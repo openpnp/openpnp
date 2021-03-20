@@ -195,14 +195,14 @@ extends AbstractConfigurationWizard {
 
         comboBoxFeedActuator = new JComboBox();
         panelPushPull.add(comboBoxFeedActuator, "4, 4");
-        comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(head));
+        comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(head, Boolean.class));
 
         lblPeelOffActuatorId = new JLabel("Peel Off Actuator");
         panelPushPull.add(lblPeelOffActuatorId, "6, 4, right, default");
 
         comboBoxPeelOffActuator = new JComboBox();
         panelPushPull.add(comboBoxPeelOffActuator, "8, 4");
-        comboBoxPeelOffActuator.setModel(new ActuatorsComboBoxModel(head));
+        comboBoxPeelOffActuator.setModel(new ActuatorsComboBoxModel(head, Boolean.class));
 
         JLabel lblX = new JLabel("X");
         panelPushPull.add(lblX, "4, 8");

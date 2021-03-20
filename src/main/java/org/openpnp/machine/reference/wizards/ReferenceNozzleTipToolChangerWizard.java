@@ -155,15 +155,15 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         }
         
         tcPostOneComboBoxActuator = new JComboBox();
-        tcPostOneComboBoxActuator.setModel(new ActuatorsComboBoxModel(myMachine));
+        tcPostOneComboBoxActuator.setModel(new ActuatorsComboBoxModel(myMachine, Boolean.class));
         panelChanger.add(tcPostOneComboBoxActuator, "4, 5, 3, 1");
         
         tcPostTwoComboBoxActuator = new JComboBox();
-        tcPostTwoComboBoxActuator.setModel(new ActuatorsComboBoxModel(myMachine));
+        tcPostTwoComboBoxActuator.setModel(new ActuatorsComboBoxModel(myMachine, Boolean.class));
         panelChanger.add(tcPostTwoComboBoxActuator, "4, 7, 3, 1");
         
         tcPostThreeComboBoxActuator = new JComboBox();
-        tcPostThreeComboBoxActuator.setModel(new ActuatorsComboBoxModel(myMachine));
+        tcPostThreeComboBoxActuator.setModel(new ActuatorsComboBoxModel(myMachine, Boolean.class));
         panelChanger.add(tcPostThreeComboBoxActuator, "4, 9, 3, 1");
         
         lblX = new JLabel("X");

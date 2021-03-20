@@ -259,11 +259,11 @@ public class ReferenceJobProcessorRetryTests {
         }
         
         @Override
-        public void actuate(boolean on) throws Exception {
+        public void actuate(Object value) throws Exception {
         }
 
         @Override
-        public String read() throws Exception {
+        public Object read() throws Exception {
             return readValue;
         }
     }

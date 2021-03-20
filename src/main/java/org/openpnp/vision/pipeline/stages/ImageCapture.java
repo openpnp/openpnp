@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OpenCvUtils;
@@ -23,13 +24,19 @@ import org.simpleframework.xml.Element;
         description="Capture an image from the pipeline camera.")
 
 public class ImageCapture extends CvStage {
+    @Deprecated
     @Attribute(required=false)
     @Property(description="Use the default camera lighting.")
     private boolean defaultLight = true;
 
+    @Deprecated
     @Element(required=false)
     @Property(description="Light actuator value or profile, if default camera lighting is disabled.")
     private Object light = null;
+
+    @Element(required=false)
+    @Property(description="Light actuator if overriding camera lighting.")
+    private String lightActuator = null;
 
     @Attribute
     @Property(description="Wait for the camera to settle before capturing an image.")
@@ -39,20 +46,12 @@ public class ImageCapture extends CvStage {
     @Property(description="Number of camera images to average.")
     private int count = 1;
 
-    public boolean isDefaultLight() {
-        return defaultLight;
+    public String getLightActuator() {
+        return lightActuator;
     }
 
-    public void setDefaultLight(boolean defaultLight) {
-        this.defaultLight = defaultLight;
-    }
-
-    public Object getLight() {
-        return light;
-    }
-
-    public void setLight(Object light) {
-        this.light = light;
+    public void setLightActuator(String lightActuator) {
+        this.lightActuator = lightActuator;
     }
 
     public boolean isSettleFirst() {
@@ -80,8 +79,13 @@ public class ImageCapture extends CvStage {
         if (camera == null) {
             throw new Exception("No Camera set on pipeline.");
         }
+        Actuator lightAct = null;
+        if (lightActuator != null) {
+            lightAct = Configuration.get().getMachine().getActuatorByName(lightActuator);
+        }
+
         // Light, settle and capture the image. Keep the lights on for possible averaging.
-        camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
+        camera.actuateLightBeforeCapture(lightAct);
         try {
             BufferedImage bufferedImage = (settleFirst ? camera.settleAndCapture() : camera.capture()); 
             Mat image = OpenCvUtils.toMat(bufferedImage);
@@ -107,7 +111,7 @@ public class ImageCapture extends CvStage {
         }
         finally {
             // Always switch off the light. 
-            camera.actuateLightAfterCapture();
+            camera.actuateLightAfterCapture(lightAct);
         }
     }
 

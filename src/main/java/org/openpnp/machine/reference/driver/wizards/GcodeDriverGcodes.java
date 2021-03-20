@@ -276,7 +276,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         {
             putValue(SMALL_ICON, Icons.export);
             putValue(NAME, "Export Gcode File");
-            putValue(SHORT_DESCRIPTION, "Export the Gcode profile to a file.");
+            putValue(SHORT_DESCRIPTION, "Export the Gcode mapping to a file.");
         }
 
         @Override
@@ -323,7 +323,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         {
             putValue(SMALL_ICON, Icons.importt);
             putValue(NAME, "Load Gcode File");
-            putValue(SHORT_DESCRIPTION, "Import the Gcode profile from a file.");
+            putValue(SHORT_DESCRIPTION, "Import the Gcode mapping from a file.");
         }
 
         @Override
@@ -355,7 +355,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         {
             putValue(SMALL_ICON, Icons.copy);
             putValue(NAME, "Copy Gcode to Clipboard");
-            putValue(SHORT_DESCRIPTION, "Copy the Gcode profile to the clipboard.");
+            putValue(SHORT_DESCRIPTION, "Copy the Gcode mapping to the clipboard.");
         }
 
         @Override
@@ -379,7 +379,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         {
             putValue(SMALL_ICON, Icons.paste);
             putValue(NAME, "Paste Gcode from Clipboard");
-            putValue(SHORT_DESCRIPTION, "Import the Gcode profile from the clipboard.");
+            putValue(SHORT_DESCRIPTION, "Import the Gcode mapping from the clipboard.");
         }
 
         @Override
@@ -402,7 +402,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Reset to defaults");
-            putValue(SHORT_DESCRIPTION, "Reset the Gcode profile to the default.");
+            putValue(SHORT_DESCRIPTION, "Reset the Gcode mapping to the default.");
         }
 
         @Override

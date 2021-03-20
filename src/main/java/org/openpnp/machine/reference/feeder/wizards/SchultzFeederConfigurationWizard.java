@@ -19,8 +19,8 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.util.Objects;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -31,8 +31,10 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
+import org.openpnp.gui.support.Converters;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.machine.reference.feeder.SchultzFeeder;
 import org.openpnp.model.Configuration;
@@ -145,7 +147,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         panelActuator.add(lblGetID, "2, 6, right, default");
 
         comboBoxIdActuator = new JComboBox();
-        comboBoxIdActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxIdActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxIdActuator, "4, 6, fill, default");
 
         btnIdActuator = new JButton(getIdActuatorAction);
@@ -159,7 +161,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         panelActuator.add(lblFeed, "2, 8, right, default");
 
         comboBoxFeedActuator = new JComboBox();
-        comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxFeedActuator, "4, 8, fill, default");
 
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
@@ -169,7 +171,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         panelActuator.add(lblPostPick, "2, 10, right, default");
 
         comboBoxPostPickActuator = new JComboBox();
-        comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxPostPickActuator, "4, 10, fill, default");
 
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
@@ -179,7 +181,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         panelActuator.add(lblFeedCount, "2, 12, right, default");
 
         comboBoxFeedCountActuator = new JComboBox();
-        comboBoxFeedCountActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxFeedCountActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxFeedCountActuator, "4, 12, fill, default");
 
         btnGetFeedCountActuator = new JButton(getFeedCountActuatorAction);
@@ -193,7 +195,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         panelActuator.add(lblClearCount, "2, 14, right, default");
 
         comboBoxClearCountActuator = new JComboBox();
-        comboBoxClearCountActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxClearCountActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxClearCountActuator, "4, 14, fill, default");
 
         btnClearCountActuator = new JButton(clearCountActuatorAction);
@@ -203,7 +205,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         panelActuator.add(lblGetPitch, "2, 16, right, default");
 
         comboBoxPitchActuator = new JComboBox();
-        comboBoxPitchActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxPitchActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxPitchActuator, "4, 16, fill, default");
 
         btnPitchActuator = new JButton(pitchActuatorAction);
@@ -217,7 +219,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         panelActuator.add(lblTogglePitch, "2, 18, right, default");
 
         comboBoxTogglePitchActuator = new JComboBox();
-        comboBoxTogglePitchActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxTogglePitchActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxTogglePitchActuator, "4, 18, fill, default");
 
         btnTogglePitchActuator = new JButton(togglePitchActuatorAction);
@@ -230,7 +232,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         panelActuator.add(lblGetStatus, "2, 20, right, default");
 
         comboBoxStatusActuator = new JComboBox();
-        comboBoxStatusActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxStatusActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxStatusActuator, "4, 20, fill, default");
 
         btnStatusActuator = new JButton(statusActuatorAction);
@@ -288,8 +290,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getIdActuatorName());
                 }
-                String s = actuator.read(feeder.getActuatorValue());
-                idText.setText(s == null ? "" : s);
+                Object o = actuator.read(feeder.getActuatorValue());
+                Converter<Object, String> converter = Converters.getConverter(actuator.getValueClass());
+                idText.setText(Objects.toString(converter.convertForward(o ), ""));
             });
         }
     };
@@ -310,7 +313,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                 if (actuator == null) {
                     throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
                 }
-                AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                AbstractActuator.suggestValueClass(actuator, Double.class);
                 actuator.actuate(feeder.getActuatorValue());
             });
         }
@@ -334,7 +337,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                     throw new Exception(
                             "Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
                 }
-                AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                AbstractActuator.suggestValueClass(actuator, Double.class);
                 actuator.actuate(feeder.getActuatorValue());
                 getFeedCountActuatorAction.actionPerformed(null);
             });
@@ -359,8 +362,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getFeedCountActuatorName());
                 }
-                String s = actuator.read(feeder.getActuatorValue());
-                feedCountValue.setText(s == null ? "" : s);
+                Object o = actuator.read(feeder.getActuatorValue());
+                Converter<Object, String> converter = Converters.getConverter(actuator.getValueClass());
+                feedCountValue.setText(Objects.toString(converter.convertForward(o), ""));
             });
         }
     };
@@ -384,7 +388,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                             "Failed, unable to find an actuator named " + feeder.getClearCountActuatorName());
                 }
 
-                AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                AbstractActuator.suggestValueClass(actuator, Double.class);
                 actuator.actuate(feeder.getActuatorValue());
                 feedCountValue.setText("");
             });
@@ -409,8 +413,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getPitchActuatorName());
                 }
-                String s = actuator.read(feeder.getActuatorValue());
-                pitchValue.setText(s == null ? "" : s);
+                Object o = actuator.read(feeder.getActuatorValue());
+                Converter<Object, String> converter = Converters.getConverter(actuator.getValueClass());
+                pitchValue.setText(Objects.toString(converter.convertForward(o), ""));
             });
         }
     };
@@ -433,7 +438,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getTogglePitchActuatorName());
                 }
-                AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                AbstractActuator.suggestValueClass(actuator, Double.class);
                 actuator.actuate(feeder.getActuatorValue());
                 pitchActuatorAction.actionPerformed(null);
             });
@@ -458,8 +463,9 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getStatusActuatorName());
                 }
-                String s = actuator.read(feeder.getActuatorValue());
-                statusText.setText(s == null ? "" : s);
+                Object o = actuator.read(feeder.getActuatorValue());
+                Converter<Object, String> converter = Converters.getConverter(actuator.getValueClass());
+                statusText.setText(Objects.toString(converter.convertForward(o), ""));
             });
         }
     };

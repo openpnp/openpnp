@@ -190,7 +190,7 @@ public class SwitcherCamera extends ReferenceCamera {
 
     public Actuator getActuator() {
         Actuator actuator = Configuration.get().getMachine().getActuator(actuatorId); 
-        AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+        AbstractActuator.suggestValueClass(actuator, Double.class);
         return actuator;
     }
 

@@ -24,23 +24,16 @@ public class ScriptActuator extends ReferenceActuator {
     }
 
     @Override
-    protected void driveActuation(boolean on) throws Exception {
+    public void driveActuation(Object value) throws Exception {
         Map<String, Object> globals = new HashMap<>();
-        globals.put("actuateBoolean", on);
-        this.execute(globals);
-    }
-
-    @Override
-    protected void driveActuation(double value) throws Exception {
-        Map<String, Object> globals = new HashMap<>();
-        globals.put("actuateDouble", value);
-        this.execute(globals);
-    }
-
-    @Override
-    protected void driveActuation(String value) throws Exception {
-        Map<String, Object> globals = new HashMap<>();
-        globals.put("actuateString", value);
+        globals.put("actuateValue", value);
+        if (value instanceof Boolean) {
+            globals.put("actuateBoolean", value);
+        } else if (value instanceof Double) {
+            globals.put("actuateDouble", value);
+        } else if (value instanceof String) {
+            globals.put("actuateString", value);
+        }
         this.execute(globals);
     }
 

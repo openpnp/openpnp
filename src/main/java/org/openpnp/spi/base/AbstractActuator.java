@@ -22,19 +22,33 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     @Attribute(required = false)
     protected String name;
 
+    @Deprecated
     @Attribute(required = false)
     protected ActuatorValueType valueType = ActuatorValueType.Boolean;
 
+    @Deprecated
     @Attribute(required = false)
     protected boolean valueTypeConfirmed = false;
 
     @Attribute(required = false)
+    protected Class<?> valueClass = Boolean.class;
+
+    @Attribute(required = false)
+    protected boolean valueClassConfirmed = false;
+
+    @Deprecated
+    @Attribute(required = false)
     protected Double defaultOnDouble = 0.0;
+
+    @Deprecated
     @Attribute(required = false)
     protected String defaultOnString = "";
 
+    @Deprecated
     @Attribute(required = false)
     protected Double defaultOffDouble = 0.0;
+
+    @Deprecated
     @Attribute(required = false)
     protected String defaultOffString = "";
 
@@ -121,227 +135,44 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     }
 
     @Override
-    public ActuatorValueType getValueType() {
-        return valueType;
+    public Class<?> getValueClass() {
+        return valueClass;
     }
 
-    public void setValueType(ActuatorValueType valueType) {
-        Object oldValue = this.valueType; 
-        this.valueType = valueType;
-        if (oldValue != valueType) {
-            valueTypeConfirmed = true;
-            firePropertyChange("valueType", oldValue, valueType);
+    public void setValueClass(Class<?> valueClass) {
+        Object oldValue = this.valueClass;
+        this.valueClass = valueClass;
+        if (oldValue != valueClass) {
+            valueClassConfirmed = true;
+            firePropertyChange("valueClass", oldValue, valueClass);
         }
     }
 
     /**
-     * @return true if the valueType was confirmed by functional usage or user interaction.
+     * @return true if the valueClass was confirmed by functional usage or user interaction.
      */
-    public boolean isValueTypeConfirmed() {
-        return valueTypeConfirmed;
+    public boolean isValueClassConfirmed() {
+        return valueClassConfirmed;
     }
 
-    public void setValueTypeConfirmed(boolean valueTypeConfirmed) {
-        this.valueTypeConfirmed = valueTypeConfirmed;
+    public void setValueClassConfirmed(boolean valueClassConfirmed) {
+        this.valueClassConfirmed = valueClassConfirmed;
     }
 
     /**
-     * Suggest a specific valueType for the actuator, based on its functional use. This will only set the valueType
-     * once, if not yet otherwise confirmed by GUI user interaction etc. (mixed type usage must remain possible).  
-     * 
-     * Performs null and type checking on the actuator.   
-     * 
+     * Suggest a specific valueClass for the actuator, based on its functional use. This will only set the valueClass
+     * once, if not yet otherwise confirmed by GUI user interaction etc. (mixed type usage must remain possible).
+     *
+     * Performs null and type checking on the actuator.
+     *
      * @param actuator
-     * @param valueType
+     * @param valueClass
      */
-    public static void suggestValueType(Actuator actuator, ActuatorValueType valueType) {
+    public static void suggestValueClass(Actuator actuator, Class<?> valueClass) {
         if (actuator instanceof AbstractActuator
-                && !((AbstractActuator) actuator).isValueTypeConfirmed()) {
-            ((AbstractActuator) actuator).setValueType(valueType);
-            ((AbstractActuator) actuator).setValueTypeConfirmed(true);
-        }
-    }
-
-    /**
-     * As the user might change the valueType() in the life-time of the actuator, we try to re-interpret
-     * persisted values in the most tolerant fashion. 
-     * 
-     * @param value
-     * @return 
-     */
-    public Object typedValue(Object value) {
-        if (value == null) {
-            return getDefaultOffValue();
-        }
-        // Tolerant conversion in case the user changed the type.
-        switch (getValueType()) {
-            case Boolean:
-                if (value instanceof Boolean) { 
-                    return (Boolean)value;
-                }
-                else if (value instanceof Double) {
-                    return (Double)value != 0.0;
-                }
-                else if (value instanceof String) {
-                    try {
-                        return !(((String)value).isEmpty() 
-                                || ((String)value).equals(Boolean.FALSE.toString()) 
-                                || Double.valueOf((String) value) == 0.0);
-                    }
-                    catch (NumberFormatException e) {
-                        return false;
-                    }
-                }
-                return false;
-            case Double:
-                    if (value instanceof Boolean) { 
-                        return (Boolean)value ? getDefaultOnValue() : getDefaultOffValue();
-                    }
-                    else if (value instanceof Double) {
-                        return (Double)value;
-                    }
-                    else if (value instanceof String) {
-                        if (((String)value).equals(Boolean.TRUE.toString())) {
-                            return getDefaultOnValue();
-                        }
-                        try {
-                            return Double.valueOf((String) value);
-                        }
-                        catch (NumberFormatException e) {
-                            return getDefaultOffValue();
-                        }
-                    }
-                    return getDefaultOffValue();
-            default:
-                if (value instanceof Boolean) { 
-                    return (Boolean)value ? getDefaultOnValue() : getDefaultOffValue();
-                }
-                return value.toString();
-        }
-    }
-
-    /**
-     * Convenience null- and type-checked call to typedValue().  
-     * 
-     * @param value
-     * @param actuator
-     * @return
-     */
-    public static Object typedValue(Object value, Actuator actuator) {
-        if (actuator instanceof AbstractActuator) {
-            return ((AbstractActuator) actuator).typedValue(value);
-        }
-        return null;
-    }
-
-    public Double getDefaultOnDouble() {
-        return defaultOnDouble;
-    }
-
-    public void setDefaultOnDouble(Double defaultOnDouble) {
-        this.defaultOnDouble = defaultOnDouble;
-    }
-
-    public String getDefaultOnString() {
-        return defaultOnString;
-    }
-
-    public void setDefaultOnString(String defaultOnString) {
-        this.defaultOnString = defaultOnString;
-    }
-
-    public Double getDefaultOffDouble() {
-        return defaultOffDouble;
-    }
-
-    public void setDefaultOffDouble(Double defaultOffDouble) {
-        this.defaultOffDouble = defaultOffDouble;
-    }
-
-    public String getDefaultOffString() {
-        return defaultOffString;
-    }
-
-    public void setDefaultOffString(String defaultOffString) {
-        this.defaultOffString = defaultOffString;
-    }
-
-    protected abstract String getDefaultOnProfile();
-
-    protected abstract String getDefaultOffProfile();
-
-    @Override
-    public Object getDefaultOnValue() {
-        switch (getValueType()) {
-            case Boolean:
-                return true;
-            case Double:
-                return getDefaultOnDouble();
-            case String:
-                return getDefaultOnString();
-            case Profile:
-                return getDefaultOnProfile();
-        }
-        return null;
-   }
-
-    @Override
-    public Object getDefaultOffValue() {
-        switch (getValueType()) {
-            case Boolean:
-                return false;
-            case Double:
-                return getDefaultOffDouble();
-            case String:
-                return getDefaultOffString();
-            case Profile:
-                return getDefaultOffProfile();
-        }
-        return null;
-    }
-
-    @Override 
-    public boolean isActuated() { 
-        Object defaultOff = getDefaultOffValue();
-        Object last = getLastActuationValue();
-        return defaultOff != null && last != null && !defaultOff.equals(last);
-    }
-
-    @Override
-    public void actuate(Object value) throws Exception {
-        if (value instanceof Boolean) {
-            assertOnOffDefined();
-        }
-
-        switch (getValueType()) {
-            case Boolean:
-                actuate((boolean)typedValue(value));
-                break;
-            case Double:
-                actuate((double)typedValue(value));
-                break;
-            case String:
-                actuate((String)typedValue(value));
-                break;
-            case Profile:
-                actuateProfile((String)typedValue(value));
-                break;
-            default:
-                throw new Exception("Unsupported valueType "+getValueType());
-        }
-    }
-
-    public void assertOnOffDefined() throws Exception {
-        if (getDefaultOnValue() == null 
-                || getDefaultOffValue() == null 
-                || getDefaultOnValue().equals(getDefaultOffValue())) {
-            throw new Exception("Actuator "+getName()+" has Default ON/OFF values not properly configured.");
-        }
-    }
-    
-    static public void assertOnOffDefined(Actuator actuator) throws Exception {
-        if (actuator instanceof AbstractActuator) {
-            ((AbstractActuator) actuator).assertOnOffDefined();
+                && !((AbstractActuator) actuator).isValueClassConfirmed()) {
+            ((AbstractActuator) actuator).setValueClass(valueClass);
+            ((AbstractActuator) actuator).setValueClassConfirmed(true);
         }
     }
 
@@ -356,13 +187,13 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
             throw new Exception("Actuator "+getName()+" must not coordinate with machine when actuated outside machine task.");
         }
         machine.getMotionPlanner()
-        .waitForCompletion(null, unconditional ? 
+        .waitForCompletion(null, unconditional ?
                 CompletionType.WaitForUnconditionalCoordination
                 : CompletionType.WaitForStillstand);
     }
 
     @Override
-    public String read() throws Exception {
+    public Object read(Object value) throws Exception {
         if (isCoordinatedBeforeRead()) {
             coordinateWithMachine(false);
         }
@@ -407,7 +238,7 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
         if (oldValue != interlockActuator) {
             if (interlockActuator) {
                 if (interlockMonitor == null) {
-                    setInterlockMonitor(new ActuatorInterlockMonitor()); 
+                    setInterlockMonitor(new ActuatorInterlockMonitor());
                 }
             }
             else {

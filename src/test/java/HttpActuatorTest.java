@@ -1,30 +1,13 @@
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
-import javax.swing.Action;
-import javax.swing.Icon;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.openpnp.CameraListener;
-import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.HttpActuator;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Head;
-import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.VisionProvider;
-import org.openpnp.spi.base.AbstractHeadMountable;
-import org.openpnp.util.VisionUtils;
 
 import com.google.common.io.Files;
 import com.sun.net.httpserver.HttpExchange;
@@ -52,15 +35,15 @@ public class HttpActuatorTest {
     public void testOffsets() {
         TestHttpServer server=new TestHttpServer ();
         HttpActuator actuator=new HttpActuator();
-        
-        
+        actuator.setValueClass(Double.class);
+
         actuator.setRegex("read:(?<Value>-?\\d+)");
         actuator.setReadUrl("http://127.0.0.1:3042/msr");
         
-        String stringResult="";
+        Double doubleResult = null;
         try {
             Configuration.get().getMachine().setEnabled(true);
-            stringResult= Configuration.get().getMachine().execute(() -> {
+            doubleResult= (Double)Configuration.get().getMachine().execute(() -> {
                  return  actuator.read();
             }, false, 0);
       
@@ -70,11 +53,32 @@ public class HttpActuatorTest {
             e.printStackTrace();
         }
         
-        Double result=Double.parseDouble(stringResult);
-        
-        Assert.assertEquals(result, Double.valueOf( 42.0));
-       
+        Assert.assertEquals(doubleResult, Double.valueOf(42.0));
     }
+
+    @Test
+    public void testInt() {
+        TestHttpServer server=new TestHttpServer ();
+        HttpActuator actuator=new HttpActuator();
+        actuator.setValueClass(Integer.class);
+
+        actuator.setRegex("read:(?<Value>-?\\d+)");
+        actuator.setReadUrl("http://127.0.0.1:3042/msr");
+
+        Integer integerResult = null;
+        try {
+            Configuration.get().getMachine().setEnabled(true);
+            integerResult= (Integer) Configuration.get().getMachine().execute(() -> {
+                return  actuator.read();
+            }, false, 0);
+        } catch (Throwable ignore) {
+            // ignore
+        }
+
+        Assert.assertEquals(integerResult, Integer.valueOf(42));
+    }
+
+
     static class TestHttpServer   {
         TestHttpServer() {
             HttpServer server;

@@ -77,19 +77,19 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         
         vacuumComboBoxActuator = new JComboBox();
         vacuumComboBoxActuator.setMaximumRowCount(15);
-        vacuumComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
+        vacuumComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead(), Boolean.class));
         panel.add(vacuumComboBoxActuator, "4, 2");
         label = new JLabel("Blow Off Actuator");
         panel.add(label, "2, 4, right, center");
 
         blowOffComboBoxActuator = new JComboBox();
         blowOffComboBoxActuator.setMaximumRowCount(15);
-        blowOffComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
+        blowOffComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead(), Boolean.class));
         panel.add(blowOffComboBoxActuator, "4, 4");
         lblSensingActuator = new JLabel("Sensing Actuator");
         panel.add(lblSensingActuator, "2, 6, right, default");
 
-        vacuumSenseActuator = new JComboBox(new ActuatorsComboBoxModel(nozzle.getHead()));
+        vacuumSenseActuator = new JComboBox(new ActuatorsComboBoxModel(nozzle.getHead(), Double.class));
         vacuumSenseActuator.setMaximumRowCount(15);
         panel.add(vacuumSenseActuator, "4, 6, fill, default");
     }

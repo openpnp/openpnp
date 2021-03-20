@@ -49,11 +49,11 @@ public class TestDriver extends AbstractDriver implements Driver {
     @Override
     public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
             throws Exception {
-        
+
         // Take only this driver's axes.
         AxesLocation newDriverLocation = move.getLocation1();
         // Take the current driver location of the given axes.
-        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this),
                 (axis) -> (axis.getDriverLengthCoordinate()));
         if (!oldDriverLocation.matches(newDriverLocation)) {
             delegate.moveTo(hm, move);
@@ -63,12 +63,7 @@ public class TestDriver extends AbstractDriver implements Driver {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        delegate.actuate(actuator, on);
-    }
-
-    @Override
-    public void actuate(ReferenceActuator actuator, double value) throws Exception {
+    public void actuate(ReferenceActuator actuator, Object value) throws Exception {
         delegate.actuate(actuator, value);
     }
 
@@ -92,7 +87,7 @@ public class TestDriver extends AbstractDriver implements Driver {
         public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
                 throws Exception {
         }
- 
+
         @Override
         public AxesLocation getReportedLocation(long timeout) throws Exception {
             return null;
@@ -105,12 +100,7 @@ public class TestDriver extends AbstractDriver implements Driver {
         }
 
         @Override
-        public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-
-        }
-
-        @Override
-        public void actuate(ReferenceActuator actuator, double value) throws Exception {
+        public void actuate(ReferenceActuator actuator, Object value) throws Exception {
 
         }
 

@@ -26,6 +26,10 @@ import org.jdesktop.beansbinding.Converter;
 public class DoubleConverter extends Converter<Double, String> {
     private String format;
 
+    public DoubleConverter() {
+        this("%f");
+    }
+
     public DoubleConverter(String format) {
         this.format = format;
     }

@@ -164,30 +164,21 @@ public interface Camera extends HeadMountable, WizardConfigurable,
 
     /**
      * Inform the Camera that the light actuator (if any) should now be actuated to the given light setting.
-     * Effective actuation may be optimized to span longer periods/prevent blinking. 
-     * 
-     * @param light Provides the light actuation value or null for default lighting. 
+     * Effective actuation may be optimized to span longer periods/prevent blinking.
+     *
+     * @param actuator Provides the light actuator override
      * @throws Exception
      */
-    void actuateLightBeforeCapture(Object light) throws Exception;
-
-    /**
-     * Inform the Camera that the light actuator (if any) should now be actuated to the default light setting.
-     * Effective actuation may be optimized to span longer periods/prevent blinking. 
-     * 
-     * @throws Exception
-     */
-    default void actuateLightBeforeCapture() throws Exception {
-        actuateLightBeforeCapture(null);
-    }
+    void actuateLightBeforeCapture(Actuator actuator) throws Exception;
 
     /**
      * Inform the Camera that the light actuator (if any) may now be actuated to the default off setting.
      * Effective actuation may be optimized to span longer periods/prevent blinking. 
-     * 
+     *
+     * @param actuator Provides the light actuator override
      * @throws Exception
      */
-    void actuateLightAfterCapture() throws Exception;
+    void actuateLightAfterCapture(Actuator actuator) throws Exception;
 
     /**
      * Ensure the related CameraView will eventually be made visible on the user interface.  

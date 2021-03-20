@@ -27,7 +27,6 @@ import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.SchultzFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
@@ -42,7 +41,7 @@ public class SchultzFeeder extends ReferenceFeeder {
     
     @Deprecated
     @Attribute(required=false)
-    protected Actuator.ActuatorValueType actuatorType = null;
+    protected Class<?> actuatorType = null;
     
     @Attribute(required=false)
     protected double actuatorValue;
@@ -52,49 +51,49 @@ public class SchultzFeeder extends ReferenceFeeder {
     
     @Deprecated
     @Attribute(required=false)
-    protected Actuator.ActuatorValueType postPickActuatorType = null;
+    protected Class<?> postPickActuatorType = null;
     
     @Attribute(required=false)
     protected String feedCountActuatorName;
     
     @Deprecated
     @Attribute(required=false)
-    protected Actuator.ActuatorValueType feedCountActuatorType = null;
+    protected Class<?> feedCountActuatorType = null;
     
     @Attribute(required=false)
     protected String clearCountActuatorName;
     
     @Deprecated
     @Attribute(required=false)
-    protected Actuator.ActuatorValueType clearCountActuatorType = null;
+    protected Class<?> clearCountActuatorType = null;
     
     @Attribute(required=false)
     protected String pitchActuatorName;
     
     @Deprecated
     @Attribute(required=false)
-    protected Actuator.ActuatorValueType pitchActuatorType = null;
+    protected Class<?> pitchActuatorType = null;
     
     @Attribute(required=false)
     protected String togglePitchActuatorName;
     
     @Deprecated
     @Attribute(required=false)
-    protected Actuator.ActuatorValueType togglePitchActuatorType = null;
+    protected Class<?> togglePitchActuatorType = null;
     
     @Attribute(required=false)
     protected String statusActuatorName;
     
     @Deprecated
     @Attribute(required=false)
-    protected Actuator.ActuatorValueType statusActuatorType = null;
+    protected Class<?> statusActuatorType = null;
     
     @Attribute(required=false)
     protected String idActuatorName;
     
     @Deprecated
     @Attribute(required=false)
-    protected Actuator.ActuatorValueType idActuatorType = null;
+    protected Class<?> idActuatorType = null;
     
     @Attribute(required=false)
     protected String fiducialPart;
@@ -111,22 +110,22 @@ public class SchultzFeeder extends ReferenceFeeder {
                 // Migrate actuator value types.
                 if (actuatorType != null) { 
                     Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
-                    AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                    AbstractActuator.suggestValueClass(actuator, Double.class);
                     actuatorType = null;
                 }
                 if (postPickActuatorType != null) {
                     Actuator actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
-                    AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                    AbstractActuator.suggestValueClass(actuator, Double.class);
                     postPickActuatorType = null;
                 }
                 if (clearCountActuatorType != null) {
                     Actuator actuator = Configuration.get().getMachine().getActuatorByName(clearCountActuatorName);
-                    AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                    AbstractActuator.suggestValueClass(actuator, Double.class);
                     clearCountActuatorType = null;
                 }
                 if (togglePitchActuatorType != null) {
                     Actuator actuator = Configuration.get().getMachine().getActuatorByName(togglePitchActuatorName);
-                    AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                    AbstractActuator.suggestValueClass(actuator, Double.class);
                     togglePitchActuatorType = null;
                 }
                 // NOTE: all the other actuator types are actually read only, no need to migrate.
@@ -152,7 +151,7 @@ public class SchultzFeeder extends ReferenceFeeder {
             throw new Exception("Feed failed. Unable to find an actuator named " + actuatorName);
         }
         MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
-        AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+        AbstractActuator.suggestValueClass(actuator, Double.class);
         actuator.actuate(actuatorValue);
     }
     
@@ -170,7 +169,7 @@ public class SchultzFeeder extends ReferenceFeeder {
         }
         // TODO: check status before feed?
         
-        AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+        AbstractActuator.suggestValueClass(actuator, Double.class);
         actuator.actuate(actuatorValue);
     }
     

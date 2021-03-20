@@ -20,6 +20,8 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Objects;
 import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
@@ -72,10 +74,10 @@ public class NullDriver extends AbstractDriver {
         Logger.debug("home()");
         checkEnabled();
         if (machine instanceof SimulationModeMachine) {
-            Location homingError = ((SimulationModeMachine) machine).getHomingError(); 
-            homingOffsets = new AxesLocation(machine, this, (axis) 
+            Location homingError = ((SimulationModeMachine) machine).getHomingError();
+            homingOffsets = new AxesLocation(machine, this, (axis)
                     -> (axis.getType() == Axis.Type.X ? homingError.getLengthX() :
-                        axis.getType() == Axis.Type.Y ? homingError.getLengthY() : 
+                        axis.getType() == Axis.Type.Y ? homingError.getLengthY() :
                             null));
         }
         else {
@@ -93,10 +95,10 @@ public class NullDriver extends AbstractDriver {
         // Take only this driver's axes.
         AxesLocation newDriverLocation = location.drivenBy(this);
         // Take the current driver location of the given axes.
-        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this),
                 (axis) -> (axis.getDriverLengthCoordinate()));
         Logger.debug("setGlobalOffsets("+oldDriverLocation+" -> "+newDriverLocation+")");
-        // Calculate the new machine to working coordinate system offset. 
+        // Calculate the new machine to working coordinate system offset.
         homingOffsets = newDriverLocation.subtract(oldDriverLocation).add(homingOffsets);
         // Store to axes
         newDriverLocation.setToDriverCoordinates(this);
@@ -114,7 +116,7 @@ public class NullDriver extends AbstractDriver {
         checkEnabled();
         AxesLocation newDriverLocation = move.getLocation1();
         // Take the current driver location of the given axes.
-        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this),
                 (axis) -> (axis.getDriverLengthCoordinate()));
         if (!oldDriverLocation.matches(newDriverLocation)) {
             // Store to axes
@@ -151,32 +153,15 @@ public class NullDriver extends AbstractDriver {
 
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value) throws Exception {
+    public void actuate(ReferenceActuator actuator, Object value) throws Exception {
         Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
         SimulationModeMachine.simulateActuate(actuator, value, feedRateMmPerMinute > 0);
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        Logger.debug("actuate({}, {})", actuator, on);
-        checkEnabled();
-
-        SimulationModeMachine.simulateActuate(actuator, on, feedRateMmPerMinute > 0);
-    }
-
-    @Override
-    public void actuate(ReferenceActuator actuator, String value) throws Exception {
-        Logger.debug("actuate({}, {})", actuator, value);
-        checkEnabled();
-        if (feedRateMmPerMinute > 0) {
-            Thread.sleep(10);
-        }
-    }
-
-    @Override
-    public String actuatorRead(ReferenceActuator actuator) throws Exception {
-        return Math.random() + "";
+    public Object actuatorRead(ReferenceActuator actuator, Object parameter) throws Exception {
+        return Objects.toString(parameter, "") + Math.random();
     }
 
     @Override
@@ -238,7 +223,7 @@ public class NullDriver extends AbstractDriver {
             for (Axis axis : machine.getAxes()) {
                 if (axis instanceof ReferenceControllerAxis) {
                     double feedRateMmPerMinute = this.feedRateMmPerMinute;
-                    if (axis.getType() ==Type.Rotation) { 
+                    if (axis.getType() ==Type.Rotation) {
                         // like in the original NullDriver simulation, rotation is at 10 x speed
                         feedRateMmPerMinute *= 10.0;
                     }
@@ -273,9 +258,9 @@ public class NullDriver extends AbstractDriver {
     public void findIssues(List<Solutions.Issue> issues) {
         super.findIssues(issues);
         issues.add(new Solutions.Issue(
-                this, 
-                "The simulation NullDriver can replaced with a GcodeAsyncDriver to drive a real controller.", 
-                "Replace with GcodeAsyncDriver.", 
+                this,
+                "The simulation NullDriver can replaced with a GcodeAsyncDriver to drive a real controller.",
+                "Replace with GcodeAsyncDriver.",
                 Severity.Fundamental,
                 "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
 

@@ -575,7 +575,7 @@ public class MotionProfile {
     public void solve(final int iterations, final double vtol, final double ttol) {
         double tStart = NanosecondTime.getRuntimeSeconds();
         solveForVelocity(iterations, vtol, ttol);
-        // Result is now stored in the profile i.e. you can get v[4], a[2], a[6] to get the (signed) solution.
+        // Result is now stored in the mapping i.e. you can get v[4], a[2], a[6] to get the (signed) solution.
         solvingTime = NanosecondTime.getRuntimeSeconds() - tStart;
         setOption(ProfileOption.Solved);
         if (svgEnabled) {
@@ -603,7 +603,7 @@ public class MotionProfile {
         // Determine the direction of travel.
         double signum = profileSignum(vEffEntry, vEffExit); 
 
-        // Compute the profile with directional vMax first, this will give us the first indications and may directly solve unconstrained long moves. 
+        // Compute the mapping with directional vMax first, this will give us the first indications and may directly solve unconstrained long moves.
         computeProfile(signum*vMax, vEffEntry, vEffExit, tMin);
 
         // Immediately return right here if this is a valid solution (this happens if it is a very long move that reaches vMax).
@@ -672,7 +672,7 @@ public class MotionProfile {
                 if (aMaxEntry == aMaxExit) {
                     double sd = signum*(s[segments]-s[0]);
                     vInitialGuess = signum*Math.sqrt(aMaxEntry*sd + 1./2*Math.pow(v[0], 2) + v[0]*v[7] - 1./2*Math.pow(v[7], 2));
-                    trace("Analytical solution with constant acceleration profile = "+vInitialGuess);
+                    trace("Analytical solution with constant acceleration mapping = "+vInitialGuess);
                 }
             }
             else if (!hasOption(ProfileOption.SimplifiedSCurve)){
@@ -918,7 +918,7 @@ public class MotionProfile {
         }
         if (tMin > 0 && tMin != time) {
             if (Math.abs(time/tMin - 1) < 0.001) {
-                // The solver may have slightly approximated. Stretch the profile into the exact minimum time. 
+                // The solver may have slightly approximated. Stretch the mapping into the exact minimum time.
                 if (retimeProfile()) {
                     trace("    retimed tMin "+tMin+" time "+time);
                 }
@@ -1032,7 +1032,7 @@ public class MotionProfile {
 
         for (int iter = 0; iter <= iterations; iter++) {
 
-            // Compute the profile with the given velocity limit.
+            // Compute the mapping with the given velocity limit.
             computeProfile(vPeak, vEffEntry, vEffExit, tMin);
 
             double sResult = sign*(s[4] - s[3]);
@@ -1111,7 +1111,7 @@ public class MotionProfile {
 
 
     /**
-     * Recalculate the profile to make sure it takes the given amount of time.
+     * Recalculate the mapping to make sure it takes the given amount of time.
      * @param newTime
      */
     public boolean retimeProfile() {
@@ -1146,10 +1146,10 @@ public class MotionProfile {
     }
 
     public static void coordinateProfiles(MotionProfile [] profiles) {
-        // Find the lead profile i.e. the one axis moving the most.
+        // Find the lead mapping i.e. the one axis moving the most.
         MotionProfile leadProfile = null;
         double bestDist = Double.NEGATIVE_INFINITY;
-        for (MotionProfile profile : profiles) { 
+        for (MotionProfile profile : profiles) {
             double dist = Math.abs(profile.s[segments]-profile.s[0]);
             if (dist > bestDist) {
                 leadProfile = profile;
@@ -1163,7 +1163,7 @@ public class MotionProfile {
     }
 
     public static void coordinateProfilesToLead(MotionProfile[] profiles, MotionProfile leadProfile) {
-        for (MotionProfile profile : profiles) { 
+        for (MotionProfile profile : profiles) {
             if (profile != leadProfile) {
                 profile.coordinateProfileToLead(leadProfile);
             }
@@ -1226,8 +1226,8 @@ public class MotionProfile {
                 profile.assertSolved();
                 profile.tMin = maxTime;
                 if (profile.time != maxTime) {
-                    if (profile.hasOption(ProfileOption.SynchronizeStraighten) 
-                            && (profile.v[0] == 0 || profile.v[segments] == 0) 
+                    if (profile.hasOption(ProfileOption.SynchronizeStraighten)
+                            && (profile.v[0] == 0 || profile.v[segments] == 0)
                             && (profile.isConstantAcceleration() || profile.a[0] == 0 || profile.a[segments] == 0)) {
                         // Profile has some zero entry/exit velocity/acceleration, we can try to straighten it.
                         if (leadProfile != null) {
@@ -1245,7 +1245,7 @@ public class MotionProfile {
                                     else if (profile.isConstantAcceleration() && !leadProfile.isConstantAcceleration()) {
                                         aFactor = 0.71; 
                                     }
-                                    coordinated = new MotionProfile(profile); 
+                                    coordinated = new MotionProfile(profile);
                                     if (profile.v[0] == 0 && profile.v[segments] == 0) {
                                         coordinated.setVelocityMax(leadProfile.getVelocityMax()*factor);
                                     }
@@ -1274,7 +1274,7 @@ public class MotionProfile {
                                 double timeFactor = profile.getSegmentBeginTime(3)/leadProfile.getSegmentBeginTime(3);
                                 timeFactor *= profile.time/maxTime;
                                 if (timeFactor > 0.0 && timeFactor < 1.0) {
-                                    coordinated = new MotionProfile(profile); 
+                                    coordinated = new MotionProfile(profile);
                                     coordinated.setEntryAccelerationMax(leadProfile.getEntryAccelerationMax()*Math.pow(timeFactor, 2));
                                     if (!profile.isConstantAcceleration()) {
                                         coordinated.setJerkMax(leadProfile.getJerkMax()*Math.pow(timeFactor, 3));
@@ -1289,7 +1289,7 @@ public class MotionProfile {
                                 timeFactor *= profile.time/maxTime;
                                 if (timeFactor > 0.0 && timeFactor < 1.0) {
                                     if (coordinated == null) { 
-                                        coordinated = new MotionProfile(profile); 
+                                        coordinated = new MotionProfile(profile);
                                     }
                                     coordinated.setExitAccelerationMax(leadProfile.getExitAccelerationMax()*Math.pow(timeFactor, 2));
                                     if (!profile.isConstantAcceleration()) {
@@ -1308,26 +1308,26 @@ public class MotionProfile {
                                 coordinated = null;
                             }
                         }
-                        if (profile.v[0] == 0 && profile.v[segments] == 0 
+                        if (profile.v[0] == 0 && profile.v[segments] == 0
                                 && profile.a[0] == 0 && profile.a[segments] == 0) {
                             // No entry conditions set, we can just re-time.
                             profile.retimeProfile();
                             continue;
                         }
                     }
-                    if (profile.hasOption(ProfileOption.SynchronizeEarlyBird) 
-                            && profile.v[segments] == 0 
+                    if (profile.hasOption(ProfileOption.SynchronizeEarlyBird)
+                            && profile.v[segments] == 0
                             && (profile.isConstantAcceleration() || profile.a[segments] == 0)) {
-                        // We just leave the profile as is. The axis will move to the target early and then stay put.
+                        // We just leave the mapping as is. The axis will move to the target early and then stay put.
                         profile.t[segments+1] += profile.tMin - profile.time;
                         profile.time = profile.tMin;
                         profile.computeBounds();
                         continue;
                     }
-                    if (profile.hasOption(ProfileOption.SynchronizeLastMinute) 
-                            && profile.v[0] == 0 
+                    if (profile.hasOption(ProfileOption.SynchronizeLastMinute)
+                            && profile.v[0] == 0
                             && (profile.isConstantAcceleration() || profile.a[0] == 0)) {
-                        // We just leave the profile as is. The axis will move to the target early and then stay put.
+                        // We just leave the mapping as is. The axis will move to the target early and then stay put.
                         profile.t[0] += profile.tMin - profile.time;
                         profile.time = profile.tMin;
                         profile.computeBounds();
@@ -1377,8 +1377,8 @@ public class MotionProfile {
     }
 
     /**
-     * Extract the (fractional) segments from solvedProfile between t0 and t1 and save them in this profile. 
-     * The displacement between t0 and t1 must match s[0] and s[7] of this profile i.e. the t0 and t7
+     * Extract the (fractional) segments from solvedProfile between t0 and t1 and save them in this mapping.
+     * The displacement between t0 and t1 must match s[0] and s[7] of this mapping i.e. the t0 and t7
      * must have been obtained by computing crossing times for s[0] and s[7] on solvedProfile.
      * 
      * @param solvedProfile  
@@ -1387,15 +1387,15 @@ public class MotionProfile {
      */
     public void extractProfileSectionFrom(MotionProfile solvedProfile, double t0, double t7) {
         if (t0 == 0 && t7 == solvedProfile.time) {
-            // Full 1:1 profile extraction.
+            // Full 1:1 mapping extraction.
             copyProfileSolution(solvedProfile);
         }
         else {
-            // Extract a partial profile.
+            // Extract a partial mapping.
             // Assert the given t0 t1 match in location.
             assert Math.abs(solvedProfile.getMomentaryLocation(t0)-s[0]) < eps;
             assert Math.abs(solvedProfile.getMomentaryLocation(t7)-s[7]) < eps;
-            // Assert we're not in a stretched profile.
+            // Assert we're not in a stretched mapping.
             assert t[0] == 0;
             assert t[segments+1] == 0;
             // Get border values.
@@ -1478,7 +1478,7 @@ public class MotionProfile {
     }
 
     /**
-     * Copy the profile solution from the template. This is not a full copy, i.e. constraints etc. are not copied.
+     * Copy the mapping solution from the template. This is not a full copy, i.e. constraints etc. are not copied.
      * 
      * @param template
      */
@@ -1595,7 +1595,7 @@ public class MotionProfile {
         t[segments+1] = 0;
 
         if (isConstantAcceleration()) {
-            // Use a simple constant acceleration profile.
+            // Use a simple constant acceleration mapping.
             j[0] = 0;
             // Acceleration jumps right up so we need to change a[0]
             a[0] = signumEntry*aMaxEntry;
@@ -1705,10 +1705,10 @@ public class MotionProfile {
             s[4] = s[5] - v[5]*t[5] + 1./2*a[5]*Math.pow(t[5], 2) - 1./6*j[4]*Math.pow(t[5], 3); 
         }
         else {
-            // 3rd order profile.
+            // 3rd order mapping.
             if (!hasOption(ProfileOption.UnconstrainedEntry)) {
-                // Need to determine, if this profile has a constant acceleration segment or not. The latter happens
-                // if the velocity is too low to reach the acceleration limit. In this case the profile will switch 
+                // Need to determine, if this mapping has a constant acceleration segment or not. The latter happens
+                // if the velocity is too low to reach the acceleration limit. In this case the mapping will switch
                 // directly from positive to negative jerk, a.k.a. "S-curve" and it will not reach aMax.   
                 // In order to calculate this, we need to get rid of entry/exit acceleration.
 
@@ -1759,7 +1759,7 @@ public class MotionProfile {
                 v[4] = vPeak;
                 a[4] = 0;
 
-                // Need to determine, if this profile has a constant acceleration segment or not (see analogous above). 
+                // Need to determine, if this mapping has a constant acceleration segment or not (see analogous above).
                 // On exit: pretend to decelerate to a = 0, move t[7] forward/backward in time.
                 double j6 = signumExit*jMax;
                 double t7late = -a[7]/j6;
@@ -1804,7 +1804,7 @@ public class MotionProfile {
                 s[4] = s[5] - v[5]*t[5] + 1./2*a[5]*Math.pow(t[5], 2) - 1./6*j[4]*Math.pow(t[5], 3);
             }
         }
-        // Unconstrained half-sided profile, i.e. it will accelerate towards the opposite location
+        // Unconstrained half-sided mapping, i.e. it will accelerate towards the opposite location
         // and cruise freely through it, only constrained by distance.
         if (hasOption(ProfileOption.UnconstrainedEntry)) {
 
@@ -2002,7 +2002,7 @@ solve(eq, t)            # Solve for t
                 ||hasOption(ProfileOption.UnconstrainedExit)
                 ||hasOption(ProfileOption.SimplifiedSCurve)
                 ||isConstantAcceleration())) {
-            // This is a regular 3rd order profile. 
+            // This is a regular 3rd order mapping.
             if (Math.signum(j[2]) != Math.signum(j[4])) {
                 // We have a sign reversal ramp, i.e. both accelerate or decelerate.  
                 double tOverlap = 0;
@@ -2022,7 +2022,7 @@ solve(eq, t)            # Solve for t
                     tOverlap = -t[4];
                 }
                 if (tOverlap > 0 && Double.isFinite(tOverlap)) {
-                    // tOverlap > 0 means that s overlaps in the middle, i.e. the profile is invalid. This may happen due to the jerk phases in the middle that 
+                    // tOverlap > 0 means that s overlaps in the middle, i.e. the mapping is invalid. This may happen due to the jerk phases in the middle that
                     // work against each other in sign reversal ramps.  
                     // We need to fuse the ramp together, i.e. create a constant acceleration segment instead of the two jerk phases to/from constant velocity.
                     // We can deduce from symmetry, that the time spent with constant acceleration is half the time spend with two jerk phases to constant velocity.
@@ -2053,7 +2053,7 @@ solve(eq, t)            # Solve for t
     protected void computeTime(double tMin) {
         boolean adjustMinTime = false;
         if (a[3] == 0) { 
-            // Not a fused profile, calculate the cruising time.
+            // Not a fused mapping, calculate the cruising time.
             if (v[4] == 0.0 && Math.abs(s[3] - s[4]) < eps) {
                 t[4] = 0;
                 adjustMinTime = true;
@@ -2064,7 +2064,7 @@ solve(eq, t)            # Solve for t
         }
         time = Arrays.stream(t).sum();
         if (adjustMinTime && (tMin > time)) {
-            // Zero velocity profile -> can adapt minimum time directly 
+            // Zero velocity mapping -> can adapt minimum time directly
             t[4] = tMin - time;
             time = tMin;
         }
@@ -2073,7 +2073,7 @@ solve(eq, t)            # Solve for t
     public Double getForwardCrossingTime(double sCross, boolean halfProfile) {
         double tSeg = t[0];
         if (halfProfile) {
-            // Check if we're beyond half the profile anyway.
+            // Check if we're beyond half the mapping anyway.
             double signum = Math.signum(v[4]);
             if (signum*sCross >= signum*s[3]) {
                 for (int i = 1; i <= 3; i++) {
@@ -2095,7 +2095,7 @@ solve(eq, t)            # Solve for t
     public Double getBackwardCrossingTime(double sCross, boolean halfProfile) {
         double tSeg = time - t[segments+1];
         if (halfProfile) {
-            // Check if we're beyond half the profile anyway.
+            // Check if we're beyond half the mapping anyway.
             double signum = Math.signum(v[4]);
             if (signum*sCross <= signum*s[4]) {
                 for (int i = segments; i > 4; i--) {
@@ -2478,7 +2478,7 @@ solve(eq, t)            # Solve for t
         }
         svg.append("</svg>\n");
         try {
-            File file = File.createTempFile("profile-solver-", ".svg");
+            File file = File.createTempFile("mapping-solver-", ".svg");
             try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                 out.println(svg.toString());
                 System.out.println(file.toURI());

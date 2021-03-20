@@ -21,6 +21,7 @@ package org.openpnp.machine.reference;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -46,6 +47,7 @@ import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 
 public class ReferenceActuator extends AbstractActuator implements ReferenceHeadMountable {
 
@@ -58,7 +60,17 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         AssumeActuatedOff,
         AssumeActuatedOn,
         ActuateOff,
-        ActuateOn
+        ActuateOn;
+
+        public static MachineStateActuation[] booleanValues() {
+            return values();
+        }
+        public static MachineStateActuation[] otherValues() {
+            return new MachineStateActuation[] {
+                    LeaveAsIs,
+                    AssumeUnknown,
+            };
+        }
     };
 
     @Attribute(required = false)
@@ -71,12 +83,15 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     @Attribute
     private int index;
 
+    @ElementList(entry = "value", inline = true, required = false)
+    protected List<Object> values;
+
     @Deprecated
     @Element(required = false)
     protected Length safeZ = null;
 
     protected Object lastActuationValue;
-    
+
     public ReferenceActuator() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
 
@@ -144,9 +159,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         this.index = index;
     }
 
-    @Element(required = false)
-    private ReferenceActuatorProfiles actuatorProfiles;
-
     @Override
     public Object getLastActuationValue() {
         return lastActuationValue;
@@ -167,41 +179,8 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
-    public void setValueType(ActuatorValueType valueType) {
-        super.setValueType(valueType);
-    }
-
-    public ReferenceActuatorProfiles getActuatorProfiles() {
-        if (actuatorProfiles == null && getValueType() == ActuatorValueType.Profile)
-        { actuatorProfiles = new ReferenceActuatorProfiles();
-        }
-        return actuatorProfiles;
-    }
-
-    public void setActuatorProfiles(ReferenceActuatorProfiles actuatorProfiles) {
-        this.actuatorProfiles = actuatorProfiles;
-        firePropertyChange("actuatorProfiles", null, actuatorProfiles);
-        firePropertyChange("profileValues", null, getProfileValues());
-    }
-
-    @Override
-    protected String getDefaultOnProfile() {
-        ReferenceActuatorProfiles.Profile profile = getActuatorProfiles().findProfile(true);
-        return (profile != null ? profile.getName() : null);
-    }
-
-    @Override
-    protected String getDefaultOffProfile() {
-        ReferenceActuatorProfiles.Profile profile = getActuatorProfiles().findProfile(false);
-        return (profile != null ? profile.getName() : null);
-    }
-
-    @Override
-    public String[] getProfileValues() {
-        if (getValueType() == ActuatorValueType.Profile) {
-            return getActuatorProfiles().getProfileNames();
-        }
-        return new String[] {};
+    public void setValueClass(Class<?> valueClass) {
+        super.setValueClass(valueClass);
     }
 
     public void actuateMachineState(Machine machine, MachineStateActuation machineStateActuation, boolean deferred) {
@@ -213,31 +192,30 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
                 setLastActuationValue(null);
                 break;
             case AssumeActuatedOff:
-                setLastActuationValue(getDefaultOffValue());
+                setLastActuationValue(false);
                 break;
             case AssumeActuatedOn:
-                setLastActuationValue(getDefaultOnValue());
+                setLastActuationValue(true);
                 break;
             case ActuateOff:
-                tryActuateBoolean(machine, false, deferred);
+                tryActuate(machine, false, deferred);
                 break;
             case ActuateOn:
-                tryActuateBoolean(machine, true, deferred);
+                tryActuate(machine, true, deferred);
                 break;
         }
     }
 
-    protected void tryActuateBoolean(Machine machine, boolean value, boolean deferred) {
+    protected void tryActuate(Machine machine, Object value, boolean deferred) {
         try {
-            assertOnOffDefined();
             if (deferred) {
                 UiUtils.submitUiMachineTask(() -> {
-                    actuate(value ? getDefaultOnValue() : getDefaultOffValue());
+                    actuate(value);
                 });
             }
             else {
                 machine.execute(() -> {
-                    actuate(value ? getDefaultOnValue() : getDefaultOffValue());
+                    actuate(value);
                     return true;
                 }, true, 0);
             }
@@ -248,30 +226,18 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     }
 
     @Override
-    public void actuate(boolean on) throws Exception {
-        if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine(false);
+    public Object[] getValues() {
+        if (Boolean.class.isAssignableFrom(valueClass)) {
+            return new Object[] {Boolean.FALSE, Boolean.TRUE};
         }
-        Logger.debug("{}.actuate({})", getName(), on);
-        if (getValueType() == ActuatorValueType.Profile) {
-            actuateProfile(on);
+        if (values == null) {
+           return null;
         }
-        else {
-            driveActuation(on);
-            setLastActuationValue(on);
-        }
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine(true);
-        }
-        getMachine().fireMachineHeadActivity(head);
-    }
-
-    protected void driveActuation(boolean on) throws Exception {
-        getDriver().actuate(this, on);
+        return values.toArray();
     }
 
     @Override
-    public void actuate(double value) throws Exception {
+    public void actuate(Object value) throws Exception {
         if (isCoordinatedBeforeActuate()) {
             coordinateWithMachine(false);
         }
@@ -284,63 +250,20 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         getMachine().fireMachineHeadActivity(head);
     }
 
-    protected void driveActuation(double value) throws Exception {
+    protected void driveActuation(Object value) throws Exception {
         getDriver().actuate(this, value);
     }
 
     @Override
-    public void actuate(String value) throws Exception {
-        if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine(false);
-        }
-        Logger.debug("{}.actuate({})", getName(), value);
-        driveActuation(value);
-        setLastActuationValue(value);
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine(true);
-        }
-        getMachine().fireMachineHeadActivity(head);
-    }
-
-    protected void driveActuation(String value) throws Exception {
-        getDriver().actuate(this, value);
-    }
-
-    @Override
-    public void actuateProfile(String name) throws Exception {
-        if (getActuatorProfiles() != null) {
-            setLastActuationValue(getActuatorProfiles().actuate(this, name));
-        }
-    }
-
-    @Override
-    public void actuateProfile(boolean on) throws Exception {
-        if (getActuatorProfiles() != null) {
-            setLastActuationValue(getActuatorProfiles().actuate(this, on));
-        }
-    }
-
-    @Override
-    public String read() throws Exception {
+    public Object read(Object value) throws Exception {
         if (isCoordinatedBeforeRead()) {
             coordinateWithMachine(false);
         }
-        String value = getDriver().actuatorRead(this);
+        value = getDriver().actuatorRead(this, value);
         Logger.debug("{}.read(): {}", getName(), value);
         if (isCoordinatedAfterActuate()) {
             coordinateWithMachine(true);
         }
-        getMachine().fireMachineHeadActivity(head);
-        return value;
-    }
-
-    @Override
-    public String read(Object parameter) throws Exception {
-        if (isCoordinatedBeforeRead()) {
-            coordinateWithMachine(false);
-        }
-        String value = getDriver().actuatorRead(this, parameter);
-        Logger.debug("{}.readWithParameter({}): {}", getName(), parameter, value);
         getMachine().fireMachineHeadActivity(head);
         return value;
     }
@@ -369,9 +292,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         propertySheets.add(new PropertySheetWizardAdapter(getConfigurationWizard()));
         if (getInterlockMonitor() != null) {
             propertySheets.add(new PropertySheetWizardAdapter(getInterlockMonitor().getConfigurationWizard(this), "Axis Interlock"));
-        }
-        if (getValueType() == ActuatorValueType.Profile) {
-            propertySheets.add(new PropertySheetWizardAdapter(getActuatorProfiles().getConfigurationWizard(this), "Profiles"));
         }
         return propertySheets.toArray(new PropertySheet[propertySheets.size()]);
     }
@@ -411,9 +331,5 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
-    }
-
-    public void fireProfilesChanged() {
-        firePropertyChange("profileValues", null, getProfileValues());
     }
 }

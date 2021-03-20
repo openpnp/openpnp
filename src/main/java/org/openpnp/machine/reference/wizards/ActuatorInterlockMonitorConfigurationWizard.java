@@ -213,7 +213,7 @@ public class ActuatorInterlockMonitorConfigurationWizard extends AbstractConfigu
         lblActuator.setToolTipText("The interlock is only active if this actuator has the chosen known or unknown state.");
         panelCondition.add(lblActuator, "2, 2, right, default");
         
-        conditionalActuator = new JComboBox(new ActuatorsComboBoxModel(actuator.getHead() != null ? actuator.getHead() : machine));
+        conditionalActuator = new JComboBox(new ActuatorsComboBoxModel(actuator.getHead() != null ? actuator.getHead() : machine, Boolean.class));
         conditionalActuator.setMaximumRowCount(15);
         conditionalActuator.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {

@@ -1015,12 +1015,12 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     @Override
     public BufferedImage lightSettleAndCapture() throws Exception {
-        actuateLightBeforeCapture();
+        actuateLightBeforeCapture(null);
         try {
             return settleAndCapture();
         }
         finally {
-            actuateLightAfterCapture();
+            actuateLightAfterCapture(null);
         }
     }
 
@@ -1069,7 +1069,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
     }
 
-    protected static void actuateLight(Actuator lightActuator, Object light) throws Exception {
+    protected static void actuateLight(Actuator lightActuator, boolean light) throws Exception {
         // Make sure it is actuated in a machine task, but only if the machine is enabled.
         Configuration.get().getMachine().executeIfEnabled(() -> {
             // Only actuate a light when the current state is unknown or different. 
@@ -1082,7 +1082,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     @Override
-    public void actuateLightBeforeCapture(Object light) throws Exception {
+    public void actuateLightBeforeCapture(Actuator actuator) throws Exception {
         // Anti-glare: switch off opposite looking cameras.
         for (Camera camera : Configuration.get().getMachine().getAllCameras()) {
             if (camera != this
@@ -1090,32 +1090,44 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                     && ((AbstractCamera) camera).isAntiGlareLightOff() 
                     && camera.getLooking() != this.getLooking()) {
                 Actuator lightActuator = camera.getLightActuator();
-                if (lightActuator != null 
-                        && lightActuator.isActuated()) {
-                    AbstractActuator.assertOnOffDefined(lightActuator);
-                    actuateLight(lightActuator, lightActuator.getDefaultOffValue());
+                if (lightActuator != null) {
+                    boolean active = false;
+                    try {
+                        active = (boolean) lightActuator.getLastActuationValue();
+                    } catch (Throwable ignore) {
+                        Logger.error("Can't get listActuator last value");
+                        //ignore
+                    }
+                    if (active) {
+                        actuateLight(lightActuator, false);
+                    }
                 }
             }
         }
 
-        if (isBeforeCaptureLightOn()) {
-            Actuator lightActuator = getLightActuator();
-            if (lightActuator != null) {
-                AbstractActuator.assertOnOffDefined(lightActuator);
-                actuateLight(lightActuator, 
-                        (light != null ? light : lightActuator.getDefaultOnValue()));
+        if (actuator == null) {
+            if (isBeforeCaptureLightOn()) {
+                Actuator lightActuator = getLightActuator();
+                if (lightActuator != null) {
+                    actuateLight(lightActuator, true);
+                }
             }
+        } else {
+            actuateLight(actuator, true);
         }
     }
 
     @Override
-    public void actuateLightAfterCapture() throws Exception {
-        if (isAfterCaptureLightOff()) {
-            Actuator lightActuator = getLightActuator();
-            if (lightActuator != null) {
-                AbstractActuator.assertOnOffDefined(lightActuator);
-                actuateLight(lightActuator, lightActuator.getDefaultOffValue());
+    public void actuateLightAfterCapture(Actuator actuator) throws Exception {
+        if (actuator == null) {
+            if (isAfterCaptureLightOff()) {
+                Actuator lightActuator = getLightActuator();
+                if (lightActuator != null) {
+                    actuateLight(lightActuator, false);
+                }
             }
+        } else {
+            actuateLight(actuator, false);
         }
     }
 

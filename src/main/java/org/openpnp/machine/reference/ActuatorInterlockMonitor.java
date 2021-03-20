@@ -352,13 +352,17 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
                     if (beforeMove 
                             ^ (interlockType == InterlockType.ConfirmInRangeAfterAxesMove)) {
                         // Read the confirmation sensor.
-                        Double confirmation = Double.parseDouble(actuator.read());
-                        // Compare against the good range.
-                        if (confirmation < confirmationGoodMin) {
-                            throw new Exception(actuator.getName()+" interlock confirmation below good range: "+confirmation+" < "+confirmationGoodMin); 
+                        Object confirmation = actuator.read();
+                        if (!(confirmation instanceof Double)) {
+                            throw new Exception(actuator.getName()+" interlock confirmation invalid type");
                         }
-                        if (confirmation > confirmationGoodMax) {
-                            throw new Exception(actuator.getName()+" interlock confirmation above good range: "+confirmation+" > "+confirmationGoodMax); 
+                        Double confirmationDouble = (Double) confirmation;
+                        // Compare against the good range.
+                        if (confirmationDouble < confirmationGoodMin) {
+                            throw new Exception(actuator.getName()+" interlock confirmation below good range: "+confirmationDouble+" < "+confirmationGoodMin);
+                        }
+                        if (confirmationDouble > confirmationGoodMax) {
+                            throw new Exception(actuator.getName()+" interlock confirmation above good range: "+confirmationDouble+" > "+confirmationGoodMax);
                         }
                     }
                     break;
@@ -367,12 +371,16 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
                     if (beforeMove 
                             ^ (interlockType == InterlockType.ConfirmMatchAfterAxesMove)) {
                         // Read the confirmation sensor.
-                        String confirmation = actuator.read();
+                        Object confirmation = actuator.read();
+                        if (!(confirmation instanceof String)) {
+                            throw new Exception(actuator.getName()+" interlock confirmation invalid type");
+                        }
+                        String confirmationString = (String) confirmation;
                         // Compare against the pattern.
-                        if (!(confirmationByRegex ? 
-                                confirmation.matches(confirmationPattern) 
-                                : confirmation.trim().equals(confirmationPattern.trim()))) {
-                            throw new Exception(actuator.getName()+" interlock confirmation does not match: "+confirmation+" vs. "+confirmationPattern); 
+                        if (!(confirmationByRegex ?
+                                confirmationString.matches(confirmationPattern)
+                                : confirmationString.trim().equals(confirmationPattern.trim()))) {
+                            throw new Exception(actuator.getName()+" interlock confirmation does not match: "+confirmationString+" vs. "+confirmationPattern);
                         }
                     }
                     break;

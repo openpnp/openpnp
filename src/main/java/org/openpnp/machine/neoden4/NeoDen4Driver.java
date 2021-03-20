@@ -612,59 +612,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         motionPending = false;
     }
 
-    @Override
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
-        switch (actuator.getName()) {
-            case ACT_N1_VACUUM:
-            case ACT_N2_VACUUM:
-            case ACT_N3_VACUUM:
-            case ACT_N4_VACUUM: {
-                if (on) {
-                    actuate(actuator, -128.0);
-                } else {
-                    actuate(actuator, 20.0);
-                    actuate(actuator, 0.0);
-                }
-                break;
-            }
-            case ACT_N1_BLOW:
-            case ACT_N2_BLOW:
-            case ACT_N3_BLOW:
-            case ACT_N4_BLOW: {
-                if (on) {
-                    actuate(actuator, 127.0);
-                } else {
-                    actuate(actuator, 0.0);
-                }
-                break;
-            }
-            case "Lights-Down": {
-                if (on) {
-                    actuate(actuator, 3.0);
-                } else {
-                    actuate(actuator, 0.0);
-                }
-              break;
-            }
-            case "Lights-Up": {
-                if (on) {
-                    actuate(actuator, 2.0);
-                } else {
-                    actuate(actuator, 0.0);
-                }
-                break;
-            }
-            case "Rails": {
-                if (on) {
-                    actuate(actuator, 25.0);
-                } else {
-                    actuate(actuator, 0.0);
-                }
-                break;
-            }
-        }
-    }
-
     private void stopRail() throws Exception {
         byte[] b = new byte[8];
         write(0x47);
@@ -766,71 +713,124 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value) throws Exception {
-        switch (actuator.getName()) {
-            case ACT_N1_BLOW:
-            case ACT_N1_VACUUM: {
-                setAirParameters(1, value);
-                break;
-            }
-            case ACT_N2_BLOW:
-            case ACT_N2_VACUUM: {
-                setAirParameters(2, value);
-                break;
-            }
-            case ACT_N3_BLOW:
-            case ACT_N3_VACUUM: {
-                setAirParameters(3, value);
-                break;
-            }
-            case ACT_N4_BLOW:
-            case ACT_N4_VACUUM: {
-                setAirParameters(4, value);
-                break;
-            }
-            case "Lights-Down": {
-                write(0x44);
-                expect(0x08);
-                
-                write(0xc4);
-                expect(0x00);
-                
-                byte[] b = new byte[8];
-                b[0] = (byte) value;
-                writeWithChecksum(b);
-                
-                pollFor(0x04,  0x40);
-              break;
-            }
-            case "Lights-Up": {
-                write(0x47);
-                expect(0x0b);
-                
-                write(0xc7);
-                expect(0x03);
-                
-                byte[] b = new byte[8];
-                b[4] = (byte) value;
-                writeWithChecksum(b);
-                
-                pollFor(0x07,  0x43);
-                break;
-            }
-            case "Rails": {
-                if ((int)value == 0) {
-                  stopRail();
-                } else if (value > 0) {
-                    stopRail();
-                    setRailSpeed((byte)value);
-                    forwardRail();
+    public void actuate(ReferenceActuator actuator, Object rawValue) throws Exception {
+        if (rawValue instanceof Boolean) {
+            boolean on = (boolean) rawValue;
+            switch (actuator.getName()) {
+                case ACT_N1_VACUUM:
+                case ACT_N2_VACUUM:
+                case ACT_N3_VACUUM:
+                case ACT_N4_VACUUM: {
+                    if (on) {
+                        actuate(actuator, -128.0);
+                    } else {
+                        actuate(actuator, 20.0);
+                        actuate(actuator, 0.0);
+                    }
+                    break;
                 }
-                else {
-                    stopRail();
-                    setRailSpeed((byte)value);
-                    reverseRail();
+                case ACT_N1_BLOW:
+                case ACT_N2_BLOW:
+                case ACT_N3_BLOW:
+                case ACT_N4_BLOW: {
+                    if (on) {
+                        actuate(actuator, 127.0);
+                    } else {
+                        actuate(actuator, 0.0);
+                    }
+                    break;
                 }
-                
-              break;
+                case "Lights-Down": {
+                    if (on) {
+                        actuate(actuator, 3.0);
+                    } else {
+                        actuate(actuator, 0.0);
+                    }
+                    break;
+                }
+                case "Lights-Up": {
+                    if (on) {
+                        actuate(actuator, 2.0);
+                    } else {
+                        actuate(actuator, 0.0);
+                    }
+                    break;
+                }
+                case "Rails": {
+                    if (on) {
+                        actuate(actuator, 25.0);
+                    } else {
+                        actuate(actuator, 0.0);
+                    }
+                    break;
+                }
+            }
+        } else if (rawValue instanceof Double) {
+            double value = (double) rawValue;
+            switch (actuator.getName()) {
+                case ACT_N1_BLOW:
+                case ACT_N1_VACUUM: {
+                    setAirParameters(1, value);
+                    break;
+                }
+                case ACT_N2_BLOW:
+                case ACT_N2_VACUUM: {
+                    setAirParameters(2, value);
+                    break;
+                }
+                case ACT_N3_BLOW:
+                case ACT_N3_VACUUM: {
+                    setAirParameters(3, value);
+                    break;
+                }
+                case ACT_N4_BLOW:
+                case ACT_N4_VACUUM: {
+                    setAirParameters(4, value);
+                    break;
+                }
+                case "Lights-Down": {
+                    write(0x44);
+                    expect(0x08);
+
+                    write(0xc4);
+                    expect(0x00);
+
+                    byte[] b = new byte[8];
+                    b[0] = (byte) value;
+                    writeWithChecksum(b);
+
+                    pollFor(0x04, 0x40);
+                    break;
+                }
+                case "Lights-Up": {
+                    write(0x47);
+                    expect(0x0b);
+
+                    write(0xc7);
+                    expect(0x03);
+
+                    byte[] b = new byte[8];
+                    b[4] = (byte) value;
+                    writeWithChecksum(b);
+
+                    pollFor(0x07, 0x43);
+                    break;
+                }
+                case "Rails": {
+                    if ((int) value == 0) {
+                        stopRail();
+                    } else if (value > 0) {
+                        stopRail();
+                        setRailSpeed((byte) value);
+                        forwardRail();
+                    } else {
+                        stopRail();
+                        setRailSpeed((byte) value);
+                        reverseRail();
+                    }
+
+                    break;
+                }
             }
         }
     }
@@ -853,23 +853,23 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     @Override
-    public String actuatorRead(ReferenceActuator actuator) throws Exception {
+    public Object actuatorRead(ReferenceActuator actuator, Object parameter) throws Exception {
         switch (actuator.getName()) {
             case ACT_N1_BLOW:
             case ACT_N1_VACUUM: {
-                return Integer.toString(getNozzleAirValue(0));
+                return getNozzleAirValue(0);
             }
             case ACT_N2_BLOW:
             case ACT_N2_VACUUM:  {
-                return Integer.toString(getNozzleAirValue(1));
+                return getNozzleAirValue(1);
             }
             case ACT_N3_BLOW:
             case ACT_N3_VACUUM:  {
-                return Integer.toString(getNozzleAirValue(2));
+                return getNozzleAirValue(2);
             }
             case ACT_N4_BLOW:
             case ACT_N4_VACUUM:  {
-                return Integer.toString(getNozzleAirValue(3));
+                return getNozzleAirValue(3);
             }
         }
         return null;

@@ -541,18 +541,22 @@ public class SimulationModeMachine extends ReferenceMachine {
     public void fireMachineActuatorActivity(Actuator actuator) {
         super.fireMachineActuatorActivity(actuator);
         ActuatorHistory history = getActuatorHistory(actuator);
-        history.put(NanosecondTime.getRuntimeSeconds(), actuator.isActuated());
+        try {
+            history.put(NanosecondTime.getRuntimeSeconds(), actuator.getLastActuationValue());
+        } catch (Exception e) {
+            Logger.error("Can't put actuator value in history");
+        }
     }
 
     private static class ActuatorHistory  {
-        private TreeMap<Double, Boolean> stateHistory = new TreeMap<>();
+        private TreeMap<Double, Object> stateHistory = new TreeMap<>();
 
-        public void put(double t, boolean actuated) {
-            stateHistory.put(t, actuated);
+        public void put(double t, Object value) {
+            stateHistory.put(t, value);
         }
 
-        public boolean getActuationAt(double t) {
-            Entry<Double, Boolean> state = stateHistory.floorEntry(t);
+        public Object getActuationAt(double t) {
+            Entry<Double, Object> state = stateHistory.floorEntry(t);
             if (state != null) {
                 while (stateHistory.firstKey() < state.getKey() - 30.0) {
                     // Remove ancient history.
@@ -580,7 +584,8 @@ public class SimulationModeMachine extends ReferenceMachine {
             Actuator lightActuator = camera.getLightActuator();
             if (lightActuator != null) {
                 ActuatorHistory actuatorHistory = machine.getActuatorHistory(lightActuator);
-                if (!actuatorHistory.getActuationAt(NanosecondTime.getRuntimeSeconds() - machine.getSimulatedCameraLag())) {
+                Object value = actuatorHistory.getActuationAt(NanosecondTime.getRuntimeSeconds() - machine.getSimulatedCameraLag());
+                if (Boolean.FALSE.equals(value)) {
                     // Shade the view. 
                     gFrame.setColor(new Color(0, 0, 0, 200));
                     gFrame.fillRect(0, 0, width, height);

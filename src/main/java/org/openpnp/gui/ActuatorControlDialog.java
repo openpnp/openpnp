@@ -2,6 +2,7 @@ package org.openpnp.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Objects;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -11,9 +12,10 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
-import org.openpnp.gui.support.ActuatorProfilesComboBoxModel;
+import org.jdesktop.beansbinding.Converter;
+import org.openpnp.gui.support.ActuatorEnumComboBoxModel;
+import org.openpnp.gui.support.Converters;
 import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.util.UiUtils;
 
@@ -33,13 +35,10 @@ public class ActuatorControlDialog extends JDialog {
     private JButton setBtn;
     private JLabel lblRead;
     private JButton readBtn;
-    private JButton readWithDoubleBtn;
     private JButton closeBtn;
-    private JComboBox profile;
-    private JButton setProfileBtn;
-    private JLabel lblSetProfile;
-    private JTextField withDoubleTf;
-    private JLabel lblWith;
+    private JComboBox valueComboBox;
+    private JButton setValueBtn;
+    private JLabel lblSetValue;
 
     public ActuatorControlDialog(Actuator actuator) {
         super(MainFrame.get(), actuator.getHead() == null ? actuator.getName()
@@ -81,8 +80,7 @@ public class ActuatorControlDialog extends JDialog {
         onBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
-                    AbstractActuator.assertOnOffDefined(actuator);
-                    actuator.actuate(actuator.getDefaultOnValue());
+                    actuator.actuate(true);
                 });
             }
         });
@@ -92,8 +90,7 @@ public class ActuatorControlDialog extends JDialog {
         offBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
-                    AbstractActuator.assertOnOffDefined(actuator);
-                    actuator.actuate(actuator.getDefaultOffValue());
+                    actuator.actuate(false);
                 });
             }
         });
@@ -109,28 +106,29 @@ public class ActuatorControlDialog extends JDialog {
         setBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
-                    // Use the generic Object method to interpret the value according to the Actuator.valueType.
-                    actuator.actuate((Object)valueTf.getText());
+                    // Use the generic Object method to interpret the value according to the actuator.valueClass.
+                    Converter<?, String> converter = Converters.getConverter(actuator.getValueClass());
+                    actuator.actuate(converter.convertReverse(valueTf.getText()));
                 });
             }
         });
         getContentPane().add(setBtn, "8, 4");
 
-        lblSetProfile = new JLabel("Set Profile");
-        getContentPane().add(lblSetProfile, "2, 5, right, default");
+        lblSetValue = new JLabel("Set Value");
+        getContentPane().add(lblSetValue, "2, 5, right, default");
 
-        profile = new JComboBox(new ActuatorProfilesComboBoxModel((AbstractActuator) actuator));
-        getContentPane().add(profile, "4, 5, 3, 1, fill, default");
+        valueComboBox = new JComboBox(new ActuatorEnumComboBoxModel((AbstractActuator) actuator));
+        getContentPane().add(valueComboBox, "4, 5, 3, 1, fill, default");
 
-        setProfileBtn = new JButton("Set");
-        setProfileBtn.addActionListener(new ActionListener() {
+        setValueBtn = new JButton("Set");
+        setValueBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
-                    actuator.actuate(profile.getSelectedItem());
+                    actuator.actuate(valueComboBox.getSelectedItem());
                 });
             }
         });
-        getContentPane().add(setProfileBtn, "8, 5");
+        getContentPane().add(setValueBtn, "8, 5");
 
         lblRead = new JLabel("Read Value");
         getContentPane().add(lblRead, "2, 7, right, default");
@@ -143,30 +141,13 @@ public class ActuatorControlDialog extends JDialog {
         readBtn.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
-                    String s = actuator.read();
-                    readTf.setText(s == null ? "" : s);
+                    Object s = actuator.read();
+                    Converter<Object, String> converter = Converters.getConverter(actuator.getValueClass());
+                    readTf.setText(Objects.toString(converter.convertForward(s), ""));
                 });
             }
         });
         getContentPane().add(readBtn, "8, 7");
-
-        readWithDoubleBtn = new JButton("Read with Double");
-        readWithDoubleBtn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.submitUiMachineTask(() -> {
-                    String s = actuator.read(Double.parseDouble(withDoubleTf.getText()));
-                    readTf.setText(s == null ? "" : s);
-                });
-            }
-        });
-
-        lblWith = new JLabel("With");
-        getContentPane().add(lblWith, "2, 9, right, default");
-
-        withDoubleTf = new JTextField();
-        getContentPane().add(withDoubleTf, "4, 9, 3, 1, fill, default");
-        withDoubleTf.setColumns(10);
-        getContentPane().add(readWithDoubleBtn, "8, 9");
 
         closeBtn = new JButton("Close");
         closeBtn.addActionListener(new ActionListener() {
@@ -180,8 +161,8 @@ public class ActuatorControlDialog extends JDialog {
 
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-                if (evt.getPropertyName().equals("valueType")) {
-                    adaptDialog();            
+                if (evt.getPropertyName().equals("valueClass")) {
+                    adaptDialog();
                 }
             }
         });
@@ -190,21 +171,19 @@ public class ActuatorControlDialog extends JDialog {
     }
 
     private void adaptDialog() {
-        boolean isBoolean = actuator.getValueType() == ActuatorValueType.Boolean;
-        boolean isProfiled = actuator.getValueType() == ActuatorValueType.Profile;
+        boolean isBoolean = Boolean.class.isAssignableFrom(actuator.getValueClass());
+        boolean isEnum = actuator.getValues() != null;
 
-        boolean showBoolean = (actuator.getDefaultOffValue() != null && actuator.getDefaultOnValue() != null
-                && !actuator.getDefaultOffValue().equals(actuator.getDefaultOnValue()));
-        lblBoolean.setVisible(showBoolean);
-        onBtn.setVisible(showBoolean);
-        offBtn.setVisible(showBoolean);
+        lblBoolean.setVisible(isBoolean);
+        onBtn.setVisible(isBoolean);
+        offBtn.setVisible(isBoolean);
 
-        lblValue.setVisible(!(isBoolean || isProfiled));
-        valueTf.setVisible(!(isBoolean || isProfiled));
-        setBtn.setVisible(!(isBoolean || isProfiled));
+        lblValue.setVisible(!(isBoolean || isEnum));
+        valueTf.setVisible(!(isBoolean || isEnum));
+        setBtn.setVisible(!(isBoolean || isEnum));
 
-        lblSetProfile.setVisible(isProfiled);
-        profile.setVisible(isProfiled);
-        setProfileBtn.setVisible(isProfiled);
+        lblSetValue.setVisible(isEnum);
+        valueComboBox.setVisible(isEnum);
+        setValueBtn.setVisible(isEnum);
     }
 }

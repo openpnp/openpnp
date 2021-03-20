@@ -20,8 +20,6 @@
 
 package org.openpnp.machine.reference.wizards;
 
-import java.util.List;
-
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -29,11 +27,6 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.machine.reference.HttpActuator;
-import org.openpnp.machine.reference.camera.SimulatedUpCamera;
-import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Severity;
-import org.openpnp.spi.Actuator.ActuatorValueType;
-import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.base.AbstractMachine;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -156,7 +149,7 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
 
     protected void adaptDialog() {
         super.adaptDialog();
-        boolean isBoolean = (valueType.getSelectedItem() == ActuatorValueType.Boolean);
+        boolean isBoolean = (Boolean.class.isAssignableFrom((Class<?>) valueClasses.getSelectedItem()));
         lblOnUrl.setVisible(isBoolean);
         onUrlTf.setVisible(isBoolean);
         lblOffUrl.setVisible(isBoolean);

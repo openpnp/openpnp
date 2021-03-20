@@ -129,8 +129,8 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
                     System.out.println("    Firmware Version: " + deviceInformation.getFirmwareVersion());
 
                     MediaDevices media = nvt.getMedia();
-                    Profile profile = findJPEGProfile(devices);
-                    String profileToken = profile.getToken();
+                    Profile mapping = findJPEGProfile(devices);
+                    String profileToken = mapping.getToken();
 
                     VideoEncoderConfigurationOptions videoEncoderConfigurationOptions = media
                             .getVideoEncoderConfigurationOptions(profileToken);
@@ -163,7 +163,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
                     }
 
                     if (selectedResolutionIndex >= 0) {
-                        VideoEncoderConfiguration videoEncoderConfiguration = profile.getVideoEncoderConfiguration();
+                        VideoEncoderConfiguration videoEncoderConfiguration = mapping.getVideoEncoderConfiguration();
 
                         VideoResolution jpegResolution = jpegResolutions.get(selectedResolutionIndex);
                         videoEncoderConfiguration.setResolution(jpegResolution);
@@ -179,7 +179,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
                                 videoEncoderConfigurationOptions.getExtension().getJPEG().getBitrateRange().getMax());
                         videoEncoderConfiguration.setRateControl(videoRateControl);
 
-                        profile.setVideoEncoderConfiguration(videoEncoderConfiguration);
+                        mapping.setVideoEncoderConfiguration(videoEncoderConfiguration);
                         media.setVideoEncoderConfiguration(videoEncoderConfiguration);
                     }
 
@@ -239,11 +239,11 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
     private Profile findJPEGProfile(InitialDevices devices) throws Exception {
         List<Profile> profiles = devices.getProfiles();
 
-        for (Profile profile : profiles) {
-            VideoEncoderConfiguration videoEncoderConfiguration = profile.getVideoEncoderConfiguration();
+        for (Profile mapping : profiles) {
+            VideoEncoderConfiguration videoEncoderConfiguration = mapping.getVideoEncoderConfiguration();
             VideoEncoding videoEncoding = videoEncoderConfiguration.getEncoding();
             if (videoEncoding == VideoEncoding.JPEG) {
-                return profile;
+                return mapping;
             }
         }
 
@@ -259,8 +259,8 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
         try {
             InitialDevices devices = nvt.getDevices();
             MediaDevices media = nvt.getMedia();
-            Profile profile = findJPEGProfile(devices);
-            String profileToken = profile.getToken();
+            Profile mapping = findJPEGProfile(devices);
+            String profileToken = mapping.getToken();
 
             VideoEncoderConfigurationOptions videoEncoderConfigurationOptions = media
                     .getVideoEncoderConfigurationOptions(profileToken);

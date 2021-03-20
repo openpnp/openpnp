@@ -213,11 +213,11 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public void actuateLightBeforeCapture(Object light) throws Exception {
+        public void actuateLightBeforeCapture(Actuator actuator) throws Exception {
         }
 
         @Override
-        public void actuateLightAfterCapture() throws Exception {
+        public void actuateLightAfterCapture(Actuator actuator) throws Exception {
         }
 
         @Override

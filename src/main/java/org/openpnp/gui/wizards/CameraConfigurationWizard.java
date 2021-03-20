@@ -475,15 +475,15 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
     protected void setActuatorModel(AbstractMachine machine, AbstractCamera camera) {
         if (camera.getHead() == null) {
-            lightActuator.setModel(new ActuatorsComboBoxModel(machine));
+            lightActuator.setModel(new ActuatorsComboBoxModel(machine, Boolean.class));
             allowMachineActuators.setVisible(false);
             lblAllowMachineActuators.setVisible(false);
         }
         else if (allowMachineActuators.isSelected()) {
-            lightActuator.setModel(new ActuatorsComboBoxModel(machine, camera.getHead()));
+            lightActuator.setModel(new ActuatorsComboBoxModel(machine, camera.getHead(), Boolean.class));
         }
         else {
-            lightActuator.setModel(new ActuatorsComboBoxModel(camera.getHead()));
+            lightActuator.setModel(new ActuatorsComboBoxModel(camera.getHead(), Boolean.class));
         }
     }
 

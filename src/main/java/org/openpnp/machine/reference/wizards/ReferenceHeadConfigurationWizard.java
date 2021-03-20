@@ -174,7 +174,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panel_2.add(lblNewLabel_4, "2, 2, right, default");
         
         comboBoxZProbeActuator = new JComboBox();
-        comboBoxZProbeActuator.setModel(new ActuatorsComboBoxModel(head));
+        comboBoxZProbeActuator.setModel(new ActuatorsComboBoxModel(head, Double.class));
         panel_2.add(comboBoxZProbeActuator, "4, 2");
         
         JPanel panel_3 = new JPanel();
@@ -193,7 +193,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panel_3.add(lblVacuumPumpActuator, "2, 2, 2, 1, right, default");
         
         comboBoxPumpActuator = new JComboBox();
-        comboBoxPumpActuator.setModel(new ActuatorsComboBoxModel(head));
+        comboBoxPumpActuator.setModel(new ActuatorsComboBoxModel(head, Boolean.class));
         panel_3.add(comboBoxPumpActuator, "4, 2, fill, default");
         
     }

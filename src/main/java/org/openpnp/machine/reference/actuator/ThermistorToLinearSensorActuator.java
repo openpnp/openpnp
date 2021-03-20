@@ -60,9 +60,12 @@ public class ThermistorToLinearSensorActuator extends ReferenceActuator {
     }
 
     @Override
-    public String read() throws Exception {
-        String s = super.read();
-        double t = Double.valueOf(s);
+    public Object read() throws Exception {
+        Object s = super.read();
+        if (!(s instanceof Double)) {
+            throw new Exception("Invalid actuator type for thermistor");
+        }
+        double t = (double) s;
         double r = temperatureToResistance(t);
         double adc = resistanceToAdc(r);
         double v = adcToVoltage(adc);

@@ -228,8 +228,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
                 if (isUserActionLightOn()) {
                     Actuator lightActuator = getLightActuator();
                     if (lightActuator != null) {
-                        AbstractActuator.assertOnOffDefined(lightActuator);
-                        actuateLight(lightActuator, lightActuator.getDefaultOnValue());
+                        actuateLight(lightActuator, true);
                     }
                 }
                 if (getPreviewFps() == 0.0) {

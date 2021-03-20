@@ -41,20 +41,20 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
     
     @Deprecated
     @Attribute(required=false)
-    protected Actuator.ActuatorValueType actuatorType = null;
+    protected Class<?> actuatorType = null;
     
     @Attribute(required=false)
-    protected double actuatorValue;
+    protected Object actuatorValue;
 
     @Attribute(required=false)
     protected String postPickActuatorName;
     
     @Deprecated
     @Attribute(required=false)
-    protected Actuator.ActuatorValueType postPickActuatorType = null;
+    protected Class<?> postPickActuatorType = null;
     
     @Attribute(required=false)
-    protected double postPickActuatorValue;
+    protected Object postPickActuatorValue;
     
     @Attribute(required=false)
     protected boolean moveBeforeFeed;
@@ -71,12 +71,12 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
                 // Migrate actuator value types.
                 if (actuatorType != null) { 
                     Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
-                    AbstractActuator.suggestValueType(actuator, actuatorType);
+                    AbstractActuator.suggestValueClass(actuator, actuatorType);
                     actuatorType = null;
                 }
                 if (postPickActuatorType != null) {
                     Actuator actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
-                    AbstractActuator.suggestValueType(actuator, postPickActuatorType);
+                    AbstractActuator.suggestValueClass(actuator, postPickActuatorType);
                     postPickActuatorType = null;
                 }
             }
@@ -99,7 +99,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         if (isMoveBeforeFeed()) {
             MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
         }
-        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
+        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueClass.
         actuator.actuate((Object)actuatorValue);
     }
     
@@ -115,7 +115,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         if (actuator == null) {
             throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
         }
-        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
+        // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueClass.
         actuator.actuate((Object)postPickActuatorValue);
     }
     
@@ -127,7 +127,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         this.actuatorName = actuatorName;
     }
 
-    public double getActuatorValue() {
+    public Object getActuatorValue() {
         return actuatorValue;
     }
 
@@ -143,7 +143,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         this.postPickActuatorName = postPickActuatorName;
     }
 
-    public double getPostPickActuatorValue() {
+    public Object getPostPickActuatorValue() {
         return postPickActuatorValue;
     }
 

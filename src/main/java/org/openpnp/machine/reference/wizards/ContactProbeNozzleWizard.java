@@ -81,7 +81,7 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         
         comboBoxContactProbeActuator = new JComboBox();
         comboBoxContactProbeActuator.setMaximumRowCount(15);
-        comboBoxContactProbeActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
+        comboBoxContactProbeActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead(), Boolean.class));
         panel.add(comboBoxContactProbeActuator, "4, 2, default, top");
     }
 

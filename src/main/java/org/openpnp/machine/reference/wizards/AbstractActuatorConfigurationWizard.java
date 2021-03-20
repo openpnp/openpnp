@@ -19,16 +19,10 @@
 
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.Color;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
-import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -43,9 +37,7 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractMachine;
 
@@ -89,16 +81,8 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
     private boolean reloadWizard;
     private JLabel lblAxisInterlock;
     private JCheckBox interlockActuator;
-    private JLabel lblValueType;
-    protected JComboBox valueType;
-    private JTextField defaultOnDouble;
-    private JLabel lblOnDouble;
-    private JLabel lblOffDouble;
-    private JTextField defaultOffDouble;
-    private JLabel lblOnString;
-    private JLabel lblOffString;
-    private JTextField defaultOnString;
-    private JTextField defaultOffString;
+    private JLabel lblValueClass;
+    protected JComboBox valueClasses;
     private JLabel lblHomingActuation;
     private JComboBox homedActuation;
     private JLabel lblEnableActuation;
@@ -277,9 +261,6 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -289,78 +270,56 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblValueType = new JLabel("Value Type");
-        lblValueType.setToolTipText("<html>\r\n<p>\r\nDetermines the primary data type of Actuator write values. \r\n</p>\r\n<ul>\r\n<li><strong>Boolean:</strong><br/>ON/OFF switching Actuator.</li>\r\n<li><strong>Double:</strong><br/>Numeric Actuator to drive scalar values.</li>\r\n<li><strong>String:</strong><br/>Textual Actuator to drive arbitrary codes and values.</li>\r\n<li><strong>Profile:</strong><br/>Multiple-choice Actuator that can define a number of named profiles<br/>\r\nand drive other Actuators.<br/>\r\nPress Apply to enable the Profiles configuration Wizard.</li>\r\n</ul>\r\n<strong>Note:</strong> the primary data type will not be enforced in the operation of the actuator.<br/>\r\nMixed type usage is still possible (for backwards compatibility). \r\n</html>");
-        generalPanel.add(lblValueType, "2, 2, right, default");
+        lblValueClass = new JLabel("Value class");
+        lblValueClass.setToolTipText("<html>\r\n<p>\r\nDetermines the primary data type of Actuator write values. \r\n</p>\r\n<ul>\r\n<li><strong>Boolean:</strong><br/>ON/OFF switching Actuator.</li>\r\n<li><strong>Double:</strong><br/>Numeric Actuator to drive scalar values.</li>\r\n<li><strong>String:</strong><br/>Textual Actuator to drive arbitrary codes and values.</li>\r\n<li><strong>Profile:</strong><br/>Multiple-choice Actuator that can define a number of named profiles<br/>\r\nand drive other Actuators.<br/>\r\nPress Apply to enable the Profiles configuration Wizard.</li>\r\n</ul>\r\n<strong>Note:</strong> the primary data type will not be enforced in the operation of the actuator.<br/>\r\nMixed type usage is still possible (for backwards compatibility). \r\n</html>");
+        generalPanel.add(lblValueClass, "2, 2, right, default");
         
-        valueType = new JComboBox(Actuator.ActuatorValueType.values());
-        valueType.addItemListener(new ItemListener() {
+        valueClasses = new JComboBox(new Class<?> [] {
+                Boolean.class,
+                Integer.class,
+                Long.class,
+                Double.class,
+                String.class
+        });
+        valueClasses.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 reloadWizard = true;
                 adaptDialog();
             }
         });
-        generalPanel.add(valueType, "4, 2, fill, default");
-        
-        lblOnDouble = new JLabel("ON Value");
-        generalPanel.add(lblOnDouble, "2, 4, right, default");
-        
-        defaultOnDouble = new JTextField();
-        generalPanel.add(defaultOnDouble, "4, 4, fill, default");
-        defaultOnDouble.setColumns(10);
-        
-        lblOffDouble = new JLabel("OFF Value");
-        generalPanel.add(lblOffDouble, "6, 4, right, default");
-        
-        defaultOffDouble = new JTextField();
-        generalPanel.add(defaultOffDouble, "8, 4, fill, default");
-        defaultOffDouble.setColumns(10);
-        
-        lblOnString = new JLabel("ON Value");
-        generalPanel.add(lblOnString, "2, 5, right, default");
-        
-        defaultOnString = new JTextField();
-        generalPanel.add(defaultOnString, "4, 5, fill, default");
-        defaultOnString.setColumns(10);
-        
-        lblOffString = new JLabel("OFF Value");
-        generalPanel.add(lblOffString, "6, 5, right, default");
-        
-        defaultOffString = new JTextField();
-        generalPanel.add(defaultOffString, "8, 5");
-        defaultOffString.setColumns(10);
-        
+        generalPanel.add(valueClasses, "4, 2, fill, default");
+
         lblMachineState = new JLabel("Machine State");
-        generalPanel.add(lblMachineState, "2, 9, right, default");
+        generalPanel.add(lblMachineState, "2, 4, right, default");
         
         lblEnableActuation = new JLabel("Enabled");
-        generalPanel.add(lblEnableActuation, "4, 9, center, default");
+        generalPanel.add(lblEnableActuation, "4, 4, center, default");
         
         lblHomingActuation = new JLabel("Homed");
         lblHomingActuation.setToolTipText("");
-        generalPanel.add(lblHomingActuation, "6, 9, center, default");
+        generalPanel.add(lblHomingActuation, "6, 4, center, default");
         
         lblDisableActuation = new JLabel("Disabled");
-        generalPanel.add(lblDisableActuation, "8, 9, center, default");
+        generalPanel.add(lblDisableActuation, "8, 4, center, default");
         
         lblMachineStateActuation = new JLabel("Actuation");
         lblMachineStateActuation.setToolTipText("<html>\r\nWhen the machine state changes, a specific actuation value can be assumed or set. \r\n</html>\r\n");
-        generalPanel.add(lblMachineStateActuation, "2, 11, right, default");
+        generalPanel.add(lblMachineStateActuation, "2, 6, right, default");
         
         enabledActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
-        generalPanel.add(enabledActuation, "4, 11, fill, default");
+        generalPanel.add(enabledActuation, "4, 6, fill, default");
         
         homedActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
-        generalPanel.add(homedActuation, "6, 11, fill, default");
+        generalPanel.add(homedActuation, "6, 6, fill, default");
         
         disabledActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
-        generalPanel.add(disabledActuation, "8, 11, fill, default");
+        generalPanel.add(disabledActuation, "8, 6, fill, default");
         
         lblIndex = new JLabel("Index");
-        generalPanel.add(lblIndex, "2, 15, right, default");
+        generalPanel.add(lblIndex, "2, 10, right, default");
         
         indexTextField = new JTextField();
-        generalPanel.add(indexTextField, "4, 15, fill, default");
+        generalPanel.add(indexTextField, "4, 10, fill, default");
         indexTextField.setColumns(10);
 
         if (actuator.getHead() == null) {
@@ -369,16 +328,15 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
     }
 
     protected void adaptDialog() {
-        boolean isDouble = (valueType.getSelectedItem() == ActuatorValueType.Double);
-        lblOnDouble.setVisible(isDouble);
-        defaultOnDouble.setVisible(isDouble);
-        lblOffDouble.setVisible(isDouble);
-        defaultOffDouble.setVisible(isDouble);
-        boolean isString = (valueType.getSelectedItem() == ActuatorValueType.String);
-        lblOnString.setVisible(isString);
-        defaultOnString.setVisible(isString);
-        lblOffString.setVisible(isString);
-        defaultOffString.setVisible(isString);
+        ReferenceActuator.MachineStateActuation[] values;
+        if(!Boolean.class.isAssignableFrom((Class<?>) valueClasses.getSelectedItem())) {
+            values = ReferenceActuator.MachineStateActuation.otherValues();
+        } else {
+            values = ReferenceActuator.MachineStateActuation.booleanValues();
+        }
+        enabledActuation.setModel(new DefaultComboBoxModel(values));
+        homedActuation.setModel(new DefaultComboBoxModel(values));
+        disabledActuation.setModel(new DefaultComboBoxModel(values));
     }
 
     @Override
@@ -409,11 +367,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         addWrappedBinding(actuator, "coordinatedAfterActuate", coordinatedAfterActuate, "selected");
         addWrappedBinding(actuator, "coordinatedBeforeRead", coordinatedBeforeRead, "selected");
 
-        addWrappedBinding(actuator, "valueType", valueType, "selectedItem");
-        addWrappedBinding(actuator, "defaultOnDouble", defaultOnDouble, "text", doubleConverter);
-        addWrappedBinding(actuator, "defaultOffDouble", defaultOffDouble, "text", doubleConverter);
-        addWrappedBinding(actuator, "defaultOnString", defaultOnString, "text");
-        addWrappedBinding(actuator, "defaultOffString", defaultOffString, "text");
+        addWrappedBinding(actuator, "valueClass", valueClasses, "selectedItem");
 
         addWrappedBinding(actuator, "enabledActuation", enabledActuation, "selectedItem");
         addWrappedBinding(actuator, "homedActuation", homedActuation, "selectedItem");

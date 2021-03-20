@@ -1,20 +1,20 @@
 /*
  * Copyright (C) 2017 Sebastian Pichelhofer <sp@apertus.org> based on reference by Jason von Nieda
  * <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -30,13 +30,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.openpnp.gui.support.Converters;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.camera.SimulatedUpCamera;
-import org.openpnp.machine.reference.driver.GcodeDriver.Line;
 import org.openpnp.machine.reference.wizards.HttpActuatorConfigurationWizard;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Severity;
-import org.openpnp.spi.Camera.Looking;
 import org.openpnp.util.TextUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
@@ -71,37 +69,24 @@ public class HttpActuator extends ReferenceActuator {
     public HttpActuator() {}
 
     @Override
-    protected void driveActuation(boolean on) throws Exception {
-        if (on && this.onUrl.isEmpty()) {
-            driveActuation("1");
+    protected void driveActuation(Object value) throws Exception {
+        if (value instanceof Boolean) {
+            boolean on = (boolean) value;
+            if ((on && !this.onUrl.isEmpty()) || ((!on) && !this.offUrl.isEmpty())) {
+                URL url = (on ?
+                        new URL(this.onUrl)
+                        : new URL(this.offUrl));
+                actuateUrl(on, url);
+                return;
+            }
         }
-        else if ((!on) && this.offUrl.isEmpty()) {
-            driveActuation("0");
-        }
-        else {
-            URL url = (on ? 
-                    new URL(this.onUrl) 
-                    : new URL(this.offUrl));
-            actuateUrl(on, url);
-        }
-    }
-
-    @Override
-    protected void driveActuation(double value) throws Exception {
-        String urlString = TextUtils.substituteVar(paramUrl, "val", value);
-        URL url = new URL(urlString);
-        actuateUrl(value, url);
-    }
-
-    @Override
-    protected void driveActuation(String value) throws Exception {
-        String urlString = TextUtils.substituteVar(paramUrl, "val", value);
+        String urlString = TextUtils.substituteVar(paramUrl, "val", Converters.getConverter(valueClass).convertForward(value));
         URL url = new URL(urlString);
         actuateUrl(value, url);
     }
 
     protected void actuateUrl(Object value, URL url) throws IOException, ProtocolException {
-        if (this.lastActuationUrl != null 
+        if (this.lastActuationUrl != null
                 && this.lastActuationUrl.equals(url.toString())) {
             // URL hasn't changed: don't bother.
             return;
@@ -129,13 +114,11 @@ public class HttpActuator extends ReferenceActuator {
     }
 
     @Override
-    public String read() throws Exception {
+    public Object read(Object value) throws Exception {
         if (isCoordinatedBeforeRead()) {
             coordinateWithMachine(false);
         }
-        
-        
-        // getDriver().actuate(this, on);
+
         URL obj = null;
         obj = new URL(this.readUrl);
 
@@ -170,7 +153,7 @@ public class HttpActuator extends ReferenceActuator {
         }
         getMachine().fireMachineHeadActivity(head);
 
-        return response.toString();
+        return Converters.getConverter(valueClass).convertReverse(response.toString());
     }
 
     @Override

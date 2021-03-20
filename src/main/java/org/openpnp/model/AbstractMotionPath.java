@@ -73,13 +73,13 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
      *  <li>Path begin/end and corners between subsequent coordinated moves are handled as zero speed and acceleration junctions.</li>
      *      
      *  <li>Multiple subsequent co-linear moves are solved as one overall move with the most restrictive limits applied.
-     *      Each partial move is then cut out from the overall profile. TODO: Moves which reach the most restrictive V max at one 
+     *      Each partial move is then cut out from the overall mapping. TODO: Moves which reach the most restrictive V max at one
      *      or both ends are re-solved with their proper V max, if higher (this is not 100% optimal but not so bad for practical 
      *      use cases).</li>
      *      
      *  <li>Coordinated moves that are followed by an uncoordinated move are handled in two ways:<br/>
      *      a) if there is an applicable s limit, the move is handled as if it extends to the limit and then cropped<br/>
-     *      b) if there is no applicable s limit, the move is handled as half-sided profile and then extended or cropped.</li>
+     *      b) if there is no applicable s limit, the move is handled as half-sided mapping and then extended or cropped.</li>
      *      
      *  <li>Coordinated moves that are preceded by an uncoordinated move are handled as in 3. (in reverse).</li>
      *   
@@ -167,7 +167,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
                 }
                 else if (MotionProfile.isCoordinated(profiles)) {
                     int lead = leadAxis[i];
-                    // This may be a sequence of multiple co-linear moves: try create a spanning profile.
+                    // This may be a sequence of multiple co-linear moves: try create a spanning mapping.
                     MotionProfile solverProfile = new MotionProfile(profiles[lead]);
                     MotionProfile [] exitProfiles = profiles;
                     for (int j = i+1; j <= last; j++) {
@@ -346,7 +346,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
                                     expandExit = true;
                                 }
                                 //                                if (solve && (expandEntry || expandExit)) {
-                                //                                    // Entry and/or exit expansion, solve using an overreaching profile.
+                                //                                    // Entry and/or exit expansion, solve using an overreaching mapping.
                                 //                                    MotionProfile solverProfile = new MotionProfile(profiles[axis]);
                                 //                                    double signum = solverProfile.profileSignum(vEffEntry, vEffExit);
                                 //                                    if (iteration > 0) {
@@ -597,7 +597,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
 
         svg.append("</svg>\n");
         try {
-            File file = File.createTempFile("profile-path-", ".svg");
+            File file = File.createTempFile("mapping-path-", ".svg");
             try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                 out.println(svg.toString());
                 System.out.println(file.toURI());

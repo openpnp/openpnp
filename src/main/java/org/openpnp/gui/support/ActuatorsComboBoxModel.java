@@ -42,6 +42,7 @@ public class ActuatorsComboBoxModel extends DefaultComboBoxModel implements Prop
     };
     private Machine actuatorsMachine;
     private Head actuatorsHead;
+    private Class<?> type;
     
     private void init() {
         addAllElements();
@@ -52,26 +53,35 @@ public class ActuatorsComboBoxModel extends DefaultComboBoxModel implements Prop
             ((AbstractModelObject) actuatorsHead).addPropertyChangeListener("actuators", this);
         }
     }
-    public ActuatorsComboBoxModel(Object actuatorsBase) {
+
+    public static Class<?> getType(Object o) {
+        return o != null? o.getClass(): null;
+    }
+
+    public ActuatorsComboBoxModel(Object actuatorsBase, Class<?> type) {
         if (actuatorsBase instanceof Head) {
             this.actuatorsHead = (Head)actuatorsBase;
         }
         else if (actuatorsBase instanceof Machine) {
             this.actuatorsMachine = (Machine)actuatorsBase;
         }
+        this.type = type;
         init();
     }
-    public ActuatorsComboBoxModel(Head actuatorsHead) {
+    public ActuatorsComboBoxModel(Head actuatorsHead, Class<?> type) {
         this.actuatorsHead = actuatorsHead;
+        this.type = type;
         init();
     }
-    public ActuatorsComboBoxModel(Machine actuatorsMachine) {
+    public ActuatorsComboBoxModel(Machine actuatorsMachine, Class<?> type) {
         this.actuatorsMachine = actuatorsMachine;
+        this.type = type;
         init();
     }
-    public ActuatorsComboBoxModel(Machine actuatorsMachine, Head actuatorsHead) {
+    public ActuatorsComboBoxModel(Machine actuatorsMachine, Head actuatorsHead, Class<?> type) {
         this.actuatorsMachine = actuatorsMachine;
         this.actuatorsHead = actuatorsHead;
+        this.type = type;
         init();
     }
 
@@ -86,7 +96,9 @@ public class ActuatorsComboBoxModel extends DefaultComboBoxModel implements Prop
         Collections.sort(actuators, comparator);
         addElement(new String());
         for (Actuator actuator : actuators) {
-            addElement(actuator.getName());
+            if (type == null || type.isAssignableFrom(actuator.getValueClass())) {
+                addElement(actuator.getName());
+            }
         }
     }
 

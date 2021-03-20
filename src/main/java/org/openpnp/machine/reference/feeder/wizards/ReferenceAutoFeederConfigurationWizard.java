@@ -33,6 +33,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.ActuatorConverter;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder;
@@ -97,7 +98,7 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         panelActuator.add(lblFeed, "2, 4, right, default");
 
         comboBoxFeedActuator = new JComboBox();
-        comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), null));
         panelActuator.add(comboBoxFeedActuator, "4, 4, fill, default");
 
         actuatorValue = new JTextField();
@@ -114,7 +115,7 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         panelActuator.add(lblPostPick, "2, 6, right, default");
 
         comboBoxPostPickActuator = new JComboBox();
-        comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), null));
         panelActuator.add(comboBoxPostPickActuator, "4, 6, fill, default");
 
         postPickActuatorValue = new JTextField();
@@ -139,14 +140,13 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
     public void createBindings() {
         super.createBindings();
 
-        DoubleConverter doubleConverter =
-                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-
         addWrappedBinding(feeder, "actuatorName", comboBoxFeedActuator, "selectedItem");
-        addWrappedBinding(feeder, "actuatorValue", actuatorValue, "text", doubleConverter);
+        addWrappedBinding(feeder, "actuatorValue", actuatorValue, "text",
+                new ActuatorConverter(() -> getActuator(feeder, "actuatorName", feeder.getActuatorName())));
 
         addWrappedBinding(feeder, "postPickActuatorName", comboBoxPostPickActuator, "selectedItem");
-        addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
+        addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text",
+                new ActuatorConverter(() -> getActuator(feeder, "actuatorName", feeder.getActuatorName())));
 
         addWrappedBinding(feeder, "moveBeforeFeed", ckBoxMoveBeforeFeed, "selected");
 
@@ -158,17 +158,12 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
-                    Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
+                Actuator actuator = getActuator(feeder, "actuatorName", feeder.getActuatorName());
+                if (actuator == null) {
                     return;
                 }
-                Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
-
-                if (actuator == null) {
-                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
-                }
-                // Use the generic Object method to interpret the value as the actuator.valueType.
-                actuator.actuate((Object)feeder.getActuatorValue());
+                // Use the generic Object method to interpret the value as the actuator.valueClass.
+                actuator.actuate(feeder.getActuatorValue());
             });
         }
     };
@@ -177,20 +172,26 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
-                    Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
+                Actuator actuator = getActuator(feeder, "postPickActuatorName", feeder.getPostPickActuatorName());
+                if (actuator == null) {
                     return;
                 }
-                Actuator actuator = Configuration.get().getMachine()
-                        .getActuatorByName(feeder.getPostPickActuatorName());
-
-                if (actuator == null) {
-                    throw new Exception(
-                            "Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
-                }
-                // Use the generic Object method to interpret the value as the actuator.valueType.
-                actuator.actuate((Object)feeder.getPostPickActuatorValue());
+                // Use the generic Object method to interpret the value as the actuator.valueClass.
+                actuator.actuate(feeder.getPostPickActuatorValue());
             });
         }
     };
+
+    private static Actuator getActuator(ReferenceAutoFeeder feeder, String fieldName, String actuatorName) throws RuntimeException {
+        if (actuatorName== null || actuatorName.equals("")) {
+            Logger.warn("No " + fieldName + " specified for feeder {}.", feeder.getName());
+            return null;
+        }
+        Actuator actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
+
+        if (actuator == null) {
+            throw new RuntimeException("Feed failed. Unable to find an actuator named " + actuatorName);
+        }
+        return actuator;
+    }
 }

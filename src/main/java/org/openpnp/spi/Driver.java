@@ -112,53 +112,24 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
     public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception;
 
     /**
-     * Actuates a machine defined object with a boolean state.
-     * 
-     * @param actuator
-     * @param on
-     * @throws Exception
-     */
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception;
-
-    /**
-     * Actuates a machine defined object with a double value.
+     * Actuates a machine defined object with a value.
      * 
      * @param actuator
      * @param value
      * @throws Exception
      */
-    public void actuate(ReferenceActuator actuator, double value) throws Exception;
-
-    /**
-     * Actuates a machine defined object with a String value.
-     * 
-     * @param actuator
-     * @param value
-     * @throws Exception
-     */
-    public default void actuate(ReferenceActuator actuator, String value) throws Exception {
+    public default void actuate(ReferenceActuator actuator, Object value) throws Exception {
     }
 
     /**
-     * Read a String value from the given Actuator.
-     * 
-     * @param actuator
-     * @return
-     * @throws Exception
-     */
-    public default String actuatorRead(ReferenceActuator actuator) throws Exception {
-        return null;
-    }
-
-    /**
-     * Read a given String value from the given Actuator.
+     * Read a given value from the given Actuator.
      * 
      * @param actuator
      * @param parameter
      * @return 
      * @throws Exception
      */
-    public default String actuatorRead(ReferenceActuator actuator, Object parameter) throws Exception {
+    public default Object actuatorRead(ReferenceActuator actuator, Object parameter) throws Exception {
         return null;
     }
 
@@ -188,7 +159,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
         /**
          * Apply axis feed-rate, acceleration and jerk limits multiplied by the proper speed factors. 
          * The Euclidean Metric is calculated to allow the machine to run faster in a diagonal.
-         * All profile motion control is left to the controller.   
+         * All mapping motion control is left to the controller.
          */
         EuclideanAxisLimits,
         /**

@@ -41,7 +41,7 @@ import org.pmw.tinylog.Logger;
 
 /**
  * The Motion represents one segment in a motion sequence. It contains the start and end location
- * along with the motion profile i.e. the jerk/acceleration/velocity over time. If the Motion is  
+ * along with the motion mapping i.e. the jerk/acceleration/velocity over time. If the Motion is
  * coordinated, it will move along a straight line between start and end. Otherwise it might sway
  * from this line due to different axis velocity/acceleration/jerk limits and/or due to entry/exit
  * momentum. 
@@ -58,7 +58,7 @@ public class Motion {
          */
         SpeedOverPrecision,
         /**
-         * The move does not have to be a straight line and profile segments do not need to 
+         * The move does not have to be a straight line and mapping segments do not need to
          * coincide in time.
          */
         UncoordinatedMotion, 
@@ -214,7 +214,7 @@ public class Motion {
     }
 
     /**
-     * Compute the limits (maximum axis velocity, acceleration, jerk) and the initial raw axis motion profile.
+     * Compute the limits (maximum axis velocity, acceleration, jerk) and the initial raw axis motion mapping.
      * @param jerkOverride 
      * @param accelerationOverride 
      * @param feedrateOverride 
@@ -590,10 +590,10 @@ public class Motion {
     }
 
     /**
-     * Get the rate function of a motion from the planned profile. 
+     * Get the rate function of a motion from the planned mapping.
      * 
      * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
-     * @param f The function to be applied to the motion profile to obtain the rate.
+     * @param f The function to be applied to the motion mapping to obtain the rate.
      * @return a Triplet with <linear, rotational, overall> Euclidean rate.
      */
     public Triplet<Double, Double, Double> getRate(Driver driver, BiFunction<ControllerAxis, MotionProfile, Double> f) {
@@ -627,7 +627,7 @@ public class Motion {
      * @see https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=823374
      * 
      * @param driver The driver for which the rate is calculated i.e. for the axes mapped to it.
-     * @param f The function to be applied to the motion profile to obtain the rate.
+     * @param f The function to be applied to the motion mapping to obtain the rate.
      * @param defaultRate
      * @return The rate in driver units per second^x
      */
@@ -660,7 +660,7 @@ public class Motion {
             return defaultFeedrate;
         }
         return getRS274NGCRate(driver,
-                (axis, profile) -> (profile.getProfileVelocity(driver.getMotionControlType())),
+                (axis, mapping) -> (mapping.getProfileVelocity(driver.getMotionControlType())),
                 defaultFeedrate); 
     }
     /**
@@ -684,7 +684,7 @@ public class Motion {
             return null;
         }
         return getRS274NGCRate(driver,
-                (axis, profile) -> (profile.getProfileAcceleration(driver.getMotionControlType())),
+                (axis, mapping) -> (mapping.getProfileAcceleration(driver.getMotionControlType())),
                 null);
     }
     /**
@@ -696,7 +696,7 @@ public class Motion {
             return null;
         }
         return getRS274NGCRate(driver,
-                (axis, profile) -> (profile.getProfileJerk(driver.getMotionControlType())),
+                (axis, mapping) -> (mapping.getProfileJerk(driver.getMotionControlType())),
                 null);
     }
 
@@ -794,7 +794,7 @@ public class Motion {
         if (MotionProfile.isCoordinated(axesProfiles)) {
             boolean hasJerk = false;
             for (MotionProfile profile : axesProfiles) {
-                if (profile.getProfileVelocity(MotionControlType.ConstantAcceleration) != 0 
+                if (profile.getProfileVelocity(MotionControlType.ConstantAcceleration) != 0
                         && !profile.isConstantAcceleration()) {
                     hasJerk = true;
                     break;
@@ -911,8 +911,8 @@ public class Motion {
         TreeSet<Double> motionIntervals = new TreeSet<>();
         intervals.add(0.);
         for (MotionProfile profile : axesProfiles) {
-            // Add all the profile times.
-            double t = profile.t[0]; 
+            // Add all the mapping times.
+            double t = profile.t[0];
             for (int i = 1; i <= MotionProfile.segments+1; i++) {
                 intervals.add(t);
                 t += profile.t[i];
@@ -1260,7 +1260,7 @@ public class Motion {
     }
 
     private double computeMaxDeltaA(Integer maxJerkSteps, ControllerAxis axis) {
-        MotionProfile profile = axesProfiles[getAxisIndex(axis)]; 
+        MotionProfile profile = axesProfiles[getAxisIndex(axis)];
         if (profile.isConstantAcceleration() || maxJerkSteps < 2) {
             return Double.POSITIVE_INFINITY; 
         }
@@ -1287,8 +1287,8 @@ public class Motion {
         double [] unitVector = MotionProfile.getUnitVector(axesProfiles);
         int leadAxis = MotionProfile.getLeadAxisIndex(unitVector);
         MotionProfile profile = axesProfiles[leadAxis];
-        double vEntry = profile.getVelocity(0);    
-        double vExit = profile.getVelocity(7);    
+        double vEntry = profile.getVelocity(0);
+        double vExit = profile.getVelocity(7);
         double time = getTime();
         // Recreate the motion with constant acceleration. 
         if (true) {
@@ -1325,7 +1325,7 @@ solve(eq, v)
             double v = 1./2*(2*s + signum*Math.sqrt(2*Math.pow(t, 2)*Math.pow(v0, 2) + 2*Math.pow(t, 2)*Math.pow(v7, 2) - 4*s*t*v0 - 4*s*t*v7 + 4*Math.pow(s, 2)))/t;
             double a;
             if (Math.abs(v) <= vmax) {
-                // Acceleration only profile, Vmax not reached.
+                // Acceleration only mapping, Vmax not reached.
                 a = (2*v - v0 - v7)/t;
             }
             else {
@@ -1376,7 +1376,7 @@ solve(eq, a)
                     profile.getVelocityMax(),
                     profile.getEntryAccelerationMax(), profile.getExitAccelerationMax(),
                     0, // no jerk 
-                    0, profile.getTimeMax(), 
+                    0, profile.getTimeMax(),
                     0);
             moderatedProfile.assertSolved();
             // Now stretch it match the time of the 3rd order motion.
@@ -1406,7 +1406,7 @@ solve(eq, a)
     }
 
     /**
-     * Creates a single move out of the motion. It just takes the nominal profile velocity, acceleration and
+     * Creates a single move out of the motion. It just takes the nominal mapping velocity, acceleration and
      * jerk limits with no regard to how the move will be executed in the controller, i.e. if the move was planned 
      * with jerk control and is then executed on a constant acceleration controller, it will not take the 
      * predicted amount of time. 

@@ -27,7 +27,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Nozzle;
@@ -40,7 +39,6 @@ import org.openpnp.util.SimpleGraph;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
     @Element
@@ -127,8 +125,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     }
                     if (blowOffActuator != null) {
                         // Type both the vacuum and the blow off actuators as Double (typical use).
-                        AbstractActuator.suggestValueType(vacuumActuator, ActuatorValueType.Double);
-                        AbstractActuator.suggestValueType(blowOffActuator, ActuatorValueType.Double);
+                        AbstractActuator.suggestValueClass(vacuumActuator, Double.class);
+                        AbstractActuator.suggestValueClass(blowOffActuator, Double.class);
                     }
                     // Migration is done.
                     version = 200;
@@ -882,7 +880,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     protected double readVacuumLevel() throws Exception {
-        return Double.parseDouble(getVacuumSenseActuator().read());
+        Object value = getVacuumSenseActuator().read();
+        if (!(value instanceof Number)) {
+            throw new NumberFormatException();
+        }
+        return ((Number)value).doubleValue();
     }
 
     protected boolean isPartOnGraphEnabled() {

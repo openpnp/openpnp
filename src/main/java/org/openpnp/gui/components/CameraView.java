@@ -921,7 +921,12 @@ public class CameraView extends JComponent implements CameraListener {
             x0++;
             y0++;
         }
-        boolean active = actuator.isActuated();
+        boolean active = false;
+        try {
+            active = (boolean) actuator.getLastActuationValue();
+        } catch (Throwable ignore) {
+            Logger.error("Can't get actuator last value");
+        }
         for (int pass = 0 ; pass < 2; pass++) {
             if (pass == 0) {
                 g2d.setStroke(new BasicStroke(active ? 4 : 4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
@@ -1599,9 +1604,13 @@ public class CameraView extends JComponent implements CameraListener {
             return;
         }
         UiUtils.submitUiMachineTask(() -> {
-            // Pass as Object for the generic behavior according to the actuator valueType.  
-            boolean state = !actuator.isActuated();
-            actuator.actuate((Object)state);
+            // Pass as Object for the generic behavior according to the actuator.valueClass.
+            try {
+                boolean state = (boolean) actuator.getLastActuationValue();
+                actuator.actuate(!state);
+            } catch (Throwable ex) {
+                throw new Exception("Can't toggle actuator", ex);
+            }
             // Note, we cannot use MovableUtils.fireTargetedUserAction(), because this itself might 
             // turn the light on.
             camera.settleAndCapture();

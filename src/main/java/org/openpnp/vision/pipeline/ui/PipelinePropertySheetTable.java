@@ -44,33 +44,18 @@ public class PipelinePropertySheetTable extends PropertySheetTable {
                 }
             }
             if (actuatorValueProperty != null) {
-                switch (actuator.getValueType()) {
-                    case Boolean:
-                        getEditorRegistry().registerEditor(actuatorValueProperty, new BooleanAsCheckBoxPropertyEditor());
-                        getRendererRegistry().registerRenderer(Object.class, new BooleanCellRenderer());
-                        getRendererRegistry().registerRenderer(String.class, new DefaultCellRenderer());
-                        break;
-                    case Double:
-                        getEditorRegistry().registerEditor(actuatorValueProperty, new DoublePropertyEditor());
-                        getRendererRegistry().registerRenderer(Object.class, new DefaultCellRenderer());
-                        break;
-                    case String:
-                        getEditorRegistry().registerEditor(actuatorValueProperty, new StringPropertyEditor());
-                        getRendererRegistry().registerRenderer(Object.class, new DefaultCellRenderer());
-                        break;
-                    case Profile:
-                        getEditorRegistry().registerEditor(actuatorValueProperty, new ActuatorProfileEditor(actuator.getProfileValues()));
-                        getRendererRegistry().registerRenderer(Object.class, new DefaultCellRenderer());
-                        break;
+                if (Boolean.class.isAssignableFrom(actuator.getValueClass())) {
+                    getEditorRegistry().registerEditor(actuatorValueProperty, new BooleanAsCheckBoxPropertyEditor());
+                    getRendererRegistry().registerRenderer(Object.class, new BooleanCellRenderer());
+                    getRendererRegistry().registerRenderer(String.class, new DefaultCellRenderer());
+                } else if (Double.class.isAssignableFrom(actuator.getValueClass())) {
+                    getEditorRegistry().registerEditor(actuatorValueProperty, new DoublePropertyEditor());
+                    getRendererRegistry().registerRenderer(Object.class, new DefaultCellRenderer());
+                } else if (String.class.isAssignableFrom(actuator.getValueClass())) {
+                    getEditorRegistry().registerEditor(actuatorValueProperty, new StringPropertyEditor());
+                    getRendererRegistry().registerRenderer(Object.class, new DefaultCellRenderer());
                 }
             }
-        }
-    }
-
-    public static class ActuatorProfileEditor extends ComboBoxPropertyEditor {
-        public ActuatorProfileEditor(String [] values) {
-            super();
-            setAvailableValues(values);
         }
     }
 }

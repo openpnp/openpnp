@@ -19,7 +19,6 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 
@@ -38,19 +37,11 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AbstractBindingListener;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.Binding;
+import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
-import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.ActuatorsComboBoxModel;
-import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
-import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.*;
 import org.openpnp.gui.support.JBindings.Wrapper;
-import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.MutableLocationProxy;
-import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.SlotSchultzFeeder;
 import org.openpnp.machine.reference.feeder.SlotSchultzFeeder.Bank;
 import org.openpnp.machine.reference.feeder.SlotSchultzFeeder.Feeder;
@@ -58,7 +49,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -67,6 +57,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.util.Objects;
 
 public class SlotSchultzFeederConfigurationWizard
 extends AbstractConfigurationWizard {
@@ -106,7 +97,7 @@ extends AbstractConfigurationWizard {
     private JTextField bankNameTf;
 
     private JComboBox feederCb;
-    private JComboBox bankCb;    
+    private JComboBox bankCb;
     private JComboBox feederPartCb;
     private JTextField fiducialPartTf;
     private JTextField xOffsetTf;
@@ -334,7 +325,7 @@ extends AbstractConfigurationWizard {
         panelActuator.add(lblGetID, "2, 6, right, default");
 
         comboBoxIdActuator = new JComboBox();
-        comboBoxIdActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxIdActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), null));
         panelActuator.add(comboBoxIdActuator, "4, 6, fill, default");
 
         btnIdActuator = new JButton(getIdActuatorAction);
@@ -348,7 +339,7 @@ extends AbstractConfigurationWizard {
         panelActuator.add(lblFeed, "2, 8, right, default");
 
         comboBoxFeedActuator = new JComboBox();
-        comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxFeedActuator, "4, 8, fill, default");
 
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
@@ -358,7 +349,7 @@ extends AbstractConfigurationWizard {
         panelActuator.add(lblPostPick, "2, 10, right, default");
 
         comboBoxPostPickActuator = new JComboBox();
-        comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxPostPickActuator, "4, 10, fill, default");
 
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
@@ -368,7 +359,7 @@ extends AbstractConfigurationWizard {
         panelActuator.add(lblFeedCount, "2, 12, right, default");
 
         comboBoxFeedCountActuator = new JComboBox();
-        comboBoxFeedCountActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxFeedCountActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxFeedCountActuator, "4, 12, fill, default");
 
         btnGetFeedCountActuator = new JButton(getFeedCountActuatorAction);
@@ -382,7 +373,7 @@ extends AbstractConfigurationWizard {
         panelActuator.add(lblClearCount, "2, 14, right, default");
 
         comboBoxClearCountActuator = new JComboBox();
-        comboBoxClearCountActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxClearCountActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxClearCountActuator, "4, 14, fill, default");
 
         btnClearCountActuator = new JButton(clearCountActuatorAction);
@@ -392,7 +383,7 @@ extends AbstractConfigurationWizard {
         panelActuator.add(lblGetPitch, "2, 16, right, default");
 
         comboBoxPitchActuator = new JComboBox();
-        comboBoxPitchActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxPitchActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxPitchActuator, "4, 16, fill, default");
 
         btnPitchActuator = new JButton(pitchActuatorAction);
@@ -406,7 +397,7 @@ extends AbstractConfigurationWizard {
         panelActuator.add(lblTogglePitch, "2, 18, right, default");
 
         comboBoxTogglePitchActuator = new JComboBox();
-        comboBoxTogglePitchActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxTogglePitchActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxTogglePitchActuator, "4, 18, fill, default");
 
         btnTogglePitchActuator = new JButton(togglePitchActuatorAction);
@@ -419,7 +410,7 @@ extends AbstractConfigurationWizard {
         panelActuator.add(lblGetStatus, "2, 20, right, default");
 
         comboBoxStatusActuator = new JComboBox();
-        comboBoxStatusActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
+        comboBoxStatusActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine(), Double.class));
         panelActuator.add(comboBoxStatusActuator, "4, 20, fill, default");
 
         btnStatusActuator = new JButton(statusActuatorAction);
@@ -714,8 +705,9 @@ extends AbstractConfigurationWizard {
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getIdActuatorName());
                 }
-                String s = actuator.read(feeder.getActuatorValue());
-                idText.setText(s == null ? "" : s);
+                Object o = actuator.read(feeder.getActuatorValue());
+                Converter<Object, String> converter = Converters.getConverter(actuator.getValueClass());
+                idText.setText(Objects.toString(converter.convertForward(o), ""));
             });
         }
     };
@@ -736,7 +728,7 @@ extends AbstractConfigurationWizard {
                 if (actuator == null) {
                     throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
                 }
-                AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                AbstractActuator.suggestValueClass(actuator, Double.class);
                 actuator.actuate(feeder.getActuatorValue());
             });
         }
@@ -760,7 +752,7 @@ extends AbstractConfigurationWizard {
                     throw new Exception(
                             "Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
                 }
-                AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                AbstractActuator.suggestValueClass(actuator, Double.class);
                 actuator.actuate(feeder.getActuatorValue());
             });
         }
@@ -784,8 +776,9 @@ extends AbstractConfigurationWizard {
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getFeedCountActuatorName());
                 }
-                String s = actuator.read(feeder.getActuatorValue());
-                feedCountValue.setText(s == null ? "" : s);
+                Object o = actuator.read(feeder.getActuatorValue());
+                Converter<Object, String> converter = Converters.getConverter(actuator.getValueClass());
+                feedCountValue.setText(Objects.toString(converter.convertForward(o), ""));
             });
         }
     };
@@ -808,7 +801,7 @@ extends AbstractConfigurationWizard {
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getClearCountActuatorName());
                 }
-                AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                AbstractActuator.suggestValueClass(actuator, Double.class);
                 actuator.actuate(feeder.getActuatorValue());
                 feedCountValue.setText("");
             });
@@ -833,8 +826,9 @@ extends AbstractConfigurationWizard {
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getPitchActuatorName());
                 }
-                String s = actuator.read(feeder.getActuatorValue());
-                pitchValue.setText(s == null ? "" : s);
+                Object o = actuator.read(feeder.getActuatorValue());
+                Converter<Object, String> converter = Converters.getConverter(actuator.getValueClass());
+                pitchValue.setText(Objects.toString(converter.convertForward(o), ""));
             });
         }
     };
@@ -857,7 +851,7 @@ extends AbstractConfigurationWizard {
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getTogglePitchActuatorName());
                 }
-                AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
+                AbstractActuator.suggestValueClass(actuator, Double.class);
                 actuator.actuate(feeder.getActuatorValue());
                 pitchActuatorAction.actionPerformed(null);
             });
@@ -882,8 +876,9 @@ extends AbstractConfigurationWizard {
                     throw new Exception(
                             "Failed, unable to find an actuator named " + feeder.getStatusActuatorName());
                 }
-                String s = actuator.read(feeder.getActuatorValue());
-                statusText.setText(s == null ? "" : s);
+                Object o = actuator.read(feeder.getActuatorValue());
+                Converter<Object, String> converter = Converters.getConverter(actuator.getValueClass());
+                statusText.setText(Objects.toString(converter.convertForward(o), ""));
             });
         }
     };
