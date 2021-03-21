@@ -1,6 +1,20 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2021-03-20
+
+## (Another) OpenCV Upgrade and Arm7 (32 Bit)
+
+The OpenCV package has been updated to a new version that has automatic builds
+for Arm7. This allows OpenPnP to work with Raspberry Pi 3 and lower. Note that openpnp-capture
+is not yet ported for Arm7, so using OpenPnPCaptureCamera will not work, but OpenCvCamera and
+others should. Support is bundled into all of the usual Linux downloads for OpenPnP.
+
+https://github.com/openpnp/opencv/pull/71
+
+Thanks @falkena!
+
+
 # 2021-03-13
 
 ## Dark Mode and Modern, Customizable Themes
