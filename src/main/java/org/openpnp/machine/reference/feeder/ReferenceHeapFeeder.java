@@ -404,19 +404,19 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         Location destination = location.add(new Location(LengthUnit.Millimeters, 0, 0, currentDepth, 0));
         switch (corner) {
             case 0: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, +1.00, -1.00, 0, 0));
+                destination = destination.add(new Location(LengthUnit.Millimeters, +1.125, -1.125, 0, 0));
                 break;
             }
             case 1: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, +1.00, +1.00, 0, 0));
+                destination = destination.add(new Location(LengthUnit.Millimeters, +1.125, +1.125, 0, 0));
                 break;
             }
             case 2: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, -1.00, +1.00, 0, 0));
+                destination = destination.add(new Location(LengthUnit.Millimeters, -1.125, +1.125, 0, 0));
                 break;
             }
             case 3: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, -1.00, -1.00, 0, 0));
+                destination = destination.add(new Location(LengthUnit.Millimeters, -1.125, -1.125, 0, 0));
                 break;
             }
         }
