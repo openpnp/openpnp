@@ -476,7 +476,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         HeapFeederHelper.dropPart(nozzle, location);
         nozzle.moveToSafeZ();
         // move up a tiny bit the "pick height"
-        lastFeedDepth -= part.getHeight().getValue() / 10;
+        lastFeedDepth -= part.getHeight().getValue() / 5;
     }
     
     public void resetFeederPipeline() {
@@ -750,6 +750,8 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 nozzle.moveToSafeZ();
                 lastHeap.moveToHeap(nozzle);
                 HeapFeederHelper.dropPart(nozzle, lastHeap.getLocation());
+                // move up a tiny bit the "pick height"
+                lastHeap.setLastFeedDepth(lastHeap.getLastFeedDepth() -lastHeap.getPart().getHeight().getValue() / 5); 
             }
 
         }
