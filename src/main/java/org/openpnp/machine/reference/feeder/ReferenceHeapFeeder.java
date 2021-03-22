@@ -329,7 +329,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             Thread.sleep(vacuumOn);
         }
         // save current value as reference value
-        double vacuumLevel = readVacuum(nozzle);
+        double vacuumLevel = (readVacuum(nozzle) + readVacuum(nozzle) + readVacuum(nozzle)) / 3.0; // average over three reads to reduce the influence of noise
         // last pick location
         nozzle.moveTo(location.add(new Location(LengthUnit.Millimeters, 0, 0, lastFeedDepth, 0)), Motion.MotionOption.SpeedOverPrecision);
         // while vacuum difference is not reached, slowly stir in the heap
