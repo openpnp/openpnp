@@ -426,7 +426,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void home(ReferenceMachine machine) throws Exception {
+    public void home(Machine machine) throws Exception {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
         // take.
         String command = getCommand(null, CommandType.HOME_COMMAND);
@@ -472,7 +472,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation axesLocation)
+    public void setGlobalOffsets(Machine machine, AxesLocation axesLocation)
             throws Exception {
         // Compose the command
         String command = getCommand(null, CommandType.SET_GLOBAL_OFFSETS_COMMAND);
@@ -482,7 +482,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             command = substituteVariable(command, "Id", head.getId());
             command = substituteVariable(command, "Name", head.getName());
             boolean isEmpty = true;
-            for (String variable : getAxisVariables(machine)) {
+            for (String variable : getAxisVariables((ReferenceMachine) machine)) {
                 ControllerAxis axis = axesLocation.getAxisByVariable(this, variable);
                 if (axis != null) {
                     if (hasVariable(command, variable)) {
@@ -637,7 +637,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
+    public void moveTo(HeadMountable hm, MoveToCommand move)
             throws Exception {
         // Get the axes that are actually moving.
         AxesLocation movedAxesLocation = move.getMovedAxesLocation();
@@ -764,7 +764,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void waitForCompletion(ReferenceHeadMountable hm, 
+    public void waitForCompletion(HeadMountable hm,
             CompletionType completionType) throws Exception {
         if (!(completionType.isUnconditionalCoordination() 
                 || isMotionPending())) {
@@ -813,11 +813,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
+    public void actuate(Actuator actuator, boolean on) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATE_BOOLEAN_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
-        command = substituteVariable(command, "Index", actuator.getIndex());
+        if (actuator instanceof ReferenceActuator) {
+            command = substituteVariable(command, "Index", ((ReferenceActuator)actuator).getIndex());
+        }
         command = substituteVariable(command, "BooleanValue", on);
         command = substituteVariable(command, "True", on ? on : null);
         command = substituteVariable(command, "False", on ? null : on);
@@ -825,28 +827,32 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value) throws Exception {
+    public void actuate(Actuator actuator, double value) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATE_DOUBLE_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
-        command = substituteVariable(command, "Index", actuator.getIndex());
+        if (actuator instanceof ReferenceActuator) {
+            command = substituteVariable(command, "Index", ((ReferenceActuator)actuator).getIndex());
+        }
         command = substituteVariable(command, "DoubleValue", value);
         command = substituteVariable(command, "IntegerValue", (int) value);
         sendGcode(command);
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, String value) throws Exception {
+    public void actuate(Actuator actuator, String value) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATE_STRING_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
-        command = substituteVariable(command, "Index", actuator.getIndex());
+        if (actuator instanceof ReferenceActuator) {
+            command = substituteVariable(command, "Index", ((ReferenceActuator)actuator).getIndex());
+        }
         command = substituteVariable(command, "StringValue", value);
         sendGcode(command);
     }
 
     @Override
-    public String actuatorRead(ReferenceActuator actuator, Object parameter) throws Exception {
+    public String actuatorRead(Actuator actuator, Object parameter) throws Exception {
         /*
          * The logic here is a little complicated. This is the only driver method that is
          * not fire and forget. In this case, we need to know if the command was serviced or not
@@ -857,7 +863,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (command != null && regex != null) {
             command = substituteVariable(command, "Id", actuator.getId());
             command = substituteVariable(command, "Name", actuator.getName());
-            command = substituteVariable(command, "Index", actuator.getIndex());
+            if (actuator instanceof ReferenceActuator) {
+                command = substituteVariable(command, "Index", ((ReferenceActuator)actuator).getIndex());
+            }
             if (parameter != null) {
                 if (parameter instanceof Double) { // Backwards compatibility
                     Double doubleParameter = (Double) parameter;
@@ -899,7 +907,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public String actuatorRead(ReferenceActuator actuator) throws Exception {
+    public String actuatorRead(Actuator actuator) throws Exception {
         return actuatorRead(actuator, null);
     }
 

@@ -21,9 +21,6 @@ package org.openpnp.spi;
 
 import java.io.Closeable;
 
-import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Length;
@@ -58,7 +55,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * @param machine
      * @throws Exception
      */
-    public void home(ReferenceMachine machine) throws Exception;
+    public void home(Machine machine) throws Exception;
 
     /**
      * Set the current physical axis positions to be reinterpreted as the specified coordinates. 
@@ -73,7 +70,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * @param axesLocation
      * @throws Exception
      */
-    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation axesLocation) throws Exception;
+    public void setGlobalOffsets(Machine machine, AxesLocation axesLocation) throws Exception;
 
     /**
      * Executes the given Motion.
@@ -84,7 +81,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * acceleration etc. as shaped by the MotionPlanner
      * @throws Exception
      */
-    public void moveTo(ReferenceHeadMountable hm, MoveToCommand moveToCommand) throws Exception;
+    public void moveTo(HeadMountable hm, MoveToCommand moveToCommand) throws Exception;
 
     /**
      * Get the momentary real-time location from the controller. This might be in mid-motion. 
@@ -109,16 +106,16 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * @param completionType The kind of completion wanted.
      * @throws Exception 
      */
-    public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception;
+    public void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception;
 
     /**
      * Actuates a machine defined object with a boolean state.
-     * 
+     *
      * @param actuator
      * @param on
      * @throws Exception
      */
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception;
+    public void actuate(Actuator actuator, boolean on) throws Exception;
 
     /**
      * Actuates a machine defined object with a double value.
@@ -127,26 +124,26 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * @param value
      * @throws Exception
      */
-    public void actuate(ReferenceActuator actuator, double value) throws Exception;
+    public void actuate(Actuator actuator, double value) throws Exception;
 
     /**
      * Actuates a machine defined object with a String value.
-     * 
+     *
      * @param actuator
      * @param value
      * @throws Exception
      */
-    public default void actuate(ReferenceActuator actuator, String value) throws Exception {
+    public default void actuate(Actuator actuator, String value) throws Exception {
     }
 
     /**
      * Read a String value from the given Actuator.
-     * 
+     *
      * @param actuator
      * @return
      * @throws Exception
      */
-    public default String actuatorRead(ReferenceActuator actuator) throws Exception {
+    public default String actuatorRead(Actuator actuator) throws Exception {
         return null;
     }
 
@@ -158,7 +155,7 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * @return 
      * @throws Exception
      */
-    public default String actuatorRead(ReferenceActuator actuator, Object parameter) throws Exception {
+    public default String actuatorRead(Actuator actuator, Object parameter) throws Exception {
         return null;
     }
 
