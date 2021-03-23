@@ -38,8 +38,10 @@ import org.openpnp.model.Motion;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.Solutions.Severity;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.base.AbstractDriver;
@@ -68,7 +70,7 @@ public class NullDriver extends AbstractDriver {
     private boolean motionPending;
 
     @Override
-    public void home(ReferenceMachine machine) throws Exception {
+    public void home(Machine machine) throws Exception {
         Logger.debug("home()");
         checkEnabled();
         if (machine instanceof SimulationModeMachine) {
@@ -88,7 +90,7 @@ public class NullDriver extends AbstractDriver {
 
 
     @Override
-    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
+    public void setGlobalOffsets(Machine machine, AxesLocation location)
             throws Exception {
         // Take only this driver's axes.
         AxesLocation newDriverLocation = location.drivenBy(this);
@@ -108,7 +110,7 @@ public class NullDriver extends AbstractDriver {
      * considerations when writing your own driver.
      */
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
+    public void moveTo(HeadMountable hm, MoveToCommand move)
             throws Exception {
         Logger.debug("moveTo({}, {}, {})", hm, move.getLocation1(), move.getFeedRatePerSecond());
         checkEnabled();
@@ -130,7 +132,7 @@ public class NullDriver extends AbstractDriver {
     }
 
     @Override
-    public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
+    public void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception {
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         while (! machine.getMotionPlanner()
                 .getMomentaryMotion(NanosecondTime.getRuntimeSeconds())
@@ -151,14 +153,14 @@ public class NullDriver extends AbstractDriver {
 
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value) throws Exception {
+    public void actuate(Actuator actuator, double value) throws Exception {
         Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
         SimulationModeMachine.simulateActuate(actuator, value, feedRateMmPerMinute > 0);
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
+    public void actuate(Actuator actuator, boolean on) throws Exception {
         Logger.debug("actuate({}, {})", actuator, on);
         checkEnabled();
 
@@ -166,7 +168,7 @@ public class NullDriver extends AbstractDriver {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, String value) throws Exception {
+    public void actuate(Actuator actuator, String value) throws Exception {
         Logger.debug("actuate({}, {})", actuator, value);
         checkEnabled();
         if (feedRateMmPerMinute > 0) {
@@ -175,7 +177,7 @@ public class NullDriver extends AbstractDriver {
     }
 
     @Override
-    public String actuatorRead(ReferenceActuator actuator) throws Exception {
+    public String actuatorRead(Actuator actuator) throws Exception {
         return Math.random() + "";
     }
 

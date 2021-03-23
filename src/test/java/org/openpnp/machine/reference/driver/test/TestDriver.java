@@ -6,14 +6,14 @@ import javax.swing.Action;
 import javax.swing.Icon;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Motion.MoveToCommand;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.PropertySheetHolder;
@@ -31,12 +31,12 @@ public class TestDriver extends AbstractDriver implements Driver {
     }
 
     @Override
-    public void home(ReferenceMachine machine) throws Exception {
+    public void home(Machine machine) throws Exception {
         delegate.home(machine);
     }
 
     @Override
-    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
+    public void setGlobalOffsets(Machine machine, AxesLocation location)
             throws Exception {
         delegate.setGlobalOffsets(machine, location);
     }
@@ -47,7 +47,7 @@ public class TestDriver extends AbstractDriver implements Driver {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
+    public void moveTo(HeadMountable hm, MoveToCommand move)
             throws Exception {
         
         // Take only this driver's axes.
@@ -63,12 +63,12 @@ public class TestDriver extends AbstractDriver implements Driver {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
+    public void actuate(Actuator actuator, boolean on) throws Exception {
         delegate.actuate(actuator, on);
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value) throws Exception {
+    public void actuate(Actuator actuator, double value) throws Exception {
         delegate.actuate(actuator, value);
     }
 
@@ -84,33 +84,33 @@ public class TestDriver extends AbstractDriver implements Driver {
         }
 
         @Override
-        public void home(ReferenceMachine machine) throws Exception {
+        public void home(Machine machine) throws Exception {
 
         }
 
         @Override
-        public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
+        public void setGlobalOffsets(Machine machine, AxesLocation location)
                 throws Exception {
         }
- 
+
         @Override
         public AxesLocation getReportedLocation(long timeout) throws Exception {
             return null;
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
+        public void moveTo(HeadMountable hm, MoveToCommand move)
                 throws Exception {
 
         }
 
         @Override
-        public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
+        public void actuate(Actuator actuator, boolean on) throws Exception {
 
         }
 
         @Override
-        public void actuate(ReferenceActuator actuator, double value) throws Exception {
+        public void actuate(Actuator actuator, double value) throws Exception {
 
         }
 
@@ -179,7 +179,7 @@ public class TestDriver extends AbstractDriver implements Driver {
         }
 
         @Override
-        public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
+        public void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception {
         }
 
         @Override
@@ -249,7 +249,7 @@ public class TestDriver extends AbstractDriver implements Driver {
     }
 
     @Override
-    public void waitForCompletion(ReferenceHeadMountable hm, CompletionType completionType) throws Exception {
+    public void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception {
     }
 
     @Override
