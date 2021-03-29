@@ -1,0 +1,1 @@
+Script Actuators are great when you need to ask the machine to make movements which are not part of the standard OpenPnP build.
