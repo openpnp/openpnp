@@ -119,14 +119,15 @@ public class ReferenceBottomVision implements PartAlignment {
         Location nozzleLocation = wantedLocation;
         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
         final Location center = new Location(maxLinearOffset.getUnits());
-
+        RotatedRect rect;
+        
         try (CvPipeline pipeline = partSettings.getPipeline()) {
 
             // The running, iterative offset.
             Location offsets = new Location(nozzleLocation.getUnits());
             // Try getting a good fix on the part in multiple passes.
             for(int pass = 0;;) {
-                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+                rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
                 camera=(Camera)pipeline.getProperty("camera");
 
                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
@@ -179,14 +180,17 @@ public class ReferenceBottomVision implements PartAlignment {
                             offsets, Math.abs(angleOffset), getMaxAngularOffset());
                 }
                 else {
-                	if(partSizeCheck(part, partSettings, rect, camera)) {
-                        // We have a good enough fix - go on with that.
                         break;                		
-                	}
                 }
 
                 // Not a good enough fix - try again with corrected position.
                 nozzle.moveTo(nozzleLocation);
+            }
+            if (!partSizeCheck(part, partSettings, rect, camera) ) {
+                throw new Exception(String.format(
+                        "ReferenceBottomVision (%s): Incorrect part size.",
+                        part.getId() 
+                        )); 
             }
             Logger.debug("Offsets accepted {}", offsets);
             // Calculate cumulative offsets over all the passes.  
@@ -274,7 +278,7 @@ public class ReferenceBottomVision implements PartAlignment {
         // Make sure width is the longest dimension
         if (checkHeight > checkWidth) {
             double height = checkHeight;
-            double width = checkHeight;
+            double width = checkWidth;
             checkWidth = height;
             checkHeight = width;
         }
@@ -302,6 +306,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
         if (measuredSize.width > pxMaxWidth) {
             Logger.debug("Package pixel width {} : limit {} : measured {}", pxWidth, pxMaxWidth, measuredSize.width);
+            return false;
         } else if (measuredSize.width < pxMinWidth) {
             Logger.debug("Package pixel width {} : limit {} : measured {}", pxWidth, pxMinWidth, measuredSize.width);
             return false;
