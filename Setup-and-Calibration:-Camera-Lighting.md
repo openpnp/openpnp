@@ -28,16 +28,6 @@ As soon as a **Light Actuator** is assigned, the Camera View will display a new 
  
 ![CameraViewLightOnOff](https://user-images.githubusercontent.com/9963310/103424966-9e2c5e80-4baf-11eb-8eac-a20844fed4e8.gif)
 
-# Related Camera Properties
-
-**Preview FPS** (frames per second) is now universally available for all the camera implementations, including the SwitcherCamera with proper channel preview (at reasonably low FPS). Note, you can set fractional FPS like **0.5** for an update every 2 seconds. The implementation has been unified and now fully supports the **0 fps** setting, where only frames explicitly captured for computer vision or for other deliberate user camera actions are shown in the Camera View. 
-
-**Suspend during tasks?** allows you to use a relatively high **Preview FPS** during manual machine control, while effectively setting it to efficient **0 FPS** during machine tasks, especially during Jobs. This is also the only reasonable setting for a SwitcherCamera with preview. 
-
-**Auto Camera View?** automatically selects the active camera in the Camera View (if another single camera was selected before). This happens on deliberate user camera actions such as positioning, jogging the camera or when computer vision captures frames or displays marked-up result images. 
-
-When both  **Suspend during tasks?** and **Auto Camera View?** are enabled, there will only be clean result images presented during a job. By only displaying one camera at a time, you get a larger preview with much better resolution. **Tip:** make sure to right-click the camera View and choose **High** or **Highest** quality rendering. 
-
 # Use in the ImageCapture Stage 
 
 Every computer vision pipeline typically contains the ImageCapture stage to capture an image from the camera:
