@@ -14,3 +14,5 @@ Add the following line so that the section now looks like:
 ```
 
 After making this change, when you start OpenPnP you will see a new tab in the Job panel called Solder Paste.
+
+Note that currently (Apr 2021), this feature was removed from OpenPnP 2.0 as it was too burdensome to support in relation to the small number of users who used this feature in 1.0.  It's currently looking for a sponsor to pick up this development again.
