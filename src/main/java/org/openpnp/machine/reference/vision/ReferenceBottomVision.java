@@ -119,7 +119,6 @@ public class ReferenceBottomVision implements PartAlignment {
         Location nozzleLocation = wantedLocation;
         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
         final Location center = new Location(maxLinearOffset.getUnits());
-        RotatedRect rect;
         
         try (CvPipeline pipeline = partSettings.getPipeline()) {
 
@@ -127,7 +126,7 @@ public class ReferenceBottomVision implements PartAlignment {
             Location offsets = new Location(nozzleLocation.getUnits());
             // Try getting a good fix on the part in multiple passes.
             for(int pass = 0;;) {
-                rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+            	RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
                 camera=(Camera)pipeline.getProperty("camera");
 
                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
@@ -167,7 +166,13 @@ public class ReferenceBottomVision implements PartAlignment {
                 Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
                         .convertToUnits(maxLinearOffset.getUnits());
                 Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
-                if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
+                if (!partSizeCheck(part, partSettings, rect, camera) ) {
+                   throw new Exception(String.format(
+                      "ReferenceBottomVision (%s): Incorrect part size.",
+                      part.getId() 
+                      )); 
+                }
+                else if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
                     Logger.debug("Offsets too large {} : center offset {} > {}", 
                             offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue()); 
                 } 
@@ -180,17 +185,12 @@ public class ReferenceBottomVision implements PartAlignment {
                             offsets, Math.abs(angleOffset), getMaxAngularOffset());
                 }
                 else {
-                        break;                		
+                   	 // We have a good enough fix - go on with that. 
+                     break;                		
                 }
-
+                
                 // Not a good enough fix - try again with corrected position.
                 nozzle.moveTo(nozzleLocation);
-            }
-            if (!partSizeCheck(part, partSettings, rect, camera) ) {
-                throw new Exception(String.format(
-                        "ReferenceBottomVision (%s): Incorrect part size.",
-                        part.getId() 
-                        )); 
             }
             Logger.debug("Offsets accepted {}", offsets);
             // Calculate cumulative offsets over all the passes.  
