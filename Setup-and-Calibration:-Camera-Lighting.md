@@ -18,10 +18,10 @@ The created **Light Actuator** can now be assigned to the camera:
 
 There are various ON and OFF actuation Options:
 
-* **Before Capture ON**: to actuate the Light Actuator before a computer vision operation captures a camera image. The happens before the [Camera Settling](/openpnp/openpnp/wiki/Camera-Settling). See the [ImageCapture Stage](#use-in-the-imagecapture-stage) section to control pipeline specific light actuation values and profiles. **NOTE:** This option should almost always be enabled. 
-* **After Capture OFF**: to actuate the Light Actuator OFF after a computer vision operation captured a camera image. 
-* **User Camera Action ON**: to actuate the Light Actuator ON when a user action is deliberately positioning or otherwise using the camera. 
-* **Anti-Glare OFF**: to prevent this camera light from blinding another camera, it is actuated OFF before any other camera is capturing an image. Only cameras looking the other way (up/down) are taken into consideration (see the **Looking** field). 
+* **Before Capture ON**: actuate the Light Actuator before computer vision captures a camera image. This happens before the [Camera Settling](/openpnp/openpnp/wiki/Camera-Settling). See the [ImageCapture Stage](#use-in-the-imagecapture-stage) section to control pipeline specific light actuation values and profiles. **NOTE:** This option should almost always be enabled. 
+* **After Capture OFF**: actuate the Light Actuator OFF after computer vision captured a camera image. 
+* **User Camera Action ON**: actuate the Light Actuator ON when a user action is deliberately positioning or otherwise using the camera. 
+* **Anti-Glare OFF**: prevent this camera light from blinding another camera, it is actuated OFF before any other camera is capturing an image. Only cameras looking the other way (up/down) are taken into consideration (see the **Looking** field). 
 
 As soon as a **Light Actuator** is assigned, the Camera View will display a new overlay light symbol in the upper right corner. It shows the camera light status and can be clicked to turn the light on or off:
  
