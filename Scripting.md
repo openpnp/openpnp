@@ -11,6 +11,8 @@ Scripts placed in the `.openpnp/scripts` directory will be automatically added t
 
 To run a script simply click it's name from the menu.
 
+Scripts can also be run as part of the machine's motion by using a special type of actuator called a **ScriptActuator**. For more detail on this feature see here [ScriptActuators](https://github.com/openpnp/openpnp/wiki/Script-Actuators)
+
 The Scripts menu also includes a Refresh Scripts item that will manually update the menu and a Open Scripts Directory item that will open the scripts directory using your computer's file manager.
 
 ## Ignoring Directories
