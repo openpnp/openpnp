@@ -14,6 +14,22 @@ You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-a
 # Test The Lights
 1. Go to Main Window -> Machine Controls -> Actuators and click the UpCamLights button. Your lights should come on. Click it again and they should turn off. If this doesn't work, adjust your Gcode settings until it does, or ask for help.
 
+# Use in the ImageCapture Stage 
+
+Every computer vision pipeline typically contains the ImageCapture stage to capture an image from the camera:
+
+![ImageCapture Stage](https://user-images.githubusercontent.com/9963310/103425063-2874c280-4bb0-11eb-9ce2-e2ce715f39a9.png)
+
+As soon as the camera has a **Light Actuator** assigned, the ImageCapture stage can control the lighting. 
+
+If the **defaultLight** property is switched on (default) the **Default ON** value of the actuator will be used to determine the lighting. If it is switched off, the **light** property comes into play.
+
+The **light** property controls the lighting for this specific pipeline (if **defaultLight** is off). The user interface responds to the value type of the actuator:
+
+![Light Property Boolean](https://user-images.githubusercontent.com/9963310/103425237-53abe180-4bb1-11eb-93f0-b212953113f5.png) ![Light Property Double](https://user-images.githubusercontent.com/9963310/103425242-61f9fd80-4bb1-11eb-949d-0c62382d5c65.png)  
+
+![Light Property Profile](https://user-images.githubusercontent.com/9963310/103425285-a7b6c600-4bb1-11eb-9ba6-b94eaa55a34c.png)
+
 # Add Lighting Control Scripts
 
 **The following is for OpenPnP 2.0 only**:
