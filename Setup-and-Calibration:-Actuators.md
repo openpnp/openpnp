@@ -156,6 +156,8 @@ The ScriptActuator can execute a script with the given value as a parameter. The
 
 ![ScriptActuator](https://user-images.githubusercontent.com/9963310/113142898-c1f15600-922b-11eb-875c-db80605e860f.png)
 
+For more info on ScriptActuators and an example click [here](https://github.com/openpnp/openpnp/wiki/Script-Actuators)
+
 ## Head Offsets
 See [Setting Head Offsets](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup#head-offsets) for the general process. It is basically the same for Actuators.
 
