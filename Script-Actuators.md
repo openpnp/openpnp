@@ -81,7 +81,7 @@ print('-------------Running South Feeder Script Complete ----------');
 
 ## Step 3 - Test the Actuator
 
-You will see that the new actuator will appear under the Scripts menu like this 
+You will see that the new script will appear under the Scripts menu like this 
 
 ![image](https://user-images.githubusercontent.com/1681591/113160044-059c8d80-9235-11eb-84eb-b7c10f9a120c.png)
 
