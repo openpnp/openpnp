@@ -48,7 +48,7 @@ The **light** property controls the lighting for this specific pipeline (if **de
 # Add Lighting Control Scripts
 As an alternative to controlling the actuators directly from OpenPnP, you can use scripts to do so. This was the only option in earlier versions of OpenPnP, so this documentation is mostly kept in order to support the older versions. 
 ___
-NOTE: Do not use this method for new machines! 
+Not recommended for new machines! 
 ___
 
 **The following is for (legacy) OpenPnP 2.0 version only, for versions 1.0 see further below.**
