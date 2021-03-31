@@ -6,3 +6,14 @@ As an example, say you want to activate a solenoid or an air cylinder as part of
 
 However, let's say your requirement is a bit more exotic.  You want to move the head in a certain direction, actuate the solenoid, wait some time, then deactivate the solenoid then move back over the pick area.  This can nicely be achieved with a script actuator in place of the regular one.
 
+## Step 1 - Create a ScriptActuator
+
+Use the green Add button under Machine Setup > Actuators to create a new ScriptActuator. Give it a meaningful name and under 'Script Name' enter the name of the actual script **including the extension** e.g. SouthFeeders.**js** 
+
+## Step 2 - Write a Script
+
+Write the script which will perform the action you require and put it in the top scripts directory.  This is the directory that opens when you select scripts > Open Scripts Directory (usually UserName>.openpnp2>scripts).  Do not put it in the 'events' sub-directory.
+
+Here is an example script that determines which nozzle is in play, moves the head a certain amount, actuates the solenoid, waits a bit, then deactivates the solenoid and returns to the original position.
+
+
