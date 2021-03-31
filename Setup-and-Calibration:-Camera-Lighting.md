@@ -48,15 +48,21 @@ As soon as the camera has a **Light Actuator** assigned, the ImageCapture stage 
 
 If the **defaultLight** property is switched on (default) the **Default ON** value of the actuator will be used to determine the lighting. If it is switched off, the **light** property comes into play.
 
-The **light** property controls the lighting for this specific pipeline (if **defaultLight** is off). The user interface responds to the value type of the actuator:
+The **light** property controls the lighting for this specific pipeline (if **defaultLight** is off). The user interface responds to the value type of the actuator, i.e. it can be a checkbox for lights that can only switch ON/OFF, it can be a number for lights that can be controlled in intensity, or it can be a profile combo box to control multi-channel lights:
 
-![Light Property Boolean](https://user-images.githubusercontent.com/9963310/103425237-53abe180-4bb1-11eb-93f0-b212953113f5.png) ![Light Property Double](https://user-images.githubusercontent.com/9963310/103425242-61f9fd80-4bb1-11eb-949d-0c62382d5c65.png)  
+![Light Property Boolean](https://user-images.githubusercontent.com/9963310/103425237-53abe180-4bb1-11eb-93f0-b212953113f5.png) 
+
+![Light Property Double](https://user-images.githubusercontent.com/9963310/103425242-61f9fd80-4bb1-11eb-949d-0c62382d5c65.png)  
 
 ![Light Property Profile](https://user-images.githubusercontent.com/9963310/103425285-a7b6c600-4bb1-11eb-9ba6-b94eaa55a34c.png)
 
 # Add Lighting Control Scripts
+As an alternative to controlling the actuators directly from OpenPnP, you can use scripts to do so. This was the only option in earlier versions of OpenPnP, so this documentation is mostly kept in order to support the older versions. 
+___
+NOTE: Do not use this method for new machines! 
+___
 
-**The following is for OpenPnP 2.0 only**:
+**The following is for (legacy) OpenPnP 2.0 version only, for versions 1.0 see further below.**
 
 For newer versions of OpenPnP 2.0, you must use the Camera.BeforeSettle/Camera.AfterSettle scripts, instead of the Capture ones. See also [[Scripting#CameraBeforeSettle]], [[Scripting#CameraAfterSettle]] and the page about [[Camera Settling]].
 
