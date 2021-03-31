@@ -1,18 +1,42 @@
-You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators) system along with [Scripting Events](https://github.com/openpnp/openpnp/wiki/Scripting#scripting-events) to turn lights on and off in response to camera capture events.
+You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators) system to turn lights on and off in response to camera capture events.
 
 # Set Up a Lighting Actuator
-1. Add an actuator for the lights you want to control. Select Machine Setup -> ReferenceMachine -> Actuators and then click the green + button to add a new Actuator.
+
+1. Add an actuator for the lights you want to control. Go to the Machine Setup tab and then look for the Camera you want to assign the light to. You'll find it either attached to the Machine (up-looking Camera) or to the Head (down-looking Camera). Got to the Actuators branch besides the Cameras branch and then click the green + button to add a new Actuator.
 2. Expand the Actuators list and select the new Actuator.
-3. Change the Actuator's name to "UpCamLights" and press Apply.
-4. Go to Machine Setup -> ReferenceMachine -> Driver -> GcodeDriver -> Gcode.
-5. In the Head Mountable dropdown, select UpCamLights.
-6. In the Setting dropdown select ACTUATE_BOOLEAN_COMMAND.
-7. In the text area, set the Gcode to the commands that will turn your lights on and off. For example, to send `M800` for on and `M801` for off, use: `{True:M800}{False:M801}`. You should change the two commands to whatever works for your machine.
-8. Press the Apply button.
-9. Restart OpenPnP.
+3. Let's assume you name it "UpCamLights".
+4. Set up the Actuator as described in the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators). If you have multi-channel lights, be sure to read about the Actuator Profiles. 
 
 # Test The Lights
-1. Go to Main Window -> Machine Controls -> Actuators and click the UpCamLights button. Your lights should come on. Click it again and they should turn off. If this doesn't work, adjust your Gcode settings until it does, or ask for help.
+
+Go to Main Window -> Machine Controls -> Actuators and click the UpCamLights button. Your lights should come on. Click it again and they should turn off. If this doesn't work, adjust your settings until it does, or ask for help.
+
+# Assign the Camera Light Actuator
+
+The created **Light Actuator** can now be assigned to the camera:
+
+![Camera Light Actuator](https://user-images.githubusercontent.com/9963310/104466458-8db7b300-55b5-11eb-8674-b554fc44ce54.png)
+
+There are various ON and OFF actuation Options:
+
+* **Before Capture ON**: to actuate the Light Actuator before a computer vision operation captures a camera image. The happens before the [Camera Settling](/openpnp/openpnp/wiki/Camera-Settling). See the [ImageCapture Stage](#image-capture-stage) section to control pipeline specific light actuation values and profiles. **NOTE:** This option should almost always be enabled. 
+* **After Capture OFF**: to actuate the Light Actuator OFF after a computer vision operation captured a camera image. 
+* **User Camera Action ON**: to actuate the Light Actuator ON when a user action is deliberately positioning or otherwise using the camera. 
+* **Anti-Glare OFF**: to prevent this camera light from blinding another camera, it is actuated OFF before any other camera is capturing an image. Only cameras looking the other way (up/down) are taken into consideration (see the **Looking** field). 
+
+As soon as a **Light Actuator** is assigned, the Camera View will display a new overlay light symbol in the upper right corner. It shows the camera light status and can be clicked to turn the light on or off:
+ 
+![CameraViewLightOnOff](https://user-images.githubusercontent.com/9963310/103424966-9e2c5e80-4baf-11eb-8eac-a20844fed4e8.gif)
+
+# Related Camera Properties
+
+**Preview FPS** (frames per second) is now universally available for all the camera implementations, including the SwitcherCamera with proper channel preview (at reasonably low FPS). Note, you can set fractional FPS like **0.5** for an update every 2 seconds. The implementation has been unified and now fully supports the **0 fps** setting, where only frames explicitly captured for computer vision or for other deliberate user camera actions are shown in the Camera View. 
+
+**Suspend during tasks?** allows you to use a relatively high **Preview FPS** during manual machine control, while effectively setting it to efficient **0 FPS** during machine tasks, especially during Jobs. This is also the only reasonable setting for a SwitcherCamera with preview. 
+
+**Auto Camera View?** automatically selects the active camera in the Camera View (if another single camera was selected before). This happens on deliberate user camera actions such as positioning, jogging the camera or when computer vision captures frames or displays marked-up result images. 
+
+When both  **Suspend during tasks?** and **Auto Camera View?** are enabled, there will only be clean result images presented during a job. By only displaying one camera at a time, you get a larger preview with much better resolution. **Tip:** make sure to right-click the camera View and choose **High** or **Highest** quality rendering. 
 
 # Use in the ImageCapture Stage 
 
