@@ -31,7 +31,8 @@ If you are adding a Top Camera, look to see if there is an existing Top Camera c
 
 For the Bottom Camera, you may see an existing one called SimulatedUpCamera. Delete it.
 
-# General Configuration
+## General Configuration
+
 In addition to the already mentioned **Name** and **Looking** properties, some additional settings can be configured:
 
 ![General Configuration](https://user-images.githubusercontent.com/9963310/113151036-ff0e1600-9234-11eb-97bf-f457c4f04eef.png)
@@ -47,12 +48,6 @@ In addition to the already mentioned **Name** and **Looking** properties, some a
    ![Show All](https://user-images.githubusercontent.com/9963310/106962435-6761df00-673f-11eb-8d8e-4098cbacb094.png)
 
 **Notes:** When both  **Suspend during tasks?** and **Auto Camera View?** are enabled, there will only be clean result images presented during a job. By only displaying one camera at a time, you get a larger preview with much better resolution. **Tip:** make sure to right-click the camera View and choose **High** or **Highest** quality rendering. 
-
-
-## General Configuration
-
-**Preview:** See the "Instructions for Use" here:
-https://github.com/openpnp/openpnp/pull/1095
 
 ## Camera View Configuration
 
