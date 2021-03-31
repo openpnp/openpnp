@@ -37,9 +37,9 @@ In addition to the already mentioned **Name** and **Looking** properties, some a
 
 ![General Configuration](https://user-images.githubusercontent.com/9963310/113151036-ff0e1600-9234-11eb-97bf-f457c4f04eef.png)
 
-**Preview FPS** (frames per second) is universally available for all the camera implementations (if using a SwitcherCamera please use a reasonably low FPS). Note, you can set fractional FPS like **0.5** for an update every 2 seconds. Another important option is to set **0 fps**, where only frames explicitly captured for computer vision or for other deliberate user camera actions are shown in the Camera View. This is the most efficient setting, optimal for slow computers and/or when you use many cameras. 
+**Preview FPS** (frames per second) is universally available for all the camera implementations (if using a SwitcherCamera please use a reasonably low FPS). Note, you can set fractional FPS like **0.5** for an update every 2 seconds. Another important option is to set **0 FPS**, where only frames explicitly captured for computer vision or for other deliberate user camera actions are shown in the Camera View. This is the most efficient setting, optimal for slow computers and/or when you use many cameras. 
 
-**Suspend during tasks?** allows you to use a relatively high **Preview FPS** during manual machine control, while effectively setting it to the efficient **0 fps** during machine tasks, especially during Jobs. This is also the only reasonable setting for a SwitcherCamera with preview. 
+**Suspend during tasks?** allows you to use a relatively high **Preview FPS** during manual machine control, while effectively setting it to the efficient **0 FPS** during machine tasks, especially during Jobs. This is also the only reasonable setting for a SwitcherCamera with preview. 
 
 **Auto Camera View?** automatically selects the active camera in the Camera View (if another single camera was selected before). This happens on deliberate user camera actions such as positioning, jogging the camera or when computer vision captures frames or displays marked-up result images. 
 
