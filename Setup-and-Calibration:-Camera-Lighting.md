@@ -4,12 +4,11 @@ You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-a
 
 1. Add an actuator for the lights you want to control. Go to the Machine Setup tab and then look for the Camera you want to assign the light to. You'll find it either attached to the Machine (up-looking Camera) or to the Head (down-looking Camera). Got to the Actuators branch besides the Cameras branch and then click the green + button to add a new Actuator.
 2. Expand the Actuators list and select the new Actuator.
-3. Let's assume you name it "UpCamLights".
-4. Set up the Actuator as described in the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators). If you have multi-channel lights, be sure to read about the Actuator Profiles. 
+3. Set up the Actuator as described in the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators). If you have multi-channel lights, be sure to read about the Actuator Profiles. 
 
 # Test The Lights
 
-Go to Main Window -> Machine Controls -> Actuators and click the UpCamLights button. Your lights should come on. Click it again and they should turn off. If this doesn't work, adjust your settings until it does, or ask for help.
+Go to Main Window -> Machine Controls -> Actuators and click the button named after the created Actuator. Your lights should come on. Click it again and they should turn off. If this doesn't work, adjust your settings until it does, or ask for help.
 
 # Assign the Camera Light Actuator
 
