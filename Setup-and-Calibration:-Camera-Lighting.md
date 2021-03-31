@@ -48,7 +48,7 @@ As soon as the camera has a **Light Actuator** assigned, the ImageCapture stage 
 
 If the **defaultLight** property is switched on (default) the **Default ON** value of the actuator will be used to determine the lighting. If it is switched off, the **light** property comes into play.
 
-The **light** property controls the lighting for this specific pipeline (if **defaultLight** is off). The user interface responds to the value type of the actuator, i.e. it can be a checkbox for lights that can only switch ON/OFF, it can be a number for lights that can be controlled in intensity, or it can be a profile combo box to control multi-channel lights:
+The **light** property controls the lighting for this specific pipeline (if **defaultLight** is off). The user interface responds to the [**Value Type** of the actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators#actuator-value-type), i.e. it can be a checkbox for lights that can only switch ON/OFF, it can be a number for lights that can be controlled in intensity, or it can be a profile combo box to control multi-channel lights:
 
 ![Light Property Boolean](https://user-images.githubusercontent.com/9963310/103425237-53abe180-4bb1-11eb-93f0-b212953113f5.png) 
 
