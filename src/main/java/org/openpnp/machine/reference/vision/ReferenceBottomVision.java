@@ -126,7 +126,7 @@ public class ReferenceBottomVision implements PartAlignment {
             Location offsets = new Location(nozzleLocation.getUnits());
             // Try getting a good fix on the part in multiple passes.
             for(int pass = 0;;) {
-            	RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
                 camera=(Camera)pipeline.getProperty("camera");
 
                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
@@ -167,10 +167,10 @@ public class ReferenceBottomVision implements PartAlignment {
                         .convertToUnits(maxLinearOffset.getUnits());
                 Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
                 if (!partSizeCheck(part, partSettings, rect, camera) ) {
-                   throw new Exception(String.format(
-                      "ReferenceBottomVision (%s): Incorrect part size.",
-                      part.getId() 
-                      )); 
+                    throw new Exception(String.format(
+                            "ReferenceBottomVision (%s): Incorrect part size.",
+                            part.getId() 
+                            )); 
                 }
                 else if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
                     Logger.debug("Offsets too large {} : center offset {} > {}", 
@@ -185,10 +185,10 @@ public class ReferenceBottomVision implements PartAlignment {
                             offsets, Math.abs(angleOffset), getMaxAngularOffset());
                 }
                 else {
-                   	 // We have a good enough fix - go on with that. 
-                     break;                		
+                    // We have a good enough fix - go on with that. 
+                    break;                		
                 }
-                
+
                 // Not a good enough fix - try again with corrected position.
                 nozzle.moveTo(nozzleLocation);
             }
