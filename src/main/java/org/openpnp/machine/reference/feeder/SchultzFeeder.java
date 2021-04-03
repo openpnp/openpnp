@@ -27,7 +27,6 @@ import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.SchultzFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
@@ -102,6 +101,11 @@ public class SchultzFeeder extends ReferenceFeeder {
     @Override
     public Location getPickLocation() throws Exception {
         return location;
+    }
+
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return false;
     }
 
     public SchultzFeeder() {

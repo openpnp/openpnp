@@ -57,6 +57,11 @@ public class RapidFeeder extends ReferenceFeeder {
     }
 
     @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return false;
+    }
+
+    @Override
     public void feed(Nozzle nozzle) throws Exception {
         Actuator actuator = nozzle.getHead().getActuatorByName(actuatorName);
         if (actuator == null) {

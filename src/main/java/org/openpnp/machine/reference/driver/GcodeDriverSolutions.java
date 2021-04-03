@@ -57,7 +57,7 @@ import org.simpleframework.xml.stream.Style;
  * The idea is not to pollute the driver implementations themselves.
  *
  */
-class GcodeDriverSolutions implements Solutions.Subject {
+public class GcodeDriverSolutions implements Solutions.Subject {
     private final GcodeDriver gcodeDriver;
 
     GcodeDriverSolutions(GcodeDriver gcodeDriver) {
@@ -188,7 +188,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                     if (gcodeDriver.getConfiguredAxes().contains("(r)")) {
                         issues.add(new Solutions.PlainIssue(
                                 gcodeDriver,
-                                "Axes should be configured as linear in feedrate calculations on the Duet controller. See the linked web page.",
+                                "Axes should be configured as linear in feedrate calculations on the Duet controller. See the linked web page.", 
                                 "Use the M584 S0 option in your config.g file.",
                                 Severity.Error,
                                 "https://duet3d.dozuki.com/Wiki/Gcode#Section_M584_Set_drive_mapping"));
@@ -198,7 +198,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                     }
                 }
             }
-            else if (gcodeDriver.getDetectedFirmware().contains("Marlin")) {
+            else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Marlin")) {
                 isMarlin = true;
                 firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("AXIS_COUNT", "0"));
                 if (firmwareAxesCount > 3) { 
@@ -213,7 +213,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                             "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#marlin-20"));
                 }
             }
-            else if (gcodeDriver.getDetectedFirmware().contains("TinyG")) {
+            else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("TinyG")) {
                 // Having a response already means we have a new firmware.
                 isTinyG = true;
             }
@@ -243,7 +243,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                                         ? "Location Confirmation recommended for extra features in homing, contact probing, etc."
                                                 : "Location Confirmation required when Confirmation Flow Control is off. Supports extra features in homing, contact probing, etc.")
                                         : "Location Confirmation usually not available when no axes present."),
-                        (locationConfirmationRecommended ? "Enable Location Confirmation" : "Disable Location Confirmation"),
+                        (locationConfirmationRecommended ? "Enable Location Confirmation" : "Disable Location Confirmation"), 
                         (confirmationFlowControl ? Severity.Suggestion : Severity.Error),
                         "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
 
@@ -726,13 +726,14 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
     /**
      * Add a solution for the given gcodeDriver to the issues, to suggest the given suggestedCommand instead of the currentCommand.
-     *
+     *  
      * @param gcodeDriver
+     * @param headMountable
      * @param issues
      * @param commandType
-     * @param currentCommand
      * @param suggestedCommand
-     * @param disallowHeadMountables Set true to disallow the commandType on HeadMountables. This is used when switching to axis letter variables.
+     * @param commandModified
+     * @param disallowHeadMountables
      */
     public static void suggestGcodeCommand(GcodeDriver gcodeDriver, HeadMountable headMountable, List<Solutions.Issue> issues,
             CommandType commandType, String suggestedCommand, boolean commandModified,

@@ -52,15 +52,14 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
-import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -70,6 +69,7 @@ import org.openpnp.gui.tablemodel.FeedersTableModel;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -493,6 +493,15 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     	tableModel.fireTableChanged(null);
     }
 
+    protected Location preliminaryPickLocation(Feeder feeder, Nozzle nozzle) throws Exception {
+        Location pickLocation = feeder.getPickLocation();
+        if (feeder.isPartHeightAbovePickLocation()) {
+            Length partHeight = nozzle.getSafePartHeight(feeder.getPart());
+            pickLocation = pickLocation.add(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
+        }
+        return pickLocation;
+    }
+
     public Action newFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
@@ -552,7 +561,10 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
                 nozzle.moveToSafeZ();
                 feeder.feed(nozzle);
-                Location pickLocation = feeder.getPickLocation();
+                // Note, we do not use nozzle.moveToPickLocation(feeder) as this might involve 
+                // probing, which we don't want to happen here. Instead we need to use a preliminary 
+                // pick location. 
+                Location pickLocation = preliminaryPickLocation(feeder, nozzle);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
                 MovableUtils.fireTargetedUserAction(nozzle);
             });
@@ -586,34 +598,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
         feeder.prepareForJob(false);
 
-        // Check the nozzle tip package compatibility.
-        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-        org.openpnp.model.Package packag = feeder.getPart().getPackage();
-        if (nozzle.getNozzleTip() == null || 
-                !packag.getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
-            // Wrong nozzle tip, try find one that works.
-            boolean resolved = false;
-            if (nozzle.isNozzleTipChangedOnManualFeed()) {
-                for (NozzleTip nozzleTip : packag.getCompatibleNozzleTips()) {
-                    if (nozzle.getCompatibleNozzleTips().contains(nozzleTip)) {
-                        // Found a compatible one. Unload and load like the JobProcessor.
-                        nozzle.unloadNozzleTip();
-                        nozzle.loadNozzleTip(nozzleTip);
-                        resolved = true;
-                        break;
-                    }
-                }
-            }
-            if (nozzle.getNozzleTip() == null) {
-                throw new Exception("Can't pick, no nozzle tip loaded on nozzle "+nozzle.getName()+". "
-                        +"You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer.");
-            }
-            else if (! resolved) {
-                throw new Exception("Can't pick, loaded nozzle tip "+
-                        nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". "
-                        +"You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer.");
-            }
-        }
+        Nozzle nozzle = getCompatibleNozzleAndTip(feeder, true);
 
         // Like in the JobProcessor, make sure it is calibrated.
         if (!nozzle.isCalibrated()) {
@@ -625,8 +610,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         feeder.feed(nozzle);
 
         // Go to the pick location and pick.
-        Location pickLocation = feeder.getPickLocation();
-        MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
+        nozzle.moveToPickLocation(feeder);
         nozzle.pick(feeder.getPart());
         nozzle.moveToSafeZ();
 
@@ -643,6 +627,40 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         MovableUtils.fireTargetedUserAction(nozzle);
     }
 
+    protected static Nozzle getCompatibleNozzleAndTip(Feeder feeder, boolean allowNozzleTipChange) throws Exception {
+        // Check the nozzle tip package compatibility.
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        org.openpnp.model.Package packag = feeder.getPart().getPackage();
+        if (nozzle.getNozzleTip() == null || 
+                !packag.getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
+            // Wrong nozzle tip, try find one that works.
+            boolean resolved = false;
+            if (nozzle.isNozzleTipChangedOnManualFeed() && allowNozzleTipChange) {
+                for (NozzleTip nozzleTip : packag.getCompatibleNozzleTips()) {
+                    if (nozzle.getCompatibleNozzleTips().contains(nozzleTip)) {
+                        // Found a compatible one. Unload and load like the JobProcessor.
+                        nozzle.unloadNozzleTip();
+                        nozzle.loadNozzleTip(nozzleTip);
+                        resolved = true;
+                        break;
+                    }
+                }
+            }
+            if (nozzle.getNozzleTip() == null) {
+                throw new Exception("No nozzle tip loaded on nozzle "+nozzle.getName()+". "
+                        +"You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer.");
+            }
+            else if (! resolved) {
+                throw new Exception("Loaded nozzle tip "+
+                        nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". "
+                        +(allowNozzleTipChange ? 
+                                "You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer." 
+                                : ""));
+            }
+        }
+        return nozzle;
+    }
+
     public Action moveCameraToPickLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCameraOnFeeder);
@@ -657,7 +675,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 Feeder feeder = getSelection();
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                Location pickLocation = feeder.getPickLocation();
+                Nozzle nozzle = getCompatibleNozzleAndTip(feeder, false);
+                Location pickLocation = preliminaryPickLocation(feeder, nozzle);
                 MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
                 MovableUtils.fireTargetedUserAction(camera);
             });
@@ -676,9 +695,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Nozzle nozzle = getCompatibleNozzleAndTip(feeder, false);
 
-                Location pickLocation = feeder.getPickLocation();
+                Location pickLocation = preliminaryPickLocation(feeder, nozzle);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
                 MovableUtils.fireTargetedUserAction(nozzle);
             });

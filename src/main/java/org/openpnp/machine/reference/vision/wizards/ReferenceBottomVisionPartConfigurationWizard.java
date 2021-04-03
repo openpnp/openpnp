@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -14,16 +15,13 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Axis;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
@@ -36,7 +34,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JComboBox;
 
 public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceBottomVision bottomVision;
@@ -159,7 +156,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
         // perform the alignment
         PartAlignment.PartAlignmentOffset alignmentOffset = VisionUtils.findPartAlignmentOffsets(bottomVision, part,
-                null, new Location(LengthUnit.Millimeters), nozzle);
+                null, new Location(LengthUnit.Millimeters, 0, 0, 0, nozzle.getLocation().getRotation()), nozzle);
         Location offsets = alignmentOffset.getLocation();
 
         if (!chckbxCenterAfterTest.isSelected()) {
@@ -168,7 +165,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
         // position the part over camera center
         Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(part, VisionUtils.getBottomVisionCamera(),
-                nozzle, 0.);
+                nozzle, nozzle.getLocation().getRotation());
 
         if (alignmentOffset.getPreRotated()) {
             // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic

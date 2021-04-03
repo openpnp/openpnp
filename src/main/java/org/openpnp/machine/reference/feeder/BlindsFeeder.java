@@ -264,6 +264,11 @@ public class BlindsFeeder extends ReferenceFeeder {
         return getPickLocation(this.getFedPocketNumber());
     }
 
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return false;
+    }
+
     private int getFedPocketNumber() {
         return this.getFeedCount()+this.getFirstPocket()-1;
     }

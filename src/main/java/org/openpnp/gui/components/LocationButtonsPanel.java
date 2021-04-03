@@ -36,6 +36,7 @@ import javax.swing.SwingUtilities;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.machine.reference.ContactProbeNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -62,8 +63,13 @@ public class LocationButtonsPanel extends JPanel {
     private JButton buttonCenterTool;
     private JButton buttonCaptureCamera;
     private JButton buttonCaptureTool;
-    
+    private JButton buttonCenterToolNoSafeZ;
+    private JButton buttonContactProbeTool;
+    private JSeparator separator;
+    private JButton buttonCenterCamera;
+
     private Location baseLocation;
+    private boolean contactProbeReference;
 
     public LocationButtonsPanel(JTextField textFieldX, JTextField textFieldY, JTextField textFieldZ,
             JTextField textFieldC) {
@@ -75,7 +81,7 @@ public class LocationButtonsPanel extends JPanel {
         this.textFieldZ = textFieldZ;
         this.textFieldC = textFieldC;
         
-        JButton buttonCenterCamera = new JButton(positionCameraAction);
+        buttonCenterCamera = new JButton(positionCameraAction);
         buttonCenterCamera.setHideActionText(true);
         add(buttonCenterCamera);
 
@@ -85,7 +91,10 @@ public class LocationButtonsPanel extends JPanel {
 
         buttonCenterToolNoSafeZ = new JButton(positionToolNoSafeZAction);
         buttonCenterToolNoSafeZ.setHideActionText(true);
-                
+
+        buttonContactProbeTool = new JButton(contactProbeNozzleAction);
+        buttonContactProbeTool.setHideActionText(true);
+
         separator = new JSeparator();
         separator.setOrientation(SwingConstants.VERTICAL);
         add(separator);
@@ -108,7 +117,44 @@ public class LocationButtonsPanel extends JPanel {
     public void setBaseLocation(Location baseLocation) {
         this.baseLocation = baseLocation;
     }
-    
+
+    @Override 
+    public void setEnabled(boolean enabled) {
+        buttonCenterCamera.setEnabled(enabled);
+        buttonCenterTool.setEnabled(enabled);
+        buttonCenterToolNoSafeZ.setEnabled(enabled);
+        buttonContactProbeTool.setEnabled(enabled);
+        buttonCaptureCamera.setEnabled(enabled);
+        buttonCaptureTool.setEnabled(enabled);
+        super.setEnabled(enabled);
+    }
+
+    public void setShowCameraButtons(boolean shown) {
+        if (shown) {
+            // not implemented
+        }
+        else {
+            remove(buttonCenterCamera);
+            remove(buttonCaptureCamera);
+            remove(separator);
+        }
+        validate();
+    }
+
+    public void setShowToolButtons(boolean shown) {
+        if (shown) {
+            // not implemented
+        }
+        else {
+            remove(buttonCenterTool);
+            remove(buttonCenterToolNoSafeZ);
+            remove(buttonContactProbeTool);
+            remove(buttonCaptureTool);
+            remove(separator);
+        }
+        validate();
+    }
+
     public void setShowPositionToolNoSafeZ(boolean b) {
         if (b) {
             add(buttonCenterToolNoSafeZ, 2);
@@ -116,6 +162,23 @@ public class LocationButtonsPanel extends JPanel {
         else {
             remove(buttonCenterToolNoSafeZ);
         }
+    }
+
+    public void setShowContactProbeTool(boolean b) {
+        if (b) {
+            add(buttonContactProbeTool, 2);
+        }
+        else {
+            remove(buttonContactProbeTool);
+        }
+    }
+
+    public boolean isContactProbeReference() {
+        return contactProbeReference;
+    }
+
+    public void setContactProbeReference(boolean contactProbeReference) {
+        this.contactProbeReference = contactProbeReference;
     }
 
     public void setActuatorName(String actuatorName) {
@@ -319,68 +382,104 @@ public class LocationButtonsPanel extends JPanel {
 
     private Action positionToolNoSafeZAction =
             new AbstractAction("Position Tool (Without Safe Z)", Icons.centerToolNoSafeZ) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the tool over the center of the location without first moving to Safe Z.");
-                }
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the tool over the center of the location without first moving to Safe Z.");
+        }
 
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        HeadMountable tool = getTool();
-                        Location location = getParsedLocation();
-                        if (baseLocation != null) {
-                            location = location.rotateXy(baseLocation.getRotation());
-                            location = location.addWithRotation(baseLocation);
-                        }
-                        tool.moveTo(location);
-                        MovableUtils.fireTargetedUserAction(tool);
-                    });
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable tool = getTool();
+                Location location = getParsedLocation();
+                if (baseLocation != null) {
+                    location = location.rotateXy(baseLocation.getRotation());
+                    location = location.addWithRotation(baseLocation);
                 }
-            };
+                tool.moveTo(location);
+                MovableUtils.fireTargetedUserAction(tool);
+            });
+        }
+    };
+
+    private Action contactProbeNozzleAction =
+            new AbstractAction("Contact Probe Tool", Icons.contactProbeNozzle) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the tool over the center of the location then contact-probe Z.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable tool = getTool();
+                if (isContactProbeReference()) {
+                    // Always use the probing default nozzle for reference probing.
+                    tool = ContactProbeNozzle.getDefaultNozzle(); 
+                }
+                if (! (tool instanceof ContactProbeNozzle)) {
+                    throw new Exception("Nozzle "+tool.getName()+" is not a ContactProbeNozzle.");
+                }
+                ContactProbeNozzle nozzle =  (ContactProbeNozzle)tool;
+                Location nominalLocation = getParsedLocation();
+                if (baseLocation != null) {
+                    nominalLocation = nominalLocation.rotateXy(baseLocation.getRotation());
+                    nominalLocation = nominalLocation.addWithRotation(baseLocation);
+                }
+                if (isContactProbeReference()) {
+                    nozzle.resetZCalibration();
+                }
+                final Location probedLocation = nozzle.contactProbeCycle(nominalLocation);
+                MovableUtils.fireTargetedUserAction(nozzle);
+                SwingUtilities.invokeAndWait(() -> {
+                    Helpers.copyLocationIntoTextFields(probedLocation, null, null, textFieldZ,
+                            null);
+                });
+            });
+        }
+    };
 
     private Action positionActuatorAction =
             new AbstractAction("Position Actuator", Icons.centerPin) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the actuator over the center of the location.");
-                }
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the actuator over the center of the location.");
+        }
 
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        Actuator actuator = getActuator();
-                        Location location = getParsedLocation();
-                        if (baseLocation != null) {
-                            location = location.rotateXy(baseLocation.getRotation());
-                            location = location.addWithRotation(baseLocation);
-                        }
-                        MovableUtils.moveToLocationAtSafeZ(actuator, location);
-                        MovableUtils.fireTargetedUserAction(actuator);
-                    });
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Actuator actuator = getActuator();
+                Location location = getParsedLocation();
+                if (baseLocation != null) {
+                    location = location.rotateXy(baseLocation.getRotation());
+                    location = location.addWithRotation(baseLocation);
                 }
-            };
+                MovableUtils.moveToLocationAtSafeZ(actuator, location);
+                MovableUtils.fireTargetedUserAction(actuator);
+            });
+        }
+    };
+
     private Action positionActuatorNoSafeZAction =
             new AbstractAction("Position Actuator (Without Safe Z)", Icons.centerPinNoSafeZ) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the actuator over the center of the location without first moving to Safe Z.");
-                }
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the actuator over the center of the location without first moving to Safe Z.");
+        }
 
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        Actuator actuator = getActuator();
-                        Location location = getParsedLocation();
-                        if (baseLocation != null) {
-                            location = location.rotateXy(baseLocation.getRotation());
-                            location = location.addWithRotation(baseLocation);
-                        }
-                        actuator.moveTo(location);
-                        MovableUtils.fireTargetedUserAction(actuator);
-                    });
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Actuator actuator = getActuator();
+                Location location = getParsedLocation();
+                if (baseLocation != null) {
+                    location = location.rotateXy(baseLocation.getRotation());
+                    location = location.addWithRotation(baseLocation);
                 }
-            };
-    private JButton buttonCenterToolNoSafeZ;
-    private JSeparator separator;
+                actuator.moveTo(location);
+                MovableUtils.fireTargetedUserAction(actuator);
+            });
+        }
+    };
 }

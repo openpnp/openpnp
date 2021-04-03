@@ -63,6 +63,11 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
         return pickLocation;
     }
 
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return false;
+    }
+
     public void feed(Nozzle nozzle) throws Exception {
         Logger.debug("{}.feed({})", getName(), nozzle);
         int partX, partY;

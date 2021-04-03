@@ -44,7 +44,6 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
-import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -110,6 +109,11 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
         }
 
         return pickLocation;
+    }
+
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return false;
     }
 
     @Override

@@ -42,12 +42,16 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
-                axisX = (AbstractAxis) configuration.getMachine().getAxis(axisXId);
-                axisY = (AbstractAxis) configuration.getMachine().getAxis(axisYId);
-                axisZ = (AbstractAxis) configuration.getMachine().getAxis(axisZId);
-                axisRotation = (AbstractAxis) configuration.getMachine().getAxis(axisRotationId);
+                applyConfiguration(configuration);
             }
         });
+    }
+
+    public void applyConfiguration(Configuration configuration) {
+        axisX = (AbstractAxis) configuration.getMachine().getAxis(axisXId);
+        axisY = (AbstractAxis) configuration.getMachine().getAxis(axisYId);
+        axisZ = (AbstractAxis) configuration.getMachine().getAxis(axisZId);
+        axisRotation = (AbstractAxis) configuration.getMachine().getAxis(axisRotationId);
     }
 
     @Override
@@ -287,16 +291,18 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
-        // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
-        // longer be used. It will be removed eventually:
-        // https://github.com/openpnp/openpnp/issues/255
-        // In the mean time, since Double.NaN would cause a problem for transformations, we shortcut
-        // it here by replacing any NaN values with the current value from the axes.
-        location = location.derive(currentLocation, 
-                Double.isNaN(location.getX()), 
-                Double.isNaN(location.getY()), 
-                Double.isNaN(location.getZ()), 
-                Double.isNaN(location.getRotation())); 
+        if (currentLocation != null) {
+            // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
+            // longer be used. It will be removed eventually:
+            // https://github.com/openpnp/openpnp/issues/255
+            // In the mean time, since Double.NaN would cause a problem for transformations, we shortcut
+            // it here by replacing any NaN values with the current value from the axes.
+            location = location.derive(currentLocation, 
+                    Double.isNaN(location.getX()), 
+                    Double.isNaN(location.getY()), 
+                    Double.isNaN(location.getZ()), 
+                    Double.isNaN(location.getRotation())); 
+        }
         // Subtract the Head offset.
         location = location.subtract(getHeadOffsets());
         return location;

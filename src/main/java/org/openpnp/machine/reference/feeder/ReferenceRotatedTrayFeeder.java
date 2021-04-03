@@ -85,6 +85,11 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		return pickLocation;
 	}
 
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return false;
+    }
+
 	private void calculatePickLocation(int partX, int partY) throws Exception {
 
 		// Multiply the offsets by the X/Y part indexes to get the total offsets

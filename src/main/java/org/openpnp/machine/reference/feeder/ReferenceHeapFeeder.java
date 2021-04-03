@@ -991,4 +991,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         }
 
     }
+
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return false;
+    }
 }

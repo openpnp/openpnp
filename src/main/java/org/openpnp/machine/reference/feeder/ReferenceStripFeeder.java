@@ -204,6 +204,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         return l;
     }
 
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return false;
+    }
+
     public Location[] getIdealLineLocations() {
         if (visionLocation == null) {
             return new Location[] {referenceHoleLocation, lastHoleLocation};

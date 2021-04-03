@@ -223,6 +223,11 @@ public class ReferenceJobProcessorRetryTests {
         }
 
         @Override
+        public boolean isPartHeightAbovePickLocation() {
+            return false;
+        }
+
+        @Override
         public void feed(Nozzle nozzle) throws Exception {
             System.out.format("feed(%s) -> %s %s\n", nozzle.getName(), getName(), getPart().getId());
             if (++feedCount > partCount) {

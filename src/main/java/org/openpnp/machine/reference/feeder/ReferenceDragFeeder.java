@@ -121,6 +121,11 @@ public class ReferenceDragFeeder extends ReferenceFeeder {
     }
 
     @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return false;
+    }
+
+    @Override
     public void feed(Nozzle nozzle) throws Exception {
         Logger.debug("feed({})", nozzle);
 

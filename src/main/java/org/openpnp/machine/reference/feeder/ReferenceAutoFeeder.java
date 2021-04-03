@@ -64,6 +64,11 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
         return location;
     }
 
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return false;
+    }
+
     public ReferenceAutoFeeder() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override

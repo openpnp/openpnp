@@ -11,9 +11,8 @@ import java.util.List;
 
 import org.opencv.core.Mat;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
-import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.FluentCv.ColorSpace;
+import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
 import org.simpleframework.xml.Attribute;
 
 /**

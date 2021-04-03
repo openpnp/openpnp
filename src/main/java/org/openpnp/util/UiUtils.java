@@ -47,7 +47,8 @@ public class UiUtils {
     public static <T> Future<T> submitUiMachineTask(final Callable<T> callable) {
         return submitUiMachineTask(callable, (result) -> {
         } , (t) -> {
-            MessageBoxes.errorBox(MainFrame.get(), "Error", t);
+            MessageBoxes.errorBox(MainFrame.get(), "Error",
+                    t);
         });
     }
 
@@ -101,5 +102,8 @@ public class UiUtils {
         }
     }
 
+    public static void messageBoxOnExceptionLater(Thrunnable thrunnable) {
+        SwingUtilities.invokeLater(() -> messageBoxOnException(thrunnable));
+    }
 
 }

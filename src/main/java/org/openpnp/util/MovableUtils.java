@@ -13,7 +13,8 @@ public class MovableUtils {
     /**
      * Moves the given HeadMountable to the specified Location by first commanding the head to
      * safe-Z all of it's components, then moving the HeadMountable in X, Y and C, followed by
-     * moving in Z.
+     * moving in Z. 
+     * Note: this will not move to safe Z if the X, Y, C coordinates remain unchanged.
      * 
      * @param hm
      * @param location
@@ -23,15 +24,20 @@ public class MovableUtils {
     public static void moveToLocationAtSafeZ(HeadMountable hm, Location location, double speed)
             throws Exception {
         Head head = hm.getHead();
-        head.moveToSafeZ(speed);
-        // Determine the exit Safe Z of that hm to optimize the move. In shared axis configurations with a Safe Z Zone
-        // OpenPnP will then move the hm's transformed Z to the lower limit of the Zone, i.e. ready to dive down as
-        // quick as possible. 
-        Length safeZ = hm.getEffectiveSafeZ();
-        if (safeZ != null) {
-            safeZ = safeZ.convertToUnits(location.getUnits());    
+        Location currentLocationWithNewZ = hm.getLocation().derive(location, false, false, true, false);
+        if (! hm.toRaw(location).matches(hm.toRaw(currentLocationWithNewZ))) {
+            // Moves in X, Y or C, move to safe Z needed. 
+            head.moveToSafeZ(speed);
+            // Determine the exit Safe Z of that hm to optimize the move. In shared axis configurations with a Safe Z Zone
+            // OpenPnP will then move the hm's transformed Z to the lower limit of the Zone, i.e. ready to dive down as
+            // quick as possible. 
+            Length safeZ = hm.getEffectiveSafeZ();
+            if (safeZ != null) {
+                safeZ = safeZ.convertToUnits(location.getUnits());    
+            }
+            hm.moveTo(location.derive(null, null, (safeZ != null ? safeZ.getValue() : Double.NaN), null), speed);
         }
-        hm.moveTo(location.derive(null, null, (safeZ != null ? safeZ.getValue() : Double.NaN), null), speed);
+        // else: moves only in Z (or not at all).
         hm.moveTo(location, speed);
     }
 
