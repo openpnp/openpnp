@@ -119,7 +119,7 @@ public class ReferenceBottomVision implements PartAlignment {
         Location nozzleLocation = wantedLocation;
         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
         final Location center = new Location(maxLinearOffset.getUnits());
-
+        
         try (CvPipeline pipeline = partSettings.getPipeline()) {
 
             // The running, iterative offset.
@@ -166,7 +166,13 @@ public class ReferenceBottomVision implements PartAlignment {
                 Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
                         .convertToUnits(maxLinearOffset.getUnits());
                 Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
-                if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
+                if (!partSizeCheck(part, partSettings, rect, camera) ) {
+                    throw new Exception(String.format(
+                            "ReferenceBottomVision (%s): Incorrect part size.",
+                            part.getId() 
+                            )); 
+                }
+                else if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
                     Logger.debug("Offsets too large {} : center offset {} > {}", 
                             offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue()); 
                 } 
@@ -179,10 +185,8 @@ public class ReferenceBottomVision implements PartAlignment {
                             offsets, Math.abs(angleOffset), getMaxAngularOffset());
                 }
                 else {
-                	if(partSizeCheck(part, partSettings, rect, camera)) {
-                        // We have a good enough fix - go on with that.
-                        break;                		
-                	}
+                    // We have a good enough fix - go on with that. 
+                    break;                		
                 }
 
                 // Not a good enough fix - try again with corrected position.
@@ -274,7 +278,7 @@ public class ReferenceBottomVision implements PartAlignment {
         // Make sure width is the longest dimension
         if (checkHeight > checkWidth) {
             double height = checkHeight;
-            double width = checkHeight;
+            double width = checkWidth;
             checkWidth = height;
             checkHeight = width;
         }
@@ -302,6 +306,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
         if (measuredSize.width > pxMaxWidth) {
             Logger.debug("Package pixel width {} : limit {} : measured {}", pxWidth, pxMaxWidth, measuredSize.width);
+            return false;
         } else if (measuredSize.width < pxMinWidth) {
             Logger.debug("Package pixel width {} : limit {} : measured {}", pxWidth, pxMinWidth, measuredSize.width);
             return false;
