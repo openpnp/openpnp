@@ -458,7 +458,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         @Override
         public Location getCameraOffset() {
             // Return the axis offset as the camera tool specific calibration offset.
-            Logger.trace("[nozzleTipCalibration] getCameraOffset() returns: {}, {}", this.centerX, this.centerY);
             return new Location(this.units, this.centerX, this.centerY, 0., 0.);
         }
     }

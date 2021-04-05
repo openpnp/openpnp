@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
@@ -411,31 +412,44 @@ public class LocationButtonsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                HeadMountable tool = getTool();
-                if (isContactProbeReference()) {
-                    // Always use the probing default nozzle for reference probing.
-                    tool = ContactProbeNozzle.getDefaultNozzle(); 
-                }
-                if (! (tool instanceof ContactProbeNozzle)) {
-                    throw new Exception("Nozzle "+tool.getName()+" is not a ContactProbeNozzle.");
-                }
-                ContactProbeNozzle nozzle =  (ContactProbeNozzle)tool;
-                Location nominalLocation = getParsedLocation();
-                if (baseLocation != null) {
-                    nominalLocation = nominalLocation.rotateXy(baseLocation.getRotation());
-                    nominalLocation = nominalLocation.addWithRotation(baseLocation);
-                }
-                if (isContactProbeReference()) {
-                    nozzle.resetZCalibration();
-                }
-                final Location probedLocation = nozzle.contactProbeCycle(nominalLocation);
-                MovableUtils.fireTargetedUserAction(nozzle);
-                SwingUtilities.invokeAndWait(() -> {
-                    Helpers.copyLocationIntoTextFields(probedLocation, null, null, textFieldZ,
-                            null);
+            int result = JOptionPane.YES_OPTION;
+            if (isContactProbeReference()) {
+                /// Warn the user.
+                result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "<html>This will overwrite the Z reference and therefore<br/>"
+                                +"change the meaning of previously captured Z coordinates.<br/>"
+                                +"<span color=\"red\">You will need to recapture these locations!</span>"
+                                +"<br/><br/>"
+                                +"Are you sure?</html>",
+                                null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            }
+            if (result == JOptionPane.YES_OPTION) {
+                UiUtils.submitUiMachineTask(() -> {
+                    HeadMountable tool = getTool();
+                    if (isContactProbeReference()) {
+                        // Always use the probing default nozzle for reference probing.
+                        tool = ContactProbeNozzle.getDefaultNozzle();
+                    }
+                    if (! (tool instanceof ContactProbeNozzle)) {
+                        throw new Exception("Nozzle "+tool.getName()+" is not a ContactProbeNozzle.");
+                    }
+                    ContactProbeNozzle nozzle =  (ContactProbeNozzle)tool;
+                    Location nominalLocation = getParsedLocation();
+                    if (baseLocation != null) {
+                        nominalLocation = nominalLocation.rotateXy(baseLocation.getRotation());
+                        nominalLocation = nominalLocation.addWithRotation(baseLocation);
+                    }
+                    if (isContactProbeReference()) {
+                        nozzle.resetZCalibration();
+                    }
+                    final Location probedLocation = nozzle.contactProbeCycle(nominalLocation);
+                    MovableUtils.fireTargetedUserAction(nozzle);
+                    SwingUtilities.invokeAndWait(() -> {
+                        Helpers.copyLocationIntoTextFields(probedLocation, null, null, textFieldZ,
+                                null);
+                    });
                 });
-            });
+            }
         }
     };
 

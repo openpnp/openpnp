@@ -27,6 +27,7 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
@@ -216,13 +217,22 @@ public class AutoFocusProviderConfigurationWizard extends AbstractConfigurationW
                 if (camera.getLocation(nozzle).getLinearLengthTo(nozzle.getLocation()).convertToUnits(LengthUnit.Millimeters).getValue() > 0.1) {
                     throw new Exception("Nozzle "+nozzle.getName()+" unexpected location. Please center and focus first.");
                 }
-                Length offsetZ = camera.getLocation(nozzle).getLengthZ().subtract(nozzle.getLocation().getLengthZ());
-                Location cameraHeadOffsets = ((ReferenceCamera) camera).getHeadOffsets();
-                Location cameraHeadOffsetsNew = cameraHeadOffsets.subtract(new Location(offsetZ.getUnits(), 0, 0, offsetZ.getValue(), 0));
-                Logger.info("Setting camera "+camera.getName()+" Z to "+cameraHeadOffsetsNew.getLengthZ()+" (previously "+cameraHeadOffsets.getLengthZ());
-                ((ReferenceCamera) camera).setHeadOffsets(cameraHeadOffsetsNew);
-                setLastFocusDistance(null);
-                MovableUtils.fireTargetedUserAction(camera);
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "<html>This will overwrite the current camera Z position and therefore<br/>"
+                                +"change the camera-to-subject distance and the subject scale.<br/>"
+                                +"<span color=\"red\">You will need to recalibrate the Units per Pixel!</span>"
+                                +"<br/><br/>"
+                                +"Are you sure?</html>",
+                                null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    Length offsetZ = camera.getLocation(nozzle).getLengthZ().subtract(nozzle.getLocation().getLengthZ());
+                    Location cameraHeadOffsets = ((ReferenceCamera) camera).getHeadOffsets();
+                    Location cameraHeadOffsetsNew = cameraHeadOffsets.subtract(new Location(offsetZ.getUnits(), 0, 0, offsetZ.getValue(), 0));
+                    Logger.info("Setting camera "+camera.getName()+" Z to "+cameraHeadOffsetsNew.getLengthZ()+" (previously "+cameraHeadOffsets.getLengthZ());
+                    ((ReferenceCamera) camera).setHeadOffsets(cameraHeadOffsetsNew);
+                    setLastFocusDistance(null);
+                    MovableUtils.fireTargetedUserAction(camera);
+                }
             });
         }
     };
