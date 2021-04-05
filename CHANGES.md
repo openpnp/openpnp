@@ -1,6 +1,25 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2021-04-05 
+
+## Nozzle Tip Changer XYZ Calibration, Auto-Focus, Part Height, Feeder, Placement sensing 
+
+This adds Nozzle tip changer XY and Z calibration using vision and probing. Used 
+to calibrate the nozzle to be able to precisely contact probe part heights, feeder 
+heights and placements. Also adds Auto-Focus based part height sensing for parts 
+with enabled bottom vision. 
+
+* Vision calibrated nozzle changer slot locations (XY) based on template images. 
+  Also detects nozzle changer slot empty/occupied status and prevents collisions.
+* Manual and automatic nozzle/nozzle tip/slot Z calibration for precision multi-
+  nozzle leveling and nozzle tip length calibration.
+* Adds Focus sensing method to cameras (FocusProvider interface). 
+  AutoFocusProvider default implementation.
+* Bottom vision uses Focus sensing to determine the part height, if unknown. 
+* ContactProbeNozzle provides on-the-fly part height probing/learning, feeder Z 
+  calibration, placement height calibration. 
+
 # 2021-03-20
 
 ## (Another) OpenCV Upgrade and Arm7 (32 Bit)
