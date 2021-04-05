@@ -51,6 +51,8 @@ import org.openpnp.util.SimpleGraph;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
+import javax.swing.*;
+
 /**
  * The Advanced Motion Planner applies any optimizing to the planned path. 
  *
@@ -367,7 +369,13 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     }
 
     protected void startNewMotionGraph() {
-        // start a new graph 
+        Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
+        if (gridColor == null) {
+            gridColor = new Color(0, 0, 0, 64);
+        } else {
+            gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
+        }
+        // start a new graph
         SimpleGraph motionGraph = new SimpleGraph();
         motionGraph.setRelativePaddingLeft(0.05);
         for (Axis axis : getMachine().getAxes()) {
@@ -401,7 +409,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 vRow.setColor(new Color(00, 0x5B, 0xD9, alphaBlend)); 
 
                 SimpleGraph.DataScale sScale =  motionGraph.getScale(axis.getName());
-                sScale.setColor(new Color(0, 0, 0, 64));
+                sScale.setColor(gridColor);
                 sScale.setLabelShown(true);
 
                 SimpleGraph.DataRow sRow = motionGraph.getRow(axis.getName(), "s");

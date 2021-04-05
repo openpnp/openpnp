@@ -8,7 +8,6 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.neoden4.wizards.Neoden4DriverConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
@@ -17,9 +16,10 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Motion.MoveToCommand;
-import org.openpnp.model.Named;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
@@ -342,7 +342,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
     
     @Override
-    public void home(ReferenceMachine machine) throws Exception {
+    public void home(Machine machine) throws Exception {
         /* Make sure *all* nozzles are up before moving */ 
         moveZ(1, 0);
         moveZ(2, 0);
@@ -376,7 +376,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     @Override
-    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation location)
+    public void setGlobalOffsets(Machine machine, AxesLocation location)
             throws Exception {
         // TODO: if the driver can do it, please implement to support visual homing. 
         throw new Exception("Not supported in this driver");
@@ -492,7 +492,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
+    public void moveTo(HeadMountable hm, MoveToCommand move)
             throws Exception {
         AxesLocation location = move.getLocation1();
         double feedRate = move.getFeedRatePerSecond();
@@ -606,14 +606,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     @Override
-    public void waitForCompletion(ReferenceHeadMountable hm, 
+    public void waitForCompletion(HeadMountable hm,
             CompletionType completionType) throws Exception {
         // TODO implement
         motionPending = false;
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
+    public void actuate(Actuator actuator, boolean on) throws Exception {
         switch (actuator.getName()) {
             case ACT_N1_VACUUM:
             case ACT_N2_VACUUM:
@@ -766,7 +766,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value) throws Exception {
+    public void actuate(Actuator actuator, double value) throws Exception {
         switch (actuator.getName()) {
             case ACT_N1_BLOW:
             case ACT_N1_VACUUM: {
@@ -853,7 +853,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     @Override
-    public String actuatorRead(ReferenceActuator actuator) throws Exception {
+    public String actuatorRead(Actuator actuator) throws Exception {
         switch (actuator.getName()) {
             case ACT_N1_BLOW:
             case ACT_N1_VACUUM: {

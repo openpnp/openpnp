@@ -4,8 +4,6 @@ import java.util.Queue;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
-import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.driver.test.TestDriver;
@@ -19,9 +17,9 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.Placement;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -175,7 +173,7 @@ public class BasicJobTest {
         }
 
         @Override
-        public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
+        public void moveTo(HeadMountable hm, MoveToCommand move)
                 throws Exception {
             AxesLocation location = move.getLocation1();
             
@@ -199,7 +197,7 @@ public class BasicJobTest {
         }
 
         @Override
-        public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
+        public void actuate(Actuator actuator, boolean on) throws Exception {
             if (expectedOps.isEmpty()) {
                 throw new Exception("Unexpected Actuate");
             }
@@ -215,7 +213,7 @@ public class BasicJobTest {
         }
 
         @Override
-        public void actuate(ReferenceActuator actuator, double value) throws Exception {
+        public void actuate(Actuator actuator, double value) throws Exception {
             super.actuate(actuator, value);
         }
 

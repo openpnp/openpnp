@@ -38,7 +38,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Set;
 
-import javax.swing.JComponent;
+import javax.swing.*;
 
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.SimpleGraph.DataRow;
@@ -121,6 +121,12 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
         FontMetrics dfm = g2d.getFontMetrics(font);
         int fontLineHeight = dfm.getAscent()+1; // numbers are all ascent
         int fontAscent = dfm.getAscent();
+        Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
+        if (gridColor == null) {
+            gridColor = new Color(0, 0, 0, 64);
+        } else {
+            gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
+        }
         g2d.setFont(font);
         int w = getWidth();
         int h = getHeight();
@@ -299,7 +305,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
             }
         }
         else {
-            g2d.setColor(new Color(0, 0, 0, 64));
+            g2d.setColor(gridColor);
             String text = "no data";
             Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
             g2d.drawString(text, (int)(Math.min(h, w)/2-bounds.getWidth()/2), (int)(h/2));

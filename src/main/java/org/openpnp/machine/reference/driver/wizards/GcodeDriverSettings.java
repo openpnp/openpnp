@@ -14,15 +14,8 @@ import java.io.FilenameFilter;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
@@ -47,12 +40,10 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JTextArea;
-import javax.swing.JButton;
+
 import java.awt.SystemColor;
 import java.awt.event.ActionListener;
 import java.awt.Font;
-import javax.swing.SwingConstants;
 
 public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
@@ -193,8 +184,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(btnDetectFirmware, "2, 16");
         
         firmwareConfiguration = new JTextArea();
-        firmwareConfiguration.setForeground(SystemColor.textInactiveText);
-        firmwareConfiguration.setBackground(SystemColor.control);
+        firmwareConfiguration.setBackground(UIManager.getColor("controlLtHighlight"));
+        firmwareConfiguration.setBorder(BorderFactory.createLineBorder(UIManager.getColor( "Component.borderColor" )));
         firmwareConfiguration.setWrapStyleWord(true);
         firmwareConfiguration.setLineWrap(true);
         firmwareConfiguration.setEditable(false);
