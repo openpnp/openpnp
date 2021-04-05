@@ -280,7 +280,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         touchLocationButtonsPanel.setContactProbeReference(true);
         panelChanger.add(touchLocationButtonsPanel, "12, 14, fill, fill");
 
-        lblZCalibrate = new JLabel("Automatic Z Calibration");
+        lblZCalibrate = new JLabel("Auto Z Calibration");
         lblZCalibrate.setToolTipText(
                 "<html>\r\nCalibrate the nozzle/nozzle tip Z by probing against the <strong>Touch Location</strong> surface.<br/>\r\nZ calibration can be triggered manually using the <strong>Calibrate now</strong> button or automatically:<br/>\r\n<ul>\r\n<li><strong>Manual:</strong> No automatic Z calibration is done. Manual calibration is stored<br/>\r\npermanently in the configuration and remains valid through machine homing.</li>\r\n<li><strong>MachineHome:</strong> Automatic Z calibration is performed when the machine is homed.<br/>\r\nThe nozzle Z calibration is reused when another Nozzle Tip is loaded.</li>\r\n<li><strong>NozzleTipChange:</strong> Automatic Z calibration is done whenever this Nozzle Tip<br/>\r\nis changed or when the machine is homed and this Nozzle Tip is currently loaded.</li>\r\n</ul>\r\nNote, you can use a stand-in Nozzle Tip named \"unloaded\" to perform Z calibration of the naked nozzle. \r\n</html>");
         panelChanger.add(lblZCalibrate, "2, 18, right, default");
@@ -401,8 +401,8 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         panelVision.add(visionTemplateTolerance, "4, 9, fill, default");
         visionTemplateTolerance.setColumns(10);
         
-        lblPrecision = new JLabel("Retry Precision");
-        lblPrecision.setToolTipText("If a calibration pass is further away than this distance, another pass is made.");
+        lblPrecision = new JLabel("Wanted Precision");
+        lblPrecision.setToolTipText("<html>If the detected template image match is further away than the <strong>Wanted Precision</strong>,<br/>\r\nthe camera is re-centered and another vision pass is made.</html>");
         panelVision.add(lblPrecision, "6, 9, right, default");
         
         visionCalibrationTolerance = new JTextField();
@@ -547,10 +547,10 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                                                         cloneVisionCalibration.setSelected(true);
                                                         panel.add(cloneVisionCalibration, "12, 4");
                                                 
-                                                templateClones = new JRadioButton("Clones from Template");
-                                                templateClones.setToolTipText("This nozzle tip can clone its settings from the nozzle tip marked as the <strong>Template</strong>.");
-                                                behaviorButtonGroup.add(templateClones);
-                                                panelClone.add(templateClones, "4, 4");
+                                                templateClone = new JRadioButton("Clones from Template");
+                                                templateClone.setToolTipText("This nozzle tip can clone its settings from the nozzle tip marked as the <strong>Template</strong>.");
+                                                behaviorButtonGroup.add(templateClone);
+                                                panelClone.add(templateClone, "4, 4");
                                                 
                                                 templateLocked = new JRadioButton("Locked");
                                                 templateLocked.setToolTipText("<html>This nozzle tip is locked against cloning.<br/>Note, its touch location Z can still be calibrated against the template nozzle tip reference. </html>");
@@ -716,6 +716,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         addWrappedBinding(nozzleTip, "zCalibrationFailHoming", zCalibrationFailHoming, "selected");
 
         addWrappedBinding(nozzleTip, "templateNozzleTip", templateNozzleTip, "selected");
+        addWrappedBinding(nozzleTip, "templateClone", templateClone, "selected");
         addWrappedBinding(nozzleTip, "templateLocked", templateLocked, "selected");
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
@@ -781,7 +782,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         }
     }
 
-    private Action calibrateZAction = new AbstractAction("Calibrate now", Icons.contactProbeNozzle) {
+    private Action calibrateZAction = new AbstractAction("Calibrate now") {
         {
             putValue(Action.SHORT_DESCRIPTION, "<html>Calibrate the nozzle/nozzle tip Z by contact-probing against the <strong>Touch Location</strong> surface.</html>");
         }
@@ -1040,7 +1041,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
     private JLabel lblCalibrationTrigger;
     private JComboBox visionCalibrationTrigger;
     private JRadioButton templateNozzleTip;
-    private JRadioButton templateClones;
+    private JRadioButton templateClone;
     private JRadioButton templateLocked;
     private final ButtonGroup behaviorButtonGroup = new ButtonGroup();
 }

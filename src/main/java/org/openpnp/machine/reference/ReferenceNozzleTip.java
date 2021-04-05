@@ -645,7 +645,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void setTemplateLocked(boolean templateLocked) {
+        boolean oldValue = this.templateLocked;
         this.templateLocked = templateLocked;
+        firePropertyChange("templateLocked", oldValue, templateLocked);
+    }
+
+    public boolean isTemplateClone() {
+        return !(templateNozzleTip || templateLocked);
+    }
+
+    public void setTemplateClone(boolean templateClone) {
+        boolean oldValue = isTemplateClone();
+        if (templateClone && !oldValue) {
+            setTemplateLocked(false);
+            firePropertyChange("templateClone", oldValue, templateClone);
+            setTemplateNozzleTip(false);
+        }
     }
 
     /**

@@ -26,6 +26,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.camera.wizards.AutoFocusProviderConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -95,6 +96,7 @@ public class AutoFocusProvider implements FocusProvider {
         diameter = Math.min(Math.min(diameter, camera.getHeight()-50), camera.getWidth()-50);
         diameter &= ~1; // Must be an even number.
 
+        double speed = Configuration.get().getMachine().getSpeed();
         // Move the movable to the start location at safe Z.
         MovableUtils.moveToLocationAtSafeZ(movable, location0);
         // Switch on the light.
@@ -111,7 +113,7 @@ public class AutoFocusProvider implements FocusProvider {
                 Integer bestFocus = null;
                 for (int step = 0; step < curveSteps; step++) {
                     Location l = location0.add(focalStep.multiply(step));
-                    movable.moveTo(l, focusSpeed);
+                    movable.moveTo(l, focusSpeed*speed);
                     BufferedImage image = camera.settleAndCapture();
                     BufferedImage filteredImage = null;
                     if (showDiagnostics) {
@@ -138,7 +140,7 @@ public class AutoFocusProvider implements FocusProvider {
                 if (focalStep.getXyzLengthTo(Location.origin).divide(focalResolution) < 1.5) {
                     // We reached focal resolution, just take the best focus location.
                     Location l = location0.add(focalStep.multiply(bestFocus));
-                    movable.moveTo(l, focusSpeed);
+                    movable.moveTo(l, focusSpeed*speed);
                     return l; 
                 }
 

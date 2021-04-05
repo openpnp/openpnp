@@ -131,7 +131,7 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         });
         panel.add(contactProbeMethod, "4, 2, fill, default");
 
-        lblContactProbeActuator = new JLabel("Probe Actuator");
+        lblContactProbeActuator = new JLabel("Contact Sense Actuator");
         panel.add(lblContactProbeActuator, "2, 4, right, center");
 
         comboBoxContactProbeActuator = new JComboBox();

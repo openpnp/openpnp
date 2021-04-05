@@ -156,20 +156,22 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             // Reset the probed part heights.
             probedPartHeightOffsets.clear();
         }
-        // After homing, recalibrate.
-        zCalibratedNozzleTip = null;
-        try {
-            ensureZCalibrated();
-        }
-        catch (Exception e) {
-            ReferenceNozzleTip nt = getCalibrationNozzleTip();
-            if (nt != null && nt.iszCalibrationFailHoming()) {
-                throw e;
+        ReferenceNozzleTip nt = getCalibrationNozzleTip();
+        if (nt != null && nt.getzCalibrationTrigger() != ZCalibrationTrigger.Manual) {
+            // After homing, recalibrate.
+            try {
+                zCalibratedNozzleTip = null;
+                ensureZCalibrated();
             }
-            else {
-                UiUtils.messageBoxOnExceptionLater(() -> {
+            catch (Exception e) {
+                if (nt != null && nt.iszCalibrationFailHoming()) {
                     throw e;
-                });
+                }
+                else {
+                    UiUtils.messageBoxOnExceptionLater(() -> {
+                        throw e;
+                    });
+                }
             }
         }
         super.home();
@@ -751,12 +753,12 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                     if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Smoothieware")) {
                         suggestedCommand = 
                                 "{True:G38.2 Z-42 F800 ; probe down max. range for contact with picked/placed part }\n" + 
-                                "{True:M400            ; wait until machine has stopped }\n";
+                                "{True:M400            ; wait until machine has stopped }";
                     }
                     else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("TinyG")) {
                         suggestedCommand = 
                                 "{True:G38.2 Z-42 F800 ; probe down in absolute coordinates until zmin switch is hit}\n" + 
-                                "{True:M400            ; wait for motion to stop}\n";
+                                "{True:M400            ; wait for motion to stop}";
                     }
                     if (suggestedCommand != null) {
                         GcodeDriverSolutions.suggestGcodeCommand(gcodeDriver, contactProbeActuator, issues, 
