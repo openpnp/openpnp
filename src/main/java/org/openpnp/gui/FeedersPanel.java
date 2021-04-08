@@ -172,7 +172,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 				final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row,
 						column);
 				if (!isSelected) {
-					String partId = (String) tableModel.getValueAt(row, 2);
+					String partId = (String) tableModel.getValueAt(tableSorter.convertRowIndexToModel(row), 2);
 					Job job = mainFrame.getJobTab().getJob();
 					boolean bFound = false;
 
