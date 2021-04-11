@@ -48,6 +48,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
+import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
@@ -62,8 +63,10 @@ import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.FocusProvider;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
+import org.openpnp.util.Collect;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
@@ -130,6 +133,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Attribute(required = false)
     private boolean allowMachineActuators = false;
 
+    @Attribute(required = false)
+    private FocusSensingMethod focusSensingMethod = FocusSensingMethod.None;
+
+    @Element(required = false)
+    protected FocusProvider focusProvider = new AutoFocusProvider();
+
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
     private int calibrationCountGoal = 25;
@@ -140,6 +149,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     private LensCalibration lensCalibration;
 
     private Actuator lightActuator;
+
+    public enum FocusSensingMethod {
+        None,
+        AutoFocus
+    }
 
     public ReferenceCamera() {
         super();
@@ -404,6 +418,26 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     public void setAllowMachineActuators(boolean allowMachineActuators) {
         this.allowMachineActuators = allowMachineActuators;
+    }
+
+    public FocusSensingMethod getFocusSensingMethod() {
+        return focusSensingMethod;
+    }
+
+    public void setFocusSensingMethod(FocusSensingMethod partHeightVisionMethod) {
+        this.focusSensingMethod = partHeightVisionMethod;
+        // if we ever expand the methods this would be the point where another method's focusProvider
+        // would be instantiated.
+    }
+
+    @Override
+    public FocusProvider getFocusProvider() {
+        if (getFocusSensingMethod() != FocusSensingMethod.None) {
+            return focusProvider;
+        }
+        else {
+            return null;
+        }
     }
 
     protected BufferedImage transformImage(BufferedImage image) {
@@ -691,14 +725,20 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
+        PropertySheet[] sheets = new PropertySheet[] {
                 new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
                 new PropertySheetWizardAdapter(new CameraVisionConfigurationWizard(this), "Vision"),
                 new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
                 new PropertySheetWizardAdapter(new ReferenceCameraPositionConfigurationWizard(getMachine(), this), "Position"),
                 new PropertySheetWizardAdapter(new ReferenceCameraCalibrationConfigurationWizard(this), "Lens Calibration"),
-                new PropertySheetWizardAdapter(new ReferenceCameraTransformsConfigurationWizard(this), "Image Transforms"),
+                new PropertySheetWizardAdapter(new ReferenceCameraTransformsConfigurationWizard(this), "Image Transforms")
         };
+        if (getFocusSensingMethod() != FocusSensingMethod.None) {
+                sheets = Collect.concat(sheets, new PropertySheet[] {
+                        new PropertySheetWizardAdapter(getFocusProvider().getConfigurationWizard(this), "Auto Focus"),
+                });
+        }
+        return sheets;
     }
     
     @Override
