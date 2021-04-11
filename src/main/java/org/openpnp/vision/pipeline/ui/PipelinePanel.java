@@ -39,7 +39,10 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 
-import com.l2fprod.common.propertysheet.*;
+import com.l2fprod.common.propertysheet.Property;
+import com.l2fprod.common.propertysheet.PropertySheetPanel;
+import com.l2fprod.common.propertysheet.PropertySheetTableModel;
+import com.l2fprod.common.swing.renderer.DefaultCellRenderer;
 
 public class PipelinePanel extends JPanel {
     private final CvPipelineEditor editor;
@@ -193,6 +196,8 @@ public class PipelinePanel extends JPanel {
             try {
                 propertySheetPanel.setBeanInfo(stage.getBeanInfo());
                 propertySheetPanel.readFromObject(stage);
+                // Set the Object.class DefaultCellRenderer, it might have been customized in a previously selected stage.
+                pipelinePropertySheetTable.getRendererRegistry().registerRenderer(Object.class, new DefaultCellRenderer());
                 stage.customizePropertySheet(pipelinePropertySheetTable, editor.getPipeline());
             }
             catch (Exception ex) {
