@@ -6,11 +6,12 @@ Instructions for OpenPnP 1.0 and 2.0 are different. See further down the page fo
 
 ## Actuator Setup
 
-Make sure to have [[configured the vacuum valve Actuator|Setup and Calibration: Vacuum Setup]]. The same Actuator is now reused to sense the vacuum:
+Make sure to have [[configured the vacuum valve Actuator|Setup and Calibration: Vacuum Setup]]. The same Actuator can be reused to sense the vacuum, or you can create a second one (for instance if your actuator is on a different driver):
 
 1. Set a ACTUATOR_READ_COMMAND in your GcodeDriver config on the new Actuator. This command will be sent to your controller when OpenPnP needs to read the vacuum level. See [actuator-read-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command) for more information.
 2. Set a ACTUATOR_READ_REGEX in your GcodeDriver config on the new Actuator. This regex will be used to read the response to the ACTUATOR_READ_COMMAND. See [actuator-read-regex](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex) for more information.
-3. You can test that the actuator read is working by opening the Actuators tab in Machine Controls, clicking the button for the actuator and clicking the Read button. You should see the value that was read in the text field.
+3. You can test that the actuator read is working by opening the Actuators tab in Machine Controls, clicking the button for the actuator and clicking the Read button. You should see the value that was read in the text field. 
+   ![Test Actuators](https://user-images.githubusercontent.com/9963310/114305655-6f405580-9ad9-11eb-855e-39d4607c3671.png)
 
 ## Nozzle Tip Setup
 
