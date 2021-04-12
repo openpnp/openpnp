@@ -30,6 +30,7 @@ public class Icons {
     public static Icon centerCameraMoveNext = getIcon("/icons/position-camera-move-next.svg");
     public static Icon centerTool = getIcon("/icons/position-nozzle.svg");
     public static Icon centerToolNoSafeZ = getIcon("/icons/position-nozzle-no-safe-z.svg");
+    public static Icon contactProbeNozzle = getIcon("/icons/contact-probe-nozzle.svg");
     public static Icon centerPin = getIcon("/icons/position-actuator.svg");
     public static Icon centerPinNoSafeZ = getIcon("/icons/position-actuator-no-safe-z.svg");
     public static Icon centerCameraOnFeeder = getIcon("/icons/position-camera-on-feeder.svg");
