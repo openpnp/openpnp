@@ -15,7 +15,7 @@ Hence, the Issues & Solutions system was born. The OpenPnP Machine Setup now has
 
 ![Issues and Solutions](https://user-images.githubusercontent.com/9963310/97119015-c611c880-170d-11eb-93d4-fa91e353eb26.png)
 
-For a quick Demo, [watch the video](https://youtu.be/VVaZo6BfhOM).
+For a quick Demo, [watch the video](https://youtu.be/VVaZo6BfhOM). Please disregard any mention of "testing version", "migration" etc. the system is now integrated into regular OpenPnP 2.0 and covers both new or changed machines and machines migrated from earlier versions. 
 
 ___
 
