@@ -32,6 +32,7 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.index.IndexFeeder;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.Neoden4Camera;
 import org.openpnp.machine.rapidplacer.RapidFeeder;
@@ -344,6 +345,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(SchultzFeeder.class);
         l.add(SlotSchultzFeeder.class);
         l.add(RapidFeeder.class);
+        l.add(IndexFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }

@@ -150,6 +150,11 @@ public class IndexFeeder extends ReferenceFeeder {
         return null;
     }
 
+    @Override
+    public String getName() {
+        return "Something!";
+    }
+
     /**
      * The IndexFeeder assumes you have a physical slot that is numbered 1 - 254. That
      * value is also used in the protocol as the address of the feeder once the feeder
