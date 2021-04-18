@@ -921,7 +921,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             getCommunications().disconnect();
         }
         catch (Exception e) {
-            Logger.error("disconnect()", e);
+            Logger.error(e, "disconnect()");
         }
 
         closeGcodeLogger();
@@ -937,7 +937,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             }
         }
         catch (Exception e) {
-            Logger.error("disconnect()", e);
+            Logger.error(e, "disconnect()");
         }
     }
 
@@ -1167,7 +1167,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     gcodeLogger = new PrintWriter(file.getAbsolutePath());
                 }
                 catch (IOException e) {
-                    Logger.warn("Cannot open Gcode log", e);
+                    Logger.warn(e, "Cannot open Gcode log");
                 }
             }
             if (gcodeLogger != null) {
