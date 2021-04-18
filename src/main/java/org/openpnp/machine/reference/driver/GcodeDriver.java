@@ -1207,11 +1207,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 }
                 catch (IOException e) {
                     if (disconnectRequested) {
-                        Logger.trace("Read error while disconnecting", e);
+                        Logger.trace(e, "Read error while disconnecting");
                         return;
                     }
                     else {
-                        Logger.error("Read error", e);
+                        Logger.error(e, "Read error");
                         return;
                     }
                 }
