@@ -386,6 +386,73 @@ public class IndexFeederTest {
     }
 
     @Test
+    public void feedThrowsExceptionAfterOneRetry() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        feeder.setPartPitch(2);
+        indexProperties.setFeederCommunicationMaxRetry(1);
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
+
+        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(getFeederAddressCommand))
+                .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
+
+        String moveFeederForwardCommand = moveFeedForward(feederAddress, 20);
+        when(mockedActuator.read(moveFeederForwardCommand))
+                .thenReturn(Errors.timeout());
+
+        try {
+            feeder.feed(mockedNozzle);
+            fail("feed did not throw exception after max retries");
+        } catch (Exception exception) {
+            assertEquals("Failed to feed", exception.getMessage());
+        }
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator).read(moveFeederForwardCommand);
+        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator).read(moveFeederForwardCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
+    }
+
+    @Test
+    public void feedThrowsExceptionAfterNoRetries() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        feeder.setPartPitch(2);
+        indexProperties.setFeederCommunicationMaxRetry(0);
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
+
+        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(getFeederAddressCommand))
+                .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
+
+        String moveFeederForwardCommand = moveFeedForward(feederAddress, 20);
+        when(mockedActuator.read(moveFeederForwardCommand))
+                .thenReturn(Errors.timeout());
+
+        try {
+            feeder.feed(mockedNozzle);
+            fail("feed did not throw exception after max retries");
+        } catch (Exception exception) {
+            assertEquals("Failed to feed", exception.getMessage());
+        }
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator).read(moveFeederForwardCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
+    }
+
+    @Test
     public void feedInitializesOnFeederTimeout() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);

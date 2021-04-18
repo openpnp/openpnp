@@ -112,8 +112,7 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        // TODO Better limit the number of times this can run before throwing an exception
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i <= indexProperties.getFeederCommunicationMaxRetry(); i++) {
             findSlotAddressIfNeeded();
             initializeIfNeeded();
 
@@ -133,6 +132,8 @@ public class IndexFeeder extends ReferenceFeeder {
 
             return;
         }
+
+        throw new Exception("Failed to feed");
     }
 
     @Override
