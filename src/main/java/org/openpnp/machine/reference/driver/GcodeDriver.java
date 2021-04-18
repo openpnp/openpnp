@@ -994,7 +994,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             getCommunications().writeLine(command);
         }
         catch (IOException ex) {
-            Logger.error("{} failed to write command {}", getCommunications().getConnectionName(), command);
+            Logger.error(ex, "{} failed to write command {}", getCommunications().getConnectionName(), command);
             disconnect();
             Configuration.get().getMachine().setEnabled(false);
         }
