@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
+import org.mockito.verification.VerificationMode;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
@@ -14,6 +15,8 @@ import org.openpnp.spi.Nozzle;
 
 import java.io.File;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 import static org.openpnp.machine.index.protocol.IndexCommands.*;
 import static org.openpnp.machine.index.protocol.IndexResponses.*;
@@ -27,6 +30,7 @@ public class IndexFeederTest {
     private Machine machine;
     private Actuator mockedActuator;
     private Nozzle mockedNozzle;
+    private IndexProperties indexProperties;
 
     @Before
     public void setUp() throws Exception {
@@ -46,6 +50,8 @@ public class IndexFeederTest {
 
         mockedNozzle = Mockito.mock(Nozzle.class);
         when(mockedNozzle.getName()).thenReturn("Test Nozzle");
+
+        indexProperties = new IndexProperties(machine);
     }
 
     @Test
@@ -144,7 +150,12 @@ public class IndexFeederTest {
         when(mockedActuator.read(getFeederAddressCommand))
                 .thenReturn(Errors.timeout());
 
-        feeder.prepareForJob(false);
+        try {
+            feeder.prepareForJob(false);
+            fail("prepareForJob did not throw exception after max retries");
+        } catch (Exception exception) {
+            assertEquals("Failed to find and initialize the feeder", exception.getMessage());
+        }
 
         Assert.assertFalse(feeder.isInitialized());
         Assert.assertNull(feeder.getSlotAddress());
@@ -258,6 +269,59 @@ public class IndexFeederTest {
         Assert.assertSame(otherFeeder, recalledOtherFeeder);
         Assert.assertFalse(otherFeeder.initialized);
         Assert.assertEquals(feederAddress, (int) otherFeeder.slotAddress);
+    }
+
+    @Test
+    public void prepareForJobThrowsExceptionAfterOneRetry() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        indexProperties.setFeederCommunicationMaxRetry(1);
+
+        int newAddress = 11;
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(Errors.wrongFeederUUID(newAddress, hardwareId));
+
+        String newInitializeFeederCommand = initializeFeeder(newAddress, hardwareId);
+        when(mockedActuator.read(newInitializeFeederCommand))
+                .thenReturn(Errors.wrongFeederUUID(newAddress, hardwareId));
+
+        try {
+            feeder.prepareForJob(false);
+            fail("prepareForJob did not throw exception after max retries");
+        } catch (Exception exception) {
+            assertEquals("Failed to find and initialize the feeder", exception.getMessage());
+        }
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
+    }
+
+    @Test
+    public void prepareForJobThrowsExceptionAfterNoRetries() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        indexProperties.setFeederCommunicationMaxRetry(0);
+
+        int newAddress = 11;
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(Errors.wrongFeederUUID(newAddress, hardwareId));
+
+        try {
+            feeder.prepareForJob(false);
+            fail("prepareForJob did not throw exception after max retries");
+        } catch (Exception exception) {
+            assertEquals("Failed to find and initialize the feeder", exception.getMessage());
+        }
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
     }
     
     @Test

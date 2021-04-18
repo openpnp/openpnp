@@ -19,6 +19,7 @@ import static org.openpnp.machine.index.protocol.IndexResponses.*;
 
 public class IndexFeeder extends ReferenceFeeder {
     public static final String ACTUATOR_NAME = "INDEX_ACTUATOR";
+    private final IndexProperties indexProperties;
 
     @Attribute(required = false)
     protected String hardwareId;
@@ -30,6 +31,10 @@ public class IndexFeeder extends ReferenceFeeder {
 
     protected boolean initialized = false;
 
+    public IndexFeeder() {
+        this.indexProperties = new IndexProperties(Configuration.get().getMachine());
+    }
+
     @Override
     public Location getPickLocation() throws Exception {
         return null;
@@ -37,18 +42,18 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public void prepareForJob(boolean visit) throws Exception {
-        // TODO Better limit the number of times this can run before throwing an exception
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i <= indexProperties.getFeederCommunicationMaxRetry(); i++) {
             findSlotAddressIfNeeded();
 
             initializeIfNeeded();
 
             if(initialized) {
-                break;
+                super.prepareForJob(visit);
+                return;
             }
         }
 
-        super.prepareForJob(visit);
+        throw new Exception("Failed to find and initialize the feeder");
     }
 
     private void findSlotAddressIfNeeded() throws Exception {
@@ -92,7 +97,7 @@ public class IndexFeeder extends ReferenceFeeder {
                 }
 
                 // This other feeder is in the slot we thought we were
-                otherFeeder.setSlotAddress(slotAddress);
+                otherFeeder.setSlotAddress(response.getFeederAddress());
 
                 return;
             }
