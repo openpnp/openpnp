@@ -37,7 +37,7 @@ import org.simpleframework.xml.Attribute;
 /**
  * Finds the maximum circular symmetry in the working image and stores the results as a single element List<Circle> on the model. 
  */
-@Stage(description="Finds circular symmetry in the working image. Diameter range and maximum distance from center can be specified.")
+@Stage(description="Finds circular symmetry in the working image. Diameter range and maximum search distance can be specified.")
 public class DetectCircularSymmetry extends CvStage {
 
     @Attribute
@@ -49,7 +49,7 @@ public class DetectCircularSymmetry extends CvStage {
     private int maxDiameter = 100;
 
     @Attribute(required = false)
-    @Property(description = "Maximum distance from center, in pixels.")
+    @Property(description = "Maximum search distance from nominal center, in pixels.")
     private int maxDistance = 100;
 
     @Attribute(required = false)
@@ -58,16 +58,16 @@ public class DetectCircularSymmetry extends CvStage {
 
     @Attribute(required = false)
     @Property(description = "Property name as controlled by the vision operation using this pipeline.<br/>"
-            + "<ul><li>propertyName.diameter</li><li>propertyName.maxDistance</li><li>propertyName.center</li></ul>"
+            + "<ul><li><i>propertyName</i>.diameter</li><li><i>propertyName</i>.maxDistance</li><li><i>propertyName</i>.center</li></ul>"
             + "If set, these will override the properties configured here.")
-    private String diameterProperty = "";
+    private String propertyName = "";
 
     @Attribute(required = false)
-    @Property(description = "Relative outer diameter margin used when the diameterProperty is set.")
+    @Property(description = "Relative outer diameter margin used when the propertyName is set.")
     private double outerMargin = 0.2;
 
     @Attribute(required = false)
-    @Property(description = "Relative inner diameter margin used when the diameterProperty is set.")
+    @Property(description = "Relative inner diameter margin used when the propertyName is set.")
     private double innerMargin = 0.4;
 
     @Attribute(required = false)
@@ -129,12 +129,12 @@ public class DetectCircularSymmetry extends CvStage {
         this.diagnostics = diagnostics;
     }
 
-    public String getDiameterProperty() {
-        return diameterProperty;
+    public String getPropertyName() {
+        return propertyName;
     }
 
-    public void setDiameterProperty(String diameterProperty) {
-        this.diameterProperty = diameterProperty;
+    public void setPropertyName(String propertyName) {
+        this.propertyName = propertyName;
     }
 
     public double getOuterMargin() {
@@ -158,7 +158,7 @@ public class DetectCircularSymmetry extends CvStage {
         Camera camera = (Camera) pipeline.getProperty("camera");
         Mat mat = pipeline.getWorkingImage();
         // Get overrinding properties, if any and convert to pixels.
-        Length diameterByProperty = (Length) pipeline.getProperty(diameterProperty+".diameter");
+        Length diameterByProperty = (Length) pipeline.getProperty(propertyName+".diameter");
         int minDiameter = this.minDiameter;
         int maxDiameter = this.maxDiameter;
         if (diameterByProperty != null && diameterByProperty.getValue() > 0) {
@@ -167,12 +167,12 @@ public class DetectCircularSymmetry extends CvStage {
             maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
         }
         int maxDistance = this.maxDistance;
-        Length maxDistanceByProperty = (Length) pipeline.getProperty(diameterProperty+".maxDistance");
+        Length maxDistanceByProperty = (Length) pipeline.getProperty(propertyName+".maxDistance");
         if (maxDistanceByProperty != null && maxDistanceByProperty.getValue() > 0) {
             maxDistance = (int) Math.round(VisionUtils.toPixels(maxDistanceByProperty, camera));
         }
         Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
-        Location centerByProperty = (Location) pipeline.getProperty(diameterProperty+".center");
+        Location centerByProperty = (Location) pipeline.getProperty(propertyName+".center");
         if (centerByProperty != null) {
             center = VisionUtils.getLocationPixels(camera, centerByProperty);
         }
