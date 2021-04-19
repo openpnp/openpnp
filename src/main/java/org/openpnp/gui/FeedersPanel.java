@@ -275,9 +275,12 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                         priorFeederId = feeder.getId();
                         PropertySheet[] propertySheets = feeder.getPropertySheets();
                         for (PropertySheet ps : propertySheets) {
-                            AbstractConfigurationWizard wizard = (AbstractConfigurationWizard) ps.getPropertySheetPanel();
-                            wizard.setWizardContainer(FeedersPanel.this);
-                            configurationPanel.addTab(ps.getPropertySheetTitle(), wizard);
+                            JPanel panel = ps.getPropertySheetPanel();
+                            if(panel instanceof AbstractConfigurationWizard) {
+                                AbstractConfigurationWizard wizard = (AbstractConfigurationWizard) ps.getPropertySheetPanel();
+                                wizard.setWizardContainer(FeedersPanel.this);
+                            }
+                            configurationPanel.addTab(ps.getPropertySheetTitle(), panel);
                         }
                     }
                     
@@ -304,10 +307,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     private boolean keepUnAppliedFeederConfigurationChanges() {
         Feeder priorFeeder = configuration.getMachine().getFeeder(priorFeederId);
         boolean feederConfigurationIsDirty = false;
-        int i = 0;
-        while (!feederConfigurationIsDirty && (i<configurationPanel.getComponentCount())) {
-            feederConfigurationIsDirty = ((AbstractConfigurationWizard) configurationPanel.getComponent(i)).isDirty();
-            i++;
+        for (Component component : configurationPanel.getComponents()) {
+            if(component instanceof AbstractConfigurationWizard) {
+                feederConfigurationIsDirty = ((AbstractConfigurationWizard) component).isDirty();
+                if(feederConfigurationIsDirty) {
+                    break;
+                }
+            }
         }
         if (feederConfigurationIsDirty && (priorFeeder != null)) {
             int selection = JOptionPane.showConfirmDialog(null,
@@ -319,14 +325,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     );
             switch (selection) {
 				case JOptionPane.YES_OPTION:
-				    int j = 0;
-				    while ((j<configurationPanel.getComponentCount())) {
-				    	AbstractConfigurationWizard wizard = ((AbstractConfigurationWizard) configurationPanel.getComponent(j));
-				        if (wizard.isDirty()) {
-							wizard.apply();
-				        }
-				        j++;
-				    }
+                    for (Component component : configurationPanel.getComponents()) {
+                        if(component instanceof AbstractConfigurationWizard) {
+                            AbstractConfigurationWizard wizard = (AbstractConfigurationWizard) component;
+                            if(wizard.isDirty()) {
+                                wizard.apply();
+                            }
+                        }
+                    }
 				    return false;
 				case JOptionPane.NO_OPTION:
 					return false;
