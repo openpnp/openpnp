@@ -138,7 +138,26 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return null;
+        return "Index feeder sheet holder title";
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheet() {
+                    @Override
+                    public String getPropertySheetTitle() {
+                        return "Search Property Sheet";
+                    }
+
+                    @Override
+                    public JPanel getPropertySheetPanel() {
+                        JPanel panel = new JPanel();
+                        panel.add(new JButton("Search or something IDK"));
+                        return panel;
+                    }
+                }
+        };
     }
 
     @Override
