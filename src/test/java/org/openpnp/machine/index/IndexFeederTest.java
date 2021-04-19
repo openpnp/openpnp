@@ -15,8 +15,7 @@ import org.openpnp.spi.Nozzle;
 
 import java.io.File;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.openpnp.machine.index.protocol.IndexCommands.*;
 import static org.openpnp.machine.index.protocol.IndexResponses.*;
@@ -565,5 +564,89 @@ public class IndexFeederTest {
 
         Assert.assertTrue(feederB.isInitialized());
         Assert.assertEquals(1, (int) feederB.getSlotAddress());
+    }
+
+    @Test
+    public void findAllFeedersUsingMaxFeederAddress() throws Exception {
+        int maxFeederAddress = 5;
+        indexProperties.setMaxFeederAddress(maxFeederAddress);
+
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            when(mockedActuator.read(getFeederId(i)))
+                    .thenReturn(Errors.timeout());
+        }
+
+        IndexFeeder.findAllFeeders();
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            inOrder.verify(mockedActuator).read(getFeederId(i));
+        }
+        inOrder.verify(mockedActuator, never()).read(any());
+    }
+
+    @Test
+    public void findAllFeedersFindsNewAndExistingFeeders() throws Exception {
+        int maxFeederAddress = 5;
+        indexProperties.setMaxFeederAddress(maxFeederAddress);
+
+        /*
+        - Existing feeder has address 1 internally, but responds on address 2
+        - New feeder responds on address 1
+        - Address 3-5 responds with timeout
+         */
+
+        String newHardwareUuid = "FFEEDDCCBBAA998877665544";
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(1);
+
+        when(mockedActuator.read(getFeederId(1)))
+                .thenReturn(GetFeederId.ok(1, newHardwareUuid));
+
+        when(mockedActuator.read(getFeederId(2)))
+                .thenReturn(GetFeederId.ok(2, hardwareId));
+
+        for (int i = 3; i <= maxFeederAddress; i++) {
+            when(mockedActuator.read(getFeederId(i)))
+                    .thenReturn(Errors.timeout());
+        }
+
+        IndexFeeder.findAllFeeders();
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            inOrder.verify(mockedActuator).read(getFeederId(i));
+        }
+        inOrder.verify(mockedActuator, never()).read(any());
+
+        assertEquals(2, (int) feeder.getSlotAddress());
+
+        IndexFeeder newFeeder = IndexFeeder.findByHardwareId(newHardwareUuid);
+        assertNotNull(newFeeder);
+        assertEquals(1, (int) newFeeder.getSlotAddress());
+        assertEquals(newHardwareUuid, newFeeder.getHardwareId());
+    }
+
+    @Test
+    public void findAllFeedersRemovesFeederAddressIfTimeoutOccurs() throws Exception {
+        int maxFeederAddress = 5;
+        indexProperties.setMaxFeederAddress(maxFeederAddress);
+
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(1);
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            when(mockedActuator.read(getFeederId(i)))
+                    .thenReturn(Errors.timeout());
+        }
+
+        IndexFeeder.findAllFeeders();
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            inOrder.verify(mockedActuator).read(getFeederId(i));
+        }
+        inOrder.verify(mockedActuator, never()).read(any());
+
+        assertNull(feeder.getSlotAddress());
     }
 }

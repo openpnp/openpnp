@@ -7,10 +7,7 @@ import org.openpnp.machine.index.protocol.PacketResponse;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Feeder;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.*;
 import org.simpleframework.xml.Attribute;
 
 import javax.swing.*;
@@ -106,7 +103,7 @@ public class IndexFeeder extends ReferenceFeeder {
         initialized = true;
     }
 
-    private Actuator getActuator() {
+    private static Actuator getActuator() {
         return Configuration.get().getMachine().getActuatorByName(ACTUATOR_NAME);
     }
 
@@ -192,33 +189,14 @@ public class IndexFeeder extends ReferenceFeeder {
     }
 
     public void setSlotAddress(Integer slotAddress) {
-        this.slotAddress = slotAddress;
-
-        if(slotAddress == null) {
-            return;
-        }
-
         // Find any other index feeders and if they have this slot address, set their address to null
-        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-            if(! (feeder instanceof IndexFeeder)) {
-                continue;
-            }
-
-            if(feeder == this) {
-                continue;
-            }
-
-            IndexFeeder indexFeeder = (IndexFeeder) feeder;
-
-            if(indexFeeder.slotAddress == null) {
-                continue;
-            }
-
-            if(this.slotAddress.equals(indexFeeder.slotAddress)) {
-                indexFeeder.slotAddress = null;
-                indexFeeder.initialized = false;
-            }
+        IndexFeeder otherFeeder = findBySlotAddress(slotAddress);
+        if(otherFeeder != null) {
+            otherFeeder.slotAddress = null;
+            otherFeeder.initialized = false;
         }
+
+        this.slotAddress = slotAddress;
     }
 
     public String getHardwareId() {
@@ -258,5 +236,50 @@ public class IndexFeeder extends ReferenceFeeder {
         }
 
         return null;
+    }
+
+    public static IndexFeeder findBySlotAddress(int slotAddress) {
+        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+            if(! (feeder instanceof IndexFeeder)) {
+                continue;
+            }
+
+            IndexFeeder indexFeeder = (IndexFeeder) feeder;
+
+            if(indexFeeder.slotAddress != null && indexFeeder.slotAddress.equals(slotAddress)) {
+                return indexFeeder;
+            }
+        }
+
+        return null;
+    }
+
+    public static void findAllFeeders() throws Exception {
+        Machine machine = Configuration.get().getMachine();
+        IndexProperties indexProperties = new IndexProperties(machine);
+        Actuator actuator = getActuator();
+        int maxFeederAddress = indexProperties.getMaxFeederAddress();
+
+        for (int address = 1; address <= maxFeederAddress; address++) {
+            String command = IndexCommands.getFeederId(address);
+            String response = actuator.read(command);
+            PacketResponse packetResponse = GetFeederId.decode(response);
+
+            if(packetResponse.isOk()) {
+                IndexFeeder otherFeeder = findByHardwareId(packetResponse.getUuid());
+                if(otherFeeder == null) {
+                    otherFeeder = new IndexFeeder();
+                    otherFeeder.setHardwareId(packetResponse.getUuid());
+                    Configuration.get().getMachine().addFeeder(otherFeeder);
+                }
+                otherFeeder.setSlotAddress(address);
+            } else if(packetResponse.getError() == ErrorTypes.TIMEOUT) {
+                IndexFeeder otherFeeder = findBySlotAddress(address);
+                if(otherFeeder != null) {
+                    otherFeeder.slotAddress = null;
+                    otherFeeder.initialized = false;
+                }
+            }
+        }
     }
 }
