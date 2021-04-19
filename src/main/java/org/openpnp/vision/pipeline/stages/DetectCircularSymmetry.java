@@ -23,9 +23,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.opencv.core.Mat;
+import org.openpnp.model.Length;
+import org.openpnp.model.Location;
+import org.openpnp.model.Point;
+import org.openpnp.spi.Camera;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
-import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
@@ -49,8 +53,28 @@ public class DetectCircularSymmetry extends CvStage {
     private int maxDistance = 100;
 
     @Attribute(required = false)
-    @Property(description = "Only one pixel out of a block of subSampling x subsampling pixels is sampled. "
-            + "The best result is refined using iteration with smaller and smaller subsampling blocks. ")
+    @Property(description = "Minimum relative circular symmetry (overall pixel variance vs. circular pixel variance).")
+    private double minSymmetry = 1.2;
+
+    @Attribute(required = false)
+    @Property(description = "Property name as controlled by the vision operation using this pipeline.<br/>"
+            + "<ul><li>propertyName.diameter</li><li>propertyName.maxDistance</li><li>propertyName.center</li></ul>"
+            + "If set, these will override the properties configured here.")
+    private String diameterProperty = "";
+
+    @Attribute(required = false)
+    @Property(description = "Relative outer diameter margin used when the diameterProperty is set.")
+    private double outerMargin = 0.2;
+
+    @Attribute(required = false)
+    @Property(description = "Relative inner diameter margin used when the diameterProperty is set.")
+    private double innerMargin = 0.4;
+
+    @Attribute(required = false)
+    @Property(description = "To speed things up, only one pixel out of a square of subSampling × subSampling pixels is sampled. "
+            + "The best region is then locally searched using iteration with smaller and smaller subSampling size.<br/>"
+            + "The subSampling value will automatically be reduced for small diameters. "
+            + "Use BlurGaussian before this stage if subSampling suffers from moiré effects.")
     private int subSampling = 8;
 
     @Attribute(required = false)
@@ -81,6 +105,14 @@ public class DetectCircularSymmetry extends CvStage {
         this.maxDistance = maxDistance;
     }
 
+    public double getMinSymmetry() {
+        return minSymmetry;
+    }
+
+    public void setMinSymmetry(double minSymmetry) {
+        this.minSymmetry = minSymmetry;
+    }
+
     public int getSubSampling() {
         return subSampling;
     }
@@ -97,13 +129,57 @@ public class DetectCircularSymmetry extends CvStage {
         this.diagnostics = diagnostics;
     }
 
+    public String getDiameterProperty() {
+        return diameterProperty;
+    }
+
+    public void setDiameterProperty(String diameterProperty) {
+        this.diameterProperty = diameterProperty;
+    }
+
+    public double getOuterMargin() {
+        return outerMargin;
+    }
+
+    public void setOuterMargin(double outerMargin) {
+        this.outerMargin = outerMargin;
+    }
+
+    public double getInnerMargin() {
+        return innerMargin;
+    }
+
+    public void setInnerMargin(double innerMargin) {
+        this.innerMargin = innerMargin;
+    }
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
+        Camera camera = (Camera) pipeline.getProperty("camera");
         Mat mat = pipeline.getWorkingImage();
-        List<Result.Circle> circles = new ArrayList<>();
-        //int effectiveSubSampling = Math.max(1, Math.min(subSampling, (maxDiameter-minDiameter)/8));
-        circles.add(findCircularSymmetry(mat, mat.cols()/2, mat.rows()/2, 
-                maxDiameter, minDiameter, maxDistance, subSampling, diagnostics, new ScoreRange()));
+        // Get overrinding properties, if any and convert to pixels.
+        Length diameterByProperty = (Length) pipeline.getProperty(diameterProperty+".diameter");
+        int minDiameter = this.minDiameter;
+        int maxDiameter = this.maxDiameter;
+        if (diameterByProperty != null && diameterByProperty.getValue() > 0) {
+            double diameter = VisionUtils.toPixels(diameterByProperty, camera);
+            minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
+            maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
+        }
+        int maxDistance = this.maxDistance;
+        Length maxDistanceByProperty = (Length) pipeline.getProperty(diameterProperty+".maxDistance");
+        if (maxDistanceByProperty != null && maxDistanceByProperty.getValue() > 0) {
+            maxDistance = (int) Math.round(VisionUtils.toPixels(maxDistanceByProperty, camera));
+        }
+        Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
+        Location centerByProperty = (Location) pipeline.getProperty(diameterProperty+".center");
+        if (centerByProperty != null) {
+            center = VisionUtils.getLocationPixels(camera, centerByProperty);
+        }
+
+        int effectiveSubSampling = Math.max(1, Math.min(subSampling, Math.min((maxDiameter-minDiameter)/4, minDiameter/3)));
+        List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 
+                maxDiameter, minDiameter, maxDistance*2, minSymmetry, effectiveSubSampling, diagnostics, new ScoreRange());
         return new Result(null, circles);
     }
 
@@ -111,8 +187,10 @@ public class DetectCircularSymmetry extends CvStage {
         public double minScore = Double.POSITIVE_INFINITY;
         public double maxScore = Double.NEGATIVE_INFINITY;
         void add(double score) {
-            minScore = Math.min(minScore, score); 
-            maxScore = Math.max(maxScore, score); 
+            if (Double.isFinite(score)) {
+                minScore = Math.min(minScore, score); 
+                maxScore = Math.max(maxScore, score);
+            }
         }
     }
 
@@ -129,8 +207,8 @@ public class DetectCircularSymmetry extends CvStage {
      * @return
      * @throws Exception 
      */
-    public static Circle findCircularSymmetry(Mat image, int xCenter, int yCenter,
-            int maxDiameter, int minDiameter, int maxDistance, int subSampling, boolean diagnostics,
+    public static  List<Result.Circle> findCircularSymmetry(Mat image, int xCenter, int yCenter,
+            int maxDiameter, int minDiameter, int maxDistance, double minSymmetry, int subSampling, boolean diagnostics,
             ScoreRange scoreRange) throws Exception {
         final int channels = image.channels();
         final int width = image.cols();
@@ -183,9 +261,9 @@ public class DetectCircularSymmetry extends CvStage {
         int xBest = 0;
         int yBest = 0;
         int rContrastBest = 0;
-        double [] match = null;
+        double [] scoreMap = null;
         if (diagnostics) {
-            match = new double[tolerance*tolerance];
+            scoreMap = new double[tolerance*tolerance];
         }
         int rTol = tolerance/2;
         int rTolSq = rTol*rTol;
@@ -195,7 +273,7 @@ public class DetectCircularSymmetry extends CvStage {
                     xi += subSampling, idxOffset += channels*subSampling) {
                 int distSq = (xi - rTol)*(xi - rTol) + (yi - rTol)*(yi - rTol);
                 if (distSq <= rTolSq) {
-                    double varianceSum = 0.1;
+                    double varianceSum = 0.01; // Prevent div by zero.
                     double lastAvgChannels = 0;
                     double contrastBest = Double.NEGATIVE_INFINITY;
                     int riContrastBest = 0;
@@ -235,36 +313,42 @@ public class DetectCircularSymmetry extends CvStage {
                             lastAvgChannels = avgChannels;
                         }
                     }
-                    double varianceOverall = 0;
+                    double varianceOverall = 0.0;
                     for (int ch = 0; ch < channels; ch++) {
                         varianceOverall += (sumSqOverall[ch] - (sumOverall[ch] * sumOverall[ch]) / nOverall[ch]);
                     }
                     double score = varianceOverall/varianceSum; 
-
-                    if (match != null) {
-                        score = Math.log(Math.log(score));
-                        match[yi*tolerance + xi] = score;
-                        scoreRange.add(score);
-                    }
                     if (scoreBest < score) {
                         scoreBest = score;
                         xBest = xi + xCrop;
                         yBest = yi + yCrop;
                         rContrastBest = riContrastBest;
                     }
+                    if (scoreMap != null) {
+                        score = Math.log(Math.log(score));
+                        scoreMap[yi*tolerance + xi] = score;
+                        scoreRange.add(score);
+                    }
                 }
             }
         }
         final int iterationRadius = 2;
-        CvStage.Result.Circle ret;
+        CvStage.Result.Circle bestResult = new CvStage.Result.Circle(r + xBest, r + yBest, rContrastBest * 2);
+        List<CvStage.Result.Circle> ret;
         if (subSampling == 1) {
-            ret = new CvStage.Result.Circle(r + xBest, r + yBest, rContrastBest * 2);
+            ret = new ArrayList<>();
+            if (scoreBest > minSymmetry) {
+                ret.add(bestResult);
+            }
         }
         else {
             ret = findCircularSymmetry(image, r + xBest, r + yBest, maxDiameter, minDiameter, 
-                    subSampling*iterationRadius, Math.max(subSampling/4, 1), diagnostics, scoreRange);
+                    subSampling*iterationRadius, minSymmetry, Math.max(subSampling/4, 1), diagnostics, scoreRange);
+            if (ret.size() > 0) {
+                bestResult = ret.get(0);
+            }
         }
-        if (match != null) {
+        if (scoreMap != null) {
             double rscale = 1/(scoreRange.maxScore - scoreRange.minScore);
             double scale = 255*channels*rscale;
             for (int yi = 0; yi < tolerance; yi++) {
@@ -273,15 +357,22 @@ public class DetectCircularSymmetry extends CvStage {
                     int xis = xi/subSampling*subSampling;
                     int distSq = (xis - rTol)*(xis - rTol) + (yis - rTol)*(yis - rTol);
                     if (distSq <= rTolSq) {
-                        double s = (match[yis*tolerance + xis] - scoreRange.minScore);
+                        double s = scoreMap[yis*tolerance + xis];
+                        if (!Double.isFinite(s)) {
+                            s = scoreRange.minScore;
+                        }
+                        s -= scoreRange.minScore;
                         double score = s*scale;
-                        int dx = (int) (xi + xCrop - ret.x + r);
-                        int dy = (int) (yi + yCrop  - ret.y + r);
-                        int distance = (int)Math.round(Math.sqrt(dx*dx + dy*dy));
-                        int dx2 = (int) (xi + xCrop - xBest);
-                        int dy2 = (int) (yi + yCrop - yBest);
+                        boolean indicate = false;
+                        if (bestResult != null) {
+                            int dx = xi + xCrop - (int) (bestResult.x) + r;
+                            int dy = yi + yCrop  - (int) (bestResult.y) + r;
+                            int distance = (int)Math.round(Math.sqrt(dx*dx + dy*dy));
+                            indicate = (distance*2 == (int)(bestResult.diameter) || dx == 0 || dy == 0);
+                        }
+                        int dx2 = (xi + xCrop - xBest);
+                        int dy2 = (yi + yCrop - yBest);
                         int distance2 = (int)Math.round(Math.sqrt(dx2*dx2 + dy2*dy2));
-                        boolean indicate = (distance*2 == (int)(ret.diameter) || dx == 0 || dy == 0);
                         double alpha = Math.pow(s*rscale, 3);
                         double alphaCompl = 1-alpha;
                         byte [] pixelData = new byte[channels];
