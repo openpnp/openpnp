@@ -37,10 +37,10 @@ import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.SimpleGraph;
-import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
     @Element
@@ -474,20 +474,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 if (calibrationNozzleTip.getCalibration().isRecalibrateOnHomeNeeded(this)) {
                     if (calibrationNozzleTip == this.getCalibrationNozzleTip()) {
                         // The currently mounted nozzle tip.
-                        try {
-                            Logger.debug("{}.home() nozzle tip {} calibration neeeded", getName(), calibrationNozzleTip.getName());
-                            calibrationNozzleTip.getCalibration().calibrate(this, true, false);
-                        }
-                        catch (Exception e) {
-                            if (calibrationNozzleTip.getCalibration().isFailHoming()) {
-                                throw e; 
-                            }
-                            else {
-                                UiUtils.messageBoxOnExceptionLater(() -> {
-                                    throw e;
-                                });
-                            }
-                        }
+                        Logger.debug("{}.home() nozzle tip {} calibration neeeded", getName(), calibrationNozzleTip.getName());
+                        calibrationNozzleTip.getCalibration().calibrate(this, true, false);
                     }
                     else {
                         // Not currently mounted so just reset.

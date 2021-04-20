@@ -326,10 +326,4 @@ public class Length {
         return setLocationField(configuration, location, length, field, false);
     }
 
-    public int compareTo(Length other) {
-        if (other == null) {
-            return Double.valueOf(getValue()).compareTo(Double.valueOf(0));
-        }
-        return Double.valueOf(getValue()).compareTo(Double.valueOf(other.convertToUnits(units).getValue()));
-    }
 }

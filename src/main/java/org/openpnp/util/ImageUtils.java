@@ -2,8 +2,6 @@ package org.openpnp.util;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.WritableRaster;
 
 public class ImageUtils {
 
@@ -27,16 +25,4 @@ public class ImageUtils {
         return img;
     }
 
-    /**
-     * Clone an image for independent manipulation.  
-     * 
-     * @param image
-     * @return
-     */
-    public static BufferedImage clone(BufferedImage image) {
-        ColorModel colorModel = image.getColorModel();
-        WritableRaster raster = image.copyData(image.getRaster().createCompatibleWritableRaster());
-        boolean isAlphaPremultiplied = colorModel.isAlphaPremultiplied();
-        return new BufferedImage(colorModel, raster, isAlphaPremultiplied, null);
-    }
 }

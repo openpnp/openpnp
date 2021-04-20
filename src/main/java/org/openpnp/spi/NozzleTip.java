@@ -19,12 +19,4 @@ public interface NozzleTip extends Identifiable, Named, WizardConfigurable, Prop
      * NozzleTips that are sturdy enough to take the lateral forces.  
      */
     public boolean isPushAndDragAllowed();
-
-    /**
-     * Perform any homing operation on each nozzle tip. The head and driver have already been homed
-     * at this time. 
-     * 
-     * @throws Exception
-     */
-    void home() throws Exception;
 }

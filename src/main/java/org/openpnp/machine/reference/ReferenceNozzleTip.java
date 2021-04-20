@@ -712,7 +712,4 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
         }
     };
-    @Override
-    public void home() throws Exception {
-    }
 }

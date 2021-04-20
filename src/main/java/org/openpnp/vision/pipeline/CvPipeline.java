@@ -16,7 +16,6 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvStage.Result;
-import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -242,9 +241,6 @@ public class CvPipeline implements AutoCloseable {
             }
             catch (Exception e) {
                 result = new Result(null, e);
-                if (stage.isEnabled()) {
-                    Logger.debug("Stage \""+stage.getName()+"\" throws "+e);
-                }
             }
             processingTimeNs = System.nanoTime() - processingTimeNs;
             totalProcessingTimeNs += processingTimeNs;

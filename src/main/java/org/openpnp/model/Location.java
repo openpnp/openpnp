@@ -64,8 +64,6 @@ public class Location {
         this.rotation = rotation;
     }
 
-    static final public Location origin = new Location(LengthUnit.Millimeters);
-
     public double getX() {
         return x;
     }
@@ -96,11 +94,6 @@ public class Location {
 
     public Length getLinearLengthTo(Location location) {
         double distance = getLinearDistanceTo(location);
-        return new Length(distance, getUnits());
-    }
-
-    public Length getXyzLengthTo(Location location) {
-        double distance = getXyzDistanceTo(location);
         return new Length(distance, getUnits());
     }
 
@@ -260,18 +253,6 @@ public class Location {
     public Location multiply(double x, double y, double z, double rotation) {
         return new Location(getUnits(), x * getX(), y * getY(), z * getZ(),
                 rotation * getRotation());
-    }
-
-    /**
-     * Returns a new Location based on this Location with values multiplied by the specified factor.
-     * Units are the same as this Location.
-     * 
-     * @param factor
-     * @return
-     */
-    public Location multiply(double factor) {
-        return new Location(getUnits(), factor * getX(), factor * getY(), factor * getZ(),
-                factor * getRotation());
     }
 
     /**
