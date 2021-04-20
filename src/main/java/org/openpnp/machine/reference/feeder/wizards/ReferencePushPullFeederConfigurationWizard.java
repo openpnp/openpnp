@@ -22,7 +22,7 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
+import java.awt.Color;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -67,7 +67,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
-import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -78,6 +77,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import java.awt.Dimension;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullFeederConfigurationWizard
@@ -633,8 +633,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 UiUtils.submitUiMachineTask(() -> {
                     MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
                     MovableUtils.fireTargetedUserAction(feeder.getCamera());
-                    feeder.getCamera().waitForCompletion(CompletionType.WaitForStillstand);
-                    SwingUtilities.invokeLater(() -> {
+                    SwingUtilities.invokeAndWait(() -> {
                         UiUtils.messageBoxOnException(() -> {
                             editPipeline();
                         });
