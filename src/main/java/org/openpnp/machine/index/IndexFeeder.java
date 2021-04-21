@@ -230,6 +230,11 @@ public class IndexFeeder extends ReferenceFeeder {
 
             IndexFeeder indexFeeder = (IndexFeeder) feeder;
 
+            // Are we explicitly asking for feeders with null hardware Id?
+            if(indexFeeder.hardwareId == null && hardwareId == null) {
+                return indexFeeder;
+            }
+
             if(indexFeeder.hardwareId != null && indexFeeder.hardwareId.equals(hardwareId)) {
                 return indexFeeder;
             }
@@ -268,10 +273,14 @@ public class IndexFeeder extends ReferenceFeeder {
             if(packetResponse.isOk()) {
                 IndexFeeder otherFeeder = findByHardwareId(packetResponse.getUuid());
                 if(otherFeeder == null) {
-                    otherFeeder = new IndexFeeder();
-                    otherFeeder.setHardwareId(packetResponse.getUuid());
-                    Configuration.get().getMachine().addFeeder(otherFeeder);
+                    // Try to find an existing feeder without a hardware id before making a new one
+                    otherFeeder = findByHardwareId(null);
+                    if(otherFeeder == null) {
+                        otherFeeder = new IndexFeeder();
+                        Configuration.get().getMachine().addFeeder(otherFeeder);
+                    }
                 }
+                otherFeeder.setHardwareId(packetResponse.getUuid());
                 otherFeeder.setSlotAddress(address);
             } else if(packetResponse.getError() == ErrorTypes.TIMEOUT) {
                 IndexFeeder otherFeeder = findBySlotAddress(address);

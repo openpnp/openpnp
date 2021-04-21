@@ -628,6 +628,42 @@ public class IndexFeederTest {
     }
 
     @Test
+    public void findAllFeedersFillsNullHardwareIdFeedersBeforeCreatingNewOnes() throws Exception {
+        int maxFeederAddress = 2;
+        indexProperties.setMaxFeederAddress(maxFeederAddress);
+
+        /*
+        - Existing feeder has no hardware id, should be filled with hardwareId
+        - New feeder responds on address 2
+        - Address 3-5 responds with timeout
+         */
+
+        String newHardwareUuid = "FFEEDDCCBBAA998877665544";
+
+        when(mockedActuator.read(getFeederId(1)))
+                .thenReturn(GetFeederId.ok(1, hardwareId));
+
+        when(mockedActuator.read(getFeederId(2)))
+                .thenReturn(GetFeederId.ok(2, newHardwareUuid));
+
+        IndexFeeder.findAllFeeders();
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            inOrder.verify(mockedActuator).read(getFeederId(i));
+        }
+        inOrder.verify(mockedActuator, never()).read(any());
+
+        assertEquals(1, (int) feeder.getSlotAddress());
+        assertEquals(hardwareId, feeder.getHardwareId());
+
+        IndexFeeder newFeeder = IndexFeeder.findByHardwareId(newHardwareUuid);
+        assertNotNull(newFeeder);
+        assertEquals(2, (int) newFeeder.getSlotAddress());
+        assertEquals(newHardwareUuid, newFeeder.getHardwareId());
+    }
+
+    @Test
     public void findAllFeedersRemovesFeederAddressIfTimeoutOccurs() throws Exception {
         int maxFeederAddress = 5;
         indexProperties.setMaxFeederAddress(maxFeederAddress);
