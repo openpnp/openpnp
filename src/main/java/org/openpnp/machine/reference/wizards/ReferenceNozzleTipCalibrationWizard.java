@@ -207,8 +207,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(calibrationZOffsetTf, "8, 10, left, default");
         calibrationZOffsetTf.setColumns(10);
         
-        lblNozzleTipDiameter = new JLabel("Nozzle Tip Diameter");
-        lblNozzleTipDiameter.setToolTipText("<html>\r\nDiameter of the feature/edge that should be detected in calibration.<br/>\r\nOnly used with pipelines that have a DetectCircularSymmetry stage.\r\n</html>");
+        lblNozzleTipDiameter = new JLabel("Vision Diameter");
+        lblNozzleTipDiameter.setToolTipText("<html>\r\nDiameter of the feature/edge that should be detected in calibration vision.<br/>\r\nOnly used with pipelines that have a DetectCircularSymmetry stage.\r\n</html>");
         panelCalibration.add(lblNozzleTipDiameter, "2, 12, right, default");
         
         calibrationTipDiameter = new JTextField();
