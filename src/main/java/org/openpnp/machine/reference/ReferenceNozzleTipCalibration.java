@@ -545,6 +545,12 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private Double offsetThreshold = 0.0;
     @Element(required = false)
     private Length offsetThresholdLength = new Length(0.5, LengthUnit.Millimeters);
+    /**
+     * Vision detection search distance margin, relative to the threshold: we want to detect nozzle tips outside the threshold and
+     * get positive falses rather than false positives.  
+     */
+    @Attribute(required = false)
+    private double detectionThresholdMargin = 0.4;
     @Element(required = false)
     private Length calibrationZOffset = new Length(0.0, LengthUnit.Millimeters);
     @Element(required = false)
@@ -1031,7 +1037,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     public CvPipeline getPipeline(Camera camera, Location measureLocation) throws Exception {
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("nozzleTip.diameter", getCalibrationTipDiameter());
-        pipeline.setProperty("nozzleTip.tolerance", getOffsetThresholdLength().multiply(1.4));
+        // Set the search tolerance to be somewhat larger than the threshold.
+        pipeline.setProperty("nozzleTip.tolerance", getOffsetThresholdLength().multiply(1 + detectionThresholdMargin));
         pipeline.setProperty("nozzleTip.center", measureLocation);
         Point maskCenter = VisionUtils.getLocationPixels(camera, measureLocation);
         pipeline.setProperty("MaskCircle.center", new org.opencv.core.Point(maskCenter.getX(), maskCenter.getY()));
