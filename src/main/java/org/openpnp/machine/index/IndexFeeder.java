@@ -4,6 +4,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.index.protocol.ErrorTypes;
 import org.openpnp.machine.index.protocol.IndexCommands;
 import org.openpnp.machine.index.protocol.PacketResponse;
+import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
@@ -103,8 +104,15 @@ public class IndexFeeder extends ReferenceFeeder {
         initialized = true;
     }
 
-    private static Actuator getActuator() {
-        return Configuration.get().getMachine().getActuatorByName(ACTUATOR_NAME);
+    static Actuator getActuator() {
+        Actuator actuator = Configuration.get().getMachine().getActuatorByName(ACTUATOR_NAME);
+
+        if(actuator == null) {
+            actuator = new ReferenceActuator();
+            actuator.setName(ACTUATOR_NAME);
+        }
+
+        return actuator;
     }
 
     @Override

@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.mockito.verification.VerificationMode;
+import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
@@ -56,6 +57,16 @@ public class IndexFeederTest {
     @Test
     public void getJobPreparationLocationReturnsNull() {
         Assert.assertNull(feeder.getJobPreparationLocation());
+    }
+
+    @Test
+    public void getActuatorCreatesReferenceActuatorIfOneDoesNotExist() {
+        machine.removeActuator(mockedActuator); // Start by removing the one we added for every other test
+
+        Actuator actuator = IndexFeeder.getActuator();
+        assertNotNull(actuator);
+        assertTrue(actuator instanceof ReferenceActuator);
+        assertEquals(IndexFeeder.ACTUATOR_NAME, actuator.getName());
     }
 
     @Test
