@@ -64,7 +64,7 @@ To access the bottom vision part settings go to the Parts tab in OpenPnP, select
 
 **Pre-rotate**: This can either inherit the global setting or override it as **Always On** or **Always Off**. 
 
-![Pre-Rotate Option](https://user-images.githubusercontent.com/9963310/115863124-4e5ef500-a435-11eb-8745-c0ffd324b28e.png)
+![Pre-Rotate Options](https://user-images.githubusercontent.com/9963310/115863124-4e5ef500-a435-11eb-8745-c0ffd324b28e.png)
 
 **Test**: Press the `Test Alignment` button to perform an alignment of that part. It must already be picked and held on the nozzle. 
 
@@ -74,14 +74,14 @@ To access the bottom vision part settings go to the Parts tab in OpenPnP, select
 
 **Rotation**: Use the option **Adjust** for all standard pipelines. Only an adjustment of ±45° can be detected and applied, which is usually more than sufficient for parts picked from normal feeders. Use the option **Full** only for special pipelines that specifically support full 360° orientation detection (pin 1 detection). **CAUTION**: You may get very strange and intermittent errors, if you set **Full** and your pipeline is not specifically made for it.  
 
-![Rotation Option](https://user-images.githubusercontent.com/9963310/115863659-10ae9c00-a436-11eb-8a86-1ecb4db357e4.png)
+![Rotation Options](https://user-images.githubusercontent.com/9963310/115863659-10ae9c00-a436-11eb-8a86-1ecb4db357e4.png)
 
 **Part Size Check**: You can add a part size check, where the vision result is compared against a known good part size. This can serve as an alternative to vacuum sensing tests, to detect whether a pick was successful. 
 
 - Use **BodySize** if your pipeline looks for the body of the part (e.g. the black body of lead free packages). 
 - Use **PadExtents** if your pipeline looks for the contacts (which the default pipeline does). Note, you need to define the footprint in the Package for this to work.
 
-![Part Size Check Option](https://user-images.githubusercontent.com/9963310/115864239-e5787c80-a436-11eb-9759-373ceb6db33d.png)
+![Part Size Check Options](https://user-images.githubusercontent.com/9963310/115866469-fd9dcb00-a439-11eb-90b8-6b47ad4c49a6.png)
 
 **Size tolerance (%)**: Determines by how much (relatively speaking) the detected part size may deviate from the footprint defined size. If the tolerance is exceeded, the aligment fails. Most likely the part was then not properly picked. 
 
