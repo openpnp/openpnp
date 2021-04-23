@@ -34,6 +34,8 @@ To configure Bottom Vision visit Machine Setup -> Vision -> Bottom Vision.
 
 **Rotate parts prior to vision?**: Will already pre-rotate the part on the nozzle to its final placement angle. This generally improves precision. This option also enabled multi-pass vision.
 
+### Multi-pass Vision
+
 The part will first be positioned and rotated as picked from the feeder, which means it might be slightly offset both in location and angle, due to play in the feeder etc. The vision operation then determines these offsets, but these may be inaccurate as the part is seen slightly from the side, which may create parallax errors and slight changes in light relection angles which might also introduce errors on beveled/angled reflective features. Furthermore, the scale in the camera view (units per pixel) might be slightly in error as the part or some of its features (angled pins etc.) might be slightly outside the focal plane. 
 
 In order to further improve precision, the part is then centered in the camera view, according to the preliminary offsets and the process is repeated. By centering the part (multiple times), the mentioned errors can be cancelled out by symmetry. 
