@@ -23,11 +23,30 @@ Core to the working of Bottom Vision is the [[CvPipeline]]. The pipeline describ
 
 # Global Configuration
 
-To enable Bottom Vision visit Machine Setup -> Vision -> Bottom Vision, check the `Enabled?` checkbox and press Apply.
+To configure Bottom Vision visit Machine Setup -> Vision -> Bottom Vision.
 
-In the same window, click the Pipeline `Edit` button to view and edit the default pipeline that will be used to locate parts. The default pipeline is used when no part specific pipeline has been configured. The built in pipeline is described below.
 
-You will probably need to customize the pipeline a bit for your machine. Since this is a very new feature there is likely to be a lot of discussion and learning happening on [the mailing list](http://groups.google.com/group/openpnp). That should be your first stop for help.
+![Bottom Vision General Settings](https://user-images.githubusercontent.com/9963310/115859927-13f35900-a431-11eb-8a20-85638ebad74a.png)
+
+**Enabled?**: Switches on bottom vision.
+
+**Pipeline**: Press the `Edit` button to view and edit the default pipeline that will be used to locate parts. The default pipeline is used when no part specific pipeline has been configured. The built-in pipeline is described below. Press `Reset to Default` to reset the pipeline to the OpenPnP default. Press `Reset All Parts` to assign the current pipeline to all parts. 
+
+**Rotate parts prior to vision?**: Will already pre-rotate the part on the nozzle to its final placement angle. This generally improves precision. This option also enabled multi-pass vision.
+
+The part will first be positioned and rotated as picked from the feeder, which means it might be slightly offset both in location and angle, due to play in the feeder etc. The vision operation then determines these offsets, but these may be inaccurate as the part is seen slightly from the side, which may create parallax errors and it slightly changes light relection angles which might also introduce errors on beveled/angled reflective features. Furthermore, the scale in the camera view (units per pixel) might be slightly in error. 
+
+In order to further improve precision, the part is then centered in the camera view, according to the preliminary offsets and the process is repeated. By centering the part (multiple times), the mentioned errors can be cancelled out by symmetry. 
+
+**Max vision passes**: Determines the maximum number of passes used to pinpoint the part (only applies when pre-rotate is active).
+
+**Max linear offset**: As long as preliminary linear offsets are larger than this, further passes are made, up until **Max. vision passes** is reached. Linear offsets are center offsets and corner offsets, see the illustration below. (only applies when pre-rotate is active).
+
+**Max angular offset**: As long as preliminary angular offsets are larger than this, further passes are made, up until **Max. vision passes** is reached (only applies when pre-rotate is active).
+
+![Offsets Explained](https://user-images.githubusercontent.com/9963310/115862405-67b37180-a434-11eb-96ff-1f22ec1c9b0b.png)
+
+You will probably need to customize the pipeline a bit for your machine. See the [Tips](#tips) section below. There is likely to be a lot of discussion and learning happening on [the mailing list](http://groups.google.com/group/openpnp). That should be your first stop for help.
 
 # Part Configuration
 
