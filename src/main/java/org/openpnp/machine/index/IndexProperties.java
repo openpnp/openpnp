@@ -6,7 +6,7 @@ public class IndexProperties {
     private static final String FEEDER_COMMUNICATION_MAX_RETRY = "IndexMachines.FeederCommunicationMaxRetry";
     private static final String MAX_FEEDER_ADDRESS = "IndexMachines.MaxFeederAddress";
 
-    private Machine machine;
+    final Machine machine;
 
     public IndexProperties(Machine machine) {
         this.machine = machine;

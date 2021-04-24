@@ -1,5 +1,6 @@
 package org.openpnp.machine.index;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.index.protocol.ErrorTypes;
 import org.openpnp.machine.index.protocol.IndexCommands;
@@ -17,7 +18,7 @@ import static org.openpnp.machine.index.protocol.IndexResponses.*;
 
 public class IndexFeeder extends ReferenceFeeder {
     public static final String ACTUATOR_NAME = "INDEX_ACTUATOR";
-    private final IndexProperties indexProperties;
+    IndexProperties indexProperties;
 
     @Attribute(required = false)
     protected String hardwareId;
@@ -30,7 +31,12 @@ public class IndexFeeder extends ReferenceFeeder {
     protected boolean initialized = false;
 
     public IndexFeeder() {
-        this.indexProperties = new IndexProperties(Configuration.get().getMachine());
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) {
+                indexProperties = new IndexProperties(configuration.getMachine());
+            }
+        });
     }
 
     @Override
