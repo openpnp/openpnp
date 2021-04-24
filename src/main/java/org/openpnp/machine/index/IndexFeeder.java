@@ -105,11 +105,17 @@ public class IndexFeeder extends ReferenceFeeder {
     }
 
     static Actuator getActuator() {
-        Actuator actuator = Configuration.get().getMachine().getActuatorByName(ACTUATOR_NAME);
+        Machine machine = Configuration.get().getMachine();
+        Actuator actuator = machine.getActuatorByName(ACTUATOR_NAME);
 
         if(actuator == null) {
             actuator = new ReferenceActuator();
             actuator.setName(ACTUATOR_NAME);
+            try {
+                machine.addActuator(actuator);
+            } catch (Exception exception) {
+                exception.printStackTrace(); // TODO Probably need to log this, figure out why it can happen first
+            }
         }
 
         return actuator;

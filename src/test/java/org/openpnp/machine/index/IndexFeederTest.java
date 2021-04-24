@@ -67,6 +67,9 @@ public class IndexFeederTest {
         assertNotNull(actuator);
         assertTrue(actuator instanceof ReferenceActuator);
         assertEquals(IndexFeeder.ACTUATOR_NAME, actuator.getName());
+
+        Actuator machineActuator = machine.getActuatorByName(IndexFeeder.ACTUATOR_NAME);
+        assertSame(actuator, machineActuator);
     }
 
     @Test
