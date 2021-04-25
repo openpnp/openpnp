@@ -79,6 +79,7 @@ OpenPnP user Bill made a Marlin 2.0 port to Teensy 4.1 with advanced axis suppor
 * See the [proposed changes (Pull Request)](https://github.com/synthetos/TinyG/pull/258).
 * Follow [the discussion](https://groups.google.com/d/msg/openpnp/veyVAwqS0do/Zsn73noGBQAJ).
 
+The changes have now officially been adopted by the TinyG project. But please still use the [makr.zone link](https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/), as the official firmware downloads are not yet updated and additional guidance is needed. 
 
 ___
 
