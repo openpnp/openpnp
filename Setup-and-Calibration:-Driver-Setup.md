@@ -2,6 +2,16 @@
 
 In OpenPnP, the Driver is the part of the software that interfaces between OpenPnP and a particular type of machine. Typically this is just a small piece of code that translates OpenPnP commands into commands for a particular motion controller such as Smoothie, TinyG, Marlin, etc.
 
+## Automatic Conversion of the NullDriver
+
+When OpenPnP is first installed, it comes with a simulated driver, the NullDriver. Together with the simulated cameras, you can try OpenPnP out with a virtual machine. Once you want to start connecting it to your real machine, the NullDriver must be replaced with the right driver. Very often this is the GcodeDriver or the GcodeAsyncDriver, letting you send textual commands to the controller, typically these textual commands are in the more or less standardized [machine controlling language named "G-code"](https://en.wikipedia.org/wiki/G-code). 
+
+If this is the case, OpenPnP can automatically do this conversion for you. More specifically, the [[Issues and Solutions]] system can be employed to do it. First press the `Find Issues & Solutions` button, then select the NullDriver line and press `Accept`:
+
+![NullDriver to GcodeAsyncDriver](https://user-images.githubusercontent.com/9963310/115991287-07553900-a5c8-11eb-9679-f4808a7dc505.png)
+
+If you use another driver type, or multiple drivers for multiple controllers, read the following.
+
 ## Choosing a Driver
 For **newer Versions of OpenPnP 2.0** you can add as many drivers as you like. Go to the Machine Setup tab and select the Drivers node. Press the `[ + ]` button to create a new driver.
 
