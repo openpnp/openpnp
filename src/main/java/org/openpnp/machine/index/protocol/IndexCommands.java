@@ -28,7 +28,7 @@ public class IndexCommands {
     }
 
     public static String getFeederAddress(String uuid) {
-        return PacketBuilder.command(0xFF, 0x01)
+        return PacketBuilder.command(0xFF, 0xC0)
                 .putUuid(uuid)
                 .toByteString();
     }

@@ -48,7 +48,7 @@ public class IndexCommandsTest {
 
     @Test
     public void testGetFeederAddress() {
-        assertEquals("FF0D01" + uuid1 + "7989", getFeederAddress(uuid1));
-        assertEquals("FF0D01" + uuid2 + "2C08", getFeederAddress(uuid2));
+        assertEquals("FF0DC0" + uuid1 + "7A09", getFeederAddress(uuid1));
+        assertEquals("FF0DC0" + uuid2 + "2F88", getFeederAddress(uuid2));
     }
 }
