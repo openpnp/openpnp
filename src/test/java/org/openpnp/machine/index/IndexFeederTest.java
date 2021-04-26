@@ -15,6 +15,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 
 import java.io.File;
+import java.util.function.IntConsumer;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -590,7 +591,7 @@ public class IndexFeederTest {
                     .thenReturn(Errors.timeout());
         }
 
-        IndexFeeder.findAllFeeders();
+        IndexFeeder.findAllFeeders(null);
 
         InOrder inOrder = Mockito.inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
@@ -625,7 +626,7 @@ public class IndexFeederTest {
                     .thenReturn(Errors.timeout());
         }
 
-        IndexFeeder.findAllFeeders();
+        IndexFeeder.findAllFeeders(null);
 
         InOrder inOrder = Mockito.inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
@@ -660,7 +661,7 @@ public class IndexFeederTest {
         when(mockedActuator.read(getFeederId(2)))
                 .thenReturn(GetFeederId.ok(2, newHardwareUuid));
 
-        IndexFeeder.findAllFeeders();
+        IndexFeeder.findAllFeeders(null);
 
         InOrder inOrder = Mockito.inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
@@ -689,7 +690,7 @@ public class IndexFeederTest {
                     .thenReturn(Errors.timeout());
         }
 
-        IndexFeeder.findAllFeeders();
+        IndexFeeder.findAllFeeders(null);
 
         InOrder inOrder = Mockito.inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
@@ -698,5 +699,27 @@ public class IndexFeederTest {
         inOrder.verify(mockedActuator, never()).read(any());
 
         assertNull(feeder.getSlotAddress());
+    }
+
+    @Test
+    public void findAllFeedersGivesProgressUpdates() throws Exception {
+        int maxFeederAddress = 5;
+        indexProperties.setMaxFeederAddress(maxFeederAddress);
+
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            when(mockedActuator.read(getFeederId(i)))
+                    .thenReturn(Errors.timeout());
+        }
+
+        IntConsumer progressUpdates = mock(IntConsumer.class);
+
+        IndexFeeder.findAllFeeders(progressUpdates);
+
+        InOrder inOrder = Mockito.inOrder(mockedActuator, progressUpdates);
+        for (int i = 1; i <= maxFeederAddress; i++) {
+            inOrder.verify(mockedActuator).read(getFeederId(i));
+            inOrder.verify(progressUpdates).accept((i * 100) / maxFeederAddress);
+        }
+        inOrder.verify(mockedActuator, never()).read(any());
     }
 }

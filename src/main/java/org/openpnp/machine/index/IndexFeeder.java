@@ -13,12 +13,14 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.*;
 import org.openpnp.util.UiUtils;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.core.Commit;
 
 import javax.swing.*;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 import static org.openpnp.machine.index.protocol.IndexResponses.*;
 
@@ -177,15 +179,24 @@ public class IndexFeeder extends ReferenceFeeder {
                     public JPanel getPropertySheetPanel() {
                         JPanel panel = new JPanel();
                         JButton searchButton = new JButton("Search");
+                        JProgressBar progressBar = new JProgressBar(0, 100);
                         searchButton.addActionListener(new AbstractAction() {
                             @Override
                             public void actionPerformed(ActionEvent e) {
                                 UiUtils.submitUiMachineTask(() -> {
-                                    IndexFeeder.findAllFeeders();
+                                    IndexFeeder.findAllFeeders(new IntConsumer() {
+                                        @Override
+                                        public void accept(int value) {
+                                            progressBar.setIndeterminate(false);
+                                            progressBar.setValue(value);
+                                        }
+                                    });
                                 });
                             }
                         });
                         panel.add(searchButton);
+                        panel.add(progressBar);
+                        progressBar.setIndeterminate(true);
                         return panel;
                     }
                 }
@@ -306,7 +317,7 @@ public class IndexFeeder extends ReferenceFeeder {
         return null;
     }
 
-    public static void findAllFeeders() throws Exception {
+    public static void findAllFeeders(IntConsumer progressUpdate) throws Exception {
         Machine machine = Configuration.get().getMachine();
         IndexProperties indexProperties = new IndexProperties(machine);
         Actuator actuator = getActuator();
@@ -318,6 +329,11 @@ public class IndexFeeder extends ReferenceFeeder {
             String command = IndexCommands.getFeederId(address);
             String response = actuator.read(command);
             PacketResponse packetResponse = GetFeederId.decode(response);
+
+            if(progressUpdate != null) {
+                int progress = (address * 100) / maxFeederAddress;
+                progressUpdate.accept(progress);
+            }
 
             if(packetResponse.isOk()) {
                 IndexFeeder otherFeeder = findByHardwareId(packetResponse.getUuid());
