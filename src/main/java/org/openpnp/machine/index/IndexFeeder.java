@@ -1,10 +1,14 @@
 package org.openpnp.machine.index;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.index.protocol.ErrorTypes;
 import org.openpnp.machine.index.protocol.IndexCommands;
 import org.openpnp.machine.index.protocol.PacketResponse;
+import org.openpnp.machine.index.sheets.FeederPropertySheet;
+import org.openpnp.machine.index.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
@@ -59,7 +63,7 @@ public class IndexFeeder extends ReferenceFeeder {
 
             initializeIfNeeded();
 
-            if(initialized) {
+            if (initialized) {
                 super.prepareForJob(visit);
                 return;
             }
@@ -77,10 +81,10 @@ public class IndexFeeder extends ReferenceFeeder {
         String feederAddressResponseString = actuator.read(IndexCommands.getFeederAddress(hardwareId));
 
         PacketResponse response = GetFeederAddress.decode(feederAddressResponseString);
-        if(! response.isOk()) {
+        if (!response.isOk()) {
             ErrorTypes error = response.getError();
 
-            if(error == ErrorTypes.TIMEOUT) {
+            if (error == ErrorTypes.TIMEOUT) {
                 return;
             }
         }
@@ -88,7 +92,7 @@ public class IndexFeeder extends ReferenceFeeder {
     }
 
     private void initializeIfNeeded() throws Exception {
-        if(initialized || slotAddress == null) {
+        if (initialized || slotAddress == null) {
             return;
         }
 
@@ -96,13 +100,13 @@ public class IndexFeeder extends ReferenceFeeder {
         String responseString = actuator.read(IndexCommands.initializeFeeder(slotAddress, hardwareId));
         PacketResponse response = InitializeFeeder.decode(responseString);
 
-        if(!response.isOk()) {
-            if(response.getError() == ErrorTypes.TIMEOUT) {
+        if (!response.isOk()) {
+            if (response.getError() == ErrorTypes.TIMEOUT) {
                 slotAddress = null;
                 return;
-            } else if(response.getError() == ErrorTypes.WRONG_FEEDER_UUID) {
+            } else if (response.getError() == ErrorTypes.WRONG_FEEDER_UUID) {
                 IndexFeeder otherFeeder = findByHardwareId(response.getUuid());
-                if(otherFeeder == null) {
+                if (otherFeeder == null) {
                     otherFeeder = new IndexFeeder();
                     otherFeeder.setHardwareId(response.getUuid());
                     Configuration.get().getMachine().addFeeder(otherFeeder);
@@ -122,7 +126,7 @@ public class IndexFeeder extends ReferenceFeeder {
         Machine machine = Configuration.get().getMachine();
         Actuator actuator = machine.getActuatorByName(ACTUATOR_NAME);
 
-        if(actuator == null) {
+        if (actuator == null) {
             actuator = new ReferenceActuator();
             actuator.setName(ACTUATOR_NAME);
             try {
@@ -168,39 +172,15 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {
-                new PropertySheet() {
-                    @Override
-                    public String getPropertySheetTitle() {
-                        return "Search Property Sheet";
-                    }
+        List<PropertySheet> sheets = new ArrayList<>();
 
-                    @Override
-                    public JPanel getPropertySheetPanel() {
-                        JPanel panel = new JPanel();
-                        JButton searchButton = new JButton("Search");
-                        JProgressBar progressBar = new JProgressBar(0, 100);
-                        searchButton.addActionListener(new AbstractAction() {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                UiUtils.submitUiMachineTask(() -> {
-                                    IndexFeeder.findAllFeeders(new IntConsumer() {
-                                        @Override
-                                        public void accept(int value) {
-                                            progressBar.setIndeterminate(false);
-                                            progressBar.setValue(value);
-                                        }
-                                    });
-                                });
-                            }
-                        });
-                        panel.add(searchButton);
-                        panel.add(progressBar);
-                        progressBar.setIndeterminate(true);
-                        return panel;
-                    }
-                }
-        };
+        if(hardwareId != null) {
+            sheets.add(new FeederPropertySheet());
+        }
+
+        sheets.add(new SearchPropertySheet());
+
+        return sheets.toArray(new PropertySheet[0]);
     }
 
     @Override
@@ -224,7 +204,7 @@ public class IndexFeeder extends ReferenceFeeder {
         result.append(name);
         result.append(" (Slot: ");
 
-        if(slotAddress == null) {
+        if (slotAddress == null) {
             result.append("None");
         } else {
             result.append(slotAddress);
@@ -249,7 +229,7 @@ public class IndexFeeder extends ReferenceFeeder {
     public void setSlotAddress(Integer slotAddress) {
         // Find any other index feeders and if they have this slot address, set their address to null
         IndexFeeder otherFeeder = findBySlotAddress(slotAddress);
-        if(otherFeeder != null) {
+        if (otherFeeder != null) {
             otherFeeder.slotAddress = null;
             otherFeeder.initialized = false;
         }
@@ -269,7 +249,7 @@ public class IndexFeeder extends ReferenceFeeder {
     public boolean isEnabled() {
         return super.isEnabled() &&
                 getHardwareId() != null &&
-                getPart() !=  null;
+                getPart() != null;
     }
 
     public boolean isInitialized() {
@@ -282,18 +262,18 @@ public class IndexFeeder extends ReferenceFeeder {
 
     public static IndexFeeder findByHardwareId(String hardwareId) {
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-            if(! (feeder instanceof IndexFeeder)) {
+            if (!(feeder instanceof IndexFeeder)) {
                 continue;
             }
 
             IndexFeeder indexFeeder = (IndexFeeder) feeder;
 
             // Are we explicitly asking for feeders with null hardware Id?
-            if(indexFeeder.hardwareId == null && hardwareId == null) {
+            if (indexFeeder.hardwareId == null && hardwareId == null) {
                 return indexFeeder;
             }
 
-            if(indexFeeder.hardwareId != null && indexFeeder.hardwareId.equals(hardwareId)) {
+            if (indexFeeder.hardwareId != null && indexFeeder.hardwareId.equals(hardwareId)) {
                 return indexFeeder;
             }
         }
@@ -303,13 +283,13 @@ public class IndexFeeder extends ReferenceFeeder {
 
     public static IndexFeeder findBySlotAddress(int slotAddress) {
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-            if(! (feeder instanceof IndexFeeder)) {
+            if (!(feeder instanceof IndexFeeder)) {
                 continue;
             }
 
             IndexFeeder indexFeeder = (IndexFeeder) feeder;
 
-            if(indexFeeder.slotAddress != null && indexFeeder.slotAddress.equals(slotAddress)) {
+            if (indexFeeder.slotAddress != null && indexFeeder.slotAddress.equals(slotAddress)) {
                 return indexFeeder;
             }
         }
@@ -330,17 +310,17 @@ public class IndexFeeder extends ReferenceFeeder {
             String response = actuator.read(command);
             PacketResponse packetResponse = GetFeederId.decode(response);
 
-            if(progressUpdate != null) {
+            if (progressUpdate != null) {
                 int progress = (address * 100) / maxFeederAddress;
                 progressUpdate.accept(progress);
             }
 
-            if(packetResponse.isOk()) {
+            if (packetResponse.isOk()) {
                 IndexFeeder otherFeeder = findByHardwareId(packetResponse.getUuid());
-                if(otherFeeder == null) {
+                if (otherFeeder == null) {
                     // Try to find an existing feeder without a hardware id before making a new one
                     otherFeeder = findByHardwareId(null);
-                    if(otherFeeder == null) {
+                    if (otherFeeder == null) {
                         otherFeeder = new IndexFeeder();
                         feedersToAdd.add(otherFeeder);
                     }
@@ -348,9 +328,9 @@ public class IndexFeeder extends ReferenceFeeder {
                 otherFeeder.setHardwareId(packetResponse.getUuid());
                 otherFeeder.setName(packetResponse.getUuid());
                 otherFeeder.setSlotAddress(address);
-            } else if(packetResponse.getError() == ErrorTypes.TIMEOUT) {
+            } else if (packetResponse.getError() == ErrorTypes.TIMEOUT) {
                 IndexFeeder otherFeeder = findBySlotAddress(address);
-                if(otherFeeder != null) {
+                if (otherFeeder != null) {
                     otherFeeder.slotAddress = null;
                     otherFeeder.initialized = false;
                 }
