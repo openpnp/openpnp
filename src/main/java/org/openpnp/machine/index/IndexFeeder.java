@@ -8,11 +8,17 @@ import org.openpnp.machine.index.protocol.PacketResponse;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.*;
+import org.openpnp.util.UiUtils;
 import org.simpleframework.xml.Attribute;
 
 import javax.swing.*;
+
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.openpnp.machine.index.protocol.IndexResponses.*;
 
@@ -41,7 +47,7 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        return null;
+        return new Location(LengthUnit.Millimeters, 20, 0, 0, 0);
     }
 
     @Override
@@ -170,7 +176,16 @@ public class IndexFeeder extends ReferenceFeeder {
                     @Override
                     public JPanel getPropertySheetPanel() {
                         JPanel panel = new JPanel();
-                        panel.add(new JButton("Search or something IDK"));
+                        JButton searchButton = new JButton("Search");
+                        searchButton.addActionListener(new AbstractAction() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                UiUtils.submitUiMachineTask(() -> {
+                                    IndexFeeder.findAllFeeders();
+                                });
+                            }
+                        });
+                        panel.add(searchButton);
                         return panel;
                     }
                 }
@@ -194,7 +209,19 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public String getName() {
-        return "Something!";
+        StringBuilder result = new StringBuilder();
+        result.append(name);
+        result.append(" (Slot: ");
+
+        if(slotAddress == null) {
+            result.append("None");
+        } else {
+            result.append(slotAddress);
+        }
+
+        result.append(")");
+
+        return result.toString();
     }
 
     /**
@@ -285,6 +312,8 @@ public class IndexFeeder extends ReferenceFeeder {
         Actuator actuator = getActuator();
         int maxFeederAddress = indexProperties.getMaxFeederAddress();
 
+        List<IndexFeeder> feedersToAdd = new ArrayList<>();
+
         for (int address = 1; address <= maxFeederAddress; address++) {
             String command = IndexCommands.getFeederId(address);
             String response = actuator.read(command);
@@ -297,10 +326,11 @@ public class IndexFeeder extends ReferenceFeeder {
                     otherFeeder = findByHardwareId(null);
                     if(otherFeeder == null) {
                         otherFeeder = new IndexFeeder();
-                        Configuration.get().getMachine().addFeeder(otherFeeder);
+                        feedersToAdd.add(otherFeeder);
                     }
                 }
                 otherFeeder.setHardwareId(packetResponse.getUuid());
+                otherFeeder.setName(packetResponse.getUuid());
                 otherFeeder.setSlotAddress(address);
             } else if(packetResponse.getError() == ErrorTypes.TIMEOUT) {
                 IndexFeeder otherFeeder = findBySlotAddress(address);
@@ -309,6 +339,10 @@ public class IndexFeeder extends ReferenceFeeder {
                     otherFeeder.initialized = false;
                 }
             }
+        }
+
+        for (IndexFeeder feeder : feedersToAdd) {
+            Configuration.get().getMachine().addFeeder(feeder);
         }
     }
 }
