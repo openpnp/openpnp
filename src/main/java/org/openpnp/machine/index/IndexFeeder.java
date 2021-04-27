@@ -25,6 +25,8 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntConsumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.openpnp.machine.index.protocol.IndexResponses.*;
 
@@ -215,6 +217,18 @@ public class IndexFeeder extends ReferenceFeeder {
         return result.toString();
     }
 
+    @Override
+    public void setName(String name) {
+        Matcher matcher = Pattern.compile("(\\(Slot: [\\w+]+\\))").matcher(name);
+        while (matcher.find()) {
+            name = name.replace(matcher.group(), "");
+        }
+
+        name = name.trim();
+
+        super.setName(name);
+    }
+
     /**
      * The IndexFeeder assumes you have a physical slot that is numbered 1 - 254. That
      * value is also used in the protocol as the address of the feeder once the feeder
@@ -243,6 +257,10 @@ public class IndexFeeder extends ReferenceFeeder {
 
     public void setHardwareId(String hardwareId) {
         this.hardwareId = hardwareId;
+
+        if(getClass().getSimpleName().equals(name)) {
+            name = hardwareId;
+        }
     }
 
     @Override
@@ -326,7 +344,6 @@ public class IndexFeeder extends ReferenceFeeder {
                     }
                 }
                 otherFeeder.setHardwareId(packetResponse.getUuid());
-                otherFeeder.setName(packetResponse.getUuid());
                 otherFeeder.setSlotAddress(address);
             } else if (packetResponse.getError() == ErrorTypes.TIMEOUT) {
                 IndexFeeder otherFeeder = findBySlotAddress(address);

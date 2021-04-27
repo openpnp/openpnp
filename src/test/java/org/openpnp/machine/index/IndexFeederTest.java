@@ -112,6 +112,114 @@ public class IndexFeederTest {
     }
 
     @Test
+    public void getNameByDefaultReturnsClassSimpleName() {
+        assertEquals(
+                "IndexFeeder (Slot: None)",
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void getNameUsesHardwareIdWhenThatIsSet() {
+        feeder.setHardwareId(hardwareId);
+        assertEquals(
+                String.format("%s (Slot: None)", hardwareId),
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void getNameUsesHardwareIdAndSlotWhenBothAreSet() {
+        int slot = 27;
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(slot);
+        assertEquals(
+                String.format("%s (Slot: %s)", hardwareId, slot),
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void setNameWorksWithoutSlotIncluded() {
+        String name = "Some Test Name";
+        feeder.setName(name);
+
+        assertEquals(
+                String.format("%s (Slot: None)", name),
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void setNameWorksWithSlotIncluded() {
+        int slot = 13;
+        String name = "Test Name";
+        String nameWithSlot = String.format("%s (Slot: %s)", name, slot);
+        feeder.setSlotAddress(slot);
+        feeder.setName(nameWithSlot);
+
+        assertEquals(nameWithSlot, feeder.getName());
+    }
+
+    @Test
+    public void setNameWorksWithOverridingNoneSlot() {
+        int slot = 13;
+        String name = "Test Name";
+        String nameWithNoneSlot = String.format("%s (Slot: None)", name);
+        feeder.setSlotAddress(slot);
+        feeder.setName(nameWithNoneSlot);
+
+        String nameWithSlot = String.format("%s (Slot: %s)", name, slot);
+        assertEquals(nameWithSlot, feeder.getName());
+    }
+
+    @Test
+    public void setNameWorksWithUnexpectedSlotNumber() {
+        String name = "Test Name";
+        String nameWithOldSlot = String.format("%s (Slot: 13)", name);
+
+        int newSlot = 3;
+        feeder.setSlotAddress(newSlot);
+        feeder.setName(nameWithOldSlot);
+
+        String nameWithNewSlot = String.format("%s (Slot: %s)", name, newSlot);
+        assertEquals(nameWithNewSlot, feeder.getName());
+    }
+
+    @Test
+    public void setNameWithMalformedSlotKeepsMalformedSlot() {
+        String name = "Test Name (Slot: No";
+        feeder.setName(name);
+
+        assertEquals(
+                String.format("%s (Slot: None)", name),
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void setNameCorrectlyTrimsInputName() {
+        String name = "Test Name ";
+        feeder.setName(name);
+
+        assertEquals(
+                "Test Name (Slot: None)",
+                feeder.getName()
+        );
+    }
+
+    @Test
+    public void setNameWithMultipleRandomSlots() {
+        feeder.setName("This (Slot: 1) Is (Slot: 2) A (Slot: 3) Weird (Slot: None) Test");
+
+        /*
+        We don't trim the spaces internally when a slot is removed. This is more or less intentional to keep everything
+        simpler.
+         */
+        assertEquals("This  Is  A  Weird  Test (Slot: None)", feeder.getName());
+    }
+
+    @Test
     public void isInitializedByDefaultReturnsFalse() {
         Assert.assertFalse(feeder.isInitialized());
     }
@@ -612,6 +720,7 @@ public class IndexFeederTest {
          */
 
         String newHardwareUuid = "FFEEDDCCBBAA998877665544";
+        feeder.setName(hardwareId);
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(1);
 
@@ -635,11 +744,19 @@ public class IndexFeederTest {
         inOrder.verify(mockedActuator, never()).read(any());
 
         assertEquals(2, (int) feeder.getSlotAddress());
+        assertEquals(
+                String.format("%s (Slot: %s)", hardwareId, 2),
+                feeder.getName()
+        );
 
         IndexFeeder newFeeder = IndexFeeder.findByHardwareId(newHardwareUuid);
         assertNotNull(newFeeder);
         assertEquals(1, (int) newFeeder.getSlotAddress());
         assertEquals(newHardwareUuid, newFeeder.getHardwareId());
+        assertEquals(
+                String.format("%s (Slot: %s)", newHardwareUuid, 1),
+                newFeeder.getName()
+        );
     }
 
     @Test
@@ -671,11 +788,19 @@ public class IndexFeederTest {
 
         assertEquals(1, (int) feeder.getSlotAddress());
         assertEquals(hardwareId, feeder.getHardwareId());
+        assertEquals(
+                String.format("%s (Slot: %s)", hardwareId, 1),
+                feeder.getName()
+        );
 
         IndexFeeder newFeeder = IndexFeeder.findByHardwareId(newHardwareUuid);
         assertNotNull(newFeeder);
         assertEquals(2, (int) newFeeder.getSlotAddress());
         assertEquals(newHardwareUuid, newFeeder.getHardwareId());
+        assertEquals(
+                String.format("%s (Slot: %s)", newHardwareUuid, 2),
+                newFeeder.getName()
+        );
     }
 
     @Test
