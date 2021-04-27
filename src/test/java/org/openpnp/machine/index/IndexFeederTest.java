@@ -7,12 +7,15 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 import org.mockito.verification.VerificationMode;
+import org.openpnp.machine.index.sheets.FeederPropertySheet;
+import org.openpnp.machine.index.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.PropertySheetHolder;
 
 import java.io.File;
 import java.util.function.IntConsumer;
@@ -877,5 +880,24 @@ public class IndexFeederTest {
                 String.format("IndexFeeder %s", feeder.getName()),
                 feeder.getPropertySheetHolderTitle()
         );
+    }
+
+    @Test
+    public void getPropertySheetsOnlyReturnsSearchWithNullHardwareId() {
+        PropertySheetHolder.PropertySheet[] sheets = feeder.getPropertySheets();
+
+        assertEquals(1, sheets.length);
+        assertTrue(sheets[0] instanceof SearchPropertySheet);
+    }
+
+    @Test
+    public void getPropertySheetsAlsoReturnsFeederConfigurationWithHardwareIdSet() {
+        feeder.setHardwareId(hardwareId);
+
+        PropertySheetHolder.PropertySheet[] sheets = feeder.getPropertySheets();
+
+        assertEquals(2, sheets.length);
+        assertTrue(sheets[0] instanceof FeederPropertySheet);
+        assertTrue(sheets[1] instanceof SearchPropertySheet);
     }
 }

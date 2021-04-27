@@ -1,8 +1,6 @@
 package org.openpnp.machine.index;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.index.protocol.ErrorTypes;
 import org.openpnp.machine.index.protocol.IndexCommands;
@@ -15,13 +13,10 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.*;
-import org.openpnp.util.UiUtils;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.core.Commit;
 
 import javax.swing.*;
 
-import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntConsumer;
