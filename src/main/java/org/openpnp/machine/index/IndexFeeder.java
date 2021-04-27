@@ -169,7 +169,12 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return "Index feeder sheet holder title";
+        String classSimpleName = getClass().getSimpleName();
+        if(hardwareId == null) {
+            return String.format("Unconfigured %s", classSimpleName);
+        } else {
+            return String.format("%s %s", classSimpleName, getName());
+        }
     }
 
     @Override
@@ -202,6 +207,10 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public String getName() {
+        if(hardwareId == null) {
+            return String.format("Unconfigured %s", getClass().getSimpleName());
+        }
+
         StringBuilder result = new StringBuilder();
         result.append(name);
         result.append(" (Slot: ");

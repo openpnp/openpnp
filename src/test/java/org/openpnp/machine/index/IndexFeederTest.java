@@ -114,7 +114,7 @@ public class IndexFeederTest {
     @Test
     public void getNameByDefaultReturnsClassSimpleName() {
         assertEquals(
-                "IndexFeeder (Slot: None)",
+                "Unconfigured IndexFeeder",
                 feeder.getName()
         );
     }
@@ -140,8 +140,17 @@ public class IndexFeederTest {
     }
 
     @Test
+    public void setHardwareIdOverridesNameOnlyIfItIsNotAlreadySet() {
+        feeder.setName("My Name");
+        feeder.setHardwareId(hardwareId);
+
+        assertEquals("My Name (Slot: None)", feeder.getName());
+    }
+
+    @Test
     public void setNameWorksWithoutSlotIncluded() {
         String name = "Some Test Name";
+        feeder.setHardwareId(hardwareId);
         feeder.setName(name);
 
         assertEquals(
@@ -155,6 +164,7 @@ public class IndexFeederTest {
         int slot = 13;
         String name = "Test Name";
         String nameWithSlot = String.format("%s (Slot: %s)", name, slot);
+        feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(slot);
         feeder.setName(nameWithSlot);
 
@@ -166,6 +176,7 @@ public class IndexFeederTest {
         int slot = 13;
         String name = "Test Name";
         String nameWithNoneSlot = String.format("%s (Slot: None)", name);
+        feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(slot);
         feeder.setName(nameWithNoneSlot);
 
@@ -179,6 +190,7 @@ public class IndexFeederTest {
         String nameWithOldSlot = String.format("%s (Slot: 13)", name);
 
         int newSlot = 3;
+        feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(newSlot);
         feeder.setName(nameWithOldSlot);
 
@@ -189,6 +201,7 @@ public class IndexFeederTest {
     @Test
     public void setNameWithMalformedSlotKeepsMalformedSlot() {
         String name = "Test Name (Slot: No";
+        feeder.setHardwareId(hardwareId);
         feeder.setName(name);
 
         assertEquals(
@@ -200,6 +213,7 @@ public class IndexFeederTest {
     @Test
     public void setNameCorrectlyTrimsInputName() {
         String name = "Test Name ";
+        feeder.setHardwareId(hardwareId);
         feeder.setName(name);
 
         assertEquals(
@@ -210,6 +224,7 @@ public class IndexFeederTest {
 
     @Test
     public void setNameWithMultipleRandomSlots() {
+        feeder.setHardwareId(hardwareId);
         feeder.setName("This (Slot: 1) Is (Slot: 2) A (Slot: 3) Weird (Slot: None) Test");
 
         /*
@@ -846,5 +861,21 @@ public class IndexFeederTest {
             inOrder.verify(progressUpdates).accept((i * 100) / maxFeederAddress);
         }
         inOrder.verify(mockedActuator, never()).read(any());
+    }
+
+    @Test
+    public void getPropertySheetHolderTitleDefault() {
+        assertEquals("Unconfigured IndexFeeder", feeder.getPropertySheetHolderTitle());
+    }
+
+    @Test
+    public void getPropertySheetHolderTitleUsesHardwareIdNameIfConfigured() {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(15);
+
+        assertEquals(
+                String.format("IndexFeeder %s", feeder.getName()),
+                feeder.getPropertySheetHolderTitle()
+        );
     }
 }
