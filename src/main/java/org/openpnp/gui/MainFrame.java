@@ -19,7 +19,16 @@
 
 package org.openpnp.gui;
 
-import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -64,7 +73,6 @@ import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
 import org.openpnp.Translations;
@@ -142,6 +150,7 @@ public class MainFrame extends JFrame {
     private JPanel panelCameraAndInstructions;
     private JPanel panelMachine;
     private MachineSetupPanel machineSetupPanel;
+    private IssuesAndSolutionsPanel issuesAndSolutionsPanel;
     private JDialog frameCamera;
     private JDialog frameMachineControls;
     private Map<KeyStroke, Action> hotkeyActionMap;
@@ -182,6 +191,10 @@ public class MainFrame extends JFrame {
 
     public MachineSetupPanel getMachineSetupTab() {
         return machineSetupPanel;
+    }
+
+    public IssuesAndSolutionsPanel getIssuesAndSolutionsTab() {
+        return issuesAndSolutionsPanel;
     }
 
     private JPanel contentPane;
@@ -252,6 +265,7 @@ public class MainFrame extends JFrame {
         packagesPanel = new PackagesPanel(configuration, this);
         feedersPanel = new FeedersPanel(configuration, this);
         machineSetupPanel = new MachineSetupPanel();
+        issuesAndSolutionsPanel = new IssuesAndSolutionsPanel(configuration, this);
 
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -596,6 +610,7 @@ public class MainFrame extends JFrame {
         tabs.addTab("Packages", null, packagesPanel, null); //$NON-NLS-1$
         tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
         tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
+        tabs.addTab("Issues & Solutions", null, issuesAndSolutionsPanel, null); //$NON-NLS-1$
 
         LogPanel logPanel = new LogPanel();
         tabs.addTab("Log", null, logPanel, null); //$NON-NLS-1$

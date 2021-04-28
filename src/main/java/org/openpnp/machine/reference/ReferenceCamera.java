@@ -797,12 +797,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
         if (getLooking() == Looking.Up
                 && isFlipX() == isFlipY()
                 && ! (this instanceof SimulatedUpCamera)) {
-            issues.add(new Solutions.PlainIssue(
+            solutions.add(new Solutions.PlainIssue(
                     this, 
                     "An up-looking camera should usually mirror the image.", 
                     "Enable either Flip X or Flip Y (but not both) in the camera's Image Transforms.", 
@@ -810,7 +810,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms"));
         }
         if (getUnitsPerPixel().getX() == 0 && getUnitsPerPixel().getY() == 0) {
-            issues.add(new Solutions.PlainIssue(
+            solutions.add(new Solutions.PlainIssue(
                     this, 
                     "Units per pixel are not yet set.", 
                     "Perform the Units Per Pixel measurement in the General Configuration tab .", 
@@ -819,7 +819,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         }
         final double previewFps = getPreviewFps();
         if (previewFps > 15) {
-            issues.add(new Solutions.Issue(
+            solutions.add(new Solutions.Issue(
                     this, 
                     "A high Preview FPS value might create undue CPU load.", 
                     "Set to 5 FPS.", 
@@ -837,7 +837,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             });
         }
         if (! isSuspendPreviewInTasks()) {
-            issues.add(new Solutions.Issue(
+            solutions.add(new Solutions.Issue(
                     this, 
                     "It is recommended to suspend camera preview during machine tasks / Jobs.", 
                     "Enable Suspend during tasks.", 
@@ -854,7 +854,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             });
         }
         if (! isAutoVisible()) {
-            issues.add(new Solutions.Issue(
+            solutions.add(new Solutions.Issue(
                     this, 
                     "In single camera preview OpenPnP can automatically switch the camera for you.", 
                     "Enable Auto Camera View.", 
@@ -875,7 +875,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         if (view != null) {
             final RenderingQuality renderingQuality = view.getRenderingQuality();
             if (renderingQuality.ordinal() < RenderingQuality.High.ordinal()) {
-                issues.add(new Solutions.Issue(
+                solutions.add(new Solutions.Issue(
                         this, 
                         "The preview rendering quality can be improved.", 
                         "Set to Rendering Quality to High (right click the Camera View to see other options).", 

@@ -20,7 +20,6 @@
 package org.openpnp.machine.reference;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -149,12 +148,12 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
         try {
             if (getContactProbeActuator() instanceof AbstractActuator) {
                 if (!getContactProbeActuator().isCoordinatedAfterActuate()) {
-                    issues.add(new Solutions.Issue(
+                    solutions.add(new Solutions.Issue(
                             getContactProbeActuator(), 
                             "Contact probe actuator needs machine coordination after actuation.", 
                             "Enable After Actuation machine coordination.", 
@@ -174,7 +173,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                     Driver driver = ((ControllerAxis) getAxisZ()).getDriver();
                     if (driver instanceof GcodeAsyncDriver) {
                         if (!((GcodeAsyncDriver) driver).isReportedLocationConfirmation()) { 
-                            issues.add(new Solutions.Issue(
+                            solutions.add(new Solutions.Issue(
                                     this, 
                                     "Z driver "+driver.getName()+" must use Location Confirmation for the probe actuator to work.", 
                                     "Enable Location Confirmation.", 
@@ -192,7 +191,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                         }
                     }
                     else {
-                        issues.add(new Solutions.PlainIssue(
+                        solutions.add(new Solutions.PlainIssue(
                                 this, 
                                 "Z driver "+driver.getName()+" must support Location Confirmation for the Z probe actuator to work.", 
                                 "Only the GcodeAsyncDriver currently supports it.", 

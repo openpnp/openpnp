@@ -20,7 +20,6 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.Action;
 
@@ -36,7 +35,6 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Issue;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Axis;
@@ -163,8 +161,8 @@ public class ReferenceHead extends AbstractHead {
     }
 
     @Override
-    public void findIssues(List<Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
         Camera camera = null;
         try {
             camera = getDefaultCamera();
@@ -173,18 +171,18 @@ public class ReferenceHead extends AbstractHead {
         }
         if (camera != null) {
             if (camera.getAxisX() == null) {
-                addMissingAxisIssue(issues, camera, Axis.Type.X);
+                addMissingAxisIssue(solutions, camera, Axis.Type.X);
             }
             if (camera.getAxisY() == null) {
-                addMissingAxisIssue(issues, camera, Axis.Type.Y);
+                addMissingAxisIssue(solutions, camera, Axis.Type.Y);
             }
             if (camera.getAxisX() != null && camera.getAxisY() != null) {
                 for (HeadMountable hm : getHeadMountables()) {
-                    addInconsistentAxisIssue(issues, camera, hm, Axis.Type.X);
-                    addInconsistentAxisIssue(issues, camera, hm, Axis.Type.Y);
+                    addInconsistentAxisIssue(solutions, camera, hm, Axis.Type.X);
+                    addInconsistentAxisIssue(solutions, camera, hm, Axis.Type.Y);
                     if (hm instanceof Nozzle) {
                         if (hm.getAxisZ() == null) {
-                            issues.add(new Solutions.PlainIssue(
+                            solutions.add(new Solutions.PlainIssue(
                                     this, 
                                     "Nozzle "+hm.getName()+" does not have a Z axis assigned.", 
                                     "Please assign a proper Z axis. You might need to create one first.", 
@@ -192,7 +190,7 @@ public class ReferenceHead extends AbstractHead {
                                     "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
                         }
                         if (hm.getAxisRotation() == null) {
-                            issues.add(new Solutions.PlainIssue(
+                            solutions.add(new Solutions.PlainIssue(
                                     this, 
                                     "Nozzle "+hm.getName()+" does not have a Rotation axis assigned.", 
                                     "Please assign a proper Rotation axis. You might need to create one first.", 
@@ -205,7 +203,7 @@ public class ReferenceHead extends AbstractHead {
                                     break;
                                 }
                                 if (nozzle2.getAxisZ() == hm.getAxisZ()) {
-                                    issues.add(new Solutions.PlainIssue(
+                                    solutions.add(new Solutions.PlainIssue(
                                             this, 
                                             "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Z axis assigned.", 
                                             "Please assign a different Z axis.", 
@@ -213,7 +211,7 @@ public class ReferenceHead extends AbstractHead {
                                             "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
                                 }
                                 if (nozzle2.getAxisRotation() == hm.getAxisRotation()) {
-                                    issues.add(new Solutions.PlainIssue(
+                                    solutions.add(new Solutions.PlainIssue(
                                             this, 
                                             "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Rotation axis assigned.", 
                                             "Please assign a different Rotation axis.", 
@@ -228,10 +226,10 @@ public class ReferenceHead extends AbstractHead {
         }
     }
 
-    protected void addMissingAxisIssue(List<Issue> issues, final Camera camera, Axis.Type type) {
+    protected void addMissingAxisIssue(Solutions solutions, final Camera camera, Axis.Type type) {
         // Find a default axis.
         final AbstractAxis axis = getMachine().getDefaultAxis(type);
-        issues.add(new Solutions.Issue(
+        solutions.add(new Solutions.Issue(
                 camera, 
                 "Missing "+type.name()+" axis assignment. Assign one to continue.", 
                 (axis == null ? 
@@ -257,12 +255,12 @@ public class ReferenceHead extends AbstractHead {
         });
     }
 
-    protected void addInconsistentAxisIssue(List<Issue> issues, final Camera camera,
+    protected void addInconsistentAxisIssue(Solutions solutions, final Camera camera,
             HeadMountable hm, Axis.Type type) {
         final Axis oldAxis = hm.getAxis(type);
         if ((hm instanceof Nozzle || oldAxis != null) 
                 && oldAxis != camera.getAxis(type)) {
-            issues.add(new Solutions.Issue(
+            solutions.add(new Solutions.Issue(
                     hm, 
                     "Inconsistent "+type.name()+" axis assignment "
                             +(oldAxis != null ? oldAxis.getName() : "null")

@@ -6,7 +6,6 @@ import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +32,6 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Issue;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
@@ -1331,11 +1329,11 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     @Override
-    public void findIssues(List<Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
 
         if ((unitsPerPixel.getX() == 0) || (unitsPerPixel.getY() == 0)) {
-             issues.add(new Solutions.PlainIssue(
+             solutions.add(new Solutions.PlainIssue(
                     this, 
                     "Camera units per pixel has not been calibrated.", 
                     "Calibrate the camera's units per pixel.", 
@@ -1343,7 +1341,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
         }
         else if (!isSecondaryUnitsPerPixelCalibrated()) {
-            issues.add(new Solutions.PlainIssue(
+            solutions.add(new Solutions.PlainIssue(
                     this, 
                     "Camera units per pixel can be calibrated for 3D scale estimation.", 
                     "Calibrate the camera's units per pixel at two different heights.", 

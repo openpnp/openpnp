@@ -26,7 +26,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -223,11 +222,11 @@ public class HttpActuator extends ReferenceActuator {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
         if (this.readUrl.length() > 0 && this.regex.length() == 0) {
 
-            issues.add(new Solutions.Issue(this,
+            solutions.add(new Solutions.Issue(this,
                     "A HTTPActuator with Read URL likely needs a regular Expression to parse the value.",
                     "Set an example expression", Severity.Warning,
                     "https://github.com/openpnp/openpnp/wiki/HttpActuatorRead") {

@@ -1,15 +1,12 @@
 package org.openpnp.gui;
 
-import org.openpnp.gui.support.AutoScroller;
-import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.LogEntryListCellRenderer;
-import org.openpnp.gui.support.LogEntryListModel;
-
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.*;
-
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -17,7 +14,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -25,6 +32,10 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.openpnp.gui.support.AutoScroller;
+import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.LogEntryListCellRenderer;
+import org.openpnp.gui.support.LogEntryListModel;
 import org.openpnp.logging.SystemLogger;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
@@ -239,7 +250,7 @@ public class LogPanel extends JPanel {
     private JPanel createFilterLogLevelPanel() {
         JPanel filterLogLevelPanel = new JPanel();
         filterLogLevelPanel.add(new JLabel("Log Level:"));
-        JComboBox<Level> logLevelFilterComboBox = new JComboBox<>(Level.values());
+        JComboBox logLevelFilterComboBox = new JComboBox(Level.values());
         logLevelFilterComboBox.setSelectedItem(filterLogLevel);
         logLevelFilterComboBox.addActionListener(e -> {
             LogEntry entry = getSelectedEntry();
@@ -255,7 +266,7 @@ public class LogPanel extends JPanel {
     private JPanel createGlobalLogLevelPanel() {
         JPanel globalLogLevelPanel = new JPanel();
         globalLogLevelPanel.add(new JLabel("Global Log Level:"));
-        JComboBox<Level> logLevelFilterComboBox = new JComboBox<>(Level.values());
+        JComboBox logLevelFilterComboBox = new JComboBox(Level.values());
         logLevelFilterComboBox.setSelectedItem((Level.valueOf(prefs.get(PREF_LOG_LEVEL, PREF_LOG_LEVEL_DEF))));
         logLevelFilterComboBox.addActionListener(e -> {
             Level logLevel = (Level) logLevelFilterComboBox.getSelectedItem();

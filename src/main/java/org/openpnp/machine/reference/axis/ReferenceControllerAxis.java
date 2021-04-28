@@ -21,15 +21,12 @@
 
 package org.openpnp.machine.reference.axis;
 
-import java.util.List;
-
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Issue;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractControllerAxis;
@@ -369,11 +366,11 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     @Override
-    public void findIssues(List<Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
 
         if (getLetter().isEmpty()) {
-            issues.add(new Solutions.PlainIssue(
+            solutions.add(new Solutions.PlainIssue(
                     this, 
                     "Axis letter is missing. Assign the letter to continue.", 
                     "Please assign the correct controller axis letter.", 
@@ -382,7 +379,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         }
         else if (getLetter().equals("E")) {
             if (getDriver() != null && !getDriver().isSupportingPreMove()) {
-                issues.add(new Solutions.PlainIssue(
+                solutions.add(new Solutions.PlainIssue(
                         this, 
                         "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
                         "Check if your controller supports proper axes A B C instead of E.", 
@@ -391,7 +388,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
             }
         }
         else if (getLetter().length() != 1 || !"XYZABCDUVW".contains(getLetter())) {
-            issues.add(new Solutions.PlainIssue(
+            solutions.add(new Solutions.PlainIssue(
                     this, 
                     "Axis letter "+getLetter()+" is not a G-code standard letter, one of X Y Z A B C D U V W.", 
                     "Please assign the correct controller axis letter.", 
@@ -399,7 +396,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                     "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
         }
         if (getDriver() == null) {
-            issues.add(new Solutions.PlainIssue(
+            solutions.add(new Solutions.PlainIssue(
                     this, 
                     "Axis is not assigned to a driver.", 
                     "Assign a driver.", 
@@ -411,7 +408,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                 getBacklashCompensationMethod();
         if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
                 && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
-            issues.add(new Solutions.Issue(
+            solutions.add(new Solutions.Issue(
                     this, 
                     "New directonal backlash compensation method improves performance and allows fluid motion.", 
                     "Set axis to DirectionalCompensation.", 
@@ -433,7 +430,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         if (Math.abs(getMotionLimit(1)*2 - getMotionLimit(2)) < 0.1) {
             // HACK: migration sets the acceleration to twice the feed-rate, that's our "signal" that the user has not yet
             // tuned them.
-            issues.add(new Solutions.PlainIssue(
+            solutions.add(new Solutions.PlainIssue(
                     this, 
                     "Feed-rate, acceleration, jerk etc. can now be set individually per axis.", 
                     "Tune your machine axes for best speed and acceleration.", 
@@ -442,7 +439,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         }
         if (getType() == Type.Rotation) {
             if (!isWrapAroundRotation()) {
-                issues.add(new Solutions.Issue(
+                solutions.add(new Solutions.Issue(
                         this, 
                         "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
                         "Enable Wrap Around.", 
@@ -459,7 +456,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                 });
             }
             if (!isLimitRotation()) {
-                issues.add(new Solutions.Issue(
+                solutions.add(new Solutions.Issue(
                         this, 
                         "Rotation can be optimized by limiting angles to ±180°. Best combined with Wrap Around.", 
                         "Enable Limit ±180°.", 

@@ -26,7 +26,10 @@ import java.awt.Desktop;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JOptionPane;
 import javax.swing.border.LineBorder;
@@ -35,16 +38,22 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.spi.Machine;
 import org.openpnp.util.XmlSerialize;
+import org.simpleframework.xml.ElementList;
 
 public class Solutions extends AbstractTableModel {
+
+    @ElementList(required = false)
+    private Set<String> dismissedSolutions = new HashSet<>();
 
     public interface Subject {
         /**
          * Report any detected issue and proposed solution in the list. 
          * @param report
          */
-        public default void findIssues(List<Solutions.Issue> issues) {
+        public default void findIssues(Solutions solutions) {
         }
         public default String getSubjectText() {
             if (this instanceof Named) {
@@ -131,6 +140,7 @@ public class Solutions extends AbstractTableModel {
         public State getState() {
             return state;
         }
+
         public boolean confirmStateChange(State state) {
             if (this.state != state) {
                 if (state == State.Solved) {
@@ -175,6 +185,7 @@ public class Solutions extends AbstractTableModel {
             }
             return false;
         }
+
         public void setState(State state) throws Exception {
             Object oldValue = this.state;
             this.state = state;
@@ -212,15 +223,87 @@ public class Solutions extends AbstractTableModel {
         }
     }
 
-    List<Issue> issues = new ArrayList<>();
+    private List<Issue> pendingIssues = null;
+    private List<Issue> issues = new ArrayList<>();
+
+    public boolean isSolutionsIssueDismissed(Issue issue) {
+        return dismissedSolutions.contains(issue.getFingerprint());
+    }
+    public void setSolutionsIssueDismissed(Issue issue, boolean dismissed) {
+        if (dismissed) {
+            dismissedSolutions.add(issue.getFingerprint()); 
+        }
+        else {
+            dismissedSolutions.remove(issue.getFingerprint());
+        }
+    }
 
     public List<Issue> getIssues() {
         return Collections.unmodifiableList(issues);
     }
 
-    public void setIssues(List<Issue> issues) {
+    public Machine getMachine() {
+        Machine machine = Configuration.get().getMachine();
+        return machine;
+    }
+
+    public void findIssues() {
+        pendingIssues = new ArrayList<>();
+        getMachine().findIssues(this);
+    }
+
+    public void add(Issue issue) {
+        pendingIssues.add(issue);
+    }
+
+    public void publishIssues() {
+        if (pendingIssues.size() == 0) {
+            pendingIssues.add(new Solutions.Issue(
+                    getMachine(), 
+                    "No issues detected.", 
+                    "", 
+                    Solutions.Severity.Information,
+                    null));
+        }
+        // Go through the issues and set initially dismissed ones.
+        // Also install listeners to update the dismissedTroubleshooting.
+        for (Issue issue : pendingIssues) {
+            if (isSolutionsIssueDismissed(issue)) {
+                issue.setInitiallyDismissed();
+            }
+            issue.addPropertyChangeListener("state", e -> {
+                if (e.getOldValue() == Solutions.State.Dismissed) {
+                    setSolutionsIssueDismissed(issue, false);
+                }
+                if (issue.getState() == Solutions.State.Dismissed) {
+                    setSolutionsIssueDismissed(issue, true);
+                }
+                int row = getIssues().indexOf(issue);
+                fireTableRowsUpdated(row, row);
+            });
+        }
+        // Sort by state (initially only Open and Dismissed possible) and place Fundamentals first.
+        pendingIssues.sort(new Comparator<Issue>() {
+            @Override
+            public int compare(Issue o1, Issue o2) {
+                int d = o1.getState().ordinal() - o2.getState().ordinal();
+                if (d != 0) {
+                    return d;
+                }
+                if (o1.getSeverity() == Severity.Fundamental && o2.getSeverity() != Severity.Fundamental) {
+                    return -1;
+                }
+                else if (o2.getSeverity() == Severity.Fundamental) {
+                    return 1;
+                }
+                else {
+                    return 0;
+                }
+            }
+        });
         //Object oldValue = this.issues; 
-        this.issues = issues;
+        this.issues = pendingIssues;
+        pendingIssues = null;
         fireTableDataChanged();
         //firePropertyChange("issues", oldValue, this.issues);
     }
@@ -305,7 +388,7 @@ public class Solutions extends AbstractTableModel {
         return null;
     }
 
-    static public class SubjectRenderer extends DefaultTableCellRenderer {
+    static protected class SubjectRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
             if (value == null) {
                 return;
@@ -315,7 +398,7 @@ public class Solutions extends AbstractTableModel {
         }
     }
 
-    static public class SeverityRenderer extends DefaultTableCellRenderer {
+    static protected class SeverityRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
             if (value == null) {
                 return;
@@ -328,7 +411,7 @@ public class Solutions extends AbstractTableModel {
         }
     }
 
-    static public class StateRenderer extends DefaultTableCellRenderer {
+    static protected class StateRenderer extends DefaultTableCellRenderer {
         public void setValue(Object value) {
             if (value == null) {
                 return;
@@ -339,5 +422,18 @@ public class Solutions extends AbstractTableModel {
             setText(state.toString());
             setBorder(new LineBorder(getBackground()));
         }
+    }
+
+    public static void applyTableUi(AutoSelectTextTable table) {
+        table.setDefaultRenderer(Solutions.Subject.class, new Solutions.SubjectRenderer());
+        table.setDefaultRenderer(Solutions.Severity.class, new Solutions.SeverityRenderer());
+        table.setDefaultRenderer(Solutions.State.class, new Solutions.StateRenderer());
+        //JComboBox statesComboBox = new JComboBox(Solutions.State.values());
+        //table.setDefaultEditor(Solutions.State.class, new DefaultCellEditor(statesComboBox));
+    }
+
+    @Deprecated
+    public void migrateDismissedSolutions(Set<String> dismissedSolutions) {
+        this.dismissedSolutions = dismissedSolutions;
     }
 }

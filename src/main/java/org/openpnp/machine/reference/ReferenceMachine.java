@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -83,11 +81,8 @@ import org.openpnp.machine.reference.signaler.SoundSignaler;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
-import org.openpnp.machine.reference.wizards.ReferenceMachineSolutionsWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Issue;
-import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
@@ -131,14 +126,16 @@ public class ReferenceMachine extends AbstractMachine {
     @Attribute(required = false)
     private boolean autoToolSelect = true;
 
+    @Element(required = false)
+    private Solutions solutions = new Solutions();
+
+    @Deprecated // now in the Solutions object.
     @ElementList(required = false)
-    Set<String> dismissedSolutions = new HashSet<>();
+    Set<String> dismissedSolutions = null;
 
     private boolean enabled;
 
     private boolean isHomed = false;
-
-    private Solutions solutions = new Solutions();
 
     private List<Class<? extends Axis>> registeredAxisClasses = new ArrayList<>();
 
@@ -305,7 +302,6 @@ public class ReferenceMachine extends AbstractMachine {
     public PropertySheet[] getPropertySheets() {
         return Collect.concat(new PropertySheet[] { 
                     new PropertySheetWizardAdapter(getConfigurationWizard()),
-                    new PropertySheetWizardAdapter(new ReferenceMachineSolutionsWizard(this), "Issues & Solutions")
                 },
                 getMotionPlanner().getPropertySheets());
     }
@@ -489,6 +485,11 @@ public class ReferenceMachine extends AbstractMachine {
     }
 
     public Solutions getSolutions() {
+        if (dismissedSolutions != null) {
+            // Migrate to Solutions object.
+            solutions.migrateDismissedSolutions(dismissedSolutions);
+            dismissedSolutions = null;
+        }
         return solutions;
     }
 
@@ -501,9 +502,9 @@ public class ReferenceMachine extends AbstractMachine {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
+    public void findIssues(Solutions solutions) {
         if (getMotionPlanner() instanceof NullMotionPlanner) {
-            issues.add(new Solutions.Issue(
+            solutions.add(new Solutions.Issue(
                     this, 
                     "Advanced Motion Planner not set. Accept or Dismiss to continue.", 
                     "Change to ReferenceAdvancedMotionPlanner", 
@@ -528,7 +529,7 @@ public class ReferenceMachine extends AbstractMachine {
             });
         }
         if (! isAutoToolSelect()) {
-            issues.add(new Solutions.Issue(
+            solutions.add(new Solutions.Issue(
                     this, 
                     "OpenPnP can often automatically select the right tool for you in Machine Controls.", 
                     "Enable Auto tool select.", 
@@ -544,67 +545,6 @@ public class ReferenceMachine extends AbstractMachine {
                 }
             });
         }
-        super.findIssues(issues);
-    }
-
-    public void setSolutionsIssues(List<Issue> issues) {
-        if (issues.size() == 0) {
-            issues.add(new Solutions.Issue(
-                    this, 
-                    "No issues detected.", 
-                    "", 
-                    Solutions.Severity.Information,
-                    null));
-        }
-        // Go through the issues and set initially dismissed ones.
-        // Also install listeners to update the dismissedTroubleshooting.
-        for (Issue issue : issues) {
-            if (isSolutionsIssueDismissed(issue)) {
-                issue.setInitiallyDismissed();
-            }
-            issue.addPropertyChangeListener("state", e -> {
-                if (e.getOldValue() == Solutions.State.Dismissed) {
-                    setSolutionsIssueDismissed(issue, false);
-                }
-                if (issue.getState() == Solutions.State.Dismissed) {
-                    setSolutionsIssueDismissed(issue, true);
-                }
-                int row = solutions.getIssues().indexOf(issue);
-                solutions.fireTableRowsUpdated(row, row);
-            });
-        }
-        // Sort by state (initially only Open and Dismissed possible) and place Fundamentals first.
-        issues.sort(new Comparator<Issue>() {
-            @Override
-            public int compare(Issue o1, Issue o2) {
-                int d = o1.getState().ordinal() - o2.getState().ordinal();
-                if (d != 0) {
-                    return d;
-                }
-                if (o1.getSeverity() == Severity.Fundamental && o2.getSeverity() != Severity.Fundamental) {
-                    return -1;
-                }
-                else if (o2.getSeverity() == Severity.Fundamental) {
-                    return 1;
-                }
-                else {
-                    return 0;
-                }
-            }
-        });
-        // Finally set the issues.
-        getSolutions().setIssues(issues);
-    }
-
-    public boolean isSolutionsIssueDismissed(Issue issue) {
-        return dismissedSolutions.contains(issue.getFingerprint());
-    }
-    public void setSolutionsIssueDismissed(Issue issue, boolean dismissed) {
-        if (dismissed) {
-            dismissedSolutions.add(issue.getFingerprint()); 
-        }
-        else {
-            dismissedSolutions.remove(issue.getFingerprint());
-        }
+        super.findIssues(solutions);
     }
 }

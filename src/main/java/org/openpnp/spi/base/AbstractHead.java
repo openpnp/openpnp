@@ -399,10 +399,10 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
+    public void findIssues(Solutions solutions) {
         // Recurse into HeadMountables.
         for (HeadMountable hm : getHeadMountables()) {
-            hm.findIssues(issues);
+            hm.findIssues(solutions);
         }
     }
 }

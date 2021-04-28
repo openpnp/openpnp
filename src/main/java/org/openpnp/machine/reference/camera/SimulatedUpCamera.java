@@ -9,7 +9,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
@@ -191,9 +190,9 @@ public class SimulatedUpCamera extends ReferenceCamera {
 
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        issues.add(new Solutions.Issue(
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        solutions.add(new Solutions.Issue(
                 this, 
                 "The SimulatedUpCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
                 "Replace with OpenPnpCaptureCamera.", 

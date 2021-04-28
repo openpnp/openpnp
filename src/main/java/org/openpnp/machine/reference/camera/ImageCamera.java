@@ -26,7 +26,6 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.net.URL;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -366,9 +365,9 @@ public class ImageCamera extends ReferenceCamera {
     
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        issues.add(new Solutions.Issue(
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        solutions.add(new Solutions.Issue(
                 this, 
                 "The simulation ImageCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
                 "Replace with OpenPnpCaptureCamera.", 

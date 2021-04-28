@@ -20,7 +20,6 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -272,9 +271,9 @@ public class NullDriver extends AbstractDriver {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        issues.add(new Solutions.Issue(
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        solutions.add(new Solutions.Issue(
                 this, 
                 "The simulation NullDriver can replaced with a GcodeAsyncDriver to drive a real controller.", 
                 "Replace with GcodeAsyncDriver.", 

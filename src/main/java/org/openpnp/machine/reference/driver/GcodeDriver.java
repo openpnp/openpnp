@@ -1572,9 +1572,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        new GcodeDriverSolutions(this).findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        new GcodeDriverSolutions(this).findIssues(solutions);
     }
 
     @Deprecated

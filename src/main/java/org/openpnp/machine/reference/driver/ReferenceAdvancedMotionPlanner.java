@@ -817,10 +817,10 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
         if (!isAllowContinuousMotion()) {
-            issues.add(new Solutions.Issue(
+            solutions.add(new Solutions.Issue(
                     this, 
                     "Use continuous motion. OpenPnP will only wait for the machine when really needed.", 
                     "Enable Continuous Motion.", 
