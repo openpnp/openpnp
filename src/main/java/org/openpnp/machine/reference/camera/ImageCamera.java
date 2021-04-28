@@ -376,17 +376,15 @@ public class ImageCamera extends ReferenceCamera {
 
             @Override
             public void setState(Solutions.State state) throws Exception {
-                if (confirmStateChange(state)) {
-                    if (state == Solutions.State.Solved) {
-                        OpenPnpCaptureCamera camera = createReplacementCamera();
-                        replaceCamera(camera);
-                    }
-                    else if (getState() == Solutions.State.Solved) {
-                        // Place the old one back (from the captured ImageCamera.this).
-                        replaceCamera(ImageCamera.this);
-                    }
-                    super.setState(state);
+                if (state == Solutions.State.Solved) {
+                    OpenPnpCaptureCamera camera = createReplacementCamera();
+                    replaceCamera(camera);
                 }
+                else if (getState() == Solutions.State.Solved) {
+                    // Place the old one back (from the captured ImageCamera.this).
+                    replaceCamera(ImageCamera.this);
+                }
+                super.setState(state);
             }
         });
     }

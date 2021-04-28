@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.UIManager;
+
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.driver.wizards.ReferenceAdvancedMotionPlannerConfigurationWizard;
@@ -50,8 +52,6 @@ import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.SimpleGraph;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-
-import javax.swing.*;
 
 /**
  * The Advanced Motion Planner applies any optimizing to the planned path. 
@@ -829,10 +829,8 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        setAllowContinuousMotion((state == Solutions.State.Solved));
-                        super.setState(state);
-                    }
+                    setAllowContinuousMotion((state == Solutions.State.Solved));
+                    super.setState(state);
                 }
             });
         }

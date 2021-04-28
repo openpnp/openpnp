@@ -31,16 +31,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.JOptionPane;
+import javax.swing.Icon;
 import javax.swing.border.LineBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.support.Icons;
 import org.openpnp.spi.Machine;
-import org.openpnp.util.XmlSerialize;
+import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.ElementList;
 
 public class Solutions extends AbstractTableModel {
@@ -66,17 +66,27 @@ public class Solutions extends AbstractTableModel {
                 return (this.getClass().getSimpleName());
             }
         }
+        public default Icon getSubjectIcon() {
+            Icon icon = null;
+            if (this instanceof PropertySheetHolder) {
+                icon = ((PropertySheetHolder)this).getPropertySheetHolderIcon();
+            }
+            if (icon == null) {
+                icon = Icons.solutions;
+            }
+            return icon;
+        }
     }
 
     public enum Severity {
+        None(new Color(255, 255, 255)), 
         Information(new Color(255, 255, 255)),
         Suggestion(new Color(255, 255, 157)),
         Warning(new Color(255, 220, 157)),
         Error(new Color(255, 157, 157)),
-        None(new Color(255, 255, 255)), 
         Fundamental(new Color(200, 220, 255));
 
-        private Color color;
+        final public Color color;
 
         Severity(Color color) {
             this.color = color;
@@ -95,6 +105,27 @@ public class Solutions extends AbstractTableModel {
         }
     }
 
+    public static class Choice {
+        final private Object value;
+        final private Icon icon;
+        final private String description;
+        public Choice(Object value, String description, Icon icon) {
+            super();
+            this.value = value;
+            this.description = description;
+            this.icon = icon;
+        }
+        public Object getValue() {
+            return value;
+        }
+        public Icon getIcon() {
+            return icon;
+        }
+        public String getDescription() {
+            return description;
+        }
+    }
+
     public static class Issue extends AbstractModelObject {
         final Subject subject;
         final String issue;
@@ -102,7 +133,7 @@ public class Solutions extends AbstractTableModel {
         final Severity severity;
         final String uri;
         private State state;
-
+        private Object choice;
 
         public Issue(Subject subject, String issue, String solution, Severity severity, String uri) {
             super();
@@ -141,55 +172,17 @@ public class Solutions extends AbstractTableModel {
             return state;
         }
 
-        public boolean confirmStateChange(State state) {
-            if (this.state != state) {
-                if (state == State.Solved) {
-                    if (JOptionPane.showConfirmDialog(MainFrame.get(), 
-                            "<html>"+
-                                    "<strong>Subject:</strong><br/>"+XmlSerialize.escapeXml(getSubject().getSubjectText())+"<br/><br/>"+
-                                    "<strong>Issue:</strong><br/>"+XmlSerialize.escapeXml(getIssue())+"<br/><br/>"+
-                                    "<strong>Solution:</strong><br/>"+XmlSerialize.escapeXml(getSolution())+"<br/><br/>"+
-                                    "Do you want to apply the suggested solution?<br/>&nbsp;"+
-                                    "</html>", 
-                                    "Confirm State "+state, JOptionPane.YES_NO_OPTION) == 0) {
-                        return true;
-                    }
-                }
-                else if (this.state == State.Solved) {
-                    if(JOptionPane.showConfirmDialog(MainFrame.get(), 
-                            "<html>"+
-                                    "<strong>Subject:</strong><br/>"+XmlSerialize.escapeXml(getSubject().getSubjectText())+"<br/><br/>"+
-                                    "<strong>Issue:</strong><br/>"+XmlSerialize.escapeXml(getIssue())+"<br/><br/>"+
-                                    "<strong>Solution applied earlier:</strong><br/>"+XmlSerialize.escapeXml(getSolution())+"<br/><br/>"+
-                                    "<strong>Change state to "+state+":</strong><br/>Do you want to <strong>undo</strong> and restore previous settings?<br/>&nbsp;"+
-                                    "</html>", 
-                                    "Confirm State "+state, JOptionPane.YES_NO_OPTION) == 0 ) {
-                        return true;
-                    }
-                }
-                else if (state == State.Dismissed){
-                    if(JOptionPane.showConfirmDialog(MainFrame.get(), 
-                            "<html>"+
-                                    "<strong>Subject:</strong><br/>"+XmlSerialize.escapeXml(getSubject().getSubjectText())+"<br/><br/>"+
-                                    "<strong>Issue:</strong><br/>"+XmlSerialize.escapeXml(getIssue())+"<br/><br/>"+
-                                    "<strong>Solution to be dismissed:</strong><br/>"+XmlSerialize.escapeXml(getSolution())+"<br/><br/>"+
-                                    "Do you want to permanently dismiss this issue?<br/>&nbsp;"+
-                                    "</html>", 
-                                    "Confirm State "+state, JOptionPane.YES_NO_OPTION) == 0 ) {
-                        return true;
-                    }
-                }
-                else {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public void setState(State state) throws Exception {
             Object oldValue = this.state;
             this.state = state;
             firePropertyChange("state", oldValue, state);
+        }
+
+        public Object getChoice() {
+            return choice;
+        }
+        public void setChoice(Object choice) {
+            this.choice = choice;
         }
 
         public void setInitiallyDismissed() {
@@ -200,6 +193,9 @@ public class Solutions extends AbstractTableModel {
         }
         public boolean canBeAutoSolved() {
             return true;
+        }
+        public Choice [] getChoices() {
+            return new Choice[] {};
         }
     }
 
@@ -247,16 +243,16 @@ public class Solutions extends AbstractTableModel {
         return machine;
     }
 
-    public void findIssues() {
+    public synchronized void findIssues() {
         pendingIssues = new ArrayList<>();
         getMachine().findIssues(this);
     }
 
-    public void add(Issue issue) {
+    public synchronized void add(Issue issue) {
         pendingIssues.add(issue);
     }
 
-    public void publishIssues() {
+    public synchronized void publishIssues() {
         if (pendingIssues.size() == 0) {
             pendingIssues.add(new Solutions.Issue(
                     getMachine(), 

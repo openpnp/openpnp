@@ -78,16 +78,14 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        if (state == Solutions.State.Solved) {
-                            convertToAsync(gcodeDriver);
-                        }
-                        else if (getState() == Solutions.State.Solved) {
-                            // Place the old one back (from the captured gcodeDriver).
-                            replaceDriver(gcodeDriver);
-                        }
-                        super.setState(state);
+                    if (state == Solutions.State.Solved) {
+                        convertToAsync(gcodeDriver);
                     }
+                    else if (getState() == Solutions.State.Solved) {
+                        // Place the old one back (from the captured gcodeDriver).
+                        replaceDriver(gcodeDriver);
+                    }
+                    super.setState(state);
                 }
             };
             solutions.add(issue);
@@ -124,12 +122,10 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        if (state == Solutions.State.Solved) {
-                            gcodeDriver.detectFirmware(false);
-                        }
-                        super.setState(state);
+                    if (state == Solutions.State.Solved) {
+                        gcodeDriver.detectFirmware(false);
                     }
+                    super.setState(state);
                 }
             });
         }
@@ -249,11 +245,9 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
-                            ((GcodeAsyncDriver) gcodeDriver)
-                            .setReportedLocationConfirmation(locationConfirmation ^ (state == Solutions.State.Solved));
-                            super.setState(state);
-                        }
+                        ((GcodeAsyncDriver) gcodeDriver)
+                        .setReportedLocationConfirmation(locationConfirmation ^ (state == Solutions.State.Solved));
+                        super.setState(state);
                     }
                 });
             }
@@ -272,11 +266,9 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
-                            ((GcodeAsyncDriver) gcodeDriver)
-                            .setConfirmationFlowControl(confirmationFlowControl ^ (state == Solutions.State.Solved));
-                            super.setState(state);
-                        }
+                        ((GcodeAsyncDriver) gcodeDriver)
+                        .setConfirmationFlowControl(confirmationFlowControl ^ (state == Solutions.State.Solved));
+                        super.setState(state);
                     }
                 });
             }
@@ -293,10 +285,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
-                            gcodeDriver.setSupportingPreMove(!(state == Solutions.State.Solved));
-                            super.setState(state);
-                        }
+                        gcodeDriver.setSupportingPreMove(!(state == Solutions.State.Solved));
+                        super.setState(state);
                     }
                 });
             }
@@ -310,10 +300,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
-                            gcodeDriver.setUsingLetterVariables((state == Solutions.State.Solved));
-                            super.setState(state);
-                        }
+                        gcodeDriver.setUsingLetterVariables((state == Solutions.State.Solved));
+                        super.setState(state);
                     }
                 });
             }
@@ -333,11 +321,9 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
-                            gcodeDriver.setMotionControlType((state == Solutions.State.Solved) ? 
-                                    newMotionControlType : oldMotionControlType);
-                            super.setState(state);
-                        }
+                        gcodeDriver.setMotionControlType((state == Solutions.State.Solved) ? 
+                                newMotionControlType : oldMotionControlType);
+                        super.setState(state);
                     }
                 });
             }
@@ -352,10 +338,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
-                            gcodeDriver.setMaxFeedRate((state == Solutions.State.Solved) ? 0 : oldMaxFeedRate);
-                            super.setState(state);
-                        }
+                        gcodeDriver.setMaxFeedRate((state == Solutions.State.Solved) ? 0 : oldMaxFeedRate);
+                        super.setState(state);
                     }
                 });
             }
@@ -371,10 +355,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        gcodeDriver.setCompressGcode((state == Solutions.State.Solved));
-                        super.setState(state);
-                    }
+                    gcodeDriver.setCompressGcode((state == Solutions.State.Solved));
+                    super.setState(state);
                 }
             });
         }
@@ -388,10 +370,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        gcodeDriver.setRemoveComments((state == Solutions.State.Solved));
-                        super.setState(state);
-                    }
+                    gcodeDriver.setRemoveComments((state == Solutions.State.Solved));
+                    super.setState(state);
                 }
             });
         }
@@ -409,11 +389,9 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
-                            gcodeDriver.serial.setFlowControl((state == Solutions.State.Solved) ? 
-                                    newFlowControl : oldFlowControl);
-                            super.setState(state);
-                        }
+                        gcodeDriver.serial.setFlowControl((state == Solutions.State.Solved) ? 
+                                newFlowControl : oldFlowControl);
+                        super.setState(state);
                     }
                 });
             }
@@ -428,10 +406,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        gcodeDriver.setConnectionKeepAlive(!(state == Solutions.State.Solved));
-                        super.setState(state);
-                    }
+                    gcodeDriver.setConnectionKeepAlive(!(state == Solutions.State.Solved));
+                    super.setState(state);
                 }
             });
         }
@@ -457,11 +433,9 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                             @Override
                             public void setState(Solutions.State state) throws Exception {
-                                if (confirmStateChange(state)) {
-                                    ((ReferenceControllerAxis) axis).setInvertLinearRotational(
-                                            (state == Solutions.State.Solved) ^ oldInvertLinearRotational);
-                                    super.setState(state);
-                                }
+                                ((ReferenceControllerAxis) axis).setInvertLinearRotational(
+                                        (state == Solutions.State.Solved) ^ oldInvertLinearRotational);
+                                super.setState(state);
                             }
                         });
                     }
@@ -479,11 +453,9 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                             @Override
                             public void setState(Solutions.State state) throws Exception {
-                                if (confirmStateChange(state)) {
-                                    ((ReferenceControllerAxis) axis).setInvertLinearRotational(
-                                            (state == Solutions.State.Solved) ^ oldInvertLinearRotational);
-                                    super.setState(state);
-                                }
+                                ((ReferenceControllerAxis) axis).setInvertLinearRotational(
+                                        (state == Solutions.State.Solved) ^ oldInvertLinearRotational);
+                                super.setState(state);
                             }
                         });
                     }
@@ -750,10 +722,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        gcodeDriver.setCommand(headMountable, commandType, (state == Solutions.State.Solved) ? suggestedCommand : currentCommand);
-                        super.setState(state);
-                    }
+                    gcodeDriver.setCommand(headMountable, commandType, (state == Solutions.State.Solved) ? suggestedCommand : currentCommand);
+                    super.setState(state);
                 }
             });
         }
@@ -771,10 +741,8 @@ class GcodeDriverSolutions implements Solutions.Subject {
 
                             @Override
                             public void setState(Solutions.State state) throws Exception {
-                                if (confirmStateChange(state)) {
-                                    gcodeDriver.setCommand(hm, commandType, (state == Solutions.State.Solved) ? null : commandHeadMountable.getCommand());
-                                    super.setState(state);
-                                }
+                                gcodeDriver.setCommand(hm, commandType, (state == Solutions.State.Solved) ? null : commandHeadMountable.getCommand());
+                                super.setState(state);
                             }
                         });
                     }

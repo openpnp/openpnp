@@ -233,19 +233,17 @@ public class ReferenceHead extends AbstractHead {
                 camera, 
                 "Missing "+type.name()+" axis assignment. Assign one to continue.", 
                 (axis == null ? 
-                        "Create and assign "+type.name()+" axis."  
+                        "Create and assign a "+type.name()+" axis manually."  
                         : "Assign "+axis.getName()+" as "+type.name()+"."), 
                 Severity.Fundamental,
                 "https://github.com/openpnp/openpnp/wiki/Mapping-Axes") {
 
             @Override
             public void setState(Solutions.State state) throws Exception {
-                if (confirmStateChange(state)) {
-                    ((AbstractHeadMountable) camera).setAxis(
-                            ((AbstractAxis)(state == State.Solved ? axis : null)),
-                            type);
-                    super.setState(state);
-                }
+                ((AbstractHeadMountable) camera).setAxis(
+                        ((AbstractAxis)(state == State.Solved ? axis : null)),
+                        type);
+                super.setState(state);
             }
 
             @Override
@@ -265,18 +263,16 @@ public class ReferenceHead extends AbstractHead {
                     "Inconsistent "+type.name()+" axis assignment "
                             +(oldAxis != null ? oldAxis.getName() : "null")
                             +" (not the same as default camera "+camera.getName()+").", 
-                            "Assign "+camera.getAxisX().getName()+" as "+type.name()+".", 
+                            "Assign "+camera.getAxis(type).getName()+" as the "+type.name()+" axis.", 
                             (hm instanceof Nozzle) ? Severity.Error : Severity.Warning,
                     "https://github.com/openpnp/openpnp/wiki/Mapping-Axes") {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        ((AbstractHeadMountable) hm).setAxis(
-                                ((AbstractAxis)(state == State.Solved ? camera.getAxis(type) : oldAxis)),
-                                type);
-                        super.setState(state);
-                    }
+                    ((AbstractHeadMountable) hm).setAxis(
+                            ((AbstractAxis)(state == State.Solved ? camera.getAxis(type) : oldAxis)),
+                            type);
+                    super.setState(state);
                 }
             });
         }

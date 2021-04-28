@@ -829,10 +829,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        setPreviewFps((state == Solutions.State.Solved) ? 5.0 : previewFps);
-                        super.setState(state);
-                    }
+                    setPreviewFps((state == Solutions.State.Solved) ? 5.0 : previewFps);
+                    super.setState(state);
                 }
             });
         }
@@ -846,10 +844,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        setSuspendPreviewInTasks((state == Solutions.State.Solved));
-                        super.setState(state);
-                    }
+                    setSuspendPreviewInTasks((state == Solutions.State.Solved));
+                    super.setState(state);
                 }
             });
         }
@@ -863,10 +859,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        setAutoVisible((state == Solutions.State.Solved));
-                        super.setState(state);
-                    }
+                    setAutoVisible((state == Solutions.State.Solved));
+                    super.setState(state);
                 }
             });
         }
@@ -884,11 +878,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
-                            view.setRenderingQuality((state == Solutions.State.Solved) ? RenderingQuality.High : renderingQuality);
-                            cameraViewHasChanged(null);
-                            super.setState(state);
-                        }
+                        view.setRenderingQuality((state == Solutions.State.Solved) ? RenderingQuality.High : renderingQuality);
+                        cameraViewHasChanged(null);
+                        super.setState(state);
                     }
                 });
             }

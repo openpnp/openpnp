@@ -24,13 +24,13 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
-import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -41,6 +41,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -70,11 +71,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
     private Preferences prefs = Preferences.userNodeForPackage(IssuesAndSolutionsPanel.class);
 
     final private Configuration configuration;
-    final private Frame frame;
+    final private MainFrame frame;
     private ReferenceMachine machine;
     private IssuePanel issuePanel;
 
-    public IssuesAndSolutionsPanel(Configuration configuration, Frame frame) {
+    public IssuesAndSolutionsPanel(Configuration configuration, MainFrame frame) {
         this.configuration = configuration;
         this.frame = frame;
 
@@ -84,7 +85,6 @@ public class IssuesAndSolutionsPanel extends JPanel {
         add(toolbar, BorderLayout.NORTH);
         toolbar.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -96,7 +96,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 FormSpecs.RELATED_GAP_ROWSPEC,}));
         
                 labelWarn = new JLabel("After each round of solving issues, please run Find Issues & Solutions again to catch dependent issues.");
-                toolbar.add(labelWarn, "5, 3");
+                toolbar.add(labelWarn, "4, 3");
                 labelWarn.setHorizontalAlignment(SwingConstants.RIGHT);
                 labelWarn.setForeground(Color.DARK_GRAY);
                 labelWarn.setVisible(false);
@@ -119,16 +119,17 @@ public class IssuesAndSolutionsPanel extends JPanel {
         issuePane.setLayout(new BorderLayout(0, 0));
         
         JPanel panel = new JPanel();
-        issuePane.add(panel, BorderLayout.NORTH);
+        issuePane.add(panel, BorderLayout.SOUTH);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
-                ColumnSpec.decode("4dlu:grow"),
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("53px"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,},
@@ -147,8 +148,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
         JButton btnUndo = new JButton(undoSolutionAction);
         panel.add(btnUndo, "7, 2, fill, top");
         
+        JLabel label = new JLabel(" ");
+        panel.add(label, "8, 2");
+        
         JButton btnInfo = new JButton(infoAction);
-        panel.add(btnInfo, "9, 2, fill, top");
+        panel.add(btnInfo, "10, 2, fill, top");
 
         configuration.addListener(new ConfigurationListener() {
             @Override
@@ -199,11 +203,15 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 table.getColumnModel().getColumn(4).setPreferredWidth(50);
                 JScrollPane scrollPane = new JScrollPane(table);
                 splitPane.setLeftComponent(scrollPane);
+
+                SwingUtilities.invokeLater(() -> {
+                   findSolutionsAction.actionPerformed(null); 
+                });
             }
         });
         
         JButton btnFindSolutions = new JButton(findSolutionsAction);
-        toolbar.add(btnFindSolutions, "3, 3, fill, top");
+        toolbar.add(btnFindSolutions, "2, 3, fill, top");
     }
 
     private List<Solutions.Issue> getSelections() {
@@ -213,14 +221,6 @@ public class IssuesAndSolutionsPanel extends JPanel {
             selections.add(machine.getSolutions().getIssue(selectedRow));
         }
         return selections;
-    }
-
-    private Solutions.Issue getSelection() {
-        List<Solutions.Issue> selections = getSelections();
-        if (selections.size() != 1) {
-            return null;
-        }
-        return selections.get(0);
     }
 
     protected void selectionActions() {
@@ -259,6 +259,38 @@ public class IssuesAndSolutionsPanel extends JPanel {
         }
         issuePane.revalidate();
         issuePane.repaint();
+        
+    }
+
+    public void updateIssueIndicator() {
+        JTabbedPane tabs = frame.getTabs();
+        int index = Arrays.asList(tabs.getComponents()).indexOf(frame.getIssuesAndSolutionsTab());
+        Solutions.Severity maxSeverity = Solutions.Severity.None;
+        for (Solutions.Issue issue : machine.getSolutions().getIssues()) {
+            if (issue.getSeverity().ordinal() >= maxSeverity.ordinal() 
+                    && issue.getState() == Solutions.State.Open) {
+                maxSeverity = issue.getSeverity();
+            }
+        }
+        if (maxSeverity.ordinal() > Solutions.Severity.Information.ordinal()) {
+            int digitCode = 0x2B24;
+            Color color = maxSeverity.color;
+            color = saturate(color);
+            tabs.setTitleAt(index, "<html>Issues &amp; Solutions <span style=\"color:#"
+            +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
+            +";\">&#"+(digitCode)+";</span></html>");
+        }
+        else {
+            tabs.setTitleAt(index, "Issues & Solutions");
+        }
+    }
+
+    public Color saturate(Color color) {
+        int minChannel = (int)(Math.min(Math.min(color.getRed(), color.getGreen()), color.getBlue())*1);
+        int maxChannel = (int)(Math.max(Math.max(color.getRed(), color.getGreen()), color.getBlue())*1);
+        double f = 200.0/(maxChannel-minChannel);
+        color = new Color((int)((color.getRed()-minChannel)*f), (int)((color.getGreen()-minChannel)*f), (int)((color.getBlue()-minChannel)*f));
+        return color;
     }
 
     private Action findSolutionsAction =
@@ -275,6 +307,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 SwingUtilities.invokeLater(() -> {
                     machine.getSolutions().publishIssues();
                     labelWarn.setVisible(false);
+                    updateIssueIndicator();
                     selectionActions();
                 });
             });
@@ -305,6 +338,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         }
                     }
                 }
+                updateIssueIndicator();
                 selectionActions();
                 labelWarn.setVisible(true);
             });
@@ -327,6 +361,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         issue.setState(Solutions.State.Dismissed);
                     }
                 }
+                updateIssueIndicator();
                 selectionActions();
             });
         }
@@ -347,6 +382,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         issue.setState(Solutions.State.Open);
                     }
                 }
+                updateIssueIndicator();
                 selectionActions();
             });
         }

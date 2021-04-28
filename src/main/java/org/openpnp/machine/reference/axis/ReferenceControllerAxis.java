@@ -417,13 +417,11 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        setBacklashCompensationMethod(
-                                (state == Solutions.State.Solved) ?  
-                                        BacklashCompensationMethod.DirectionalCompensation 
-                                        : oldBacklashCompensationMethod);
-                        super.setState(state);
-                    }
+                    setBacklashCompensationMethod(
+                            (state == Solutions.State.Solved) ?  
+                                    BacklashCompensationMethod.DirectionalCompensation 
+                                    : oldBacklashCompensationMethod);
+                    super.setState(state);
                 }
             });
         }
@@ -448,10 +446,8 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
-                            setWrapAroundRotation((state == Solutions.State.Solved));
-                            super.setState(state);
-                        }
+                        setWrapAroundRotation((state == Solutions.State.Solved));
+                        super.setState(state);
                     }
                 });
             }
@@ -465,10 +461,8 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
-                            setLimitRotation((state == Solutions.State.Solved));
-                            super.setState(state);
-                        }
+                        setLimitRotation((state == Solutions.State.Solved));
+                        super.setState(state);
                     }
                 });
             }

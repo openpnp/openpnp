@@ -162,10 +162,8 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
                         @Override
                         public void setState(Solutions.State state) throws Exception {
-                            if (confirmStateChange(state)) {
-                                ((AbstractActuator) getContactProbeActuator()).setCoordinatedAfterActuate((state == Solutions.State.Solved));
-                                super.setState(state);
-                            }
+                            ((AbstractActuator) getContactProbeActuator()).setCoordinatedAfterActuate((state == Solutions.State.Solved));
+                            super.setState(state);
                         }
                     });
                 }
@@ -182,10 +180,8 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
                                 @Override
                                 public void setState(Solutions.State state) throws Exception {
-                                    if (confirmStateChange(state)) {
-                                        ((GcodeAsyncDriver) driver).setReportedLocationConfirmation((state == Solutions.State.Solved));
-                                        super.setState(state);
-                                    }
+                                    ((GcodeAsyncDriver) driver).setReportedLocationConfirmation((state == Solutions.State.Solved));
+                                    super.setState(state);
                                 }
                             });
                         }

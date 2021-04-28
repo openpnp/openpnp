@@ -30,12 +30,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.camera.SimulatedUpCamera;
-import org.openpnp.machine.reference.driver.GcodeDriver.Line;
 import org.openpnp.machine.reference.wizards.HttpActuatorConfigurationWizard;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Severity;
-import org.openpnp.spi.Camera.Looking;
 import org.openpnp.util.TextUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
@@ -233,10 +230,8 @@ public class HttpActuator extends ReferenceActuator {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        setRegex("read:(?<Value>-?\\d+)");
-                        super.setState(state);
-                    }
+                    setRegex("read:(?<Value>-?\\d+)");
+                    super.setState(state);
                 }
             });
         }
