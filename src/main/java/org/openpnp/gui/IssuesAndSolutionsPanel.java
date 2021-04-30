@@ -233,10 +233,12 @@ public class IssuesAndSolutionsPanel extends JPanel {
             if (issue.getState() != Solutions.State.Dismissed) {
                 needDismiss = true;
             }
-            if (issue.getState() != Solutions.State.Open) {
-                needUndo = true;
+            if (issue.getState() == Solutions.State.Dismissed || issue.canBeUndone()) {
+                if (issue.getState() != Solutions.State.Open) {
+                    needUndo = true;
+                }
             }
-            if (issue.canBeAutoSolved()) {
+            if (issue.canBeAccepted()) {
                 if (issue.getState() != Solutions.State.Solved) {
                     needAccept = true;
                 }
@@ -326,7 +328,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
             UiUtils.messageBoxOnException(() -> { 
                 List<Solutions.Issue> issues = getSelections();
                 for (Solutions.Issue issue : issues) {
-                    if (issue.canBeAutoSolved() ) {
+                    if (issue.canBeAccepted() ) {
                         if (issue.getState() != Solutions.State.Solved) {
                             issue.setState(Solutions.State.Solved);
                         }

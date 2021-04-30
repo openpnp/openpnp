@@ -74,14 +74,21 @@ public class SimulatedUpCamera extends ReferenceCamera {
                 location.getY() - phyHeight / 2, phyWidth, phyHeight);
 
         // determine if there are any nozzles within our bounds and if so render them
-        for (Head head :  Configuration.get()
-                .getMachine().getHeads()) {
-            for (Nozzle nozzle : head.getNozzles()) {
-                Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
-                if (phyBounds.contains(l.getX(), l.getY())) {
-                    drawNozzle(g, nozzle, l);
+        try {
+            for (Head head :  Configuration.get()
+                    .getMachine().getHeads()) {
+                for (Nozzle nozzle : head.getNozzles()) {
+                    Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
+                    if (phyBounds.contains(l.getX(), l.getY())) {
+                        drawNozzle(g, nozzle, l);
+                    }
                 }
             }
+        }
+        catch (Exception e) {
+            // This can throw a concurrrent modification exception if the nozzles 
+            // array is modified. 
+            e.printStackTrace();
         }
 
         g.setTransform(tx);

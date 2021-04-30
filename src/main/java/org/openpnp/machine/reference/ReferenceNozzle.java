@@ -30,6 +30,7 @@ import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.CoordinateAxis;
+import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
@@ -40,7 +41,6 @@ import org.openpnp.util.SimpleGraph;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
     @Element
@@ -816,7 +816,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
    
 
     protected Actuator getVacuumSenseActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+        Head head = getHead();
+        Actuator actuator = (head == null ? null : head.getActuatorByName(vacuumSenseActuatorName));
         if (actuator == null) {
             throw new Exception(String.format("Can't find vacuum sense actuator %s", vacuumSenseActuatorName));
         }
@@ -824,7 +825,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     protected Actuator getVacuumActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(vacuumActuatorName);
+        Head head = getHead();
+        Actuator actuator = (head == null ? null : head.getActuatorByName(vacuumActuatorName));
         if (actuator == null) {
             throw new Exception(String.format("Can't find vacuum actuator %s", vacuumActuatorName));
         }
@@ -832,7 +834,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     protected Actuator getBlowOffActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(blowOffActuatorName);
+        Head head = getHead();
+        Actuator actuator = (head == null ? null : head.getActuatorByName(blowOffActuatorName));
         if (actuator == null) {
             throw new Exception(String.format("Can't find blow actuator %s", blowOffActuatorName));
         }

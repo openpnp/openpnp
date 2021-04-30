@@ -32,11 +32,13 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.Icon;
+import javax.swing.JOptionPane;
 import javax.swing.border.LineBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.spi.Machine;
@@ -168,6 +170,14 @@ public class Solutions extends AbstractTableModel {
             return DigestUtils.shaHex(subject.getSubjectText()+"\n"+issue+"\n"+solution);
         }
 
+        public boolean confirm(String message, boolean warning) {
+            int result = JOptionPane.showConfirmDialog(MainFrame.get(),
+                    message, null, 
+                    JOptionPane.YES_NO_OPTION, 
+                    warning ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE);
+            return (result == JOptionPane.YES_OPTION);
+        }
+
         public State getState() {
             return state;
         }
@@ -191,7 +201,10 @@ public class Solutions extends AbstractTableModel {
         public String getUri() {
             return uri;
         }
-        public boolean canBeAutoSolved() {
+        public boolean canBeAccepted() {
+            return true;
+        }
+        public boolean canBeUndone() {
             return true;
         }
         public Choice [] getChoices() {
@@ -214,7 +227,7 @@ public class Solutions extends AbstractTableModel {
             }
             super.setState(state);
         }
-        public boolean canBeAutoSolved() {
+        public boolean canBeAccepted() {
             return false;
         }
     }

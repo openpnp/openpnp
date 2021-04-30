@@ -30,8 +30,6 @@ import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
@@ -505,49 +503,6 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void findIssues(Solutions solutions) {
-        solutions.add(new Solutions.Issue(
-                this, 
-                "Create your machine nozzles.", 
-                "Choose the type and number of your nozzles", 
-                Solutions.Severity.Fundamental,
-                "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
-
-            @Override
-            public void setState(Solutions.State state) throws Exception {
-                if ((state == Solutions.State.Solved)) {
-                    MessageBoxes.infoBox("Choice is:", getChoice().toString());
-                } 
-                else {
-                }
-                // Reselect the tree path to reload the wizard with potentially different property sheets. 
-                MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
-                super.setState(state);
-            }
-            
-            @Override
-            public Solutions.Choice[] getChoices() {
-                return new Solutions.Choice[] {
-                        new Solutions.Choice(1, 
-                                "<html><h3>Standalone Nozzle<h3>"
-                                + "<p>The nozzle(s) have their own dedicated Z axis motor</p>"
-                                + "</html>",
-                                Icons.nozzleSingle),
-                        new Solutions.Choice(2, 
-                                "<html><h3>Dual Nozzle, Shared Z Axis, Negated<h3>"
-                                + "<p>Two nozzles share a Z axis motor. The second nozzle moves equally up when the first one moves down. "
-                                + "The nozzles are negatively coupled by rack and pinion or belt.</p>"
-                                + "</html>",
-                                Icons.nozzleDualNeg),
-                        new Solutions.Choice(3, 
-                                "<html><h3>Dual Nozzle, Shared Z Axis, Cam<h3>"
-                                + "<p>Two nozzles share a Z axis motor. The two nozzles are pushed down by a cam, and pulled up with a spring.</p>"
-                                + "</html>",
-                                Icons.nozzleDualCam),
-                        
-                };
-            }
-        });
-
         if (getMotionPlanner() instanceof NullMotionPlanner) {
             solutions.add(new Solutions.Issue(
                     this, 
