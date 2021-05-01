@@ -3,8 +3,9 @@ package org.openpnp.machine.index;
 import org.openpnp.spi.Machine;
 
 public class IndexProperties {
-    private static final String FEEDER_COMMUNICATION_MAX_RETRY = "IndexMachines.FeederCommunicationMaxRetry";
-    private static final String MAX_FEEDER_ADDRESS = "IndexMachines.MaxFeederAddress";
+    static final String FEEDER_COMMUNICATION_MAX_RETRY = "IndexMachines.FeederCommunicationMaxRetry";
+    static final String FEEDER_SLOTS_PROPERTY = "IndexMachines.FeederSlots";
+    static final String MAX_FEEDER_ADDRESS = "IndexMachines.MaxFeederAddress";
 
     final Machine machine;
 
@@ -40,5 +41,16 @@ public class IndexProperties {
 
     public void setMaxFeederAddress(int maxFeederAddress) {
         machine.setProperty(MAX_FEEDER_ADDRESS, maxFeederAddress);
+    }
+
+    public synchronized IndexFeederSlots getFeederSlots() {
+        IndexFeederSlots feederSlots = (IndexFeederSlots) machine.getProperty(FEEDER_SLOTS_PROPERTY);
+
+        if(feederSlots == null) {
+            feederSlots = new IndexFeederSlots();
+            machine.setProperty(FEEDER_SLOTS_PROPERTY, feederSlots);
+        }
+
+        return feederSlots;
     }
 }
