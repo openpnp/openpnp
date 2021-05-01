@@ -59,6 +59,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
@@ -799,90 +800,94 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
-        if (getLooking() == Looking.Up
-                && isFlipX() == isFlipY()
-                && ! (this instanceof SimulatedUpCamera)) {
-            solutions.add(new Solutions.PlainIssue(
-                    this, 
-                    "An up-looking camera should usually mirror the image.", 
-                    "Enable either Flip X or Flip Y (but not both) in the camera's Image Transforms.", 
-                    Severity.Warning,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms"));
-        }
-        if (getUnitsPerPixel().getX() == 0 && getUnitsPerPixel().getY() == 0) {
-            solutions.add(new Solutions.PlainIssue(
-                    this, 
-                    "Units per pixel are not yet set.", 
-                    "Perform the Units Per Pixel measurement in the General Configuration tab .", 
-                    Severity.Error,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-units-per-pixel"));
-        }
-        final double previewFps = getPreviewFps();
-        if (previewFps > 15) {
-            solutions.add(new Solutions.Issue(
-                    this, 
-                    "A high Preview FPS value might create undue CPU load.", 
-                    "Set to 5 FPS.", 
-                    Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
-                
-
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    setPreviewFps((state == Solutions.State.Solved) ? 5.0 : previewFps);
-                    super.setState(state);
-                }
-            });
-        }
-        if (! isSuspendPreviewInTasks()) {
-            solutions.add(new Solutions.Issue(
-                    this, 
-                    "It is recommended to suspend camera preview during machine tasks / Jobs.", 
-                    "Enable Suspend during tasks.", 
-                    Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
-
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    setSuspendPreviewInTasks((state == Solutions.State.Solved));
-                    super.setState(state);
-                }
-            });
-        }
-        if (! isAutoVisible()) {
-            solutions.add(new Solutions.Issue(
-                    this, 
-                    "In single camera preview OpenPnP can automatically switch the camera for you.", 
-                    "Enable Auto Camera View.", 
-                    Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
-
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    setAutoVisible((state == Solutions.State.Solved));
-                    super.setState(state);
-                }
-            });
-        }
-        CameraPanel cameraPanel = MainFrame.get().getCameraViews();
-        CameraView view = cameraPanel.getCameraView(this);
-        if (view != null) {
-            final RenderingQuality renderingQuality = view.getRenderingQuality();
-            if (renderingQuality.ordinal() < RenderingQuality.High.ordinal()) {
+        if (solutions.isTargeting(Milestone.Vision)) {
+            if (getLooking() == Looking.Up
+                    && isFlipX() == isFlipY()
+                    && ! (this instanceof SimulatedUpCamera)) {
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "An up-looking camera should usually mirror the image.", 
+                        "Enable either Flip X or Flip Y (but not both) in the camera's Image Transforms.", 
+                        Severity.Warning,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms"));
+            }
+            /*duplicate
+            if (getUnitsPerPixel().getX() == 0 && getUnitsPerPixel().getY() == 0) {
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "Units per pixel are not yet set.", 
+                        "Perform the Units Per Pixel measurement in the General Configuration tab .", 
+                        Severity.Error,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-units-per-pixel"));
+            }
+            */
+            final double previewFps = getPreviewFps();
+            if (previewFps > 15) {
                 solutions.add(new Solutions.Issue(
                         this, 
-                        "The preview rendering quality can be improved.", 
-                        "Set to Rendering Quality to High (right click the Camera View to see other options).", 
+                        "A high Preview FPS value might create undue CPU load.", 
+                        "Set to 5 FPS.", 
                         Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#camera-view-configuration") {
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
+
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
-                        view.setRenderingQuality((state == Solutions.State.Solved) ? RenderingQuality.High : renderingQuality);
-                        cameraViewHasChanged(null);
+                        setPreviewFps((state == Solutions.State.Solved) ? 5.0 : previewFps);
                         super.setState(state);
                     }
                 });
+            }
+            if (! isSuspendPreviewInTasks()) {
+                solutions.add(new Solutions.Issue(
+                        this, 
+                        "It is recommended to suspend camera preview during machine tasks / Jobs.", 
+                        "Enable Suspend during tasks.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        setSuspendPreviewInTasks((state == Solutions.State.Solved));
+                        super.setState(state);
+                    }
+                });
+            }
+            if (! isAutoVisible()) {
+                solutions.add(new Solutions.Issue(
+                        this, 
+                        "In single camera preview OpenPnP can automatically switch the camera for you.", 
+                        "Enable Auto Camera View.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#general-configuration") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        setAutoVisible((state == Solutions.State.Solved));
+                        super.setState(state);
+                    }
+                });
+            }
+            CameraPanel cameraPanel = MainFrame.get().getCameraViews();
+            CameraView view = cameraPanel.getCameraView(this);
+            if (view != null) {
+                final RenderingQuality renderingQuality = view.getRenderingQuality();
+                if (renderingQuality.ordinal() < RenderingQuality.High.ordinal()) {
+                    solutions.add(new Solutions.Issue(
+                            this, 
+                            "The preview rendering quality can be improved.", 
+                            "Set to Rendering Quality to High (right click the Camera View to see other options).", 
+                            Severity.Suggestion,
+                            "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#camera-view-configuration") {
+
+                        @Override
+                        public void setState(Solutions.State state) throws Exception {
+                            view.setRenderingQuality((state == Solutions.State.Solved) ? RenderingQuality.High : renderingQuality);
+                            cameraViewHasChanged(null);
+                            super.setState(state);
+                        }
+                    });
+                }
             }
         }
     }

@@ -11,7 +11,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
@@ -32,6 +34,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
@@ -1331,22 +1334,25 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
+        if (solutions.isTargeting(Milestone.Vision)) {
 
-        if ((unitsPerPixel.getX() == 0) || (unitsPerPixel.getY() == 0)) {
-             solutions.add(new Solutions.PlainIssue(
-                    this, 
-                    "Camera units per pixel has not been calibrated.", 
-                    "Calibrate the camera's units per pixel.", 
-                    Severity.Warning,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
-        }
-        else if (!isSecondaryUnitsPerPixelCalibrated()) {
-            solutions.add(new Solutions.PlainIssue(
-                    this, 
-                    "Camera units per pixel can be calibrated for 3D scale estimation.", 
-                    "Calibrate the camera's units per pixel at two different heights.", 
-                    Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
+            if ((unitsPerPixel.getX() == 0) || (unitsPerPixel.getY() == 0)) {
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "Camera units per pixel has not been calibrated.", 
+                        "Calibrate the camera's units per pixel.", 
+                        Severity.Warning,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
+            }
+            else if (solutions.isTargeting(Milestone.Advanced) 
+                    && !isSecondaryUnitsPerPixelCalibrated()) {
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "Camera units per pixel can be calibrated for 3D scale estimation.", 
+                        "Calibrate the camera's units per pixel at two different heights.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
+            }
         }
     }
 }

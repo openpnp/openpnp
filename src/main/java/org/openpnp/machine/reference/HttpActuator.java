@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.HttpActuatorConfigurationWizard;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.util.TextUtils;
 import org.pmw.tinylog.Logger;
@@ -221,19 +222,21 @@ public class HttpActuator extends ReferenceActuator {
     @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
-        if (this.readUrl.length() > 0 && this.regex.length() == 0) {
+        if (solutions.isTargeting(Milestone.Basic)) {
+            if (this.readUrl.length() > 0 && this.regex.length() == 0) {
 
-            solutions.add(new Solutions.Issue(this,
-                    "A HTTPActuator with Read URL likely needs a regular Expression to parse the value.",
-                    "Set an example expression", Severity.Warning,
-                    "https://github.com/openpnp/openpnp/wiki/HttpActuatorRead") {
+                solutions.add(new Solutions.Issue(this,
+                        "A HTTPActuator with Read URL likely needs a regular Expression to parse the value.",
+                        "Set an example expression", Severity.Warning,
+                        "https://github.com/openpnp/openpnp/wiki/HttpActuatorRead") {
 
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    setRegex("read:(?<Value>-?\\d+)");
-                    super.setState(state);
-                }
-            });
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        setRegex("read:(?<Value>-?\\d+)");
+                        super.setState(state);
+                    }
+                });
+            }
         }
     }
 }

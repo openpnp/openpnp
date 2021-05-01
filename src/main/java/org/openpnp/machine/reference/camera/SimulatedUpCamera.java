@@ -9,6 +9,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.ConcurrentModificationException;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
@@ -22,6 +23,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.Utils2D;
@@ -74,9 +76,10 @@ public class SimulatedUpCamera extends ReferenceCamera {
                 location.getY() - phyHeight / 2, phyWidth, phyHeight);
 
         // determine if there are any nozzles within our bounds and if so render them
+        Machine machine = Configuration.get()
+                .getMachine();
         try {
-            for (Head head :  Configuration.get()
-                    .getMachine().getHeads()) {
+            for (Head head :  machine.getHeads()) {
                 for (Nozzle nozzle : head.getNozzles()) {
                     Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
                     if (phyBounds.contains(l.getX(), l.getY())) {
@@ -85,10 +88,9 @@ public class SimulatedUpCamera extends ReferenceCamera {
                 }
             }
         }
-        catch (Exception e) {
-            // This can throw a concurrrent modification exception if the nozzles 
-            // array is modified. 
-            e.printStackTrace();
+        catch (ConcurrentModificationException e) {
+            // If nozzles are added/removed while enumerating them here, a ConcurrentModificationExceptions 
+            // is thrown. This is not so unlikely when this camera has high fps. 
         }
 
         g.setTransform(tx);

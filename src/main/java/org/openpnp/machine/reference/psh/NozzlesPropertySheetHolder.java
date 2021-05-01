@@ -51,7 +51,6 @@ public class NozzlesPropertySheetHolder extends SimplePropertySheetHolder {
             }
             try {
                 Nozzle nozzle = cls.newInstance();
-
                 head.addNozzle(nozzle);
             }
             catch (Exception e) {

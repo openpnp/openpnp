@@ -273,15 +273,15 @@ public class NullDriver extends AbstractDriver {
         super.findIssues(solutions);
         solutions.add(new Solutions.Issue(
                 this, 
-                "The simulation NullDriver can replaced with a GcodeAsyncDriver to drive a real controller.", 
-                "Replace with GcodeAsyncDriver.", 
+                "The simulation NullDriver can replaced with a GcodeDriver to drive a real controller.", 
+                "Replace with GcodeDriver.", 
                 Severity.Fundamental,
-                "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
+                "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup#automatic-conversion-of-the-nulldriver") {
 
             @Override
             public void setState(Solutions.State state) throws Exception {
                 if (state == Solutions.State.Solved) {
-                    GcodeDriverSolutions.convertToAsync(NullDriver.this);
+                    GcodeDriverSolutions.convertToGcode(NullDriver.this);
                 }
                 else if (getState() == Solutions.State.Solved) {
                     // Place the old one back (from the captured NullDriver.this).

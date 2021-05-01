@@ -42,6 +42,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Axis;
@@ -179,16 +180,7 @@ public class ReferenceHead extends AbstractHead {
     @Attribute(required=false) 
     private NozzleSolution nozzleSolution;
     @Attribute(required=false) 
-    int numberOfNozzleSolutions = 1;
-    
-    public int getNumberOfNozzleSolutions() {
-        return numberOfNozzleSolutions;
-    }
-
-    public void setNumberOfNozzleSolutions(int n) {
-        this.numberOfNozzleSolutions = n;
-    }
-
+    int nozzleSolutionsMultiplier = 1;
 
     @Override
     public void findIssues(Solutions solutions) {
@@ -201,25 +193,39 @@ public class ReferenceHead extends AbstractHead {
         catch (Exception e) {
         }
         if (camera != null) {
-            
+
             final Camera theCamera = camera;
-            if (isDefaultHead) { 
+            if (isDefaultHead && solutions.getTargetMilestone() == Milestone.Start) { 
                 solutions.add(new Solutions.Issue(
                         this, 
                         "Create nozzles for this head.", 
-                        "Choose the type and number of your nozzles", 
+                        "Choose the number and type of your nozzles", 
                         Solutions.Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup") {
+
                     {
                         setChoice(nozzleSolution);
+                        multiplier = nozzleSolutionsMultiplier;
                     }
                     @Override
                     public void setState(Solutions.State state) throws Exception {
                         if (state == State.Solved) {
-                            if (confirm("<html>The nozzle solution can only be applied (multiple times), it cannot be undone,<br/>"
-                                    + "your existing nozzle and axis configuration will be oeverwritten.<br/><br/>"
+                            if (confirm("<html>"
+                                    + "<p>Accepting this solution may change your machine configuration fundamentally.<br/>"
+                                    + "The following will happen:<p/>"
+                                    + "<ol>"
+                                    + "<li>The current machine configuration is saved (same as File/Save Configuration).</li>"
+                                    + "<li>The new solution overwrites your existing nozzle and axis configuration.</li>"
+                                    + "<li>As far as nozzles and axes remain the same type and count, their detail configuration is preserved.</li>"
+                                    + "<li>A nozzle solution can be applied multiple times, you can revisit and expand it.</li>"
+                                    + "<li>There is no automatic Undo operation available, previous configuration must be restored manually.</li>"
+                                    + "</ol>"
+                                    + "<br/>"
                                     +"Are you sure?</html>", true)) {
-                                createNozzleSolution(theCamera, (NozzleSolution) getChoice(), getNumberOfNozzleSolutions());
+                                createNozzleSolution(theCamera, (NozzleSolution) getChoice(), multiplier);
+                            }
+                            else {
+                                Configuration.get().load();
                             }
                         }
                         super.setState(state);
@@ -230,33 +236,52 @@ public class ReferenceHead extends AbstractHead {
                         return false;
                     }
 
+                    private int multiplier;
+
                     @Override
-                    public Solutions.Choice[] getChoices() {
-                        return new Solutions.Choice[] {
-                                new Solutions.Choice(NozzleSolution.Standalone, 
+                    public Solutions.Issue.CustomProperty[] getProperties() {
+                        return new Solutions.Issue.CustomProperty[] {
+                                new Solutions.Issue.IntegerProperty(
+                                        "Number of Nozzle Units",
+                                        "The Number of Nozzles or Pairs of Nozzles",
+                                        1, 8) {
+                                    @Override
+                                    public int get() {
+                                        return multiplier;
+                                    }
+                                    @Override
+                                    public void set(int value) {
+                                        multiplier = value;
+                                    }
+                                },
+                        };
+                    }
+                    @Override
+                    public Solutions.Issue.Choice[] getChoices() {
+                        return new Solutions.Issue.Choice[] {
+                                new Solutions.Issue.Choice(NozzleSolution.Standalone, 
                                         "<html><h3>Standalone Nozzle<h3>"
-                                                + "<p>The nozzle(s) have their own dedicated Z axis motor</p>"
+                                                + "<p>A nozzle has its own dedicated Z axis motor</p>"
                                                 + "</html>",
                                                 Icons.nozzleSingle),
-                                new Solutions.Choice(NozzleSolution.DualNegated, 
-                                        "<html><h3>Dual Nozzle, Shared Z Axis, Negated<h3>"
-                                                + "<p>Two nozzles share a Z axis motor. "
-                                                + "The second nozzle moves equally up when the first one moves down. "
+                                new Solutions.Issue.Choice(NozzleSolution.DualNegated, 
+                                        "<html><h3>Nozzle Pair, Shared Z Axis, Negated<h3>"
+                                                + "<p>A nozzle pair shares a Z axis motor. "
+                                                + "When the first nozzle moves up, then second one moves down equally. "
                                                 + "The nozzles are negatively coupled by rack and pinion or belt.</p>"
                                                 + "</html>",
                                                 Icons.nozzleDualNeg),
-                                new Solutions.Choice(NozzleSolution.DualCam, 
-                                        "<html><h3>Dual Nozzle, Shared Z Axis, Cam<h3>"
-                                                + "<p>Two nozzles share a Z axis motor. "
-                                                + "The two nozzles are pushed down by a rotational cam, and pulled up with a spring.</p>"
+                                new Solutions.Issue.Choice(NozzleSolution.DualCam, 
+                                        "<html><h3>Nozzle Pair, Shared Z Axis, Cam<h3>"
+                                                + "<p>A nozzle pair shares a Z axis motor. "
+                                                + "The two nozzles are pushed down by a rotational cam, pulled up with a spring.</p>"
                                                 + "</html>",
                                                 Icons.nozzleDualCam),
                         };
                     }
                 });
             }
-            if (nozzleSolution != null) {
-
+            if (solutions.isTargeting(Milestone.Basic)) {
                 if (camera.getAxisX() == null) {
                     addMissingAxisIssue(solutions, camera, Axis.Type.X);
                 }
@@ -366,7 +391,9 @@ public class ReferenceHead extends AbstractHead {
         }
     }
 
-    private void createNozzleSolution(Camera camera, NozzleSolution nozzleSolution, int n) throws Exception {
+    private synchronized void createNozzleSolution(Camera camera, 
+            NozzleSolution nozzleSolution, int nozzleSolutionsMultiplier) throws Exception {
+        Configuration.get().save();
         // Recycle existing nozzles and axes.
         LinkedHashSet<AbstractNozzle> nozzles = new LinkedHashSet<>();
         LinkedHashSet<AbstractAxis> axesZ = new LinkedHashSet<>();
@@ -395,8 +422,8 @@ public class ReferenceHead extends AbstractHead {
                 }
             }
         }
-        for (int i = 0; i < n; i++) {
-            String suffix = n > 1 ? String.valueOf(i+1) : "";
+        for (int i = 0; i < nozzleSolutionsMultiplier; i++) {
+            String suffix = nozzleSolutionsMultiplier > 1 ? String.valueOf(i+1) : "";
             String suffix1 = String.valueOf(i*2+1);
             String suffix2 = String.valueOf(i*2+2);
             switch (nozzleSolution) {
@@ -457,6 +484,7 @@ public class ReferenceHead extends AbstractHead {
             removeNozzle(unusedNozzle);
         }
         this.nozzleSolution = nozzleSolution;
+        this.nozzleSolutionsMultiplier = nozzleSolutionsMultiplier;
     }
 
     private CoordinateAxis getRawAxis(Axis axis) { 
@@ -484,7 +512,7 @@ public class ReferenceHead extends AbstractHead {
         }
         nozzle.setName("N"+i);
         nozzle.setAxisX((AbstractAxis) camera.getAxisX());
-        nozzle.setAxisY((AbstractAxis) camera.getAxisX());
+        nozzle.setAxisY((AbstractAxis) camera.getAxisY());
         return nozzle;
     }
 

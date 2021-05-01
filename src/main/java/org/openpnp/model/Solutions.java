@@ -41,14 +41,27 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.machine.reference.driver.NullDriver;
+import org.openpnp.machine.reference.driver.NullMotionPlanner;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.Camera;
+import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.VisionUtils;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
 public class Solutions extends AbstractTableModel {
 
     @ElementList(required = false)
     private Set<String> dismissedSolutions = new HashSet<>();
+
+    public enum Milestone {
+        Start, Basic, Vision, Calibrated, Advanced
+    }
+    @Attribute(required = false)
+    private Milestone targetMilestone;
 
     public interface Subject {
         /**
@@ -80,6 +93,26 @@ public class Solutions extends AbstractTableModel {
         }
     }
 
+    public Milestone getTargetMilestone() {
+        if (targetMilestone == null) {
+            migrateLevel();
+        }
+        return targetMilestone;
+    }
+    public void setTargetMilestone(Milestone targetMilestone) throws Exception {
+        if (targetMilestone.ordinal() > this.targetMilestone.ordinal() + 1) {
+            throw new Exception("The Issues & Solutions level can only be increased by one level");
+        }
+        this.targetMilestone = targetMilestone;
+    }
+
+    public boolean isTargeting(Milestone targetMilestone) {
+        return getTargetMilestone().ordinal() >= targetMilestone.ordinal();
+    }
+    public boolean isAtMostTargeting(Milestone targetMilestone) {
+        return getTargetMilestone().ordinal() <= targetMilestone.ordinal();
+    }
+
     public enum Severity {
         None(new Color(255, 255, 255)), 
         Information(new Color(255, 255, 255)),
@@ -107,28 +140,7 @@ public class Solutions extends AbstractTableModel {
         }
     }
 
-    public static class Choice {
-        final private Object value;
-        final private Icon icon;
-        final private String description;
-        public Choice(Object value, String description, Icon icon) {
-            super();
-            this.value = value;
-            this.description = description;
-            this.icon = icon;
-        }
-        public Object getValue() {
-            return value;
-        }
-        public Icon getIcon() {
-            return icon;
-        }
-        public String getDescription() {
-            return description;
-        }
-    }
-
-    public static class Issue extends AbstractModelObject {
+    public static abstract class Issue extends AbstractModelObject {
         final Subject subject;
         final String issue;
         final String solution;
@@ -172,7 +184,7 @@ public class Solutions extends AbstractTableModel {
 
         public boolean confirm(String message, boolean warning) {
             int result = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    message, null, 
+                    message, warning ? "Warning" : "Question", 
                     JOptionPane.YES_NO_OPTION, 
                     warning ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE);
             return (result == JOptionPane.YES_OPTION);
@@ -207,6 +219,77 @@ public class Solutions extends AbstractTableModel {
         public boolean canBeUndone() {
             return true;
         }
+
+        /**
+         * Ultra simple custom property support. 
+         *
+         */
+        public abstract class CustomProperty {
+            private final String label;
+            private final String toolTip;
+            
+            public CustomProperty(String label, String toolTip) {
+                super();
+                this.label = label;
+                this.toolTip = toolTip;
+            }
+
+            public String getLabel() {
+                return label;
+            }
+            public String getToolTip() {
+                return toolTip;
+            }
+        }
+        public abstract class IntegerProperty extends CustomProperty {
+            private final int min;
+            private final int max;
+            
+            public IntegerProperty(String label, String toolTip, int min, int max) {
+                super(label, toolTip);
+                this.min = min;
+                this.max = max;
+            }
+            public int getMin() {
+                return min;
+            }
+            public int getMax() {
+                return max;
+            }
+            public abstract int get();
+            public abstract void set(int value);
+        }
+
+        public CustomProperty [] getProperties() {
+            return new CustomProperty[] {};
+        }
+
+        /**
+         * Ultra-simple multiple-choices system. 
+         * @return
+         */
+        public class Choice {
+            final private Object value;
+            final private Icon icon;
+            final private String description;
+
+            public Choice(Object value, String description, Icon icon) {
+                super();
+                this.value = value;
+                this.description = description;
+                this.icon = icon;
+            }
+            public Object getValue() {
+                return value;
+            }
+            public Icon getIcon() {
+                return icon;
+            }
+            public String getDescription() {
+                return description;
+            }
+        }
+
         public Choice [] getChoices() {
             return new Choice[] {};
         }
@@ -267,7 +350,7 @@ public class Solutions extends AbstractTableModel {
 
     public synchronized void publishIssues() {
         if (pendingIssues.size() == 0) {
-            pendingIssues.add(new Solutions.Issue(
+            pendingIssues.add(new Solutions.PlainIssue(
                     getMachine(), 
                     "No issues detected.", 
                     "", 
@@ -444,5 +527,39 @@ public class Solutions extends AbstractTableModel {
     @Deprecated
     public void migrateDismissedSolutions(Set<String> dismissedSolutions) {
         this.dismissedSolutions = dismissedSolutions;
+    }
+
+    @Deprecated
+    private void migrateLevel() {
+        // Migration of an older configuration, try reconstructing the level. This is only a very crude heuristic.
+        if (getMachine().getDrivers().isEmpty() || getMachine().getDrivers().get(0) instanceof NullDriver) {
+            targetMilestone = Milestone.Start;
+        }
+        else if (getMachine().getMotionPlanner() instanceof NullMotionPlanner) {
+            targetMilestone = Milestone.Calibrated;
+            try {
+                for (Camera camera : new Camera[] {
+                        getMachine().getDefaultHead().getDefaultCamera(), 
+                        VisionUtils.getBottomVisionCamera() }) {
+                    if (camera.getUnitsPerPixel().getX() == 0 || camera.getUnitsPerPixel().getY() == 0) {
+                        targetMilestone = Milestone.Vision;
+                    }
+                }
+            }
+            catch (Exception e) {
+                targetMilestone = Milestone.Start;
+            }
+            for (Axis axis : getMachine().getAxes()) {
+                if (axis instanceof ControllerAxis) {
+                    if (((ControllerAxis) axis).getDriver() == null 
+                            || ((ControllerAxis) axis).getLetter().isEmpty()) {
+                        targetMilestone = Milestone.Basic;
+                    }
+                }
+            }
+        }
+        else {
+            targetMilestone = Milestone.Advanced;
+        }
     }
 }

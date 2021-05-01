@@ -83,6 +83,7 @@ import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
@@ -503,7 +504,8 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void findIssues(Solutions solutions) {
-        if (getMotionPlanner() instanceof NullMotionPlanner) {
+        if (getMotionPlanner() instanceof NullMotionPlanner 
+                && solutions.isTargeting(Milestone.Advanced)) {
             solutions.add(new Solutions.Issue(
                     this, 
                     "Advanced Motion Planner not set. Accept or Dismiss to continue.", 
@@ -526,7 +528,7 @@ public class ReferenceMachine extends AbstractMachine {
                 }
             });
         }
-        if (! isAutoToolSelect()) {
+        if (solutions.isTargeting(Milestone.Basic) && ! isAutoToolSelect()) {
             solutions.add(new Solutions.Issue(
                     this, 
                     "OpenPnP can often automatically select the right tool for you in Machine Controls.", 

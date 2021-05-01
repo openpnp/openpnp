@@ -11,9 +11,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTextArea;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -22,6 +26,7 @@ import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Issue;
+import org.openpnp.model.Solutions.Issue.IntegerProperty;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -45,12 +50,15 @@ public class IssuePanel extends JPanel {
     private JPanel panel_2;
     private JPanel panel_3;
     private final ButtonGroup buttonGroup = new ButtonGroup();
-    private JRadioButton[] multipleChoice = new JRadioButton[MAX_MULTIPLE_CHOICE];
-    private JPanel[] panelMultiChoice = new JPanel[MAX_MULTIPLE_CHOICE];
-    private JLabel[] lblMultiChoice = new JLabel[MAX_MULTIPLE_CHOICE];
 
     public IssuePanel(Issue issue, ReferenceMachine machine) {
         super();
+        // Calculate the needed rows from the issue properties
+        final int rowsFixed = 4;
+        int rowCount = rowsFixed;
+        rowCount += issue.getProperties().length;
+        rowCount += issue.getChoices().length;
+
         setBorder(null);
         this.issue = issue;
         this.machine = machine;
@@ -69,7 +77,21 @@ public class IssuePanel extends JPanel {
                 new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("70dlu", true), Sizes.constant("150dlu", true)), 1),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,},
-                guardedRowspec()));
+                issue == null ? new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC, 
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, 
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, 
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, 
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, 
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, 
+                        FormSpecs.DEFAULT_ROWSPEC,
+        }
+        : dynamicRowspec(rowCount)));
 
         lblSubject = new JLabel("Subject");
         panel.add(lblSubject, "2, 2, right, center");
@@ -124,11 +146,41 @@ public class IssuePanel extends JPanel {
         solutionText.setWrapStyleWord(true);  
         solutionText.setLineWrap(true);
 
-        int formRow = 0;
-        for (Solutions.Choice choice : issue.getChoices()) {
+        buildDynamicPart(rowsFixed);
+
+        initDataBindings();
+    }
+
+    private void buildDynamicPart(int formRow) {
+        for (Solutions.Issue.CustomProperty property : issue.getProperties()) {
+            if (property instanceof IntegerProperty) {
+                IntegerProperty intProperty = (IntegerProperty) property;
+                JLabel lblSpinner = new JLabel(property.getLabel());
+                lblSpinner.setToolTipText(property.getToolTip());
+                panel.add(lblSpinner, "2, "+(formRow*2)+", right, default");
+                JSpinner spinner = new JSpinner();
+                spinner.addChangeListener(new ChangeListener() {
+                    public void stateChanged(ChangeEvent e) {
+                        int value = (int) spinner.getValue();
+                        intProperty.set(value);
+                        int newValue = intProperty.get();
+                        if (newValue != value) {
+                            spinner.setValue(newValue);
+                        }
+                    }
+                });
+                spinner.setModel(new SpinnerNumberModel(intProperty.get(), intProperty.getMin(), intProperty.getMax(), 1));
+                spinner.setToolTipText(property.getToolTip());
+                spinner.setEnabled(issue.getState() == Solutions.State.Open);
+                panel.add(spinner, "4, "+(formRow*2)+", left, default");
+            }
+            // Consume the row
+            formRow++;
+        }
+        for (Solutions.Issue.Choice choice : issue.getChoices()) {
             final JRadioButton radioButton = new JRadioButton("");
             buttonGroup.add(radioButton);
-            panel.add(radioButton, "2, "+(8+formRow*2)+", right, default");
+            panel.add(radioButton, "2, "+(formRow*2)+", right, default");
             radioButton.setSelected(issue.getChoice() == choice.getValue());
             radioButton.setEnabled(issue.getState() == Solutions.State.Open);
             radioButton.addItemListener(new ItemListener() {
@@ -141,7 +193,7 @@ public class IssuePanel extends JPanel {
 
             JPanel panelMultiChoice = new JPanel();
             panelMultiChoice.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-            panel.add(panelMultiChoice, "4, "+(8+formRow*2)+", fill, fill");
+            panel.add(panelMultiChoice, "4, "+(formRow*2)+", fill, fill");
             panelMultiChoice.setLayout(new FormLayout(new ColumnSpec[] {
                     new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("70dlu", true), Sizes.constant("150dlu", true)), 1),},
                     new RowSpec[] {
@@ -150,6 +202,7 @@ public class IssuePanel extends JPanel {
             JLabel lblMultiChoice = new JLabel(choice.getDescription());
             panelMultiChoice.add(lblMultiChoice, "1, 1");
             lblMultiChoice.setIcon(choice.getIcon());
+            lblMultiChoice.setIconTextGap(20);
             lblMultiChoice.addMouseListener(new MouseListener() {
                 private boolean beginClick;
 
@@ -179,82 +232,27 @@ public class IssuePanel extends JPanel {
                     radioButton.setSelected(true);
                 }
             });
-            // Count
+            // Consume the row
             formRow++;
         }
+    }
 
-        initDataBindings();
+    private RowSpec[] dynamicRowspec(int rows) {
+        RowSpec[] rowspec = new RowSpec[rows*2];
+        for (int i = 0; i < rows*2; i+=2) {
+            rowspec[i] = FormSpecs.RELATED_GAP_ROWSPEC;
+            rowspec[i+1] = FormSpecs.DEFAULT_ROWSPEC;
+        }
+        return rowspec;
     }
-    private RowSpec[] guardedRowspec() {
-        return new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,};
-    }
+
     protected void initDataBindings() {
         // For some strange reason this does not work:
         //      BeanProperty<Issue, String> issueBeanProperty = BeanProperty.create("subject.subjectText");
         //      BeanProperty<JTextArea, String> jTextAreaBeanProperty = BeanProperty.create("text");
         //      AutoBinding<Issue, String, JTextArea, String> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, issue, issueBeanProperty, subjectText, jTextAreaBeanProperty);
         //      autoBinding.bind();
-        // So bind it statically. 
+        // So bind it statically, it is final anyway. 
         subjectText.setText(issue.getSubject().getSubjectText());
         subjectText.setIcon(issue.getSubject().getSubjectIcon());
 

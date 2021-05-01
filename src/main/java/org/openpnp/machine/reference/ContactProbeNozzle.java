@@ -28,6 +28,7 @@ import org.openpnp.machine.reference.wizards.ContactProbeNozzleWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.ControllerAxis;
@@ -150,55 +151,57 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
-        try {
-            if (getContactProbeActuator() instanceof AbstractActuator) {
-                if (!getContactProbeActuator().isCoordinatedAfterActuate()) {
-                    solutions.add(new Solutions.Issue(
-                            getContactProbeActuator(), 
-                            "Contact probe actuator needs machine coordination after actuation.", 
-                            "Enable After Actuation machine coordination.", 
-                            Severity.Error,
-                            "https://github.com/openpnp/openpnp/wiki/Motion-Planner#actuator-machine-coordination") {
-
-                        @Override
-                        public void setState(Solutions.State state) throws Exception {
-                            ((AbstractActuator) getContactProbeActuator()).setCoordinatedAfterActuate((state == Solutions.State.Solved));
-                            super.setState(state);
-                        }
-                    });
-                }
-                if (getAxisZ() instanceof ControllerAxis) {
-                    Driver driver = ((ControllerAxis) getAxisZ()).getDriver();
-                    if (driver instanceof GcodeAsyncDriver) {
-                        if (!((GcodeAsyncDriver) driver).isReportedLocationConfirmation()) { 
-                            solutions.add(new Solutions.Issue(
-                                    this, 
-                                    "Z driver "+driver.getName()+" must use Location Confirmation for the probe actuator to work.", 
-                                    "Enable Location Confirmation.", 
-                                    Severity.Error,
-                                    "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
-
-                                @Override
-                                public void setState(Solutions.State state) throws Exception {
-                                    ((GcodeAsyncDriver) driver).setReportedLocationConfirmation((state == Solutions.State.Solved));
-                                    super.setState(state);
-                                }
-                            });
-                        }
-                    }
-                    else {
-                        solutions.add(new Solutions.PlainIssue(
-                                this, 
-                                "Z driver "+driver.getName()+" must support Location Confirmation for the Z probe actuator to work.", 
-                                "Only the GcodeAsyncDriver currently supports it.", 
+        if (solutions.isTargeting(Milestone.Advanced)) {
+            try {
+                if (getContactProbeActuator() instanceof AbstractActuator) {
+                    if (!getContactProbeActuator().isCoordinatedAfterActuate()) {
+                        solutions.add(new Solutions.Issue(
+                                getContactProbeActuator(), 
+                                "Contact probe actuator needs machine coordination after actuation.", 
+                                "Enable After Actuation machine coordination.", 
                                 Severity.Error,
-                                "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings"));
+                                "https://github.com/openpnp/openpnp/wiki/Motion-Planner#actuator-machine-coordination") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                ((AbstractActuator) getContactProbeActuator()).setCoordinatedAfterActuate((state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
+                    if (getAxisZ() instanceof ControllerAxis) {
+                        Driver driver = ((ControllerAxis) getAxisZ()).getDriver();
+                        if (driver instanceof GcodeAsyncDriver) {
+                            if (!((GcodeAsyncDriver) driver).isReportedLocationConfirmation()) { 
+                                solutions.add(new Solutions.Issue(
+                                        this, 
+                                        "Z driver "+driver.getName()+" must use Location Confirmation for the probe actuator to work.", 
+                                        "Enable Location Confirmation.", 
+                                        Severity.Error,
+                                        "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
+
+                                    @Override
+                                    public void setState(Solutions.State state) throws Exception {
+                                        ((GcodeAsyncDriver) driver).setReportedLocationConfirmation((state == Solutions.State.Solved));
+                                        super.setState(state);
+                                    }
+                                });
+                            }
+                        }
+                        else {
+                            solutions.add(new Solutions.PlainIssue(
+                                    this, 
+                                    "Z driver "+driver.getName()+" must support Location Confirmation for the Z probe actuator to work.", 
+                                    "Only the GcodeAsyncDriver currently supports it.", 
+                                    Severity.Error,
+                                    "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings"));
+                        }
                     }
                 }
             }
-        }
-        catch (Exception e) {
-            // Ignore a stale Actuator name here.
+            catch (Exception e) {
+                // Ignore a stale Actuator name here.
+            }
         }
     }
 }
