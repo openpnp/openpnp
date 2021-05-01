@@ -124,9 +124,6 @@ public class IndexFeeder extends ReferenceFeeder {
 
     static Actuator getDataActuator() {
         Machine machine = Configuration.get().getMachine();
-        if(machine == null) {
-            return null;  // If we have no machine, we can't actually fetch or make the actuator
-        }
 
         Actuator actuator = machine.getActuatorByName(ACTUATOR_DATA_NAME);
 

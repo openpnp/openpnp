@@ -42,10 +42,7 @@ public class IndexFeederLoadingTest {
     }
 
     @Test
-    public void loadingOfDataActuator() throws Exception {
-        assertNull(IndexFeeder.getDataActuator());
-
-        Configuration.get().load();
+    public void loadingOfDataActuator() throws Exception {Configuration.get().load();
         Machine machine = Configuration.get().getMachine();
 
         Actuator actuator = machine.getActuatorByName(IndexFeeder.ACTUATOR_DATA_NAME);
