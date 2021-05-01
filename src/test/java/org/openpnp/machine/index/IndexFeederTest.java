@@ -47,6 +47,10 @@ public class IndexFeederTest {
         feeder = new IndexFeeder();
         machine.addFeeder(feeder);
 
+        // First remove the Reference Actuator that was made when we created the IndexFeeder
+        machine.removeActuator(machine.getActuatorByName(IndexFeeder.ACTUATOR_DATA_NAME));
+
+        // Then make a fake one for us to mock with
         mockedActuator = Mockito.mock(Actuator.class);
         when(mockedActuator.getName()).thenReturn(IndexFeeder.ACTUATOR_DATA_NAME);
         machine.addActuator(mockedActuator);
