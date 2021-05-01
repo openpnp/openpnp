@@ -53,7 +53,11 @@ OpenPnP will automatically complete Motion Paths in these cases:
 
 ![Actuator Machine Coordination](https://user-images.githubusercontent.com/9963310/97218401-eeaac880-17c8-11eb-8cf8-f51ec1f5730b.png)
 
-The **Machine Coordination** options tell OpenPnP when to coordinate the machine/motion with the actuator. The **After Actuation** option is disabled by default. It can be enabled, if OpenPnP must coordinate _after_ the actuation. This will also update the machine location, if it has changed behind its back. This can happen through custom actuator motion or probing Gcode. For example it is used for the [[Contact Probing Nozzle]]'s probing actuator. 
+The **Machine Coordination** options tell OpenPnP when to coordinate the machine/motion with the actuator. 
+
+The **Before Actuation** option is enabled by default. It can be disabled, if you don't want to wait for motion to complete before actuating the actuator. This can be useful e.g. for the light actuator, so the camera will already start to adapt to bright lighting while arriving. Or it can be used for feeder actuators, if you want the feed operation to start even while the machine is still moving there. 
+
+The **After Actuation** option is disabled by default. It can be enabled, if OpenPnP must coordinate _after_ the actuation. Wenn you have the **Location Confirmation** option enabled on the driver, each coordination will also update the machine location. This is useful it has changed behind OpenPnP's back. This can happen through custom actuator motion or probing Gcode. For example it is used for the [[Contact Probing Nozzle]]'s probing actuator. 
 
 ### Custom Scripts
 
