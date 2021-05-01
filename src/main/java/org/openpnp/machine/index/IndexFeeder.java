@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 import static org.openpnp.machine.index.protocol.IndexResponses.*;
 
 public class IndexFeeder extends ReferenceFeeder {
-    public static final String ACTUATOR_NAME = "INDEX_ACTUATOR";
+    public static final String ACTUATOR_DATA_NAME = "IndexFeederData";
     IndexProperties indexProperties;
 
     @Attribute(required = false)
@@ -44,6 +44,9 @@ public class IndexFeeder extends ReferenceFeeder {
             @Override
             public void configurationLoaded(Configuration configuration) {
                 indexProperties = new IndexProperties(configuration.getMachine());
+
+                // Ensure actuators are added to the machine when it has IndexFeeders
+                getDataActuator();
             }
         });
     }
@@ -74,7 +77,7 @@ public class IndexFeeder extends ReferenceFeeder {
             return;
         }
 
-        Actuator actuator = getActuator();
+        Actuator actuator = getDataActuator();
         String feederAddressResponseString = actuator.read(IndexCommands.getFeederAddress(hardwareId));
 
         PacketResponse response = GetFeederAddress.decode(feederAddressResponseString);
@@ -93,7 +96,7 @@ public class IndexFeeder extends ReferenceFeeder {
             return;
         }
 
-        Actuator actuator = getActuator();
+        Actuator actuator = getDataActuator();
         String responseString = actuator.read(IndexCommands.initializeFeeder(slotAddress, hardwareId));
         PacketResponse response = InitializeFeeder.decode(responseString);
 
@@ -119,13 +122,17 @@ public class IndexFeeder extends ReferenceFeeder {
         initialized = true;
     }
 
-    static Actuator getActuator() {
+    static Actuator getDataActuator() {
         Machine machine = Configuration.get().getMachine();
-        Actuator actuator = machine.getActuatorByName(ACTUATOR_NAME);
+        if(machine == null) {
+            return null;  // If we have no machine, we can't actually fetch or make the actuator
+        }
+
+        Actuator actuator = machine.getActuatorByName(ACTUATOR_DATA_NAME);
 
         if (actuator == null) {
             actuator = new ReferenceActuator();
-            actuator.setName(ACTUATOR_NAME);
+            actuator.setName(ACTUATOR_DATA_NAME);
             try {
                 machine.addActuator(actuator);
             } catch (Exception exception) {
@@ -142,7 +149,7 @@ public class IndexFeeder extends ReferenceFeeder {
             findSlotAddressIfNeeded();
             initializeIfNeeded();
 
-            Actuator actuator = getActuator();
+            Actuator actuator = getDataActuator();
             String ackResponseString = actuator.read(IndexCommands.moveFeedForward(slotAddress, partPitch * 10));
 
             PacketResponse ackResponse = MoveFeedForward.decode(ackResponseString);
@@ -322,7 +329,7 @@ public class IndexFeeder extends ReferenceFeeder {
     public static void findAllFeeders(IntConsumer progressUpdate) throws Exception {
         Machine machine = Configuration.get().getMachine();
         IndexProperties indexProperties = new IndexProperties(machine);
-        Actuator actuator = getActuator();
+        Actuator actuator = getDataActuator();
         int maxFeederAddress = indexProperties.getMaxFeederAddress();
 
         List<IndexFeeder> feedersToAdd = new ArrayList<>();

@@ -1,15 +1,16 @@
 package org.openpnp.machine.index;
 
 import com.google.common.io.Files;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Machine;
 
 import java.io.File;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 /**
  * This has to be a separate test from IndexFeederTest because in there we load the machine in the setup which precludes
@@ -38,5 +39,18 @@ public class IndexFeederLoadingTest {
         Configuration.get().load();
 
         assertSame(Configuration.get().getMachine(), feeder.indexProperties.machine);
+    }
+
+    @Test
+    public void loadingOfDataActuator() throws Exception {
+        assertNull(IndexFeeder.getDataActuator());
+
+        Configuration.get().load();
+        Machine machine = Configuration.get().getMachine();
+
+        Actuator actuator = machine.getActuatorByName(IndexFeeder.ACTUATOR_DATA_NAME);
+        assertNotNull(actuator);
+        assertTrue(actuator instanceof ReferenceActuator);
+        assertEquals(IndexFeeder.ACTUATOR_DATA_NAME, actuator.getName());
     }
 }

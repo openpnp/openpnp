@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
-import org.mockito.verification.VerificationMode;
 import org.openpnp.machine.index.sheets.FeederPropertySheet;
 import org.openpnp.machine.index.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -49,7 +48,7 @@ public class IndexFeederTest {
         machine.addFeeder(feeder);
 
         mockedActuator = Mockito.mock(Actuator.class);
-        when(mockedActuator.getName()).thenReturn(IndexFeeder.ACTUATOR_NAME);
+        when(mockedActuator.getName()).thenReturn(IndexFeeder.ACTUATOR_DATA_NAME);
         machine.addActuator(mockedActuator);
 
         mockedNozzle = Mockito.mock(Nozzle.class);
@@ -64,15 +63,15 @@ public class IndexFeederTest {
     }
 
     @Test
-    public void getActuatorCreatesReferenceActuatorIfOneDoesNotExist() {
+    public void getDataActuatorCreatesReferenceActuatorIfOneDoesNotExist() {
         machine.removeActuator(mockedActuator); // Start by removing the one we added for every other test
 
-        Actuator actuator = IndexFeeder.getActuator();
+        Actuator actuator = IndexFeeder.getDataActuator();
         assertNotNull(actuator);
         assertTrue(actuator instanceof ReferenceActuator);
-        assertEquals(IndexFeeder.ACTUATOR_NAME, actuator.getName());
+        assertEquals(IndexFeeder.ACTUATOR_DATA_NAME, actuator.getName());
 
-        Actuator machineActuator = machine.getActuatorByName(IndexFeeder.ACTUATOR_NAME);
+        Actuator machineActuator = machine.getActuatorByName(IndexFeeder.ACTUATOR_DATA_NAME);
         assertSame(actuator, machineActuator);
     }
 
