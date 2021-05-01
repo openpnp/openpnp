@@ -251,6 +251,14 @@ public class IndexFeeder extends ReferenceFeeder {
         return slotAddress;
     }
 
+    public IndexFeederSlots.Slot getSlot() {
+        if(slotAddress == null) {
+            return null;
+        }
+
+        return indexProperties.getFeederSlots().getSlot(slotAddress);
+    }
+
     public void setSlotAddress(Integer slotAddress) {
         // Find any other index feeders and if they have this slot address, set their address to null
         IndexFeeder otherFeeder = findBySlotAddress(slotAddress);
@@ -277,8 +285,10 @@ public class IndexFeeder extends ReferenceFeeder {
     @Override
     public boolean isEnabled() {
         return super.isEnabled() &&
-                getHardwareId() != null &&
-                getPart() != null;
+                hardwareId != null &&
+                partId != null &&
+                slotAddress != null &&
+                getSlot().getLocation() != null;
     }
 
     public boolean isInitialized() {

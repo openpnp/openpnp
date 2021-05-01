@@ -10,6 +10,8 @@ import org.openpnp.machine.index.sheets.FeederPropertySheet;
 import org.openpnp.machine.index.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
@@ -17,6 +19,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.function.IntConsumer;
 
 import static org.junit.Assert.*;
@@ -109,10 +112,33 @@ public class IndexFeederTest {
     }
 
     @Test
+    public void isEnabledReturnsFalseIfNoAddressIsSet() {
+        feeder.setEnabled(true);
+        feeder.setHardwareId(hardwareId);
+        feeder.setPart(new Part("test-part"));
+
+        Assert.assertNull(feeder.getSlot());
+        Assert.assertFalse(feeder.isEnabled());
+    }
+
+    @Test
+    public void isEnabledReturnsFalseIfSlotHasNoLocation() {
+        feeder.setEnabled(true);
+        feeder.setHardwareId(hardwareId);
+        feeder.setPart(new Part("test-part"));
+        feeder.setSlotAddress(5);
+
+        Assert.assertNull(feeder.getSlot().getLocation());
+        Assert.assertFalse(feeder.isEnabled());
+    }
+
+    @Test
     public void isEnabledReturnsTrueIfEverythingIsSet() {
         feeder.setEnabled(true);
         feeder.setHardwareId(hardwareId);
         feeder.setPart(new Part("test-part"));
+        feeder.setSlotAddress(5);
+        feeder.getSlot().setLocation(new Location(LengthUnit.Millimeters, 1, 1, 1, 1));
 
         Assert.assertTrue(feeder.isEnabled());
     }
