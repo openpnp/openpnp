@@ -23,8 +23,6 @@ package org.openpnp.machine.reference.driver;
 
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,6 +47,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.GcodeServer;
+import org.openpnp.util.XmlSerialize;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.convert.AnnotationStrategy;
@@ -917,6 +916,14 @@ class GcodeDriverSolutions implements Solutions.Subject {
         asyncDriver.setTimeoutMilliseconds(asyncDriver.getTimeoutMilliseconds()*3);
         replaceDriver(asyncDriver);
     }
+
+    /**
+     * Convert an existing GcodeAsyncDriver to a GcodeDriver while keeping all settings and 
+     * Axis/Actuator assignments. Removes sub-class properties.  
+     * 
+     * @param asyncDriver
+     * @throws Exception
+     */
     public static void convertToPlain(GcodeAsyncDriver asyncDriver) throws Exception {
         // Serialize the GcodeDriver
         Serializer serOut = createSerializer();
@@ -927,82 +934,13 @@ class GcodeDriverSolutions implements Solutions.Subject {
         gcodeDriverSerialized.replace(
                 asyncDriver.getClass().getCanonicalName(), 
                 GcodeAsyncDriver.class.getCanonicalName());
-        // HACK: Blot out serialized properties from the GcodeAsyncDriver class.
-        // Note this does not care about XML structure, it just assumes each element or attribute is unique
-        // within this gcodeDriverSerialized string, and that it cannot occur inside CDATA etc.  
-        for (Field f : GcodeAsyncDriver.class.getDeclaredFields()) {
-            // Handle all fields with xml annotation.
-            for (Annotation annotation : f.getAnnotations()) {
-                if (annotation.annotationType().getPackage().getName().equals("org.simpleframework.xml")) {
-                    // Try element syntax.
-                    String dashedName = camelToDashed(f.getName());
-                    int begin = Math.max(gcodeDriverSerialized.indexOf("<"+dashedName+">"),
-                            gcodeDriverSerialized.indexOf("<"+dashedName+" "));
-                    if (begin >= 0) {
-                        // Element without closing tag.
-                        int end = gcodeDriverSerialized.indexOf("/>", begin+dashedName.length()+2);
-                        if (end > begin) {
-                            end += 2;
-                            gcodeDriverSerialized = gcodeDriverSerialized.substring(0, begin)
-                                    + gcodeDriverSerialized.substring(end);
-                        }
-                        else {
-                            // Element with closing tag.
-                            end = gcodeDriverSerialized.indexOf("</"+dashedName+">", begin+dashedName.length()+2);
-                            if (end > begin) {
-                                end += dashedName.length()+3;
-                                gcodeDriverSerialized = gcodeDriverSerialized.substring(0, begin)
-                                        + gcodeDriverSerialized.substring(end);
-                            }
-                        }
-                    }
-                    // Try attribute syntax.
-                    begin = gcodeDriverSerialized.indexOf(" "+dashedName+"=\"");
-                    if (begin >= 0) {
-                        int end = gcodeDriverSerialized.indexOf("\"", begin+dashedName.length()+3);
-                        if (end >= begin) {
-                            end += 1;
-                            gcodeDriverSerialized = gcodeDriverSerialized.substring(0, begin)
-                                    + gcodeDriverSerialized.substring(end);
-                        }
-                    }
-                    break;//annotation
-                }
-            }
-        }
-
+        // Remove the sub-class properties. 
+        gcodeDriverSerialized = XmlSerialize.purgeSubclassXml(GcodeAsyncDriver.class, gcodeDriverSerialized);
         // De-serialize it.
         Serializer serIn = createSerializer();
         StringReader sr = new StringReader(gcodeDriverSerialized);
         GcodeDriver gcodeDriver = serIn.read(GcodeDriver.class, sr);
-        // Triple the timeout as asynchronously executed move sequences can be longer than single moves.
-        gcodeDriver.setTimeoutMilliseconds(gcodeDriver.getTimeoutMilliseconds()*3);
         replaceDriver(gcodeDriver);
-    }
-
-    /**
-     * Adapted from https://www.geeksforgeeks.org/convert-camel-case-string-to-snake-case-in-java/
-     * 
-     * @param str
-     * @return
-     */
-    private static String camelToDashed(String str) {
-        // Regular Expression
-        String regex = "([a-z])([A-Z]+)";
-
-        // Replacement string
-        String replacement = "$1-$2";
-
-        // Replace the given regex
-        // with replacement string
-        // and convert it to lower case.
-        str = str
-                .replaceAll(
-                        regex, replacement)
-                .toLowerCase();
-
-        // return string
-        return str;
     }
 
     /**

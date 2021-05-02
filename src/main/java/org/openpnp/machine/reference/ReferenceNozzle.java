@@ -93,7 +93,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
                 // When brand new nozzles are created rather than loaded from configuration, configurationLoaded() is also 
-                // called back. Therefore we need to check for the presence of the head. 
+                // triggered. Therefore we need to check for the presence of the head. 
                 if (getHead() !=  null) {
                     nozzleTip = (ReferenceNozzleTip) configuration.getMachine().getNozzleTip(currentNozzleTipId);
                     if (version < 200) {

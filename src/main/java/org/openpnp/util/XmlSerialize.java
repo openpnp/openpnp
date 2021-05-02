@@ -23,6 +23,8 @@ import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 
 public class XmlSerialize {
     public static String serialize(Object o) {
@@ -37,7 +39,7 @@ public class XmlSerialize {
         XMLDecoder xmlDecoder = new XMLDecoder(new ByteArrayInputStream(s.getBytes()));
         return xmlDecoder.readObject();
     }
-    
+
     /**
      * From https://stackoverflow.com/questions/1265282/recommended-method-for-escaping-html-in-java
      * @param s
@@ -60,5 +62,84 @@ public class XmlSerialize {
             }
         }
         return out.toString();
+    }
+
+    /**
+     * Purges serialized properties from the GcodeAsyncDriver class.
+     * Note this does not care about XML structure (no CDATA support etc.), it just assumes each element or
+     * attribute pattern is unique within the serialized string (which is not unreasonable).
+     * 
+     * @param cls
+     * @param serialized
+     * @return
+     * @throws SecurityException
+     */
+    public static String purgeSubclassXml(Class cls, String serialized) throws SecurityException {
+        for (Field f : cls.getDeclaredFields()) {
+            // Handle all fields with xml annotation.
+            for (Annotation annotation : f.getAnnotations()) {
+                if (annotation.annotationType().getPackage().getName().equals("org.simpleframework.xml")) {
+                    // Try element syntax.
+                    String dashedName = camelToDashed(f.getName());
+                    int begin = Math.max(serialized.indexOf("<"+dashedName+">"),
+                            serialized.indexOf("<"+dashedName+" "));
+                    if (begin >= 0) {
+                        // Element without closing tag.
+                        int end = serialized.indexOf("/>", begin+dashedName.length()+2);
+                        if (end > begin) {
+                            end += 2;
+                            serialized = serialized.substring(0, begin)
+                                    + serialized.substring(end);
+                        }
+                        else {
+                            // Element with closing tag.
+                            end = serialized.indexOf("</"+dashedName+">", begin+dashedName.length()+2);
+                            if (end > begin) {
+                                end += dashedName.length()+3;
+                                serialized = serialized.substring(0, begin)
+                                        + serialized.substring(end);
+                            }
+                        }
+                    }
+                    // Try attribute syntax.
+                    begin = serialized.indexOf(" "+dashedName+"=\"");
+                    if (begin >= 0) {
+                        int end = serialized.indexOf("\"", begin+dashedName.length()+3);
+                        if (end >= begin) {
+                            end += 1;
+                            serialized = serialized.substring(0, begin)
+                                    + serialized.substring(end);
+                        }
+                    }
+                    break;//annotation
+                }
+            }
+        }
+        return serialized;
+    }
+
+    /**
+     * Adapted from https://www.geeksforgeeks.org/convert-camel-case-string-to-snake-case-in-java/
+     * 
+     * @param str
+     * @return
+     */
+    private static String camelToDashed(String str) {
+        // Regular Expression
+        String regex = "([a-z])([A-Z]+)";
+
+        // Replacement string
+        String replacement = "$1-$2";
+
+        // Replace the given regex
+        // with replacement string
+        // and convert it to lower case.
+        str = str
+                .replaceAll(
+                        regex, replacement)
+                .toLowerCase();
+
+        // return string
+        return str;
     }
 }
