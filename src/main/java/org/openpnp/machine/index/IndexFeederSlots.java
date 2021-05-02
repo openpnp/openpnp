@@ -27,7 +27,7 @@ public class IndexFeederSlots {
         @Attribute
         private final int address;
 
-        @Element
+        @Element(required = false)
         private Location location;
 
         public Slot(int address) {
