@@ -12,6 +12,7 @@ import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Solutions;
 import org.openpnp.spi.*;
 import org.simpleframework.xml.Attribute;
 
@@ -54,6 +55,21 @@ public class IndexFeeder extends ReferenceFeeder {
     @Override
     public Location getPickLocation() throws Exception {
         return new Location(LengthUnit.Millimeters, 20, 0, 0, 0);
+    }
+
+    @Override
+    public void findIssues(List<Solutions.Issue> issues) {
+        super.findIssues(issues);
+
+        if(slotAddress != null && getSlot().getLocation() == null) {
+            issues.add(new Solutions.PlainIssue(
+                    this,
+                    "Feeder slot has unconfigured location",
+                    "Select the feeder in the Feeders tab and make sure the slot has a set location",
+                    Solutions.Severity.Fundamental,
+                    "URI goes here" // TODO Internet better
+            ));
+        }
     }
 
     @Override

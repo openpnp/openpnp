@@ -9,16 +9,15 @@ import org.mockito.Mockito;
 import org.openpnp.machine.index.sheets.FeederPropertySheet;
 import org.openpnp.machine.index.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.Part;
+import org.openpnp.model.*;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.IntConsumer;
 
@@ -928,5 +927,22 @@ public class IndexFeederTest {
         assertEquals(2, sheets.length);
         assertTrue(sheets[0] instanceof FeederPropertySheet);
         assertTrue(sheets[1] instanceof SearchPropertySheet);
+    }
+
+    @Test
+    public void findIssuesAddsIssueIfSlotHasNoLocationSet() {
+        feeder.setSlotAddress(5);
+        assertNull(feeder.getSlot().getLocation());
+
+        List<Solutions.Issue> issues = new ArrayList<>();
+        feeder.findIssues(issues);
+
+        assertEquals(1, issues.size());
+        Solutions.Issue issue = issues.get(0);
+
+        assertEquals(feeder, issue.getSubject());
+        assertEquals("Feeder slot has unconfigured location", issue.getIssue());
+        assertEquals(Solutions.Severity.Fundamental, issue.getSeverity());
+        assertEquals(Solutions.State.Open, issue.getState());
     }
 }
