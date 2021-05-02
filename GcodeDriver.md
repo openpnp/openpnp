@@ -13,6 +13,12 @@ Please see the following pages for additional information when configuring Gcode
 # Examples
 Please see [[GcodeDriver: Example Configurations]] for some community contributed example configurations. If you find one that matches your controller you can use it as a starting point for your own system.
 
+# Connection
+
+![Driver Connection](https://user-images.githubusercontent.com/9963310/116818952-317d9c80-ab6e-11eb-9485-15b33abb363a.png)
+
+Connect the driver to your controller. 
+
 # Configuration
 
 To configure the GcodeDriver it is necessary to at least set a COMMAND_CONFIRM_REGEX and one or more commands. The COMMAND_CONFIRM_REGEX is a regular expression that the driver will use to match responses from the controller. When the response matches it considers a command to be complete. Defining commands tells the driver what to send to your controller when OpenPnP wants to perform a certain action.
