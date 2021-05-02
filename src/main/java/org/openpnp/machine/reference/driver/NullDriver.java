@@ -34,6 +34,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
@@ -271,24 +272,26 @@ public class NullDriver extends AbstractDriver {
     @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
-        solutions.add(new Solutions.Issue(
-                this, 
-                "The simulation NullDriver can replaced with a GcodeDriver to drive a real controller.", 
-                "Replace with GcodeDriver.", 
-                Severity.Fundamental,
-                "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup#automatic-conversion-of-the-nulldriver") {
+        if (solutions.isTargeting(Milestone.Connect)) {
+            solutions.add(new Solutions.Issue(
+                    this, 
+                    "The simulation NullDriver can replaced with a GcodeDriver to drive a real controller.", 
+                    "Replace with GcodeDriver.", 
+                    Severity.Fundamental,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup#automatic-conversion-of-the-nulldriver") {
 
-            @Override
-            public void setState(Solutions.State state) throws Exception {
-                if (state == Solutions.State.Solved) {
-                    GcodeDriverSolutions.convertToGcode(NullDriver.this);
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (state == Solutions.State.Solved) {
+                        GcodeDriverSolutions.convertToGcode(NullDriver.this);
+                    }
+                    else if (getState() == Solutions.State.Solved) {
+                        // Place the old one back (from the captured NullDriver.this).
+                        GcodeDriverSolutions.replaceDriver(NullDriver.this);
+                    }
+                    super.setState(state);
                 }
-                else if (getState() == Solutions.State.Solved) {
-                    // Place the old one back (from the captured NullDriver.this).
-                    GcodeDriverSolutions.replaceDriver(NullDriver.this);
-                }
-                super.setState(state);
-            }
-        });
+            });
+        }
     }
 }

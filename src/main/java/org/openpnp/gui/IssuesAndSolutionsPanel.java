@@ -24,9 +24,8 @@ package org.openpnp.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -39,7 +38,6 @@ import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -52,6 +50,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.jdesktop.beansbinding.AutoBinding;
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.IssuePanel;
@@ -60,7 +62,6 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -76,6 +77,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
     final private Configuration configuration;
     final private MainFrame frame;
+    private Solutions solutions;
     private ReferenceMachine machine;
     private IssuePanel issuePanel;
 
@@ -95,33 +97,35 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,}));
-                
-                JLabel lblMilestone = new JLabel("Milestone");
-                lblMilestone.setToolTipText("<html>\r\nThe target milestone for the machine configuration.<br/>\r\nFilters and influences proposed solutions to ensure that basic<br/>\r\nmachine operation is achieved, before more advanced, more<br/>\r\ncomplex <em>and more difficult</em> solutions are targeted.\r\n</html>\r\n");
-                toolbar.add(lblMilestone, "4, 3, right, default");
-                
-                JComboBox targetMilestone = new JComboBox(Solutions.Milestone.values());
-                
-                toolbar.add(targetMilestone, "6, 3, fill, default");
-        
-                labelWarn = new JLabel("After each round of solving issues, please run Find Issues & Solutions again to catch dependent issues.");
-                toolbar.add(labelWarn, "8, 3");
-                labelWarn.setHorizontalAlignment(SwingConstants.RIGHT);
-                labelWarn.setForeground(Color.DARK_GRAY);
-                labelWarn.setVisible(false);
+                new RowSpec[] {
+                        FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,}));
+
+        JLabel lblMilestone = new JLabel("Milestone");
+        lblMilestone.setFont(lblMilestone.getFont().deriveFont(lblMilestone.getFont().getStyle() | Font.BOLD));
+        lblMilestone.setToolTipText("<html>\r\nThe target milestone for the machine configuration.<br/>\r\nThe milestone filters and sometimes influences proposed solutions<br/>\r\nto ensure that basic machine operation is achieved, before more advanced,<br/>\r\nmore complex <em>and more difficult</em> solutions are targeted.\r\n</html>\r\n");
+        toolbar.add(lblMilestone, "4, 3, right, default");
+
+        targetMilestone = new JLabel(" - ");
+        targetMilestone.setFont(targetMilestone.getFont().deriveFont(targetMilestone.getFont().getStyle() | Font.BOLD));
+
+        toolbar.add(targetMilestone, "6, 3, fill, default");
 
         JSplitPane splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setContinuousLayout(true);
         splitPane
-                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+        .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
         splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
@@ -133,7 +137,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         issuePane = new JPanel();
         splitPane.setRightComponent(issuePane);
         issuePane.setLayout(new BorderLayout(0, 0));
-        
+
         JPanel panel = new JPanel();
         issuePane.add(panel, BorderLayout.SOUTH);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -149,24 +153,24 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 ColumnSpec.decode("53px"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.LINE_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,}));
-        
+                new RowSpec[] {
+                        FormSpecs.LINE_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,}));
+
         JButton btnAccept = new JButton(acceptSolutionAction);
         panel.add(btnAccept, "3, 2, fill, top");
-        
+
         JButton btnDismiss = new JButton(dismissSolutionAction);
         panel.add(btnDismiss, "5, 2, fill, top");
-        
+
         JButton btnUndo = new JButton(undoSolutionAction);
         panel.add(btnUndo, "7, 2, fill, top");
-        
+
         JLabel label = new JLabel(" ");
         panel.add(label, "8, 2");
-        
+
         JButton btnInfo = new JButton(infoAction);
         panel.add(btnInfo, "10, 2, fill, top");
 
@@ -177,22 +181,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
                 machine = (ReferenceMachine)configuration.getMachine();
-                Solutions solutions = machine.getSolutions();
-                targetMilestone.setSelectedItem(solutions.getTargetMilestone());
-                targetMilestone.addItemListener(new ItemListener() {
-                    public void itemStateChanged(ItemEvent e) {
-                        Milestone selectedMilestone = (Milestone) targetMilestone.getSelectedItem();
-                        UiUtils.messageBoxOnException(() -> {
-                            if (selectedMilestone != solutions.getTargetMilestone()) {
-                                solutions.setTargetMilestone(selectedMilestone);
-                                findSolutionsAction.actionPerformed(null);
-                            }
-                        });
-                        if (selectedMilestone != solutions.getTargetMilestone()) {
-                            targetMilestone.setSelectedItem(solutions.getTargetMilestone());
-                        }
-                    }
-                });
+                solutions = machine.getSolutions();
+                initDataBindings();
+
                 tableSorter = new TableRowSorter<>(solutions);
                 table = new AutoSelectTextTable(solutions) {
                     @Override
@@ -236,14 +227,36 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 splitPane.setLeftComponent(scrollPane);
 
                 SwingUtilities.invokeLater(() -> {
-                   findSolutionsAction.actionPerformed(null); 
+                    findIssuesAndSolutions(); 
                 });
             }
         });
-        
+
         JButton btnFindSolutions = new JButton(findSolutionsAction);
-        toolbar.add(btnFindSolutions, "2, 3, fill, top");
+        toolbar.add(btnFindSolutions, "2, 3, 1, 3, fill, fill");
+
+        label_1 = new JLabel(" - ");
+        toolbar.add(label_1, "4, 5, 7, 1");
+
+        labelWarn = new JLabel("After each round of solving issues, please run Find Issues & Solutions again to catch dependent issues.");
+        toolbar.add(labelWarn, "2, 7, 10, 1, left, default");
+        labelWarn.setHorizontalAlignment(SwingConstants.RIGHT);
+        labelWarn.setForeground(Color.DARK_GRAY);
+        labelWarn.setVisible(false);
+        initDataBindings();
     }
+
+    protected void initDataBindings() {
+        BeanProperty<Solutions, String> solutionsBeanProperty = BeanProperty.create("targetMilestone.name");
+        BeanProperty<JLabel, String> jComboBoxBeanProperty = BeanProperty.create("text");
+        AutoBinding<Solutions, String, JLabel, String> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, solutions, solutionsBeanProperty, targetMilestone, jComboBoxBeanProperty);
+        autoBinding.bind();
+        //
+        BeanProperty<Solutions, String> solutionsBeanProperty_1 = BeanProperty.create("targetMilestone.description");
+        AutoBinding<Solutions, String, JLabel, String> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ, solutions, solutionsBeanProperty_1, label_1, jComboBoxBeanProperty);
+        autoBinding_1.bind();
+    }
+
 
     private List<Solutions.Issue> getSelections() {
         List<Solutions.Issue> selections = new ArrayList<>();
@@ -277,7 +290,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
             if (issue.getUri() != null) {
                 needInfo = true;
             }
-            
+
         }
         acceptSolutionAction.setEnabled(needAccept && issues.size() == 1);
         dismissSolutionAction.setEnabled(needDismiss);
@@ -292,7 +305,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         }
         issuePane.revalidate();
         issuePane.repaint();
-        
+        updateIssueIndicator();
     }
 
     public void updateIssueIndicator() {
@@ -310,8 +323,8 @@ public class IssuesAndSolutionsPanel extends JPanel {
             Color color = maxSeverity.color;
             color = saturate(color);
             tabs.setTitleAt(index, "<html>Issues &amp; Solutions <span style=\"color:#"
-            +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
-            +";\">&#"+(indicatorUnicode)+";</span></html>");
+                    +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
+                    +";\">&#"+(indicatorUnicode)+";</span></html>");
         }
         else {
             tabs.setTitleAt(index, "Issues & Solutions");
@@ -326,6 +339,17 @@ public class IssuesAndSolutionsPanel extends JPanel {
         return color;
     }
 
+    public void findIssuesAndSolutions() {
+        UiUtils.messageBoxOnException(() -> {
+            machine.getSolutions().findIssues();
+            machine.getSolutions().publishIssues();
+            labelWarn.setVisible(false);
+            if (table.getRowCount() > 0) {
+                table.setRowSelectionInterval(0, 0);
+            }
+        });
+    }
+
     private Action findSolutionsAction =
             new AbstractAction("Find Issues & Solutions", Icons.solutions) {
         {
@@ -335,13 +359,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                machine.getSolutions().findIssues();
-                machine.getSolutions().publishIssues();
-                labelWarn.setVisible(false);
-                updateIssueIndicator();
-                selectionActions();
-            });
+            findIssuesAndSolutions();
         }
     };
 
@@ -355,6 +373,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> { 
+                labelWarn.setVisible(true);
                 List<Solutions.Issue> issues = getSelections();
                 for (Solutions.Issue issue : issues) {
                     if (issue.canBeAccepted() ) {
@@ -369,9 +388,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         }
                     }
                 }
-                updateIssueIndicator();
                 selectionActions();
-                labelWarn.setVisible(true);
             });
         }
     };
@@ -392,7 +409,6 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         issue.setState(Solutions.State.Dismissed);
                     }
                 }
-                updateIssueIndicator();
                 selectionActions();
             });
         }
@@ -413,7 +429,6 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         issue.setState(Solutions.State.Open);
                     }
                 }
-                updateIssueIndicator();
                 selectionActions();
             });
         }
@@ -439,11 +454,13 @@ public class IssuesAndSolutionsPanel extends JPanel {
             });
         }
     };
+
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
     private TableRowSorter tableSorter;
     private AutoSelectTextTable table;
     private JLabel labelWarn;
     private JPanel issuePane;
-
+    private JLabel targetMilestone;
+    private JLabel label_1;
 }

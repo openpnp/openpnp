@@ -21,6 +21,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -201,25 +202,27 @@ public class SimulatedUpCamera extends ReferenceCamera {
     @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
-        solutions.add(new Solutions.Issue(
-                this, 
-                "The SimulatedUpCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
-                "Replace with OpenPnpCaptureCamera.", 
-                Severity.Fundamental,
-                "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
+        if (solutions.isTargeting(Milestone.Connect)) {
+            solutions.add(new Solutions.Issue(
+                    this, 
+                    "The SimulatedUpCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
+                    "Replace with OpenPnpCaptureCamera.", 
+                    Severity.Fundamental,
+                    "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
 
-            @Override
-            public void setState(Solutions.State state) throws Exception {
-                if (state == Solutions.State.Solved) {
-                    OpenPnpCaptureCamera camera = createReplacementCamera();
-                    replaceCamera(camera);
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (state == Solutions.State.Solved) {
+                        OpenPnpCaptureCamera camera = createReplacementCamera();
+                        replaceCamera(camera);
+                    }
+                    else if (getState() == Solutions.State.Solved) {
+                        // Place the old one back (from the captured SimulatedUpCamera.this).
+                        replaceCamera(SimulatedUpCamera.this);
+                    }
+                    super.setState(state);
                 }
-                else if (getState() == Solutions.State.Solved) {
-                    // Place the old one back (from the captured SimulatedUpCamera.this).
-                    replaceCamera(SimulatedUpCamera.this);
-                }
-                super.setState(state);
-            }
-        });
+            });
+        }
     }
 }

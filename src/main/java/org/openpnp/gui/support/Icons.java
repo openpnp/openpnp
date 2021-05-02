@@ -109,6 +109,8 @@ public class Icons {
     public static Icon nozzleDualNeg = getIcon("/icons/nozzle-neg.svg", 96, 96);
     public static Icon nozzleDualCam = getIcon("/icons/nozzle-cam.svg", 96, 96);
 
+    public static Icon milestone = getIcon("/icons/milestone.svg", 96, 96);
+
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
             return new FlatSVGIcon(resourceName.substring(1), width, height);

@@ -247,7 +247,9 @@ public class ReferenceMachine extends AbstractMachine {
     }
 
     public void setMotionPlanner(MotionPlanner motionPlanner) {
+        Object oldValue = this.motionPlanner;
         this.motionPlanner = motionPlanner;
+        firePropertyChange("motionPlanner", oldValue, motionPlanner);
     }
 
     @Override
@@ -504,31 +506,58 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void findIssues(Solutions solutions) {
-        if (getMotionPlanner() instanceof NullMotionPlanner 
-                && solutions.isTargeting(Milestone.Advanced)) {
-            solutions.add(new Solutions.Issue(
-                    this, 
-                    "Advanced Motion Planner not set. Accept or Dismiss to continue.", 
-                    "Change to ReferenceAdvancedMotionPlanner", 
-                    Solutions.Severity.Fundamental,
-                    "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
-                final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
+        if (solutions.isTargeting(Milestone.Advanced)) {
+            if (getMotionPlanner() instanceof NullMotionPlanner) {
+                solutions.add(new Solutions.Issue(
+                        this, 
+                        "Advanced Motion Planner not set. Accept or Dismiss to continue.", 
+                        "Change to ReferenceAdvancedMotionPlanner", 
+                        Solutions.Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
+                    final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
 
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if ((state == Solutions.State.Solved)) {
-                        setMotionPlanner(new ReferenceAdvancedMotionPlanner());
-                    } 
-                    else {
-                        setMotionPlanner(oldMotionPlanner);
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if ((state == Solutions.State.Solved)) {
+                            setMotionPlanner(new ReferenceAdvancedMotionPlanner());
+                        } 
+                        else {
+                            setMotionPlanner(oldMotionPlanner);
+                        }
+                        // Reselect the tree path to reload the wizard with potentially different property sheets. 
+                        MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+                        super.setState(state);
                     }
-                    // Reselect the tree path to reload the wizard with potentially different property sheets. 
-                    MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
-                    super.setState(state);
-                }
-            });
+                });
+            }
         }
-        if (solutions.isTargeting(Milestone.Basic) && ! isAutoToolSelect()) {
+        else {
+            // Conservative solutions.
+            if (!(getMotionPlanner() instanceof NullMotionPlanner)) {
+                solutions.add(new Solutions.Issue(
+                        this, 
+                        "Advanced motion planner set. Revert to a simpler, safer planner.", 
+                        "Change to NullMotionPlanner", 
+                        Solutions.Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
+                    final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if ((state == Solutions.State.Solved)) {
+                            setMotionPlanner(new NullMotionPlanner());
+                        } 
+                        else {
+                            setMotionPlanner(oldMotionPlanner);
+                        }
+                        // Reselect the tree path to reload the wizard with potentially different property sheets. 
+                        MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+                        super.setState(state);
+                    }
+                });
+            }
+        }
+        if (solutions.isTargeting(Milestone.Basics) && ! isAutoToolSelect()) {
             solutions.add(new Solutions.Issue(
                     this, 
                     "OpenPnP can often automatically select the right tool for you in Machine Controls.", 

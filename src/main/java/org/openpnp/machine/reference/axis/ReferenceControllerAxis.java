@@ -370,7 +370,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
 
-        if (solutions.isTargeting(Milestone.Basic)) {
+        if (solutions.isTargeting(Milestone.Basics)) {
             if (getDriver() == null) {
                 solutions.add(new Solutions.PlainIssue(
                         this, 
@@ -417,7 +417,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
             }
         }
-        if (solutions.isTargeting(Milestone.Calibrated)) {
+        if (solutions.isTargeting(Milestone.Calibration)) {
             final BacklashCompensationMethod oldBacklashCompensationMethod = 
                     getBacklashCompensationMethod();
             if (oldBacklashCompensationMethod != BacklashCompensationMethod.None

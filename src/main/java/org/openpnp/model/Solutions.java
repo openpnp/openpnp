@@ -23,6 +23,8 @@ package org.openpnp.model;
 
 import java.awt.Color;
 import java.awt.Desktop;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,6 +51,7 @@ import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.VisionUtils;
+import org.openpnp.util.XmlSerialize;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
@@ -57,11 +60,72 @@ public class Solutions extends AbstractTableModel {
     @ElementList(required = false)
     private Set<String> dismissedSolutions = new HashSet<>();
 
-    public enum Milestone {
-        Start, Basic, Vision, Calibrated, Advanced
+    public enum Milestone implements Subject, Named {
+        Welcome, Connect, Basics, Vision, Calibration, Advanced;
+
+        public Milestone getPrevious() {
+            if (ordinal()-1 >= 0) {
+                return values()[ordinal() - 1];
+            }
+            return null;
+        }
+        public Milestone getNext() {
+            if (ordinal()+1 < values().length) {
+                return values()[ordinal() + 1];
+            }
+            return null;
+        }
+        @Override
+        public String getName() {
+            return toString();
+        }
+        @Override
+        public Icon getSubjectIcon() {
+            return Icons.solutions;
+        }
+        @Override
+        public void setName(String name) {
+        }
+        public String getDescription() {
+            switch (this) {
+                case Welcome:
+                    return "Get to know OpenPnP by using the demo simulation machine. Choose your nozzle configuration.";
+                case Connect:
+                    return "Connect OpenPnP to real controllers and cameras.";
+                case Basics:
+                    return "Configure basic machine motion, vacuum switching, light switching.";
+                case Vision: 
+                    return "Setup cameras and computer vision.";
+                case Calibration:
+                    return "Calibrate the machine for precision motion and vision.";
+                case Advanced:
+                    return "Enable more advanced features for a faster and more automatic machine.";
+                default:
+                    return null;
+            }
+        }
     }
     @Attribute(required = false)
     private Milestone targetMilestone;
+
+    // Lacking multiple inheritance, we can't inherit from AbstractModelObject 
+    protected final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        propertyChangeSupport.addPropertyChangeListener(listener);
+    }
+
+    public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+        propertyChangeSupport.addPropertyChangeListener(propertyName, listener);
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        propertyChangeSupport.removePropertyChangeListener(listener);
+    }
+
+    public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+        propertyChangeSupport.removePropertyChangeListener(propertyName, listener);
+    }
 
     public interface Subject {
         /**
@@ -99,11 +163,10 @@ public class Solutions extends AbstractTableModel {
         }
         return targetMilestone;
     }
-    public void setTargetMilestone(Milestone targetMilestone) throws Exception {
-        if (targetMilestone.ordinal() > this.targetMilestone.ordinal() + 1) {
-            throw new Exception("The Issues & Solutions level can only be increased by one level");
-        }
+    public void setTargetMilestone(Milestone targetMilestone) {
+        Object oldValue = this.targetMilestone;
         this.targetMilestone = targetMilestone;
+        propertyChangeSupport.firePropertyChange("targetMilestone", oldValue, targetMilestone);
     }
 
     public boolean isTargeting(Milestone targetMilestone) {
@@ -138,6 +201,14 @@ public class Solutions extends AbstractTableModel {
         State(Color color) {
             this.color = color;
         }
+    }
+
+    public boolean confirm(String message, boolean warning) {
+        int result = JOptionPane.showConfirmDialog(MainFrame.get(),
+                message, warning ? "Warning" : "Question", 
+                        JOptionPane.YES_NO_OPTION, 
+                        warning ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE);
+        return (result == JOptionPane.YES_OPTION);
     }
 
     public static abstract class Issue extends AbstractModelObject {
@@ -182,14 +253,6 @@ public class Solutions extends AbstractTableModel {
             return DigestUtils.shaHex(subject.getSubjectText()+"\n"+issue+"\n"+solution);
         }
 
-        public boolean confirm(String message, boolean warning) {
-            int result = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    message, warning ? "Warning" : "Question", 
-                    JOptionPane.YES_NO_OPTION, 
-                    warning ? JOptionPane.WARNING_MESSAGE : JOptionPane.QUESTION_MESSAGE);
-            return (result == JOptionPane.YES_OPTION);
-        }
-
         public State getState() {
             return state;
         }
@@ -227,7 +290,7 @@ public class Solutions extends AbstractTableModel {
         public abstract class CustomProperty {
             private final String label;
             private final String toolTip;
-            
+
             public CustomProperty(String label, String toolTip) {
                 super();
                 this.label = label;
@@ -244,7 +307,7 @@ public class Solutions extends AbstractTableModel {
         public abstract class IntegerProperty extends CustomProperty {
             private final int min;
             private final int max;
-            
+
             public IntegerProperty(String label, String toolTip, int min, int max) {
                 super(label, toolTip);
                 this.min = min;
@@ -341,7 +404,102 @@ public class Solutions extends AbstractTableModel {
 
     public synchronized void findIssues() {
         pendingIssues = new ArrayList<>();
-        getMachine().findIssues(this);
+        Machine machine = getMachine();
+        machine.findIssues(this);
+        // Add the milestone completion solution.
+        Milestone targetMilestone = getTargetMilestone();
+        pendingIssues.add(new Solutions.Issue(
+                targetMilestone, 
+                "Complete milestone "+targetMilestone.getName(), 
+                targetMilestone.getDescription(), 
+                Solutions.Severity.Information,
+                "https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions") {
+            {
+                setChoice(targetMilestone.getNext());
+            }
+            @Override
+            public void setState(Solutions.State state) throws Exception {
+                if (state == State.Solved) {
+                    boolean ok = true;
+                    if (getChoice() == targetMilestone.getNext()) {
+                        // Check if proceeding to the next level is ok.
+                        // Make a fresh findIssues (this will only affect the pendingIssues, not the actual ones).
+                        findIssues();
+                        StringBuilder str = new StringBuilder();
+                        str.append("<ul>");
+                        for (Issue issue : pendingIssues) {
+                            if (issue.getState() == State.Open 
+                                    && !issue.getFingerprint().equals(getFingerprint())) {
+                                // There is still an open issue.
+                                ok = false;
+                                str.append("<li>");
+                                str.append(XmlSerialize.escapeXml(issue.getSubject().getSubjectText()));
+                                str.append(": ");
+                                str.append(XmlSerialize.escapeXml(issue.getIssue()));
+                                str.append("</li>");
+                            }
+                        }
+                        str.append("</ul>");
+                        pendingIssues = null;
+                        if (!ok) {
+                            if (confirm("<html>"
+                                    + "<p>Issues for milestone <strong>"+targetMilestone+"</strong> are still open:</p>"
+                                    + str.toString()
+                                    + "<p color=\"red\">It is not recommended to switch to the next target milestone "
+                                    + "before these are resolved or dismissed!</p>"
+                                    + "<p><br/>Are you sure you still want to proceed?</p>"
+                                    + "</html>", 
+                                    true)) {
+                                ok = true;
+                            }
+                        }
+                    }
+                    if (ok) {
+                        super.setState(state);
+                        setTargetMilestone((Milestone) getChoice());
+                        MainFrame.get().getIssuesAndSolutionsTab().findIssuesAndSolutions();
+                    }
+                }
+                else {
+                    super.setState(state);
+                }
+            }
+
+            @Override
+            public Solutions.Issue.Choice[] getChoices() {
+                return new Solutions.Issue.Choice[] {
+                        (targetMilestone.getNext() == null ? null :
+                            new Solutions.Issue.Choice(targetMilestone.getNext(), 
+                                    "<html><h3>Proceed to "+targetMilestone.getNext().getName()+"</h3>"
+                                            + "<p>Confirm to have completed and tested milestone <strong>"+targetMilestone.getName()+"</strong>:</p><br/>"
+                                            + "<blockquote>"+XmlSerialize.escapeXml(targetMilestone.getDescription())+"</blockquote><br/>"
+                                            + "<p>Yes? <em>Congratulations!</em></p><br/>"
+                                            + "<p>You can proceed to the next milestone "
+                                            + "<strong>"+targetMilestone.getNext().getName()+"</strong>:</p><br/>"
+                                            + "<blockquote>"+XmlSerialize.escapeXml(targetMilestone.getNext().getDescription())+"</blockquote><br/>"
+                                            + "<p>Note: all issues from this milestone should be resolved or dismissed before you proceed.</p>"
+                                            + "</html>",
+                                            Icons.milestone)),
+                        (targetMilestone.getPrevious() == null ? null :
+                            new Solutions.Issue.Choice(targetMilestone.getPrevious(), 
+                                    "<html><h3>Go back to "+targetMilestone.getPrevious().getName()+"</h3>"
+                                            + "<p>To limit the scope for Issues & Solutions, you can go back to the previous milestone "
+                                            + "<strong>"+targetMilestone.getPrevious().getName()+"</strong>:</p><br/>"
+                                            + "<blockquote>"+XmlSerialize.escapeXml(targetMilestone.getPrevious().getDescription())+"</blockquote><br/>"
+                                            + "<p>Note: Most Issues & Solutions from previous milestones are also reported on subsequent milestones. "
+                                            + "But in earlier target milestones some solutions proposed are simpler, more conservative. "
+                                            + "For troubleshooting, it can therfore be beneficial to go back and try getting it to work there.</p><br/>"
+                                            + "<p>To change your nozzle configuration, you have to go back all the way to "+Milestone.Welcome.getName()+".</p>"
+                                            + "</html>",
+                                            Icons.milestone)),
+                };
+            }
+        });
+        for (Issue issue : pendingIssues) {
+            if (isSolutionsIssueDismissed(issue)) {
+                issue.setInitiallyDismissed();
+            }
+        }
     }
 
     public synchronized void add(Issue issue) {
@@ -349,20 +507,8 @@ public class Solutions extends AbstractTableModel {
     }
 
     public synchronized void publishIssues() {
-        if (pendingIssues.size() == 0) {
-            pendingIssues.add(new Solutions.PlainIssue(
-                    getMachine(), 
-                    "No issues detected.", 
-                    "", 
-                    Solutions.Severity.Information,
-                    null));
-        }
-        // Go through the issues and set initially dismissed ones.
-        // Also install listeners to update the dismissedTroubleshooting.
+        // Go through the issues and install listeners to update the dismissedTroubleshooting.
         for (Issue issue : pendingIssues) {
-            if (isSolutionsIssueDismissed(issue)) {
-                issue.setInitiallyDismissed();
-            }
             issue.addPropertyChangeListener("state", e -> {
                 if (e.getOldValue() == Solutions.State.Dismissed) {
                     setSolutionsIssueDismissed(issue, false);
@@ -426,10 +572,6 @@ public class Solutions extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        /*Issue issue = getIssue(rowIndex); 
-        if (columnIndex == 4) {
-            return true;
-        }*/
         return false;
     }
 
@@ -439,16 +581,6 @@ public class Solutions extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-        /*
-        Issue issue = getIssue(rowIndex); 
-        if (columnIndex == 4) {
-            SwingUtilities.invokeLater(() -> {
-                UiUtils.messageBoxOnException(() -> {
-                    issue.setState((State) aValue);
-                });
-            });
-        }
-*/
     }
 
     @Override
@@ -533,10 +665,10 @@ public class Solutions extends AbstractTableModel {
     private void migrateLevel() {
         // Migration of an older configuration, try reconstructing the level. This is only a very crude heuristic.
         if (getMachine().getDrivers().isEmpty() || getMachine().getDrivers().get(0) instanceof NullDriver) {
-            targetMilestone = Milestone.Start;
+            targetMilestone = Milestone.Welcome;
         }
         else if (getMachine().getMotionPlanner() instanceof NullMotionPlanner) {
-            targetMilestone = Milestone.Calibrated;
+            targetMilestone = Milestone.Calibration;
             try {
                 for (Camera camera : new Camera[] {
                         getMachine().getDefaultHead().getDefaultCamera(), 
@@ -547,13 +679,13 @@ public class Solutions extends AbstractTableModel {
                 }
             }
             catch (Exception e) {
-                targetMilestone = Milestone.Start;
+                targetMilestone = Milestone.Connect;
             }
             for (Axis axis : getMachine().getAxes()) {
                 if (axis instanceof ControllerAxis) {
                     if (((ControllerAxis) axis).getDriver() == null 
                             || ((ControllerAxis) axis).getLetter().isEmpty()) {
-                        targetMilestone = Milestone.Basic;
+                        targetMilestone = Milestone.Basics;
                     }
                 }
             }

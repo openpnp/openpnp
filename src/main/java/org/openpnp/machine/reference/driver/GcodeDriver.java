@@ -37,7 +37,6 @@ import java.util.regex.Pattern;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
@@ -1343,7 +1342,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setMaxFeedRate(int maxFeedRate) {
+        Object oldValue = this.maxFeedRate;
         this.maxFeedRate = maxFeedRate;
+        firePropertyChange("maxFeedRate", oldValue, maxFeedRate);
     }
 
     @Override
@@ -1380,7 +1381,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setRemoveComments(boolean removeComments) {
+        Object oldValue = this.removeComments;
         this.removeComments = removeComments;
+        firePropertyChange("removeComments", oldValue, removeComments);
     }
 
     public boolean isCompressGcode() {
@@ -1388,7 +1391,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setCompressGcode(boolean compressGcode) {
+        Object oldValue = this.compressGcode;
         this.compressGcode = compressGcode;
+        firePropertyChange("compressGcode", oldValue, compressGcode);
     }
 
     public boolean isUsingLetterVariables() {
@@ -1396,7 +1401,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setUsingLetterVariables(boolean usingLetterVariables) {
+        Object oldValue = this.usingLetterVariables;
         this.usingLetterVariables = usingLetterVariables;
+        firePropertyChange("usingLetterVariables", oldValue, usingLetterVariables);
     }
 
     @Override
@@ -1405,7 +1412,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setSupportingPreMove(boolean supportingPreMove) {
+        Object oldValue = this.supportingPreMove;
         this.supportingPreMove = supportingPreMove;
+        firePropertyChange("supportingPreMove", oldValue, supportingPreMove);
     }
 
     public boolean isLoggingGcode() {

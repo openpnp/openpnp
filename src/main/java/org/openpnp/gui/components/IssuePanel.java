@@ -178,62 +178,64 @@ public class IssuePanel extends JPanel {
             formRow++;
         }
         for (Solutions.Issue.Choice choice : issue.getChoices()) {
-            final JRadioButton radioButton = new JRadioButton("");
-            buttonGroup.add(radioButton);
-            panel.add(radioButton, "2, "+(formRow*2)+", right, default");
-            radioButton.setSelected(issue.getChoice() == choice.getValue());
-            radioButton.setEnabled(issue.getState() == Solutions.State.Open);
-            radioButton.addItemListener(new ItemListener() {
-                public void itemStateChanged(ItemEvent e) {
-                    if (radioButton.isSelected()) {
-                        issue.setChoice(choice.getValue());
+            if (choice != null) {
+                final JRadioButton radioButton = new JRadioButton("");
+                buttonGroup.add(radioButton);
+                panel.add(radioButton, "2, "+(formRow*2)+", right, default");
+                radioButton.setSelected(issue.getChoice() == choice.getValue());
+                radioButton.setEnabled(issue.getState() == Solutions.State.Open);
+                radioButton.addItemListener(new ItemListener() {
+                    public void itemStateChanged(ItemEvent e) {
+                        if (radioButton.isSelected()) {
+                            issue.setChoice(choice.getValue());
+                        }
                     }
-                }
-            });
+                });
 
-            JPanel panelMultiChoice = new JPanel();
-            panelMultiChoice.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-            panel.add(panelMultiChoice, "4, "+(formRow*2)+", fill, fill");
-            panelMultiChoice.setLayout(new FormLayout(new ColumnSpec[] {
-                    new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("70dlu", true), Sizes.constant("150dlu", true)), 1),},
-                    new RowSpec[] {
-                            FormSpecs.DEFAULT_ROWSPEC,}));
+                JPanel panelMultiChoice = new JPanel();
+                panelMultiChoice.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+                panel.add(panelMultiChoice, "4, "+(formRow*2)+", fill, fill");
+                panelMultiChoice.setLayout(new FormLayout(new ColumnSpec[] {
+                        new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("70dlu", true), Sizes.constant("150dlu", true)), 1),},
+                        new RowSpec[] {
+                                FormSpecs.DEFAULT_ROWSPEC,}));
 
-            JLabel lblMultiChoice = new JLabel(choice.getDescription());
-            panelMultiChoice.add(lblMultiChoice, "1, 1");
-            lblMultiChoice.setIcon(choice.getIcon());
-            lblMultiChoice.setIconTextGap(20);
-            lblMultiChoice.addMouseListener(new MouseListener() {
-                private boolean beginClick;
+                JLabel lblMultiChoice = new JLabel(choice.getDescription());
+                panelMultiChoice.add(lblMultiChoice, "1, 1");
+                lblMultiChoice.setIcon(choice.getIcon());
+                lblMultiChoice.setIconTextGap(20);
+                lblMultiChoice.addMouseListener(new MouseListener() {
+                    private boolean beginClick;
 
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    if (beginClick) {
+                    @Override
+                    public void mouseReleased(MouseEvent e) {
+                        if (beginClick) {
+                            radioButton.setSelected(true);
+                        }
+                    }
+
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                        beginClick = true;
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        beginClick = false;
+                    }
+
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                    }
+
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
                         radioButton.setSelected(true);
                     }
-                }
-
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    beginClick = true;
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    beginClick = false;
-                }
-
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    radioButton.setSelected(true);
-                }
-            });
-            // Consume the row
-            formRow++;
+                });
+                // Consume the row
+                formRow++;
+            }
         }
     }
 

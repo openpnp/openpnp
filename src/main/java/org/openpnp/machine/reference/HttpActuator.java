@@ -222,7 +222,7 @@ public class HttpActuator extends ReferenceActuator {
     @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
-        if (solutions.isTargeting(Milestone.Basic)) {
+        if (solutions.isTargeting(Milestone.Basics)) {
             if (this.readUrl.length() > 0 && this.regex.length() == 0) {
 
                 solutions.add(new Solutions.Issue(this,
