@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2017 Sebastian Pichelhofer & Jason von Nieda <jason@vonnieda.org>
+ * Rotation Matrix corrections by Martin Gyurkó <nospam@gyurma.de> in 2021
  * 
  * This file is part of OpenPnP.
  * 
@@ -88,20 +89,18 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	private void calculatePickLocation(int partX, int partY) throws Exception {
 
 		// Multiply the offsets by the X/Y part indexes to get the total offsets
-		// and then add the pickLocation to offset the final value.
+		// and then rotate it with the correct rotation matrix.
 		// and then add them to the location to get the final pickLocation.
-		// pickLocation = location.add(offsets.multiply(partX, partY, 0.0,
-		// 0.0));
+		// pickLocation = location.add(offsets.multiply(partX, partY, 0.0, 0.0));
 
-		double delta_x1 = partX * offsets.getX() * Math.cos(Math.toRadians(trayRotation));
-		double delta_y1 = Math.sqrt((partX * offsets.getX() * partX * offsets.getX()) - (delta_x1 * delta_x1));
-		Location delta1 = new Location(LengthUnit.Millimeters, delta_x1, delta_y1, 0, 0);
+		double sin = Math.sin(Math.toRadians(trayRotation));
+		double cos = Math.cos(Math.toRadians(trayRotation));
 
-		double delta_y2 = partY * offsets.getY() * Math.cos(Math.toRadians(trayRotation)) * -1;
-		double delta_x2 = Math.sqrt((partY * offsets.getY() * partY * offsets.getY()) - (delta_y2 * delta_y2));
-		Location delta2 = new Location(LengthUnit.Millimeters, delta_x2, delta_y2, 0, 0);
+		double delta_x = partX * offsets.getX() * cos + partY * offsets.getY() * sin;
+		double delta_y = partX * offsets.getX() * sin - partY * offsets.getY() * cos;
+		Location delta = new Location(LengthUnit.Millimeters, delta_x, delta_y, 0, 0);
 
-		pickLocation = location.add(delta1.add(delta2));
+		pickLocation = location.add(delta);
 	}
 
 	public void feed(Nozzle nozzle) throws Exception {
