@@ -650,7 +650,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
         if (command == null) {
-            return;
+            if (movedAxesLocation.isEmpty()) {
+                return;
+            }
+            throw new Exception(getName()+" MOVE_TO_COMMAND missing, please use Issues & Solutions to propose proper G-code commands.");
         }
         if (hasVariable(command, "BacklashFeedRate")) {
             throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
