@@ -19,9 +19,8 @@
 
 package org.openpnp.machine.reference.camera.wizards;
 
-import java.awt.Color;
-
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -62,6 +61,8 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
     private JTextField width;
     private JLabel lblHeight;
     private JTextField height;
+    private JLabel lblFocalBlur;
+    private JCheckBox simulateFocalBlur;
 
     public SimulatedUpCameraConfigurationWizard(SimulatedUpCamera camera) {
         this.camera = camera;
@@ -107,6 +108,13 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(height, "4, 4, fill, default");
         height.setColumns(10);
         
+        lblFocalBlur = new JLabel("Simulate Focal Blur?");
+        lblFocalBlur.setToolTipText("Simulate focal blur in order to test Auto Focus. This is very slow!");
+        panelGeneral.add(lblFocalBlur, "2, 6, right, default");
+        
+        simulateFocalBlur = new JCheckBox("");
+        panelGeneral.add(simulateFocalBlur, "4, 6");
+        
         lblX = new JLabel("X");
         panelGeneral.add(lblX, "4, 8, center, default");
         
@@ -148,6 +156,8 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
 
         addWrappedBinding(camera, "width", width, "text", intConverter);
         addWrappedBinding(camera, "height", height, "text", intConverter);
+
+        addWrappedBinding(camera, "simulateFocalBlur", simulateFocalBlur, "selected");
 
         MutableLocationProxy errorOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, camera, "errorOffsets", errorOffsets,

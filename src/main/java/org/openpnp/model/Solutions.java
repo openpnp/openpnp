@@ -473,11 +473,12 @@ public class Solutions extends AbstractTableModel {
                                     "<html><h3>Proceed to "+targetMilestone.getNext().getName()+"</h3>"
                                             + "<p>Confirm to have completed and tested milestone <strong>"+targetMilestone.getName()+"</strong>:</p><br/>"
                                             + "<blockquote>"+XmlSerialize.escapeXml(targetMilestone.getDescription())+"</blockquote><br/>"
+                                            + "<p>Note: all issues from this milestone should be resolved or dismissed before you proceed.</p><br/>"
                                             + "<p>Yes? <em>Congratulations!</em></p><br/>"
                                             + "<p>You can proceed to the next milestone "
                                             + "<strong>"+targetMilestone.getNext().getName()+"</strong>:</p><br/>"
                                             + "<blockquote>"+XmlSerialize.escapeXml(targetMilestone.getNext().getDescription())+"</blockquote><br/>"
-                                            + "<p>Note: all issues from this milestone should be resolved or dismissed before you proceed.</p>"
+                                            + "<p>More Issues & Solutions will be presented that need addressing to reach the next milestone.</p>"
                                             + "</html>",
                                             Icons.milestone)),
                         (targetMilestone.getPrevious() == null ? null :

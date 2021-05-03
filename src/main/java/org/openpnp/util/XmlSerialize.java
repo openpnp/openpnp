@@ -26,6 +26,13 @@ import java.io.ByteArrayOutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.AnnotationStrategy;
+import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.stream.Format;
+import org.simpleframework.xml.stream.HyphenStyle;
+import org.simpleframework.xml.stream.Style;
+
 public class XmlSerialize {
     public static String serialize(Object o) {
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();
@@ -65,7 +72,20 @@ public class XmlSerialize {
     }
 
     /**
-     * Purges serialized properties from the GcodeAsyncDriver class.
+     * Create a standard OpenPnP Configuration serializer.
+     * 
+     * @return
+     */
+    public static Serializer createSerializer() {
+        Style style = new HyphenStyle();
+        Format format = new Format(style);
+        AnnotationStrategy strategy = new AnnotationStrategy();
+        Serializer serializer = new Persister(strategy, format);
+        return serializer;
+    }
+
+    /**
+     * Purges serialized properties of the given class from the serialized XML.
      * Note this does not care about XML structure (no CDATA support etc.), it just assumes each element or
      * attribute pattern is unique within the serialized string (which is not unreasonable).
      * 
@@ -75,17 +95,18 @@ public class XmlSerialize {
      * @throws SecurityException
      */
     public static String purgeSubclassXml(Class cls, String serialized) throws SecurityException {
+        HyphenStyle hyphenStyle = new HyphenStyle();
         for (Field f : cls.getDeclaredFields()) {
             // Handle all fields with xml annotation.
             for (Annotation annotation : f.getAnnotations()) {
                 if (annotation.annotationType().getPackage().getName().equals("org.simpleframework.xml")) {
                     // Try element syntax.
-                    String dashedName = camelToDashed(f.getName());
-                    int begin = Math.max(serialized.indexOf("<"+dashedName+">"),
-                            serialized.indexOf("<"+dashedName+" "));
+                    String elementName = hyphenStyle.getElement(f.getName());
+                    int begin = Math.max(serialized.indexOf("<"+elementName+">"),
+                            serialized.indexOf("<"+elementName+" "));
                     if (begin >= 0) {
                         // Element without closing tag.
-                        int end = serialized.indexOf("/>", begin+dashedName.length()+2);
+                        int end = serialized.indexOf("/>", begin+elementName.length()+2);
                         if (end > begin) {
                             end += 2;
                             serialized = serialized.substring(0, begin)
@@ -93,18 +114,28 @@ public class XmlSerialize {
                         }
                         else {
                             // Element with closing tag.
-                            end = serialized.indexOf("</"+dashedName+">", begin+dashedName.length()+2);
+                            end = serialized.indexOf("</"+elementName+">", begin+elementName.length()+2);
                             if (end > begin) {
-                                end += dashedName.length()+3;
+                                end += elementName.length()+3;
                                 serialized = serialized.substring(0, begin)
                                         + serialized.substring(end);
                             }
                         }
                     }
+                    else {
+                        // Empty Element.
+                        begin = serialized.indexOf("<"+elementName+"/>");
+                        if (begin >= 0) {
+                            int end = begin+elementName.length()+3;
+                            serialized = serialized.substring(0, begin)
+                                    + serialized.substring(end);
+                        }
+                    }
                     // Try attribute syntax.
-                    begin = serialized.indexOf(" "+dashedName+"=\"");
+                    String attributeName = hyphenStyle.getAttribute(f.getName());
+                    begin = serialized.indexOf(" "+attributeName+"=\"");
                     if (begin >= 0) {
-                        int end = serialized.indexOf("\"", begin+dashedName.length()+3);
+                        int end = serialized.indexOf("\"", begin+attributeName.length()+3);
                         if (end >= begin) {
                             end += 1;
                             serialized = serialized.substring(0, begin)
@@ -116,30 +147,5 @@ public class XmlSerialize {
             }
         }
         return serialized;
-    }
-
-    /**
-     * Adapted from https://www.geeksforgeeks.org/convert-camel-case-string-to-snake-case-in-java/
-     * 
-     * @param str
-     * @return
-     */
-    private static String camelToDashed(String str) {
-        // Regular Expression
-        String regex = "([a-z])([A-Z]+)";
-
-        // Replacement string
-        String replacement = "$1-$2";
-
-        // Replace the given regex
-        // with replacement string
-        // and convert it to lower case.
-        str = str
-                .replaceAll(
-                        regex, replacement)
-                .toLowerCase();
-
-        // return string
-        return str;
     }
 }

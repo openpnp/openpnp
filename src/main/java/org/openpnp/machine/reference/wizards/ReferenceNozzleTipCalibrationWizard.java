@@ -22,6 +22,8 @@ package org.openpnp.machine.reference.wizards;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -47,13 +49,13 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
+import org.openpnp.machine.reference.ReferenceNozzleTipCalibration.RecalibrationTrigger;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
@@ -211,7 +213,20 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(lblRecalibration, "2, 12, right, default");
 
         recalibrationCb = new JComboBox(ReferenceNozzleTipCalibration.RecalibrationTrigger.values());
+        recalibrationCb.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                adaptDialog();
+            }
+        });
         panelCalibration.add(recalibrationCb, "4, 12, left, default");
+        
+        lblFailHoming = new JLabel("Fail Homing?");
+        lblFailHoming.setToolTipText(
+                "When the calibration fails during homing, also fail the homing cycle.");
+        panelCalibration.add(lblFailHoming, "6, 12, right, default");
+        
+        failHoming = new JCheckBox("");
+        panelCalibration.add(failHoming, "8, 12");
 
         lblNewLabel = new JLabel("Pipeline");
         panelCalibration.add(lblNewLabel, "2, 14, right, default");
@@ -257,7 +272,15 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         }
 
         initDataBindings();
+        adaptDialog();
+    }
 
+    protected void adaptDialog() {
+        ReferenceNozzleTipCalibration.RecalibrationTrigger recalibration = (RecalibrationTrigger) recalibrationCb.getSelectedItem();
+        boolean calibratesOnHoming = (recalibration == ReferenceNozzleTipCalibration.RecalibrationTrigger.MachineHome
+                || recalibration == ReferenceNozzleTipCalibration.RecalibrationTrigger.NozzleTipChange);
+        lblFailHoming.setVisible(calibratesOnHoming);
+        failHoming.setVisible(calibratesOnHoming);
     }
 
     @SuppressWarnings("serial")
@@ -269,7 +292,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                HeadMountable nozzle = getUiCalibrationNozzle();
+                HeadMountable nozzle = getUiCalibrationNozzle(nozzleTip);
                 Camera camera = VisionUtils.getBottomVisionCamera();
                 Location location = camera.getLocation(nozzle)
                         .add(new Location(nozzleTip.getCalibration().getCalibrationZOffset().getUnits(), 0, 0, 
@@ -291,8 +314,10 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private JLabel lblRecalibration;
     private JComboBox recalibrationCb;
     private JButton btnCalibrateCamera;
+    private JLabel lblFailHoming;
+    private JCheckBox failHoming;
 
-    public ReferenceNozzle getUiCalibrationNozzle() throws Exception {
+    public static ReferenceNozzle getUiCalibrationNozzle(ReferenceNozzleTip nozzleTip) throws Exception {
         ReferenceNozzle refNozzle; 
         if (nozzleTip.isUnloadedNozzleTipStandin()) {
             // For the "unloaded" stand-in it is not well-defined where it is currently "loaded"
@@ -322,7 +347,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         StringBuffer info = new StringBuffer();
         ReferenceNozzle nozzle = null;
         try {
-            nozzle = getUiCalibrationNozzle();
+            nozzle = getUiCalibrationNozzle(nozzleTip);
         }
         catch (Exception e) {
             info.append(e.getMessage());
@@ -360,14 +385,14 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private void calibrate() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrate(getUiCalibrationNozzle());
+                .calibrate(getUiCalibrationNozzle(nozzleTip));
         });
     }
 
     private void calibrateCamera() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrateCamera(getUiCalibrationNozzle());
+                .calibrateCamera(getUiCalibrationNozzle(nozzleTip));
         });
     }
 
@@ -377,6 +402,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         LengthConverter lengthConverter = new LengthConverter();
         
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox,
+                "selected");
+        addWrappedBinding(nozzleTip.getCalibration(), "failHoming", failHoming,
                 "selected");
         addWrappedBinding(nozzleTip.getCalibration(), "angleSubdivisions", angleIncrementsTf,
                 "text", intConverter);

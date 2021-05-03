@@ -47,9 +47,18 @@ public class ReferenceHead extends AbstractHead {
 
     @Override
     public void home() throws Exception {
+        // Note, don't call super.home() yet, need to do visual homing first.
         Logger.debug("{}.home()", getName());
+        ReferenceMachine machine = getMachine();
 
-        // Note, don't call super.home() yet, need to do the physical homing first.
+        visualHome(machine, true);
+
+        super.home();
+        // Let everybody know.
+        getMachine().fireMachineHeadActivity(this);
+    }
+
+    public void visualHome(ReferenceMachine machine, boolean apply) throws Exception {
         if (getVisualHomingMethod() != VisualHomingMethod.None) {
             /*
              * The head default camera should now be (if everything has homed correctly) directly
@@ -69,27 +78,24 @@ public class ReferenceHead extends AbstractHead {
                 throw new Exception("Visual homing failed");
             }
 
-            ReferenceMachine machine = getMachine();
-            AxesLocation axesHomingLocation;
-            if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
-                // Convert fiducial location to raw coordinates
-                // TODO: are you sure the toHeadLocation() is needed?
-                axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
+            if (apply) {
+                AxesLocation axesHomingLocation;
+                if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
+                    // Convert fiducial location to raw coordinates
+                    // TODO: are you sure the toHeadLocation() is needed?
+                    axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
+                }
+                else {
+                    // Use bare X, Y homing coordinates (legacy mode).
+                    axesHomingLocation =  new AxesLocation(machine, 
+                            (axis) -> (axis.getHomeCoordinate())); 
+                }
+                // Just take the X and Y axes.
+                axesHomingLocation = axesHomingLocation.byType(Axis.Type.X, Axis.Type.Y); 
+                // Reset to the axes homing location as the new Working Coordinate System.
+                machine.getMotionPlanner().setGlobalOffsets(axesHomingLocation);
             }
-            else {
-                // Use bare X, Y homing coordinates (legacy mode).
-                axesHomingLocation =  new AxesLocation(machine, 
-                        (axis) -> (axis.getHomeCoordinate())); 
-            }
-            // Just take the X and Y axes.
-            axesHomingLocation = axesHomingLocation.byType(Axis.Type.X, Axis.Type.Y); 
-            // Reset to the homing fiducial location as the new Working Coordinate System.
-            machine.getMotionPlanner().setGlobalOffsets(axesHomingLocation);
         }
-        // Now that the machine is physically homed, do the logical homing.
-        super.home();
-        // Let everybody know.
-        getMachine().fireMachineHeadActivity(this);
     }
 
     @Override

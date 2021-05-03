@@ -206,4 +206,6 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @return True if this Camera should be shown in multi camera view panels. 
      */
     boolean isShownInMultiCameraView();
+
+    public FocusProvider getFocusProvider();
 }
