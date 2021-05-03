@@ -19,7 +19,11 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,20 +38,28 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
+import org.openpnp.gui.components.TemplateImageControl;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.ReferenceNozzleTip.VisionCalibration;
+import org.openpnp.machine.reference.ReferenceNozzleTip.VisionCalibrationTrigger;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.openpnp.vision.TemplateImage;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -109,7 +121,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         contentPanel.add(panelChanger);
         panelChanger.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -303,12 +315,195 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
             copyFromNozzleTip.setEnabled(false);
             btnNewButton.setEnabled(false);
         }
+        
+        panelVision = new JPanel();
+        panelVision.setBorder(new TitledBorder(null, "Vision Calibration", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        contentPanel.add(panelVision);
+        
+        panelVision.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblVisionCalibration = new JLabel("Vision Location");
+        lblVisionCalibration.setToolTipText("<html>Location for vision calibration, or None for no calibration.<br/>\r\nChoose a location where the nozzle tip in the slot is visible. \r\n</html>");
+        panelVision.add(lblVisionCalibration, "2, 2, right, default");
+        
+        visionCalibration = new JComboBox(VisionCalibration.values());
+        visionCalibration.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                adaptDialog();
+            }
+        });
+        panelVision.add(visionCalibration, "4, 2, 3, 1");
+        
+        lblVisionCalibrationHelp = new JLabel("<html>\r\nCapture two template images of your nozzle tip changer slot<br/>\r\nboth in empty and occupied state.<br/>\r\nUsing the templates, vision calibration will then calibrate the<br/>\r\nchanger locations in X/Y and also make sure the slot is empty<br/>\r\nor occupied as expected.\r\n</html>");
+        panelVision.add(lblVisionCalibrationHelp, "10, 2, 1, 10, default, top");
+        
+        lblCalibrationTrigger = new JLabel("Calibration Trigger");
+        panelVision.add(lblCalibrationTrigger, "2, 5, right, default");
+        
+        visionCalibrationTrigger = new JComboBox(VisionCalibrationTrigger.values());
+        panelVision.add(visionCalibrationTrigger, "4, 5, 3, 1, fill, default");
+        
+        lblTemplateDimX = new JLabel("Template Width");
+        lblTemplateDimX.setToolTipText("<html>\r\nTemplate image width (X). The template is centered around the selected Vision Location.<br/>\r\nChoose dimensions as small as possible, but the templates should include tell-tale horizontal and vertical<br/>\r\nedges. Furthermore, the nozzle tip should be visible when it occupies the changer slot.\r\n</html>");
+        panelVision.add(lblTemplateDimX, "2, 7, right, default");
+        
+        visionTemplateDimensionX = new JTextField();
+        panelVision.add(visionTemplateDimensionX, "4, 7");
+        visionTemplateDimensionX.setColumns(10);
+        
+        lblTemplateDimY = new JLabel("Template Height");
+        lblTemplateDimY.setToolTipText("<html>\r\nTemplate image width (X). The template is centered around the selected Vision Location.<br/>\r\nChoose dimensions as small as possible, but the templates should include tell-tale horizontal and vertical<br/>\r\nedges. Furthermore, the nozzle tip should be visible when it occupies the changer slot.\r\n</html>");
+        panelVision.add(lblTemplateDimY, "6, 7, right, default");
+        
+        visionTemplateDimensionY = new JTextField();
+        panelVision.add(visionTemplateDimensionY, "8, 7");
+        visionTemplateDimensionY.setColumns(10);
+        
+        lblTolerance = new JLabel("Tolerance");
+        lblTolerance.setToolTipText("Maximum calibration tolerance i.e. how far away from the nominal location the calibrated location can be.");
+        panelVision.add(lblTolerance, "2, 9, right, default");
+        
+        visionTemplateTolerance = new JTextField();
+        panelVision.add(visionTemplateTolerance, "4, 9, fill, default");
+        visionTemplateTolerance.setColumns(10);
+        
+        lblPrecision = new JLabel("Wanted Precision");
+        lblPrecision.setToolTipText("<html>If the detected template image match is further away than the <strong>Wanted Precision</strong>,<br/>\r\nthe camera is re-centered and another vision pass is made.</html>");
+        panelVision.add(lblPrecision, "6, 9, right, default");
+        
+        visionCalibrationTolerance = new JTextField();
+        panelVision.add(visionCalibrationTolerance, "8, 9, fill, default");
+        visionCalibrationTolerance.setColumns(10);
+        
+        lblMaxPasses = new JLabel("Max. Passes");
+        panelVision.add(lblMaxPasses, "2, 11, right, default");
+        
+        visionCalibrationMaxPasses = new JTextField();
+        panelVision.add(visionCalibrationMaxPasses, "4, 11, fill, default");
+        visionCalibrationMaxPasses.setColumns(10);
+        
+        lblMinScore = new JLabel("Minimum Score");
+        lblMinScore.setToolTipText("<html>\r\nWhen the template images are matched against the camera image, a score is computed<br/>\r\nindicating the quality of the match. If the obtained score is smaller than the Minimum Score<br/>\r\ngiven here, the calibration fails. This should stop the machine from atempting a nozzle tip <br/>\r\nchange, when the position is wrong. \r\n</html>");
+        panelVision.add(lblMinScore, "2, 13, right, default");
+        
+        visionMatchMinimumScore = new JTextField();
+        panelVision.add(visionMatchMinimumScore, "4, 13, fill, default");
+        visionMatchMinimumScore.setColumns(10);
+        
+        lblLastScore = new JLabel("Last Score");
+        panelVision.add(lblLastScore, "6, 13, right, default");
+        
+        visionMatchLastScore = new JTextField();
+        visionMatchLastScore.setEditable(false);
+        panelVision.add(visionMatchLastScore, "8, 13, fill, default");
+        visionMatchLastScore.setColumns(10);
+        
+        btnTest = new JButton(visionCalibrateTestAction);
+        panelVision.add(btnTest, "10, 13");
+        
+        lblTemplateEmpty = new JLabel("Template Empty");
+        panelVision.add(lblTemplateEmpty, "2, 17, right, top");
+        
+        btnCaptureEmpty = new JButton(captureTemplateImageEmptyAction);
+        panelVision.add(btnCaptureEmpty, "4, 17, default, top");
+        
+        btnResetEmpty = new JButton(resetTemplateImageEmptyAction);
+        panelVision.add(btnResetEmpty, "6, 17, default, top");
+       
+        visionTemplateImageEmpty = new TemplateImageControl();
+        visionTemplateImageEmpty.setName("Empty");
+        visionTemplateImageEmpty.setCamera(getCamera());
+        panelVision.add(visionTemplateImageEmpty, "8, 17, 3, 1");
+        
+        lblTemplateOccupied = new JLabel("Template Occupied");
+        panelVision.add(lblTemplateOccupied, "2, 19, right, top");
+        
+        btnCaptureOccupied = new JButton(captureTemplateImageOccupiedAction);
+        panelVision.add(btnCaptureOccupied, "4, 19, default, top");
+        
+        btnResetOccupied = new JButton(resetTemplateImageOccupiedAction);
+        panelVision.add(btnResetOccupied, "6, 19, default, top");
+        visionTemplateImageOccupied = new TemplateImageControl();
+        visionTemplateImageOccupied.setName("Occupied");
+        visionTemplateImageOccupied.setCamera(getCamera());
+        panelVision.add(visionTemplateImageOccupied, "8, 19, 3, 1");
+        visionTemplateImageOccupied.setBackground(Color.DARK_GRAY);
+
+        adaptDialog();
     }
-    
+
+    private void adaptDialog() {
+        boolean visionCalib = visionCalibration.getSelectedItem() != VisionCalibration.None;
+        lblCalibrationTrigger.setVisible(visionCalib);
+        visionCalibrationTrigger.setVisible(visionCalib);
+        lblVisionCalibrationHelp.setVisible(visionCalib);
+        lblTemplateDimX.setVisible(visionCalib);
+        visionTemplateDimensionX.setVisible(visionCalib);
+        lblTemplateDimY.setVisible(visionCalib);
+        visionTemplateDimensionY.setVisible(visionCalib);
+        lblTolerance.setVisible(visionCalib);
+        visionTemplateTolerance.setVisible(visionCalib);
+        lblPrecision.setVisible(visionCalib);
+        visionCalibrationTolerance.setVisible(visionCalib);
+        lblMaxPasses.setVisible(visionCalib);
+        visionCalibrationMaxPasses.setVisible(visionCalib);
+        lblMinScore.setVisible(visionCalib);
+        visionMatchMinimumScore.setVisible(visionCalib);
+        lblLastScore.setVisible(visionCalib);
+        visionMatchLastScore.setVisible(visionCalib);
+        btnTest.setVisible(visionCalib);
+        lblTemplateEmpty.setVisible(visionCalib);
+        btnCaptureEmpty.setVisible(visionCalib);
+        btnResetEmpty.setVisible(visionCalib);
+        visionTemplateImageEmpty.setVisible(visionCalib);
+        lblTemplateOccupied.setVisible(visionCalib);
+        btnCaptureOccupied.setVisible(visionCalib);
+        btnResetOccupied.setVisible(visionCalib);
+        visionTemplateImageOccupied.setVisible(visionCalib);
+    }
+
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        IntegerConverter intConverter = new IntegerConverter();
 
         MutableLocationProxy changerStartLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzleTip, "changerStartLocation", changerStartLocation,
@@ -360,8 +555,27 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         addWrappedBinding(nozzleTip, "changerActuatorPostStepOne", tcPostOneComboBoxActuator, "selectedItem");
         addWrappedBinding(nozzleTip, "changerActuatorPostStepTwo", tcPostTwoComboBoxActuator, "selectedItem");
         addWrappedBinding(nozzleTip, "changerActuatorPostStepThree", tcPostThreeComboBoxActuator, "selectedItem");
-        // bert stop
-        
+
+        addWrappedBinding(nozzleTip, "visionCalibration", visionCalibration, "selectedItem");
+        addWrappedBinding(nozzleTip, "visionCalibrationTrigger", visionCalibrationTrigger, "selectedItem");
+        addWrappedBinding(nozzleTip, "visionTemplateDimensionX", visionTemplateDimensionX, "text",
+                lengthConverter);
+        addWrappedBinding(nozzleTip, "visionTemplateDimensionY", visionTemplateDimensionY, "text",
+                lengthConverter);
+        addWrappedBinding(nozzleTip, "visionTemplateTolerance", visionTemplateTolerance, "text",
+                lengthConverter);
+        addWrappedBinding(nozzleTip, "visionCalibrationTolerance", visionCalibrationTolerance, "text",
+                lengthConverter);
+        addWrappedBinding(nozzleTip, "visionCalibrationMaxPasses", visionCalibrationMaxPasses, "text", 
+                intConverter);
+        addWrappedBinding(nozzleTip, "visionMatchMinimumScore", visionMatchMinimumScore, "text",
+                doubleConverter);
+        addWrappedBinding(nozzleTip, "visionMatchLastScore", visionMatchLastScore, "text",
+                doubleConverter);
+
+        addWrappedBinding(nozzleTip, "visionTemplateImageEmpty", visionTemplateImageEmpty, "templateImage");
+        addWrappedBinding(nozzleTip, "visionTemplateImageOccupied", visionTemplateImageOccupied, "templateImage");
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerStartZ);
@@ -380,6 +594,44 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldChangerEndZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(visionTemplateDimensionX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(visionTemplateDimensionY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(visionTemplateTolerance);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(visionCalibrationTolerance);
+        ComponentDecorators.decorateWithAutoSelect(visionCalibrationMaxPasses);
+        ComponentDecorators.decorateWithAutoSelect(visionMatchMinimumScore);
+        ComponentDecorators.decorateWithAutoSelect(visionMatchLastScore);
+    }
+
+    protected BufferedImage captureTemplateImage() throws Exception {
+        Location location = nozzleTip.getVisionCalibration().getLocation(nozzleTip);
+        if (location == null) {
+            throw new Exception("Select a vision calibration location first.");
+        }
+        Camera camera = getCamera();
+        if (camera == null) {
+            throw new Exception("No down-looking camera found.");
+        }
+        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        BufferedImage image = camera.lightSettleAndCapture();
+        Location upp = camera.getUnitsPerPixel();
+        int width = ((int) Math.ceil(nozzleTip.getVisionTemplateDimensionX().divide(upp.getLengthX()))) & ~1; // divisible by 2
+        int height = ((int) Math.ceil(nozzleTip.getVisionTemplateDimensionY().divide(upp.getLengthY()))) & ~1; // divisible by 2
+        int x = (image.getWidth() - width)/2;
+        int y = (image.getHeight() - height)/2;
+        BufferedImage templateImage = image.getSubimage(x, y, width, height);
+        return templateImage;
+    }
+
+    protected Camera getCamera() {
+        try {
+            Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
+                    .getDefaultCamera();
+            return camera;
+        }
+        catch (Exception e) {
+           return null;
+        }
     }
 
     private Action cloneFromNozzleTipAction = new AbstractAction("Clone Tool Changer Setting", Icons.importt) {
@@ -414,4 +666,108 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
             });
         }
     };
+
+    private Action captureTemplateImageEmptyAction = new AbstractAction("Capture") {
+        {
+            putValue(Action.SHORT_DESCRIPTION, 
+                    "<html>Capture the template image for the empty nozzle tip holder slot.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.submitUiMachineTask(() -> {
+                BufferedImage templateImage = captureTemplateImage();
+                nozzleTip.setVisionTemplateImageEmpty(new TemplateImage(templateImage));
+            });
+        }
+    };
+
+    private Action resetTemplateImageEmptyAction = new AbstractAction("Reset") {
+        {
+            putValue(Action.SHORT_DESCRIPTION, 
+                    "<html>Reset the template image for the empty nozzle tip holder slot.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            nozzleTip.setVisionTemplateImageEmpty(null);
+        }
+    };
+
+    private Action captureTemplateImageOccupiedAction = new AbstractAction("Capture") {
+        {
+            putValue(Action.SHORT_DESCRIPTION, 
+                    "<html>Capture the template image for the occupied nozzle tip holder slot.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.submitUiMachineTask(() -> {
+                BufferedImage templateImage = captureTemplateImage();
+                nozzleTip.setVisionTemplateImageOccupied(new TemplateImage(templateImage));
+            });
+        }
+    };
+
+    private Action resetTemplateImageOccupiedAction = new AbstractAction("Reset") {
+        {
+            putValue(Action.SHORT_DESCRIPTION, 
+                    "<html>Reset the template image for the occupied nozzle tip holder slot.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            nozzleTip.setVisionTemplateImageOccupied(null);
+        }
+    };
+    private Action visionCalibrateTestAction = new AbstractAction("Test") {
+        {
+            putValue(Action.SHORT_DESCRIPTION, 
+                    "<html>Test the vision calibration.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.submitUiMachineTask(() -> {
+                nozzleTip.resetVisionCalibration();
+                nozzleTip.ensureVisionCalibration(true);
+                nozzleTip.resetVisionCalibration();
+            });
+        }
+    };
+
+    private JPanel panelVision;
+    private JLabel lblVisionCalibration;
+    private JComboBox visionCalibration;
+    private TemplateImageControl visionTemplateImageEmpty;
+    private TemplateImageControl visionTemplateImageOccupied;
+    private JLabel lblTemplateDimX;
+    private JTextField visionTemplateDimensionX;
+    private JTextField visionTemplateDimensionY;
+    private JLabel lblTemplateEmpty;
+    private JLabel lblTemplateOccupied;
+    private JButton btnCaptureEmpty;
+    private JButton btnCaptureOccupied;
+    private JButton btnResetEmpty;
+    private JButton btnResetOccupied;
+    private JLabel lblMinScore;
+    private JTextField visionMatchMinimumScore;
+    private JLabel lblVisionCalibrationHelp;
+    private JLabel lblLastScore;
+    private JTextField visionMatchLastScore;
+    private JButton btnTest;
+    private JLabel lblTolerance;
+    private JTextField visionTemplateTolerance;
+    private JLabel lblPrecision;
+    private JTextField visionCalibrationTolerance;
+    private JLabel lblTemplateDimY;
+    private JLabel lblMaxPasses;
+    private JTextField visionCalibrationMaxPasses;
+    private JLabel lblCalibrationTrigger;
+    private JComboBox visionCalibrationTrigger;
 }
