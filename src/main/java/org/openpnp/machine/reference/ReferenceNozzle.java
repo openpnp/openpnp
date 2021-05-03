@@ -3,7 +3,6 @@ package org.openpnp.machine.reference;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
@@ -97,64 +96,68 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
-                nozzleTip = (ReferenceNozzleTip) configuration.getMachine().getNozzleTip(currentNozzleTipId);
-                if (version < 200) {
-                    // Migration of these actuators has gone back and forth, cumbersome resolution needed. 
-                    Actuator vacuumActuator = null;
-                    try {
-                        vacuumActuator = getVacuumActuator();
+                // When brand new nozzles are created rather than loaded from configuration, configurationLoaded() is also 
+                // triggered. Therefore we need to check for the presence of the head. 
+                if (getHead() !=  null) {
+                    nozzleTip = (ReferenceNozzleTip) configuration.getMachine().getNozzleTip(currentNozzleTipId);
+                    if (version < 200) {
+                        // Migration of these actuators has gone back and forth, cumbersome resolution needed. 
+                        Actuator vacuumActuator = null;
+                        try {
+                            vacuumActuator = getVacuumActuator();
+                        }
+                        catch (Exception e) {
+                            // Cleanup dangling reference.
+                            vacuumActuatorName = null;
+                        }
+                        try {
+                            getVacuumSenseActuator();
+                        }
+                        catch (Exception e) {
+                            // Cleanup dangling reference.
+                            vacuumSenseActuatorName = null;
+                        }
+                        Actuator blowOffActuator = null;
+                        try {
+                            blowOffActuator = getBlowOffActuator();
+                        }
+                        catch (Exception e) {
+                            // Cleanup dangling reference.
+                            blowOffActuatorName = null;
+                        }
+                        if (vacuumSenseActuatorName == null) {
+                            vacuumSenseActuatorName = vacuumActuatorName;
+                        }
+                        else if (vacuumActuatorName == null) {
+                            vacuumActuatorName = vacuumSenseActuatorName;
+                        }
+                        if (blowOffActuator != null) {
+                            // Type both the vacuum and the blow off actuators as Double (typical use).
+                            AbstractActuator.suggestValueType(vacuumActuator, ActuatorValueType.Double);
+                            AbstractActuator.suggestValueType(blowOffActuator, ActuatorValueType.Double);
+                        }
+                        // Migration is done.
+                        version = 200;
                     }
-                    catch (Exception e) {
-                        // Cleanup dangling reference.
-                        vacuumActuatorName = null;
-                    }
-                    try {
-                        getVacuumSenseActuator();
-                    }
-                    catch (Exception e) {
-                        // Cleanup dangling reference.
-                        vacuumSenseActuatorName = null;
-                    }
-                    Actuator blowOffActuator = null;
-                    try {
-                        blowOffActuator = getBlowOffActuator();
-                    }
-                    catch (Exception e) {
-                        // Cleanup dangling reference.
-                        blowOffActuatorName = null;
-                    }
-                    if (vacuumSenseActuatorName == null) {
-                        vacuumSenseActuatorName = vacuumActuatorName;
-                    }
-                    else if (vacuumActuatorName == null) {
-                        vacuumActuatorName = vacuumSenseActuatorName;
-                    }
-                    if (blowOffActuator != null) {
-                        // Type both the vacuum and the blow off actuators as Double (typical use).
-                        AbstractActuator.suggestValueType(vacuumActuator, ActuatorValueType.Double);
-                        AbstractActuator.suggestValueType(blowOffActuator, ActuatorValueType.Double);
-                    }
-                    // Migration is done.
-                    version = 200;
-                }
 
-                if (isManualNozzleTipChangeLocationUndefined()) {
-                    // try to clone from other nozzle. 
-                    for (Nozzle nozzle : configuration.getMachine().getDefaultHead().getNozzles()) {
-                        if (nozzle instanceof ReferenceNozzle) {
-                            if (!((ReferenceNozzle) nozzle).isManualNozzleTipChangeLocationUndefined()) {
-                                manualNozzleTipChangeLocation = ((ReferenceNozzle) nozzle).getManualNozzleTipChangeLocation();
-                                break;
+                    if (isManualNozzleTipChangeLocationUndefined()) {
+                        // try to clone from other nozzle. 
+                        for (Nozzle nozzle : configuration.getMachine().getDefaultHead().getNozzles()) {
+                            if (nozzle instanceof ReferenceNozzle) {
+                                if (!((ReferenceNozzle) nozzle).isManualNozzleTipChangeLocationUndefined()) {
+                                    manualNozzleTipChangeLocation = ((ReferenceNozzle) nozzle).getManualNozzleTipChangeLocation();
+                                    break;
+                                }
                             }
                         }
                     }
-                }
-                if (isManualNozzleTipChangeLocationUndefined()) {
-                    // Migrate from old setting.
-                    for (NozzleTip nt : configuration.getMachine().getNozzleTips()) {
-                        if (nt instanceof ReferenceNozzleTip) { 
-                            manualNozzleTipChangeLocation = ((ReferenceNozzleTip) nt).getChangerEndLocation();
-                            break;
+                    if (isManualNozzleTipChangeLocationUndefined()) {
+                        // Migrate from old setting.
+                        for (NozzleTip nt : configuration.getMachine().getNozzleTips()) {
+                            if (nt instanceof ReferenceNozzleTip) { 
+                                manualNozzleTipChangeLocation = ((ReferenceNozzleTip) nt).getChangerEndLocation();
+                                break;
+                            }
                         }
                     }
                 }
@@ -1236,10 +1239,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        ContactProbeNozzle.addConversionIssue(issues, this);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        ContactProbeNozzle.addConversionIssue(solutions, this);
     }
+
     @Deprecated
     public void migrateSafeZ() {
         if (safeZ == null) {

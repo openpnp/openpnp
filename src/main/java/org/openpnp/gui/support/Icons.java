@@ -1,10 +1,9 @@
 package org.openpnp.gui.support;
 
-import com.formdev.flatlaf.extras.FlatSVGIcon;
-
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import java.net.URISyntaxException;
+
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 public class Icons {
     public static Icon add = getIcon("/icons/general-add.svg");
@@ -106,7 +105,13 @@ public class Icons {
     public static Icon dismiss = getIcon("/icons/dismiss.svg");
     public static Icon undo = getIcon("/icons/undo.svg");
     public static Icon info = getIcon("/icons/info.svg");
-    
+
+    public static Icon nozzleSingle = getIcon("/icons/nozzle-single.svg", 96, 96);
+    public static Icon nozzleDualNeg = getIcon("/icons/nozzle-neg.svg", 96, 96);
+    public static Icon nozzleDualCam = getIcon("/icons/nozzle-cam.svg", 96, 96);
+
+    public static Icon milestone = getIcon("/icons/milestone.svg", 96, 96);
+
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
             return new FlatSVGIcon(resourceName.substring(1), width, height);

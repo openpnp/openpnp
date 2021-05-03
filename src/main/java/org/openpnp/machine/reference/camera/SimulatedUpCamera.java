@@ -9,6 +9,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.ConcurrentModificationException;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.util.List;
@@ -23,8 +24,10 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.Utils2D;
@@ -79,14 +82,21 @@ public class SimulatedUpCamera extends ReferenceCamera {
                 location.getY() - phyHeight / 2, phyWidth, phyHeight);
 
         // determine if there are any nozzles within our bounds and if so render them
-        for (Head head :  Configuration.get()
-                .getMachine().getHeads()) {
-            for (Nozzle nozzle : head.getNozzles()) {
-                Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
-                if (phyBounds.contains(l.getX(), l.getY())) {
-                    drawNozzle(g, nozzle, l);
+        Machine machine = Configuration.get()
+                .getMachine();
+        try {
+            for (Head head :  machine.getHeads()) {
+                for (Nozzle nozzle : head.getNozzles()) {
+                    Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
+                    if (phyBounds.contains(l.getX(), l.getY())) {
+                        drawNozzle(g, nozzle, l);
+                    }
                 }
             }
+        }
+        catch (ConcurrentModificationException e) {
+            // If nozzles are added/removed while enumerating them here, a ConcurrentModificationExceptions 
+            // is thrown. This is not so unlikely when this camera has high fps. 
         }
 
         g.setTransform(tx);
@@ -274,18 +284,18 @@ public class SimulatedUpCamera extends ReferenceCamera {
 
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        issues.add(new Solutions.Issue(
-                this, 
-                "The SimulatedUpCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
-                "Replace with OpenPnpCaptureCamera.", 
-                Severity.Fundamental,
-                "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        if (solutions.isTargeting(Milestone.Connect)) {
+            solutions.add(new Solutions.Issue(
+                    this, 
+                    "The SimulatedUpCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
+                    "Replace with OpenPnpCaptureCamera.", 
+                    Severity.Fundamental,
+                    "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
 
-            @Override
-            public void setState(Solutions.State state) throws Exception {
-                if (confirmStateChange(state)) {
+                @Override
+                public void setState(Solutions.State state) throws Exception {
                     if (state == Solutions.State.Solved) {
                         OpenPnpCaptureCamera camera = createReplacementCamera();
                         replaceCamera(camera);
@@ -296,7 +306,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
                     }
                     super.setState(state);
                 }
-            }
-        });
+            });
+        }
     }
 }
