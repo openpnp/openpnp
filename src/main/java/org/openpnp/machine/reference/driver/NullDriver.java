@@ -20,12 +20,9 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -35,8 +32,9 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
-import org.openpnp.model.Solutions;
 import org.openpnp.model.Motion.MoveToCommand;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
@@ -272,20 +270,20 @@ public class NullDriver extends AbstractDriver {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        issues.add(new Solutions.Issue(
-                this, 
-                "The simulation NullDriver can replaced with a GcodeAsyncDriver to drive a real controller.", 
-                "Replace with GcodeAsyncDriver.", 
-                Severity.Fundamental,
-                "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        if (solutions.isTargeting(Milestone.Connect)) {
+            solutions.add(new Solutions.Issue(
+                    this, 
+                    "The simulation NullDriver can replaced with a GcodeDriver to drive a real controller.", 
+                    "Replace with GcodeDriver.", 
+                    Severity.Fundamental,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup#automatic-conversion-of-the-nulldriver") {
 
-            @Override
-            public void setState(Solutions.State state) throws Exception {
-                if (confirmStateChange(state)) {
+                @Override
+                public void setState(Solutions.State state) throws Exception {
                     if (state == Solutions.State.Solved) {
-                        GcodeDriverSolutions.convertToAsync(NullDriver.this);
+                        GcodeDriverSolutions.convertToGcode(NullDriver.this);
                     }
                     else if (getState() == Solutions.State.Solved) {
                         // Place the old one back (from the captured NullDriver.this).
@@ -293,7 +291,7 @@ public class NullDriver extends AbstractDriver {
                     }
                     super.setState(state);
                 }
-            }
-        });
+            });
+        }
     }
 }

@@ -39,7 +39,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Issue;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
@@ -57,16 +57,12 @@ import org.openpnp.util.Collect;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
+import org.openpnp.util.XmlSerialize;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.convert.AnnotationStrategy;
-import org.simpleframework.xml.core.Persister;
-import org.simpleframework.xml.stream.Format;
-import org.simpleframework.xml.stream.HyphenStyle;
-import org.simpleframework.xml.stream.Style;
 
 public class ContactProbeNozzle extends ReferenceNozzle {
 
@@ -674,112 +670,6 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         probeNozzle.moveToSafeZ();
     }
 
-    @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        try {
-            if (getContactProbeActuator() instanceof AbstractActuator) {
-                AbstractActuator contactProbeActuator = (AbstractActuator) getContactProbeActuator();
-                if (!contactProbeActuator.isCoordinatedAfterActuate()) {
-                    issues.add(new Solutions.Issue(
-                            contactProbeActuator, 
-                            "Contact probe actuator needs machine coordination after actuation.", 
-                            "Enable After Actuation machine coordination.", 
-                            Severity.Error,
-                            "https://github.com/openpnp/openpnp/wiki/Motion-Planner#actuator-machine-coordination") {
-
-                        @Override
-                        public void setState(Solutions.State state) throws Exception {
-                            if (confirmStateChange(state)) {
-                                contactProbeActuator.setCoordinatedAfterActuate((state == Solutions.State.Solved));
-                                super.setState(state);
-                            }
-                        }
-                    });
-                }
-                if (getAxisZ() instanceof ControllerAxis) {
-                    Driver driver = ((ControllerAxis) getAxisZ()).getDriver();
-                    Driver oldDriver = contactProbeActuator.getDriver();
-                    if (driver != null && driver != oldDriver) {
-                        issues.add(new Solutions.Issue(
-                                this, 
-                                "Z driver "+driver.getName()+" not same as actuator "+contactProbeActuator.getName()+" driver "+
-                                        (oldDriver == null ? "(unassigned)" : oldDriver.getName())+".", 
-                                "Assign driver "+driver.getName()+" to actuator "+contactProbeActuator.getName()+".", 
-                                Severity.Error,
-                                "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#adding-actuators") {
-
-                            @Override
-                            public void setState(Solutions.State state) throws Exception {
-                                if (confirmStateChange(state)) {
-                                    contactProbeActuator.setDriver((state == Solutions.State.Solved) ?
-                                            driver : oldDriver);
-                                    super.setState(state);
-                                }
-                            }
-                        });
-                    }
-                    if (driver instanceof GcodeAsyncDriver) {
-                        if (!((GcodeAsyncDriver) driver).isReportedLocationConfirmation()) { 
-                            issues.add(new Solutions.Issue(
-                                    this, 
-                                    "Z driver "+driver.getName()+" must use Location Confirmation for the probe actuator to work.", 
-                                    "Enable Location Confirmation.", 
-                                    Severity.Error,
-                                    "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
-
-                                @Override
-                                public void setState(Solutions.State state) throws Exception {
-                                    if (confirmStateChange(state)) {
-                                        ((GcodeAsyncDriver) driver).setReportedLocationConfirmation((state == Solutions.State.Solved));
-                                        super.setState(state);
-                                    }
-                                }
-                            });
-                        }
-                    }
-                    else {
-                        issues.add(new Solutions.PlainIssue(
-                                this, 
-                                "Z driver "+driver.getName()+" must support Location Confirmation for the Z probe actuator to work.", 
-                                "Only the GcodeAsyncDriver currently supports it.", 
-                                Severity.Error,
-                                "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings"));
-                    }
-                }
-                if (contactProbeActuator.getDriver() instanceof GcodeDriver) {
-                    GcodeDriver gcodeDriver = (GcodeDriver) contactProbeActuator.getDriver();
-                    String suggestedCommand = null; 
-                    if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Smoothieware")) {
-                        suggestedCommand = 
-                                "{True:G38.2 Z-42 F800 ; probe down max. range for contact with picked/placed part }\n" + 
-                                "{True:M400            ; wait until machine has stopped }";
-                    }
-                    else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("TinyG")) {
-                        suggestedCommand = 
-                                "{True:G38.2 Z-42 F800 ; probe down in absolute coordinates until zmin switch is hit}\n" + 
-                                "{True:M400            ; wait for motion to stop}";
-                    }
-                    if (suggestedCommand != null) {
-                        GcodeDriverSolutions.suggestGcodeCommand(gcodeDriver, contactProbeActuator, issues, 
-                                GcodeDriver.CommandType.ACTUATE_BOOLEAN_COMMAND, suggestedCommand, false, false);
-                    }
-                    else {
-                        issues.add(new Solutions.PlainIssue(
-                                this, 
-                                "Missing ACTUATE_BOOLEAN_COMMAND for actuator "+contactProbeActuator.getName()+" on driver "+gcodeDriver.getName()+" (no suggestion available for detected firmware).", 
-                                "Please add the command manually.",
-                                Severity.Error,
-                                "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#setting-up-the-g-code"));
-                    }
-                }
-            }
-        }
-        catch (Exception e) {
-            // Ignore a stale or missing Actuator name here.
-        }
-    }
-
     protected boolean isPartHeightSensingAvailable(Part part, NozzleTip nozzleTip) {
         Machine machine = Configuration.get().getMachine();
         if (part != null && AbstractPnpJobProcessor.findPartAligner(machine, part) != null) {
@@ -827,42 +717,162 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         }
         return null;
     }
+
     public static boolean isConfigured() {
         return getDefaultNozzle() != null;
     }
-    public static void addConversionIssue(List<Issue> issues, final ReferenceNozzle nozzle) {
-        if (! (nozzle instanceof ContactProbeNozzle)) {
-            issues.add(new Solutions.Issue(
-                    nozzle, 
-                    "The nozzle can be replaced with a ContactProbeNozzle to support various probing features.", 
-                    "Replace with ContactProbeNozzle.", 
-                    Severity.Fundamental,
-                    "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle") {
 
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        if (solutions.isTargeting(Milestone.Advanced)) {
+            try {
+                if (getContactProbeActuator() instanceof AbstractActuator) {
+                    AbstractActuator contactProbeActuator = (AbstractActuator) getContactProbeActuator();
+                    if (!contactProbeActuator.isCoordinatedAfterActuate()) {
+                        solutions.add(new Solutions.Issue(
+                                contactProbeActuator, 
+                                "Contact probe actuator needs machine coordination after actuation.", 
+                                "Enable After Actuation machine coordination.", 
+                                Severity.Error,
+                                "https://github.com/openpnp/openpnp/wiki/Motion-Planner#actuator-machine-coordination") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                contactProbeActuator.setCoordinatedAfterActuate((state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
+                    if (getAxisZ() instanceof ControllerAxis) {
+                        Driver driver = ((ControllerAxis) getAxisZ()).getDriver();
+                        Driver oldDriver = contactProbeActuator.getDriver();
+                        if (driver != null && driver != oldDriver) {
+                            solutions.add(new Solutions.Issue(
+                                    this, 
+                                    "Z driver "+driver.getName()+" not same as actuator "+contactProbeActuator.getName()+" driver "+
+                                            (oldDriver == null ? "(unassigned)" : oldDriver.getName())+".", 
+                                            "Assign driver "+driver.getName()+" to actuator "+contactProbeActuator.getName()+".", 
+                                            Severity.Error,
+                                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#adding-actuators") {
+
+                                @Override
+                                public void setState(Solutions.State state) throws Exception {
+                                    contactProbeActuator.setDriver((state == Solutions.State.Solved) ?
+                                            driver : oldDriver);
+                                    super.setState(state);
+                                }
+                            });
+                        }
+                        if (driver instanceof GcodeAsyncDriver) {
+                            if (!((GcodeAsyncDriver) driver).isReportedLocationConfirmation()) { 
+                                solutions.add(new Solutions.Issue(
+                                        this, 
+                                        "Z driver "+driver.getName()+" must use Location Confirmation for the probe actuator to work.", 
+                                        "Enable Location Confirmation.", 
+                                        Severity.Error,
+                                        "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
+
+                                    @Override
+                                    public void setState(Solutions.State state) throws Exception {
+                                        ((GcodeAsyncDriver) driver).setReportedLocationConfirmation((state == Solutions.State.Solved));
+                                        super.setState(state);
+                                    }
+                                });
+                            }
+                        }
+                        else {
+                            solutions.add(new Solutions.PlainIssue(
+                                    this, 
+                                    "Z driver "+driver.getName()+" must support Location Confirmation for the Z probe actuator to work.", 
+                                    "Only the GcodeAsyncDriver currently supports it.", 
+                                    Severity.Error,
+                                    "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings"));
+                        }
+                    }
+                    if (contactProbeActuator.getDriver() instanceof GcodeDriver) {
+                        GcodeDriver gcodeDriver = (GcodeDriver) contactProbeActuator.getDriver();
+                        String suggestedCommand = null; 
+                        if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Smoothieware")) {
+                            suggestedCommand = 
+                                    "{True:G38.2 Z-42 F800 ; probe down max. range for contact with picked/placed part }\n" + 
+                                            "{True:M400            ; wait until machine has stopped }";
+                        }
+                        else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("TinyG")) {
+                            suggestedCommand = 
+                                    "{True:G38.2 Z-42 F800 ; probe down in absolute coordinates until zmin switch is hit}\n" + 
+                                            "{True:M400            ; wait for motion to stop}";
+                        }
+                        if (suggestedCommand != null) {
+                            GcodeDriverSolutions.suggestGcodeCommand(gcodeDriver, contactProbeActuator, solutions, 
+                                    GcodeDriver.CommandType.ACTUATE_BOOLEAN_COMMAND, suggestedCommand, false, false);
+                        }
+                        else {
+                            solutions.add(new Solutions.PlainIssue(
+                                    this, 
+                                    "Missing ACTUATE_BOOLEAN_COMMAND for actuator "+contactProbeActuator.getName()+" on driver "+gcodeDriver.getName()+" (no suggestion available for detected firmware).", 
+                                    "Please add the command manually.",
+                                    Severity.Error,
+                                    "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#setting-up-the-g-code"));
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                // Ignore a stale Actuator name here.
+            }
+        }
+    }
+
+    public static void addConversionIssue(Solutions solutions, final ReferenceNozzle nozzle) {
+        if (solutions.isTargeting(Milestone.Advanced)) {
+            if (! (nozzle instanceof ContactProbeNozzle)) {
+                solutions.add(new Solutions.Issue(
+                        nozzle, 
+                        "The nozzle can be replaced with a ContactProbeNozzle to support various probing features.", 
+                        "Replace with ContactProbeNozzle.", 
+                        Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
                         if (state == Solutions.State.Solved) {
                             ContactProbeNozzle contactProbeNozzle = convertToContactProbe(nozzle);
                             replaceNozzle(contactProbeNozzle);
                         }
                         else if (getState() == Solutions.State.Solved) {
-                            // Place the old one back (from the captured ImageCamera.this).
+                            // Place the old one back.
                             replaceNozzle(nozzle);
                         }
                         super.setState(state);
                     }
-                }
-            });
+                });
+            }
         }
-    }
+        else {
+            // Conservative settings. 
+            if (nozzle instanceof ContactProbeNozzle) {
+                solutions.add(new Solutions.Issue(
+                        nozzle, 
+                        "Converting the ContactProbeNozzle back to a plain ReferenceNozzle may simplify the machine setup.", 
+                        "Replace with ReferenceNozzle.", 
+                        Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle") {
 
-    private static Serializer createSerializer() {
-        Style style = new HyphenStyle();
-        Format format = new Format(style);
-        AnnotationStrategy strategy = new AnnotationStrategy();
-        Serializer serializer = new Persister(strategy, format);
-        return serializer;
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (state == Solutions.State.Solved) {
+                            ReferenceNozzle referenceNozzle = convertToReferenceNozzle((ContactProbeNozzle) nozzle);
+                            replaceNozzle(referenceNozzle);
+                        }
+                        else if (getState() == Solutions.State.Solved) {
+                            // Place the old one back.
+                            replaceNozzle(nozzle);
+                        }
+                        super.setState(state);
+                    }
+                });
+            }
+        }
     }
 
     /**
@@ -874,7 +884,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
      */
     public static ContactProbeNozzle convertToContactProbe(ReferenceNozzle nozzle) throws Exception {
         // Serialize the nozzle
-        Serializer serOut = createSerializer();
+        Serializer serOut = XmlSerialize.createSerializer();
         StringWriter sw = new StringWriter();
         serOut.write(nozzle, sw);
         String serialized = sw.toString();
@@ -883,12 +893,40 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                 nozzle.getClass().getCanonicalName(), 
                 ContactProbeNozzle.class.getCanonicalName());
         // De-serialize it.
-        Serializer serIn = createSerializer();
+        Serializer serIn = XmlSerialize.createSerializer();
         StringReader sr = new StringReader(serialized);
         ContactProbeNozzle contactProbeNozzle = serIn.read(ContactProbeNozzle.class, sr);
         contactProbeNozzle.applyConfiguration(Configuration.get());
         contactProbeNozzle.setHead(nozzle.getHead());
         return contactProbeNozzle;
+    }
+
+    /**
+     * Convert an ContactProbeNozzle back to a ReferenceNozzle while keeping all super class settings.
+     * 
+     * @param nozzle
+     * @return
+     * @throws Exception
+     */
+    public static ReferenceNozzle convertToReferenceNozzle(ContactProbeNozzle nozzle) throws Exception {
+        // Serialize the nozzle
+        Serializer serOut = XmlSerialize.createSerializer();
+        StringWriter sw = new StringWriter();
+        serOut.write(nozzle, sw);
+        String serialized = sw.toString();
+        // Patch it.
+        serialized.replace(
+                nozzle.getClass().getCanonicalName(), 
+                ReferenceNozzle.class.getCanonicalName());
+        // Remove sub-class settings.
+        serialized = XmlSerialize.purgeSubclassXml(ContactProbeNozzle.class, serialized);
+        // De-serialize it.
+        Serializer serIn = XmlSerialize.createSerializer();
+        StringReader sr = new StringReader(serialized);
+        ReferenceNozzle referenceNozzle = serIn.read(ReferenceNozzle.class, sr);
+        referenceNozzle.applyConfiguration(Configuration.get());
+        referenceNozzle.setHead(nozzle.getHead());
+        return referenceNozzle;
     }
 
     /**
