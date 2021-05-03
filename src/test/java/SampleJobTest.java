@@ -5,7 +5,7 @@ import java.io.File;
 
 import org.apache.commons.io.FileUtils;
 import org.jcodec.api.awt.SequenceEncoder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;

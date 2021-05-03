@@ -599,11 +599,15 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                          firstPartLocation, secondPartLocation,
                                          part1HoleLocations, part2HoleLocations);
                                  final Location referenceHole1 = referenceHoles.get(0)
-                                                                               .derive(null, null,
-                                                                                       null, 0d);
+                                         .derive(null, null,
+                                                 null, 0d)
+                                         .derive(feeder.getReferenceHoleLocation(), 
+                                                 false,  false,  true, false);
                                  final Location referenceHole2 = referenceHoles.get(1)
-                                                                               .derive(null, null,
-                                                                                       null, 0d);
+                                         .derive(null, null,
+                                                 null, 0d)
+                                         .derive(feeder.getLastHoleLocation(), 
+                                                 false,  false,  true, false);
 
                                  feeder.setReferenceHoleLocation(referenceHole1);
                                  feeder.setLastHoleLocation(referenceHole2);
