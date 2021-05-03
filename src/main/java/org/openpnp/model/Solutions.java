@@ -61,7 +61,7 @@ public class Solutions extends AbstractTableModel {
     private Set<String> dismissedSolutions = new HashSet<>();
 
     public enum Milestone implements Subject, Named {
-        Welcome, Connect, Basics, Vision, Calibration, Advanced;
+        Welcome, Connect, Basics, Vision, Calibration, Production, Advanced;
 
         public Milestone getPrevious() {
             if (ordinal()-1 >= 0) {
@@ -98,6 +98,8 @@ public class Solutions extends AbstractTableModel {
                     return "Setup cameras and computer vision.";
                 case Calibration:
                     return "Calibrate the machine for precision motion and vision.";
+                case Production:
+                    return "Configure feeders and solve other production related issues.";
                 case Advanced:
                     return "Enable more advanced features for a faster and more automatic machine.";
                 default:
