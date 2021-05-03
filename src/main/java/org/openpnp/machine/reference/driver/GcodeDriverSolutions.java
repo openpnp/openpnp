@@ -101,7 +101,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 gcodeDriver.detectFirmware(true);
             }
             catch (Exception e) {
-                Logger.warn(gcodeDriver.getName()+" failure to detect firmware", e);
+                Logger.warn(e, gcodeDriver.getName()+" failure to detect firmware");
             }
         }
         Integer firmwareAxesCount = null;

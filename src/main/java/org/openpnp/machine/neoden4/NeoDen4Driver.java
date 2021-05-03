@@ -882,7 +882,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             getCommunications().disconnect();
         }
         catch (Exception e) {
-            Logger.error("disconnect()", e);
+            Logger.error(e, "disconnect()");
         }
     }
 

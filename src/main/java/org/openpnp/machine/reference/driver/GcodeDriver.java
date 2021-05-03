@@ -921,7 +921,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             getCommunications().disconnect();
         }
         catch (Exception e) {
-            Logger.error("disconnect()", e);
+            Logger.error(e, "disconnect()");
         }
 
         closeGcodeLogger();
@@ -937,7 +937,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             }
         }
         catch (Exception e) {
-            Logger.error("disconnect()", e);
+            Logger.error(e, "disconnect()");
         }
     }
 
@@ -994,7 +994,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             getCommunications().writeLine(command);
         }
         catch (IOException ex) {
-            Logger.error("{} failed to write command {}", getCommunications().getConnectionName(), command);
+            Logger.error(ex, "{} failed to write command {}", getCommunications().getConnectionName(), command);
             disconnect();
             Configuration.get().getMachine().setEnabled(false);
         }
@@ -1167,7 +1167,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     gcodeLogger = new PrintWriter(file.getAbsolutePath());
                 }
                 catch (IOException e) {
-                    Logger.warn("Cannot open Gcode log", e);
+                    Logger.warn(e, "Cannot open Gcode log");
                 }
             }
             if (gcodeLogger != null) {
@@ -1207,11 +1207,11 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 }
                 catch (IOException e) {
                     if (disconnectRequested) {
-                        Logger.trace("Read error while disconnecting", e);
+                        Logger.trace(e, "Read error while disconnecting");
                         return;
                     }
                     else {
-                        Logger.error("Read error", e);
+                        Logger.error(e, "Read error");
                         return;
                     }
                 }
