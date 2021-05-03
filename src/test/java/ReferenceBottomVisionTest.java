@@ -1,6 +1,6 @@
 import java.io.File;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
