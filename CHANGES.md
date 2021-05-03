@@ -1,7 +1,7 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
-# 2021-04-12 
+# 2021-05-03 
 
 ## Nozzle Tip Changer Z Calibration, Auto-Focus, Part Height, Feeder, Placement sensing 
 
