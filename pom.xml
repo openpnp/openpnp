@@ -379,7 +379,6 @@
 				<version>2.22.2</version>
 				<configuration>
 					<argLine>-Xmx512m</argLine>
-					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 				</configuration>
 			</plugin>
 
