@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
@@ -36,6 +37,7 @@ import javax.swing.SwingUtilities;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.machine.reference.ContactProbeNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -63,10 +65,12 @@ public class LocationButtonsPanel extends JPanel {
     private JButton buttonCaptureCamera;
     private JButton buttonCaptureTool;
     private JButton buttonCenterToolNoSafeZ;
+    private JButton buttonContactProbeTool;
     private JSeparator separator;
     private JButton buttonCenterCamera;
 
     private Location baseLocation;
+    private boolean contactProbeReference;
 
     public LocationButtonsPanel(JTextField textFieldX, JTextField textFieldY, JTextField textFieldZ,
             JTextField textFieldC) {
@@ -88,7 +92,10 @@ public class LocationButtonsPanel extends JPanel {
 
         buttonCenterToolNoSafeZ = new JButton(positionToolNoSafeZAction);
         buttonCenterToolNoSafeZ.setHideActionText(true);
-                
+
+        buttonContactProbeTool = new JButton(contactProbeNozzleAction);
+        buttonContactProbeTool.setHideActionText(true);
+
         separator = new JSeparator();
         separator.setOrientation(SwingConstants.VERTICAL);
         add(separator);
@@ -117,6 +124,7 @@ public class LocationButtonsPanel extends JPanel {
         buttonCenterCamera.setEnabled(enabled);
         buttonCenterTool.setEnabled(enabled);
         buttonCenterToolNoSafeZ.setEnabled(enabled);
+        buttonContactProbeTool.setEnabled(enabled);
         buttonCaptureCamera.setEnabled(enabled);
         buttonCaptureTool.setEnabled(enabled);
         super.setEnabled(enabled);
@@ -141,6 +149,7 @@ public class LocationButtonsPanel extends JPanel {
         else {
             remove(buttonCenterTool);
             remove(buttonCenterToolNoSafeZ);
+            remove(buttonContactProbeTool);
             remove(buttonCaptureTool);
             remove(separator);
         }
@@ -154,6 +163,23 @@ public class LocationButtonsPanel extends JPanel {
         else {
             remove(buttonCenterToolNoSafeZ);
         }
+    }
+
+    public void setShowContactProbeTool(boolean b) {
+        if (b) {
+            add(buttonContactProbeTool, 2);
+        }
+        else {
+            remove(buttonContactProbeTool);
+        }
+    }
+
+    public boolean isContactProbeReference() {
+        return contactProbeReference;
+    }
+
+    public void setContactProbeReference(boolean contactProbeReference) {
+        this.contactProbeReference = contactProbeReference;
     }
 
     public void setActuatorName(String actuatorName) {
@@ -374,6 +400,56 @@ public class LocationButtonsPanel extends JPanel {
                 tool.moveTo(location);
                 MovableUtils.fireTargetedUserAction(tool);
             });
+        }
+    };
+
+    private Action contactProbeNozzleAction =
+            new AbstractAction("Contact Probe Tool", Icons.contactProbeNozzle) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the tool over the center of the location then contact-probe Z.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            int result = JOptionPane.YES_OPTION;
+            if (isContactProbeReference()) {
+                /// Warn the user.
+                result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "<html>This will overwrite the Z reference and therefore<br/>"
+                                +"change the meaning of previously captured Z coordinates.<br/>"
+                                +"<span color=\"red\">You will need to recapture these locations!</span>"
+                                +"<br/><br/>"
+                                +"Are you sure?</html>",
+                                null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            }
+            if (result == JOptionPane.YES_OPTION) {
+                UiUtils.submitUiMachineTask(() -> {
+                    HeadMountable tool = getTool();
+                    if (isContactProbeReference()) {
+                        // Always use the probing default nozzle for reference probing.
+                        tool = ContactProbeNozzle.getDefaultNozzle();
+                    }
+                    if (! (tool instanceof ContactProbeNozzle)) {
+                        throw new Exception("Nozzle "+tool.getName()+" is not a ContactProbeNozzle.");
+                    }
+                    ContactProbeNozzle nozzle =  (ContactProbeNozzle)tool;
+                    Location nominalLocation = getParsedLocation();
+                    if (baseLocation != null) {
+                        nominalLocation = nominalLocation.rotateXy(baseLocation.getRotation());
+                        nominalLocation = nominalLocation.addWithRotation(baseLocation);
+                    }
+                    if (isContactProbeReference()) {
+                        nozzle.resetZCalibration();
+                    }
+                    final Location probedLocation = nozzle.contactProbeCycle(nominalLocation);
+                    MovableUtils.fireTargetedUserAction(nozzle);
+                    SwingUtilities.invokeAndWait(() -> {
+                        Helpers.copyLocationIntoTextFields(probedLocation, null, null, textFieldZ,
+                                null);
+                    });
+                });
+            }
         }
     };
 

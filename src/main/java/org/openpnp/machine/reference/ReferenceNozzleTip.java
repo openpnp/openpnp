@@ -33,6 +33,7 @@ import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractNozzleTip;
 import org.openpnp.util.ImageUtils;
@@ -59,25 +60,27 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Element(required = false)
     private double changerStartToMidSpeed = 1D;
-    
+
     @Element(required = false)
     private Location changerMidLocation = new Location(LengthUnit.Millimeters);
-    
+
     @Element(required = false)
     private double changerMidToMid2Speed = 1D;
-    
+
     @Element(required = false)
     private Location changerMidLocation2 = new Location(LengthUnit.Millimeters);
-    
+
     @Element(required = false)
     private double changerMid2ToEndSpeed = 1D;
-    
+
     @Element(required = false)
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
 
     @Element(required = false)
+    private Location touchLocation = new Location(LengthUnit.Millimeters);
+
     public enum VisionCalibration {
-        None, FirstLocation, SecondLocation, ThirdLocation, LastLocation;
+        None, FirstLocation, SecondLocation, ThirdLocation, LastLocation, TouchLocation;
 
         public Location getLocation(ReferenceNozzleTip nt) {
             switch (this) {
@@ -91,6 +94,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     return nt.getChangerMidLocation2();
                 case LastLocation:
                     return nt.getChangerEndLocation();
+                case TouchLocation:
+                    return nt.getTouchLocation();
             }
             return null;
         }
@@ -134,6 +139,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Element(required = false)
     private Location visionCalibrationOffset;
+
+    public enum ZCalibrationTrigger {
+        Manual, MachineHome, NozzleTipChange
+    }
+
+    @Attribute(required = false)
+    private ZCalibrationTrigger zCalibrationTrigger = ZCalibrationTrigger.Manual;
+
+    @Attribute(required = false)
+    private boolean zCalibrationFailHoming = true;
+
+    @Attribute(required = false)
+    private boolean templateNozzleTip = false;
+
+    @Attribute(required = false)
+    private boolean templateLocked = false;
 
     @Element(required = false)
     private Length maxPartDiameter = new Length(20, LengthUnit.Millimeters);
@@ -469,6 +490,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         return null;
     }
 
+    public Location getTouchLocation() {
+        return touchLocation;
+    }
+
+    public void setTouchLocation(Location touchLocation) {
+        Object oldValue = this.touchLocation;
+        this.touchLocation = touchLocation;
+        firePropertyChange("touchLocation", oldValue, touchLocation);
+    }
 
     public VisionCalibration getVisionCalibration() {
         return visionCalibration;
@@ -568,6 +598,85 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         Object oldValue = this.visionTemplateImageOccupied;
         this.visionTemplateImageOccupied = visionTemplateImageOccupied;
         firePropertyChange("visionTemplateImageOccupied", oldValue, visionTemplateImageOccupied);
+    }
+
+    public ZCalibrationTrigger getzCalibrationTrigger() {
+        return zCalibrationTrigger;
+    }
+
+    public void setzCalibrationTrigger(ZCalibrationTrigger zCalibrationTrigger) {
+        Object oldValue = this.zCalibrationTrigger;
+        this.zCalibrationTrigger = zCalibrationTrigger;
+        firePropertyChange("zCalibrationTrigger", oldValue, zCalibrationTrigger);
+    }
+
+    public boolean iszCalibrationFailHoming() {
+        return zCalibrationFailHoming;
+    }
+
+    public void setzCalibrationFailHoming(boolean zCalibrationFailHoming) {
+        Object oldValue = this.zCalibrationFailHoming;
+        this.zCalibrationFailHoming = zCalibrationFailHoming;
+        firePropertyChange("zCalibrationFailHoming", oldValue, zCalibrationFailHoming);
+    }
+
+    public boolean isTemplateNozzleTip() {
+        return templateNozzleTip;
+    }
+
+    public void setTemplateNozzleTip(boolean templateNozzleTip) {
+        boolean oldValue = this.templateNozzleTip;
+        this.templateNozzleTip = templateNozzleTip;
+        firePropertyChange("templateNozzleTip", oldValue, templateNozzleTip);
+        if (templateNozzleTip && ! oldValue) {
+            // Make sure, only one nozzle tip is template. 
+            for (NozzleTip nt : Configuration.get().getMachine().getNozzleTips()) {
+                if (nt != this
+                        && nt instanceof ReferenceNozzleTip
+                        && ((ReferenceNozzleTip) nt).isTemplateNozzleTip()) {
+                    ((ReferenceNozzleTip) nt).setTemplateNozzleTip(false);
+                }
+            }
+        }
+    }
+
+    public boolean isTemplateLocked() {
+        return templateLocked;
+    }
+
+    public void setTemplateLocked(boolean templateLocked) {
+        boolean oldValue = this.templateLocked;
+        this.templateLocked = templateLocked;
+        firePropertyChange("templateLocked", oldValue, templateLocked);
+    }
+
+    public boolean isTemplateClone() {
+        return !(templateNozzleTip || templateLocked);
+    }
+
+    public void setTemplateClone(boolean templateClone) {
+        boolean oldValue = isTemplateClone();
+        if (templateClone && !oldValue) {
+            setTemplateLocked(false);
+            firePropertyChange("templateClone", oldValue, templateClone);
+            setTemplateNozzleTip(false);
+        }
+    }
+
+    /**
+     * @return the calibration offset Z of the nozzle this nozzle tip is attached to.
+     */
+    public Length getCalibrationOffsetZ() {
+        Length offsetZ = null;
+        Nozzle nozzle = getNozzleAttachedTo();
+        if (nozzle instanceof ContactProbeNozzle) {
+            offsetZ = ((ContactProbeNozzle) nozzle).getCalibrationOffsetZ();
+        }
+        return offsetZ;
+    }
+
+    public void setCalibrationOffsetZ(Length calibrationOffsetZ) {
+        firePropertyChange("calibrationOffsetZ", null, calibrationOffsetZ);
     }
 
     public VacuumMeasurementMethod getMethodPartOn() {
@@ -870,6 +979,53 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         valveData.recordDataPoint(t, valveSwitchingOn ? 0 : 1);
         valveData.recordDataPoint(vacuumGraph.getT(), valveSwitchingOn ? 1 : 0);
         return vacuumGraph;
+    }
+
+    public static ReferenceNozzleTip getTemplateNozzleTip() throws Exception {
+        for (NozzleTip nt : Configuration.get().getMachine().getNozzleTips()) {
+            if (nt instanceof ReferenceNozzleTip
+                    && ((ReferenceNozzleTip)nt).isTemplateNozzleTip()) {
+                return (ReferenceNozzleTip)nt;
+            }
+        }
+        throw new Exception("No Nozzle Tip is defined as template.");
+    }
+
+    public void assignNozzleTipChangerSettings(ReferenceNozzleTip templateNozzleTip, 
+            boolean changerLocations, boolean zCalibration, boolean visionCalibration) {
+        if (getChangerStartLocation().getLinearDistanceTo(Location.origin) != 0
+                && !isTemplateLocked()) {
+            if (changerLocations) {
+                Location offsets = getChangerStartLocation()
+                        .subtract(templateNozzleTip.getChangerStartLocation());
+                setChangerMidLocation(templateNozzleTip.getChangerMidLocation().add(offsets));
+                setChangerMidLocation2(templateNozzleTip.getChangerMidLocation2().add(offsets));
+                setChangerEndLocation(templateNozzleTip.getChangerEndLocation().add(offsets));
+                setChangerActuatorPostStepOne(templateNozzleTip.getChangerActuatorPostStepOne());
+                setChangerActuatorPostStepTwo(templateNozzleTip.getChangerActuatorPostStepTwo());
+                setChangerActuatorPostStepThree(templateNozzleTip.getChangerActuatorPostStepThree());
+                setChangerStartToMidSpeed(templateNozzleTip.getChangerStartToMidSpeed());
+                setChangerMidToMid2Speed(templateNozzleTip.getChangerMidToMid2Speed());
+                setChangerMid2ToEndSpeed(templateNozzleTip.getChangerMid2ToEndSpeed());
+                setTouchLocation(templateNozzleTip.getTouchLocation().add(offsets));
+            }
+            if (zCalibration) {
+                setzCalibrationTrigger(templateNozzleTip.getzCalibrationTrigger());
+                setzCalibrationFailHoming(templateNozzleTip.iszCalibrationFailHoming());
+            }
+            if (visionCalibration) {
+                setVisionCalibration(templateNozzleTip.getVisionCalibration());
+                setVisionCalibrationTrigger(templateNozzleTip.getVisionCalibrationTrigger());
+                setVisionTemplateDimensionX(templateNozzleTip.getVisionTemplateDimensionX());
+                setVisionTemplateDimensionY(templateNozzleTip.getVisionTemplateDimensionY());
+                setVisionTemplateTolerance(templateNozzleTip.getVisionTemplateTolerance());
+                setVisionCalibrationTolerance(templateNozzleTip.getVisionCalibrationTolerance());
+                setVisionCalibrationMaxPasses(templateNozzleTip.getVisionCalibrationMaxPasses());
+                setVisionMatchMinimumScore(templateNozzleTip.getVisionMatchMinimumScore());
+                setVisionTemplateImageEmpty(templateNozzleTip.getVisionTemplateImageEmpty());
+                setVisionTemplateImageOccupied(templateNozzleTip.getVisionTemplateImageOccupied());
+            }
+        }
     }
 
     public Action loadAction = new AbstractAction("Load") {
