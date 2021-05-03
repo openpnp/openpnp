@@ -62,7 +62,10 @@ public class LocationButtonsPanel extends JPanel {
     private JButton buttonCenterTool;
     private JButton buttonCaptureCamera;
     private JButton buttonCaptureTool;
-    
+    private JButton buttonCenterToolNoSafeZ;
+    private JSeparator separator;
+    private JButton buttonCenterCamera;
+
     private Location baseLocation;
 
     public LocationButtonsPanel(JTextField textFieldX, JTextField textFieldY, JTextField textFieldZ,
@@ -75,7 +78,7 @@ public class LocationButtonsPanel extends JPanel {
         this.textFieldZ = textFieldZ;
         this.textFieldC = textFieldC;
         
-        JButton buttonCenterCamera = new JButton(positionCameraAction);
+        buttonCenterCamera = new JButton(positionCameraAction);
         buttonCenterCamera.setHideActionText(true);
         add(buttonCenterCamera);
 
@@ -108,7 +111,42 @@ public class LocationButtonsPanel extends JPanel {
     public void setBaseLocation(Location baseLocation) {
         this.baseLocation = baseLocation;
     }
-    
+
+    @Override 
+    public void setEnabled(boolean enabled) {
+        buttonCenterCamera.setEnabled(enabled);
+        buttonCenterTool.setEnabled(enabled);
+        buttonCenterToolNoSafeZ.setEnabled(enabled);
+        buttonCaptureCamera.setEnabled(enabled);
+        buttonCaptureTool.setEnabled(enabled);
+        super.setEnabled(enabled);
+    }
+
+    public void setShowCameraButtons(boolean shown) {
+        if (shown) {
+            // not implemented
+        }
+        else {
+            remove(buttonCenterCamera);
+            remove(buttonCaptureCamera);
+            remove(separator);
+        }
+        validate();
+    }
+
+    public void setShowToolButtons(boolean shown) {
+        if (shown) {
+            // not implemented
+        }
+        else {
+            remove(buttonCenterTool);
+            remove(buttonCenterToolNoSafeZ);
+            remove(buttonCaptureTool);
+            remove(separator);
+        }
+        validate();
+    }
+
     public void setShowPositionToolNoSafeZ(boolean b) {
         if (b) {
             add(buttonCenterToolNoSafeZ, 2);
@@ -319,68 +357,67 @@ public class LocationButtonsPanel extends JPanel {
 
     private Action positionToolNoSafeZAction =
             new AbstractAction("Position Tool (Without Safe Z)", Icons.centerToolNoSafeZ) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the tool over the center of the location without first moving to Safe Z.");
-                }
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the tool over the center of the location without first moving to Safe Z.");
+        }
 
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        HeadMountable tool = getTool();
-                        Location location = getParsedLocation();
-                        if (baseLocation != null) {
-                            location = location.rotateXy(baseLocation.getRotation());
-                            location = location.addWithRotation(baseLocation);
-                        }
-                        tool.moveTo(location);
-                        MovableUtils.fireTargetedUserAction(tool);
-                    });
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable tool = getTool();
+                Location location = getParsedLocation();
+                if (baseLocation != null) {
+                    location = location.rotateXy(baseLocation.getRotation());
+                    location = location.addWithRotation(baseLocation);
                 }
-            };
+                tool.moveTo(location);
+                MovableUtils.fireTargetedUserAction(tool);
+            });
+        }
+    };
 
     private Action positionActuatorAction =
             new AbstractAction("Position Actuator", Icons.centerPin) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the actuator over the center of the location.");
-                }
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the actuator over the center of the location.");
+        }
 
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        Actuator actuator = getActuator();
-                        Location location = getParsedLocation();
-                        if (baseLocation != null) {
-                            location = location.rotateXy(baseLocation.getRotation());
-                            location = location.addWithRotation(baseLocation);
-                        }
-                        MovableUtils.moveToLocationAtSafeZ(actuator, location);
-                        MovableUtils.fireTargetedUserAction(actuator);
-                    });
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Actuator actuator = getActuator();
+                Location location = getParsedLocation();
+                if (baseLocation != null) {
+                    location = location.rotateXy(baseLocation.getRotation());
+                    location = location.addWithRotation(baseLocation);
                 }
-            };
+                MovableUtils.moveToLocationAtSafeZ(actuator, location);
+                MovableUtils.fireTargetedUserAction(actuator);
+            });
+        }
+    };
+
     private Action positionActuatorNoSafeZAction =
             new AbstractAction("Position Actuator (Without Safe Z)", Icons.centerPinNoSafeZ) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the actuator over the center of the location without first moving to Safe Z.");
-                }
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Position the actuator over the center of the location without first moving to Safe Z.");
+        }
 
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        Actuator actuator = getActuator();
-                        Location location = getParsedLocation();
-                        if (baseLocation != null) {
-                            location = location.rotateXy(baseLocation.getRotation());
-                            location = location.addWithRotation(baseLocation);
-                        }
-                        actuator.moveTo(location);
-                        MovableUtils.fireTargetedUserAction(actuator);
-                    });
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.submitUiMachineTask(() -> {
+                Actuator actuator = getActuator();
+                Location location = getParsedLocation();
+                if (baseLocation != null) {
+                    location = location.rotateXy(baseLocation.getRotation());
+                    location = location.addWithRotation(baseLocation);
                 }
-            };
-    private JButton buttonCenterToolNoSafeZ;
-    private JSeparator separator;
+                actuator.moveTo(location);
+                MovableUtils.fireTargetedUserAction(actuator);
+            });
+        }
+    };
 }
