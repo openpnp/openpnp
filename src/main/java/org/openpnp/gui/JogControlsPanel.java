@@ -26,7 +26,6 @@ import java.awt.FocusTraversalPolicy;
 import java.awt.Font;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -809,16 +808,21 @@ public class JogControlsPanel extends JPanel {
             // add property listener for recycle button
             // enable recycle only if part on current head
             PropertyChangeListener recyclePropertyListener = (e) -> {
-                    boolean canTakeBack = false;
-                    Part part = machineControlsPanel.getSelectedNozzle().getPart();
-                    if (part != null) {
-                        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-                            if (feeder.isEnabled() && feeder.getPart().equals(part) && feeder.canTakeBackPart()) {
-                                canTakeBack = true;
+                    Nozzle selectedNozzle = machineControlsPanel.getSelectedNozzle();
+                    if (selectedNozzle != null) {
+                        boolean canTakeBack = false;
+                        Part part = selectedNozzle.getPart();
+                        if (part != null) {
+                            for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+                                if (feeder.isEnabled() 
+                                        && feeder.getPart() == part
+                                        && feeder.canTakeBackPart()) {
+                                    canTakeBack = true;
+                                }
                             }
                         }
+                        recycleAction.setEnabled(canTakeBack);
                     }
-                    recycleAction.setEnabled(canTakeBack);
                 };
             // add to all nozzles
             for (Head head : Configuration.get().getMachine().getHeads()) {

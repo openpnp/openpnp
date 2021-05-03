@@ -70,6 +70,11 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         }
     }
 
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return true;
+    }
+
     private Location getPickLocation(CvPipeline pipeline, Camera camera, Nozzle nozzle)
             throws Exception {
         // Process the pipeline to extract RotatedRect results
@@ -95,10 +100,8 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         Location location = VisionUtils.getPixelLocation(camera, result.center.x, result.center.y);
         // Update the location's rotation with the result's angle
         location = location.derive(null, null, null, result.angle + this.location.getRotation());
-        // Update the location with the correct Z, which is the configured Location's Z
-        // plus the part height.
-        double z = this.location.convertToUnits(location.getUnits()).getZ()
-                + part.getHeight().convertToUnits(location.getUnits()).getValue(); 
+        // Update the location with the correct Z, which is the configured Location's Z.
+        double z = this.location.convertToUnits(location.getUnits()).getZ(); 
         location = location.derive(null, null, z, null);
         return location;
     }

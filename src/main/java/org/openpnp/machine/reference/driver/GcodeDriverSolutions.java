@@ -57,7 +57,7 @@ import org.simpleframework.xml.stream.Style;
  * The idea is not to pollute the driver implementations themselves.
  *
  */
-class GcodeDriverSolutions implements Solutions.Subject {
+public class GcodeDriverSolutions implements Solutions.Subject {
     private final GcodeDriver gcodeDriver;
 
     GcodeDriverSolutions(GcodeDriver gcodeDriver) {
@@ -101,7 +101,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                 gcodeDriver.detectFirmware(true);
             }
             catch (Exception e) {
-                Logger.warn(gcodeDriver.getName()+" failure to detect firmware", e);
+                Logger.warn(e, gcodeDriver.getName()+" failure to detect firmware");
             }
         }
         Integer firmwareAxesCount = null;
@@ -198,7 +198,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                     }
                 }
             }
-            else if (gcodeDriver.getDetectedFirmware().contains("Marlin")) {
+            else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Marlin")) {
                 isMarlin = true;
                 firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("AXIS_COUNT", "0"));
                 if (firmwareAxesCount > 3) { 
@@ -213,7 +213,7 @@ class GcodeDriverSolutions implements Solutions.Subject {
                             "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#marlin-20"));
                 }
             }
-            else if (gcodeDriver.getDetectedFirmware().contains("TinyG")) {
+            else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("TinyG")) {
                 // Having a response already means we have a new firmware.
                 isTinyG = true;
             }
@@ -728,10 +728,11 @@ class GcodeDriverSolutions implements Solutions.Subject {
      * Add a solution for the given gcodeDriver to the issues, to suggest the given suggestedCommand instead of the currentCommand.
      *
      * @param gcodeDriver
+     * @param headMountable
      * @param issues
      * @param commandType
-     * @param currentCommand
      * @param suggestedCommand
+     * @param commandModified
      * @param disallowHeadMountables Set true to disallow the commandType on HeadMountables. This is used when switching to axis letter variables.
      */
     public static void suggestGcodeCommand(GcodeDriver gcodeDriver, HeadMountable headMountable, List<Solutions.Issue> issues,

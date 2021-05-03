@@ -1,6 +1,6 @@
 import java.io.File;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;

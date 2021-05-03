@@ -458,7 +458,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         @Override
         public Location getCameraOffset() {
             // Return the axis offset as the camera tool specific calibration offset.
-            Logger.debug("[nozzleTipCalibration] getCameraOffset() returns: {}, {}", this.centerX, this.centerY);
             return new Location(this.units, this.centerX, this.centerY, 0., 0.);
         }
     }
@@ -481,6 +480,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     @Attribute(required = false)
     private boolean enabled;
+    @Attribute(required = false)
+    private boolean failHoming = true;
 
     private boolean calibrating;
 
@@ -663,13 +664,15 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 } else {
                     misdetects++;
                     if (misdetects > this.allowMisdetections) {
-                        throw new Exception("Too many vision misdetects. Check pipeline and threshold.");
+                        throw new Exception(
+                                "Nozzle tip calibration: too many vision misdetects. Check pipeline and threshold.");
                     }
                 }
             }
 
             if (nozzleTipMeasuredLocations.size() < Math.max(3, angleSubdivisions + 1 - this.allowMisdetections)) {
-                throw new Exception("Not enough results from vision. Check pipeline and threshold."); 
+                throw new Exception(
+                        "Nozzle tip calibration: not enough results from vision. Check pipeline and threshold.");
             }
 
             Configuration.get().getScripting().on("NozzleCalibration.Finished", params);
@@ -1032,6 +1035,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isFailHoming() {
+        return failHoming;
+    }
+
+    public void setFailHoming(boolean failHoming) {
+        this.failHoming = failHoming;
     }
 
     public CvPipeline getPipeline(Camera camera, Location measureLocation) throws Exception {

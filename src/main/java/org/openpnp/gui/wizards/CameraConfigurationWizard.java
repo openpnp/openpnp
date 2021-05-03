@@ -19,7 +19,6 @@
 
 package org.openpnp.gui.wizards;
 
-import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
@@ -51,6 +50,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.AbstractBroadcastingCamera;
+import org.openpnp.machine.reference.ReferenceCamera.FocusSensingMethod;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -154,16 +154,26 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panel.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("max(70dlu;default)"), FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("max(70dlu;default)"), FormSpecs.RELATED_GAP_COLSPEC,
-                        ColumnSpec.decode("max(70dlu;default)"), FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblName = new JLabel("Name");
         panel.add(lblName, "2, 2, right, default");
@@ -211,6 +221,17 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         
         shownInMultiCameraView = new JCheckBox("");
         panel.add(shownInMultiCameraView, "8, 8");
+        
+        lblFocusSensing = new JLabel("Focus Sensing Method");
+        panel.add(lblFocusSensing, "2, 10, right, default");
+        
+        focusSensingMethod = new JComboBox(FocusSensingMethod.values());
+        focusSensingMethod.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                reloadWizard = true;
+            }
+        });
+        panel.add(focusSensingMethod, "4, 10, fill, default");
         panelLight = new JPanel();
         panelLight.setBorder(new TitledBorder(null, "Light", TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
@@ -514,6 +535,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lblCameraZ.setVisible(cameraZ);
         cameraPrimaryZ.setVisible(cameraZ);
         cameraSecondaryZ.setVisible(cameraZ);
+
+        lblFocusSensing.setVisible(camera.getHead() == null);
+        focusSensingMethod.setVisible(camera.getHead() == null);
     };
 
     @Override
@@ -532,6 +556,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         addWrappedBinding(camera, "suspendPreviewInTasks", suspendPreviewInTasks, "selected");
         addWrappedBinding(camera, "autoVisible", autoVisible, "selected");
         addWrappedBinding(camera, "shownInMultiCameraView", shownInMultiCameraView, "selected");
+        addWrappedBinding(camera, "focusSensingMethod", focusSensingMethod, "selectedItem");
 
         addWrappedBinding(camera, "allowMachineActuators", allowMachineActuators, "selected");
         addWrappedBinding(camera, "lightActuator", lightActuator, "selectedItem", actuatorConverter);
@@ -703,6 +728,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     @Override
     protected void saveToModel() {
         super.saveToModel();
+        if (reloadWizard) {
+            MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+        }
         UiUtils.messageBoxOnException(() -> {
             camera.reinitialize();
         });
@@ -886,4 +914,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JCheckBox autoViewPlaneZ;
     private JLabel lblShowMultiview;
     private JCheckBox shownInMultiCameraView;
+    private JLabel lblFocusSensing;
+    private JComboBox focusSensingMethod;
+    private boolean reloadWizard;
 }
