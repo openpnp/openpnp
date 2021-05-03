@@ -1,19 +1,19 @@
 package org.openpnp.machine.index;
 
 import com.google.common.io.Files;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Machine;
 
 import java.io.File;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class IndexFeederSlotsTest {
     private IndexFeederSlots feederSlots;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         File workingDirectory = Files.createTempDir();
         workingDirectory = new File(workingDirectory, ".openpnp");

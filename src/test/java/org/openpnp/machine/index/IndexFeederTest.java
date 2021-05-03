@@ -1,11 +1,9 @@
 package org.openpnp.machine.index;
 
 import com.google.common.io.Files;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
-import org.mockito.Mockito;
 import org.openpnp.machine.index.sheets.FeederPropertySheet;
 import org.openpnp.machine.index.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -18,10 +16,9 @@ import org.openpnp.spi.PropertySheetHolder;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.IntConsumer;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.openpnp.machine.index.protocol.IndexCommands.*;
 import static org.openpnp.machine.index.protocol.IndexResponses.*;
@@ -37,7 +34,7 @@ public class IndexFeederTest {
     private Nozzle mockedNozzle;
     private IndexProperties indexProperties;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         File workingDirectory = Files.createTempDir();
         workingDirectory = new File(workingDirectory, ".openpnp");
@@ -53,11 +50,11 @@ public class IndexFeederTest {
         machine.removeActuator(machine.getActuatorByName(IndexFeeder.ACTUATOR_DATA_NAME));
 
         // Then make a fake one for us to mock with
-        mockedActuator = Mockito.mock(Actuator.class);
+        mockedActuator = mock(Actuator.class);
         when(mockedActuator.getName()).thenReturn(IndexFeeder.ACTUATOR_DATA_NAME);
         machine.addActuator(mockedActuator);
 
-        mockedNozzle = Mockito.mock(Nozzle.class);
+        mockedNozzle = mock(Nozzle.class);
         when(mockedNozzle.getName()).thenReturn("Test Nozzle");
 
         indexProperties = new IndexProperties(machine);
@@ -65,7 +62,7 @@ public class IndexFeederTest {
 
     @Test
     public void getJobPreparationLocationReturnsNull() {
-        Assert.assertNull(feeder.getJobPreparationLocation());
+        assertNull(feeder.getJobPreparationLocation());
     }
 
     @Test
@@ -83,22 +80,22 @@ public class IndexFeederTest {
 
     @Test
     public void getSlotAddressReturnsNullByDefault() {
-        Assert.assertNull(feeder.getSlotAddress());
+        assertNull(feeder.getSlotAddress());
     }
     
     @Test
     public void isEnabledReturnsFalseIfSetEnabledToFalse() {
         feeder.setEnabled(false);
 
-        Assert.assertFalse(feeder.isEnabled());
+        assertFalse(feeder.isEnabled());
     }
 
     @Test
     public void isEnabledReturnsFalseIfNoHardwareIdSet() {
         feeder.setEnabled(true);
 
-        Assert.assertNull(feeder.getHardwareId());
-        Assert.assertFalse(feeder.isEnabled());
+        assertNull(feeder.getHardwareId());
+        assertFalse(feeder.isEnabled());
     }
 
     @Test
@@ -106,8 +103,8 @@ public class IndexFeederTest {
         feeder.setEnabled(true);
         feeder.setHardwareId(hardwareId);
 
-        Assert.assertNull(feeder.getPart());
-        Assert.assertFalse(feeder.isEnabled());
+        assertNull(feeder.getPart());
+        assertFalse(feeder.isEnabled());
     }
 
     @Test
@@ -116,8 +113,8 @@ public class IndexFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setPart(new Part("test-part"));
 
-        Assert.assertNull(feeder.getSlot());
-        Assert.assertFalse(feeder.isEnabled());
+        assertNull(feeder.getSlot());
+        assertFalse(feeder.isEnabled());
     }
 
     @Test
@@ -127,8 +124,8 @@ public class IndexFeederTest {
         feeder.setPart(new Part("test-part"));
         feeder.setSlotAddress(5);
 
-        Assert.assertNull(feeder.getSlot().getLocation());
-        Assert.assertFalse(feeder.isEnabled());
+        assertNull(feeder.getSlot().getLocation());
+        assertFalse(feeder.isEnabled());
     }
 
     @Test
@@ -139,7 +136,7 @@ public class IndexFeederTest {
         feeder.setSlotAddress(5);
         feeder.getSlot().setLocation(new Location(LengthUnit.Millimeters, 1, 1, 1, 1));
 
-        Assert.assertTrue(feeder.isEnabled());
+        assertTrue(feeder.isEnabled());
     }
 
     @Test
@@ -267,7 +264,7 @@ public class IndexFeederTest {
 
     @Test
     public void isInitializedByDefaultReturnsFalse() {
-        Assert.assertFalse(feeder.isInitialized());
+        assertFalse(feeder.isInitialized());
     }
 
     @Test
@@ -284,12 +281,12 @@ public class IndexFeederTest {
 
         feeder.prepareForJob(false);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(getFeederAddressCommand);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
 
-        Assert.assertEquals(feederAddress, (int) feeder.getSlotAddress());
-        Assert.assertTrue(feeder.isInitialized());
+        assertEquals(feederAddress, (int) feeder.getSlotAddress());
+        assertTrue(feeder.isInitialized());
     }
     
     @Test
@@ -303,11 +300,11 @@ public class IndexFeederTest {
 
         feeder.prepareForJob(false);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
 
-        Assert.assertEquals(feederAddress, (int) feeder.getSlotAddress());
-        Assert.assertTrue(feeder.isInitialized());
+        assertEquals(feederAddress, (int) feeder.getSlotAddress());
+        assertTrue(feeder.isInitialized());
     }
 
     @Test
@@ -325,8 +322,8 @@ public class IndexFeederTest {
             assertEquals("Failed to find and initialize the feeder", exception.getMessage());
         }
 
-        Assert.assertFalse(feeder.isInitialized());
-        Assert.assertNull(feeder.getSlotAddress());
+        assertFalse(feeder.isInitialized());
+        assertNull(feeder.getSlotAddress());
     }
 
     @Test
@@ -350,13 +347,13 @@ public class IndexFeederTest {
 
         feeder.prepareForJob(false);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator).read(newGetFeederAddressCommand);
         inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
 
-        Assert.assertEquals(newAddress, (int) feeder.getSlotAddress());
-        Assert.assertTrue(feeder.isInitialized());
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
+        assertTrue(feeder.isInitialized());
     }
 
     @Test
@@ -365,7 +362,7 @@ public class IndexFeederTest {
         feeder.setSlotAddress(feederAddress);
         String otherHardwareId = "445566778899AABBCCDDEEFF";
 
-        Assert.assertNull(IndexFeeder.findByHardwareId(otherHardwareId));
+        assertNull(IndexFeeder.findByHardwareId(otherHardwareId));
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
@@ -383,18 +380,18 @@ public class IndexFeederTest {
 
         feeder.prepareForJob(false);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator).read(newGetFeederAddressCommand);
         inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
 
-        Assert.assertEquals(newAddress, (int) feeder.getSlotAddress());
-        Assert.assertTrue(feeder.isInitialized());
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
+        assertTrue(feeder.isInitialized());
 
         IndexFeeder otherFeeder = IndexFeeder.findByHardwareId(otherHardwareId);
-        Assert.assertNotNull(otherFeeder);
-        Assert.assertFalse(otherFeeder.initialized);
-        Assert.assertEquals(feederAddress, (int) otherFeeder.slotAddress);
+        assertNotNull(otherFeeder);
+        assertFalse(otherFeeder.initialized);
+        assertEquals(feederAddress, (int) otherFeeder.slotAddress);
     }
 
     @Test
@@ -407,7 +404,7 @@ public class IndexFeederTest {
         otherFeeder.setHardwareId(otherHardwareId);
         machine.addFeeder(otherFeeder);
 
-        Assert.assertSame(otherFeeder, IndexFeeder.findByHardwareId(otherHardwareId));
+        assertSame(otherFeeder, IndexFeeder.findByHardwareId(otherHardwareId));
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
@@ -425,18 +422,18 @@ public class IndexFeederTest {
 
         feeder.prepareForJob(false);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator).read(newGetFeederAddressCommand);
         inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
 
-        Assert.assertEquals(newAddress, (int) feeder.getSlotAddress());
-        Assert.assertTrue(feeder.isInitialized());
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
+        assertTrue(feeder.isInitialized());
 
         IndexFeeder recalledOtherFeeder = IndexFeeder.findByHardwareId(otherHardwareId);
-        Assert.assertSame(otherFeeder, recalledOtherFeeder);
-        Assert.assertFalse(otherFeeder.initialized);
-        Assert.assertEquals(feederAddress, (int) otherFeeder.slotAddress);
+        assertSame(otherFeeder, recalledOtherFeeder);
+        assertFalse(otherFeeder.initialized);
+        assertEquals(feederAddress, (int) otherFeeder.slotAddress);
     }
 
     @Test
@@ -462,7 +459,7 @@ public class IndexFeederTest {
             assertEquals("Failed to find and initialize the feeder", exception.getMessage());
         }
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator).read(newInitializeFeederCommand);
         inOrder.verify(mockedActuator, never()).read(any());
@@ -487,7 +484,7 @@ public class IndexFeederTest {
             assertEquals("Failed to find and initialize the feeder", exception.getMessage());
         }
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator, never()).read(any());
     }
@@ -508,7 +505,7 @@ public class IndexFeederTest {
 
         feeder.feed(mockedNozzle);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator).read(moveFeedForwardCommand);
     }
@@ -543,14 +540,14 @@ public class IndexFeederTest {
 
         feeder.feed(mockedNozzle);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(oldInitializeFeederCommand); // First initialization
         inOrder.verify(mockedActuator).read(oldMoveFeederForwardCommand); // Uninitialized feeder error
         inOrder.verify(mockedActuator).read(newGetFeederAddressCommand); // New address
         inOrder.verify(mockedActuator).read(newInitializeFeederCommand); // Second initialization in new slot
         inOrder.verify(mockedActuator).read(newMoveFeedForwardCommand); // Finally move the feeder
 
-        Assert.assertEquals(newAddress, (int) feeder.getSlotAddress());
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
     }
 
     @Test
@@ -579,7 +576,7 @@ public class IndexFeederTest {
             assertEquals("Failed to feed", exception.getMessage());
         }
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator).read(moveFeederForwardCommand);
         inOrder.verify(mockedActuator).read(getFeederAddressCommand);
@@ -614,7 +611,7 @@ public class IndexFeederTest {
             assertEquals("Failed to feed", exception.getMessage());
         }
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator).read(moveFeederForwardCommand);
         inOrder.verify(mockedActuator, never()).read(any());
@@ -650,14 +647,14 @@ public class IndexFeederTest {
 
         feeder.feed(mockedNozzle);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(oldInitializeFeederCommand); // First initialization
         inOrder.verify(mockedActuator).read(oldMoveFeederForwardCommand); // Uninitialized feeder error
         inOrder.verify(mockedActuator).read(newGetFeederAddressCommand); // New address
         inOrder.verify(mockedActuator).read(newInitializeFeederCommand); // Second initialization in new slot
         inOrder.verify(mockedActuator).read(newMoveFeedForwardCommand); // Finally move the feeder
 
-        Assert.assertEquals(newAddress, (int) feeder.getSlotAddress());
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
     }
 
     @Test
@@ -719,7 +716,7 @@ public class IndexFeederTest {
         feederB.feed(mockedNozzle);
 
         // Verify all of the calls in order
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(feederASlot1InitializationCommand); // First initialization Feeder A
         inOrder.verify(mockedActuator).read(feederBSlot2InitializationCommand); // First initialization Feeder B
         inOrder.verify(mockedActuator).read(feederBSlot2FeedCommand); // Feeder B timeout
@@ -728,11 +725,11 @@ public class IndexFeederTest {
         inOrder.verify(mockedActuator).read(feederBSlot1FeedCommand); // Finally move the feeder
 
         // Verify the state of the two feeders
-        Assert.assertFalse(feederA.isInitialized());
-        Assert.assertNull(feeder.getSlotAddress());
+        assertFalse(feederA.isInitialized());
+        assertNull(feeder.getSlotAddress());
 
-        Assert.assertTrue(feederB.isInitialized());
-        Assert.assertEquals(1, (int) feederB.getSlotAddress());
+        assertTrue(feederB.isInitialized());
+        assertEquals(1, (int) feederB.getSlotAddress());
     }
 
     @Test
@@ -747,7 +744,7 @@ public class IndexFeederTest {
 
         IndexFeeder.findAllFeeders(null);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
             inOrder.verify(mockedActuator).read(getFeederId(i));
         }
@@ -783,7 +780,7 @@ public class IndexFeederTest {
 
         IndexFeeder.findAllFeeders(null);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
             inOrder.verify(mockedActuator).read(getFeederId(i));
         }
@@ -826,7 +823,7 @@ public class IndexFeederTest {
 
         IndexFeeder.findAllFeeders(null);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
             inOrder.verify(mockedActuator).read(getFeederId(i));
         }
@@ -863,7 +860,7 @@ public class IndexFeederTest {
 
         IndexFeeder.findAllFeeders(null);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator);
+        InOrder inOrder = inOrder(mockedActuator);
         for (int i = 1; i <= maxFeederAddress; i++) {
             inOrder.verify(mockedActuator).read(getFeederId(i));
         }
@@ -886,7 +883,7 @@ public class IndexFeederTest {
 
         IndexFeeder.findAllFeeders(progressUpdates);
 
-        InOrder inOrder = Mockito.inOrder(mockedActuator, progressUpdates);
+        InOrder inOrder = inOrder(mockedActuator, progressUpdates);
         for (int i = 1; i <= maxFeederAddress; i++) {
             inOrder.verify(mockedActuator).read(getFeederId(i));
             inOrder.verify(progressUpdates).accept((i * 100) / maxFeederAddress);

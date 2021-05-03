@@ -1,8 +1,8 @@
 package org.openpnp.machine.index;
 
 import com.google.common.io.Files;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
@@ -10,7 +10,7 @@ import org.openpnp.spi.Machine;
 
 import java.io.File;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This has to be a separate test from IndexFeederTest because in there we load the machine in the setup which precludes
@@ -22,7 +22,7 @@ public class IndexFeederLoadingTest {
 
     private IndexFeeder feeder;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         File workingDirectory = Files.createTempDir();
         workingDirectory = new File(workingDirectory, ".openpnp");
