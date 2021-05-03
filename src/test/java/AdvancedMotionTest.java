@@ -22,7 +22,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openpnp.model.AbstractMotionPath;
 import org.openpnp.model.MotionProfile;
 import org.openpnp.model.MotionProfile.ErrorState;

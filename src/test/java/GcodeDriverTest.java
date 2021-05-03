@@ -1,9 +1,8 @@
 import java.io.File;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver.CommunicationsType;
@@ -14,15 +13,15 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.GcodeServer;
-import org.pmw.tinylog.Configurator;
-import org.pmw.tinylog.Level;
 
 import com.google.common.io.Files;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class GcodeDriverTest {
     GcodeServer server;
     
-    @Before
+    @BeforeEach
     public void before() throws Exception {
         /**
          * Uncomment this to enable TRACE logging, which will show Gcode commands and responses.
@@ -98,7 +97,7 @@ public class GcodeDriverTest {
         /**
          * Read the actuator we configured.
          */
-        Assert.assertEquals(machine.execute(() -> actuator.read()), "497");
+        assertEquals(machine.execute(() -> actuator.read()), "497");
     }
     
     @Test
@@ -171,7 +170,7 @@ public class GcodeDriverTest {
         }
     }
     
-    @After
+    @AfterEach
     public void after() throws Exception {
         /**
          * TODO: This is cleaner than not shutting it down, but it causes a 3s delay in the test
