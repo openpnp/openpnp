@@ -10,7 +10,7 @@ machine building process. Essential configuration comes first, advanced features
 are only suggested later. Potentially problematic solutions are even taken back
 when going back to earlier milestones for troubleshooting or machine reconfiguration. 
 
-The Issues & Solutions UI has been promoted to be a top level tab. It even sport an 
+The Issues & Solutions UI has been promoted to be a top level tab. It even sports an 
 indicator on the tab to alert the user to detected issues. Solutions can now take 
 multiple choice and other input for enhanced solutions. Nozzle setup can now be done
 using a few clicks.
