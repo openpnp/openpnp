@@ -1,7 +1,6 @@
 import javax.swing.Action;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
@@ -30,6 +29,8 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ReferenceJobProcessorRetryTests {
     /**
@@ -65,7 +66,7 @@ public class ReferenceJobProcessorRetryTests {
          * 5 because the feeder contains 1 part. The first feed succeeds, the second fails, and
          * the third through fifth are the three retries.
          */
-        Assert.assertEquals("Feed count should be 5.", 5, f1.feedCount);
+        assertEquals(5, f1.feedCount, "Feed count should be 5.");
     }
 
     /**
@@ -95,11 +96,11 @@ public class ReferenceJobProcessorRetryTests {
         f1.setPartCount(0);
 
        
-        Assert.assertTrue("The feeder should be enabled.", f1.isEnabled());
+        assertTrue(f1.isEnabled(), "The feeder should be enabled.");
 
         runJob(machine, job);
-        
-        Assert.assertFalse("The feeder should be disabled.", f1.isEnabled());
+
+        assertFalse(f1.isEnabled(), "The feeder should be disabled.");
     }
 
     /**
@@ -135,7 +136,7 @@ public class ReferenceJobProcessorRetryTests {
         runJob(machine, job);
         
         TestNozzle n1 = (TestNozzle) machine.getHeadByName("H1").getNozzleByName("N1");
-        Assert.assertEquals("Pick count should be 4.", 4, n1.getPickCount());
+        assertEquals(4, n1.getPickCount(), "Pick count should be 4.");
     }
 
     /**
@@ -186,9 +187,9 @@ public class ReferenceJobProcessorRetryTests {
         
         runJob(machine, job);
         
-        Assert.assertEquals("F1 Feed count should be 2.", 2, f1.feedCount);
-        Assert.assertEquals("F2 Feed count should be 2.", 2, f2.feedCount);
-        Assert.assertEquals("F3 Feed count should be 0.", 0, f3.feedCount);
+        assertEquals(2, f1.feedCount, "F1 Feed count should be 2.");
+        assertEquals(2, f2.feedCount, "F2 Feed count should be 2.");
+        assertEquals(0, f3.feedCount, "F3 Feed count should be 0.");
     }
     
 
