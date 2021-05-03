@@ -3,6 +3,18 @@ a complete change list, only those that may directly interest or affect users.
 
 # 2021-05-03 
 
+## Better Issues & Solutions 
+
+Issues & Solutions now provides guidance based on the milestones of a step-by-step 
+machine building process. Essential configuration comes first, advanced features 
+are only suggested later. Potentially problematic solutions are even taken back
+when going back to earlier milestones for troubleshooting or machine reconfiguration. 
+
+The Issues & Solutions UI has been promoted to be a top level tab. It even sport an 
+indicator on the tab to alert the user to detected issues. Solutions can now take 
+multiple choice and other input for enhanced solutions. Nozzle setup can now be done
+using a few clicks.
+
 ## Nozzle Tip Changer Z Calibration, Auto-Focus, Part Height, Feeder, Placement sensing 
 
 This adds Nozzle tip changer Z calibration. Used to calibrate the nozzle to be able to 
