@@ -2,7 +2,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-
 import javax.swing.Action;
 import javax.swing.Icon;
 
@@ -16,6 +15,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.FocusProvider;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
@@ -265,6 +265,11 @@ public class VisionUtilsTest {
         @Override
         public boolean isShownInMultiCameraView() {
             return false;
+        }
+
+        @Override
+        public FocusProvider getFocusProvider() {
+            return null;
         }
     }
 }
