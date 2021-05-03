@@ -56,8 +56,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     
     @Element(required = false)
     private Location changerEndLocation = new Location(LengthUnit.Millimeters);
-    
-    
+
+    @Element(required = false)
+    private Length maxPartDiameter = new Length(20, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length maxPartHeight = new Length(10, LengthUnit.Millimeters);
+
     @Element(required = false)
     private ReferenceNozzleTipCalibration calibration = new ReferenceNozzleTipCalibration();
 
@@ -226,6 +231,22 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 new PropertySheetWizardAdapter(new ReferenceNozzleTipToolChangerWizard(this), "Tool Changer"),
                 new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this), "Calibration")
                 };
+    }
+
+    public Length getMaxPartHeight() {
+        return maxPartHeight;
+    }
+
+    public void setMaxPartHeight(Length maxPartHeight) {
+        this.maxPartHeight = maxPartHeight;
+    }
+
+    public Length getMaxPartDiameter() {
+        return maxPartDiameter;
+    }
+
+    public void setMaxPartDiameter(Length maxPartDiameter) {
+        this.maxPartDiameter = maxPartDiameter;
     }
 
     public int getPickDwellMilliseconds() {

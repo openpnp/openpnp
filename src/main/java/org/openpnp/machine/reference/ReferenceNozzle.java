@@ -448,6 +448,19 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return location;
     }
 
+    @Override
+    public Length getSafePartHeight(Part part) {
+        if (part != null) {
+            if (part.isPartHeightUnknown() && nozzleTip != null) {
+                return nozzleTip.getMaxPartHeight();
+            }
+            else {
+                return part.getHeight();
+            }
+        }
+        return new Length(0, LengthUnit.Millimeters);
+    }
+
     @Override 
     public Length getEffectiveSafeZ() throws Exception {
         Length safeZ = super.getEffectiveSafeZ();
@@ -456,11 +469,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         }
         if (enableDynamicSafeZ) { 
             // if a part is loaded, decrease (higher) safeZ
-            if (getPart() != null) {
-                safeZ = safeZ.add(getPart().getHeight());
-                // Note, the safeZ value will be validated in moveToSafeZ()
-                // to make sure it is not outside the Safe Z Zone.
-            }
+            safeZ = safeZ.add(getSafePartHeight());
+            // Note, the safeZ value will be validated in moveToSafeZ()
+            // to make sure it is not outside the Safe Z Zone.
         }
         return safeZ;
     }

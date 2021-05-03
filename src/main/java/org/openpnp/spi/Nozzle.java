@@ -2,7 +2,7 @@ package org.openpnp.spi;
 
 import java.util.Set;
 
-import org.openpnp.model.Location;
+import org.openpnp.model.Length;
 import org.openpnp.model.Part;
 
 /**
@@ -131,4 +131,20 @@ public interface Nozzle
 
     public void calibrate() throws Exception;
     public boolean isCalibrated();
+
+    /**
+     * @return The height of the part currently on the nozzle. If the part height is not yet 
+     * known, the maximum part height configured on the nozzle tip is returned.
+     * If no part is on the nozzle, a zero Length is returned.  
+     */
+    default Length getSafePartHeight(){
+        return getSafePartHeight(getPart());
+    }
+
+    /**
+     * @return The height of the given part. If the part height is not yet 
+     * known (to be probed), the maximum part height configured on the nozzle tip is returned.
+     * If part is null, a zero Length is returned.  
+     */
+    Length getSafePartHeight(Part part);
 }

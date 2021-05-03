@@ -235,7 +235,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // Verify that the part height is greater than zero. Catches a common configuration
             // error.
-            if (placement.getPart().getHeight().getValue() <= 0D) {
+            if (placement.getPart().isPartHeightUnknown()) {
                 throw new JobProcessorException(placement.getPart(), String.format("Part height for %s must be greater than 0.",
                         placement.getPart().getId()));
             }
