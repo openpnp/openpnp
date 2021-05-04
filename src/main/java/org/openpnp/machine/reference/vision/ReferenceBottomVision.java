@@ -1,30 +1,28 @@
 package org.openpnp.machine.reference.vision;
 
+import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.Action;
 import javax.swing.Icon;
 
-import java.awt.Shape;
-import java.awt.Rectangle;
-
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
-
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
 import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.model.Footprint;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -93,8 +91,28 @@ public class ReferenceBottomVision implements PartAlignment {
                     partSettings);
         }
     }
-    
-    public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) {
+
+    public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) throws Exception {
+        if (part.isPartHeightUnknown()) {
+            if (camera.getFocusProvider() != null
+                    && nozzle.getNozzleTip() instanceof ReferenceNozzleTip) {
+                ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzle.getNozzleTip(); 
+                Location location1 = camera.getLocation(nozzle)
+                        .derive(null, null, null, angle);
+                Location location0 = location1.add(new Location(nt.getMaxPartHeight().getUnits(), 
+                        0, 0, nt.getMaxPartHeight().getValue(), 0));
+                Location focus = camera.getFocusProvider().autoFocus(camera, nozzle, nt.getMaxPartDiameter(), location0, location1);
+                Length partHeight = focus.getLengthZ().subtract(location1.getLengthZ());
+                if (partHeight.getValue() <= 0.001) {
+                    throw new Exception("Auto focus part height determination failed. Camera seems to have focused on nozzle tip.");
+                }
+                Logger.info("Part "+part.getId()+" height set to "+partHeight+" by camera focus provider.");
+                part.setHeight(partHeight);
+            }
+            if (part.isPartHeightUnknown()) {
+                throw new Exception("Part height unknown and camera "+camera.getName()+" does not support part height sensing.");
+            }
+        }
         return camera.getLocation(nozzle)
                 .add(new Location(part.getHeight()
                         .getUnits(),

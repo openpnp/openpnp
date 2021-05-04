@@ -1,6 +1,6 @@
 import java.awt.image.BufferedImage;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openpnp.vision.FluentCv;
 
 public class OpenCvTest {

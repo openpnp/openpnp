@@ -242,7 +242,7 @@ public class PackagesPanel extends JPanel {
             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
         }
         catch (PatternSyntaxException e) {
-            Logger.warn("Search failed", e);
+            Logger.warn(e, "Search failed");
             return;
         }
         tableSorter.setRowFilter(rf);

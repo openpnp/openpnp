@@ -72,6 +72,11 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         }
     }
 
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return true;
+    }
+
     /**
      * Executes the vision pipeline to locate a part.
      * @param nozzle used nozzle
@@ -107,12 +112,10 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
             // Get the result's Location
             // Update the location with the result's rotation
             partLocation = partLocation.derive(null, null, null, -(result.angle + getLocation().getRotation()));
-            // Update the location with the correct Z, which is the configured Location's Z
-            // plus the part height.
+            // Update the location with the correct Z, which is the configured Location's Z.
             partLocation =
                     partLocation.derive(null, null,
-                            this.location.convertToUnits(partLocation.getUnits()).getZ()
-                            + part.getHeight().convertToUnits(partLocation.getUnits()).getValue(),
+                            this.location.convertToUnits(partLocation.getUnits()).getZ(),
                             null);
             MainFrame.get().getCameraViews().getCameraView(camera)
             .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);

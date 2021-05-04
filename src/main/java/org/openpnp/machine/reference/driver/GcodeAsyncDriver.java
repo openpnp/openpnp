@@ -221,7 +221,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
             commandQueue = null;
         }
         catch (Exception e) {
-            Logger.error("disconnect()", e);
+            Logger.error(e, "disconnect()");
         }
 
         super.disconnectThreads();
@@ -358,7 +358,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
                 }
             }
             catch (InterruptedException e) {
-                Logger.warn(getName() +" was interrupted while waiting for completion.", e);
+                Logger.warn(e, getName() +" was interrupted while waiting for completion.");
             }
         }
     }

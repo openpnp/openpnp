@@ -26,17 +26,14 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.camera.SimulatedUpCamera;
-import org.openpnp.machine.reference.driver.GcodeDriver.Line;
 import org.openpnp.machine.reference.wizards.HttpActuatorConfigurationWizard;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
-import org.openpnp.spi.Camera.Looking;
 import org.openpnp.util.TextUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
@@ -223,23 +220,23 @@ public class HttpActuator extends ReferenceActuator {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        if (this.readUrl.length() > 0 && this.regex.length() == 0) {
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        if (solutions.isTargeting(Milestone.Basics)) {
+            if (this.readUrl.length() > 0 && this.regex.length() == 0) {
 
-            issues.add(new Solutions.Issue(this,
-                    "A HTTPActuator with Read URL likely needs a regular Expression to parse the value.",
-                    "Set an example expression", Severity.Warning,
-                    "https://github.com/openpnp/openpnp/wiki/HttpActuatorRead") {
+                solutions.add(new Solutions.Issue(this,
+                        "A HTTPActuator with Read URL likely needs a regular Expression to parse the value.",
+                        "Set an example expression", Severity.Warning,
+                        "https://github.com/openpnp/openpnp/wiki/HttpActuatorRead") {
 
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
                         setRegex("read:(?<Value>-?\\d+)");
                         super.setState(state);
                     }
-                }
-            });
+                });
+            }
         }
     }
 }

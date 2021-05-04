@@ -41,7 +41,7 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Element(required = false)
     protected Location parkLocation = new Location(LengthUnit.Millimeters);
-    
+
     @Deprecated
     @Element(required=false)
     protected boolean softLimitsEnabled = false;
@@ -63,7 +63,7 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     /**
      * Choice of Visual Homing Method.
      * 
-     * Previous Visual Homing reset the controller to home coordinates not to the fiducial coordinates as one
+     * Previous Visual Homing reset the controller to home coordinates, not to the fiducial coordinates as one
      * might expect. As a consequence the fiducial location may shift its meaning before/after homing i.e. it cannot be captured. 
      * This behavior has been called a bug by Jason. But we absolutely need to migrate this behavior in order not to 
      * break all the captured coordinates on a machine!
@@ -78,13 +78,12 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         ResetToFiducialLocation,
         ResetToHomeLocation
     }
-    
+
     @Attribute(required = false)
     private VisualHomingMethod visualHomingMethod = VisualHomingMethod.None;
 
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
-
 
     protected Machine machine;
 
@@ -213,6 +212,18 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         int index = nozzles.indexOf(nozzle);
         if (nozzles.remove(nozzle)) {
             fireIndexedPropertyChange("nozzles", index, nozzle, null);
+        }
+    }
+
+    @Override 
+    public void permutateNozzle(Nozzle nozzle, int direction) {
+        int index0 = nozzles.indexOf(nozzle);
+        int index1 = direction > 0 ? index0+1 : index0-1;
+        if (0 <= index1 && nozzles.size() > index1) {
+            nozzles.remove(nozzle);
+            nozzles.add(index1, nozzle);
+            fireIndexedPropertyChange("nozzles", index0, nozzle, nozzles.get(index0));
+            fireIndexedPropertyChange("nozzles", index1, nozzles.get(index0), nozzle);
         }
     }
 
@@ -399,10 +410,10 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
+    public void findIssues(Solutions solutions) {
         // Recurse into HeadMountables.
         for (HeadMountable hm : getHeadMountables()) {
-            hm.findIssues(issues);
+            hm.findIssues(solutions);
         }
     }
 }

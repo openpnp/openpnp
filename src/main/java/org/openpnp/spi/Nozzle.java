@@ -2,6 +2,7 @@ package org.openpnp.spi;
 
 import java.util.Set;
 
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 
@@ -21,6 +22,17 @@ public interface Nozzle
     NozzleTip getNozzleTip();
 
     /**
+     * Move the Nozzle to the given feeder pick location. This will move at safe Z and position the Nozzle
+     * so it is ready for {@link #pick(Part)}. This might or might not involve offsets and actions for 
+     * contact-probing e.g. to determine the feeder's calibrated Z. 
+     * 
+     * @param feeder 
+     * 
+     * @throws Exception
+     */
+    public void moveToPickLocation(Feeder feeder) throws Exception;
+
+    /**
      * Commands the Nozzle to perform it's pick operation. Generally this just consists of turning
      * on the vacuum. When this is called during job processing the processor will have already
      * positioned the nozzle over the part to be picked and lowered it to the correct height. Some
@@ -30,6 +42,17 @@ public interface Nozzle
      * @throws Exception
      */
     public void pick(Part part) throws Exception;
+
+    /**
+     * Move the Nozzle to the given placementLocation. This will move at safe Z and position the Nozzle
+     * so it is ready for {@link #place()}. This might or might not involve offsets and actions for 
+     * contact-probing. 
+     * 
+     * @param placementLocation
+     * @param part Part to be placed, null on discard. 
+     * @throws Exception
+     */
+    void moveToPlacementLocation(Location placementLocation, Part part) throws Exception;
 
     /**
      * Commands the Nozzle to perform it's place operation. Generally this just consists of
@@ -121,8 +144,17 @@ public interface Nozzle
      */
     public boolean isPartOff() throws Exception;
     
+    /**
+     * @return A set of nozzle tips compatible with this nozzle. 
+     */
     public Set<NozzleTip> getCompatibleNozzleTips();
-    
+
+    /**
+     * @param part
+     * @return A set of nozzle tips compatible with this nozzle and the given part.
+     */
+    public Set<NozzleTip> getCompatibleNozzleTips(Part part);
+
     public void addCompatibleNozzleTip(NozzleTip nt);
     
     public void removeCompatibleNozzleTip(NozzleTip nt);
@@ -131,4 +163,20 @@ public interface Nozzle
 
     public void calibrate() throws Exception;
     public boolean isCalibrated();
+
+    /**
+     * @return The height of the part currently on the nozzle. If the part height is not yet 
+     * known, the maximum part height configured on the nozzle tip is returned.
+     * If no part is on the nozzle, a zero Length is returned.  
+     */
+    default Length getSafePartHeight(){
+        return getSafePartHeight(getPart());
+    }
+
+    /**
+     * @return The height of the given part. If the part height is not yet 
+     * known (to be probed), the maximum part height configured on the nozzle tip is returned.
+     * If part is null, a zero Length is returned.  
+     */
+    Length getSafePartHeight(Part part);
 }

@@ -1,6 +1,6 @@
 import java.awt.geom.AffineTransform;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;

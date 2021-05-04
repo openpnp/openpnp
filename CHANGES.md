@@ -1,6 +1,32 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2021-05-03 
+
+## Better Issues & Solutions 
+
+Issues & Solutions now provides guidance based on the milestones of a step-by-step 
+machine building process. Essential configuration comes first, advanced features 
+are only suggested later. Potentially problematic solutions are even taken back
+when going back to earlier milestones for troubleshooting or machine reconfiguration. 
+
+The Issues & Solutions UI has been promoted to be a top level tab. It even sports an 
+indicator on the tab to alert the user to detected issues. Solutions can now take 
+multiple choice and other input for enhanced solutions. Nozzle setup can now be done
+using a few clicks.
+
+## Nozzle Tip Changer Z Calibration, Auto-Focus, Part Height, Feeder, Placement sensing 
+
+This adds Nozzle tip changer Z calibration. Used to calibrate the nozzle to be able to 
+precisely contact probe part heights, feeder heights and placements. Also adds Auto-Focus 
+based part height sensing for parts with enabled bottom vision. 
+
+* Manual and automatic nozzle/nozzle tip/slot Z calibration for precision multi-
+  nozzle leveling and nozzle tip length calibration.
+* Bottom vision uses auto-focus to determine the part height, if unknown. 
+* ContactProbeNozzle provides on-the-fly part height probing/learning, feeder Z 
+  calibration, placement height calibration. 
+
 # 2021-03-20
 
 ## (Another) OpenCV Upgrade and Arm7 (32 Bit)

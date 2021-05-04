@@ -20,7 +20,6 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.Action;
 
@@ -36,26 +35,30 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Issue;
-import org.openpnp.model.Solutions.Severity;
-import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.AbstractHeadMountable;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
 
 public class ReferenceHead extends AbstractHead {
 
     @Override
     public void home() throws Exception {
+        // Note, don't call super.home() yet, need to do visual homing first.
         Logger.debug("{}.home()", getName());
+        ReferenceMachine machine = getMachine();
 
-        // Note, don't call super.home() yet, need to do the physical homing first.
+        visualHome(machine, true);
+
+        super.home();
+        // Let everybody know.
+        getMachine().fireMachineHeadActivity(this);
+    }
+
+    public void visualHome(ReferenceMachine machine, boolean apply) throws Exception {
         if (getVisualHomingMethod() != VisualHomingMethod.None) {
             /*
              * The head default camera should now be (if everything has homed correctly) directly
@@ -75,27 +78,24 @@ public class ReferenceHead extends AbstractHead {
                 throw new Exception("Visual homing failed");
             }
 
-            ReferenceMachine machine = getMachine();
-            AxesLocation axesHomingLocation;
-            if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
-                // Convert fiducial location to raw coordinates
-                // TODO: are you sure the toHeadLocation() is needed?
-                axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
+            if (apply) {
+                AxesLocation axesHomingLocation;
+                if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
+                    // Convert fiducial location to raw coordinates
+                    // TODO: are you sure the toHeadLocation() is needed?
+                    axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
+                }
+                else {
+                    // Use bare X, Y homing coordinates (legacy mode).
+                    axesHomingLocation =  new AxesLocation(machine, 
+                            (axis) -> (axis.getHomeCoordinate())); 
+                }
+                // Just take the X and Y axes.
+                axesHomingLocation = axesHomingLocation.byType(Axis.Type.X, Axis.Type.Y); 
+                // Reset to the axes homing location as the new Working Coordinate System.
+                machine.getMotionPlanner().setGlobalOffsets(axesHomingLocation);
             }
-            else {
-                // Use bare X, Y homing coordinates (legacy mode).
-                axesHomingLocation =  new AxesLocation(machine, 
-                        (axis) -> (axis.getHomeCoordinate())); 
-            }
-            // Just take the X and Y axes.
-            axesHomingLocation = axesHomingLocation.byType(Axis.Type.X, Axis.Type.Y); 
-            // Reset to the homing fiducial location as the new Working Coordinate System.
-            machine.getMotionPlanner().setGlobalOffsets(axesHomingLocation);
         }
-        // Now that the machine is physically homed, do the logical homing.
-        super.home();
-        // Let everybody know.
-        getMachine().fireMachineHeadActivity(this);
     }
 
     @Override
@@ -162,125 +162,36 @@ public class ReferenceHead extends AbstractHead {
         return (ReferenceMachine) Configuration.get().getMachine();
     }
 
+    enum NozzleSolution {
+        Standalone,
+        DualNegated,
+        DualCam
+    }
+
+    @Attribute(required=false) 
+    private NozzleSolution nozzleSolution;
+    @Attribute(required=false) 
+    int nozzleSolutionsMultiplier = 1;
+
+    NozzleSolution getNozzleSolution() {
+        return nozzleSolution;
+    }
+
+    void setNozzleSolution(NozzleSolution nozzleSolution) {
+        this.nozzleSolution = nozzleSolution;
+    }
+
+    int getNozzleSolutionsMultiplier() {
+        return nozzleSolutionsMultiplier;
+    }
+
+    void setNozzleSolutionsMultiplier(int nozzleSolutionsMultiplier) {
+        this.nozzleSolutionsMultiplier = nozzleSolutionsMultiplier;
+    }
+
     @Override
-    public void findIssues(List<Issue> issues) {
-        super.findIssues(issues);
-        Camera camera = null;
-        try {
-            camera = getDefaultCamera();
-        }
-        catch (Exception e) {
-        }
-        if (camera != null) {
-            if (camera.getAxisX() == null) {
-                addMissingAxisIssue(issues, camera, Axis.Type.X);
-            }
-            if (camera.getAxisY() == null) {
-                addMissingAxisIssue(issues, camera, Axis.Type.Y);
-            }
-            if (camera.getAxisX() != null && camera.getAxisY() != null) {
-                for (HeadMountable hm : getHeadMountables()) {
-                    addInconsistentAxisIssue(issues, camera, hm, Axis.Type.X);
-                    addInconsistentAxisIssue(issues, camera, hm, Axis.Type.Y);
-                    if (hm instanceof Nozzle) {
-                        if (hm.getAxisZ() == null) {
-                            issues.add(new Solutions.PlainIssue(
-                                    this, 
-                                    "Nozzle "+hm.getName()+" does not have a Z axis assigned.", 
-                                    "Please assign a proper Z axis. You might need to create one first.", 
-                                    Severity.Error,
-                                    "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                        }
-                        if (hm.getAxisRotation() == null) {
-                            issues.add(new Solutions.PlainIssue(
-                                    this, 
-                                    "Nozzle "+hm.getName()+" does not have a Rotation axis assigned.", 
-                                    "Please assign a proper Rotation axis. You might need to create one first.", 
-                                    Severity.Error,
-                                    "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                        }
-                        if (hm.getAxisZ() != null && hm.getAxisRotation() != null) {
-                            for (Nozzle nozzle2 : getNozzles()) {
-                                if (nozzle2 == hm) {
-                                    break;
-                                }
-                                if (nozzle2.getAxisZ() == hm.getAxisZ()) {
-                                    issues.add(new Solutions.PlainIssue(
-                                            this, 
-                                            "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Z axis assigned.", 
-                                            "Please assign a different Z axis.", 
-                                            Severity.Error,
-                                            "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                                }
-                                if (nozzle2.getAxisRotation() == hm.getAxisRotation()) {
-                                    issues.add(new Solutions.PlainIssue(
-                                            this, 
-                                            "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Rotation axis assigned.", 
-                                            "Please assign a different Rotation axis.", 
-                                            Severity.Error,
-                                            "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    protected void addMissingAxisIssue(List<Issue> issues, final Camera camera, Axis.Type type) {
-        // Find a default axis.
-        final AbstractAxis axis = getMachine().getDefaultAxis(type);
-        issues.add(new Solutions.Issue(
-                camera, 
-                "Missing "+type.name()+" axis assignment. Assign one to continue.", 
-                (axis == null ? 
-                        "Create and assign "+type.name()+" axis."  
-                        : "Assign "+axis.getName()+" as "+type.name()+"."), 
-                Severity.Fundamental,
-                "https://github.com/openpnp/openpnp/wiki/Mapping-Axes") {
-
-            @Override
-            public void setState(Solutions.State state) throws Exception {
-                if (confirmStateChange(state)) {
-                    ((AbstractHeadMountable) camera).setAxis(
-                            ((AbstractAxis)(state == State.Solved ? axis : null)),
-                            type);
-                    super.setState(state);
-                }
-            }
-
-            @Override
-            public boolean canBeAutoSolved() {
-                return axis != null;
-            }
-        });
-    }
-
-    protected void addInconsistentAxisIssue(List<Issue> issues, final Camera camera,
-            HeadMountable hm, Axis.Type type) {
-        final Axis oldAxis = hm.getAxis(type);
-        if ((hm instanceof Nozzle || oldAxis != null) 
-                && oldAxis != camera.getAxis(type)) {
-            issues.add(new Solutions.Issue(
-                    hm, 
-                    "Inconsistent "+type.name()+" axis assignment "
-                            +(oldAxis != null ? oldAxis.getName() : "null")
-                            +" (not the same as default camera "+camera.getName()+").", 
-                            "Assign "+camera.getAxisX().getName()+" as "+type.name()+".", 
-                            (hm instanceof Nozzle) ? Severity.Error : Severity.Warning,
-                    "https://github.com/openpnp/openpnp/wiki/Mapping-Axes") {
-
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        ((AbstractHeadMountable) hm).setAxis(
-                                ((AbstractAxis)(state == State.Solved ? camera.getAxis(type) : oldAxis)),
-                                type);
-                        super.setState(state);
-                    }
-                }
-            });
-        }
+    public void findIssues(Solutions solutions) {
+        new HeadSolutions(this).findIssues(solutions);
+        super.findIssues(solutions);
     }
 }

@@ -149,4 +149,8 @@ public class Part extends AbstractModelObject implements Identifiable {
         return String.format("id %s, name %s, heightUnits %s, height %f, packageId (%s)", id, name,
                 heightUnits, height, packageId);
     }
+
+    public boolean isPartHeightUnknown() {
+        return getHeight().getValue() <= 0.0;
+    }
 }
