@@ -128,7 +128,10 @@ public abstract class CalibrateCameraProcess {
             + "just touching the rig. Click Next to pick-up the rig and retract it to safe Z." +
                     "</body></html>",
             "<html><body>Now jog the nozzle so that the calibration fiducial is centered in the "
-            + "camera's field-of-view. Click Next to begin the automated calibration sequence." +
+            + "camera's field-of-view. Verify the fiducial stays within the green circle when the "
+            + "nozzle is rotated through 360 degrees. If necessary, adjust the position of the "
+            + "calibration rig on the nozzle tip until the fiducial stays within the green "
+            + "circle. Click Next to begin the automated calibration sequence." +
                     "</body></html>",
             "<html><body>Estimating units per pixel." +
                     "</body></html>",
@@ -346,6 +349,9 @@ public abstract class CalibrateCameraProcess {
             UiUtils.submitUiMachineTask(() -> {
                 nozzle.pick(calibrationRig);
             });
+
+            showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
+                    (int)(0.75*maskDiameter/2), Color.GREEN);
         }
         
         Logger.trace("testPatternZ = " + testPatternZ);
@@ -355,6 +361,7 @@ public abstract class CalibrateCameraProcess {
         UiUtils.submitUiMachineTask(() -> {
             nozzle.moveToSafeZ();
         });
+        
         
         return true;
     }
@@ -680,22 +687,24 @@ public abstract class CalibrateCameraProcess {
  
         MatOfPoint3f testPattern3dPoints = new MatOfPoint3f();
         MatOfPoint2f testPatternImagePoints = new MatOfPoint2f();
-        double angles[];
+        int angleIncrement;
         double observationWeight;
         if (isHeadMountedCamera) {
-            angles = new double[] {0.0};
-            observationWeight = 1.0;
+            angleIncrement = 360;
         }
         else {
-            angles = new double[] {0.0, 180.0};
-            observationWeight = 0.5;
+            angleIncrement = 180;
         }
+        int numberOfAngles = 360 / angleIncrement;
+        observationWeight = 1.0 / numberOfAngles;
         
         swingWorker = new SwingWorker<Void, String>() { 
             @Override
             protected Void doInBackground() throws Exception  
             {
                 org.opencv.core.Point observedPoint = null;
+                
+                int angle = 0;
                 
                 for (int iPoint = 0; (iPoint < actualPointsPerTestPattern) && !isCancelled(); iPoint++) {
                     publish(String.format("Collecting calibration point %d of %d", iPoint, actualPointsPerTestPattern));
@@ -704,8 +713,9 @@ public abstract class CalibrateCameraProcess {
                     
                     org.opencv.core.Point measuredPoint = new org.opencv.core.Point(0, 0);
                     
-                    for (double angle : angles) {
-                        final Location moveLocation = testLocation.derive(null, null, null, angle);
+                    int count = 0;
+                    do {
+                        final Location moveLocation = testLocation.derive(null, null, null, (double) angle);
     
                         //Move the machine and capture the fiducial location
                         Future<Void> future = UiUtils.submitUiMachineTask(() -> {
@@ -724,7 +734,15 @@ public abstract class CalibrateCameraProcess {
                         }
                         measuredPoint.x += observationWeight * observedPoint.x;
                         measuredPoint.y += observationWeight * observedPoint.y;
-                    }
+                        
+                        count++;
+                        if (count < numberOfAngles) {
+                            angle += angleIncrement;
+                            if (angle >= 360) {
+                                angle = 0;
+                            }
+                        }
+                    } while (count < numberOfAngles);
                     
                     //Save the test pattern location and the corresponding image point
                     if (observedPoint != null) {
@@ -732,7 +750,7 @@ public abstract class CalibrateCameraProcess {
                                 new MatOfPoint3f(
                                         new Point3(apparentMotionDirection*testLocation.getX(), 
                                                 apparentMotionDirection*testLocation.getY(), 
-                                                0 /*testPatternZ*/)));
+                                                0)));
                         testPatternImagePoints.push_back(
                                 new MatOfPoint2f(measuredPoint));
                     }
@@ -847,18 +865,22 @@ public abstract class CalibrateCameraProcess {
             
             if (keypoints != null) {
                 Logger.trace("keypoints = " + keypoints);
-                double minDistanceSquared = Double.POSITIVE_INFINITY;
+                double minDistance = Double.POSITIVE_INFINITY;
                 KeyPoint bestKeyPoint = null;
                 for (KeyPoint kpt : keypoints) {
                     double dx = kpt.pt.x - expectedPoint.getX();
                     double dy = kpt.pt.y - expectedPoint.getY();
-                    double distanceSquared = dx*dx + dy*dy;
-                    if (distanceSquared < minDistanceSquared) {
+                    double distance = Math.sqrt(dx*dx + dy*dy);
+                    if (distance < minDistance) {
                         bestKeyPoint = kpt;
-                        minDistanceSquared = distanceSquared;
+                        minDistance = distance;
                     }
                 }
-                showPointAndCircle(bestKeyPoint.pt, new org.opencv.core.Point(expectedPoint.getX(), expectedPoint.getY()), maskDiameter/2, Color.RED);
+                Color pointColor = Color.GREEN;
+                if (2*minDistance + bestKeyPoint.size > 0.80*maskDiameter) {
+                    pointColor = Color.YELLOW;
+                }
+                showPointAndCircle(bestKeyPoint.pt, new org.opencv.core.Point(expectedPoint.getX(), expectedPoint.getY()), maskDiameter/2, pointColor, Color.RED);
                 return bestKeyPoint.pt;
             }
             attempts++;
@@ -914,7 +936,15 @@ public abstract class CalibrateCameraProcess {
         showPointAndCircle(point, null, 0, color);
     }
     
+    protected void showCircle(org.opencv.core.Point center, int radius, Color color) {
+        showPointAndCircle(null, center, radius, color);
+    }
+    
     private void showPointAndCircle(org.opencv.core.Point point, org.opencv.core.Point center, int radius, Color color) {
+        showPointAndCircle(point, center, radius, color, color);
+    }
+    
+    private void showPointAndCircle(org.opencv.core.Point point, org.opencv.core.Point center, int radius, Color pointColor, Color circleColor) {
         if ((point != null) || (center != null)) {
             cameraView.setCameraViewFilter(new CameraViewFilter() {
                 @Override
@@ -923,13 +953,13 @@ public abstract class CalibrateCameraProcess {
                     if (point != null) {
                         org.opencv.core.Point p1 = new org.opencv.core.Point(point.x-20, point.y);
                         org.opencv.core.Point p2 = new org.opencv.core.Point(point.x+20, point.y);
-                        Imgproc.line(mat, p1, p2, FluentCv.colorToScalar(color), 2);
+                        Imgproc.line(mat, p1, p2, FluentCv.colorToScalar(pointColor), 2);
                         p1 = new org.opencv.core.Point(point.x, point.y-20);
                         p2 = new org.opencv.core.Point(point.x, point.y+20);
-                        Imgproc.line(mat, p1, p2, FluentCv.colorToScalar(color), 2);
+                        Imgproc.line(mat, p1, p2, FluentCv.colorToScalar(pointColor), 2);
                     }
                     if (center != null) {
-                        Imgproc.circle(mat, center, radius, FluentCv.colorToScalar(color), 2);
+                        Imgproc.circle(mat, center, radius, FluentCv.colorToScalar(circleColor), 2);
                     }
                     BufferedImage result = OpenCvUtils.toBufferedImage(mat);
                     mat.release();
@@ -937,11 +967,6 @@ public abstract class CalibrateCameraProcess {
                 }
             });
         }
-    }
-
-    
-    protected void showCircle(org.opencv.core.Point center, int radius, Color color) {
-        showPointAndCircle(null, center, radius, color);
     }
     
     protected void restoreCameraView() {

@@ -521,6 +521,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Logger.trace("primary uppX = " + uppX);
             Logger.trace("primary uppY = " + uppY);
             setUnitsPerPixelPrimary(new Location(LengthUnit.Millimeters, uppX, uppY, advancedCalibration.calibrationPatternZ, 0));
+            setCameraPrimaryZ(new Length(advancedCalibration.calibrationPatternZ, LengthUnit.Millimeters));
             
             distanceToCamera = advancedCalibration.getDistanceToCameraAtZ(new Length(advancedCalibration.calibrationPatternZ + 20, LengthUnit.Millimeters)).getValue();
             Logger.trace("distanceToCamera@calibrationZ+20 = " + distanceToCamera);
@@ -529,6 +530,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Logger.trace("secondary uppX = " + uppX);
             Logger.trace("secondary uppY = " + uppY);
             setUnitsPerPixelSecondary(new Location(LengthUnit.Millimeters, uppX, uppY, advancedCalibration.calibrationPatternZ + 20, 0));
+            setCameraPrimaryZ(new Length(advancedCalibration.calibrationPatternZ + 20, LengthUnit.Millimeters));
             setEnableUnitsPerPixel3D(true);
             
             if (getHead() == null) {
