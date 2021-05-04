@@ -37,6 +37,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView.RenderingQuality;
 import org.openpnp.gui.components.reticle.CrosshairReticle;
 import org.openpnp.gui.components.reticle.FiducialReticle;
+import org.openpnp.gui.components.reticle.GridReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.components.reticle.RulerReticle;
 import org.openpnp.gui.processes.EstimateObjectZCoordinateProcess;
@@ -104,6 +105,10 @@ public class CameraViewPopupMenu extends JPopupMenu {
             if (cameraView.getDefaultReticle() instanceof RulerReticle) {
                 setReticleOptionsMenu(createRulerReticleOptionsMenu(
                         (RulerReticle) cameraView.getDefaultReticle()));
+            }
+            else if (cameraView.getDefaultReticle() instanceof GridReticle) {
+                setReticleOptionsMenu(createGridReticleOptionsMenu(
+                        (GridReticle) cameraView.getDefaultReticle()));
             }
             else if (cameraView.getDefaultReticle() instanceof FiducialReticle) {
                 setReticleOptionsMenu(createFiducialReticleOptionsMenu(
@@ -253,6 +258,13 @@ public class CameraViewPopupMenu extends JPopupMenu {
         buttonGroup.add(menuItem);
         menu.add(menuItem);
 
+        menuItem = new JRadioButtonMenuItem(gridReticleAction);
+        if (reticle != null && reticle.getClass() == GridReticle.class) {
+            menuItem.setSelected(true);
+        }
+        buttonGroup.add(menuItem);
+        menu.add(menuItem);
+
         menuItem = new JRadioButtonMenuItem(rulerReticleAction);
         if (reticle != null && reticle.getClass() == RulerReticle.class) {
             menuItem.setSelected(true);
@@ -298,6 +310,151 @@ public class CameraViewPopupMenu extends JPopupMenu {
         menu.add(createColorMenuItem("Blue", Color.blue, buttonGroup, reticle));
         menu.add(createColorMenuItem("White", Color.white, buttonGroup, reticle));
         menu.add(createColorMenuItem("Red", Color.red, buttonGroup, reticle));
+
+        return menu;
+    }
+
+    private JMenu createGridReticleOptionsMenu(final GridReticle reticle) {
+        JMenu menu = new JMenu("Options");
+
+        JMenu subMenu;
+        JRadioButtonMenuItem menuItem;
+        ButtonGroup buttonGroup;
+
+        subMenu = new JMenu("Color");
+        buttonGroup = new ButtonGroup();
+        subMenu.add(createColorMenuItem("Red", Color.red, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Green", Color.green, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Yellow", Color.yellow, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Orange", Color.decode("#ffd35d"), buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("Blue", Color.blue, buttonGroup, reticle));
+        subMenu.add(createColorMenuItem("White", Color.white, buttonGroup, reticle));
+        menu.add(subMenu);
+
+        subMenu = new JMenu("Units");
+        buttonGroup = new ButtonGroup();
+        menuItem = new JRadioButtonMenuItem("Millimeters");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnits() == LengthUnit.Millimeters) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnits(LengthUnit.Millimeters);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("Inches");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnits() == LengthUnit.Inches) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnits(LengthUnit.Inches);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menu.add(subMenu);
+
+        subMenu = new JMenu("Units Per Tick");
+        buttonGroup = new ButtonGroup();
+        menuItem = new JRadioButtonMenuItem("0.1");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnitsPerTick() == 0.1) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnitsPerTick(0.1);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("0.25");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnitsPerTick() == 0.25) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnitsPerTick(0.25);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("0.50");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnitsPerTick() == 0.50) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnitsPerTick(0.50);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("1");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnitsPerTick() == 1) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnitsPerTick(1);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("2");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnitsPerTick() == 2) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnitsPerTick(2);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("5");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnitsPerTick() == 5) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnitsPerTick(5);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menuItem = new JRadioButtonMenuItem("10");
+        buttonGroup.add(menuItem);
+        if (reticle.getUnitsPerTick() == 10) {
+            menuItem.setSelected(true);
+        }
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reticle.setUnitsPerTick(10);
+                cameraView.setDefaultReticle(reticle);
+            }
+        });
+        subMenu.add(menuItem);
+        menu.add(subMenu);
 
         return menu;
     }
@@ -586,6 +743,16 @@ public class CameraViewPopupMenu extends JPopupMenu {
         public void actionPerformed(ActionEvent arg0) {
             CrosshairReticle reticle = new CrosshairReticle();
             JMenu optionsMenu = createCrosshairReticleOptionsMenu(reticle);
+            setReticleOptionsMenu(optionsMenu);
+            cameraView.setDefaultReticle(reticle);
+        }
+    };
+
+    private Action gridReticleAction = new AbstractAction("Grid") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            GridReticle reticle = new GridReticle();
+            JMenu optionsMenu = createGridReticleOptionsMenu(reticle);
             setReticleOptionsMenu(optionsMenu);
             cameraView.setDefaultReticle(reticle);
         }

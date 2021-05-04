@@ -813,7 +813,8 @@ public class JogControlsPanel extends JPanel {
                     Part part = machineControlsPanel.getSelectedNozzle().getPart();
                     if (part != null) {
                         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
-                            if (feeder.isEnabled() && feeder.getPart().equals(part) && feeder.canTakeBackPart()) {
+                            Part feederPart = feeder.getPart();
+                            if (feeder.isEnabled() && feederPart != null && feederPart.equals(part) && feeder.canTakeBackPart()) {
                                 canTakeBack = true;
                             }
                         }

@@ -40,8 +40,12 @@ public class MaskCircle extends CvStage {
         if (center == null) {
             center = new Point(mat.cols() / 2, mat.rows() / 2);
         }
-        Imgproc.circle(mask, center,  Math.abs(diameter) / 2, new Scalar(255, 255, 255), -1);
-        if(diameter < 0) {
+        Integer maskDiameter = (Integer) pipeline.getProperty("MaskCircle.diameter");
+        if (maskDiameter == null) {
+            maskDiameter = diameter;
+        }
+        Imgproc.circle(mask, center,  Math.abs(maskDiameter) / 2, new Scalar(255, 255, 255), -1);
+        if(maskDiameter < 0) {
             Core.bitwise_not(mask,mask);
         }
         mat.copyTo(masked, mask);
