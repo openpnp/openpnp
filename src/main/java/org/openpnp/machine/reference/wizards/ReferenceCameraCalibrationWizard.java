@@ -212,6 +212,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             referenceCamera.getAdvancedCalibration().setEnabled(chckbxEnable.isSelected());
             if (chckbxEnable.isSelected()) {
                 referenceCamera.clearCalibrationCache();
+                
             }
 
         }

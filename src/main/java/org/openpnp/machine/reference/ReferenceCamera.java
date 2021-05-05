@@ -521,7 +521,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Logger.trace("primary uppX = " + uppX);
             Logger.trace("primary uppY = " + uppY);
             setUnitsPerPixelPrimary(new Location(LengthUnit.Millimeters, uppX, uppY, advancedCalibration.calibrationPatternZ, 0));
-            setCameraPrimaryZ(new Length(advancedCalibration.calibrationPatternZ, LengthUnit.Millimeters));
+            if (ReferenceCamera.this.looking == Looking.Down) {
+                setCameraPrimaryZ(new Length(0, LengthUnit.Millimeters));
+            }
+            else {
+                setCameraPrimaryZ(defaultZ);
+            }
             
             distanceToCamera = advancedCalibration.getDistanceToCameraAtZ(new Length(advancedCalibration.calibrationPatternZ + 20, LengthUnit.Millimeters)).getValue();
             Logger.trace("distanceToCamera@calibrationZ+20 = " + distanceToCamera);
@@ -530,7 +535,13 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Logger.trace("secondary uppX = " + uppX);
             Logger.trace("secondary uppY = " + uppY);
             setUnitsPerPixelSecondary(new Location(LengthUnit.Millimeters, uppX, uppY, advancedCalibration.calibrationPatternZ + 20, 0));
-            setCameraPrimaryZ(new Length(advancedCalibration.calibrationPatternZ + 20, LengthUnit.Millimeters));
+            if (ReferenceCamera.this.looking == Looking.Down) {
+                setCameraSecondaryZ(new Length(0, LengthUnit.Millimeters));
+            }
+            else {
+                setCameraSecondaryZ(defaultZ);
+            }
+            
             setEnableUnitsPerPixel3D(true);
             
             if (getHead() == null) {
@@ -1086,22 +1097,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 List<Mat> imagePointsList = new ArrayList<Mat>();
                 imagePointsList.add(testPatternImagePoints);
                 
-//                double rms = Calib3d.calibrateCamera(actualTestPatternList, imagePointsList, size,
-//                        cameraMatrix, distortionCoefficients, rvecs, tvecs/*, Calib3d.CALIB_USE_INTRINSIC_GUESS | Calib3d.CALIB_RATIONAL_MODEL |
-//                            Calib3d.CALIB_THIN_PRISM_MODEL | Calib3d.CALIB_TILTED_MODEL*/ );
-//                Logger.trace("cameraMatrix = " + cameraMatrix.dump());
-                
+                double minRms = Double.POSITIVE_INFINITY;
                 double rms = 0;
-                for (int i=0; i<10; i++) {
-//                    cameraMatrix.put(0, 2, (size.width - 1.0)/2.0);
-//                    cameraMatrix.put(1, 2, (size.height - 1.0)/2.0);
+                do {
                     Logger.trace("cameraMatrix = " + cameraMatrix.dump());
                     
                     rms = Calib3d.calibrateCamera(actualTestPatternList, imagePointsList, size,
                             cameraMatrix, distortionCoefficients, rvecs, tvecs, Calib3d.CALIB_USE_INTRINSIC_GUESS/* | Calib3d.CALIB_RATIONAL_MODEL |
                                 Calib3d.CALIB_THIN_PRISM_MODEL | Calib3d.CALIB_TILTED_MODEL*/ );
                     Logger.trace("rms = " + rms);
-                }
+                    if (rms < minRms) {
+                        minRms = rms;
+                    }
+                } while (rms == minRms);
                 
                 actualTestPatternList.get(0).release();
                 imagePointsList.get(0).release();
@@ -1145,15 +1153,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     Core.gemm(rotate_m_c, vect_m_c_m, -1, vect_m_c_m, 0, vect_c_m_c);
                     Logger.trace("vect_c_m_c = " + vect_c_m_c.dump());
                     
-                    //Homogeneous coordinates of the image center
-                    Mat imageCenter = Mat.zeros(3, 1, CvType.CV_64FC1);
-                    imageCenter.put(0, 0, (size.width - 1.0)/2);
-                    imageCenter.put(1, 0, (size.height - 1.0)/2);
-                    imageCenter.put(2, 0, 1);
+                    //Homogeneous coordinates of the camera image principal point
+//                    Mat imageCenter = Mat.zeros(3, 1, CvType.CV_64FC1);
+//                    imageCenter.put(0, 0, (size.width - 1.0)/2);
+//                    imageCenter.put(1, 0, (size.height - 1.0)/2);
+//                    imageCenter.put(2, 0, 1);
+                    Mat imagePrincipalPoint = new Mat();
+                    imagePrincipalPoint.push_back(cameraMatrix.col(2));
+                    Logger.trace("imagePrincipalPoint = " + imagePrincipalPoint.dump());
                     
-                    //Construct a vector from the machine origin to the test pattern center with components
-                    //in the machine reference system
-                    Mat vect_m_testPatternCenter_m = convertToMachineCoordinates(imageCenter, calibrationPatternZ);
+                    //Construct a vector from the machine origin to the intersection of the camera 
+                    //Z-axis and the test pattern Z plane with components in the machine reference
+                    //system
+                    Mat vect_m_testPatternCenter_m = convertToMachineCoordinates(imagePrincipalPoint, calibrationPatternZ);
                     Logger.trace("vect_m_testPatternCenter_m = " + vect_m_testPatternCenter_m.dump());
                     
                     //Compute the absolute distance from the camera origin to the test pattern center
@@ -1164,7 +1176,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     //components in the machine reference system.  The virtual camera is centered above and
                     //is looking straight down onto the test pattern.  This is normal for top cameras, and for
                     //bottom cameras, this will make the image appear as if the bottom of the part was 
-                    //imaged from above by an x-ray.
+                    //taken from above by an x-ray camera.
                     vect_m_cHat_m = vect_m_testPatternCenter_m.clone();
                     vect_m_cHat_m.put(2, 0, calibrationPatternZ + absoluteCameraToTestPatternDistance);
                     Logger.trace("vect_m_cHat_m = " + vect_m_cHat_m.dump());
@@ -1211,7 +1223,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     unit_c_cz_m = Mat.zeros(3, 1, CvType.CV_64FC1);
                     Core.gemm(rotate_m_c.t(), unitZ, 1, unitZ, 0, unit_c_cz_m);
                     
-                    imageCenter.release();
+                    imagePrincipalPoint.release();
                     vect_m_testPatternCenter_m.release();
                     rotate_m_cHat.release();
                     
