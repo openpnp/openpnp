@@ -27,6 +27,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Issue;
 import org.openpnp.model.Solutions.Issue.IntegerProperty;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -53,15 +54,14 @@ public class IssuePanel extends JPanel {
 
     public IssuePanel(Issue issue, ReferenceMachine machine) {
         super();
-        // Calculate the needed rows from the issue properties
-        final int rowsFixed = 4;
-        int rowCount = rowsFixed;
-        rowCount += issue.getProperties().length;
-        rowCount += issue.getChoices().length;
-
-        setBorder(null);
         this.issue = issue;
         this.machine = machine;
+
+        // Calculate the needed rows from the issue properties
+        final int rowsFixed = 4;
+        int rowCount = getDynamicRows(rowsFixed);
+
+        setBorder(null);
         setLayout(new BorderLayout(0, 0));
 
         scrollPane = new JScrollPane();
@@ -151,7 +151,31 @@ public class IssuePanel extends JPanel {
         initDataBindings();
     }
 
+    public int getDynamicRows(int formRow) {
+        formRow += (issue.getExtendedDescription() == null) ? 0 : 1; 
+        formRow += issue.getProperties().length;
+        formRow += issue.getChoices().length;
+        return formRow;
+    }
+
     private void buildDynamicPart(int formRow) {
+        if (issue.getExtendedDescription() != null) {
+            JPanel panelMultiChoice = new JPanel();
+            panelMultiChoice.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+            panel.add(panelMultiChoice, "4, "+(formRow*2)+", fill, fill");
+            panelMultiChoice.setLayout(new FormLayout(new ColumnSpec[] {
+                    new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("70dlu", true), Sizes.constant("150dlu", true)), 1),},
+                    new RowSpec[] {
+                            FormSpecs.DEFAULT_ROWSPEC,}));
+
+            JLabel lblMultiChoice = new JLabel(issue.getExtendedDescription());
+            panelMultiChoice.add(lblMultiChoice, "1, 1");
+            lblMultiChoice.setIcon(issue.getExtendedIcon());
+            lblMultiChoice.setIconTextGap(20);
+            
+            // Consume the row
+            formRow++;
+        }
         for (Solutions.Issue.CustomProperty property : issue.getProperties()) {
             if (property instanceof IntegerProperty) {
                 IntegerProperty intProperty = (IntegerProperty) property;
@@ -266,5 +290,9 @@ public class IssuePanel extends JPanel {
         BeanProperty<Issue, String> issueBeanProperty_2 = BeanProperty.create("solution");
         AutoBinding<Issue, String, JTextArea, String> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ, issue, issueBeanProperty_2, solutionText, jLabelBeanProperty);
         autoBinding_2.bind();
+
+        UiUtils.messageBoxOnExceptionLater(() -> {
+            issue.selectActive();
+        });
     }
 }

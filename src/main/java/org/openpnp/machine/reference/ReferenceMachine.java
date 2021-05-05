@@ -506,6 +506,7 @@ public class ReferenceMachine extends AbstractMachine {
 
     @Override
     public void findIssues(Solutions solutions) {
+        new CalibrationSolutions(this).findIssues(solutions);
         if (solutions.isTargeting(Milestone.Advanced)) {
             if (getMotionPlanner() instanceof NullMotionPlanner) {
                 solutions.add(new Solutions.Issue(

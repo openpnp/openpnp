@@ -40,6 +40,7 @@ import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractControllerAxis;
@@ -285,8 +286,8 @@ class HeadSolutions implements Solutions.Subject {
                 // Collect nozzle.
                 nozzles.add((AbstractNozzle) nozzle);
                 // Collect the underlying raw axes. 
-                axesZ.add((AbstractAxis) getRawAxis(axisZ));
-                axesC.add((AbstractAxis) getRawAxis(axisC));
+                axesZ.add((AbstractAxis) getRawAxis(head.getMachine(), axisZ));
+                axesC.add((AbstractAxis) getRawAxis(head.getMachine(), axisC));
                 // Collect the transformed axes.
                 if (axisZ instanceof ReferenceMappedAxis) {
                     axesNegated.add((ReferenceMappedAxis) axisZ);
@@ -364,11 +365,13 @@ class HeadSolutions implements Solutions.Subject {
         head.setNozzleSolutionsMultiplier(nozzleSolutionsMultiplier);
     }
 
-    private CoordinateAxis getRawAxis(Axis axis) { 
-        try {
-            return ((AbstractAxis) axis).getCoordinateAxes(head.getMachine()).getAxis(axis.getType());
-        }
-        catch (Exception e) {
+    public static CoordinateAxis getRawAxis(Machine machine, Axis axis) { 
+        if (axis != null) {
+            try {
+                return ((AbstractAxis) axis).getCoordinateAxes(machine).getAxis(axis.getType());
+            }
+            catch (Exception e) {
+            }
         }
         return null;
     }

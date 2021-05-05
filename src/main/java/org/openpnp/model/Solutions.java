@@ -60,6 +60,9 @@ public class Solutions extends AbstractTableModel {
     @ElementList(required = false)
     private Set<String> dismissedSolutions = new HashSet<>();
 
+    @ElementList(required = false)
+    private Set<String> doneSolutions = new HashSet<>();
+
     public enum Milestone implements Subject, Named {
         Welcome, Connect, Basics, Vision, Calibration, Production, Advanced;
 
@@ -246,7 +249,7 @@ public class Solutions extends AbstractTableModel {
             return solution;
         }
         public Severity getSeverity() {
-            if (state == State.Dismissed) {
+            if (state != State.Open) {
                 return Severity.None;
             }
             return severity;
@@ -272,8 +275,8 @@ public class Solutions extends AbstractTableModel {
             this.choice = choice;
         }
 
-        public void setInitiallyDismissed() {
-            this.state = State.Dismissed;
+        void setInitialState(State state) {
+            this.state = state;
         }
         public String getUri() {
             return uri;
@@ -358,6 +361,17 @@ public class Solutions extends AbstractTableModel {
         public Choice [] getChoices() {
             return new Choice[] {};
         }
+
+        public void selectActive() throws Exception {
+        }
+
+        public String getExtendedDescription() {
+            return null;
+        }
+
+        public Icon getExtendedIcon() {
+            return null;
+        }
     }
 
     public static class PlainIssue extends Issue {
@@ -388,10 +402,24 @@ public class Solutions extends AbstractTableModel {
     }
     public void setSolutionsIssueDismissed(Issue issue, boolean dismissed) {
         if (dismissed) {
+            doneSolutions.remove(issue.getFingerprint());
             dismissedSolutions.add(issue.getFingerprint()); 
         }
         else {
             dismissedSolutions.remove(issue.getFingerprint());
+        }
+    }
+
+    public boolean isSolutionsIssueDone(Issue issue) {
+        return doneSolutions.contains(issue.getFingerprint());
+    }
+    public void setSolutionsIssueDone(Issue issue, boolean dismissed) {
+        if (dismissed) {
+            dismissedSolutions.remove(issue.getFingerprint());
+            doneSolutions.add(issue.getFingerprint()); 
+        }
+        else {
+            doneSolutions.remove(issue.getFingerprint());
         }
     }
 
@@ -500,7 +528,10 @@ public class Solutions extends AbstractTableModel {
         });
         for (Issue issue : pendingIssues) {
             if (isSolutionsIssueDismissed(issue)) {
-                issue.setInitiallyDismissed();
+                issue.setInitialState(State.Dismissed);
+            }
+            else if (isSolutionsIssueDone(issue)) {
+                issue.setInitialState(State.Solved);
             }
         }
     }
