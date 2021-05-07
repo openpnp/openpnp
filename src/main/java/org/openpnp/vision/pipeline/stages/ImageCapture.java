@@ -13,6 +13,7 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
+import org.openpnp.vision.pipeline.TerminalException;
 import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -80,34 +81,40 @@ public class ImageCapture extends CvStage {
         if (camera == null) {
             throw new Exception("No Camera set on pipeline.");
         }
-        // Light, settle and capture the image. Keep the lights on for possible averaging.
-        camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
         try {
-            BufferedImage bufferedImage = (settleFirst ? camera.settleAndCapture() : camera.capture()); 
-            Mat image = OpenCvUtils.toMat(bufferedImage);
-            if (count <= 1) { 
-                return new Result(image, ColorSpace.Bgr);
-            }
-            else {
-                // Perform averaging in channel type double.
-                image.convertTo(image, CvType.CV_64F);
-                Mat avgImage = image;
-                double beta = 1.0 / count;
-                Core.addWeighted(avgImage, 0, image, beta, 0, avgImage); // avgImage = image/count
-                for (int i = 1; i < count; i++) {
-                    image = OpenCvUtils.toMat(camera.capture());
-                    image.convertTo(image, CvType.CV_64F);
-                    Core.addWeighted(avgImage, 1, image, beta, 0, avgImage); // avgImage = avgImag + image/count
-                    // Release the additional image.
-                    image.release();
+            // Light, settle and capture the image. Keep the lights on for possible averaging.
+            camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
+            try {
+                BufferedImage bufferedImage = (settleFirst ? camera.settleAndCapture() : camera.capture()); 
+                Mat image = OpenCvUtils.toMat(bufferedImage);
+                if (count <= 1) { 
+                    return new Result(image, ColorSpace.Bgr);
                 }
-                avgImage.convertTo(avgImage, CvType.CV_8U);
-                return new Result(avgImage, ColorSpace.Bgr);
+                else {
+                    // Perform averaging in channel type double.
+                    image.convertTo(image, CvType.CV_64F);
+                    Mat avgImage = image;
+                    double beta = 1.0 / count;
+                    Core.addWeighted(avgImage, 0, image, beta, 0, avgImage); // avgImage = image/count
+                    for (int i = 1; i < count; i++) {
+                        image = OpenCvUtils.toMat(camera.capture());
+                        image.convertTo(image, CvType.CV_64F);
+                        Core.addWeighted(avgImage, 1, image, beta, 0, avgImage); // avgImage = avgImag + image/count
+                        // Release the additional image.
+                        image.release();
+                    }
+                    avgImage.convertTo(avgImage, CvType.CV_8U);
+                    return new Result(avgImage, ColorSpace.Bgr);
+                }
+            }
+            finally {
+                // Always switch off the light. 
+                camera.actuateLightAfterCapture();
             }
         }
-        finally {
-            // Always switch off the light. 
-            camera.actuateLightAfterCapture();
+        catch (Exception e) {
+            // These machine exceptions are terminal to the pipeline.
+            throw new TerminalException(e);
         }
     }
 
