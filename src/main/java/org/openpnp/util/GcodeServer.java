@@ -41,6 +41,9 @@ public class GcodeServer extends Thread {
 
     private long maxDwellTimeMilliseconds = 20000;
 
+    static final String firmware = "FIRMWARE_NAME:GcodeServer, FIRMWARE_URL:http%3A//openpnp.org, X-SOURCE_CODE_URL:https%3A//github.com/openpnp/openpnp, FIRMWARE_VERSION:"+Main.getVersion()+", "
+            +"X-FIRMWARE_BUILD_DATE:Oct 23 2020 00:00:00";
+
     /**
      * Create a GcodeServer listening on the given port.
      * @param port
@@ -554,8 +557,7 @@ public class GcodeServer extends Thread {
                             paxes++;
                         }
                     }
-                    setResponse("FIRMWARE_NAME:GcodeServer, FIRMWARE_URL:http%3A//openpnp.org, X-SOURCE_CODE_URL:https%3A//github.com/openpnp/openpnp, FIRMWARE_VERSION:"+Main.getVersion()+", "
-                            +"X-FIRMWARE_BUILD_DATE:Oct 23 2020 00:00:00, X-AXES:"+axes+", X-PAXES:"+paxes+"\nok");
+                    setResponse(firmware+", X-AXES:"+axes+", X-PAXES:"+paxes+"\nok");
                 }
 
                 // Acceleration
@@ -726,5 +728,9 @@ public class GcodeServer extends Thread {
             motion.setPlannedTime1(time);
             return motion;
         }
+    }
+
+    public static String getGenericFirmware() {
+        return firmware;
     }
 }

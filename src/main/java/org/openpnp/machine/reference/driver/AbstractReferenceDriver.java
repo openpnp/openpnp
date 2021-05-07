@@ -114,7 +114,9 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     }
 
     public void setMotionControlType(MotionControlType motionControlType) {
+        Object oldValue = this.motionControlType;
         this.motionControlType = motionControlType;
+        firePropertyChange("motionControlType", oldValue, motionControlType);
     }
 
     public CommunicationsType getCommunicationsType() {
@@ -139,7 +141,9 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     }
     
     public void setConnectionKeepAlive(boolean connectionKeepAlive) {
-    	this.connectionKeepAlive = connectionKeepAlive;
+        Object oldValue = this.connectionKeepAlive;
+        this.connectionKeepAlive = connectionKeepAlive;
+        firePropertyChange("connectionKeepAlive", oldValue, connectionKeepAlive);
     }
 
     public boolean isInSimulationMode() {
@@ -190,7 +194,9 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     }
 
     public void setFlowControl(FlowControl flowControl) {
+        Object oldValue = this.flowControl;
         serial.setFlowControl(flowControl);
+        firePropertyChange("flowControl", oldValue, flowControl);
     }
 
     public DataBits getDataBits() {

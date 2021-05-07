@@ -290,6 +290,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         for (Head head : heads) {
             head.home();
         }
+        for (NozzleTip nt : getNozzleTips()) {
+            nt.home();
+        }
     }
 
     @Override
@@ -717,32 +720,32 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
+    public void findIssues(Solutions solutions) {
         // MotionPlanner.
-        getMotionPlanner().findIssues(issues);
+        getMotionPlanner().findIssues(solutions);
         // Recurse into axes.
         for (Axis axis : getAxes()) {
-            axis.findIssues(issues);
+            axis.findIssues(solutions);
         }
         // Recurse into heads
         for (Head head : getHeads()) {
-            head.findIssues(issues);
+            head.findIssues(solutions);
         }
         // Recurse into machine cameras.  
         for (Camera camera : getCameras()) {
-            camera.findIssues(issues);
+            camera.findIssues(solutions);
         }
         // Recurse into machine actuators.  
         for (Actuator actuator : getActuators()) {
-            actuator.findIssues(issues);
+            actuator.findIssues(solutions);
         }
         // Recurse into drivers.  
         for (Driver driver : getDrivers()) {
-            driver.findIssues(issues);
+            driver.findIssues(solutions);
         }
         // Recurse into feeders.  
         for (Feeder feeder : getFeeders()) {
-            feeder.findIssues(issues);
+            feeder.findIssues(solutions);
         }
     }
 }

@@ -37,7 +37,6 @@ import java.util.regex.Pattern;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
@@ -651,7 +650,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
         if (command == null) {
-            return;
+            if (movedAxesLocation.isEmpty()) {
+                return;
+            }
+            throw new Exception(getName()+" MOVE_TO_COMMAND missing, please use Issues & Solutions to propose proper G-code commands.");
         }
         if (hasVariable(command, "BacklashFeedRate")) {
             throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
@@ -1343,7 +1345,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setMaxFeedRate(int maxFeedRate) {
+        Object oldValue = this.maxFeedRate;
         this.maxFeedRate = maxFeedRate;
+        firePropertyChange("maxFeedRate", oldValue, maxFeedRate);
     }
 
     @Override
@@ -1380,7 +1384,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setRemoveComments(boolean removeComments) {
+        Object oldValue = this.removeComments;
         this.removeComments = removeComments;
+        firePropertyChange("removeComments", oldValue, removeComments);
     }
 
     public boolean isCompressGcode() {
@@ -1388,7 +1394,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setCompressGcode(boolean compressGcode) {
+        Object oldValue = this.compressGcode;
         this.compressGcode = compressGcode;
+        firePropertyChange("compressGcode", oldValue, compressGcode);
     }
 
     public boolean isUsingLetterVariables() {
@@ -1396,7 +1404,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setUsingLetterVariables(boolean usingLetterVariables) {
+        Object oldValue = this.usingLetterVariables;
         this.usingLetterVariables = usingLetterVariables;
+        firePropertyChange("usingLetterVariables", oldValue, usingLetterVariables);
     }
 
     @Override
@@ -1405,7 +1415,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setSupportingPreMove(boolean supportingPreMove) {
+        Object oldValue = this.supportingPreMove;
         this.supportingPreMove = supportingPreMove;
+        firePropertyChange("supportingPreMove", oldValue, supportingPreMove);
     }
 
     public boolean isLoggingGcode() {
@@ -1572,9 +1584,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        new GcodeDriverSolutions(this).findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        new GcodeDriverSolutions(this).findIssues(solutions);
     }
 
     @Deprecated

@@ -45,8 +45,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         }
         try {
             // move to the discard location
-            MovableUtils.moveToLocationAtSafeZ(nozzle,
-                    Configuration.get().getMachine().getDiscardLocation());
+            nozzle.moveToPlacementLocation(Configuration.get().getMachine().getDiscardLocation(), null);
             // discard the part
             nozzle.place();
             nozzle.moveToSafeZ();
