@@ -676,7 +676,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
     }
 
-    private BufferedImage autoSettleAndCapture() {
+    private BufferedImage autoSettleAndCapture() throws Exception {
         Mat mask = null;
         Mat maskFullsize = null;
         Mat lastSettleMat = null;
@@ -1027,14 +1027,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     @Override
     public BufferedImage settleAndCapture() throws Exception {
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("camera", this);
-            Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("camera", this);
+        Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
 
         try {
             // Make sure the camera (or its subject) stands still.
@@ -1059,14 +1054,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
         finally {
 
-            try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("camera", this);
-                Configuration.get().getScripting().on("Camera.AfterSettle", globals);
-            }
-            catch (Exception e) {
-                Logger.warn(e);
-            }
+            Configuration.get().getScripting().on("Camera.AfterSettle", globals);
         }
     }
 
