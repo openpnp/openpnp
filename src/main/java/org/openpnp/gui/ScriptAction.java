@@ -1,13 +1,13 @@
 package org.openpnp.gui;
 
 import java.awt.event.ActionEvent;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 
 import org.openpnp.model.Configuration;
-import org.pmw.tinylog.Logger;
+import org.openpnp.util.UiUtils;
 
 @SuppressWarnings("serial")
 public class ScriptAction extends AbstractAction{
@@ -19,14 +19,11 @@ public class ScriptAction extends AbstractAction{
 
     @Override
     public void actionPerformed(ActionEvent arg0) {
-        try {
+        UiUtils.messageBoxOnException(() -> {
             Map<String, Object> globals = new HashMap<>();
             Configuration.get()
                         .getScripting()
                         .on(this.eventName, globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
+        });
     }
 }
