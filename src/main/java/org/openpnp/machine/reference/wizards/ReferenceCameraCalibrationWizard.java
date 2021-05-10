@@ -40,6 +40,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.RegionOfInterest;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.LensCalibration.LensModel;
 import org.pmw.tinylog.Logger;
@@ -107,10 +108,23 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                         chckbxEnable = new JCheckBox("Use Calibration");
                         chckbxEnable.addActionListener(enableCalibration);
                         
-                        lblNewLabel_1 = new JLabel("Default Z");
+                        lblNewLabel_1 = new JLabel("Default Working Plane");
                         panelCameraCalibration.add(lblNewLabel_1, "2, 4, right, default");
                         
                         textFieldDefaultZ = new JTextField();
+                        if (referenceCamera.getLooking() == Looking.Down) {
+                            textFieldDefaultZ.setToolTipText("<html><p width=\"500\">"
+                                + "This is the assumed Z coordinate of objects viewed by the "
+                                + "camera if their true Z coordinate is unknown. Typically this "
+                                + "is set to the Z coordinate of the working surface of the "
+                                + "board(s) to be populated.</p></html>");
+                        }
+                        else {
+                            textFieldDefaultZ.setToolTipText("<html><p width=\"500\">"
+                                    + "This is the Z coordinate to which the bottom surface of "
+                                    + "parts carried by the nozzle will be lowered for visual "
+                                    + "alignment.</p></html>");
+                        }
                         panelCameraCalibration.add(textFieldDefaultZ, "4, 4, fill, default");
                         textFieldDefaultZ.setColumns(10);
                         panelCameraCalibration.add(chckbxEnable, "2, 6");
@@ -122,16 +136,10 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                         sliderAlpha.setPaintLabels(true);
                         sliderAlpha.addChangeListener(sliderAlphaChanged);
                         
-//                                comboBoxPart.addActionListener(new ActionListener() {
-//                                    public void actionPerformed(ActionEvent e) {
-//                                        calibrationRig =(Part)comboBoxPart.getSelectedItem(); 
-//                                    }
-//                                });
-                
                         startCameraCalibrationBtn = new JButton(startCalibration);
                         panelCameraCalibration.add(startCameraCalibrationBtn, "4, 6");
                         
-                        lblNewLabel = new JLabel("Valid Pixels");
+                        lblNewLabel = new JLabel("Hide Invalid Pixels");
                         lblNewLabel.setToolTipText("<html><p width=\"500\">"
                                 + "A value of zero forces all valid pixels to be displayed but "
                                 + "the edges of the display may show invalid pixels. A value "
@@ -176,15 +184,13 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 new CalibrateCameraProcess(MainFrame.get(), cameraView, (Part) comboBoxPart.getSelectedItem()) {
 
                     @Override 
-                    public void processRawCalibrationData(MatOfPoint3f testPattern3dPoints, 
-                            MatOfPoint2f testPatternImagePoints, double testPatternZ, 
-                            double xScaling, double yScaling, Size size) {
+                    public void processRawCalibrationData(List<Mat> testPattern3dPointsList, 
+                            List<Mat> testPatternImagePointsList, Size size) {
                         
                         Logger.trace("processResults has been called!");
 
                         referenceCamera.getAdvancedCalibration().processRawCalibrationData(
-                                testPattern3dPoints, testPatternImagePoints, testPatternZ, 
-                                xScaling, yScaling, size);
+                                testPattern3dPointsList, testPatternImagePointsList, size);
                         
                         referenceCamera.getAdvancedCalibration().setEnabled(true);
                         

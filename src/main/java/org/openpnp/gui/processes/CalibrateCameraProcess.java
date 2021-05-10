@@ -85,10 +85,11 @@ import org.pmw.tinylog.Logger;
 public abstract class CalibrateCameraProcess {
     static final boolean useSavedData = false;
 
-    private static final int desiredTestPatternSize = 15;
+    private static final int numberOfCalibrationHeights = 2;
+    private static final int desiredTestPatternSize = 5;
     private static final int desiredPointsPerTestPattern = desiredTestPatternSize*desiredTestPatternSize;
     private static final double testPatternFillFraction = 0.90;
-    private static final double trialStepSize = 0.2;
+    private static final double trialStepSize = 0.5;
     private static final Location trialStep = new Location(LengthUnit.Millimeters, -trialStepSize, trialStepSize, 0, 0);
     private final MainFrame mainFrame;
     private final CameraView cameraView;
@@ -117,6 +118,11 @@ public abstract class CalibrateCameraProcess {
             "<html><body>Locating the %s corner of the camera's view." +
                     "</body></html>",
             "<html><body>Collecting calibration point %d of %d." +
+                    "</body></html>",
+            "<html><body>Place a spacer under the calibration rig to raise it to about the height "
+            + "of the tallest object you will ever want to image with the camera. Again be sure the "
+            + "calibration rig is secured so that it can not move during the remainder of the "
+            + "calibration process. Click Next when ready to proceed." +
                     "</body></html>",};
     private String[] fixedCameraInstructions = new String[] {
             "<html><body>Select a nozzle and load it with the largest available nozzle tip. This "
@@ -191,7 +197,12 @@ public abstract class CalibrateCameraProcess {
     private MaskCircle secondMaskCircle;
 
     private int maskDiameter;
+    
+    private int calibrationHeightIndex;
 
+    private List<Mat> testPattern3dPointsList;
+    private List<Mat> testPatternImagePointsList;
+    
     public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, Part calibrationRigPart)
             throws Exception {
         this.mainFrame = mainFrame;
@@ -209,6 +220,11 @@ public abstract class CalibrateCameraProcess {
         numberOfPointsPerTestPatternY = 2 * ((int) (pixelsY / (2*pixelsPerTestPoint))) + 1;
         actualPointsPerTestPattern = numberOfPointsPerTestPatternX * numberOfPointsPerTestPatternY;
 
+        testPattern3dPointsList = new ArrayList<>();
+        testPatternImagePointsList = new ArrayList<>();
+        
+        calibrationHeightIndex = 0;
+        
         isHeadMountedCamera = camera.getHead() != null;
         apparentMotionDirection = isHeadMountedCamera ? -1.0 : +1.0;
         pkg = calibrationRigPart.getPackage();
@@ -240,21 +256,16 @@ public abstract class CalibrateCameraProcess {
      * This method is called when the raw calibration data collection has completed and must be 
      * overridden to process the raw calibration data into a usable form
      * 
-     * @param testPattern3dPoints - an N x 1 MatOfPoint3f containing the 3D machine coordinates of 
-     * the corresponding image points in testPatternImagePoints
+     * @param testPattern3dPoints - A List of N x 1 MatOfPoint3f containing the 3D machine 
+     * coordinates of the corresponding image points in testPatternImagePoints
      * 
-     * @param testPatternImagePoints - an N x 1 MatOfPoint2f containing the 2D image points of the 
-     * corresponding machine coordinates in testPatternImagePoints
+     * @param testPatternImagePoints - A List of N x 1 MatOfPoint2f containing the 2D image points 
+     * of the corresponding machine coordinates in testPatternImagePoints
      * 
-     * @param xScaling - a very rough signed approximation to the camera's X units-per-pixel
-     *  
-     * @param yScaling - a very rough signed approximation to the camera's Y units-per-pixel
-
      * @param size - the size of the images
      */
-    protected abstract void processRawCalibrationData(MatOfPoint3f testPattern3dPoints, 
-            MatOfPoint2f testPatternImagePoints, double testPatternZ, double xScaling, 
-            double yScaling, Size size);
+    protected abstract void processRawCalibrationData(List<Mat> testPattern3dPoints, 
+            List<Mat> testPatternImagePoints, Size size);
     
     /**
      * This method is called when the raw calibration data collection has been canceled and must 
@@ -283,6 +294,9 @@ public abstract class CalibrateCameraProcess {
             case 4:
                 stepResult = step5();
                 break;
+            case 5:
+                stepResult = step6();
+                break;
             default :
                 break;
         }
@@ -291,7 +305,7 @@ public abstract class CalibrateCameraProcess {
             return;
         }
         step++;
-        if (step > 5) {
+        if (step > 6) {
             cleanup();
         }
         else {
@@ -750,13 +764,15 @@ public abstract class CalibrateCameraProcess {
                                 new MatOfPoint3f(
                                         new Point3(apparentMotionDirection*testLocation.getX(), 
                                                 apparentMotionDirection*testLocation.getY(), 
-                                                0)));
+                                                testPatternZ)));
                         testPatternImagePoints.push_back(
                                 new MatOfPoint2f(measuredPoint));
                     }
                 }
                 Logger.trace("testPattern3dPoints = " + testPattern3dPoints.dump());
                 Logger.trace("testPatternImagePoints = " + testPatternImagePoints.dump());
+                testPattern3dPointsList.add(testPattern3dPoints);
+                testPatternImagePointsList.add(testPatternImagePoints);
                 return null;
             }
             
@@ -771,11 +787,20 @@ public abstract class CalibrateCameraProcess {
             @Override
             protected void done()  
             {
-                if (!this.isCancelled()) {
-                    processRawCalibrationData(testPattern3dPoints, testPatternImagePoints, testPatternZ, 
-                        xScaling, yScaling, new Size(pixelsX, pixelsY));
+                if (this.isCancelled()) {
+                    CalibrateCameraProcess.this.cancel();
+                    return;
                 }
-                CalibrateCameraProcess.this.cancel();
+                
+                calibrationHeightIndex++;
+                if (calibrationHeightIndex == numberOfCalibrationHeights) {
+                    processRawCalibrationData(testPattern3dPointsList, testPatternImagePointsList, 
+                        new Size(pixelsX, pixelsY));
+                    CalibrateCameraProcess.this.cancel();
+                }
+                else {
+                    advance();
+                }
             }
             
         };
@@ -785,6 +810,16 @@ public abstract class CalibrateCameraProcess {
         return true;
     }
 
+    /**
+     * Action to take when transitioning from step 5 to step 6
+     * 
+     * @return true if the action was successful and the state machine should move to the next step
+     */
+    private boolean step6() {
+        step = 0;
+        return true;
+    }
+    
     private Location walkToPoint(Point2D desiredCameraPoint, double xScaling,
             double yScaling) throws InterruptedException, ExecutionException {
         //Move the machine to the starting location and wait for it to finish

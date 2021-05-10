@@ -1076,11 +1076,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             this.calibrationPatternZ = calibrationPatternZ;
         }
         
-        public void processRawCalibrationData(MatOfPoint3f testPattern3dPoints, 
-                MatOfPoint2f testPatternImagePoints, double testPatternZ, double xScaling, double yScaling, 
-                Size size) {
-            if ((testPattern3dPoints.rows() > 0) && (testPatternImagePoints.rows() > 0)) {
-                this.calibrationPatternZ = testPatternZ;
+        public void processRawCalibrationData(List<Mat> testPattern3dPointsList, 
+                List<Mat> testPatternImagePointsList, Size size) {
+            if ((testPattern3dPointsList.get(0).rows() > 0) && (testPatternImagePointsList.get(0).rows() > 0)) {
+                this.calibrationPatternZ = testPattern3dPointsList.get(0).get(0, 0)[2];
                 
                 List<Mat> rvecs = new ArrayList<>();
                 List<Mat> tvecs = new ArrayList<>();
@@ -1091,18 +1090,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 cameraMatrix.put(0, 2, (size.width - 1.0)/2.0);
                 cameraMatrix.put(1, 2, (size.height - 1.0)/2.0);
                 
-                List<Mat> actualTestPatternList = new ArrayList<Mat>();
-                actualTestPatternList.add(testPattern3dPoints);
-                
-                List<Mat> imagePointsList = new ArrayList<Mat>();
-                imagePointsList.add(testPatternImagePoints);
-                
                 double minRms = Double.POSITIVE_INFINITY;
                 double rms = 0;
                 do {
                     Logger.trace("cameraMatrix = " + cameraMatrix.dump());
                     
-                    rms = Calib3d.calibrateCamera(actualTestPatternList, imagePointsList, size,
+                    rms = Calib3d.calibrateCamera(testPattern3dPointsList, testPatternImagePointsList, size,
                             cameraMatrix, distortionCoefficients, rvecs, tvecs, Calib3d.CALIB_USE_INTRINSIC_GUESS/* | Calib3d.CALIB_RATIONAL_MODEL |
                                 Calib3d.CALIB_THIN_PRISM_MODEL | Calib3d.CALIB_TILTED_MODEL*/ );
                     Logger.trace("rms = " + rms);
@@ -1111,8 +1104,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     }
                 } while (rms == minRms);
                 
-                actualTestPatternList.get(0).release();
-                imagePointsList.get(0).release();
+//                actualTestPatternList.get(0).release();
+//                imagePointsList.get(0).release();
                 
                 Logger.trace("cameraMatrix = " + cameraMatrix.dump());
                 Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
@@ -1129,25 +1122,38 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     rvecs.get(0).release();
                     Logger.trace("rotate_m_c = " + rotate_m_c.dump());
 
-                    //tvecs contains the vector from the camera origin to the test pattern
+//                    //tvecs contains the vector from the camera origin to the test pattern
+//                    //origin with components expressed in the camera reference system
+//                    Mat vect_c_tp_c = tvecs.get(0).clone();
+//                    tvecs.get(0).release();
+//                    Logger.trace("vect_c_tp_c = " + vect_c_tp_c.dump());
+//                    
+//                    //Construct a vector from the machine origin to the test pattern origin with
+//                    //components expressed in the machine reference system
+//                    Mat vect_m_tp_m = Mat.zeros(3, 1, CvType.CV_64FC1);
+//                    vect_m_tp_m.put(2, 0, calibrationPatternZ);
+//
+//                    //Construct a vector from the machine origin to the camera origin with components in 
+//                    //the machine reference system: vect_m_c_m = vect_m_tp_m - rotate_m_c.t() * vect_c_tp_c
+//                    vect_m_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
+//                    Core.gemm(rotate_m_c.t(), vect_c_tp_c, -1, vect_m_tp_m, 1, vect_m_c_m);
+//                    vect_c_tp_c.release();
+//                    vect_m_tp_m.release();
+//                    Logger.trace("vect_m_c_m = " + vect_m_c_m.dump());
+                    
+                    //tvecs contains the vector from the camera origin to the machine
                     //origin with components expressed in the camera reference system
-                    Mat vect_c_tp_c = tvecs.get(0).clone();
+                    Mat vect_c_m_c = tvecs.get(0).clone();
                     tvecs.get(0).release();
-                    Logger.trace("vect_c_tp_c = " + vect_c_tp_c.dump());
-                    
-                    //Construct a vector from the machine origin to the test pattern origin with
-                    //components expressed in the machine reference system
-                    Mat vect_m_tp_m = Mat.zeros(3, 1, CvType.CV_64FC1);
-                    vect_m_tp_m.put(2, 0, testPatternZ);
-
+                    Logger.trace("vect_c_m_c = " + vect_c_m_c.dump());
+                      
                     //Construct a vector from the machine origin to the camera origin with components in 
-                    //the machine reference system: vect_m_c_m = vect_m_tp_m - rotate_m_c.t() * vect_c_tp_c
+                    //the machine reference system: vect_m_c_m = -rotate_m_c.t() * vect_c_m_c
                     vect_m_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
-                    Core.gemm(rotate_m_c.t(), vect_c_tp_c, -1, vect_m_tp_m, 1, vect_m_c_m);
-                    vect_c_tp_c.release();
-                    vect_m_tp_m.release();
+                    Core.gemm(rotate_m_c.t(), vect_c_m_c, -1, vect_c_m_c, 0, vect_m_c_m);
+                    vect_c_m_c.release();
                     Logger.trace("vect_m_c_m = " + vect_m_c_m.dump());
-                    
+
                     //Construct a vector from the camera origin to the machine origin with components
                     //expressed in the camera reference system
                     Core.gemm(rotate_m_c, vect_m_c_m, -1, vect_m_c_m, 0, vect_c_m_c);
@@ -1174,9 +1180,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     
                     //Compute the vector from the machine origin to the virtual camera's origin with
                     //components in the machine reference system.  The virtual camera is centered above and
-                    //is looking straight down onto the test pattern.  This is normal for top cameras, and for
+                    //is looking straight down onto the machine.  This is normal for top cameras, and for
                     //bottom cameras, this will make the image appear as if the bottom of the part was 
-                    //taken from above by an x-ray camera.
+                    //taken from above by an x-ray camera (which is desired).
                     vect_m_cHat_m = vect_m_testPatternCenter_m.clone();
                     vect_m_cHat_m.put(2, 0, calibrationPatternZ + absoluteCameraToTestPatternDistance);
                     Logger.trace("vect_m_cHat_m = " + vect_m_cHat_m.dump());
@@ -1257,7 +1263,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Mat ret = Mat.eye(3, 3, CvType.CV_64FC1);
             
             //Generate a set of points around the outer perimeter of the distorted unrectifed image
-            int numberOfPointsPerSide = 100;
+            int numberOfPointsPerSide = 250;
             MatOfPoint2f distortedPoints = new MatOfPoint2f();
             double xStep = (size.width - 1)/(numberOfPointsPerSide - 1);
             double yStep = (size.height - 1)/(numberOfPointsPerSide - 1);
@@ -1278,7 +1284,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 distortedPoints.push_back(new MatOfPoint2f(
                         new org.opencv.core.Point((numberOfPointsPerSide - 1 - iSidePt)*xStep, 0)));
             }
-//            Logger.trace("distortedPoints = " + distortedPoints.dump());
+            Logger.trace("distortedPoints = " + distortedPoints.dump());
 
             MatOfPoint2f undistortedPoints = new MatOfPoint2f();
            
@@ -1286,86 +1292,177 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Calib3d.undistortPoints(distortedPoints, undistortedPoints, physicalCameraMatrix, 
                     distortionCoefficients, rectification);
             distortedPoints.release();
-//            Logger.trace("undistortedPoints = " + undistortedPoints.dump());
+            Logger.trace("undistortedPoints = " + undistortedPoints.dump());
             
             double outerMaxX = Double.NEGATIVE_INFINITY;
+            double outerMinX = Double.POSITIVE_INFINITY;
             double outerMaxY = Double.NEGATIVE_INFINITY;
-            double innerMinX = Double.POSITIVE_INFINITY;
-            double innerMinY = Double.POSITIVE_INFINITY;
-            
-            double angle = Math.atan2(size.height, size.width);
+            double outerMinY = Double.POSITIVE_INFINITY;
             
             for (int i=0; i<undistortedPoints.rows(); i++) {
                 double[] pt = undistortedPoints.get(i, 0);
-                if (Math.abs(pt[0]) > outerMaxX) {
-                    outerMaxX = Math.abs(pt[0]);
+                if (pt[0] > outerMaxX) {
+                    outerMaxX = pt[0];
                 }
-                if (Math.abs(pt[1]) > outerMaxY) {
-                    outerMaxY = Math.abs(pt[1]);
+                else if (pt[0] < outerMinX) {
+                    outerMinX = pt[0];
+                }
+                if (pt[1] > outerMaxY) {
+                    outerMaxY = pt[1];
+                }
+                else if (pt[1] < outerMinY) {
+                    outerMinY = pt[1];
+                }
+            }
+            
+            double aspectRatio = size.height/size.width;
+            
+            double outerCenterX = (outerMaxX + outerMinX) / 2;
+            double outerCenterY = (outerMaxY + outerMinY) / 2;
+            Logger.trace("outer center = (" + outerCenterX + ", " + outerCenterY + ")" );
+            
+            double outerF;
+            if ((outerMaxY - outerMinY)/(outerMaxX - outerMinX) >= aspectRatio) {
+                //Constrained by the height
+                outerF = size.height / (outerMaxY - outerMinY);
+                double newWidth = (outerMaxY - outerMinY)/aspectRatio;
+                outerMinX = outerCenterX - newWidth/2;
+                outerMaxX = outerCenterX + newWidth/2;
+            }
+            else {
+                //Constrained by the width
+                outerF = size.width / (outerMaxX - outerMinX);
+                double newHeight = (outerMaxY - outerMinY)/aspectRatio;
+                outerMinY = outerCenterY - newHeight/2;
+                outerMaxY = outerCenterY + newHeight/2;
+            }
+            Logger.trace("outerX extent = (" + outerMinX + ", " + outerMaxX + ")" );
+            Logger.trace("outerY extent = (" + outerMinY + ", " + outerMaxY + ")" );
+            
+            double outerCx = (size.width-1)/2 - outerF*outerCenterX;
+            double outerCy = (size.height-1)/2 - outerF*outerCenterY;
+            
+            
+            double innerMinX = Double.NEGATIVE_INFINITY;
+            double innerMaxX = Double.POSITIVE_INFINITY;
+            double innerMinY = Double.NEGATIVE_INFINITY;
+            double innerMaxY = Double.POSITIVE_INFINITY;
+            
+            //The following assumes the center of the outer bounding rectangle falls within the
+            //interior of the undistorted and rectified image boundary (which is where we need 
+            //to start)
+            double innerCenterX = outerCenterX;
+            double innerCenterY = outerCenterY;
+            
+            double angle = Math.atan2(size.height, size.width);
+            
+            boolean fullyConstrained = false;
+            double maxWidth = 0;
+            double maxHeight = 0;
+            
+            while (!fullyConstrained) {
+                innerMinX = Double.NEGATIVE_INFINITY;
+                innerMaxX = Double.POSITIVE_INFINITY;
+                innerMinY = Double.NEGATIVE_INFINITY;
+                innerMaxY = Double.POSITIVE_INFINITY;
+                
+                for (int i=0; i<undistortedPoints.rows(); i++) {
+                    double[] pt = undistortedPoints.get(i, 0);
+                    double ptAngle = Math.atan2((pt[1] - innerCenterY), (pt[0] - innerCenterX));
+                    
+                    //Make ptAngle in the range [-angle, 2*PI-angle)
+                    if (ptAngle < -angle) {
+                        ptAngle += 2*Math.PI;
+                    }
+                    
+                    if ((ptAngle >= -angle) && (ptAngle < angle)) {
+                        //right side
+                        if (pt[0] < innerMaxX) {
+                            innerMaxX = pt[0];
+                        }
+                    }
+                    else if ((ptAngle >= angle) && (ptAngle < Math.PI - angle)) {
+                        //bottom side
+                        if (pt[1] < innerMaxY) {
+                            innerMaxY = pt[1];
+                        }
+                    }
+                    else if ((ptAngle >= Math.PI - angle) && (ptAngle < Math.PI + angle)) {
+                        //left side
+                        if (pt[0] > innerMinX) {
+                            innerMinX = pt[0];
+                        }
+                    }
+                    else { //if ((ptAngle >= Math.PI + angle) && (ptAngle < 2*Math.PI - angle)) {
+                        //top side
+                        if (pt[1] > innerMinY) {
+                            innerMinY = pt[1];
+                        }
+                    }
                 }
                 
-                double ptAngle = Math.atan2(pt[1], pt[0]);
+                double innerCenterOffsetX = (innerMaxX + innerMinX)/2 - innerCenterX;
+                double innerCenterOffsetY = (innerMaxY + innerMinY)/2 - innerCenterY;
                 
-                //Make ptAngle in the range [-angle, 2*PI-angle)
-                if (ptAngle < -angle) {
-                    ptAngle += 2*Math.PI;
-                }
+                double newHeight;
+                double newWidth;
                 
-                if ((ptAngle >= -angle) && (ptAngle < angle)) {
-                    //right side
-                    if (pt[0] < innerMinX) {
-                        innerMinX = pt[0];
-                    }
+                if ((innerMaxY - innerMinY)/(innerMaxX - innerMinX) >= aspectRatio) {
+                    //Constrained by the width, move the center up/down
+                    newWidth = innerMaxX - innerMinX;
+                    newHeight = newWidth*aspectRatio;
+                    innerMaxY = (innerMaxY + innerMinY)/2 + newHeight/2;
+                    innerMinY = (innerMaxY + innerMinY)/2 - newHeight/2;
                 }
-                else if ((ptAngle >= angle) && (ptAngle < Math.PI - angle)) {
-                    //top side
-                    if (pt[1] < innerMinY) {
-                        innerMinY = pt[1];
-                    }
+                else {
+                    //Constrained by the height, move the center left/right
+                    newHeight = innerMaxY - innerMinY;
+                    newWidth = newHeight/aspectRatio;
+                    innerMaxX = (innerMaxX + innerMinX)/2 + newWidth/2;
+                    innerMinX = (innerMaxX + innerMinX)/2 - newWidth/2;
                 }
-                else if ((ptAngle >= Math.PI - angle) && (ptAngle < Math.PI + angle)) {
-                    //left side
-                    if (-pt[0] < innerMinX) {
-                        innerMinX = -pt[0];
-                    }
+                Logger.trace("innerX extent = (" + innerMinX + ", " + innerMaxX + ")" );
+                Logger.trace("innerY extent = (" + innerMinY + ", " + innerMaxY + ")" );
+                
+                innerCenterX += innerCenterOffsetX;
+                innerCenterY += innerCenterOffsetY;
+                Logger.trace("inner center = (" + innerCenterX + ", " + innerCenterY + ")" );
+                
+                fullyConstrained = (Math.abs(innerCenterOffsetX) < 0.0001) &&
+                        (Math.abs(innerCenterOffsetY) < 0.0001);
+                if (newWidth > maxWidth) {
+                    maxWidth = newWidth;
+                    fullyConstrained = false;
                 }
-                else { //if ((ptAngle >= Math.PI + angle) && (ptAngle < 2*Math.PI - angle)) {
-                    //bottom side
-                    if (-pt[1] < innerMinY) {
-                        innerMinY = -pt[1];
-                    }
+                if (newHeight > maxHeight) {
+                    maxHeight = newHeight;
+                    fullyConstrained = false;
                 }
+                Logger.trace("width = " + newWidth + ", " + maxWidth);
+                Logger.trace("height = " + newHeight + ", " + maxHeight);
             }
             undistortedPoints.release();
             
-            double ratio = size.height/size.width;
+            double innerF;
             
-            double fMin;
-            double fMax;
-            
-            if (outerMaxY/outerMaxX >= ratio) {
-                //Constrained by the height
-                fMin = size.height / (2*outerMaxY);
-            }
-            else {
+            if ((innerMaxY - innerMinY)/(innerMaxX - innerMinX) >= aspectRatio) {
                 //Constrained by the width
-                fMin = size.width / (2*outerMaxX);
-            }
-            
-            if (innerMinY/innerMinX >= ratio) {
-                //Constrained by the width
-                fMax = size.width / (2*innerMinX);
+                innerF = size.width / (innerMaxX - innerMinX);
             }
             else {
                 //Constrained by the height
-                fMax = size.height / (2*innerMinY);
+                innerF = size.height / (innerMaxY - innerMinY);
             }
+            double innerCx = (size.width-1)/2 - innerF*innerCenterX;
+            double innerCy = (size.height-1)/2 - innerF*innerCenterY;
             
-            double f = fMax*alpha + fMin*(1-alpha);
+            double f = innerF*alpha + outerF*(1-alpha);
+            double cx = innerCx*alpha + outerCx*(1-alpha);
+            double cy = innerCy*alpha + outerCy*(1-alpha);
             ret.put(0, 0, f);
-            ret.put(0, 2, (size.width - 1)/2);
+            ret.put(0, 2, cx);
             ret.put(1, 1, f);
-            ret.put(1, 2, (size.height - 1)/2);
+            ret.put(1, 2, cy);
             
             return ret;
         }
