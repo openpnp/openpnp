@@ -67,10 +67,9 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
 
     @Override
     public void setCoordinate(double coordinate) {
-        Object oldValue = this.coordinate;
         this.coordinate = coordinate;
-        firePropertyChange("coordinate", oldValue, coordinate);
-        firePropertyChange("lengthCoordinate", null, getLengthCoordinate());
+        // Note, we do not firePropertyChange() as these changes are live from the machine thread,
+        // and coordinate changes are handled through MachineListener.machineHeadActivity(Machine, Head).
     }
 
     @Override
