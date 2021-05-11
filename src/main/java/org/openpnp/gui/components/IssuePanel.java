@@ -292,7 +292,7 @@ public class IssuePanel extends JPanel {
         autoBinding_2.bind();
 
         UiUtils.messageBoxOnExceptionLater(() -> {
-            issue.selectActive();
+            issue.activate();
         });
     }
 }

@@ -61,7 +61,7 @@ public class Solutions extends AbstractTableModel {
     private Set<String> dismissedSolutions = new HashSet<>();
 
     @ElementList(required = false)
-    private Set<String> doneSolutions = new HashSet<>();
+    private Set<String> solvedSolutions = new HashSet<>();
 
     public enum Milestone implements Subject, Named {
         Welcome, Connect, Basics, Vision, Calibration, Production, Advanced;
@@ -362,7 +362,7 @@ public class Solutions extends AbstractTableModel {
             return new Choice[] {};
         }
 
-        public void selectActive() throws Exception {
+        public void activate() throws Exception {
         }
 
         public String getExtendedDescription() {
@@ -402,7 +402,7 @@ public class Solutions extends AbstractTableModel {
     }
     public void setSolutionsIssueDismissed(Issue issue, boolean dismissed) {
         if (dismissed) {
-            doneSolutions.remove(issue.getFingerprint());
+            solvedSolutions.remove(issue.getFingerprint());
             dismissedSolutions.add(issue.getFingerprint()); 
         }
         else {
@@ -410,16 +410,16 @@ public class Solutions extends AbstractTableModel {
         }
     }
 
-    public boolean isSolutionsIssueDone(Issue issue) {
-        return doneSolutions.contains(issue.getFingerprint());
+    public boolean isSolutionsIssueSolved(Issue issue) {
+        return solvedSolutions.contains(issue.getFingerprint());
     }
-    public void setSolutionsIssueDone(Issue issue, boolean dismissed) {
+    public void setSolutionsIssueSolved(Issue issue, boolean dismissed) {
         if (dismissed) {
             dismissedSolutions.remove(issue.getFingerprint());
-            doneSolutions.add(issue.getFingerprint()); 
+            solvedSolutions.add(issue.getFingerprint()); 
         }
         else {
-            doneSolutions.remove(issue.getFingerprint());
+            solvedSolutions.remove(issue.getFingerprint());
         }
     }
 
@@ -530,7 +530,7 @@ public class Solutions extends AbstractTableModel {
             if (isSolutionsIssueDismissed(issue)) {
                 issue.setInitialState(State.Dismissed);
             }
-            else if (isSolutionsIssueDone(issue)) {
+            else if (isSolutionsIssueSolved(issue)) {
                 issue.setInitialState(State.Solved);
             }
         }

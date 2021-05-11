@@ -30,8 +30,8 @@ import org.openpnp.spi.Axis;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Machine;
 import org.openpnp.spi.Locatable.LocationOption;
+import org.openpnp.spi.Machine;
 import org.openpnp.util.MovableUtils;
 import org.simpleframework.xml.Element;
 
@@ -175,10 +175,18 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
     }
 
     /**
-     * @return The first HeadMountable that has this axis assigned. Used to capture and safely position an axis.
+     * @return The first HeadMountable that has this axis assigned. Used to capture and safely position an axis. 
+     * Returns null is the axis is unused.
      */
     public HeadMountable getDefaultHeadMountable() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
+            // Try cameras with preference.
+            for (HeadMountable hm : head.getCameras()) {
+                if (hm.getMappedAxes(Configuration.get().getMachine()).contains(this)) {    
+                    return hm;
+                }
+            }
+            // Then the rest.
             for (HeadMountable hm : head.getHeadMountables()) {
                 if (hm.getMappedAxes(Configuration.get().getMachine()).contains(this)) {    
                     return hm;

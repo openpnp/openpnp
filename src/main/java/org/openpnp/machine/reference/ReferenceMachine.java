@@ -29,7 +29,6 @@ import java.util.Set;
 import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
@@ -525,8 +524,6 @@ public class ReferenceMachine extends AbstractMachine {
                         else {
                             setMotionPlanner(oldMotionPlanner);
                         }
-                        // Reselect the tree path to reload the wizard with potentially different property sheets. 
-                        MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
                         super.setState(state);
                     }
                 });
@@ -551,8 +548,6 @@ public class ReferenceMachine extends AbstractMachine {
                         else {
                             setMotionPlanner(oldMotionPlanner);
                         }
-                        // Reselect the tree path to reload the wizard with potentially different property sheets. 
-                        MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
                         super.setState(state);
                     }
                 });

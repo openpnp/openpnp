@@ -34,10 +34,14 @@ import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Issue;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.State;
+import org.openpnp.spi.Axis;
+import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.pmw.tinylog.Logger;
 
 
@@ -57,8 +61,8 @@ class CalibrationSolutions implements Solutions.Subject {
     @Override
     public void findIssues(Solutions solutions) {
         if (solutions.getTargetMilestone() == Milestone.Calibration) {
-            // Safety stuff.
-            boolean okSafeZ = true;
+            // Dynamic Safe Z yes/no.
+            boolean okDynamicSafeZ = true;
             for (Head head : machine.getHeads()) {
                 for (Nozzle nozzle : head.getNozzles()) {
                     if (nozzle instanceof ReferenceNozzle) {
@@ -97,18 +101,20 @@ class CalibrationSolutions implements Solutions.Subject {
                                 refNozzle.setEnableDynamicSafeZ((state == State.Solved) ? (boolean) getChoice() : oldDynamicSafeZ);
                                 setChoice((state == State.Solved) ? (boolean) getChoice() : oldDynamicSafeZ);
                                 // This is a permanently available solution and we need to save state.
-                                solutions.setSolutionsIssueDone(this, (state == State.Solved));
+                                solutions.setSolutionsIssueSolved(this, (state == State.Solved));
                                 super.setState(state);
                             }
                         };
                         solutions.add(issue);
-                        if (!solutions.isSolutionsIssueDone(issue)) {
-                            okSafeZ = false;
+                        if (!solutions.isSolutionsIssueSolved(issue)) {
+                            okDynamicSafeZ = false;
                         }
                     }
                 }
             }
-            if (okSafeZ) {
+            if (okDynamicSafeZ) {
+
+                // Safe Z
                 for (Head head : machine.getHeads()) {
                     for (HeadMountable hm: head.getHeadMountables()) {
                         CoordinateAxis rawAxisZ = HeadSolutions.getRawAxis(machine, hm.getAxisZ());
@@ -125,7 +131,7 @@ class CalibrationSolutions implements Solutions.Subject {
                                     double zUnit = axesLocation1.subtract(axesLocation0).getCoordinate(axisZ);
                                     boolean isShared = isSharedAxis(head, hm, axisZ);
                                     final boolean partClearance = (hm instanceof ReferenceNozzle) && !(((ReferenceNozzle) hm).isEnableDynamicSafeZ());
-                                    final boolean lowLimit = (zUnit > 0);
+                                    final boolean limitLow = (zUnit > 0);
                                     final Length oldLimitLow = axisZ.getSafeZoneLow();
                                     final Length oldLimitHigh = axisZ.getSafeZoneHigh();  
                                     final boolean oldEnableLow = axisZ.isSafeZoneLowEnabled(); 
@@ -134,12 +140,12 @@ class CalibrationSolutions implements Solutions.Subject {
                                     solutions.add(new Solutions.Issue(
                                             hm, 
                                             "Calibrate Safe Z of "+hm.getName()+".", 
-                                            "Capture the Safe Z by jogging the machine.", 
+                                            "Jog "+hm.getName()+" over the tallest obstacle and capture.", 
                                             Solutions.Severity.Fundamental,
-                                            "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup") {
+                                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
 
                                         @Override 
-                                        public void selectActive() throws Exception {
+                                        public void activate() throws Exception {
                                             MainFrame.get().getMachineControls().setSelectedTool(hm);
                                         }
 
@@ -163,7 +169,7 @@ class CalibrationSolutions implements Solutions.Subject {
                                         @Override
                                         public void setState(Solutions.State state) throws Exception {
                                             Length newLimit = axisZ.getDriverLengthCoordinate();
-                                            if (lowLimit) {
+                                            if (limitLow) {
                                                 axisZ.setSafeZoneLow((state == State.Solved) ? newLimit : oldLimitLow);
                                                 axisZ.setSafeZoneLowEnabled((state == State.Solved) ? true : oldEnableLow);
                                                 if (!isShared) {
@@ -178,7 +184,7 @@ class CalibrationSolutions implements Solutions.Subject {
                                                 }
                                             }
                                             // This is a permanently available solution and we need to save state.
-                                            solutions.setSolutionsIssueDone(this, (state == State.Solved));
+                                            solutions.setSolutionsIssueSolved(this, (state == State.Solved));
                                             super.setState(state);
                                         }
                                     });
@@ -186,6 +192,150 @@ class CalibrationSolutions implements Solutions.Subject {
                                 catch (Exception e) {
                                     Logger.warn(e);
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Visual Homing
+            for (Head h : machine.getHeads()) {
+                if (h instanceof ReferenceHead) {
+                    ReferenceHead head = (ReferenceHead) h;
+                    Camera cam = null;
+                    try {
+                        cam = head.getDefaultCamera();
+                    }
+                    catch (Exception e) {
+                        // Ignore missing camera.
+                    }
+                    final Camera camera = cam;
+                    final Location oldFiducialLocation = head.getHomingFiducialLocation();
+                    if (camera != null 
+                            && head.getVisualHomingMethod() == VisualHomingMethod.None) {
+                        solutions.add(new Solutions.Issue(
+                                head, 
+                                "Enable Visual Homing.", 
+                                "Mount a permanent fiducial to your machine and use it for repeatable precision X/Y homing.", 
+                                Solutions.Severity.Suggestion,
+                                "https://github.com/openpnp/openpnp/wiki/Visual-Homing") {
+
+                            @Override 
+                            public void activate() throws Exception {
+                                MainFrame.get().getMachineControls().setSelectedTool(camera);
+                            }
+
+                            @Override 
+                            public String getExtendedDescription() {
+                                return "<html>"
+                                        + "<p>Mount a permanent fiducial to your machine table. Choose a mounting point that is mechanically coupled to the "
+                                        + "most important parts of your machine table. Make sure it is very unlikely you will ever need to change this new "
+                                        + "frame of reference.</p><br/>"
+                                        + "<p>Home the machine by means of your controller/manually. It must presently work in the wanted coordinate system.</p><br/>"
+                                        + "<p>Jog camera "+camera.getName()+" over the fiducial. Target it roughly with the cross-hairs.</p><br/>"
+                                        + "<p>Then press Accept to detect the precise position of the fiducial and set it up for visual homing.</p><br/>"
+                                        + "<p>Note: This will not change your present machine coordinate system, but rather pin it down to the fiducial. "
+                                        + "If the machine/controller axis setup were to change slightly in the future (e.g. a homing end-switch slightly moved), the "
+                                        + "homing fiducial will still be able to precisely preserve the frame of reference in X and Y.</p>"
+                                        + "</html>";
+                            }
+
+                            @Override
+                            public Icon getExtendedIcon() {
+                                return Icons.home;
+                            }
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                if (state == State.Solved) {
+                                    try { 
+                                        machine.execute(() -> {
+                                            // Set rough location as homing fiducial location.
+                                            Location homingFiducialLocation = camera.getLocation();
+                                            head.setHomingFiducialLocation(homingFiducialLocation);
+                                            head.setVisualHomingMethod(VisualHomingMethod.ResetToFiducialLocation);
+                                            // Perform homing to it, but don't reset machine position. 
+                                            head.visualHome(machine, false);
+                                            // With the precise location, set the homing fiducial again.
+                                            homingFiducialLocation = camera.getLocation();
+                                            head.setHomingFiducialLocation(homingFiducialLocation);
+                                            return true;
+                                        });
+                                    }
+                                    catch (Exception e) {
+                                        // Restore old settings
+                                        head.setHomingFiducialLocation(oldFiducialLocation);
+                                        head.setVisualHomingMethod(VisualHomingMethod.None);
+                                        // Re-throw
+                                        throw e;
+                                    }
+                                }
+                                else {
+                                    head.setHomingFiducialLocation(oldFiducialLocation);
+                                    head.setVisualHomingMethod(VisualHomingMethod.None);
+                                }
+                                super.setState(state);
+                            }
+                        });
+                    }
+                }
+            } 
+
+            // Soft-limits
+            for (Axis axis : machine.getAxes()) {
+                if (axis instanceof ReferenceControllerAxis 
+                        && axis.getType() != Type.Rotation) {
+                    ReferenceControllerAxis controllerAxis = (ReferenceControllerAxis) axis;
+                    HeadMountable hm = controllerAxis.getDefaultHeadMountable();
+                    if (hm != null) {
+                        final Length oldLimitLow = controllerAxis.getSoftLimitLow();
+                        final Length oldLimitHigh = controllerAxis.getSoftLimitHigh();  
+                        for (boolean limitLow : new Boolean[] {true, false}) {
+                            String qualifier = limitLow ? "low side" : "high side";
+                            if (!(limitLow ? controllerAxis.isSoftLimitLowEnabled() : controllerAxis.isSoftLimitHighEnabled())) {
+                                solutions.add(new Solutions.Issue(
+                                        controllerAxis, 
+                                        "Calibrate the "+qualifier+" soft limit of "+controllerAxis.getName()+".", 
+                                        "Move axis "+controllerAxis.getName()+" to the "+qualifier+" soft limit and capture.", 
+                                        Solutions.Severity.Suggestion,
+                                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
+
+                                    @Override 
+                                    public void activate() throws Exception {
+                                        MainFrame.get().getMachineControls().setSelectedTool(hm);
+                                    }
+
+                                    @Override 
+                                    public String getExtendedDescription() {
+                                        return "<html>"
+                                                + "<p>Move axis "+controllerAxis.getName()+" to the "+qualifier+" soft limit.</p><br/>"
+                                                + "<p>Jog "+controllerAxis.getType().getDefaultLetter()+" of "
+                                                + hm.getClass().getSimpleName()+" "+hm.getName()+" to do so.</p><br/>"
+                                                + "<p>If the axis has a limit switch, use a position close to it but still safe "
+                                                + "to not trigger the switch by accident.</p><br/>"
+                                                + "<p>Then press Accept to capture the lower soft limit.</p>"
+                                                + "</html>";
+                                    }
+
+                                    @Override
+                                    public Icon getExtendedIcon() {
+                                        return limitLow ? Icons.captureAxisLow : Icons.captureAxisHigh;
+                                    }
+
+                                    @Override
+                                    public void setState(Solutions.State state) throws Exception {
+                                        Length newLimit = controllerAxis.getDriverLengthCoordinate();
+                                        if (limitLow) {
+                                            controllerAxis.setSoftLimitLow((state == State.Solved) ? newLimit : oldLimitLow);
+                                            controllerAxis.setSoftLimitLowEnabled((state == State.Solved));
+                                        }
+                                        else {
+                                            controllerAxis.setSoftLimitHigh((state == State.Solved) ? newLimit : oldLimitHigh);
+                                            controllerAxis.setSoftLimitHighEnabled((state == State.Solved));
+                                        }
+                                        super.setState(state);
+                                    }
+                                });
                             }
                         }
                     }

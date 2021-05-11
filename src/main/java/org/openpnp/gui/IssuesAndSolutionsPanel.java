@@ -388,6 +388,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         }
                     }
                 }
+                // Reselect the Machine Setup tree path to reload the wizard with potentially different settings and property sheets.
+                // Otherwise each and every modified setting would need property change firing support, which is clearly not the case.
+                MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
                 selectionActions();
             });
         }
@@ -409,6 +412,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         issue.setState(Solutions.State.Dismissed);
                     }
                 }
+                // Reselect the Machine Setup tree path to reload the wizard with potentially different settings and property sheets.
+                // Otherwise each and every modified setting would need property change firing support, which is clearly not the case.
+                MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
                 selectionActions();
             });
         }
@@ -429,6 +435,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         issue.setState(Solutions.State.Open);
                     }
                 }
+                // Reselect the Machine Setup tree path to reload the wizard with potentially different settings and property sheets.
+                // Otherwise each and every modified setting would need property change firing support, which is clearly not the case.
+                MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
                 selectionActions();
             });
         }
