@@ -1,6 +1,7 @@
 package org.openpnp.machine.reference.vision;
 
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -72,6 +73,9 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     @Attribute(required = false)
     protected int repeatFiducialRecognition = 3;
     
+    @Element(required = false)
+    protected Length maxDistance = new Length(4, LengthUnit.Millimeters);
+
     @Element(required = false)
     protected FiducialLocatorTolerances tolerances = new FiducialLocatorTolerances();
     
@@ -321,10 +325,8 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
         return getFiducialLocation(location, part);
     }
-    
-    private Location getFiducialLocation(Location location, Part part) throws Exception {
-        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
 
+    public CvPipeline getFiducialPipeline(Camera camera, Part part) throws Exception {
         org.openpnp.model.Package pkg = part.getPackage();
         if (pkg == null) {
             throw new Exception(
@@ -343,26 +345,36 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                     "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
                     pkg.getId()));
         }
-        
+
+        PartSettings partSettings = getPartSettings(part);
+        CvPipeline pipeline = partSettings.getPipeline(); 
+
+        pipeline.setProperty("camera", camera);
+        pipeline.setProperty("part", part);
+        pipeline.setProperty("package", pkg);
+        pipeline.setProperty("footprint", footprint);
+        Rectangle2D bounds = footprint.getPadsShape().getBounds2D();
+        Length diameter = new Length(Math.max(bounds.getWidth(), bounds.getHeight()), footprint.getUnits());
+        pipeline.setProperty("fiducial.diameter", diameter);
+        pipeline.setProperty("fiducial.maxDistance", getMaxDistance());
+        return pipeline;
+    }
+
+    private Location getFiducialLocation(Location nominalLocation, Part part) throws Exception {
+        Location location = nominalLocation;
+        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+
         int repeatFiducialRecognition = 3;
         if ( this.repeatFiducialRecognition > 3 ) {
-        	repeatFiducialRecognition = this.repeatFiducialRecognition;
+            repeatFiducialRecognition = this.repeatFiducialRecognition;
         }
 
         Logger.debug("Looking for {} at {}", part.getId(), location);
         MovableUtils.moveToLocationAtSafeZ(camera, location);
 
-        PartSettings partSettings = getPartSettings(part);
         List<Location> matchedLocations = new ArrayList<Location>();
-        
-        try (CvPipeline pipeline = partSettings.getPipeline()) {
-            MovableUtils.moveToLocationAtSafeZ(camera, location);
 
-            pipeline.setProperty("camera", camera);
-            pipeline.setProperty("part", part);
-            pipeline.setProperty("package", pkg);
-            pipeline.setProperty("footprint", footprint);
-            
+        try(CvPipeline pipeline = getFiducialPipeline(camera, part)) {
             for (int i = 0; i < repeatFiducialRecognition; i++) {
                 // Perform vision operation
                 pipeline.process();
@@ -377,7 +389,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 for (KeyPoint keypoint : keypoints) {
                     locations.add(VisionUtils.getPixelLocation(camera, keypoint.pt.x, keypoint.pt.y));
                 }
-                
+
                 // Sort by distance from center.
                 Collections.sort(locations, new Comparator<Location>() {
                     @Override
@@ -387,7 +399,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                         return Double.compare(d1, d2);
                     }
                 });
-                
+
                 // And use the closest result
                 location = locations.get(0);
 
@@ -412,10 +424,6 @@ public class ReferenceFiducialLocator implements FiducialLocator {
                 	//to average, keep a list of all matches except the first, since its probably most off
                 	matchedLocations.add(location);
                 }
-            
-                Logger.debug("{} located at {}", part.getId(), location);
-                // Move to where we actually found the fid
-                camera.moveTo(location);
             }
         }
         
@@ -438,7 +446,9 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
             camera.moveTo(location);
         }
-        
+        if (location.convertToUnits(maxDistance.getUnits()).getLinearDistanceTo(nominalLocation) > maxDistance.getValue()) {
+            throw new Exception("Fiducial "+part.getName()+" detected too far away.");
+        }
         return location;
     }
     
@@ -470,7 +480,15 @@ public class ReferenceFiducialLocator implements FiducialLocator {
     public void setRepeatFiducialRecognition(int repeatFiducialRecognition) {
         this.repeatFiducialRecognition = repeatFiducialRecognition;
     }
-    
+
+    public Length getMaxDistance() {
+        return maxDistance;
+    }
+
+    public void setMaxDistance(Length maxDistance) {
+        this.maxDistance = maxDistance;
+    }
+
     public CvPipeline getPipeline() {
         return pipeline;
     }
