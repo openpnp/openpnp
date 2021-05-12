@@ -30,4 +30,10 @@ The secondary fiducial should be placed close to the primary fiducial (see previ
 
 You can print out the same fiducial as for the primary fiducial, cut it out with a margin of a few millimeters, and glue it onto a spacer. The spacer should be as black and matte as possible. All the other rules for the primary fiducial apply equally.
 
+## Nozzle Offsets
 
+After the calibration fiducial X, Y coordinates have been determined, we also need the Z coordinates. For this we need the nozzle tip (the very point) as the reference. Therefore, you need to load a nozzle tip to each nozzle and then perform the nozzle offset calibration solutions. 
+
+In the spirit of the holistic approach described above, this step goes both ways: The fiducial will get its Z coordinate, and the nozzle will get its approximate head offsets in X, Y (these will be calibrated to better precision later). 
+
+For multi-nozzle machines, the first nozzle (default nozzle) will serve as the head Z reference. All the other nozzles will be adjusted to the same reference. 
