@@ -2,6 +2,8 @@
 
 Visual calibration uses a holistic (whole-machine) approach to calibrate both the cameras and various mechanics of the machine by playing the two against each other. On one hand, the known metrics of machine motion are used to calibrate the cameras. On the other hand, the camera is used to make the motion more precise. The inherent chicken and egg situation between the two is circumvented by exploiting various forms of symmetry and by approximation through iteration, things that would be hard or tedious to do by hand. 
 
+Visual Calibration is provided by [[Issues and Solutions]] when targeting the **Calibration** milestone. This page as a whole provides the background information for it. Individual sections are linked from the corresponding solutions.  
+
 # Calibration Rig
 
 In order to perform Visual Calibration, a certain calibration rig is needed. The elements of which is described here. 
