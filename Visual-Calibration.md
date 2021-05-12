@@ -8,17 +8,25 @@ Visual Calibration is provided by [[Issues and Solutions]] when targeting the **
 
 In order to perform Visual Calibration, a certain calibration rig is needed. The elements of which is described here. 
 
-## Calibration Base Fiducial
+## Calibration Primary Fiducial
 
 Camera calibration can be performed automatically by looking at a [fiducial](https://en.wikipedia.org/wiki/Fiducial_marker#Printed_circuit_boards) while moving the camera around in a certain pattern. 
 
-The fiducial must be round, high contrast, sharp and flat. The standard fiducial (also used for [[Visual Homing]]) is just any bright 1mm diameter round mark on dark ground. You can simply print the linked PDF. It is recommended to use a high quality matte photo paper or similar: 
+The fiducial must be round, high contrast, sharp and flat. The standard fiducial (the same type is used for [[Visual Homing]]) is just any bright 1mm diameter round mark on dark ground. You can simply print the linked PDF. It is recommended to use a high quality matte photo paper or similar: 
 
 * [FiducialHome.pdf](https://github.com/openpnp/openpnp/files/5542424/FiducialHome.pdf)
 
 The camera must be free to move around the fiducial so that it can appear at the edge of the camera view all around i.e. do not place the fiducial at the very edge of the machine motion range. 
 
-As both the camera and the camera light will move around and point at the fiducial from various angles, the fiducial must not have any depth or 3D structure, and it should have highly [diffuse reflection](https://en.wikipedia.org/wiki/Diffuse_reflection) so lighting it from the side should be fine. Don't use through holes, carrier tape sprocket holes, prints on glossy photo paper, HASL PCB fiducials or similar.
+As both the camera and the camera light will move around and point at the fiducial from various angles, the fiducial must not have any depth or 3D structure, and it should have [diffuse reflection](https://en.wikipedia.org/wiki/Diffuse_reflection) so lighting it from the side should be fine. Don't use through holes, carrier tape sprocket holes, prints on glossy photo paper, HASL PCB fiducials or similar.
 
-The fiducial must be mounted precisely on PCB surface Z Level, one way to make sure, is to glue the printed-out fiducial flat onto a surplus PCB that you can position reproducibly (±1 mm) on its holder.
+The fiducial must be mounted precisely on PCB surface Z Level, one way to make sure of this, is to glue the printed-out fiducial flat onto a surplus PCB that you can position reproducibly (±1 mm) on its holder.
+
+## Calibration Secondary Fiducial
+
+Camera calibration also requires looking at a secondary fiducial at different height (Z level). This will provide the calibration algorithm with the needed 3D/spacial information to determine the true focal length of the lens and the optical position of the camera in space. 
+
+You can print out the same fiducial as for the primary fiducial (see previous section)
+
+The secondary fiducial should be placed close to the primary fiducial, but on an elevated (or lowered) level in Z. The placement must not obstruct the camera view on either fiducials from all around them, again so that they can appear anywhere inside and to the edge of the camera view. 
 
