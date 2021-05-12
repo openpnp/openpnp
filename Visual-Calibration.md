@@ -8,15 +8,15 @@ In order to perform Visual Calibration, a certain calibration rig is needed. The
 
 ## Calibration Base Fiducial
 
-Camera calibration can be performed automatically by looking at a fiducial while moving the camera around in a certain pattern. 
+Camera calibration can be performed automatically by looking at a [fiducial](https://en.wikipedia.org/wiki/Fiducial_marker#Printed_circuit_boards) while moving the camera around in a certain pattern. 
 
-The fiducial must be round, high contrast, sharp and flat. You can print one on matte paper using the best quality print settings.
+The fiducial must be round, high contrast, sharp and flat. The standard fiducial (also used for [[Visual Homing]]) is just any bright 1mm diameter round mark on dark ground. You can simply print the linked PDF. It is recommended to use a high quality matte photo paper or similar: 
 
-Just paste this ● (Unicode character 9679 / 0x25CF) into an editor and print at 10pt.
+* [FiducialHome.pdf](https://github.com/openpnp/openpnp/files/5542424/FiducialHome.pdf)
 
 The camera must be free to move around the fiducial so that it can appear at the edge of the camera view all around i.e. do not place the fiducial at the very edge of the machine motion range. 
 
-As the camera and the light will move around and point at the fiducial from various angles, the fiducial must not have any depth or 3D structure, and it must not be shiny, i.e. lighting it from the side should be fine. Don't use through holes, carrier tape sprocket holes, prints on glossy photo paper, HASL PCB fiducials or similar.
+As both the camera and the camera light will move around and point at the fiducial from various angles, the fiducial must not have any depth or 3D structure, and it should have highly [diffuse reflection](https://en.wikipedia.org/wiki/Diffuse_reflection) so lighting it from the side should be fine. Don't use through holes, carrier tape sprocket holes, prints on glossy photo paper, HASL PCB fiducials or similar.
 
-The fiducial must be mounted precisely on PCB surface Z Level, one way to make sure is to glue the printed-out fiducial flat onto a surplus PCB that you can position reproducibly (±1 mm) on its holder.
+The fiducial must be mounted precisely on PCB surface Z Level, one way to make sure, is to glue the printed-out fiducial flat onto a surplus PCB that you can position reproducibly (±1 mm) on its holder.
 
