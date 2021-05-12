@@ -10,7 +10,9 @@ In order to perform Visual Calibration, a certain calibration rig is needed. The
 
 Camera calibration can be performed automatically by looking at a fiducial while moving the camera around in a certain pattern. 
 
-The fiducial must be round, high contrast, sharp and flat. You can print it on matte paper using the best quality print settings.
+The fiducial must be round, high contrast, sharp and flat. You can print one on matte paper using the best quality print settings.
+
+Just paste this ● (Unicode character 9679 / 0x25CF) into an editor and print at 10pt.
 
 The camera must be free to move around the fiducial so that it can appear at the edge of the camera view all around i.e. do not place the fiducial at the very edge of the machine motion range. 
 
