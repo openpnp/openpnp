@@ -139,6 +139,10 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                         startCameraCalibrationBtn = new JButton(startCalibration);
                         panelCameraCalibration.add(startCameraCalibrationBtn, "4, 6");
                         
+                        chckbxUseSavedData = new JCheckBox("Used Saved Data");
+                        chckbxUseSavedData.setEnabled(referenceCamera.getAdvancedCalibration().getSavedTestPattern3dPointsList() != null);
+                        panelCameraCalibration.add(chckbxUseSavedData, "6, 6");
+                        
                         lblNewLabel = new JLabel("Hide Invalid Pixels");
                         lblNewLabel.setToolTipText("<html><p width=\"500\">"
                                 + "A value of zero forces all valid pixels to be displayed but "
@@ -171,44 +175,53 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         public void actionPerformed(ActionEvent e) {
             MainFrame.get().getCameraViews().setSelectedCamera(referenceCamera);
 
-            startCameraCalibrationBtn.setEnabled(false);
-
-            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(referenceCamera);
-
-            boolean savedEnabledState = referenceCamera.getAdvancedCalibration().isEnabled();
-            
-            referenceCamera.getAdvancedCalibration().setEnabled(false);
-            referenceCamera.clearCalibrationCache();
-            
-            UiUtils.messageBoxOnException(() -> {
-                new CalibrateCameraProcess(MainFrame.get(), cameraView, (Part) comboBoxPart.getSelectedItem()) {
-
-                    @Override 
-                    public void processRawCalibrationData(List<Mat> testPattern3dPointsList, 
-                            List<Mat> testPatternImagePointsList, Size size) {
-                        
-                        Logger.trace("processResults has been called!");
-
-                        referenceCamera.getAdvancedCalibration().processRawCalibrationData(
-                                testPattern3dPointsList, testPatternImagePointsList, size);
-                        
-                        referenceCamera.getAdvancedCalibration().setEnabled(true);
-                        
-                        chckbxEnable.setSelected(true);
-                        
-                        startCameraCalibrationBtn.setEnabled(true);
-                    }
-
-                    @Override
-                    protected void processCanceled() {
-                        referenceCamera.getAdvancedCalibration().setEnabled(true);
-                        
-                        chckbxEnable.setSelected(savedEnabledState);
-                        
-                        startCameraCalibrationBtn.setEnabled(savedEnabledState);
-                    }
-                };
-            });
+            if (!chckbxUseSavedData.isSelected()) {
+                startCameraCalibrationBtn.setEnabled(false);
+    
+                CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(referenceCamera);
+    
+                boolean savedEnabledState = referenceCamera.getAdvancedCalibration().isEnabled();
+                
+                referenceCamera.getAdvancedCalibration().setEnabled(false);
+                referenceCamera.clearCalibrationCache();
+                
+                UiUtils.messageBoxOnException(() -> {
+                    new CalibrateCameraProcess(MainFrame.get(), cameraView, (Part) comboBoxPart.getSelectedItem()) {
+    
+                        @Override 
+                        public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
+                                double[][][] testPatternImagePointsList, Size size) {
+                            
+                            Logger.trace("processResults has been called!");
+    
+                            referenceCamera.getAdvancedCalibration().processRawCalibrationData(
+                                    testPattern3dPointsList, testPatternImagePointsList, size, referenceCamera.getDefaultZ());
+                            
+                            referenceCamera.getAdvancedCalibration().setEnabled(true);
+                            
+                            chckbxEnable.setSelected(true);
+                            
+                            startCameraCalibrationBtn.setEnabled(true);
+                            
+                            chckbxUseSavedData.setEnabled(true);
+                        }
+    
+                        @Override
+                        protected void processCanceled() {
+                            referenceCamera.getAdvancedCalibration().setEnabled(true);
+                            
+                            chckbxEnable.setSelected(savedEnabledState);
+                            
+                            startCameraCalibrationBtn.setEnabled(savedEnabledState);
+                        }
+                    };
+                });
+            }
+            else {
+                referenceCamera.getAdvancedCalibration().processRawCalibrationData(
+                        new Size(referenceCamera.getWidth(), referenceCamera.getHeight()), 
+                        referenceCamera.getDefaultZ());
+            }
         }
     };
 
@@ -242,5 +255,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private JLabel lblNewLabel;
     private JTextField textFieldDefaultZ;
     private JLabel lblNewLabel_1;
+    private JCheckBox chckbxUseSavedData;
     
 }

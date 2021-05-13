@@ -86,7 +86,7 @@ public abstract class CalibrateCameraProcess {
     static final boolean useSavedData = false;
 
     private static final int numberOfCalibrationHeights = 2;
-    private static final int desiredTestPatternSize = 5;
+    private static final int desiredTestPatternSize = 15;
     private static final int desiredPointsPerTestPattern = desiredTestPatternSize*desiredTestPatternSize;
     private static final double testPatternFillFraction = 0.90;
     private static final double trialStepSize = 0.5;
@@ -200,8 +200,8 @@ public abstract class CalibrateCameraProcess {
     
     private int calibrationHeightIndex;
 
-    private List<Mat> testPattern3dPointsList;
-    private List<Mat> testPatternImagePointsList;
+    private List<List<double[]>> testPattern3dPointsList;
+    private List<List<double[]>> testPatternImagePointsList;
     
     public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, Part calibrationRigPart)
             throws Exception {
@@ -236,9 +236,14 @@ public abstract class CalibrateCameraProcess {
         pipeline.setProperty("package", pkg);
         pipeline.setProperty("footprint", footprint);
         
-        firstMaskCircle = (MaskCircle)pipeline.getStage("first_mask");
-        secondMaskCircle = (MaskCircle)pipeline.getStage("second_mask");
-        maskDiameter = firstMaskCircle.getDiameter();
+        try {
+            firstMaskCircle = (MaskCircle)pipeline.getStage("first_mask");
+            secondMaskCircle = (MaskCircle)pipeline.getStage("second_mask");
+            maskDiameter = firstMaskCircle.getDiameter();
+        }
+        catch (Exception ex) {
+            maskDiameter = 100;
+        }
         
         savedAutoToolSelect = Configuration.get().getMachine().isAutoToolSelect();
         ((ReferenceMachine) Configuration.get().getMachine()).setAutoToolSelect(false);
@@ -264,8 +269,8 @@ public abstract class CalibrateCameraProcess {
      * 
      * @param size - the size of the images
      */
-    protected abstract void processRawCalibrationData(List<Mat> testPattern3dPoints, 
-            List<Mat> testPatternImagePoints, Size size);
+    protected abstract void processRawCalibrationData(double[][][] testPattern3dPoints, 
+            double[][][] testPatternImagePoints, Size size);
     
     /**
      * This method is called when the raw calibration data collection has been canceled and must 
@@ -296,6 +301,9 @@ public abstract class CalibrateCameraProcess {
                 break;
             case 5:
                 stepResult = step6();
+                break;
+            case 6:
+                stepResult = step7();
                 break;
             default :
                 break;
@@ -699,8 +707,10 @@ public abstract class CalibrateCameraProcess {
     private boolean step5() {
         //Collect the calibration points
  
-        MatOfPoint3f testPattern3dPoints = new MatOfPoint3f();
-        MatOfPoint2f testPatternImagePoints = new MatOfPoint2f();
+//        MatOfPoint3f testPattern3dPoints = new MatOfPoint3f();
+        List<double[]> testPattern3dPoints = new ArrayList<>();
+//        MatOfPoint2f testPatternImagePoints = new MatOfPoint2f();
+        List<double[]> testPatternImagePoints = new ArrayList<>();
         int angleIncrement;
         double observationWeight;
         if (isHeadMountedCamera) {
@@ -760,17 +770,16 @@ public abstract class CalibrateCameraProcess {
                     
                     //Save the test pattern location and the corresponding image point
                     if (observedPoint != null) {
-                        testPattern3dPoints.push_back(
-                                new MatOfPoint3f(
-                                        new Point3(apparentMotionDirection*testLocation.getX(), 
-                                                apparentMotionDirection*testLocation.getY(), 
-                                                testPatternZ)));
-                        testPatternImagePoints.push_back(
-                                new MatOfPoint2f(measuredPoint));
+                        testPattern3dPoints.add( 
+                                new double[] {apparentMotionDirection*testLocation.getX(), 
+                                              apparentMotionDirection*testLocation.getY(), 
+                                              testPatternZ});
+                        testPatternImagePoints.add(
+                                new double[] {measuredPoint.x, measuredPoint.y});
                     }
                 }
-                Logger.trace("testPattern3dPoints = " + testPattern3dPoints.dump());
-                Logger.trace("testPatternImagePoints = " + testPatternImagePoints.dump());
+                Logger.trace("testPattern3dPoints = " + testPattern3dPoints);
+                Logger.trace("testPatternImagePoints = " + testPatternImagePoints);
                 testPattern3dPointsList.add(testPattern3dPoints);
                 testPatternImagePointsList.add(testPatternImagePoints);
                 return null;
@@ -787,6 +796,8 @@ public abstract class CalibrateCameraProcess {
             @Override
             protected void done()  
             {
+                restoreCameraView();
+                
                 if (this.isCancelled()) {
                     CalibrateCameraProcess.this.cancel();
                     return;
@@ -794,7 +805,27 @@ public abstract class CalibrateCameraProcess {
                 
                 calibrationHeightIndex++;
                 if (calibrationHeightIndex == numberOfCalibrationHeights) {
-                    processRawCalibrationData(testPattern3dPointsList, testPatternImagePointsList, 
+                    double[][][] testPattern3dPointsArray = new double[testPattern3dPointsList.size()][][];
+                    for (int tpIdx=0; tpIdx<testPattern3dPointsList.size(); tpIdx++) {
+                        List<double[]> tp = testPattern3dPointsList.get(tpIdx);
+                        testPattern3dPointsArray[tpIdx] = new double[tp.size()][];
+                        for (int ptIdx=0; ptIdx<tp.size(); ptIdx++) {
+                            double[] pt = tp.get(ptIdx);
+                            testPattern3dPointsArray[tpIdx][ptIdx] = pt;
+                        }
+                    }
+                        
+                    double[][][] testPatternImagePointsArray = new double[testPatternImagePointsList.size()][][];
+                    for (int tpIdx=0; tpIdx<testPatternImagePointsList.size(); tpIdx++) {
+                        List<double[]> tp = testPatternImagePointsList.get(tpIdx);
+                        testPatternImagePointsArray[tpIdx] = new double[tp.size()][];
+                        for (int ptIdx=0; ptIdx<tp.size(); ptIdx++) {
+                            double[] pt = tp.get(ptIdx);
+                            testPatternImagePointsArray[tpIdx][ptIdx] = pt;
+                        }
+                    }
+                    
+                    processRawCalibrationData(testPattern3dPointsArray, testPatternImagePointsArray, 
                         new Size(pixelsX, pixelsY));
                     CalibrateCameraProcess.this.cancel();
                 }
@@ -816,6 +847,15 @@ public abstract class CalibrateCameraProcess {
      * @return true if the action was successful and the state machine should move to the next step
      */
     private boolean step6() {
+        return true;
+    }
+    
+    /**
+     * Action to take when transitioning from step 6 to step 1
+     * 
+     * @return true if the action was successful and the state machine should move to the next step
+     */
+    private boolean step7() {
         step = 0;
         return true;
     }
@@ -879,7 +919,8 @@ public abstract class CalibrateCameraProcess {
 
     private org.opencv.core.Point findCalibrationRigFiducialPoint(Part part, Point2D expectedPoint) {
         pipeline.setProperty("MaskCircle.center", new org.opencv.core.Point(expectedPoint.getX(), expectedPoint.getY()));
-
+        pipeline.setProperty("MaskCircle.diameter", maskDiameter);
+        
         List<KeyPoint> keypoints = null;
         int attempts = 0;
         
@@ -912,10 +953,11 @@ public abstract class CalibrateCameraProcess {
                     }
                 }
                 Color pointColor = Color.GREEN;
+                Color circleColor = Color.GREEN;
                 if (2*minDistance + bestKeyPoint.size > 0.80*maskDiameter) {
                     pointColor = Color.YELLOW;
                 }
-                showPointAndCircle(bestKeyPoint.pt, new org.opencv.core.Point(expectedPoint.getX(), expectedPoint.getY()), maskDiameter/2, pointColor, Color.RED);
+                showPointAndCircle(bestKeyPoint.pt, new org.opencv.core.Point(expectedPoint.getX(), expectedPoint.getY()), maskDiameter/2, pointColor, circleColor);
                 return bestKeyPoint.pt;
             }
             attempts++;
