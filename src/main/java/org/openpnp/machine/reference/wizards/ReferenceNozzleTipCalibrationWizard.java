@@ -99,7 +99,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         contentPanel.add(panelCalibration);
         panelCalibration.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(72dlu;default)"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -109,6 +109,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 FormSpecs.UNRELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -198,7 +200,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         offsetThresholdTf = new JTextField();
         panelCalibration.add(offsetThresholdTf, "4, 10, left, default");
-        offsetThresholdTf.setColumns(6);
+        offsetThresholdTf.setColumns(10);
 
         lblCalibrationZOffset = new JLabel("Calibration Z Offset");
         lblCalibrationZOffset.setToolTipText("<html>\r\n<p>\r\nWhen the vision-detected feature of a nozzle is higher up on the nozzle tip <br />\r\nit is recommended to shift the focus plane with the \"Z Offset\".\r\n</p>\r\n<p>If a nozzle tip is named \"unloaded\" it is used as a stand-in for calibration<br />\r\nof the bare nozzle tip holder. Again the \"Z Offset\" can be used to calibrate at the <br />\r\nproper focal plane. \r\n</p>\r\n</html>");
@@ -206,11 +208,19 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
         calibrationZOffsetTf = new JTextField();
         panelCalibration.add(calibrationZOffsetTf, "8, 10, left, default");
-        calibrationZOffsetTf.setColumns(6);
+        calibrationZOffsetTf.setColumns(10);
+        
+        lblNozzleTipDiameter = new JLabel("Vision Diameter");
+        lblNozzleTipDiameter.setToolTipText("<html>\r\nDiameter of the feature/edge that should be detected in calibration vision.<br/>\r\nOnly used with pipelines that have a DetectCircularSymmetry stage.\r\n</html>");
+        panelCalibration.add(lblNozzleTipDiameter, "2, 12, right, default");
+        
+        calibrationTipDiameter = new JTextField();
+        panelCalibration.add(calibrationTipDiameter, "4, 12, left, default");
+        calibrationTipDiameter.setColumns(10);
 
         lblRecalibration = new JLabel("Automatic Recalibration");
         lblRecalibration.setToolTipText("<html>\r\n<p>Determines when a recalibration is automatically executed:</p>\r\n<p><ul><li>On each nozzle tip change.</li>\r\n<li>On each nozzle tip change but only in Jobs.</li>\r\n<li>On machine homing and when first loaded. </li></ul></p>\r\n<p>Manual with stored calibration (only recommended for machines <br /> \r\nwith C axis homing).</p>\r\n</html>");
-        panelCalibration.add(lblRecalibration, "2, 12, right, default");
+        panelCalibration.add(lblRecalibration, "2, 14, right, default");
 
         recalibrationCb = new JComboBox(ReferenceNozzleTipCalibration.RecalibrationTrigger.values());
         recalibrationCb.addItemListener(new ItemListener() {
@@ -218,23 +228,23 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 adaptDialog();
             }
         });
-        panelCalibration.add(recalibrationCb, "4, 12, left, default");
-        
+        panelCalibration.add(recalibrationCb, "4, 14, left, default");
+
         lblFailHoming = new JLabel("Fail Homing?");
         lblFailHoming.setToolTipText(
                 "When the calibration fails during homing, also fail the homing cycle.");
-        panelCalibration.add(lblFailHoming, "6, 12, right, default");
+        panelCalibration.add(lblFailHoming, "6, 14, right, default");
         
         failHoming = new JCheckBox("");
-        panelCalibration.add(failHoming, "8, 12");
+        panelCalibration.add(failHoming, "8, 14");
 
         lblNewLabel = new JLabel("Pipeline");
-        panelCalibration.add(lblNewLabel, "2, 14, right, default");
+        panelCalibration.add(lblNewLabel, "2, 16, right, default");
 
         panel = new JPanel();
         FlowLayout flowLayout = (FlowLayout) panel.getLayout();
         flowLayout.setVgap(0);
-        panelCalibration.add(panel, "4, 14, left, default");
+        panelCalibration.add(panel, "4, 16, fill, default");
 
         btnEditPipeline = new JButton("Edit");
         panel.add(btnEditPipeline);
@@ -314,6 +324,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private JLabel lblRecalibration;
     private JComboBox recalibrationCb;
     private JButton btnCalibrateCamera;
+    private JLabel lblNozzleTipDiameter;
+    private JTextField calibrationTipDiameter;
     private JLabel lblFailHoming;
     private JCheckBox failHoming;
 
@@ -374,8 +386,10 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     }
 
     private void editCalibrationPipeline() throws Exception {
-        CvPipeline pipeline = nozzleTip.getCalibration()
-                                       .getPipeline();
+        Camera camera = VisionUtils.getBottomVisionCamera();
+        ReferenceNozzleTipCalibration calibration = nozzleTip.getCalibration();
+        CvPipeline pipeline = calibration
+                .getPipeline(camera, calibration.getCalibrationLocation(camera));
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
         dialog.setVisible(true);
@@ -413,6 +427,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "text", lengthConverter);
         addWrappedBinding(nozzleTip.getCalibration(), "calibrationZOffset", calibrationZOffsetTf,
                 "text", lengthConverter);
+        addWrappedBinding(nozzleTip.getCalibration(), "calibrationTipDiameter", calibrationTipDiameter,
+                "text", lengthConverter);
+
         addWrappedBinding(nozzleTip.getCalibration(), "recalibrationTrigger",
                 recalibrationCb, "selectedItem");
         
@@ -420,6 +437,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(offsetThresholdTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationZOffsetTf);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationTipDiameter);
     }
     protected void initDataBindings() {
         BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
