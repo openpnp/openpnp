@@ -26,7 +26,11 @@ The fiducial must be mounted precisely on PCB surface Z Level, one way to make s
 
 Camera calibration also requires looking at a secondary fiducial at different height (Z level). This will provide the calibration algorithm with the needed 3D/spacial information to determine the true focal length of the lens and the optical position of the camera in space. 
 
-The secondary fiducial should be placed close to the primary fiducial (see previous section), but on an elevated (or lowered) level in Z. The placement must not obstruct the camera view on either fiducials from all around them, again so that they can appear anywhere inside and to the edge of the camera view. 
+The secondary fiducial should be placed close to the primary fiducial (see previous section), but on an elevated (or lowered) level in Z. The fiducial may be out of focus, but the blur should not go all the way across. In the illustration below the middle one is still good, the right one not.
+
+![Out of Focus](https://user-images.githubusercontent.com/9963310/118112263-0e13e680-b3e5-11eb-818b-64d157866b35.png)
+
+The placement must not obstruct the camera view on either fiducials from all around them, again so that they can appear anywhere inside and to the edge of the camera view. 
 
 You can print out the same fiducial as for the primary fiducial, cut it out with a margin of a few millimeters, and glue it onto a spacer. The spacer should be as black and matte as possible. All the other rules for the primary fiducial apply equally.
 
