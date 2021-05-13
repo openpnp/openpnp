@@ -44,6 +44,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -281,15 +282,17 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
              * property name somewhere.
              */
             BeanUtils.addPropertyChangeListener(obj, (PropertyChangeListener) (e) -> {
-                if (e instanceof IndexedPropertyChangeEvent) {
-                    for (PropertySheetHolderTreeNode node : children) {
-                        node.loadChildren();
-                        treeModel.nodeStructureChanged(node);
+                SwingUtilities.invokeLater(() -> {
+                    if (e instanceof IndexedPropertyChangeEvent) {
+                        for (PropertySheetHolderTreeNode node : children) {
+                            node.loadChildren();
+                            treeModel.nodeStructureChanged(node);
+                        }
                     }
-                }
-                else {
-                    treeModel.nodeChanged(this);
-                }
+                    else {
+                        treeModel.nodeChanged(this);
+                    }
+                });
             }); 
         }
 

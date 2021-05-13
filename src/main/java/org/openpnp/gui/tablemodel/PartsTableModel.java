@@ -128,7 +128,22 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 
     @Override
     public void propertyChange(PropertyChangeEvent arg0) {
-        parts = new ArrayList<>(Configuration.get().getParts());
-        fireTableDataChanged();
+        if (arg0.getSource() instanceof Part) {
+            // Only single part data changed, but sort order might change, so still need fireTableDataChanged().
+            fireTableDataChanged();
+        }
+        else  {
+            // Parts list itself changes.
+            if (parts != null) { 
+                for (Part part : parts) {
+                    part.removePropertyChangeListener(this);
+                }
+            }
+            parts = new ArrayList<>(Configuration.get().getParts());
+            fireTableDataChanged();
+            for (Part part : parts) {
+                part.addPropertyChangeListener(this);
+            }
+        }
     }
 }

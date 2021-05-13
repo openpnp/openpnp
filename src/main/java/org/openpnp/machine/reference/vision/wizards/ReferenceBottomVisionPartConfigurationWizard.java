@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -37,7 +38,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JComboBox;
 
 public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceBottomVision bottomVision;
@@ -210,7 +210,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
         // perform the alignment
         PartAlignment.PartAlignmentOffset alignmentOffset = VisionUtils.findPartAlignmentOffsets(bottomVision, part,
-                null, new Location(LengthUnit.Millimeters), nozzle);
+                null, new Location(LengthUnit.Millimeters, 0, 0, 0, nozzle.getLocation().getRotation()), nozzle);
         Location offsets = alignmentOffset.getLocation();
 
         if (!centerAfterTest) {
@@ -219,7 +219,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
         // position the part over camera center
         Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(part, VisionUtils.getBottomVisionCamera(),
-                nozzle, 0.);
+                nozzle, nozzle.getLocation().getRotation());
 
         if (alignmentOffset.getPreRotated()) {
             // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic

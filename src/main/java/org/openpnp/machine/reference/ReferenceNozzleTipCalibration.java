@@ -20,7 +20,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
@@ -459,7 +458,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         @Override
         public Location getCameraOffset() {
             // Return the axis offset as the camera tool specific calibration offset.
-            Logger.debug("[nozzleTipCalibration] getCameraOffset() returns: {}, {}", this.centerX, this.centerY);
             return new Location(this.units, this.centerX, this.centerY, 0., 0.);
         }
     }
@@ -482,6 +480,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     @Attribute(required = false)
     private boolean enabled;
+    @Attribute(required = false)
+    private boolean failHoming = true;
 
     private boolean calibrating;
 
@@ -546,8 +546,16 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private Double offsetThreshold = 0.0;
     @Element(required = false)
     private Length offsetThresholdLength = new Length(0.5, LengthUnit.Millimeters);
+    /**
+     * Vision detection search distance margin, relative to the threshold: we want to detect nozzle tips outside the threshold and
+     * get positive falses rather than false positives.  
+     */
+    @Attribute(required = false)
+    private double detectionThresholdMargin = 0.4;
     @Element(required = false)
     private Length calibrationZOffset = new Length(0.0, LengthUnit.Millimeters);
+    @Element(required = false)
+    private Length calibrationTipDiameter = new Length(0.0, LengthUnit.Millimeters);
 
     public ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
         return this.runoutCompensationAlgorithm;
@@ -575,11 +583,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             referenceCamera = (ReferenceCamera)camera;
         }
 
-        // This is our baseline location. Note: we do not apply the tool specific calibration offset here
-        // as this would defy the very purpose of finding a new one here.  
-        Location cameraLocation = camera.getLocation();
-        Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
-                .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, this.calibrationZOffset.getValue(), 0));
+        Location measureBaseLocation = getCalibrationLocation(camera);
 
         try {
             calibrating = true;
@@ -660,13 +664,15 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 } else {
                     misdetects++;
                     if (misdetects > this.allowMisdetections) {
-                        throw new Exception("Too many vision misdetects. Check pipeline and threshold.");
+                        throw new Exception(
+                                "Nozzle tip calibration: too many vision misdetects. Check pipeline and threshold.");
                     }
                 }
             }
 
             if (nozzleTipMeasuredLocations.size() < Math.max(3, angleSubdivisions + 1 - this.allowMisdetections)) {
-                throw new Exception("Not enough results from vision. Check pipeline and threshold."); 
+                throw new Exception(
+                        "Nozzle tip calibration: not enough results from vision. Check pipeline and threshold.");
             }
 
             Configuration.get().getScripting().on("NozzleCalibration.Finished", params);
@@ -742,6 +748,15 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
     }
 
+    public Location getCalibrationLocation(Camera camera) {
+        // This is our baseline location. Note: we do not apply the tool specific calibration offset here
+        // as this would defy the very purpose of finding a new one here.  
+        Location cameraLocation = camera.getLocation();
+        Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
+                .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, this.calibrationZOffset.getValue(), 0));
+        return measureBaseLocation;
+    }
+
     public static void resetAllNozzleTips() {
         // Reset all nozzle tip calibrations, as they have become invalid due to some machine configuration change.
         for (NozzleTip nt: Configuration.get().getMachine().getNozzleTips()) {
@@ -792,11 +807,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
     private Location findCircle(Location measureLocation) throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
-        try (CvPipeline pipeline = getPipeline()) {
-            pipeline.setProperty("camera", camera);
-            Point maskCenter = VisionUtils.getLocationPixels(camera, measureLocation);
-            pipeline.setProperty("MaskCircle.center", new org.opencv.core.Point(maskCenter.getX(), maskCenter.getY()));
-
+        try (CvPipeline pipeline = getPipeline(camera, measureLocation)) {
+            
             pipeline.process();
             List<Location> locations = new ArrayList<>();
 
@@ -987,6 +999,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         this.calibrationZOffset = calibrationZOffset;
     }
 
+    public Length getCalibrationTipDiameter() {
+        return calibrationTipDiameter;
+    }
+
+    public void setCalibrationTipDiameter(Length calibrationTipDiameter) {
+        this.calibrationTipDiameter = calibrationTipDiameter;
+    }
+
     public RecalibrationTrigger getRecalibrationTrigger() {
         return recalibrationTrigger;
     }
@@ -1017,8 +1037,22 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         this.enabled = enabled;
     }
 
-    public CvPipeline getPipeline() throws Exception {
-        pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
+    public boolean isFailHoming() {
+        return failHoming;
+    }
+
+    public void setFailHoming(boolean failHoming) {
+        this.failHoming = failHoming;
+    }
+
+    public CvPipeline getPipeline(Camera camera, Location measureLocation) throws Exception {
+        pipeline.setProperty("camera", camera);
+        pipeline.setProperty("nozzleTip.diameter", getCalibrationTipDiameter());
+        // Set the search tolerance to be somewhat larger than the threshold.
+        pipeline.setProperty("nozzleTip.tolerance", getOffsetThresholdLength().multiply(1 + detectionThresholdMargin));
+        pipeline.setProperty("nozzleTip.center", measureLocation);
+        Point maskCenter = VisionUtils.getLocationPixels(camera, measureLocation);
+        pipeline.setProperty("MaskCircle.center", new org.opencv.core.Point(maskCenter.getX(), maskCenter.getY()));
         return pipeline;
     }
 
