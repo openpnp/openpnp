@@ -19,13 +19,16 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference;
+package org.openpnp.machine.reference.solutions;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
 import org.openpnp.gui.support.Icons;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHead.NozzleSolution;
+import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -52,10 +55,10 @@ import org.openpnp.spi.base.AbstractNozzle;
  * The idea is not to pollute the head implementation itself.
  *
  */
-class HeadSolutions implements Solutions.Subject {
+public class HeadSolutions implements Solutions.Subject {
     private final ReferenceHead head;
 
-    HeadSolutions(ReferenceHead head) {
+    public HeadSolutions(ReferenceHead head) {
         this.head = head;
     }
 

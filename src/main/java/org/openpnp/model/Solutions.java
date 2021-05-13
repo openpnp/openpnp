@@ -413,8 +413,8 @@ public class Solutions extends AbstractTableModel {
     public boolean isSolutionsIssueSolved(Issue issue) {
         return solvedSolutions.contains(issue.getFingerprint());
     }
-    public void setSolutionsIssueSolved(Issue issue, boolean dismissed) {
-        if (dismissed) {
+    public void setSolutionsIssueSolved(Issue issue, boolean solved) {
+        if (solved) {
             dismissedSolutions.remove(issue.getFingerprint());
             solvedSolutions.add(issue.getFingerprint()); 
         }
@@ -432,6 +432,11 @@ public class Solutions extends AbstractTableModel {
         return machine;
     }
 
+    /**
+     * Perform the Issues & Solutions search. This opens a list of pending issues, i.e. it does not
+     * directly affect the table model. Pending issues will only be made visible when 
+     * {@link #publishIssues()} is called.    
+     */
     public synchronized void findIssues() {
         pendingIssues = new ArrayList<>();
         Machine machine = getMachine();
@@ -536,10 +541,22 @@ public class Solutions extends AbstractTableModel {
         }
     }
 
-    public synchronized void add(Issue issue) {
+    /**
+     * Adds the issue to the list of pending issues that {@link #findIssues()} has opened.
+     * This should only be called from inside {@link #Subject.findIssues(Solutions)}
+     * 
+     * @param issue
+     * @return true if the issue was already marked as solved.  
+     */
+    public synchronized boolean add(Issue issue) {
         pendingIssues.add(issue);
+        return isSolutionsIssueSolved(issue);
     }
 
+    /**
+     * Publish the pending issues that {@link #findIssues()} has found i.e. that were added using {@link #add(Issue)}.
+     * This makes them visible trough the TableModel of this.
+     */
     public synchronized void publishIssues() {
         // Go through the issues and install listeners to update the dismissedTroubleshooting.
         for (Issue issue : pendingIssues) {

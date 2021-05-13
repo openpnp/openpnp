@@ -157,7 +157,7 @@ public class DetectCircularSymmetry extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Camera camera = (Camera) pipeline.getProperty("camera");
         Mat mat = pipeline.getWorkingImage();
-        // Get overrinding properties, if any and convert to pixels.
+        // Get overriding properties, if any and convert to pixels.
         Length diameterByProperty = (Length) pipeline.getProperty(propertyName+".diameter");
         int minDiameter = this.minDiameter;
         int maxDiameter = this.maxDiameter;
@@ -198,14 +198,19 @@ public class DetectCircularSymmetry extends CvStage {
      * Find the circle that has its center at the greatest circular symmetry in the given image,
      * indicating the largest contrast edge as its diameter.
      * 
-     * @param image
-     * @param xCenter
-     * @param yCenter
-     * @param maxDiameter
-     * @param diagnostics TODO
-     * @param tolerance
-     * @return
-     * @throws Exception 
+     * @param image         Image to be searched. If diagnostics are enabled, this image will be modified. 
+     * @param xCenter       Nominal X center of the search area inside the given image, in pixels.
+     * @param yCenter       Nominal Y center of the search area inside the given image, in pixels.
+     * @param maxDiameter   Maximum diameter of the examined circular symmetry area (pixels outside it are ignored).
+     * @param minDiameter   Minimum diameter of the examined circular symmetry area (pixels inside it are ignored).
+     * @param maxDistance   Search distance from the given center.
+     * @param minSymmetry   The minimum circular symmetry required to detect a match. This is the ratio of overall pixel
+     *                      variance divided by the circular pixel variance (sum of ring pixel variances). 
+     * @param subSampling   Sub-sampling pixel distance, i.e. only one pixel out of a square of size subSampling will be examined. 
+     * @param diagnostics   If true, draws a diagnostic heat map, circle and cross hairs into the image. 
+     * @param scoreRange    Outputs the score range of all the sampled center candidates.
+     * @return              A list of the the detected circles (currently only the best).
+     * @throws Exception
      */
     public static  List<Result.Circle> findCircularSymmetry(Mat image, int xCenter, int yCenter,
             int maxDiameter, int minDiameter, int maxDistance, double minSymmetry, int subSampling, boolean diagnostics,

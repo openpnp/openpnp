@@ -444,4 +444,11 @@ public class Location {
         result = 31 * result + (int) (temp ^ temp >>> 32);
         return result;
     }
+
+    /**
+     * @return true if all the coordinates are zero, assuming the location is therefore uninitialized.
+     */
+    public boolean isUninitialized() {
+        return this.equals(origin);
+    }
 }

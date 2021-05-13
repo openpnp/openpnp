@@ -85,6 +85,12 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
 
+    @Element(required = false)
+    private Location calibrationPrimaryFiducialLocation = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Location calibrationSecondaryFiducialLocation = new Location(LengthUnit.Millimeters);
+
     protected Machine machine;
 
     public AbstractHead() {
@@ -407,6 +413,22 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setHomingFiducialLocation(Location homingFiducialLocation) {
         this.homingFiducialLocation = homingFiducialLocation;
+    }
+
+    public Location getCalibrationPrimaryFiducialLocation() {
+        return calibrationPrimaryFiducialLocation;
+    }
+
+    public void setCalibrationPrimaryFiducialLocation(Location calibrationPrimaryFiducialLocation) {
+        this.calibrationPrimaryFiducialLocation = calibrationPrimaryFiducialLocation;
+    }
+
+    public Location getCalibrationSecondaryFiducialLocation() {
+        return calibrationSecondaryFiducialLocation;
+    }
+
+    public void setCalibrationSecondaryFiducialLocation(Location calibrationSecondaryFiducialLocation) {
+        this.calibrationSecondaryFiducialLocation = calibrationSecondaryFiducialLocation;
     }
 
     @Override

@@ -19,7 +19,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference.driver;
+package org.openpnp.machine.reference.solutions;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -31,8 +31,11 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver.CommunicationsType;
+import org.openpnp.machine.reference.driver.GcodeAsyncDriver;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.Command;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
+import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
@@ -59,7 +62,7 @@ import org.simpleframework.xml.Serializer;
 public class GcodeDriverSolutions implements Solutions.Subject {
     private final GcodeDriver gcodeDriver;
 
-    GcodeDriverSolutions(GcodeDriver gcodeDriver) {
+    public GcodeDriverSolutions(GcodeDriver gcodeDriver) {
         this.gcodeDriver = gcodeDriver;
     }
 
@@ -290,20 +293,21 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares"));
                 }
 
-                if (gcodeDriver.communicationsType == CommunicationsType.serial && gcodeDriver.serial != null) {
-                    final FlowControl oldFlowControl = gcodeDriver.serial.getFlowControl();
+                if (gcodeDriver.getCommunicationsType() == CommunicationsType.serial 
+                        && gcodeDriver.getSerial() != null) {
+                    final FlowControl oldFlowControl = gcodeDriver.getSerial().getFlowControl();
                     final FlowControl newFlowControl = isTinyG ? FlowControl.XonXoff : FlowControl.RtsCts;
                     if (oldFlowControl != newFlowControl) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
                                 "Change of serial port Flow Control recommended.",
                                 "Set "+newFlowControl.name()+" on serial port.",
-                                (gcodeDriver.serial.getFlowControl() == FlowControl.Off || isTinyG ? Severity.Warning : Severity.Suggestion),
+                                (gcodeDriver.getSerial().getFlowControl() == FlowControl.Off || isTinyG ? Severity.Warning : Severity.Suggestion),
                                 "https://en.wikipedia.org/wiki/Flow_control_(data)#Hardware_flow_control") {
 
                             @Override
                             public void setState(Solutions.State state) throws Exception {
-                                gcodeDriver.serial.setFlowControl((state == Solutions.State.Solved) ? 
+                                gcodeDriver.getSerial().setFlowControl((state == Solutions.State.Solved) ? 
                                         newFlowControl : oldFlowControl);
                                 super.setState(state);
                             }

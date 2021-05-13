@@ -135,7 +135,15 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
         }
         this.communicationsType = communicationsType;
     }
-    
+
+    public SerialPortCommunications getSerial() {
+        return serial;
+    }
+
+    public TcpCommunications getTcp() {
+        return tcp;
+    }
+
     public boolean isConnectionKeepAlive() {
     	return connectionKeepAlive;
     }
@@ -160,7 +168,7 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
         }
         switch (communicationsType) {
             case serial: {
-                return serial;
+                return getSerial();
             }
             case tcp: {
                 tcp.setDriver(this);
@@ -168,75 +176,75 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
             }
             default: {
                 Logger.error("Invalid communications method attempted to be set. Defaulting to serial.");
-                return serial;
+                return getSerial();
             }
         }
     }
 
     public String getPortName() {
-        return serial.getPortName();
+        return getSerial().getPortName();
     }
 
     public void setPortName(String portName) {
-        serial.setPortName(portName);
+        getSerial().setPortName(portName);
     }
 
     public int getBaud() {
-        return serial.getBaud();
+        return getSerial().getBaud();
     }
 
     public void setBaud(int baud) {
-        serial.setBaud(baud);
+        getSerial().setBaud(baud);
     }
 
     public FlowControl getFlowControl() {
-        return serial.getFlowControl();
+        return getSerial().getFlowControl();
     }
 
     public void setFlowControl(FlowControl flowControl) {
         Object oldValue = this.flowControl;
-        serial.setFlowControl(flowControl);
+        getSerial().setFlowControl(flowControl);
         firePropertyChange("flowControl", oldValue, flowControl);
     }
 
     public DataBits getDataBits() {
-        return serial.getDataBits();
+        return getSerial().getDataBits();
     }
 
     public void setDataBits(DataBits dataBits) {
-        serial.setDataBits(dataBits);
+        getSerial().setDataBits(dataBits);
     }
 
     public StopBits getStopBits() {
-        return serial.getStopBits();
+        return getSerial().getStopBits();
     }
 
     public void setStopBits(StopBits stopBits) {
-        serial.setStopBits(stopBits);
+        getSerial().setStopBits(stopBits);
     }
 
     public Parity getParity() {
-        return serial.getParity();
+        return getSerial().getParity();
     }
 
     public void setParity(Parity parity) {
-        serial.setParity(parity);
+        getSerial().setParity(parity);
     }
 
     public boolean isSetDtr() {
-        return serial.isSetDtr();
+        return getSerial().isSetDtr();
     }
 
     public void setSetDtr(boolean setDtr) {
-        serial.setSetDtr(setDtr);
+        getSerial().setSetDtr(setDtr);
     }
 
     public boolean isSetRts() {
-        return serial.isSetRts();
+        return getSerial().isSetRts();
     }
 
     public void setSetRts(boolean setRts) {
-        serial.setSetRts(setRts);
+        getSerial().setSetRts(setRts);
     }
 
     public String getIpAddress() {
