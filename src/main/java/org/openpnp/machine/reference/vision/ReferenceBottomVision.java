@@ -6,7 +6,6 @@ import java.util.Map;
 import javax.swing.Action;
 import javax.swing.Icon;
 
-import java.awt.Shape;
 import java.awt.Rectangle;
 
 import org.apache.commons.io.IOUtils;
@@ -195,6 +194,10 @@ public class ReferenceBottomVision implements PartAlignment {
             Logger.debug("Offsets accepted {}", offsets);
             // Calculate cumulative offsets over all the passes.  
             offsets = wantedLocation.subtractWithRotation(nozzleLocation);
+            
+            // subtract visionCenterOffset
+            offsets = offsets.subtract(partSettings.getVisionOffset().rotateXy(angleNorm(wantedAngle + offsets.getRotation(), 180)));
+
             Logger.debug("Final offsets {}", offsets);
             displayResult(pipeline, part, offsets, camera);
             return new PartAlignment.PartAlignmentOffset(offsets, true);
@@ -241,6 +244,10 @@ public class ReferenceBottomVision implements PartAlignment {
 
             // Set the angle on the offsets.
             offsets = offsets.derive(null, null, null, angleOffset);
+            
+            // subtract visionCenterOffset
+            offsets = offsets.subtract(partSettings.getVisionOffset().rotateXy(angleOffset));
+            
             Logger.debug("Final offsets {}", offsets);
 
             displayResult(pipeline, part, offsets, camera);
@@ -551,6 +558,9 @@ public class ReferenceBottomVision implements PartAlignment {
         @Attribute(required = false)
         protected MaxRotation maxRotation = MaxRotation.Adjust;
         
+        @Element(required = false)
+        protected Location visionOffset = new Location(LengthUnit.Millimeters);
+        
         @Element
         protected CvPipeline pipeline;
 
@@ -617,5 +627,13 @@ public class ReferenceBottomVision implements PartAlignment {
             this.checkSizeTolerancePercent = checkSizeTolerancePercent;
         }
 
+        public Location getVisionOffset() {
+            return visionOffset;
+        }
+
+        public void setVisionOffset(Location visionOffset) {
+            this.visionOffset = visionOffset.derive(null, null, 0.0, 0.0);
+        }
+        
     }
 }
