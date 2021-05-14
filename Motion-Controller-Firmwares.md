@@ -24,7 +24,7 @@ The following requirements apply for controllers with axes attached:
 
 ## Duet3D
 
-[Duet3D 2/3 controllers](https://www.duet3d.com/index.php?route=common/home#products) firmwares have been improved for use with OpenPnP. Many thanks to Duet3D for providing a free Duet 3 board and to [dc42](https://github.com/dc42) for implementing substantial improvements, and accepting a crucial [pull request](https://github.com/Duet3D/RepRapFirmware/pull/471). For advanced OpenPnP use, Duet firmware has been improved in...
+[Duet3D 2/3 controllers](https://www.duet3d.com/index.php?route=common/home#products) firmwares have been perfected for use with OpenPnP. Many thanks to Duet3D for providing a free Duet 3 board and to [dc42](https://github.com/dc42) for implementing substantial improvements, and accepting a crucial [pull request](https://github.com/Duet3D/RepRapFirmware/pull/471). For advanced OpenPnP use, Duet firmware has been improved in...
 
 * USB serial speed
 * Fixes for compressed G-code parsing
