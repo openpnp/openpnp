@@ -19,6 +19,8 @@ Note that the _First Location_ is approached from Safe Z above it and the last m
 
 See the [Nozzle Tip Probing Configuration](https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#nozzle-tip-probing-configuration) documentation, if you have a ContactProbeNozzle. 
 
+![Z Calibration](https://user-images.githubusercontent.com/9963310/118365257-3b56c500-b59c-11eb-8287-34e7eb78c7dc.png)
+
 ## Vision Calibration
 
 Using computer vision Nozzle Tip Changer locations can be calibrated in X and Y. The process uses two template images, of the empty and occupied changer slot respectively. It can therefore also detect if the slot is empty/occupied as expected.
