@@ -26,6 +26,10 @@ Now that OpenPnP knows where the camera is, let's move the nozzle around and mak
 3. Using the jog controls, move the nozzle forward, backward, left and right while looking at the camera view.
 4. Make sure that when you click arrows to move nozzle, in the camera view the nozzle moves in the same direction. For example if you click the up arrow nozzle should move vertical on your screen.  If it doesn't, you may need to adjust the [rotation and transforms](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms) of the camera.
 
+## Auto-Focus
+
+The Camera can optionally enable Auto-Focus capabilities. See the [[Up looking Camera Auto Focus]] page. This can be used to set the precise Z location of the camera (which is the focal plane).
+
 ***
 
 | Previous Step                 | Jump To                 | Next Step                                   |
