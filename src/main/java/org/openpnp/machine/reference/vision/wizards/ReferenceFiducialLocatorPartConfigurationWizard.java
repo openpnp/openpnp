@@ -2,7 +2,6 @@ package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -18,10 +17,7 @@ import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSetting
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
-import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.stages.SetResult;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
@@ -85,13 +81,8 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
     }
 
     private void editPipeline() throws Exception {
-        CvPipeline pipeline = partSettings.getPipeline();
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("part", part);
-        pipeline.setProperty("package", part.getPackage());
-        pipeline.setProperty("footprint", part.getPackage().getFootprint());
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        CvPipelineEditor editor = new CvPipelineEditor(fiducialLocator.getFiducialPipeline(camera, part));
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Fiducial Locator Pipeline", editor);
         dialog.setVisible(true);
     }
