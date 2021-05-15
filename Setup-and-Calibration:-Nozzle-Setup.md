@@ -76,7 +76,7 @@ The Nozzle Tip Changer allows OpenPnP to automatically choose the best nozzle ti
 
 The [[Nozzle Tip Changer]] configuration has its own page.
 
-![screen shot 2017](https://cloud.githubusercontent.com/assets/4028409/22084570/eced8ab8-ddd0-11e6-9e53-a3dcf60e647b.JPG)
+![Nozzle Tip Changer](https://user-images.githubusercontent.com/9963310/118364459-c59d2a00-b598-11eb-95bc-a8f77163e620.png)
 
 ## Nozzle Jogging
 Now that your nozzle is configured, let's move it around and make sure it's working.
