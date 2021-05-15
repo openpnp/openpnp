@@ -49,6 +49,8 @@ In addition to the already mentioned **Name** and **Looking** properties, some a
 
 **Notes:** When both  **Suspend during tasks?** and **Auto Camera View?** are enabled, there will only be clean result images presented during a job. By only displaying one camera at a time, you get a larger preview with much better resolution. **Tip:** make sure to right-click the camera View and choose **High** or **Highest** quality rendering. 
 
+**Focus Provider**: The bottom camera can optionally enable Auto-Focus capabilities. See the [[Up looking Camera Auto Focus]] page.
+
 ## Camera View Configuration
 
 Check out the context menu in the Camera View. You can set various options there:
