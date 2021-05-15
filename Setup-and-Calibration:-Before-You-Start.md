@@ -24,9 +24,16 @@ If you haven't already, [download and install OpenPnP](http://openpnp.org/downlo
 
 ## Configuration and Log Locations
 
-Get familiar with the locations of configuration and log files for OpenPnP. You will likely need to edit the `machine.xml` configuration file and you may need to look at the log files if things go wrong.
+Get familiar with the locations of configuration and log files for OpenPnP. You will sometimes need to edit the `machine.xml` configuration file, and you may need to look at the log files if things go wrong.
 
 See [Where are configuration and log files located?](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located) in the [[FAQ]] for more information.
+
+## Guidance by the Issues & Solutions System
+
+Be sure to check out the [[Issues and Solutions]] system. It will guide you through the machine setup process. The system is still being improved but already supports the most difficult configuration steps mostly automatically. Whenever OpenPnP starts up, it will scan your configuration for issues and solution. A notifier dot will appear on the tab, when unresolved issues and solutions are present. 
+
+![Issues and Solutions Tab](https://user-images.githubusercontent.com/9963310/118362167-a3061380-b58e-11eb-9acd-d4d0b521af1c.png)
+
 
 ***
 
