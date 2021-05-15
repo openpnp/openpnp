@@ -97,7 +97,7 @@ The **Advanced** milestone, while also serving as a production milestone, finall
 
 ## Video
 
-**Outdated:** For a quick Demo, [watch the video](https://youtu.be/VVaZo6BfhOM). Please disregard any mention of "testing version", "migration" etc. the system is now integrated into regular OpenPnP 2.0 and covers both new or changed machines and machines migrated from earlier versions. 
+**Outdated:** ~~For a quick Demo, [watch the video](https://youtu.be/VVaZo6BfhOM). Please disregard any mention of "testing version", "migration" etc. the system is now integrated into regular OpenPnP 2.0 and covers both new or changed machines and machines migrated from earlier versions.~~
 
 ___
 
