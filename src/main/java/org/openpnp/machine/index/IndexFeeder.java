@@ -2,6 +2,7 @@ package org.openpnp.machine.index;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.index.exceptions.FeedFailureException;
 import org.openpnp.machine.index.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.index.protocol.ErrorTypes;
 import org.openpnp.machine.index.protocol.IndexCommands;
@@ -174,11 +175,12 @@ public class IndexFeeder extends ReferenceFeeder {
 
             PacketResponse ackResponse = MoveFeedForward.decode(ackResponseString);
             if (!ackResponse.isOk()) {
+                slotAddress = null;
+                initialized = false;
                 ErrorTypes error = ackResponse.getError();
-                if (error == ErrorTypes.UNINITIALIZED_FEEDER ||
-                        error == ErrorTypes.TIMEOUT) {
-                    slotAddress = null;
-                    initialized = false;
+                if (error == ErrorTypes.TIMEOUT) {
+                    throw new FeedFailureException("Feed command timed out");
+                } else if (error == ErrorTypes.UNINITIALIZED_FEEDER) {
                     continue;
                 }
             }

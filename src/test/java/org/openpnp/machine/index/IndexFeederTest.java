@@ -4,6 +4,7 @@ import com.google.common.io.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.openpnp.machine.index.exceptions.FeedFailureException;
 import org.openpnp.machine.index.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.index.sheets.FeederPropertySheet;
 import org.openpnp.machine.index.sheets.SearchPropertySheet;
@@ -612,16 +613,15 @@ public class IndexFeederTest {
         when(mockedActuator.read(moveFeederForwardCommand))
                 .thenReturn(Errors.timeout());
 
-        try {
-            feeder.feed(mockedNozzle);
-            fail("feed did not throw exception after max retries");
-        } catch (Exception exception) {
-            assertEquals("Failed to feed", exception.getMessage());
-        }
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
 
         InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator).read(moveFeederForwardCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
+
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
+
         inOrder.verify(mockedActuator).read(getFeederAddressCommand);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator).read(moveFeederForwardCommand);
@@ -647,12 +647,7 @@ public class IndexFeederTest {
         when(mockedActuator.read(moveFeederForwardCommand))
                 .thenReturn(Errors.timeout());
 
-        try {
-            feeder.feed(mockedNozzle);
-            fail("feed did not throw exception after max retries");
-        } catch (Exception exception) {
-            assertEquals("Failed to feed", exception.getMessage());
-        }
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
 
         InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
@@ -660,8 +655,34 @@ public class IndexFeederTest {
         inOrder.verify(mockedActuator, never()).read(any());
     }
 
+    /**
+     * We only use our internal retry counts if get address / initialize fails. We don't want to
+     * use it if the feed command fails because OpenPnP itself has its own retries.
+     */
     @Test
-    public void feedInitializesOnFeederTimeout() throws Exception {
+    public void feedThrowsExceptionIfTheFeedTimesOut() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        feeder.setPartPitch(2);
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
+
+        String moveFeedForwardCommand = moveFeedForward(feederAddress, 20);
+        when(mockedActuator.read(moveFeedForwardCommand))
+                .thenReturn(Errors.timeout());
+
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
+
+        InOrder inOrder = inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator).read(moveFeedForwardCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
+    }
+
+    @Test
+    public void feedInitializesOnUninitializedFeeder() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
@@ -672,7 +693,7 @@ public class IndexFeederTest {
 
         String oldMoveFeederForwardCommand = moveFeedForward(feederAddress, 20);
         when(mockedActuator.read(oldMoveFeederForwardCommand))
-                .thenReturn(Errors.timeout());
+                .thenReturn(Errors.uninitializedFeeder(feederAddress, "FFEEDDCCBBAA998877665544"));
 
         int newAddress = 11;
 
@@ -758,13 +779,17 @@ public class IndexFeederTest {
                 .thenReturn(MoveFeedForward.ok(1));
 
         // Actually try to feed on feeder B
-        feederB.feed(mockedNozzle);
+        assertThrows(FeedFailureException.class, () -> feederB.feed(mockedNozzle));
 
         // Verify all of the calls in order
         InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(feederASlot1InitializationCommand); // First initialization Feeder A
         inOrder.verify(mockedActuator).read(feederBSlot2InitializationCommand); // First initialization Feeder B
         inOrder.verify(mockedActuator).read(feederBSlot2FeedCommand); // Feeder B timeout
+        inOrder.verify(mockedActuator, never()).read(any());
+
+        feederB.feed(mockedNozzle);
+
         inOrder.verify(mockedActuator).read(feederBGetAddressCommand); // Find feeder B slot
         inOrder.verify(mockedActuator).read(feederBSlot1InitializationCommand); // Initialize feeder B
         inOrder.verify(mockedActuator).read(feederBSlot1FeedCommand); // Finally move the feeder
