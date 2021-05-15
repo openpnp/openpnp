@@ -38,7 +38,7 @@ Some issues just alert you to problems or tasks, i.e. you have to resolve it you
 
 ![Dismiss](https://user-images.githubusercontent.com/9963310/118359604-8d8bec00-b584-11eb-9fe1-1816ec853985.png) Dismisses the reported issue or proposed solution. **Caution**: unless the reported issue is a false alarm (which it rarely is), the underlying problem will not magically go away, just by pressing **Dismiss**! Be sure to really understand what you are dismissing, and that you have provided a better, alternative resolution, or that it really is a false alarm.
 
-![Reopen](https://user-images.githubusercontent.com/9963310/118359592-7fd66680-b584-11eb-9259-3103db8c6e0c.png) reopens an issue that has previously been accepted or dismissed. As long as you haven't pressed **Find Issues & Solutions** in the meantime, the former state of your machine configuration will be restored. 
+![Reopen](https://user-images.githubusercontent.com/9963310/118359592-7fd66680-b584-11eb-9259-3103db8c6e0c.png) Reopens an issue that has previously been accepted or dismissed. As long as you haven't pressed **Find Issues & Solutions** in the meantime, the former state of your machine configuration will be restored. 
 
 ### Severity
 
