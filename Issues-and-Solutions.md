@@ -32,7 +32,7 @@ Each issue points to a problem or task at hand. Select it in the list to see the
 
 Some issues just alert you to problems or tasks, i.e. you have to resolve it yourself, by configuring OpenPnP settings or for instance by setting your motion controller up right. Other issues propose a ready-made solution, and you can just accept it to be automatically applied to your machine setup. If you don't like the proposed solution, you can alternatively dismiss it and resolve the issue manually. 
 
-![Info](https://user-images.githubusercontent.com/9963310/118359670-d8a5ff00-b584-11eb-9f89-b46d004b4630.png) Links to guidance from the Wiki or other sources. Note, the issue specific link is the one at the bottom. 
+![Info](https://user-images.githubusercontent.com/9963310/118359670-d8a5ff00-b584-11eb-9f89-b46d004b4630.png) Links to the Wiki or other sources for guidance regarding this issue. **Note**, the issue specific button is the one at the bottom. 
 
 ![Accept](https://user-images.githubusercontent.com/9963310/118359624-9f6d8f00-b584-11eb-875d-b89c068e97de.png) Accepts the proposed solution to be applied to your machine configuration. **Important:** immediately after doing that, there is a window of opportunity to safely inspect the applied solution and perhaps to even try it out. The solution can then still be undone by pressing **Reopen**. However, as soon as you press **Find Issues & Solutions** again, the changes will be permanent. 
 
