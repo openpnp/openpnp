@@ -2,6 +2,7 @@ package org.openpnp.machine.index;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.index.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.index.protocol.ErrorTypes;
 import org.openpnp.machine.index.protocol.IndexCommands;
 import org.openpnp.machine.index.protocol.PacketResponse;
@@ -81,6 +82,12 @@ public class IndexFeeder extends ReferenceFeeder {
 
             if (initialized) {
                 super.prepareForJob(visit);
+
+                if(getSlot().getLocation() == null) {
+                    throw new UnconfiguredSlotException(
+                            String.format("The slot at address %s has no location configured.", slotAddress)
+                    );
+                }
                 return;
             }
         }

@@ -4,6 +4,7 @@ import com.google.common.io.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.openpnp.machine.index.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.index.sheets.FeederPropertySheet;
 import org.openpnp.machine.index.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
@@ -58,6 +59,14 @@ public class IndexFeederTest {
         when(mockedNozzle.getName()).thenReturn("Test Nozzle");
 
         indexProperties = new IndexProperties(machine);
+    }
+
+    private void setSlotLocation(int address) {
+        setSlotLocation(address, new Location(LengthUnit.Millimeters, 1, 1, 1, 1));
+    }
+
+    private void setSlotLocation(int address, Location location) {
+        indexProperties.getFeederSlots().getSlot(address).setLocation(location);
     }
 
     @Test
@@ -133,8 +142,8 @@ public class IndexFeederTest {
         feeder.setEnabled(true);
         feeder.setHardwareId(hardwareId);
         feeder.setPart(new Part("test-part"));
-        feeder.setSlotAddress(5);
-        feeder.getSlot().setLocation(new Location(LengthUnit.Millimeters, 1, 1, 1, 1));
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress);
 
         assertTrue(feeder.isEnabled());
     }
@@ -270,6 +279,7 @@ public class IndexFeederTest {
     @Test
     public void prepareForJobFindsFeederAddressAndInitializes() throws Exception {
         feeder.setHardwareId(hardwareId);
+        setSlotLocation(feederAddress);
 
         String getFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(getFeederAddressCommand))
@@ -293,6 +303,7 @@ public class IndexFeederTest {
     public void prepareForJobInitializesIfSlotAddressIsSet() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
@@ -337,6 +348,8 @@ public class IndexFeederTest {
 
         int newAddress = 11;
 
+        setSlotLocation(newAddress);
+
         String newGetFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
@@ -369,6 +382,8 @@ public class IndexFeederTest {
                 .thenReturn(Errors.wrongFeederUUID(feederAddress, otherHardwareId));
 
         int newAddress = 11;
+
+        setSlotLocation(newAddress);
 
         String newGetFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
@@ -412,6 +427,8 @@ public class IndexFeederTest {
 
         int newAddress = 11;
 
+        setSlotLocation(newAddress);
+
         String newGetFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
                 .thenReturn(GetFeederAddress.ok(newAddress, hardwareId));
@@ -434,6 +451,32 @@ public class IndexFeederTest {
         assertSame(otherFeeder, recalledOtherFeeder);
         assertFalse(otherFeeder.initialized);
         assertEquals(feederAddress, (int) otherFeeder.slotAddress);
+    }
+
+    @Test
+    public void prepareForJobThrowsExceptionIfNewSlotHasNoLocation() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress);
+
+        String firstInitializeCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(firstInitializeCommand))
+                .thenReturn(Errors.timeout());
+
+        int newFeederAddress = 11;
+        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(getFeederAddressCommand))
+                .thenReturn(GetFeederAddress.ok(newFeederAddress, hardwareId));
+
+        String newInitializeCommand = initializeFeeder(newFeederAddress, hardwareId);
+        when(mockedActuator.read(newInitializeCommand))
+                .thenReturn(InitializeFeeder.ok(newFeederAddress));
+
+
+        assertThrows(UnconfiguredSlotException.class, () -> feeder.prepareForJob(false));
+
+        assertTrue(feeder.isInitialized());
+        assertEquals(newFeederAddress, feeder.getSlotAddress());
     }
 
     @Test
@@ -667,6 +710,7 @@ public class IndexFeederTest {
         String hardwareIdA = "445566778899AABBCCDDEEFF";
         feederA.setHardwareId(hardwareIdA);
         feederA.setSlotAddress(1);
+        setSlotLocation(1);
         machine.addFeeder(feederA);
 
         // Feeder B -> Slot 2
@@ -674,6 +718,7 @@ public class IndexFeederTest {
         String hardwareIdB = "FFEEDDCCBBAA998877665544";
         feederB.setHardwareId(hardwareIdB);
         feederB.setSlotAddress(2);
+        setSlotLocation(2);
         feederB.setPartPitch(2);
         machine.addFeeder(feederB);
 
