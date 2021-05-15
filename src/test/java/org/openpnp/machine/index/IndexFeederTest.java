@@ -538,6 +538,7 @@ public class IndexFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
+        setSlotLocation(feederAddress);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
@@ -559,6 +560,7 @@ public class IndexFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
+        setSlotLocation(feederAddress);
 
         String oldInitializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(oldInitializeFeederCommand))
@@ -569,6 +571,8 @@ public class IndexFeederTest {
                 .thenReturn(Errors.uninitializedFeeder(feederAddress, hardwareId));
 
         int newAddress = 11;
+
+        setSlotLocation(newAddress);
 
         String newGetFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
@@ -599,6 +603,7 @@ public class IndexFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
+        setSlotLocation(feederAddress);
         indexProperties.setFeederCommunicationMaxRetry(1);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
@@ -633,6 +638,7 @@ public class IndexFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
+        setSlotLocation(feederAddress);
         indexProperties.setFeederCommunicationMaxRetry(0);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
@@ -655,6 +661,30 @@ public class IndexFeederTest {
         inOrder.verify(mockedActuator, never()).read(any());
     }
 
+    @Test
+    public void feedThrowsExceptionWhenFeederCannotBeInitialized() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        feeder.setPartPitch(2);
+        indexProperties.setFeederCommunicationMaxRetry(1);
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(Errors.timeout());
+
+        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(getFeederAddressCommand))
+                .thenReturn(GetFeederAddress.ok(feederAddress, hardwareId));
+
+        assertThrows(FeedFailureException.class, () -> feeder.feed(mockedNozzle));
+
+        InOrder inOrder = inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
+    }
+
     /**
      * We only use our internal retry counts if get address / initialize fails. We don't want to
      * use it if the feed command fails because OpenPnP itself has its own retries.
@@ -664,6 +694,7 @@ public class IndexFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
+        setSlotLocation(feederAddress);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
@@ -686,6 +717,7 @@ public class IndexFeederTest {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
+        setSlotLocation(feederAddress);
 
         String oldInitializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(oldInitializeFeederCommand))
@@ -696,6 +728,8 @@ public class IndexFeederTest {
                 .thenReturn(Errors.uninitializedFeeder(feederAddress, "FFEEDDCCBBAA998877665544"));
 
         int newAddress = 11;
+
+        setSlotLocation(newAddress);
 
         String newGetFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
@@ -719,6 +753,32 @@ public class IndexFeederTest {
         inOrder.verify(mockedActuator).read(newMoveFeedForwardCommand); // Finally move the feeder
 
         assertEquals(newAddress, (int) feeder.getSlotAddress());
+    }
+
+    /**
+     * The important thing to note here is that the feed command is never issued because we have no location.
+     * Technically, the feeder could feed, but then we couldn't go pick up the part. When the issue is fixed,
+     * feed would be called again essentially wasting a part. So we don't feed at all.
+     */
+    @Test
+    public void feedThrowsExceptionIfSlotHasNoLocation() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        feeder.setPartPitch(2);
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
+
+        String moveFeedForwardCommand = moveFeedForward(feederAddress, 20);
+        when(mockedActuator.read(moveFeedForwardCommand))
+                .thenReturn(MoveFeedForward.ok(feederAddress));
+
+        assertThrows(UnconfiguredSlotException.class, () -> feeder.feed(mockedNozzle));
+
+        InOrder inOrder = inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
     }
 
     @Test

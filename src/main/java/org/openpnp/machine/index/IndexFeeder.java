@@ -170,6 +170,16 @@ public class IndexFeeder extends ReferenceFeeder {
             findSlotAddressIfNeeded();
             initializeIfNeeded();
 
+            if(! initialized) {
+                continue;
+            }
+
+            if(getSlot().getLocation() == null) {
+                throw new UnconfiguredSlotException(
+                        String.format("Will not feed because slot %s has no location configured", slotAddress)
+                );
+            }
+
             Actuator actuator = getDataActuator();
             String ackResponseString = actuator.read(IndexCommands.moveFeedForward(slotAddress, partPitch * 10));
 
@@ -188,7 +198,7 @@ public class IndexFeeder extends ReferenceFeeder {
             return;
         }
 
-        throw new Exception("Failed to feed");
+        throw new FeedFailureException("Failed to feed for an unknown reason. Is the feeder inserted?");
     }
 
     @Override
