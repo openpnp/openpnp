@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.openpnp.machine.index.exceptions.FeedFailureException;
+import org.openpnp.machine.index.exceptions.FeederHasNoLocationOffsetException;
+import org.openpnp.machine.index.exceptions.NoSlotAddressException;
 import org.openpnp.machine.index.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.index.sheets.FeederPropertySheet;
 import org.openpnp.machine.index.sheets.SearchPropertySheet;
@@ -35,6 +37,8 @@ public class IndexFeederTest {
     private Actuator mockedActuator;
     private Nozzle mockedNozzle;
     private IndexProperties indexProperties;
+    private Location baseLocation;
+    private Location feederOffset;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -60,10 +64,9 @@ public class IndexFeederTest {
         when(mockedNozzle.getName()).thenReturn("Test Nozzle");
 
         indexProperties = new IndexProperties(machine);
-    }
 
-    private void setSlotLocation(int address) {
-        setSlotLocation(address, new Location(LengthUnit.Millimeters, 1, 1, 1, 1));
+        baseLocation = new Location(LengthUnit.Millimeters, 1, 2, 3, 0);
+        feederOffset = new Location(LengthUnit.Millimeters, 1, 1, 0, 45);
     }
 
     private void setSlotLocation(int address, Location location) {
@@ -139,12 +142,24 @@ public class IndexFeederTest {
     }
 
     @Test
+    public void isEnabledReturnsFalseIfFeederHasNoOffset() {
+        feeder.setEnabled(true);
+        feeder.setHardwareId(hardwareId);
+        feeder.setPart(new Part("test-part"));
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        assertFalse(feeder.isEnabled());
+    }
+
+    @Test
     public void isEnabledReturnsTrueIfEverythingIsSet() {
         feeder.setEnabled(true);
         feeder.setHardwareId(hardwareId);
         feeder.setPart(new Part("test-part"));
         feeder.setSlotAddress(feederAddress);
-        setSlotLocation(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+        feeder.setOffset(feederOffset);
 
         assertTrue(feeder.isEnabled());
     }
@@ -280,7 +295,8 @@ public class IndexFeederTest {
     @Test
     public void prepareForJobFindsFeederAddressAndInitializes() throws Exception {
         feeder.setHardwareId(hardwareId);
-        setSlotLocation(feederAddress);
+        feeder.setOffset(feederOffset);
+        setSlotLocation(feederAddress, baseLocation);
 
         String getFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(getFeederAddressCommand))
@@ -303,8 +319,9 @@ public class IndexFeederTest {
     @Test
     public void prepareForJobInitializesIfSlotAddressIsSet() throws Exception {
         feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
         feeder.setSlotAddress(feederAddress);
-        setSlotLocation(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
@@ -341,6 +358,7 @@ public class IndexFeederTest {
     @Test
     public void prepareForJobFindsFeederAgainIfLostToTimeout() throws Exception {
         feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
         feeder.setSlotAddress(feederAddress);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
@@ -349,7 +367,7 @@ public class IndexFeederTest {
 
         int newAddress = 11;
 
-        setSlotLocation(newAddress);
+        setSlotLocation(newAddress, baseLocation);
 
         String newGetFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
@@ -373,6 +391,7 @@ public class IndexFeederTest {
     @Test
     public void prepareForJobFindsFeederAgainIfWrongFeederUUIDAndMakesNewFeeder() throws Exception {
         feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
         feeder.setSlotAddress(feederAddress);
         String otherHardwareId = "445566778899AABBCCDDEEFF";
 
@@ -384,7 +403,7 @@ public class IndexFeederTest {
 
         int newAddress = 11;
 
-        setSlotLocation(newAddress);
+        setSlotLocation(newAddress, baseLocation);
 
         String newGetFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
@@ -413,6 +432,7 @@ public class IndexFeederTest {
     @Test
     public void prepareForJobFindsFeederAgainIfWrongFeederUUIDAndUsesExistingFeeder() throws Exception {
         feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
         feeder.setSlotAddress(feederAddress);
 
         String otherHardwareId = "445566778899AABBCCDDEEFF";
@@ -428,7 +448,7 @@ public class IndexFeederTest {
 
         int newAddress = 11;
 
-        setSlotLocation(newAddress);
+        setSlotLocation(newAddress, baseLocation);
 
         String newGetFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
@@ -458,7 +478,7 @@ public class IndexFeederTest {
     public void prepareForJobThrowsExceptionIfNewSlotHasNoLocation() throws Exception {
         feeder.setHardwareId(hardwareId);
         feeder.setSlotAddress(feederAddress);
-        setSlotLocation(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
 
         String firstInitializeCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(firstInitializeCommand))
@@ -478,6 +498,21 @@ public class IndexFeederTest {
 
         assertTrue(feeder.isInitialized());
         assertEquals(newFeederAddress, feeder.getSlotAddress());
+    }
+    @Test
+    public void prepareForJobThrowsExceptionIfFeederHasNoOffset() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        String initializeCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
+
+
+        assertThrows(FeederHasNoLocationOffsetException.class, () -> feeder.prepareForJob(false));
+
+        assertTrue(feeder.isInitialized());
     }
 
     @Test
@@ -536,9 +571,10 @@ public class IndexFeederTest {
     @Test
     public void feedMovesPartForwardByPitch() throws Exception {
         feeder.setHardwareId(hardwareId);
-        feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
-        setSlotLocation(feederAddress);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
@@ -558,9 +594,10 @@ public class IndexFeederTest {
     @Test
     public void feedInitializesIfUninitializedErrorIsReturned() throws Exception {
         feeder.setHardwareId(hardwareId);
-        feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
-        setSlotLocation(feederAddress);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
 
         String oldInitializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(oldInitializeFeederCommand))
@@ -572,7 +609,7 @@ public class IndexFeederTest {
 
         int newAddress = 11;
 
-        setSlotLocation(newAddress);
+        setSlotLocation(newAddress, baseLocation);
 
         String newGetFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
@@ -601,9 +638,10 @@ public class IndexFeederTest {
     @Test
     public void feedThrowsExceptionAfterOneRetry() throws Exception {
         feeder.setHardwareId(hardwareId);
-        feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
-        setSlotLocation(feederAddress);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
         indexProperties.setFeederCommunicationMaxRetry(1);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
@@ -636,9 +674,10 @@ public class IndexFeederTest {
     @Test
     public void feedThrowsExceptionAfterNoRetries() throws Exception {
         feeder.setHardwareId(hardwareId);
-        feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
-        setSlotLocation(feederAddress);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
         indexProperties.setFeederCommunicationMaxRetry(0);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
@@ -692,9 +731,10 @@ public class IndexFeederTest {
     @Test
     public void feedThrowsExceptionIfTheFeedTimesOut() throws Exception {
         feeder.setHardwareId(hardwareId);
-        feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
-        setSlotLocation(feederAddress);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
 
         String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(initializeFeederCommand))
@@ -715,9 +755,10 @@ public class IndexFeederTest {
     @Test
     public void feedInitializesOnUninitializedFeeder() throws Exception {
         feeder.setHardwareId(hardwareId);
-        feeder.setSlotAddress(feederAddress);
         feeder.setPartPitch(2);
-        setSlotLocation(feederAddress);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
 
         String oldInitializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
         when(mockedActuator.read(oldInitializeFeederCommand))
@@ -729,7 +770,7 @@ public class IndexFeederTest {
 
         int newAddress = 11;
 
-        setSlotLocation(newAddress);
+        setSlotLocation(newAddress, baseLocation);
 
         String newGetFeederAddressCommand = getFeederAddress(hardwareId);
         when(mockedActuator.read(newGetFeederAddressCommand))
@@ -782,6 +823,28 @@ public class IndexFeederTest {
     }
 
     @Test
+    public void feedThrowsExceptionIfFeederHasNoOffset() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+        feeder.setPartPitch(2);
+
+        String initializeFeederCommand = initializeFeeder(feederAddress, hardwareId);
+        when(mockedActuator.read(initializeFeederCommand))
+                .thenReturn(InitializeFeeder.ok(feederAddress));
+
+        String moveFeedForwardCommand = moveFeedForward(feederAddress, 20);
+        when(mockedActuator.read(moveFeedForwardCommand))
+                .thenReturn(MoveFeedForward.ok(feederAddress));
+
+        assertThrows(FeederHasNoLocationOffsetException.class, () -> feeder.feed(mockedNozzle));
+
+        InOrder inOrder = inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(initializeFeederCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
+    }
+
+    @Test
     public void twoFeedersCanNotHaveTheSameAddress() throws Exception {
         // Remove the main feeder so we can make two of our own in this test
         machine.removeFeeder(feeder);
@@ -790,16 +853,18 @@ public class IndexFeederTest {
         IndexFeeder feederA = new IndexFeeder();
         String hardwareIdA = "445566778899AABBCCDDEEFF";
         feederA.setHardwareId(hardwareIdA);
+        feederA.setOffset(feederOffset);
         feederA.setSlotAddress(1);
-        setSlotLocation(1);
+        setSlotLocation(1, baseLocation);
         machine.addFeeder(feederA);
 
         // Feeder B -> Slot 2
         IndexFeeder feederB = new IndexFeeder();
         String hardwareIdB = "FFEEDDCCBBAA998877665544";
         feederB.setHardwareId(hardwareIdB);
+        feederB.setOffset(feederOffset);
         feederB.setSlotAddress(2);
-        setSlotLocation(2);
+        setSlotLocation(2, baseLocation);
         feederB.setPartPitch(2);
         machine.addFeeder(feederB);
 
@@ -1057,8 +1122,19 @@ public class IndexFeederTest {
     }
 
     @Test
+    public void findIssuesGivesNothingIfNoHardwareIdIsPresent() {
+        feeder.setSlotAddress(feederAddress);
+
+        List<Solutions.Issue> issues = new ArrayList<>();
+        feeder.findIssues(issues);
+
+        assertEquals(0, issues.size());
+    }
+    @Test
     public void findIssuesAddsIssueIfSlotHasNoLocationSet() {
-        feeder.setSlotAddress(5);
+        feeder.setHardwareId(hardwareId);
+        feeder.setOffset(feederOffset);
+        feeder.setSlotAddress(feederAddress);
         assertNull(feeder.getSlot().getLocation());
 
         List<Solutions.Issue> issues = new ArrayList<>();
@@ -1068,8 +1144,58 @@ public class IndexFeederTest {
         Solutions.Issue issue = issues.get(0);
 
         assertEquals(feeder, issue.getSubject());
-        assertEquals("Feeder slot has unconfigured location", issue.getIssue());
-        assertEquals(Solutions.Severity.Fundamental, issue.getSeverity());
+        assertEquals("Feeder slot has no configured location", issue.getIssue());
+        assertEquals(Solutions.Severity.Error, issue.getSeverity());
         assertEquals(Solutions.State.Open, issue.getState());
+    }
+    @Test
+    public void findIssuesAddsIssueIfFeederHasNoOffsetSet() {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        List<Solutions.Issue> issues = new ArrayList<>();
+        feeder.findIssues(issues);
+
+        assertEquals(1, issues.size());
+        Solutions.Issue issue = issues.get(0);
+
+        assertEquals(feeder, issue.getSubject());
+        assertEquals("Feeder has no configured offset", issue.getIssue());
+        assertEquals(Solutions.Severity.Error, issue.getSeverity());
+        assertEquals(Solutions.State.Open, issue.getState());
+    }
+
+    @Test
+    public void getPickLocationThrowsExceptionIfNoSlotAddressIsSet() {
+        assertThrows(NoSlotAddressException.class, () -> feeder.getPickLocation());
+    }
+
+    @Test
+    public void getPickLocationThrowsExceptionIfSlotHasNoLocation() {
+        feeder.setSlotAddress(feederAddress);
+
+        assertThrows(UnconfiguredSlotException.class, () -> feeder.getPickLocation());
+    }
+    
+    @Test
+    public void getPickLocationThrowsExceptionIfFeederHasNoOffset() {
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        assertThrows(FeederHasNoLocationOffsetException.class, () -> feeder.getPickLocation());
+    }
+
+    @Test
+    public void getPickLocationUsesOffsetWithRotation() throws Exception {
+        feeder.setSlotAddress(feederAddress);
+        setSlotLocation(feederAddress, baseLocation);
+
+        feeder.setOffset(feederOffset);
+
+        Location actualLocation = feeder.getPickLocation();
+        Location expectedLocation = new Location(LengthUnit.Millimeters, 2, 3, 3, 45);
+
+        assertEquals(expectedLocation, actualLocation);
     }
 }

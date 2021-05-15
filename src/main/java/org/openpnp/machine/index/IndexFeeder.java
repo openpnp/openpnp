@@ -3,6 +3,8 @@ package org.openpnp.machine.index;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.index.exceptions.FeedFailureException;
+import org.openpnp.machine.index.exceptions.FeederHasNoLocationOffsetException;
+import org.openpnp.machine.index.exceptions.NoSlotAddressException;
 import org.openpnp.machine.index.exceptions.UnconfiguredSlotException;
 import org.openpnp.machine.index.protocol.ErrorTypes;
 import org.openpnp.machine.index.protocol.IndexCommands;
@@ -12,11 +14,11 @@ import org.openpnp.machine.index.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
 import org.openpnp.spi.*;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 import javax.swing.*;
 
@@ -42,6 +44,9 @@ public class IndexFeeder extends ReferenceFeeder {
 
     protected boolean initialized = false;
 
+    @Element
+    private Location offset;
+
     public IndexFeeder() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
@@ -56,19 +61,66 @@ public class IndexFeeder extends ReferenceFeeder {
 
     @Override
     public Location getPickLocation() throws Exception {
-        return new Location(LengthUnit.Millimeters, 20, 0, 0, 0);
+        verifyFeederLocationIsFullyConfigured();
+
+        return offset.offsetWithRotationFrom(getSlot().getLocation());
+    }
+
+    private void verifyFeederLocationIsFullyConfigured() throws NoSlotAddressException,
+            UnconfiguredSlotException, FeederHasNoLocationOffsetException {
+        if(slotAddress == null) {
+            throw new NoSlotAddressException(
+                    String.format("Index Feeder with address %s has no address. Is it inserted?", hardwareId)
+            );
+        }
+
+        if(getSlot().getLocation() == null) {
+            throw new UnconfiguredSlotException(
+                    String.format("The slot at address %s has no location configured.", slotAddress)
+            );
+        }
+
+        if(offset == null) {
+            throw new FeederHasNoLocationOffsetException(
+                    String.format("Index Feeder with address %s has no location offset.", hardwareId)
+            );
+        }
+    }
+
+    public void setOffset(Location offsets) {
+        Object oldValue = this.offset;
+        this.offset = offsets;
+        firePropertyChange("offsets", oldValue, offsets);
+    }
+
+    public Location getOffset() {
+        return offset;
     }
 
     @Override
     public void findIssues(List<Solutions.Issue> issues) {
         super.findIssues(issues);
 
+        if(hardwareId == null) {
+            return;
+        }
+
         if(slotAddress != null && getSlot().getLocation() == null) {
             issues.add(new Solutions.PlainIssue(
                     this,
-                    "Feeder slot has unconfigured location",
+                    "Feeder slot has no configured location",
                     "Select the feeder in the Feeders tab and make sure the slot has a set location",
-                    Solutions.Severity.Fundamental,
+                    Solutions.Severity.Error,
+                    "URI goes here" // TODO Internet better
+            ));
+        }
+
+        if(offset == null) {
+            issues.add(new Solutions.PlainIssue(
+                    this,
+                    "Feeder has no configured offset",
+                    "Select the feeder in the Feeders tab and make sure the feeder has an offset location from the slot",
+                    Solutions.Severity.Error,
                     "URI goes here" // TODO Internet better
             ));
         }
@@ -82,13 +134,9 @@ public class IndexFeeder extends ReferenceFeeder {
             initializeIfNeeded();
 
             if (initialized) {
-                super.prepareForJob(visit);
+                verifyFeederLocationIsFullyConfigured();
 
-                if(getSlot().getLocation() == null) {
-                    throw new UnconfiguredSlotException(
-                            String.format("The slot at address %s has no location configured.", slotAddress)
-                    );
-                }
+                super.prepareForJob(visit);
                 return;
             }
         }
@@ -174,11 +222,7 @@ public class IndexFeeder extends ReferenceFeeder {
                 continue;
             }
 
-            if(getSlot().getLocation() == null) {
-                throw new UnconfiguredSlotException(
-                        String.format("Will not feed because slot %s has no location configured", slotAddress)
-                );
-            }
+            verifyFeederLocationIsFullyConfigured();
 
             Actuator actuator = getDataActuator();
             String ackResponseString = actuator.read(IndexCommands.moveFeedForward(slotAddress, partPitch * 10));
@@ -320,6 +364,7 @@ public class IndexFeeder extends ReferenceFeeder {
                 hardwareId != null &&
                 partId != null &&
                 slotAddress != null &&
+                offset != null &&
                 getSlot().getLocation() != null;
     }
 
