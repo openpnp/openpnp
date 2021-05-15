@@ -1,6 +1,11 @@
 ## What is it?
 
-The Nozzle Tip Changer allows OpenPnP to automatically choose the best nozzle tip for a given part. 
+The Nozzle Tip Changer allows OpenPnP to automatically choose the best nozzle tip for a given part. It can optionally Z calibrate the nozzle tip.
+
+The following shows a nozzle tip load and Z probe motion sequence.
+
+![Nozzle Tip Change and Z Calibrate](https://user-images.githubusercontent.com/9963310/113582499-c00f0480-9628-11eb-8e7d-db51b25813cd.gif)
+
 
 ## Four Positions
 
@@ -9,6 +14,10 @@ OpenPnP supports the so-called "Four Positions" changer style. You can configure
 ![Four Positions](https://user-images.githubusercontent.com/9963310/118364459-c59d2a00-b598-11eb-95bc-a8f77163e620.png)
 
 Note that the _First Location_ is approached from Safe Z above it and the last move is returning from _Last Location_ to Safe Z. 
+
+## Nozzle Tip Z Probing
+
+See the [Nozzle Tip Probing Configuration](https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#nozzle-tip-probing-configuration) documentation, if you have a ContactProbeNozzle. 
 
 ## Vision Calibration
 
@@ -49,3 +58,18 @@ Use the **Reset** button to remove templates images.
 The two images are both used and the better match tells OpenPnP if the slot in question is empty or occupied. If this does not correspond to the state internally stored by OpenPnP, it will abort the calibration and therefore the nozzle tip load/unload operation. Nasty collisions can be safely prevented. 
 
 ![Found occupied](https://user-images.githubusercontent.com/9963310/113589665-f00ed580-9631-11eb-9522-272dbf86ee64.png)
+
+## Cloning Settings
+
+![Cloning Settings](https://user-images.githubusercontent.com/9963310/113582934-49bed200-9629-11eb-9340-fa6b391f77dd.png)
+
+All the settings can be cloned to/from other nozzle tips, so you need to configure them only once. The various **Locations** are automatically translated according to the **First Location**, so you need only set one location for additional nozzle tip slots. 
+
+* Marking a nozzle tip changer slot as the **Template** makes it the template that others can be cloned from. Use the **Clone Tool Changer Settings to all Nozzle Tips** button to distribute the settings to all the other nozzle tip changer slots. 
+
+* Marking a nozzle tip changer slot as **Clones from Template** lets you clone it from the template. Use the **Clone Tool Changer Settings from Template** button to clone the settings to this nozzle tip changer slots. 
+
+* Marking a nozzle tip changer slot as **Locked** prevents any cloning to/from it. Use it if this slot is different from others. This must be used for the "unloaded" nozzle tip stand-in.
+
+
+
