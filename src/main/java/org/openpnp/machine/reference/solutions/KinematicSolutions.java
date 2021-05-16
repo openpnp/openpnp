@@ -49,17 +49,17 @@ import org.pmw.tinylog.Logger;
  * The idea is not to pollute the head implementation itself.
  *
  */
-public class MechanicalCalibrationSolutions implements Solutions.Subject {
+public class KinematicSolutions implements Solutions.Subject {
     private ReferenceMachine machine;
 
-    public MechanicalCalibrationSolutions setMachine(ReferenceMachine machine) {
+    public KinematicSolutions setMachine(ReferenceMachine machine) {
         this.machine = machine;
         return this;
     }
 
     @Override
     public void findIssues(Solutions solutions) {
-        if (solutions.getTargetMilestone() == Milestone.Calibration) {
+        if (solutions.isTargeting(Milestone.Kinematics)) {
             // Dynamic Safe Z yes/no.
             boolean okDynamicSafeZ = true;
             for (Head head : machine.getHeads()) {

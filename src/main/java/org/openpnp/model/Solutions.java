@@ -63,8 +63,29 @@ public class Solutions extends AbstractTableModel {
     @ElementList(required = false)
     private Set<String> solvedSolutions = new HashSet<>();
 
+    private boolean showSolved;
+
+    private boolean showDismissed;
+
     public enum Milestone implements Subject, Named {
-        Welcome, Connect, Basics, Vision, Calibration, Production, Advanced;
+        Welcome     ("Welcome",     "welcome",      "Get to know OpenPnP by using the demo simulation machine. Choose your nozzle configuration."), 
+        Connect     ("Connect",     "connect",      "Connect OpenPnP to real controllers and cameras."),
+        Basics      ("Basics",      "basics",       "Configure basic machine axes, motion, vacuum switching, light switching."),
+        Kinematics  ("Kinematics",  "kinematics",   "Define machine kinematics: Safe Z, soft limits, motion control model, feed-rates, accelerations etc."),
+        Vision      ("Vision",      "vision",       "Setup cameras and computer vision."),
+        Calibration ("Calibration", "calibration",  "Calibrate the machine for precision motion and vision."),
+        Production  ("Production",  "production",   "Configure feeders and solve other production related issues."), 
+        Advanced    ("Advanced",    "advanced",     "Enable more advanced features for a faster and more automatic machine.");
+
+        final private String name;
+        final private String tag;
+        final private String description;
+
+        private Milestone(String name, String tag, String description) {
+            this.name = name;
+            this.tag = tag;
+            this.description = description;
+        }
 
         public Milestone getPrevious() {
             if (ordinal()-1 >= 0) {
@@ -72,42 +93,33 @@ public class Solutions extends AbstractTableModel {
             }
             return null;
         }
+
         public Milestone getNext() {
             if (ordinal()+1 < values().length) {
                 return values()[ordinal() + 1];
             }
             return null;
         }
+
         @Override
         public String getName() {
-            return toString();
+            return name;
         }
+
+        @Override
+        public void setName(String name) {}
+
         @Override
         public Icon getSubjectIcon() {
             return Icons.solutions;
         }
-        @Override
-        public void setName(String name) {
-        }
+
         public String getDescription() {
-            switch (this) {
-                case Welcome:
-                    return "Get to know OpenPnP by using the demo simulation machine. Choose your nozzle configuration.";
-                case Connect:
-                    return "Connect OpenPnP to real controllers and cameras.";
-                case Basics:
-                    return "Configure basic machine motion, vacuum switching, light switching.";
-                case Vision: 
-                    return "Setup cameras and computer vision.";
-                case Calibration:
-                    return "Calibrate the machine for precision motion and vision.";
-                case Production:
-                    return "Configure feeders and solve other production related issues.";
-                case Advanced:
-                    return "Enable more advanced features for a faster and more automatic machine.";
-                default:
-                    return null;
-            }
+            return description;
+        }
+
+        public String getAnchor() {
+            return "#"+tag+"-milestone";
         }
     }
     @Attribute(required = false)
@@ -172,6 +184,22 @@ public class Solutions extends AbstractTableModel {
         Object oldValue = this.targetMilestone;
         this.targetMilestone = targetMilestone;
         propertyChangeSupport.firePropertyChange("targetMilestone", oldValue, targetMilestone);
+    }
+
+    public boolean isShowSolved() {
+        return showSolved;
+    }
+
+    public void setShowSolved(boolean showSolved) {
+        this.showSolved = showSolved;
+    }
+
+    public boolean isShowDismissed() {
+        return showDismissed;
+    }
+
+    public void setShowDismissed(boolean showDismissed) {
+        this.showDismissed = showDismissed;
     }
 
     public boolean isTargeting(Milestone targetMilestone) {
@@ -249,9 +277,9 @@ public class Solutions extends AbstractTableModel {
             return solution;
         }
         public Severity getSeverity() {
-            if (state != State.Open) {
-                return Severity.None;
-            }
+            //            if (state != State.Open) {
+            //                return Severity.None;
+            //            }
             return severity;
         }
         public String getFingerprint() {
@@ -448,7 +476,7 @@ public class Solutions extends AbstractTableModel {
                 "Complete milestone "+targetMilestone.getName(), 
                 targetMilestone.getDescription(), 
                 Solutions.Severity.Information,
-                "https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions") {
+                "https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions"+targetMilestone.getAnchor()) {
             {
                 setChoice(targetMilestone.getNext());
             }
@@ -531,12 +559,22 @@ public class Solutions extends AbstractTableModel {
                 };
             }
         });
-        for (Issue issue : pendingIssues) {
+        for (Issue issue : new ArrayList<>(pendingIssues)) {
             if (isSolutionsIssueDismissed(issue)) {
-                issue.setInitialState(State.Dismissed);
+                if (isShowDismissed()) {
+                    issue.setInitialState(State.Dismissed);
+                }
+                else {
+                    pendingIssues.remove(issue);
+                }
             }
             else if (isSolutionsIssueSolved(issue)) {
-                issue.setInitialState(State.Solved);
+                if (isShowSolved()) {
+                    issue.setInitialState(State.Solved);
+                }
+                else {
+                    pendingIssues.remove(issue);
+                }
             }
         }
     }
@@ -575,10 +613,10 @@ public class Solutions extends AbstractTableModel {
         pendingIssues.sort(new Comparator<Issue>() {
             @Override
             public int compare(Issue o1, Issue o2) {
-                int d = o1.getState().ordinal() - o2.getState().ordinal();
-                if (d != 0) {
-                    return d;
-                }
+                //                int d = o1.getState().ordinal() - o2.getState().ordinal();
+                //                if (d != 0) {
+                //                    return d;
+                //                }
                 if (o1.getSeverity() == Severity.Fundamental && o2.getSeverity() != Severity.Fundamental) {
                     return -1;
                 }

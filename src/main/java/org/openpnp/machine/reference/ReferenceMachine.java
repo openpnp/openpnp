@@ -77,8 +77,8 @@ import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.SignalersPropertySheetHolder;
 import org.openpnp.machine.reference.signaler.ActuatorSignaler;
 import org.openpnp.machine.reference.signaler.SoundSignaler;
-import org.openpnp.machine.reference.solutions.MechanicalCalibrationSolutions;
-import org.openpnp.machine.reference.solutions.VisualCalibrationSolutions;
+import org.openpnp.machine.reference.solutions.KinematicSolutions;
+import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
@@ -506,15 +506,16 @@ public class ReferenceMachine extends AbstractMachine {
     }
 
     //@Element(required = false)
-    private MechanicalCalibrationSolutions mechanicalCalibration = new MechanicalCalibrationSolutions(); 
+    private KinematicSolutions kinematicSolutions = new KinematicSolutions(); 
 
     @Element(required = false)
-    private VisualCalibrationSolutions visualCalibration = new VisualCalibrationSolutions();
+    private VisionSolutions visualSolutions = new VisionSolutions();
 
     @Override
     public void findIssues(Solutions solutions) {
-        mechanicalCalibration.setMachine(this).findIssues(solutions);
-        visualCalibration.setMachine(this).findIssues(solutions);
+        kinematicSolutions.setMachine(this).findIssues(solutions);
+        visualSolutions.setMachine(this).findIssues(solutions);
+
         if (solutions.isTargeting(Milestone.Advanced)) {
             if (getMotionPlanner() instanceof NullMotionPlanner) {
                 solutions.add(new Solutions.Issue(

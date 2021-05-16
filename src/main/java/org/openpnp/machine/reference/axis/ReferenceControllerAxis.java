@@ -406,6 +406,8 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                         Severity.Warning,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
             }
+        }
+        if (solutions.isTargeting(Milestone.Kinematics)) {
             if (Math.abs(getMotionLimit(1)*2 - getMotionLimit(2)) < 0.1) {
                 // HACK: migration sets the acceleration to twice the feed-rate, that's our "signal" that the user has not yet
                 // tuned them.
@@ -416,31 +418,6 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                         Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
             }
-        }
-        if (solutions.isTargeting(Milestone.Calibration)) {
-            final BacklashCompensationMethod oldBacklashCompensationMethod = 
-                    getBacklashCompensationMethod();
-            if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
-                    && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
-                solutions.add(new Solutions.Issue(
-                        this, 
-                        "New directonal backlash compensation method improves performance and allows fluid motion.", 
-                        "Set axis to DirectionalCompensation.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Backlash-Compensation") {
-
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        setBacklashCompensationMethod(
-                                (state == Solutions.State.Solved) ?  
-                                        BacklashCompensationMethod.DirectionalCompensation 
-                                        : oldBacklashCompensationMethod);
-                        super.setState(state);
-                    }
-                });
-            }
-        }
-        if (solutions.isTargeting(Milestone.Advanced)) {
             if (getType() == Type.Rotation) {
                 if (!isWrapAroundRotation()) {
                     solutions.add(new Solutions.Issue(
@@ -472,6 +449,29 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                         }
                     });
                 }
+            }
+        }
+        if (solutions.isTargeting(Milestone.Calibration)) {
+            final BacklashCompensationMethod oldBacklashCompensationMethod = 
+                    getBacklashCompensationMethod();
+            if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
+                    && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
+                solutions.add(new Solutions.Issue(
+                        this, 
+                        "New directonal backlash compensation method improves performance and allows fluid motion.", 
+                        "Set axis to DirectionalCompensation.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Backlash-Compensation") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        setBacklashCompensationMethod(
+                                (state == Solutions.State.Solved) ?  
+                                        BacklashCompensationMethod.DirectionalCompensation 
+                                        : oldBacklashCompensationMethod);
+                        super.setState(state);
+                    }
+                });
             }
         }
     }

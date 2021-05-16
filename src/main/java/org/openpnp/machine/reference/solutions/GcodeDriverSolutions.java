@@ -411,7 +411,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         });
                     }
 
-                    if (solutions.isTargeting(Milestone.Advanced)) {
+                    if (solutions.isTargeting(Milestone.Kinematics)) {
                         final MotionControlType oldMotionControlType = gcodeDriver.getMotionControlType();
                         final MotionControlType newMotionControlType = isTinyG ?
                                 MotionControlType.SimpleSCurve : MotionControlType.ModeratedConstantAcceleration;

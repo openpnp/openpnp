@@ -26,6 +26,8 @@ import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -38,6 +40,7 @@ import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -46,6 +49,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
@@ -98,20 +102,30 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.LABEL_COMPONENT_GAP_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,}));
 
         JLabel lblMilestone = new JLabel("Milestone");
         lblMilestone.setFont(lblMilestone.getFont().deriveFont(lblMilestone.getFont().getStyle() | Font.BOLD));
@@ -167,7 +181,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         JButton btnDismiss = new JButton(dismissSolutionAction);
         panel.add(btnDismiss, "5, 2, fill, top");
 
-        JButton btnUndo = new JButton(undoSolutionAction);
+        JButton btnUndo = new JButton(reopenSolutionAction);
         panel.add(btnUndo, "7, 2, fill, top");
 
         JLabel label = new JLabel(" ");
@@ -231,7 +245,10 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
                     @Override
                     public void tableChanged(TableModelEvent e) {
-                        selectionActions();
+                        SwingUtilities.invokeLater(() -> {
+                            dirty = true;
+                            notifySolutionsChanged();
+                        });
                     }
                 });
 
@@ -243,27 +260,49 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
         JButton btnFindSolutions = new JButton(findSolutionsAction);
         toolbar.add(btnFindSolutions, "2, 3, 1, 3, fill, fill");
+        
+        JLabel lblSolved = new JLabel("Include Solved?");
+        lblSolved.setToolTipText("<html>Include already solved solutions, if they can be revisited.<br/>\r\nSome solutions can only be accepted once, these will not reappear.</html>");
+        toolbar.add(lblSolved, "9, 3, right, default");
+        
+        showSolved = new JCheckBox("");
+        showSolved.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                findIssuesAndSolutions(); 
+            }
+        });
+        toolbar.add(showSolved, "11, 3");
+        
+        JLabel lblDismissed = new JLabel("Include Dismissed?");
+        lblDismissed.setToolTipText("<html>Include already dismissed solutions.</html>");
+        toolbar.add(lblDismissed, "13, 3, right, default");
+        
+        showDismissed = new JCheckBox("");
+        showDismissed.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                findIssuesAndSolutions(); 
+            }
+        });
+        toolbar.add(showDismissed, "15, 3");
+        
+        JLabel label_2 = new JLabel(" ");
+        toolbar.add(label_2, "17, 3");
+        
+        JButton btnInfoMilestone = new JButton(infoMilestoneAction);
+        toolbar.add(btnInfoMilestone, "19, 3, 1, 3");
 
         label_1 = new JLabel(" - ");
-        toolbar.add(label_1, "4, 5, 7, 1");
+        toolbar.add(label_1, "4, 5, 14, 1");
 
-        labelWarn = new JLabel("After each round of solving issues, please run Find Issues & Solutions again to catch dependent issues.");
-        toolbar.add(labelWarn, "2, 7, 10, 1, left, default");
+        labelWarn = new JLabel(" After each round of solving issues, please run Find Issues & Solutions again to catch dependent issues. ");
+        labelWarn.setBorder(UIManager.getBorder("ToolTip.border"));
+        labelWarn.setBackground(UIManager.getColor("ToolTip.background"));
+        toolbar.add(labelWarn, "2, 7, 20, 1, left, default");
         labelWarn.setHorizontalAlignment(SwingConstants.RIGHT);
-        labelWarn.setForeground(Color.DARK_GRAY);
+        labelWarn.setForeground(UIManager.getColor("ToolTip.foreground"));
+        labelWarn.setOpaque(true);
         labelWarn.setVisible(false);
         initDataBindings();
-    }
-
-    protected void initDataBindings() {
-        BeanProperty<Solutions, String> solutionsBeanProperty = BeanProperty.create("targetMilestone.name");
-        BeanProperty<JLabel, String> jComboBoxBeanProperty = BeanProperty.create("text");
-        AutoBinding<Solutions, String, JLabel, String> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, solutions, solutionsBeanProperty, targetMilestone, jComboBoxBeanProperty);
-        autoBinding.bind();
-        //
-        BeanProperty<Solutions, String> solutionsBeanProperty_1 = BeanProperty.create("targetMilestone.description");
-        AutoBinding<Solutions, String, JLabel, String> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ, solutions, solutionsBeanProperty_1, label_1, jComboBoxBeanProperty);
-        autoBinding_1.bind();
     }
 
 
@@ -280,7 +319,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         List<Solutions.Issue> issues = getSelections();
         boolean needAccept = false;
         boolean needDismiss = false;
-        boolean needUndo = false;
+        boolean needReopen = false;
         boolean needInfo = false;
         for (Solutions.Issue issue : issues) {
             if (issue.getState() != Solutions.State.Dismissed) {
@@ -288,7 +327,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
             }
             if (issue.getState() == Solutions.State.Dismissed || issue.canBeUndone()) {
                 if (issue.getState() != Solutions.State.Open) {
-                    needUndo = true;
+                    needReopen = true;
                 }
             }
             if (issue.canBeAccepted()) {
@@ -303,7 +342,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         }
         acceptSolutionAction.setEnabled(needAccept && issues.size() == 1);
         dismissSolutionAction.setEnabled(needDismiss);
-        undoSolutionAction.setEnabled(needUndo);
+        reopenSolutionAction.setEnabled(needReopen);
         infoAction.setEnabled(needInfo);
         if (issuePanel != null) {
             issuePane.remove(issuePanel);
@@ -360,10 +399,14 @@ public class IssuesAndSolutionsPanel extends JPanel {
     }
 
     public void notifySolutionsChanged() {
-        // Reselect the Machine Setup tree path to reload the wizard with potentially different settings and property sheets.
-        // Otherwise each and every modified setting would need property change firing support, which is clearly not the case.
-        MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
-        selectionActions();
+        if (dirty) {
+            dirty = false;
+            // Reselect the Machine Setup tree path to reload the wizard with potentially different settings and property sheets.
+            // Otherwise each and every modified setting would need property change firing support, which is clearly not the case.
+            MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+            selectionActions();
+            dirty = false;
+        }
     }
 
     private Action findSolutionsAction =
@@ -404,7 +447,6 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         }
                     }
                 }
-                notifySolutionsChanged();
             });
         }
     };
@@ -413,7 +455,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
             new AbstractAction("Dismiss", Icons.dismiss) {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Dismiss the solutions. If the solution has previously applied any changes, <strong>undo</strong> them.</html>");
+                    "<html>Dismiss the solutions. If the solution has just applied any changes before (with no Find Solutions between), <strong>undo</strong> them.</html>");
         }
 
         @Override
@@ -425,15 +467,14 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         issue.setState(Solutions.State.Dismissed);
                     }
                 }
-                notifySolutionsChanged();
             });
         }
     };    
-    private Action undoSolutionAction =
-            new AbstractAction("Undo", Icons.undo) {
+    private Action reopenSolutionAction =
+            new AbstractAction("Reopen", Icons.undo) {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Re-open the solution. If the solution has previously applied any changes, <strong>undo</strong> them.</html>");
+                    "<html>Reopen the solution. If the solution has just applied any changes before (with no Find Solutions between), <strong>undo</strong> them.</html>");
         }
 
         @Override
@@ -445,7 +486,6 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         issue.setState(Solutions.State.Open);
                     }
                 }
-                notifySolutionsChanged();
             });
         }
     }; 
@@ -471,6 +511,22 @@ public class IssuesAndSolutionsPanel extends JPanel {
         }
     };
 
+    private Action infoMilestoneAction =
+            new AbstractAction("", Icons.info) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "<html>Open the Wiki page about Issues & Solutions and Milestones.</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> { 
+                Desktop dt = Desktop.getDesktop();
+                dt.browse(new URI("https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions"));;
+            });
+        }
+    };
+
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
     private TableRowSorter tableSorter;
@@ -479,4 +535,27 @@ public class IssuesAndSolutionsPanel extends JPanel {
     private JPanel issuePane;
     private JLabel targetMilestone;
     private JLabel label_1;
+    private JCheckBox showSolved;
+    private JCheckBox showDismissed;
+    private boolean dirty = false;
+
+    protected void initDataBindings() {
+        BeanProperty<Solutions, String> solutionsBeanProperty = BeanProperty.create("targetMilestone.name");
+        BeanProperty<JLabel, String> jComboBoxBeanProperty = BeanProperty.create("text");
+        AutoBinding<Solutions, String, JLabel, String> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ, solutions, solutionsBeanProperty, targetMilestone, jComboBoxBeanProperty);
+        autoBinding.bind();
+        //
+        BeanProperty<Solutions, String> solutionsBeanProperty_1 = BeanProperty.create("targetMilestone.description");
+        AutoBinding<Solutions, String, JLabel, String> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ, solutions, solutionsBeanProperty_1, label_1, jComboBoxBeanProperty);
+        autoBinding_1.bind();
+        //
+        BeanProperty<Solutions, Boolean> solutionsBeanProperty_2 = BeanProperty.create("showSolved");
+        BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
+        AutoBinding<Solutions, Boolean, JCheckBox, Boolean> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, solutions, solutionsBeanProperty_2, showSolved, jCheckBoxBeanProperty);
+        autoBinding_2.bind();
+        //
+        BeanProperty<Solutions, Boolean> solutionsBeanProperty_3 = BeanProperty.create("showDismissed");
+        AutoBinding<Solutions, Boolean, JCheckBox, Boolean> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, solutions, solutionsBeanProperty_3, showDismissed, jCheckBoxBeanProperty);
+        autoBinding_3.bind();
+    }
 }
