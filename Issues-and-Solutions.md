@@ -80,13 +80,16 @@ The **Connect** milestone handles the conversion from the simulated machine to a
 
 
 ### Basics Milestone 
-The **Basics**  milestone handles moving around the machine and switching vacuum and lights. It makes sure all axes have letters and are mapped to drivers. It generates most G-code, regular expressions etc. to talk to your motion controller.
+The **Basics**  milestone handles moving around the machine manually a.k.a. jogging, switching vacuum and lights. It makes sure all axes have letters and are mapped to drivers. In case you use a G-code motion controller, it generates most G-code snippets, regular expressions etc. to talk to your motion controller.
+
+### Kinematics Milestone
+The **Kinematics** milestone defines the kinematic profile of your machine, used for automatic motion: Safe Z, soft limits, motion control model, feed-rates, acceleration limits etc.
 
 ### Vision Milestone 
-The **Vision** milestone handles some Computer Vision issues. This is currently very thin, more is planned in the future. 
+The **Vision** milestone sets up the cameras for Computer Vision. A calibration rig is used to calibrate the camera lenses and optical properties such as the true spacial position and imaging scale of the camera. See the [[Visual Calibration]] page for more information.
 
 ### Calibration Milestone 
-The **Calibration** milestone handles calibration issues. This is currently very thin, more is planned in the future. 
+The **Calibration** milestone brings Kinematics and Vision together to calibrate the machine. Nozzle head offsets, backlash compensation etc. 
 
 ### Production Milestone 
 The **Production** milestone handles recurrent configuration tasks such as feeder setup as well as production issues such as board, placement and job handling. This is currently empty, but feeder issues are already in the pipeline. More is planned in the future. 
