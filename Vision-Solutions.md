@@ -40,4 +40,13 @@ After the calibration fiducial X, Y coordinates have been determined, we also ne
 
 In the spirit of the holistic approach described above, this step goes both ways: The fiducial will get its Z coordinate, and the nozzle will get its approximate head offsets in X, Y (these will be calibrated to better precision later). 
 
-For multi-nozzle machines, the first nozzle (default nozzle) will serve as the head Z reference. All the other nozzles will be adjusted to the same reference. 
+For multi-nozzle machines, the first nozzle (default nozzle) will serve as the head Z reference. All the other nozzles will be adjusted to the same Z reference. 
+
+## Down-looking Camera Offsets
+
+For machines with multiple down-looking camera on the same head, the additional cameras equally need to calibrate head offsets. Move the camera to the primary calibration fiducial and accept the solution. 
+
+## Up-looking Camera Offsets
+
+Up-looking cameras (also known as "bottom cameras") cannot look at the calibration fiducial, obviously, so they are calibrated against a nozzle tip. Load the smallest nozzle tip that you can reliably detect (it may take some trial and error). 
+
