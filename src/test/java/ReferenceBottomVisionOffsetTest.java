@@ -34,8 +34,6 @@ public class ReferenceBottomVisionOffsetTest {
 
         // Copy the required configuration files over to the new configuration
         // directory.
-        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/ReferenceBottomVisionOffset/machine.xml"),
-                new File(workingDirectory, "machine.xml"));
         FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/ReferenceBottomVisionOffset/packages.xml"),
                 new File(workingDirectory, "packages.xml"));
         FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/ReferenceBottomVisionOffset/parts.xml"),
