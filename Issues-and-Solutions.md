@@ -1,4 +1,8 @@
 ## What is it?
+____
+NOTE: some part of the following are not yet available in the current OpenPnP Version. It is already documented here, because some solutions currently in development are linked to sections on this page. 
+____
+
 OpenPnP is complex to set up and the more flexibility and optimization is added, the more the complexity grows. In the course of developing and community testing the [[Advanced Motion Control]] it became apparent, that it is easier to program an automatism to _propose_ the proper setup than to document or provide support for it.
 
 Hence, the Issues & Solutions system was born. It has these features:
