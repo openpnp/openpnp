@@ -499,6 +499,7 @@ public class IndexFeederTest {
         assertTrue(feeder.isInitialized());
         assertEquals(newFeederAddress, feeder.getSlotAddress());
     }
+
     @Test
     public void prepareForJobThrowsExceptionIfFeederHasNoOffset() throws Exception {
         feeder.setHardwareId(hardwareId);
@@ -566,6 +567,11 @@ public class IndexFeederTest {
         InOrder inOrder = inOrder(mockedActuator);
         inOrder.verify(mockedActuator).read(initializeFeederCommand);
         inOrder.verify(mockedActuator, never()).read(any());
+    }
+
+    @Test
+    public void getPartPitchByDefaultReturnsFourMillimeters() {
+        assertEquals(4, feeder.getPartPitch());
     }
     
     @Test
@@ -1130,6 +1136,7 @@ public class IndexFeederTest {
 
         assertEquals(0, issues.size());
     }
+
     @Test
     public void findIssuesAddsIssueIfSlotHasNoLocationSet() {
         feeder.setHardwareId(hardwareId);
@@ -1148,6 +1155,7 @@ public class IndexFeederTest {
         assertEquals(Solutions.Severity.Error, issue.getSeverity());
         assertEquals(Solutions.State.Open, issue.getState());
     }
+
     @Test
     public void findIssuesAddsIssueIfFeederHasNoOffsetSet() {
         feeder.setHardwareId(hardwareId);

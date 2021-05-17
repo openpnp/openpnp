@@ -379,6 +379,10 @@ public class IndexFeeder extends ReferenceFeeder {
         this.partPitch = partPitch;
     }
 
+    public int getPartPitch() {
+        return partPitch;
+    }
+
     public static IndexFeeder findByHardwareId(String hardwareId) {
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
             if (!(feeder instanceof IndexFeeder)) {
