@@ -44,7 +44,7 @@ public class IndexFeeder extends ReferenceFeeder {
 
     protected boolean initialized = false;
 
-    @Element
+    @Element(required = false)
     private Location offset;
 
     public IndexFeeder() {
@@ -260,7 +260,7 @@ public class IndexFeeder extends ReferenceFeeder {
         List<PropertySheet> sheets = new ArrayList<>();
 
         if(hardwareId != null) {
-            sheets.add(new FeederPropertySheet());
+            sheets.add(new FeederPropertySheet(this));
         }
 
         sheets.add(new SearchPropertySheet());
@@ -351,11 +351,14 @@ public class IndexFeeder extends ReferenceFeeder {
     }
 
     public void setHardwareId(String hardwareId) {
+    	Object oldValue = this.hardwareId;
         this.hardwareId = hardwareId;
 
         if(getClass().getSimpleName().equals(name)) {
             name = hardwareId;
         }
+        
+        firePropertyChange("hardwareId", oldValue, hardwareId);
     }
 
     @Override

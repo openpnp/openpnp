@@ -101,6 +101,13 @@ public class JBindings {
                     wrappedBinding.addBindingListener(listener);
                 }
             }
+
+            // HACK DO NOT MERGE
+            if(sourcePropertyName.equals("slotAddress")) {
+                wrappedBinding.setSourceNullValue("None");
+            }
+            // HACK DO NOT MERGE
+
             wrappedBinding.bind();
             AutoBinding<SS, SV, Wrapper<SV>, SV> binding = Bindings.createAutoBinding(
                     UpdateStrategy.READ, source, sourceProperty, wrapper, wrapperProperty);
