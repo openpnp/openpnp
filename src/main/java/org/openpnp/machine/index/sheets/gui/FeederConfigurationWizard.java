@@ -1,26 +1,27 @@
 package org.openpnp.machine.index.sheets.gui;
 
-import javax.swing.JPanel;
+import javax.swing.*;
 
-import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
-import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.gui.support.PartsComboBoxModel;
+import org.jdesktop.beansbinding.AutoBinding;
+import org.jdesktop.beansbinding.Converter;
+import org.openpnp.gui.support.*;
 import org.openpnp.machine.index.IndexFeeder;
+import org.openpnp.machine.index.IndexFeederSlots;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 
 import javax.swing.border.TitledBorder;
-import javax.swing.JLabel;
+
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JTextField;
 import com.jgoodies.forms.layout.FormSpecs;
-import javax.swing.JComboBox;
 import org.openpnp.gui.components.LocationButtonsPanel;
-import javax.swing.JButton;
+import org.openpnp.util.UiUtils;
+
 import javax.swing.border.EtchedBorder;
 import java.awt.Color;
+import java.awt.event.ActionEvent;
 
 public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 
@@ -40,6 +41,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 	private final JTextField yOffsetTf;
 	private final JTextField zOffsetTf;
 	private final JTextField rotOffsetTf;
+	private final LocationButtonsPanel offsetLocationPanel;
+	private final LocationButtonsPanel slotLocationPanel;
 
 	/**
 	 * Create the panel.
@@ -77,8 +80,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 
 		slotAddressValue = new JLabel("");
 		infoPanel.add(slotAddressValue, "4, 4");
-		
-		JButton findButton = new JButton("Find");
+
+		JButton findButton = new JButton(findSlotAddressAction);
 		infoPanel.add(findButton, "6, 4");
 		
 		JPanel partPanel = new JPanel();
@@ -119,7 +122,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		partPanel.add(partPitchTf, "4, 4, fill, default");
 		partPitchTf.setColumns(10);
 		
-		JButton feedButton = new JButton("Feed");
+		JButton feedButton = new JButton(feedAction);
 		partPanel.add(feedButton, "6, 4");
 		
 		JLabel feedRetryLabel = new JLabel("Feed Retry Count");
@@ -192,8 +195,8 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		rotSlotTf = new JTextField();
 		locationPanel.add(rotSlotTf, "10, 4, left, center");
 		rotSlotTf.setColumns(10);
-		
-		LocationButtonsPanel slotLocationPanel = new LocationButtonsPanel(xSlotTf, ySlotTf, zSlotTf, rotSlotTf);
+
+		slotLocationPanel = new LocationButtonsPanel(xSlotTf, ySlotTf, zSlotTf, rotSlotTf);
 		locationPanel.add(slotLocationPanel, "12, 4, left, top");
 		
 		JLabel offsetLabel = new JLabel("Part Offset");
@@ -214,19 +217,58 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		rotOffsetTf = new JTextField();
 		locationPanel.add(rotOffsetTf, "10, 6, left, center");
 		rotOffsetTf.setColumns(10);
-		
-		LocationButtonsPanel offsetLocationPanel = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, rotOffsetTf);
+
+		offsetLocationPanel = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, rotOffsetTf);
 		locationPanel.add(offsetLocationPanel, "12, 6, left, top");
 	}
 
 	@Override
 	public void createBindings() {
+		LengthConverter lengthConverter = new LengthConverter();
 		IntegerConverter intConverter = new IntegerConverter();
+		DoubleConverter doubleConverter =
+				new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+
 		addWrappedBinding(feeder, "hardwareId", hardwareIdValue, "text");
-		addWrappedBinding(feeder, "slotAddress", slotAddressValue, "text", intConverter);
+		bind(AutoBinding.UpdateStrategy.READ, feeder, "slotAddress", slotAddressValue, "text", intConverter);
 
 		addWrappedBinding(feeder, "part", partCb, "selectedItem");
+		addWrappedBinding(feeder, "partPitch", partPitchTf, "text", intConverter);
 		addWrappedBinding(feeder, "feedRetryCount", feedRetryCountTf, "text", intConverter);
 		addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter);
+
+//		JBindings.Wrapper<IndexFeederSlots.Slot> slotWrapper = new JBindings.Wrapper<>();
+//		addWrappedBinding(feeder, "slot", slotWrapper, "value");
+//
+//		MutableLocationProxy pickLocation = new MutableLocationProxy();
+//		addWrappedBinding(slotWrapper, "value.location", pickLocation, "location");
+//		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "lengthX", xSlotTf, "text", lengthConverter);
+//		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "lengthY", ySlotTf, "text", lengthConverter);
+//		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "lengthZ", zSlotTf, "text", lengthConverter);
+//		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "rotation", rotSlotTf, "text", doubleConverter);
+//		bind(AutoBinding.UpdateStrategy.READ, pickLocation, "location", offsetLocationPanel, "baseLocation");
+//
+//		MutableLocationProxy offsets = new MutableLocationProxy();
+//		bind(AutoBinding.UpdateStrategy.READ_WRITE, feeder, "offset", offsets, "location");
+//		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthX", xOffsetTf, "text", lengthConverter);
+//		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthY", yOffsetTf, "text", lengthConverter);
+//		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthZ", zOffsetTf, "text", lengthConverter);
+//		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "rotation", rotOffsetTf, "text", doubleConverter);
 	}
+
+	private final Action findSlotAddressAction = new AbstractAction("Find") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			UiUtils.submitUiMachineTask(feeder::findSlotAddress);
+		}
+	};
+
+	private final Action feedAction = new AbstractAction("Feed") {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			UiUtils.submitUiMachineTask(() -> {
+				feeder.feed(null); // TODO This probably shouldn't be null
+			});
+		}
+	};
 }

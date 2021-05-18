@@ -144,8 +144,12 @@ public class IndexFeeder extends ReferenceFeeder {
         throw new Exception("Failed to find and initialize the feeder");
     }
 
-    private void findSlotAddressIfNeeded() throws Exception {
-        if (slotAddress != null) {
+    public void findSlotAddress() throws Exception {
+        findSlotAddress(true);
+    }
+
+    private void findSlotAddress(boolean force) throws Exception {
+        if (slotAddress != null && !force) { // TODO test force
             return;
         }
 
@@ -161,6 +165,10 @@ public class IndexFeeder extends ReferenceFeeder {
             }
         }
         setSlotAddress(response.getFeederAddress());
+    }
+
+    private void findSlotAddressIfNeeded() throws Exception {
+        findSlotAddress(false);
     }
 
     private void initializeIfNeeded() throws Exception {
@@ -336,6 +344,8 @@ public class IndexFeeder extends ReferenceFeeder {
     }
 
     public void setSlotAddress(Integer slotAddress) {
+        Integer oldValue = this.slotAddress;
+        String oldName = this.getName();
         // Find any other index feeders and if they have this slot address, set their address to null
         IndexFeeder otherFeeder = findBySlotAddress(slotAddress);
         if (otherFeeder != null) {
@@ -344,6 +354,9 @@ public class IndexFeeder extends ReferenceFeeder {
         }
 
         this.slotAddress = slotAddress;
+
+        firePropertyChange("slotAddress", oldValue, slotAddress);
+        firePropertyChange("name", oldName, getName());
     }
 
     public String getHardwareId() {
@@ -351,7 +364,7 @@ public class IndexFeeder extends ReferenceFeeder {
     }
 
     public void setHardwareId(String hardwareId) {
-    	Object oldValue = this.hardwareId;
+        String oldValue = this.hardwareId;
         this.hardwareId = hardwareId;
 
         if(getClass().getSimpleName().equals(name)) {
