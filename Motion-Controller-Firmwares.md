@@ -31,7 +31,7 @@ The following requirements apply for controllers with axes attached:
 * Fixes and configurable option for correct feed rate calculations according to section 2.1.2.5 of the NIST G-Code standard.
 * Configurable grace period for proper look-ahead planning
 
-Firmware [version 3.3beta](https://github.com/Duet3D/RepRapFirmware/blob/v3-dev/WHATS_NEW_RRF3_Beta.md#reprapfirmware-33beta1) or newer must be used to support most OpenPnP Advanced Motion Control features. Use the [[Issues and Solutions]] system to help you detect the correct version and configuration and to setup proper G-code.
+Firmware [version 3.3beta](https://github.com/Duet3D/RepRapFirmware/wiki/Changelog-RRF-3.x-Beta-&-RC#reprapfirmware-33beta1) or newer must be used to support most OpenPnP Advanced Motion Control features. Use the [[Issues and Solutions]] system to help you detect the correct version and configuration and to setup proper G-code.
 
 Refer to the Duet3D Wiki on how to upgrade:
 
