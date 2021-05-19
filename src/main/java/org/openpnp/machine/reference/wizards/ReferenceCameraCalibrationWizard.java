@@ -175,27 +175,28 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         public void actionPerformed(ActionEvent e) {
             MainFrame.get().getCameraViews().setSelectedCamera(referenceCamera);
 
+            boolean savedEnabledState = referenceCamera.getAdvancedCalibration().isEnabled();
+            
+            referenceCamera.getAdvancedCalibration().setEnabled(false);
+            referenceCamera.clearCalibrationCache();
+            
             if (!chckbxUseSavedData.isSelected()) {
                 startCameraCalibrationBtn.setEnabled(false);
     
                 CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(referenceCamera);
     
-                boolean savedEnabledState = referenceCamera.getAdvancedCalibration().isEnabled();
-                
-                referenceCamera.getAdvancedCalibration().setEnabled(false);
-                referenceCamera.clearCalibrationCache();
-                
                 UiUtils.messageBoxOnException(() -> {
                     new CalibrateCameraProcess(MainFrame.get(), cameraView, (Part) comboBoxPart.getSelectedItem()) {
     
                         @Override 
                         public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
-                                double[][][] testPatternImagePointsList, Size size) {
+                                double[][][] testPatternImagePointsList, double[] testPatternZ, Size size) {
                             
                             Logger.trace("processResults has been called!");
     
                             referenceCamera.getAdvancedCalibration().processRawCalibrationData(
-                                    testPattern3dPointsList, testPatternImagePointsList, size, referenceCamera.getDefaultZ());
+                                    testPattern3dPointsList, testPatternImagePointsList, 
+                                    testPatternZ, size, referenceCamera.getDefaultZ());
                             
                             referenceCamera.getAdvancedCalibration().setEnabled(true);
                             
@@ -221,6 +222,12 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 referenceCamera.getAdvancedCalibration().processRawCalibrationData(
                         new Size(referenceCamera.getWidth(), referenceCamera.getHeight()), 
                         referenceCamera.getDefaultZ());
+                
+                referenceCamera.getAdvancedCalibration().setEnabled(true);
+                
+                chckbxEnable.setSelected(true);
+                
+                startCameraCalibrationBtn.setEnabled(true);
             }
         }
     };

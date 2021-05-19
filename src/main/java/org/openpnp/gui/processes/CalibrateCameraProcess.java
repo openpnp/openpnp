@@ -91,6 +91,7 @@ public abstract class CalibrateCameraProcess {
     private static final double testPatternFillFraction = 0.90;
     private static final double trialStepSize = 0.5;
     private static final Location trialStep = new Location(LengthUnit.Millimeters, -trialStepSize, trialStepSize, 0, 0);
+
     private final MainFrame mainFrame;
     private final CameraView cameraView;
     private final Camera camera;
@@ -152,7 +153,7 @@ public abstract class CalibrateCameraProcess {
     private CvPipeline pipeline;
     private double apparentMotionDirection;
     private double movableZ;
-    private double testPatternZ;
+    private double[] testPatternZ;
     private int pixelsX;
     private int pixelsY;
     private Location centralLocation;
@@ -223,6 +224,7 @@ public abstract class CalibrateCameraProcess {
         testPattern3dPointsList = new ArrayList<>();
         testPatternImagePointsList = new ArrayList<>();
         
+        testPatternZ = new double[numberOfCalibrationHeights];
         calibrationHeightIndex = 0;
         
         isHeadMountedCamera = camera.getHead() != null;
@@ -270,7 +272,7 @@ public abstract class CalibrateCameraProcess {
      * @param size - the size of the images
      */
     protected abstract void processRawCalibrationData(double[][][] testPattern3dPoints, 
-            double[][][] testPatternImagePoints, Size size);
+            double[][][] testPatternImagePoints, double[] testPatternZ, Size size);
     
     /**
      * This method is called when the raw calibration data collection has been canceled and must 
@@ -357,13 +359,15 @@ public abstract class CalibrateCameraProcess {
 
         if (isHeadMountedCamera) {
             //Capture the nozzle's Z coordinate as the test pattern's Z coordinate
-            testPatternZ = nozzle.getLocation().convertToUnits(LengthUnit.Millimeters).getZ();
+            testPatternZ[calibrationHeightIndex] = 
+                    nozzle.getLocation().convertToUnits(LengthUnit.Millimeters).getZ();
             movableZ = 0;
             movable = camera;
         }
         else {
-            testPatternZ = camera.getDefaultZ().convertToUnits(LengthUnit.Millimeters).getValue();
-            movableZ = testPatternZ + 
+            testPatternZ[calibrationHeightIndex] = 
+                    camera.getDefaultZ().convertToUnits(LengthUnit.Millimeters).getValue();
+            movableZ = testPatternZ[calibrationHeightIndex] + 
                     calibrationRig.getHeight().convertToUnits(LengthUnit.Millimeters).getValue();
             movable = nozzle;
             
@@ -773,7 +777,7 @@ public abstract class CalibrateCameraProcess {
                         testPattern3dPoints.add( 
                                 new double[] {apparentMotionDirection*testLocation.getX(), 
                                               apparentMotionDirection*testLocation.getY(), 
-                                              testPatternZ});
+                                              0});
                         testPatternImagePoints.add(
                                 new double[] {measuredPoint.x, measuredPoint.y});
                     }
@@ -826,7 +830,7 @@ public abstract class CalibrateCameraProcess {
                     }
                     
                     processRawCalibrationData(testPattern3dPointsArray, testPatternImagePointsArray, 
-                        new Size(pixelsX, pixelsY));
+                        testPatternZ, new Size(pixelsX, pixelsY));
                     CalibrateCameraProcess.this.cancel();
                 }
                 else {
