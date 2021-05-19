@@ -98,17 +98,19 @@ public class HeadSolutions implements Solutions.Subject {
                                     + "<li>The new solution overwrites your existing nozzle and axis configuration.</li>"
                                     + "<li>As far as nozzles and axes remain the same type and count, their detail configuration is preserved.</li>"
                                     + "<li>A nozzle solution can be applied multiple times, you can revisit and expand it.</li>"
-                                    + "<li><span color=\"red\">Caution:</span> Undo will not restore the previous configuration, only enable a fresh choice.<br/>"
+                                    + "<li><span color=\"red\">Caution:</span> Reopen will not restore the previous configuration, only enable a fresh choice.<br/>"
                                     + "If you want to restore previous configuration you must restore the saved configuration manually.</li>"
                                     + "</ol>"
                                     + "<br/>"
                                     +"Are you sure?</html>", true)) {
                                 createNozzleSolution(theCamera, (NozzleSolution) getChoice(), multiplier);
-                                // We mark this as dismissed, not solved, as a reminder of the choice.
-                                super.setState(State.Dismissed);
+                                // Remember this is solved (it can be revisited).
+                                solutions.setSolutionsIssueSolved(this, true);
+                                super.setState(state);
                             }
                         }
                         else {
+                            solutions.setSolutionsIssueSolved(this, false);
                             super.setState(state);
                         }
                     }

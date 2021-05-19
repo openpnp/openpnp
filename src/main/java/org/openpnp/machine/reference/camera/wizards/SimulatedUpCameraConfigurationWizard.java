@@ -63,6 +63,17 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
     private JTextField height;
     private JLabel lblFocalBlur;
     private JCheckBox simulateFocalBlur;
+    private JLabel lblNewLabel;
+    private JTextField simulatedLocationX;
+    private JTextField simulatedLocationY;
+    private JTextField simulatedLocationZ;
+    private JLabel lblUnitsPerPixel;
+    private JTextField simulatedUnitsPerPixelX;
+    private JTextField simulatedUnitsPerPixelY;
+    private JTextField simulatedUnitsPerPixelZ;
+    private JTextField simulatedLocationRotation;
+    private JLabel lblCameraFlipped;
+    private JCheckBox simulatedFlipped;
 
     public SimulatedUpCameraConfigurationWizard(SimulatedUpCamera camera) {
         this.camera = camera;
@@ -92,6 +103,14 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblCameraWidth = new JLabel("Width");
@@ -108,42 +127,87 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(height, "4, 4, fill, default");
         height.setColumns(10);
         
+        lblCameraFlipped = new JLabel("View mirrored?");
+        lblCameraFlipped.setToolTipText("Simulate the camera as showing a mirrored view");
+        panelGeneral.add(lblCameraFlipped, "2, 6, right, default");
+        
+        simulatedFlipped = new JCheckBox("");
+        panelGeneral.add(simulatedFlipped, "4, 6");
+        
         lblFocalBlur = new JLabel("Simulate Focal Blur?");
         lblFocalBlur.setToolTipText("Simulate focal blur in order to test Auto Focus. This is very slow!");
-        panelGeneral.add(lblFocalBlur, "2, 6, right, default");
+        panelGeneral.add(lblFocalBlur, "2, 8, right, default");
         
         simulateFocalBlur = new JCheckBox("");
-        panelGeneral.add(simulateFocalBlur, "4, 6");
+        panelGeneral.add(simulateFocalBlur, "4, 8");
         
         lblX = new JLabel("X");
-        panelGeneral.add(lblX, "4, 8, center, default");
+        panelGeneral.add(lblX, "4, 10, center, default");
         
         lblY = new JLabel("Y");
-        panelGeneral.add(lblY, "6, 8, center, default");
+        panelGeneral.add(lblY, "6, 10, center, default");
         
         lblZ = new JLabel("Z");
-        panelGeneral.add(lblZ, "8, 8, center, default");
+        panelGeneral.add(lblZ, "8, 10, center, default");
         
         lblRotation = new JLabel("Rotation");
-        panelGeneral.add(lblRotation, "10, 8, center, default");
+        panelGeneral.add(lblRotation, "10, 10, center, default");
         
-        lblErrorOffsets = new JLabel("Error Offsets");
-        panelGeneral.add(lblErrorOffsets, "2, 10, right, default");
+        lblNewLabel = new JLabel("Camera Location");
+        lblNewLabel.setToolTipText("<html>\r\nThe Camera simulated location.<br/>\r\n<strong>Note:</strong>  In order to test calibration procedures, we cannot use the regular camera location.\r\n</html>");
+        panelGeneral.add(lblNewLabel, "2, 12, right, default");
+        
+        simulatedLocationX = new JTextField();
+        panelGeneral.add(simulatedLocationX, "4, 12, fill, default");
+        simulatedLocationX.setColumns(10);
+        
+        simulatedLocationY = new JTextField();
+        panelGeneral.add(simulatedLocationY, "6, 12, fill, default");
+        simulatedLocationY.setColumns(10);
+        
+        simulatedLocationZ = new JTextField();
+        panelGeneral.add(simulatedLocationZ, "8, 12, fill, default");
+        simulatedLocationZ.setColumns(10);
+        
+        simulatedLocationRotation = new JTextField();
+        panelGeneral.add(simulatedLocationRotation, "10, 12, fill, default");
+        simulatedLocationRotation.setColumns(10);
+        
+        lblUnitsPerPixel = new JLabel("Units per Pixel");
+        lblUnitsPerPixel.setToolTipText("<html>\r\nThe camera simulated units per pixel.<br/>\r\n<strong>Note:</strong>  In order to test calibration procedures, we cannot use the regular units per pixel.\r\n</html>");
+        panelGeneral.add(lblUnitsPerPixel, "2, 14, right, default");
+        
+        simulatedUnitsPerPixelX = new JTextField();
+        panelGeneral.add(simulatedUnitsPerPixelX, "4, 14, fill, default");
+        simulatedUnitsPerPixelX.setColumns(10);
+        
+        simulatedUnitsPerPixelY = new JTextField();
+        simulatedUnitsPerPixelY.setText("");
+        panelGeneral.add(simulatedUnitsPerPixelY, "6, 14, fill, default");
+        simulatedUnitsPerPixelY.setColumns(10);
+        
+        simulatedUnitsPerPixelZ = new JTextField();
+        panelGeneral.add(simulatedUnitsPerPixelZ, "8, 14, fill, default");
+        simulatedUnitsPerPixelZ.setColumns(10);
+        
+        lblErrorOffsets = new JLabel("Part Error Offsets");
+        lblErrorOffsets.setToolTipText("Part on nozzle error offsets");
+        panelGeneral.add(lblErrorOffsets, "2, 16, right, default");
         
         errorOffsetsX = new JTextField();
-        panelGeneral.add(errorOffsetsX, "4, 10, fill, default");
+        panelGeneral.add(errorOffsetsX, "4, 16, fill, default");
         errorOffsetsX.setColumns(10);
         
         errorOffsetsY = new JTextField();
-        panelGeneral.add(errorOffsetsY, "6, 10, fill, default");
+        panelGeneral.add(errorOffsetsY, "6, 16, fill, default");
         errorOffsetsY.setColumns(10);
         
         errorOffsetsZ = new JTextField();
-        panelGeneral.add(errorOffsetsZ, "8, 10, fill, default");
+        panelGeneral.add(errorOffsetsZ, "8, 16, fill, default");
         errorOffsetsZ.setColumns(10);
         
         errorOffsetsRotation = new JTextField();
-        panelGeneral.add(errorOffsetsRotation, "10, 10, fill, default");
+        panelGeneral.add(errorOffsetsRotation, "10, 16, fill, default");
         errorOffsetsRotation.setColumns(10);
     }
 
@@ -154,9 +218,10 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         IntegerConverter intConverter = new IntegerConverter();
         LengthConverter lengthConverter = new LengthConverter();
 
-        addWrappedBinding(camera, "width", width, "text", intConverter);
-        addWrappedBinding(camera, "height", height, "text", intConverter);
+        addWrappedBinding(camera, "viewWidth", width, "text", intConverter);
+        addWrappedBinding(camera, "viewHeight", height, "text", intConverter);
 
+        addWrappedBinding(camera, "simulatedFlipped", simulatedFlipped, "selected");
         addWrappedBinding(camera, "simulateFocalBlur", simulateFocalBlur, "selected");
 
         MutableLocationProxy errorOffsets = new MutableLocationProxy();
@@ -167,12 +232,36 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         addWrappedBinding(errorOffsets, "lengthZ", errorOffsetsZ, "text", lengthConverter);
         addWrappedBinding(errorOffsets, "rotation", errorOffsetsRotation, "text",
                 doubleConverter);
-        
+
+        MutableLocationProxy simulatedLocation = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, camera, "simulatedLocation", simulatedLocation,
+                "location");
+        addWrappedBinding(simulatedLocation, "lengthX", simulatedLocationX, "text", lengthConverter);
+        addWrappedBinding(simulatedLocation, "lengthY", simulatedLocationY, "text", lengthConverter);
+        addWrappedBinding(simulatedLocation, "lengthZ", simulatedLocationZ, "text", lengthConverter);
+        addWrappedBinding(simulatedLocation, "rotation", simulatedLocationRotation, "text", doubleConverter);
+
+        MutableLocationProxy simulatedUnitsPerPixel = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, camera, "simulatedUnitsPerPixel", simulatedUnitsPerPixel,
+                "location");
+        addWrappedBinding(simulatedUnitsPerPixel, "lengthX", simulatedUnitsPerPixelX, "text", lengthConverter);
+        addWrappedBinding(simulatedUnitsPerPixel, "lengthY", simulatedUnitsPerPixelY, "text", lengthConverter);
+        addWrappedBinding(simulatedUnitsPerPixel, "lengthZ", simulatedUnitsPerPixelZ, "text", lengthConverter);
+
         ComponentDecorators.decorateWithAutoSelect(width);
         ComponentDecorators.decorateWithAutoSelect(height);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(errorOffsetsX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(errorOffsetsY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(errorOffsetsZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(errorOffsetsRotation);
+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedLocationX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedLocationY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedLocationZ);
+        ComponentDecorators.decorateWithAutoSelect(simulatedLocationRotation);
+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedUnitsPerPixelX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedUnitsPerPixelY);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedUnitsPerPixelZ);
     }
 }

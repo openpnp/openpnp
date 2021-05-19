@@ -19,7 +19,6 @@
 
 package org.openpnp.machine.reference.camera.wizards;
 
-import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
@@ -29,6 +28,7 @@ import java.io.FilenameFilter;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -37,8 +37,10 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.ImageCamera;
+import org.openpnp.model.Configuration;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -55,6 +57,14 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
     private JTextField textFieldSourceUrl;
     private JButton btnBrowse;
 
+    private JLabel lblCameraFlipped;
+
+    private JCheckBox simulatedFlipped;
+
+    private JLabel lblRotation;
+
+    private JTextField simulatedRotation;
+
     public ImageCameraConfigurationWizard(ImageCamera camera) {
         this.camera = camera;
 
@@ -64,14 +74,16 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 "General", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(50dlu;default):grow"),
+                ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -85,40 +97,66 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         
         lblWidth = new JLabel("Width");
         panelGeneral.add(lblWidth, "2, 2, right, default");
-        
+
         width = new JTextField();
         panelGeneral.add(width, "4, 2, fill, default");
         width.setColumns(10);
-        
+
         lblHeight = new JLabel("Height");
         panelGeneral.add(lblHeight, "2, 4, right, default");
-        
+
         height = new JTextField();
         panelGeneral.add(height, "4, 4, fill, default");
         height.setColumns(10);
 
+        lblRotation = new JLabel("Rotation");
+        panelGeneral.add(lblRotation, "2, 6, right, default");
+
+        simulatedRotation = new JTextField();
+        panelGeneral.add(simulatedRotation, "4, 6, fill, default");
+        simulatedRotation.setColumns(10);
+
+
+        lblCameraFlipped = new JLabel("View mirrored?");
+        lblCameraFlipped.setToolTipText("Simulate the camera as showing a mirrored view");
+        panelGeneral.add(lblCameraFlipped, "2, 8, right, default");
+
+        simulatedFlipped = new JCheckBox("");
+        panelGeneral.add(simulatedFlipped, "4, 8");
+
+        label = new JLabel(" ");
+        panelGeneral.add(label, "6, 8");
+
         lblSourceUrl = new JLabel("Source URL");
-        panelGeneral.add(lblSourceUrl, "2, 8, right, default");
+        panelGeneral.add(lblSourceUrl, "2, 12, right, default");
 
         textFieldSourceUrl = new JTextField();
-        panelGeneral.add(textFieldSourceUrl, "4, 8, 3, 1, fill, default");
+        panelGeneral.add(textFieldSourceUrl, "4, 12, 3, 1, fill, default");
         textFieldSourceUrl.setColumns(40);
 
         btnBrowse = new JButton(browseAction);
-        panelGeneral.add(btnBrowse, "8, 8");
+        panelGeneral.add(btnBrowse, "8, 12");
     }
 
     @Override
     public void createBindings() {
+        DoubleConverter doubleConverter =
+                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         IntegerConverter intConverter = new IntegerConverter();
 
-        addWrappedBinding(camera, "width", width, "text", intConverter);
-        addWrappedBinding(camera, "height", height, "text", intConverter);
+        addWrappedBinding(camera, "viewWidth", width, "text", intConverter);
+        addWrappedBinding(camera, "viewHeight", height, "text", intConverter);
+
+        addWrappedBinding(camera, "simulatedRotation", simulatedRotation, "text", doubleConverter);
+        addWrappedBinding(camera, "simulatedFlipped", simulatedFlipped, "selected");
 
         addWrappedBinding(camera, "sourceUri", textFieldSourceUrl, "text");
 
         ComponentDecorators.decorateWithAutoSelect(width);
         ComponentDecorators.decorateWithAutoSelect(height);
+
+        ComponentDecorators.decorateWithAutoSelect(simulatedRotation);;
+
         ComponentDecorators.decorateWithAutoSelect(textFieldSourceUrl);
     }
 
@@ -154,6 +192,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
     private JLabel lblHeight;
     private JTextField width;
     private JTextField height;
+    private JLabel label;
 
     @Override
     protected void saveToModel() {

@@ -8,6 +8,7 @@ import javax.swing.Icon;
 
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
@@ -91,6 +92,9 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Element(required = false)
     private Location calibrationSecondaryFiducialLocation = new Location(LengthUnit.Millimeters);
 
+    @Element(required = false)
+    private Length calibrationPrimaryFiducialDiameter = null;
+    
     protected Machine machine;
 
     public AbstractHead() {
@@ -429,6 +433,14 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setCalibrationSecondaryFiducialLocation(Location calibrationSecondaryFiducialLocation) {
         this.calibrationSecondaryFiducialLocation = calibrationSecondaryFiducialLocation;
+    }
+
+    public Length getCalibrationPrimaryFiducialDiameter() {
+        return calibrationPrimaryFiducialDiameter;
+    }
+
+    public void setCalibrationPrimaryFiducialDiameter(Length calibrationPrimaryFiducialDiameter) {
+        this.calibrationPrimaryFiducialDiameter = calibrationPrimaryFiducialDiameter;
     }
 
     @Override

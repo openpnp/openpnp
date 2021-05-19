@@ -90,6 +90,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
@@ -212,6 +214,13 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         
         calibrationSecondaryLocation = new LocationButtonsPanel(calibrationSecondaryX, calibrationSecondaryY, calibrationSecondaryZ, (JTextField) null);
         panel.add(calibrationSecondaryLocation, "10, 16, left, fill");
+        
+        lblFiducialDiameter = new JLabel("Fiducial Diameter");
+        panel.add(lblFiducialDiameter, "2, 18, right, default");
+        
+        calibrationPrimaryFiducialDiameter = new JTextField();
+        panel.add(calibrationPrimaryFiducialDiameter, "4, 18, fill, default");
+        calibrationPrimaryFiducialDiameter.setColumns(10);
 
         JPanel panel_2 = new JPanel();
         panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -281,6 +290,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         addWrappedBinding(secondaryLocation, "lengthY", calibrationSecondaryY, "text", lengthConverter);
         addWrappedBinding(secondaryLocation, "lengthZ", calibrationSecondaryZ, "text", lengthConverter);
 
+        addWrappedBinding(head, "calibrationPrimaryFiducialDiameter", calibrationPrimaryFiducialDiameter, "text", lengthConverter);
+
         addWrappedBinding(head, "zProbeActuatorName", comboBoxZProbeActuator, "selectedItem");
         addWrappedBinding(head, "pumpActuatorName", comboBoxPumpActuator, "selectedItem");
 
@@ -294,6 +305,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationSecondaryX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationSecondaryY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationSecondaryZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationPrimaryFiducialDiameter);
 
         adaptDialog();
     }
@@ -332,4 +344,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JTextField calibrationSecondaryZ;
     private LocationButtonsPanel calibrationSecondaryLocation;
     private JPanel panel_1;
+    private JLabel lblFiducialDiameter;
+    private JTextField calibrationPrimaryFiducialDiameter;
 }

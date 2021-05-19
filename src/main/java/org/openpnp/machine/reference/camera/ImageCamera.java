@@ -64,6 +64,12 @@ public class ImageCamera extends ReferenceCamera {
     @Attribute(required = false)
     private int height = 480;
 
+    @Attribute(required = false)
+    private double simulatedRotation = 0;
+
+    @Attribute(required = false)
+    private boolean simulatedFlipped = false;
+
     private BufferedImage source;
 
     /**
@@ -84,6 +90,7 @@ public class ImageCamera extends ReferenceCamera {
     @Attribute(required = false)
     boolean filterTestImageVision = true;
 
+    @Deprecated
     @Attribute(required = false)
     private boolean subPixelRendering = true;
 
@@ -91,20 +98,36 @@ public class ImageCamera extends ReferenceCamera {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
     }
 
-    public int getWidth() {
+    public int getViewWidth() {
         return width;
     }
 
-    public void setWidth(int width) {
+    public void setViewWidth(int width) {
         this.width = width;
     }
 
-    public int getHeight() {
+    public int getViewHeight() {
         return height;
     }
 
-    public void setHeight(int height) {
+    public void setViewHeight(int height) {
         this.height = height;
+    }
+
+    public double getSimulatedRotation() {
+        return simulatedRotation;
+    }
+
+    public void setSimulatedRotation(double simulatedRotation) {
+        this.simulatedRotation = simulatedRotation;
+    }
+
+    public boolean isSimulatedFlipped() {
+        return simulatedFlipped;
+    }
+
+    public void setSimulatedFlipped(boolean simulatedFlipped) {
+        this.simulatedFlipped = simulatedFlipped;
     }
 
     public String getSourceUri() {
@@ -154,42 +177,24 @@ public class ImageCamera extends ReferenceCamera {
         double pixelX = locationX / getUnitsPerPixel().getX();
         double pixelY = locationY / getUnitsPerPixel().getY();
 
-        
-        if (subPixelRendering ) {
-            // Sub-pixel rendering.
-            double dx = (pixelX - (width / 2.0));
-            double dy = (source.getHeight() - (pixelY + (height / 2.0)));
-            gFrame.clearRect(0, 0, width, height);
-            gFrame.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            gFrame.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            gFrame.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            AffineTransform t = new AffineTransform();
-            t.translate(-dx, -dy); // x/y set here
-            t.scale(1.0, 1.0);
-            gFrame.drawImage(source, t, null);
-        }
-        else {
-            int dx = (int) (pixelX - (width / 2));
-            int dy = (int) (source.getHeight() - (pixelY + (height / 2)));
-            int dx1 = dx;
-            int dy1 = dy;
-            int w1 = width;
-            int h1 = height;
-    
-            if (dx < 0 || dy < 0 || dx+w1 > source.getWidth() || dy+h1 > source.getHeight()) {
-                // crop to source area
-                w1 += Math.min(0, dx);
-                h1 += Math.min(0, dy);
-                dx1 = Math.max(0, dx);
-                dy1 = Math.max(0, dy);
-                w1 = Math.min(w1, source.getWidth() - dx1);
-                h1 = Math.min(h1, source.getHeight() - dy1);
-                // paint the rest black
-                gFrame.setColor(Color.black);
-                gFrame.fillRect(0, 0, width, height);
+        // Sub-pixel rendering.
+        double dx = (pixelX - (width / 2.0));
+        double dy = (source.getHeight() - (pixelY + (height / 2.0)));
+        gFrame.clearRect(0, 0, width, height);
+        gFrame.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);//VALUE_INTERPOLATION_BILINEAR);
+        gFrame.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        gFrame.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        AffineTransform t = new AffineTransform();
+        t.translate(-dx, -dy); // x/y set here
+        if (simulation) {
+            if (isSimulatedFlipped()) {
+                t.translate(dx + width/2, dy + height/2);
+                t.scale(-1.0, 1.0);
+                t.translate(-dx - width/2, -dy - height/2);
             }
-            gFrame.drawImage(source, dx1-dx, dy1-dy, dx1-dx+w1 - 1, dy1-dy+h1 - 1, dx1, dy1, dx1 + w1 - 1, dy1 + h1 - 1, null);
+            t.rotate(-Math.toRadians(getSimulatedRotation()), dx + width/2, dy + height/2);
         }
+        gFrame.drawImage(source, t, null);
 
         if (simulation) {
             SimulationModeMachine.simulateCameraExposure(this, gFrame, width, height);
