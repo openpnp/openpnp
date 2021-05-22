@@ -1,6 +1,7 @@
 package org.openpnp.machine.index;
 
 import org.openpnp.model.Identifiable;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.util.IdentifiableList;
 import org.simpleframework.xml.Attribute;
@@ -25,10 +26,12 @@ public class IndexFeederSlots {
 
     public static class Slot implements Identifiable {
         @Attribute
-        private final int address;
+        private int address;
 
         @Element(required = false)
         private Location location;
+
+        private Slot() {}
 
         public Slot(int address) {
             this.address = address;

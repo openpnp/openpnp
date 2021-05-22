@@ -14,6 +14,7 @@ import org.openpnp.machine.index.sheets.SearchPropertySheet;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
 import org.openpnp.spi.*;
@@ -149,7 +150,7 @@ public class IndexFeeder extends ReferenceFeeder {
     }
 
     private void findSlotAddress(boolean force) throws Exception {
-        if (slotAddress != null && !force) { // TODO test force
+        if (slotAddress != null && !force) {
             return;
         }
 
@@ -161,6 +162,7 @@ public class IndexFeeder extends ReferenceFeeder {
             ErrorTypes error = response.getError();
 
             if (error == ErrorTypes.TIMEOUT) {
+                setSlotAddress(null);
                 return;
             }
         }
@@ -344,18 +346,23 @@ public class IndexFeeder extends ReferenceFeeder {
     }
 
     public void setSlotAddress(Integer slotAddress) {
+        IndexFeederSlots.Slot oldSlot = getSlot();
         Integer oldValue = this.slotAddress;
         String oldName = this.getName();
-        // Find any other index feeders and if they have this slot address, set their address to null
-        IndexFeeder otherFeeder = findBySlotAddress(slotAddress);
-        if (otherFeeder != null) {
-            otherFeeder.slotAddress = null;
-            otherFeeder.initialized = false;
+
+        if(slotAddress != null) {
+            // Find any other index feeders and if they have this slot address, set their address to null
+            IndexFeeder otherFeeder = findBySlotAddress(slotAddress);
+            if (otherFeeder != null) {
+                otherFeeder.slotAddress = null;
+                otherFeeder.initialized = false;
+            }
         }
 
         this.slotAddress = slotAddress;
 
         firePropertyChange("slotAddress", oldValue, slotAddress);
+        firePropertyChange("slot", oldSlot, getSlot());
         firePropertyChange("name", oldName, getName());
     }
 

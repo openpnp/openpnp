@@ -934,6 +934,52 @@ public class IndexFeederTest {
     }
 
     @Test
+    public void findSlotAddressForcesFind() throws Exception{
+        feeder.setHardwareId(hardwareId);
+
+        int newAddress = 11;
+
+        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(getFeederAddressCommand))
+                .thenReturn(
+                        GetFeederAddress.ok(feederAddress, hardwareId),
+                        GetFeederAddress.ok(newAddress, hardwareId)
+                );
+
+        feeder.findSlotAddress();
+
+        InOrder inOrder = inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
+
+        assertEquals(feederAddress, (int) feeder.getSlotAddress());
+
+        feeder.findSlotAddress();
+
+        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
+
+        assertEquals(newAddress, (int) feeder.getSlotAddress());
+    }
+
+    @Test
+    public void findSlotAddressClearsSlotAddressOnTimeout() throws Exception {
+        feeder.setHardwareId(hardwareId);
+        feeder.setSlotAddress(feederAddress);
+
+        String getFeederAddressCommand = getFeederAddress(hardwareId);
+        when(mockedActuator.read(getFeederAddressCommand))
+                .thenReturn(Errors.timeout());
+
+        feeder.findSlotAddress();
+
+        InOrder inOrder = inOrder(mockedActuator);
+        inOrder.verify(mockedActuator).read(getFeederAddressCommand);
+        inOrder.verify(mockedActuator, never()).read(any());
+
+        assertNull(feeder.getSlotAddress());
+    }
+
+    @Test
     public void findAllFeedersUsingMaxFeederAddress() throws Exception {
         int maxFeederAddress = 5;
         indexProperties.setMaxFeederAddress(maxFeederAddress);

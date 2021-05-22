@@ -3,10 +3,11 @@ package org.openpnp.machine.index.sheets.gui;
 import javax.swing.*;
 
 import org.jdesktop.beansbinding.AutoBinding;
-import org.jdesktop.beansbinding.Converter;
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.gui.support.*;
 import org.openpnp.machine.index.IndexFeeder;
-import org.openpnp.machine.index.IndexFeederSlots;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 
@@ -229,31 +230,50 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		DoubleConverter doubleConverter =
 				new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
+		SlotProxy slotProxy = new SlotProxy();
+		AutoBinding<IndexFeeder, Object, SlotProxy, Object> binding = Bindings.createAutoBinding(UpdateStrategy.READ,
+				feeder, BeanProperty.create("slot"),
+				slotProxy, BeanProperty.create("slot"));
+		binding.setSourceNullValue(null);
+		binding.bind();
+//		bind(UpdateStrategy.READ, feeder, "slot", slotProxy, "slot");
+
 		addWrappedBinding(feeder, "hardwareId", hardwareIdValue, "text");
-		bind(AutoBinding.UpdateStrategy.READ, feeder, "slotAddress", slotAddressValue, "text", intConverter);
+		bind(UpdateStrategy.READ, slotProxy, "slotAddress", slotAddressValue, "text");
 
 		addWrappedBinding(feeder, "part", partCb, "selectedItem");
 		addWrappedBinding(feeder, "partPitch", partPitchTf, "text", intConverter);
 		addWrappedBinding(feeder, "feedRetryCount", feedRetryCountTf, "text", intConverter);
 		addWrappedBinding(feeder, "pickRetryCount", pickRetryCountTf, "text", intConverter);
 
-//		JBindings.Wrapper<IndexFeederSlots.Slot> slotWrapper = new JBindings.Wrapper<>();
-//		addWrappedBinding(feeder, "slot", slotWrapper, "value");
-//
-//		MutableLocationProxy pickLocation = new MutableLocationProxy();
-//		addWrappedBinding(slotWrapper, "value.location", pickLocation, "location");
-//		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "lengthX", xSlotTf, "text", lengthConverter);
-//		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "lengthY", ySlotTf, "text", lengthConverter);
-//		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "lengthZ", zSlotTf, "text", lengthConverter);
-//		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "rotation", rotSlotTf, "text", doubleConverter);
-//		bind(AutoBinding.UpdateStrategy.READ, pickLocation, "location", offsetLocationPanel, "baseLocation");
-//
-//		MutableLocationProxy offsets = new MutableLocationProxy();
-//		bind(AutoBinding.UpdateStrategy.READ_WRITE, feeder, "offset", offsets, "location");
-//		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthX", xOffsetTf, "text", lengthConverter);
-//		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthY", yOffsetTf, "text", lengthConverter);
-//		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthZ", zOffsetTf, "text", lengthConverter);
-//		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "rotation", rotOffsetTf, "text", doubleConverter);
+		bind(UpdateStrategy.READ, slotProxy, "enabled", feedAction, "enabled");
+
+		bind(UpdateStrategy.READ, slotProxy, "enabled", xSlotTf, "enabled");
+		bind(UpdateStrategy.READ, slotProxy, "enabled", ySlotTf, "enabled");
+		bind(UpdateStrategy.READ, slotProxy, "enabled", zSlotTf, "enabled");
+		bind(UpdateStrategy.READ, slotProxy, "enabled", rotSlotTf, "enabled");
+		bind(UpdateStrategy.READ, slotProxy, "enabled", slotLocationPanel, "enabled");
+
+		bind(UpdateStrategy.READ, slotProxy, "enabled", xOffsetTf, "enabled");
+		bind(UpdateStrategy.READ, slotProxy, "enabled", yOffsetTf, "enabled");
+		bind(UpdateStrategy.READ, slotProxy, "enabled", zOffsetTf, "enabled");
+		bind(UpdateStrategy.READ, slotProxy, "enabled", rotOffsetTf, "enabled");
+		bind(UpdateStrategy.READ, slotProxy, "enabled", offsetLocationPanel, "enabled");
+
+		MutableLocationProxy pickLocation = new MutableLocationProxy();
+		bind(AutoBinding.UpdateStrategy.READ_WRITE, slotProxy, "location", pickLocation, "location");
+		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "lengthX", xSlotTf, "text", lengthConverter);
+		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "lengthY", ySlotTf, "text", lengthConverter);
+		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "lengthZ", zSlotTf, "text", lengthConverter);
+		bind(AutoBinding.UpdateStrategy.READ_WRITE, pickLocation, "rotation", rotSlotTf, "text", doubleConverter);
+		bind(AutoBinding.UpdateStrategy.READ, pickLocation, "location", offsetLocationPanel, "baseLocation");
+
+		MutableLocationProxy offsets = new MutableLocationProxy();
+		addWrappedBinding(feeder, "offset", offsets, "location");
+		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthX", xOffsetTf, "text", lengthConverter);
+		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthY", yOffsetTf, "text", lengthConverter);
+		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "lengthZ", zOffsetTf, "text", lengthConverter);
+		bind(AutoBinding.UpdateStrategy.READ_WRITE, offsets, "rotation", rotOffsetTf, "text", doubleConverter);
 	}
 
 	private final Action findSlotAddressAction = new AbstractAction("Find") {
