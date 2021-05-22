@@ -101,7 +101,6 @@ public class JBindings {
                     wrappedBinding.addBindingListener(listener);
                 }
             }
-
             wrappedBinding.bind();
             AutoBinding<SS, SV, Wrapper<SV>, SV> binding = Bindings.createAutoBinding(
                     UpdateStrategy.READ, source, sourceProperty, wrapper, wrapperProperty);

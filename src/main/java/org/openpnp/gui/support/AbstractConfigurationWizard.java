@@ -98,7 +98,6 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         for (WrappedBinding wrappedBinding : wrappedBindings) {
             wrappedBinding.reset();
         }
-        btnApply.setEnabled(false);
         applyAction.setEnabled(false);
         resetAction.setEnabled(false);
     }
