@@ -28,7 +28,7 @@ Backlash compensation is configured on the ReferenceControllerAxis. Refer to the
  The machine always needs to perform an extra move and it will force a complete machine still-stand between motion segments.</li>
 * **OneSidedOptimizedPositioning:**
   Works like OneSidedPositioning except it will only perform an extra move when moving from the wrong side. Only half of the extra moves are needed.
-* **DirectionalCompensation (Experimental!):**
+* **DirectionalCompensation:**
 Backlash compensation is applied in the direction of travel. The offset is added to the actual target coordinate, if moving in the direction of the offset (which can be positive or negative), no offset is added if moving against the offset. 
   No extra moves are needed. The machine can also move more fluidly, as there is no direction change needed. 
   However: the offset needs to precisely match the physical backlash.
