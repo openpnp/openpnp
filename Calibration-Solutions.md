@@ -6,5 +6,7 @@ The Calibration Solutions are part of an overall holistic (whole-machine) approa
 
 # Calibrating Backlash Compensation
 
-Using the camera and looking at the calibration primary fiducial, the solution can automatically determine the backlash of the machine. It can therefore configure [[Backlash Compensation]] with the correct offsets.
+Backlash compensation is used to avoid the effects of any looseness or play in the mechanical linkages of machine axes. More information can be found on the [[Backlash Compensation]] page. 
+
+Using the camera and looking at the calibration primary fiducial, the calibration process can automatically determine the backlash of the machine in X and Y. It can therefore configure [[Backlash Compensation]] with the correct offsets to perfectly compensate. The **DirectionalCompensation** is used for best performance. 
 
