@@ -93,7 +93,7 @@ The **Kinematics** milestone defines the kinematic profile of your machine, used
 The **Vision** milestone sets up the cameras for Computer Vision. A calibration rig is used to calibrate the camera lenses and optical properties such as the true spacial position and imaging scale of the camera. See the [[Vision Solutions]] page for more information.
 
 ### Calibration Milestone 
-The **Calibration** milestone brings Kinematics and Vision together to calibrate the machine. Nozzle head offsets, backlash compensation etc. 
+The **Calibration** milestone brings Kinematics and Vision together to calibrate the machine. Nozzle head offsets, backlash compensation etc. See the [[Calibration Solutions]] page for more information.
 
 ### Production Milestone 
 The **Production** milestone handles recurrent configuration tasks such as feeder setup as well as production issues such as board, placement and job handling. This is currently empty, but feeder issues are already in the pipeline. More is planned in the future. 
