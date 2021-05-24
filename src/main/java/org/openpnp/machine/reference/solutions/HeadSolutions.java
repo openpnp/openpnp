@@ -371,7 +371,7 @@ public class HeadSolutions implements Solutions.Subject {
     }
 
     public static CoordinateAxis getRawAxis(Machine machine, Axis axis) { 
-        if (axis != null) {
+        if (axis instanceof AbstractAxis) {
             try {
                 return ((AbstractAxis) axis).getCoordinateAxes(machine).getAxis(axis.getType());
             }

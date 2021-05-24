@@ -64,8 +64,14 @@ public class ImageCamera extends ReferenceCamera {
     @Attribute(required = false)
     private int height = 480;
 
+    @Element(required = false)
+    private Location imageUnitsPerPixel;
+
     @Attribute(required = false)
     private double simulatedRotation = 0;
+
+    @Attribute(required = false)
+    private double simulatedScale = 1.0;
 
     @Attribute(required = false)
     private boolean simulatedFlipped = false;
@@ -122,12 +128,31 @@ public class ImageCamera extends ReferenceCamera {
         this.simulatedRotation = simulatedRotation;
     }
 
+    public double getSimulatedScale() {
+        return simulatedScale;
+    }
+
+    public void setSimulatedScale(double simulatedScale) {
+        this.simulatedScale = simulatedScale;
+    }
+
     public boolean isSimulatedFlipped() {
         return simulatedFlipped;
     }
 
     public void setSimulatedFlipped(boolean simulatedFlipped) {
         this.simulatedFlipped = simulatedFlipped;
+    }
+
+    public Location getImageUnitsPerPixel() {
+        if (imageUnitsPerPixel == null) {
+            imageUnitsPerPixel = getUnitsPerPixel();
+        }
+        return imageUnitsPerPixel;
+    }
+
+    public void setImageUnitsPerPixel(Location imageUnitsPerPixel) {
+        this.imageUnitsPerPixel = imageUnitsPerPixel;
     }
 
     public String getSourceUri() {
@@ -174,8 +199,8 @@ public class ImageCamera extends ReferenceCamera {
         double locationX = location.getX();
         double locationY = location.getY();
 
-        double pixelX = locationX / getUnitsPerPixel().getX();
-        double pixelY = locationY / getUnitsPerPixel().getY();
+        double pixelX = locationX / getImageUnitsPerPixel().getX();
+        double pixelY = locationY / getImageUnitsPerPixel().getY();
 
         // Sub-pixel rendering.
         double dx = (pixelX - (width / 2.0));
@@ -187,11 +212,9 @@ public class ImageCamera extends ReferenceCamera {
         AffineTransform t = new AffineTransform();
         t.translate(-dx, -dy); // x/y set here
         if (simulation) {
-            if (isSimulatedFlipped()) {
-                t.translate(dx + width/2, dy + height/2);
-                t.scale(-1.0, 1.0);
-                t.translate(-dx - width/2, -dy - height/2);
-            }
+            t.translate(dx + width/2, dy + height/2);
+            t.scale(isSimulatedFlipped() ? -getSimulatedScale() : getSimulatedScale(), getSimulatedScale());
+            t.translate(-dx - width/2, -dy - height/2);
             t.rotate(-Math.toRadians(getSimulatedRotation()), dx + width/2, dy + height/2);
         }
         gFrame.drawImage(source, t, null);
@@ -203,7 +226,6 @@ public class ImageCamera extends ReferenceCamera {
         gFrame.dispose();
         return frame;
     }
-
     /**
      * Check if the specified location is a pick location, by looking at it and checking if a tape pocket with the 
      * shape of the blackened footprint is there.
@@ -286,7 +308,7 @@ public class ImageCamera extends ReferenceCamera {
             // Find the best match
             TemplateMatch bestMatch = null;
             double bestDistance = Double.MAX_VALUE;
-            Location unitsPerPixel = getUnitsPerPixel();
+            Location unitsPerPixel = getImageUnitsPerPixel();
             Location center = new Location(LengthUnit.Millimeters);
             // CV operations are always rounded to the nearest pixel, giving at most an error of 0.5 x pixel diameter. 
             // The same is true for CV operation that sets up and adjust the StripFeeder. Test have shown, that the test image has 
@@ -302,7 +324,7 @@ public class ImageCamera extends ReferenceCamera {
                 double offsetY = (dimension / 2.0) - (y + template.getHeight()/2.0);
                 offsetX *= unitsPerPixel.getX();
                 offsetY *= unitsPerPixel.getY();
-                Location offsets = new Location(getUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
+                Location offsets = new Location(getImageUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
                 double distance = center.getLinearDistanceTo(offsets);
                 double score = resultMat.get(y, x)[0];
                 if (bestMatch == null || (bestDistance > distance && bestMatch.score*0.85 < score)) {

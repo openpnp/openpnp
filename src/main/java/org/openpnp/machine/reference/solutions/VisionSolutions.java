@@ -65,8 +65,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 /**
- * This helper class implements the Issues & Solutions for the ReferenceHead. 
- * The idea is not to pollute the head implementation itself.
+ * This helper class implements the Issues & Solutions for the Vision milestone. 
  *
  */
 public class VisionSolutions implements Solutions.Subject {
@@ -153,7 +152,7 @@ public class VisionSolutions implements Solutions.Subject {
                     if (defaultCamera != null) {
                         for (Camera camera : head.getCameras()) {
                             if (camera instanceof ReferenceCamera) {
-                                perHeadCameraSolutions(solutions, head, defaultCamera, defaultNozzle, (ReferenceCamera) camera);
+                                perDownLookingCameraSolutions(solutions, head, defaultCamera, defaultNozzle, (ReferenceCamera) camera);
                             }
                         }
                         for (Nozzle nozzle : head.getNozzles()) {
@@ -185,7 +184,7 @@ public class VisionSolutions implements Solutions.Subject {
         }
     }
 
-    public void perHeadCameraSolutions(Solutions solutions, ReferenceHead head, Camera defaultCamera, Nozzle defaultNozzle, ReferenceCamera camera) {
+    private void perDownLookingCameraSolutions(Solutions solutions, ReferenceHead head, Camera defaultCamera, Nozzle defaultNozzle, ReferenceCamera camera) {
 
         // Find the base calibration fiducial.
         if (camera == defaultCamera) {
@@ -244,7 +243,7 @@ public class VisionSolutions implements Solutions.Subject {
                             new Solutions.Issue.IntegerProperty(
                                     "Detected feature diameter",
                                     "Adjust the nozzle tip feature diameter that should be detected.",
-                                    10, 500) {
+                                    3, 1000) {
                                 @Override
                                 public int get() {
                                     return featureDiameter;
@@ -254,8 +253,8 @@ public class VisionSolutions implements Solutions.Subject {
                                     featureDiameter = value;
                                     UiUtils.submitUiMachineTask(() -> {
                                         try {
-                                            // This show a diagnostic detection image in the camera view for 4000ms.
-                                            getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.4, 4000);
+                                            // This show a diagnostic detection image in the camera view for 2000ms.
+                                            getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.4, 2000);
                                         }
                                         catch (Exception e) {
                                             Toolkit.getDefaultToolkit().beep();
@@ -377,21 +376,61 @@ public class VisionSolutions implements Solutions.Subject {
                     Solutions.Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#down-looking-camera-offsets") {
 
+                private int featureDiameter;
+
+                {
+                    featureDiameter = 20;
+                    if (camera.getUnitsPerPixel().getX() != 0
+                            && head.getCalibrationPrimaryFiducialDiameter() != null
+                            && head.getCalibrationPrimaryFiducialDiameter().getValue() != 0) {
+                        // Existing diameter setting.
+                        featureDiameter = (int) Math.round(head.getCalibrationPrimaryFiducialDiameter().divide(camera.getUnitsPerPixel().getLengthX()));
+                    }
+                }
+
                 @Override 
                 public void activate() throws Exception {
                     MainFrame.get().getMachineControls().setSelectedTool(camera);
                     camera.ensureCameraVisible();
                 }
 
+                @Override
+                public Solutions.Issue.CustomProperty[] getProperties() {
+                    return new Solutions.Issue.CustomProperty[] {
+                            new Solutions.Issue.IntegerProperty(
+                                    "Detected feature diameter",
+                                    "Adjust the nozzle tip feature diameter that should be detected.",
+                                    3, 1000) {
+                                @Override
+                                public int get() {
+                                    return featureDiameter;
+                                }
+                                @Override
+                                public void set(int value) {
+                                    featureDiameter = value;
+                                    UiUtils.submitUiMachineTask(() -> {
+                                        try {
+                                            // This show a diagnostic detection image in the camera view for 2000ms.
+                                            getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.4, 2000);
+                                        }
+                                        catch (Exception e) {
+                                            Toolkit.getDefaultToolkit().beep();
+                                        }
+                                    });
+                                }
+                            },
+                    };
+                }
                 @Override 
                 public String getExtendedDescription() {
                     return "<html>"
-                            + "<p>Once the calibration primary fiducial is captured in X, Y you can use it to capture the nozzle head "
+                            + "<p>Once the calibration primary fiducial is captured you can use it to capture the camera head "
                             + "offsets (first approximation).</p><br/>"
-                            + "<p>Furthermore, this also captures the nozzle offset as a first approximation.</p><br/>"
-                            + "<p>Jog nozzle " + camera.getName()
+                            + "<p>Jog camera " + camera.getName()
                             + " over the primary fiducial. Target it with the cross-hairs.</p><br/>"
-                            + "<p>Then press Accept to capture the camera head offsets.</p>"
+                            + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
+                            + "camera view.</p><br/>"
+                            + "<p>Then press Accept to capture the offsets. The camera will perform a small calibration movement "
                             + "</html>";
                 }
 
@@ -401,16 +440,14 @@ public class VisionSolutions implements Solutions.Subject {
                         final State oldState = getState();
                         UiUtils.submitUiMachineTask(
                                 () -> {
-                                    // Reset any former head offset.
-                                    camera.setHeadOffsets(Location.origin);
                                     // Perform preliminary camera calibration. 
-                                    autoCalibrateCamera(camera, camera, null, diagnosticsMilliseconds);
+                                    autoCalibrateCamera(camera, camera, (double) featureDiameter, diagnosticsMilliseconds);
                                     // Get the precise fiducial location.
                                     Location fiducialLocation = getSubjectLocation(camera, camera, 
                                             head.getCalibrationPrimaryFiducialDiameter(), diagnosticsMilliseconds);
                                     // Determine the camera head offset (remember, we reset the head offset to zero above, so 
                                     // the camera now shows the true offset).
-                                    Location headOffsets = head.getCalibrationPrimaryFiducialLocation().subtract(fiducialLocation);
+                                    Location headOffsets = camera.getHeadOffsets().add(head.getCalibrationPrimaryFiducialLocation().subtract(fiducialLocation));
                                     camera.setHeadOffsets(headOffsets);
                                     Logger.info("Set camera "+camera.getName()+" head offsets to "+headOffsets
                                             +" (previously "+oldCameraOffsets+")");
@@ -494,7 +531,7 @@ public class VisionSolutions implements Solutions.Subject {
                         new Solutions.Issue.IntegerProperty(
                                 "Detected feature diameter",
                                 "Adjust the nozzle tip feature diameter that should be detected.",
-                                10, 500) {
+                                3, 1000) {
                             @Override
                             public int get() {
                                 return featureDiameter;
@@ -504,8 +541,8 @@ public class VisionSolutions implements Solutions.Subject {
                                 featureDiameter = value;
                                 UiUtils.submitUiMachineTask(() -> {
                                     try {
-                                        // This show a diagnostic detection image in the camera view for 4000ms.
-                                        getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.4, 4000);
+                                        // This show a diagnostic detection image in the camera view for 2000ms.
+                                        getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.4, 2000);
                                     }
                                     catch (Exception e) {
                                         Toolkit.getDefaultToolkit().beep();
@@ -565,7 +602,7 @@ public class VisionSolutions implements Solutions.Subject {
         });
     }
 
-    public void perNozzleSolutions(Solutions solutions, ReferenceHead head, Camera defaultCamera, Nozzle defaultNozzle, ReferenceNozzle nozzle) {
+    private void perNozzleSolutions(Solutions solutions, ReferenceHead head, Camera defaultCamera, Nozzle defaultNozzle, ReferenceNozzle nozzle) {
         if (solvedPrimaryXY && solvedSecondaryXY 
                 && (solvedPrimaryZ || defaultNozzle == nozzle)) {
             final Location oldPrimaryFiducialLocation = head.getCalibrationPrimaryFiducialLocation();
@@ -678,7 +715,7 @@ public class VisionSolutions implements Solutions.Subject {
         }
     }
 
-    public void perHeadSolutions(Solutions solutions, ReferenceHead head, Camera defaultCamera) {
+    private void perHeadSolutions(Solutions solutions, ReferenceHead head, Camera defaultCamera) {
         // Visual Homing
         if (head.getVisualHomingMethod() == VisualHomingMethod.None) {
             final Location oldFiducialLocation = head.getHomingFiducialLocation();
@@ -754,7 +791,7 @@ public class VisionSolutions implements Solutions.Subject {
         }
     }
 
-    static class CameraCalibrationState {
+    private static class CameraCalibrationState {
         boolean flipX;
         boolean flipY;
         double rotation;
@@ -835,14 +872,14 @@ public class VisionSolutions implements Solutions.Subject {
                 // X Axis 
                 Location originLocationX = initialLocation.add(new Location(LengthUnit.Millimeters,
                         -displacementMm * 0.5, 0, 0, 0));
-                zeroKnowledgeMoveTo(movable, originLocationX);
+                zeroKnowledgeMoveTo(movable, originLocationX, pass == 0);
                 if (featureDiameter != null) {
                     expectedOffsetsAndDiameter = getExpectedOffsetsAndDiameter(camera, movable, initialLocation, featureDiameter);
                 }
                 Circle originX = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics);
                 Location displacedXLocation = originLocationX.add(
                         new Location(LengthUnit.Millimeters, displacementMm, 0, 0, 0));
-                zeroKnowledgeMoveTo(movable, displacedXLocation);
+                zeroKnowledgeMoveTo(movable, displacedXLocation, false);
                 if (featureDiameter != null) {
                     expectedOffsetsAndDiameter = getExpectedOffsetsAndDiameter(camera, movable, initialLocation, featureDiameter);
                 }
@@ -854,14 +891,14 @@ public class VisionSolutions implements Solutions.Subject {
                 // Y Axis 
                 Location originLocationY = initialLocation.add(new Location(LengthUnit.Millimeters,
                         0, -displacementMm * 0.5, 0, 0));
-                zeroKnowledgeMoveTo(movable, originLocationY);
+                zeroKnowledgeMoveTo(movable, originLocationY, false);
                 if (featureDiameter != null) {
                     expectedOffsetsAndDiameter = getExpectedOffsetsAndDiameter(camera, movable, initialLocation, featureDiameter);
                 }
                 Circle originY = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics);
                 Location displacedYLocation = originLocationY.add(
                         new Location(LengthUnit.Millimeters, 0, displacementMm, 0, 0));
-                zeroKnowledgeMoveTo(movable, displacedYLocation);
+                zeroKnowledgeMoveTo(movable, displacedYLocation, false);
                 if (featureDiameter != null) {
                     expectedOffsetsAndDiameter = getExpectedOffsetsAndDiameter(camera, movable, initialLocation, featureDiameter);
                 }
@@ -929,7 +966,7 @@ public class VisionSolutions implements Solutions.Subject {
                     // Auto-focus and set Z of camera.
                     Location location0 = initialLocation.add(new Location(LengthUnit.Millimeters, 0, 0, 0.5*zeroKnowledgeAutoFocusDepthMm, 0));
                     Location location1 = initialLocation.add(new Location(LengthUnit.Millimeters, 0, 0, -0.5*zeroKnowledgeAutoFocusDepthMm, 0));
-                    initialLocation = new AutoFocusProvider().autoFocus(camera, movable, featureDiameter.multiply(2), location0, location1);
+                    initialLocation = new AutoFocusProvider().autoFocus(camera, movable, featureDiameter.multiply(4), location0, location1);
                     Location cameraHeadOffsetsNew = camera.getHeadOffsets().derive(initialLocation, false, false, true, false);
                     Logger.info("Setting camera "+camera.getName()+" Z to "+cameraHeadOffsetsNew.getLengthZ()+" (previously "+camera.getHeadOffsets().getLengthZ());
                     camera.setHeadOffsets(cameraHeadOffsetsNew);
@@ -957,7 +994,7 @@ public class VisionSolutions implements Solutions.Subject {
         }
         finally {
             // Restore the camera location
-            zeroKnowledgeMoveTo(movable, initialLocation);
+            zeroKnowledgeMoveTo(movable, initialLocation, true);
         }
     }
 
@@ -989,7 +1026,7 @@ public class VisionSolutions implements Solutions.Subject {
                 Location offsets = camera.getLocation().subtract(subjectLocation);
                 location = location.add(offsets);
             }
-            zeroKnowledgeMoveTo(movable, location);
+            zeroKnowledgeMoveTo(movable, location, pass == 0);
         }
         return location;
     }
@@ -1001,10 +1038,10 @@ public class VisionSolutions implements Solutions.Subject {
             Location l = (camera != movable) ? 
                     movable.getLocation().subtract(location) 
                     : location.subtract(movable.getLocation());
-            expectedOffsetAndDiameter = new Circle(
-                    l.getLengthX().divide(camera.getUnitsPerPixel().getLengthX()), 
-                    -l.getLengthY().divide(camera.getUnitsPerPixel().getLengthY()), 
-                    expectedDiameter.divide(camera.getUnitsPerPixel().getLengthX()));
+                    expectedOffsetAndDiameter = new Circle(
+                            l.getLengthX().divide(camera.getUnitsPerPixel().getLengthX()), 
+                            -l.getLengthY().divide(camera.getUnitsPerPixel().getLengthY()), 
+                            expectedDiameter.divide(camera.getUnitsPerPixel().getLengthX()));
         }
         return expectedOffsetAndDiameter;
     }
@@ -1021,7 +1058,8 @@ public class VisionSolutions implements Solutions.Subject {
      * @return
      * @throws Exception
      */
-    public Circle getSubjectPixelLocation(ReferenceCamera camera, HeadMountable movable, Circle expectedOffsetAndDiameter, double extraSearchRange, long diagnostics) throws Exception {
+    public Circle getSubjectPixelLocation(ReferenceCamera camera, HeadMountable movable, Circle expectedOffsetAndDiameter, double extraSearchRange, 
+            long diagnostics) throws Exception {
         BufferedImage bufferedImage = camera.lightSettleAndCapture();
         Mat image = OpenCvUtils.toMat(bufferedImage);
         try {
@@ -1047,7 +1085,8 @@ public class VisionSolutions implements Solutions.Subject {
                 double x = 0;
                 double y = 0;
                 int n = 0;
-                for (int angle = -180; angle < 180; angle += 360/zeroKnowledgeRunoutCompensationShots) {
+                int da = 360/zeroKnowledgeRunoutCompensationShots;
+                for (int angle = -180+da/2; angle < 180; angle += da) {
                     l = l.derive(new Location(l.getUnits(), 0, 0, 0, angle), false, false, false, true);
                     movable.moveTo(l);
                     bufferedImage = camera.lightSettleAndCapture();
@@ -1076,7 +1115,7 @@ public class VisionSolutions implements Solutions.Subject {
         }
     }
 
-    public Circle getPixelLocationShot(ReferenceCamera camera, long diagnostics, Mat image,
+    private Circle getPixelLocationShot(ReferenceCamera camera, long diagnostics, Mat image,
             int maxDiameter, int minDiameter, int maxDistance, int expectedX, int expectedY,
             int effectiveSubSampling) throws Exception, IOException {
         ScoreRange scoreRange = new ScoreRange();
@@ -1106,16 +1145,42 @@ public class VisionSolutions implements Solutions.Subject {
     }
 
     /**
+     * Get the detected Location of a subject. 
+     * 
+     * @param camera
+     * @param movable
+     * @param expectedLocation
+     * @param expectedDiameter
+     * @param diagnostics
+     * @return
+     * @throws Exception
+     */
+    Location getDetectedLocation(ReferenceCamera camera, HeadMountable movable, Location expectedLocation, Length expectedDiameter, 
+            long diagnostics) throws Exception {
+        Circle expectedFeature = getExpectedOffsetsAndDiameter(camera, movable, expectedLocation, expectedDiameter);
+        Circle detected = getSubjectPixelLocation(camera, movable, expectedFeature, 0.0, diagnostics);
+        Location subjectLocation = VisionUtils.getPixelLocation(camera, movable, detected.x, detected.y);
+        // Make sure its in the expected units.
+        return subjectLocation.convertToUnits(expectedLocation.getUnits());
+    }
+
+    /**
      * Moves the head-mountable to a location at safe Z using a conservative backlash-compensation scheme. Used to get precise
      * camera and camera subject positioning before proper backlash compensation can be configured and calibrated. 
      * 
      * @param hm
      * @param location
+     * @param safeZ TODO
      * @throws Exception
      */
-    public void zeroKnowledgeMoveTo(HeadMountable hm, Location location) throws Exception {
+    public void zeroKnowledgeMoveTo(HeadMountable hm, Location location, boolean safeZ) throws Exception {
         Location backlashCompensatedLocation = location.add(zeroKnowledgeBacklashOffsets);
-        MovableUtils.moveToLocationAtSafeZ(hm, backlashCompensatedLocation);
+        if (safeZ) {
+            MovableUtils.moveToLocationAtSafeZ(hm, backlashCompensatedLocation);
+        }
+        else {
+            hm.moveTo(backlashCompensatedLocation);
+        }
         hm.moveTo(location);
     }
 }

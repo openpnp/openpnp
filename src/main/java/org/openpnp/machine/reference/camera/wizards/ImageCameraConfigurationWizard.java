@@ -35,10 +35,13 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.util.UiUtils;
@@ -78,10 +81,18 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -101,6 +112,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         width = new JTextField();
         panelGeneral.add(width, "4, 2, fill, default");
         width.setColumns(10);
+        
+        label_1 = new JLabel(" ");
+        panelGeneral.add(label_1, "8, 2");
 
         lblHeight = new JLabel("Height");
         panelGeneral.add(lblHeight, "2, 4, right, default");
@@ -115,27 +129,52 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         simulatedRotation = new JTextField();
         panelGeneral.add(simulatedRotation, "4, 6, fill, default");
         simulatedRotation.setColumns(10);
+        
+        lblScale = new JLabel("Viewing Scale");
+        panelGeneral.add(lblScale, "2, 8, right, default");
+        
+        simulatedScale = new JTextField();
+        panelGeneral.add(simulatedScale, "4, 8, fill, default");
+        simulatedScale.setColumns(10);
 
 
         lblCameraFlipped = new JLabel("View mirrored?");
         lblCameraFlipped.setToolTipText("Simulate the camera as showing a mirrored view");
-        panelGeneral.add(lblCameraFlipped, "2, 8, right, default");
+        panelGeneral.add(lblCameraFlipped, "2, 10, right, default");
 
         simulatedFlipped = new JCheckBox("");
-        panelGeneral.add(simulatedFlipped, "4, 8");
+        panelGeneral.add(simulatedFlipped, "4, 10");
 
         label = new JLabel(" ");
-        panelGeneral.add(label, "6, 8");
+        panelGeneral.add(label, "6, 10");
 
         lblSourceUrl = new JLabel("Source URL");
-        panelGeneral.add(lblSourceUrl, "2, 12, right, default");
+        panelGeneral.add(lblSourceUrl, "2, 14, right, default");
 
         textFieldSourceUrl = new JTextField();
-        panelGeneral.add(textFieldSourceUrl, "4, 12, 3, 1, fill, default");
+        panelGeneral.add(textFieldSourceUrl, "4, 14, 5, 1, fill, default");
         textFieldSourceUrl.setColumns(40);
 
         btnBrowse = new JButton(browseAction);
-        panelGeneral.add(btnBrowse, "8, 12");
+        panelGeneral.add(btnBrowse, "10, 14");
+        
+        lblX = new JLabel("X");
+        panelGeneral.add(lblX, "4, 16, center, default");
+        
+        lblY = new JLabel("Y");
+        panelGeneral.add(lblY, "6, 16, center, default");
+        
+        lblUnitsPerPixel = new JLabel("Units per Pixel");
+        lblUnitsPerPixel.setToolTipText("To allow simulation of Unit per Pixel calibration, the true Units per Pixel of the image must be stored independently.");
+        panelGeneral.add(lblUnitsPerPixel, "2, 18, right, default");
+        
+        imageUnitsPerPixelX = new JTextField();
+        panelGeneral.add(imageUnitsPerPixelX, "4, 18, fill, default");
+        imageUnitsPerPixelX.setColumns(10);
+        
+        imageUnitsPerPixelY = new JTextField();
+        panelGeneral.add(imageUnitsPerPixelY, "6, 18, fill, default");
+        imageUnitsPerPixelY.setColumns(10);
     }
 
     @Override
@@ -143,21 +182,30 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         IntegerConverter intConverter = new IntegerConverter();
+        LengthConverter uppConverter = new LengthConverter("%.6f");
 
         addWrappedBinding(camera, "viewWidth", width, "text", intConverter);
         addWrappedBinding(camera, "viewHeight", height, "text", intConverter);
 
         addWrappedBinding(camera, "simulatedRotation", simulatedRotation, "text", doubleConverter);
+        addWrappedBinding(camera, "simulatedScale", simulatedScale, "text", doubleConverter);
         addWrappedBinding(camera, "simulatedFlipped", simulatedFlipped, "selected");
 
         addWrappedBinding(camera, "sourceUri", textFieldSourceUrl, "text");
 
+        MutableLocationProxy imageUnitsPerPixel = new MutableLocationProxy();
+        bind(UpdateStrategy.READ_WRITE, camera, "imageUnitsPerPixel", imageUnitsPerPixel, "location");
+        addWrappedBinding(imageUnitsPerPixel, "lengthX", imageUnitsPerPixelX, "text", uppConverter);
+        addWrappedBinding(imageUnitsPerPixel, "lengthY", imageUnitsPerPixelY, "text", uppConverter);
+
         ComponentDecorators.decorateWithAutoSelect(width);
         ComponentDecorators.decorateWithAutoSelect(height);
-
-        ComponentDecorators.decorateWithAutoSelect(simulatedRotation);;
+        ComponentDecorators.decorateWithAutoSelect(simulatedRotation);
+        ComponentDecorators.decorateWithAutoSelect(simulatedScale);
 
         ComponentDecorators.decorateWithAutoSelect(textFieldSourceUrl);
+        ComponentDecorators.decorateWithAutoSelect(imageUnitsPerPixelX);
+        ComponentDecorators.decorateWithAutoSelect(imageUnitsPerPixelY);
     }
 
     private Action browseAction = new AbstractAction() {
@@ -193,6 +241,14 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
     private JTextField width;
     private JTextField height;
     private JLabel label;
+    private JLabel lblUnitsPerPixel;
+    private JTextField imageUnitsPerPixelX;
+    private JTextField imageUnitsPerPixelY;
+    private JLabel label_1;
+    private JLabel lblScale;
+    private JTextField simulatedScale;
+    private JLabel lblX;
+    private JLabel lblY;
 
     @Override
     protected void saveToModel() {

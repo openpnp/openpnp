@@ -45,8 +45,7 @@ import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
 
 /**
- * This helper class implements the Issues & Solutions for the ReferenceHead. 
- * The idea is not to pollute the head implementation itself.
+ * This helper class implements the Issues & Solutions for the Kinematics milestone. 
  *
  */
 public class KinematicSolutions implements Solutions.Subject {
@@ -138,7 +137,7 @@ public class KinematicSolutions implements Solutions.Subject {
 
                                     solutions.add(new Solutions.Issue(
                                             hm, 
-                                            "Calibrate Safe Z of "+hm.getName()+".", 
+                                            "Set Safe Z of "+hm.getName()+".", 
                                             "Jog "+hm.getName()+" over the tallest obstacle and capture.", 
                                             Solutions.Severity.Fundamental,
                                             "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
@@ -211,7 +210,7 @@ public class KinematicSolutions implements Solutions.Subject {
                             if (!(limitLow ? controllerAxis.isSoftLimitLowEnabled() : controllerAxis.isSoftLimitHighEnabled())) {
                                 solutions.add(new Solutions.Issue(
                                         controllerAxis, 
-                                        "Calibrate the "+qualifier+" soft limit of "+controllerAxis.getName()+".", 
+                                        "Set the "+qualifier+" soft limit of "+controllerAxis.getName()+".", 
                                         "Move axis "+controllerAxis.getName()+" to the "+qualifier+" soft limit and capture.", 
                                         Solutions.Severity.Suggestion,
                                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {

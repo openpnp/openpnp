@@ -193,7 +193,8 @@ public class IssuePanel extends JPanel {
                         }
                     }
                 });
-                spinner.setModel(new SpinnerNumberModel(intProperty.get(), intProperty.getMin(), intProperty.getMax(), 1));
+                int val = intProperty.get();
+                spinner.setModel(new SpinnerNumberModel(val, (int)Math.min(val, intProperty.getMin()), (int)Math.max(val, intProperty.getMax()), 1));
                 spinner.setToolTipText(property.getToolTip());
                 spinner.setEnabled(issue.getState() == Solutions.State.Open);
                 panel.add(spinner, "4, "+(formRow*2)+", left, default");

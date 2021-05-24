@@ -186,10 +186,6 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(simulatedUnitsPerPixelY, "6, 14, fill, default");
         simulatedUnitsPerPixelY.setColumns(10);
         
-        simulatedUnitsPerPixelZ = new JTextField();
-        panelGeneral.add(simulatedUnitsPerPixelZ, "8, 14, fill, default");
-        simulatedUnitsPerPixelZ.setColumns(10);
-        
         lblErrorOffsets = new JLabel("Part Error Offsets");
         lblErrorOffsets.setToolTipText("Part on nozzle error offsets");
         panelGeneral.add(lblErrorOffsets, "2, 16, right, default");
@@ -217,6 +213,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         IntegerConverter intConverter = new IntegerConverter();
         LengthConverter lengthConverter = new LengthConverter();
+        LengthConverter uppConverter = new LengthConverter("%.6f");
 
         addWrappedBinding(camera, "viewWidth", width, "text", intConverter);
         addWrappedBinding(camera, "viewHeight", height, "text", intConverter);
@@ -244,9 +241,8 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         MutableLocationProxy simulatedUnitsPerPixel = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, camera, "simulatedUnitsPerPixel", simulatedUnitsPerPixel,
                 "location");
-        addWrappedBinding(simulatedUnitsPerPixel, "lengthX", simulatedUnitsPerPixelX, "text", lengthConverter);
-        addWrappedBinding(simulatedUnitsPerPixel, "lengthY", simulatedUnitsPerPixelY, "text", lengthConverter);
-        addWrappedBinding(simulatedUnitsPerPixel, "lengthZ", simulatedUnitsPerPixelZ, "text", lengthConverter);
+        addWrappedBinding(simulatedUnitsPerPixel, "lengthX", simulatedUnitsPerPixelX, "text", uppConverter);
+        addWrappedBinding(simulatedUnitsPerPixel, "lengthY", simulatedUnitsPerPixelY, "text", uppConverter);
 
         ComponentDecorators.decorateWithAutoSelect(width);
         ComponentDecorators.decorateWithAutoSelect(height);
@@ -260,8 +256,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedLocationZ);
         ComponentDecorators.decorateWithAutoSelect(simulatedLocationRotation);
 
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedUnitsPerPixelX);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedUnitsPerPixelY);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedUnitsPerPixelZ);
+        //ComponentDecorators.decorateWithAutoSelect(simulatedUnitsPerPixelX);
+        //ComponentDecorators.decorateWithAutoSelect(simulatedUnitsPerPixelY);
     }
 }
