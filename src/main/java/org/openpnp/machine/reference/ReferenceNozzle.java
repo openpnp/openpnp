@@ -286,17 +286,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (nozzleTip == null) {
             throw new Exception("Can't pick, no nozzle tip loaded");
         }
-        
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("nozzle", this);
-            globals.put("part", part);
-            Configuration.get().getScripting().on("Nozzle.BeforePick", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
-        
+
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("nozzle", this);
+        globals.put("part", part);
+        Configuration.get().getScripting().on("Nozzle.BeforePick", globals);
+
         setPart(part);
 
         // if the method needs it, store one measurement up front
@@ -314,16 +309,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         establishPickVacuumLevel(this.getPickDwellMilliseconds() + nozzleTip.getPickDwellMilliseconds());
 
         getMachine().fireMachineHeadActivity(head);
-        
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("nozzle", this);
-            globals.put("part", part);
-            Configuration.get().getScripting().on("Nozzle.AfterPick", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
+
+        Configuration.get().getScripting().on("Nozzle.AfterPick", globals);
     }
 
     @Override
@@ -342,15 +329,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (nozzleTip == null) {
             throw new Exception("Can't place, no nozzle tip loaded");
         }
-        
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("nozzle", this);
-            Configuration.get().getScripting().on("Nozzle.BeforePlace", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
+
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("nozzle", this);
+        Configuration.get().getScripting().on("Nozzle.BeforePlace", globals);
 
         // if the method needs it, store one measurement up front
         storeBeforePlaceVacuumLevel();
@@ -367,24 +349,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         else {
             actuateVacuumValve(false);
         }
-        
 
         // wait for the Dwell Time and/or make sure the vacuum level decays to the desired range (with timeout)
         establishPlaceVacuumLevel(this.getPlaceDwellMilliseconds() + nozzleTip.getPlaceDwellMilliseconds());
 
         setPart(null);
         getMachine().fireMachineHeadActivity(head);
-        
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("nozzle", this);
-            Configuration.get().getScripting().on("Nozzle.AfterPlace", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
+
+        Configuration.get().getScripting().on("Nozzle.AfterPlace", globals);
     }
-    
+
     private ReferenceNozzleTip getUnloadedNozzleTipStandin() {
         for (NozzleTip nozzleTip : this.getCompatibleNozzleTips()) {
             if (nozzleTip instanceof ReferenceNozzleTip) {
@@ -565,18 +539,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if (changerEnabled) {
                 Logger.debug("{}.loadNozzleTip({}): Start", getName(), nozzleTip.getName());
 
-                try {
-                    Map<String, Object> globals = new HashMap<>();
-                    globals.put("head", getHead());
-                    globals.put("nozzle", this);
-                    globals.put("nozzleTip", nt);
-                    Configuration.get()
-                    .getScripting()
-                    .on("NozzleTip.BeforeLoad", globals);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("head", getHead());
+                globals.put("nozzle", this);
+                globals.put("nozzleTip", nt);
+
+                Configuration.get()
+                .getScripting()
+                .on("NozzleTip.BeforeLoad", globals);
 
                 ensureZCalibrated();
 
@@ -611,26 +581,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
                 Logger.debug("{}.loadNozzleTip({}): Finished",
                         new Object[] {getName(), nozzleTip.getName()});
+
+                Configuration.get()
+                .getScripting()
+                .on("NozzleTip.Loaded", globals);
             }
             else {
                 Logger.debug("{}.loadNozzleTip({}): moveTo manual Location",
                         new Object[] {getName(), nozzleTip.getName()});
                 assertManualChangeLocation();
                 MovableUtils.moveToLocationAtSafeZ(this, getManualNozzleTipChangeLocation());
-            }
-
-            if (changerEnabled) {
-                try {
-                    Map<String, Object> globals = new HashMap<>();
-                    globals.put("head", getHead());
-                    globals.put("nozzle", this);
-                    Configuration.get()
-                    .getScripting()
-                    .on("NozzleTip.Loaded", globals);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
             }
         }
 
@@ -679,24 +639,17 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (!nt.isUnloadedNozzleTipStandin()) {
             Logger.debug("{}.unloadNozzleTip(): Start", getName());
 
-            if (changerEnabled) {
-                 try {
-                    Map<String, Object> globals = new HashMap<>();
-                    globals.put("head", getHead());
-                    globals.put("nozzle", this);
-                    globals.put("nozzleTip", nt);
-                    Configuration.get()
-                    .getScripting()
-                    .on("NozzleTip.BeforeUnload", globals);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
-            }
-
             double speed = getHead().getMachine().getSpeed();
 
             if (changerEnabled) {
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("head", getHead());
+                globals.put("nozzle", this);
+                globals.put("nozzleTip", nt);
+                Configuration.get()
+                .getScripting()
+                .on("NozzleTip.BeforeUnload", globals);
+
                 ensureZCalibrated();
 
                 Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
@@ -726,17 +679,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
                 Logger.debug("{}.unloadNozzleTip(): Finished", getName());
 
-                try {
-                    Map<String, Object> globals = new HashMap<>();
-                    globals.put("head", getHead());
-                    globals.put("nozzle", this);
-                    Configuration.get()
-                    .getScripting()
-                    .on("NozzleTip.Unloaded", globals);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
+                Configuration.get()
+                .getScripting()
+                .on("NozzleTip.Unloaded", globals);
             }
             else {
                 Logger.debug("{}.unloadNozzleTip({}): moveTo manual Location",

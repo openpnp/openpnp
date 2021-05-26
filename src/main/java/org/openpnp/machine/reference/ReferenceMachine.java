@@ -425,12 +425,7 @@ public class ReferenceMachine extends AbstractMachine {
         getMotionPlanner().home();
         super.home();
 
-        try {
-            Configuration.get().getScripting().on("Machine.AfterHoming", null);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
+        Configuration.get().getScripting().on("Machine.AfterHoming", null);
 
         // if homing went well, set machine homed-flag true
         this.setHomed(true);     

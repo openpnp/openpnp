@@ -18,7 +18,6 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
-import org.pmw.tinylog.Logger;
 
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.MultiFormatReader;
@@ -231,31 +230,19 @@ public class VisionUtils {
     }
     
     public static PartAlignment.PartAlignmentOffset findPartAlignmentOffsets(PartAlignment p, Part part, BoardLocation boardLocation, Location placementLocation, Nozzle nozzle) throws Exception {
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("part", part);
-            globals.put("nozzle", nozzle);
-            Configuration.get().getScripting().on("Vision.PartAlignment.Before", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("part", part);
+        globals.put("nozzle", nozzle);
+        Configuration.get().getScripting().on("Vision.PartAlignment.Before", globals);
+
         PartAlignmentOffset offsets = null;
         try {
             offsets = p.findOffsets(part, boardLocation, placementLocation, nozzle);
             return offsets;
         }
         finally {
-            try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("part", part);
-                globals.put("nozzle", nozzle);
-                globals.put("offsets", offsets);
-                Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
-            }
-            catch (Exception e) {
-                Logger.warn(e);
-            }
+            globals.put("offsets", offsets);
+            Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
         }
     }
 }

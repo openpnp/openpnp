@@ -225,15 +225,11 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         if (isFeederHeightProbingNeeded(feeder)) {
             moveAboveProbingLocation(pickLocationPart);
 
-            try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("nozzle", this);
-                globals.put("feeder", feeder);
-                globals.put("part", part);
-                Configuration.get().getScripting().on("Nozzle.BeforePickProbe", globals);
-            } catch (Exception e) {
-                Logger.warn(e);
-            }
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            globals.put("feeder", feeder);
+            globals.put("part", part);
+            Configuration.get().getScripting().on("Nozzle.BeforePickProbe", globals);
 
             Length depthZ;
             if (partHeightProbing) {
@@ -264,15 +260,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             // Retract from probing e.g. until the probe sensor is released.
             contactProbe(false, contactProbeDepthZ);
 
-            try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("nozzle", this);
-                globals.put("feeder", feeder);
-                globals.put("part", part);
-                Configuration.get().getScripting().on("Nozzle.AfterPickProbe", globals);
-            } catch (Exception e) {
-                Logger.warn(e);
-            }
+            Configuration.get().getScripting().on("Nozzle.AfterPickProbe", globals);
         }
         else {
             Length offsetZ = probedFeederHeightOffsets.get(feeder);
@@ -297,14 +285,10 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             // Calculate the probe starting location.
             moveAboveProbingLocation(placementLocationPart);
 
-            try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("nozzle", this);
-                globals.put("part", getPart());
-                Configuration.get().getScripting().on("Nozzle.BeforePlaceProbe", globals);
-            } catch (Exception e) {
-                Logger.warn(e);
-            }
+            Map<String, Object> globals = new HashMap<>();
+            globals.put("nozzle", this);
+            globals.put("part", getPart());
+            Configuration.get().getScripting().on("Nozzle.BeforePlaceProbe", globals);
 
             Length depthZ;
             if (partHeightProbing) {
@@ -337,14 +321,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
             contactProbe(false, contactProbeDepthZ);
 
-            try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("nozzle", this);
-                globals.put("part", getPart());
-                Configuration.get().getScripting().on("Nozzle.AfterPlaceProbe", globals);
-            } catch (Exception e) {
-                Logger.warn(e);
-            }
+            Configuration.get().getScripting().on("Nozzle.AfterPlaceProbe", globals);
         }
         else {
             Length offsetZ = probedPartHeightOffsets.get(part);

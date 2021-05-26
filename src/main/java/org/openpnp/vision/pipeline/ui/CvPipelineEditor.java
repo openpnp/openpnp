@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
+import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.stages.ActuatorWrite;
@@ -208,7 +209,7 @@ public class CvPipelineEditor extends JPanel {
     }
 
     public void process() {
-        getPipeline().process();
+        UiUtils.messageBoxOnException(() -> getPipeline().process());
         resultsPanel.refresh();
     }
 
