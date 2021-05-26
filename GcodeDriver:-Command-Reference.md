@@ -196,6 +196,11 @@ Sent whenever an Actuator's actuate(double) method is called. This is currently 
 | DoubleValue    | Double   | The Double value sent to the actuator. This is typically user defined in the configuration of the device using the actuator. |
 | IntegerValue   | Integer | The Double value sent to the actuator after being cast to an Integer. This is typically user defined in the configuration of the device using the actuator. |
 
+Example:
+```
+M104 S{DoubleValue} ; Set a set-point double value.
+```
+
 ### ACTUATOR_READ_COMMAND
 
 Sent whenever an Actuator's read() method is called. Along with [ACTUATOR_READ_REGEX](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex) this can be used to read a value from any type of attached sensor or device.
