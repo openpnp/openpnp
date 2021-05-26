@@ -15,10 +15,12 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -46,6 +48,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private JComboBox comboBoxMaxRotation;
     private JComboBox comboBoxcheckPartSizeMethod;
     private JTextField textPartSizeTolerance;
+    private JTextField testAlignmentAngle;
 
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision, Part part) {
         this.bottomVision = bottomVision;
@@ -55,21 +58,47 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(
-                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("right:default"),
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, },
-                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("right:max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblEnabled = new JLabel("Enabled?");
         panel.add(lblEnabled, "2, 2");
 
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
+
+        JLabel lblPrerotate = new JLabel("Pre-rotate");
+        panel.add(lblPrerotate, "2, 4, right, default");
+
+        comboBoxPreRotate = new JComboBox(ReferenceBottomVision.PreRotateUsage.values());
+        panel.add(comboBoxPreRotate, "4, 4");
+
+        JLabel lblTestAngle = new JLabel("Test Placement Angle");
+        panel.add(lblTestAngle, "2, 6, right, default");
 
         JButton btnTestAlighment = new JButton("Test Alignment");
         btnTestAlighment.addActionListener((e) -> {
@@ -78,19 +107,16 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
             });
         });
 
-        JLabel lblPrerotate = new JLabel("Pre-rotate");
-        panel.add(lblPrerotate, "2, 4, right, default");
-
-        comboBoxPreRotate = new JComboBox(ReferenceBottomVision.PreRotateUsage.values());
-        panel.add(comboBoxPreRotate, "4, 4");
-
-        JLabel lblTest = new JLabel("Test");
-        panel.add(lblTest, "2, 6");
-        panel.add(btnTestAlighment, "4, 6");
+        testAlignmentAngle = new JTextField();
+        testAlignmentAngle.setText("0.000");
+        panel.add(testAlignmentAngle, "4, 6, right, default");
+        testAlignmentAngle.setColumns(10);
+        panel.add(btnTestAlighment, "6, 6");
 
         chckbxCenterAfterTest = new JCheckBox("Center After Test");
+        chckbxCenterAfterTest.setToolTipText("Center and rotate the part after the test.");
         chckbxCenterAfterTest.setSelected(true);
-        panel.add(chckbxCenterAfterTest, "6, 6");
+        panel.add(chckbxCenterAfterTest, "8, 6");
 
         JLabel lblPipeline = new JLabel("Pipeline");
         panel.add(lblPipeline, "2, 8");
@@ -120,7 +146,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         panel.add(btnLoadDefault, "6, 8");
 
         JLabel lblMaxRotation = new JLabel("Rotation");
-        panel.add(lblMaxRotation, "2, 10, right, top");
+        panel.add(lblMaxRotation, "2, 10, right, default");
 
         comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
         comboBoxMaxRotation.setToolTipText(
@@ -153,19 +179,21 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         }
 
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
+                .convertReverse(testAlignmentAngle.getText());
 
         // perform the alignment
         PartAlignment.PartAlignmentOffset alignmentOffset = VisionUtils.findPartAlignmentOffsets(bottomVision, part,
-                null, new Location(LengthUnit.Millimeters, 0, 0, 0, nozzle.getLocation().getRotation()), nozzle);
+                null, new Location(LengthUnit.Millimeters, 0, 0, 0, angle), nozzle);
         Location offsets = alignmentOffset.getLocation();
 
         if (!chckbxCenterAfterTest.isSelected()) {
             return;
         }
 
-        // position the part over camera center
+        // Nominal position of the part over camera center
         Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(part, VisionUtils.getBottomVisionCamera(),
-                nozzle, nozzle.getLocation().getRotation());
+                nozzle, angle);
 
         if (alignmentOffset.getPreRotated()) {
             // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
