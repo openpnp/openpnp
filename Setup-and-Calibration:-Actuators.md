@@ -105,11 +105,17 @@ This applies to the ReferenceActuator, for the other types please see the corres
 
 Once you've created an Actuator, you will generally need to assign commands to it. The most common case is using GcodeDriver/GcodeAsyncDriver and boolean actuators to control something like a switch, a solenoid, a pump, a valve, etc. 
 
-To set the Gcode for an Actuator:
+To set the Gcode for a Boolean Actuator:
 1. Go to Machine Setup -> Driver -> GcodeDriver/GcodeAsyncDriver -> Gcode. 
 2. Select the Actuator from the dropdown menu.
-3. Select the ACTUATE_BOOLEAN command.
+3. Select the [ACTUATE_BOOLEAN](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_boolean_command)  command.
 4. Enter the Gcode fragment. An example would be `{True:M801}{False:M800}`. This will send M801 when the Actuator is turned on, and M800 when it is turned off. The text after `True:` or `False:` is what will actually be sent.
+
+To set the Gcode for a Double Actuator:
+1. Go to Machine Setup -> Driver -> GcodeDriver/GcodeAsyncDriver -> Gcode. 
+2. Select the Actuator from the dropdown menu.
+3. Select the [ACTUATE_DOUBLE](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_double_command) command.
+4. Enter the Gcode fragment. An example would be `M104 {DoubleValue}`. 
 
 ### Reading Sensors
 
