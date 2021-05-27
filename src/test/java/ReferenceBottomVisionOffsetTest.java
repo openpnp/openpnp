@@ -425,8 +425,6 @@ public class ReferenceBottomVisionOffsetTest {
         // error of vision
         Location error = new Location(LengthUnit.Millimeters, -0.6, 1.2, 0.0, -12.0);
         
-        // calculate resulting 
-
         // test data
         Location[][] testData = {
                 {new Location(LengthUnit.Millimeters, 10.0, 10.0, 0.0, 000.0), error.rotateXy(-error.getRotation())},
