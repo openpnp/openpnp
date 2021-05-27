@@ -927,6 +927,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 Configuration.get().getScripting().on("Job.Placement.BeforeAssembly", params);
             }
             catch (Exception e) {
+                throw new JobProcessorException(null, e);
             }
         }
         

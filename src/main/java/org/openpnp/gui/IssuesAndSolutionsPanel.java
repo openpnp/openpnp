@@ -31,7 +31,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -310,7 +309,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
     public void updateIssueIndicator() {
         JTabbedPane tabs = frame.getTabs();
-        int index = Arrays.asList(tabs.getComponents()).indexOf(frame.getIssuesAndSolutionsTab());
+        int index = tabs.indexOfComponent(frame.getIssuesAndSolutionsTab());
         Solutions.Severity maxSeverity = Solutions.Severity.None;
         for (Solutions.Issue issue : machine.getSolutions().getIssues()) {
             if (issue.getSeverity().ordinal() >= maxSeverity.ordinal() 

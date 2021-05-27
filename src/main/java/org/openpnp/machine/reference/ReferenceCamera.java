@@ -178,26 +178,17 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     /**
      * Captures an image using captureTransformed() and performs scripting and lighting events
      * before and after the capture.
+     * @throws Exception 
      */
     @Override
-    public BufferedImage capture() {
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("camera", this);
-            Configuration.get().getScripting().on("Camera.BeforeCapture", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
+    public BufferedImage capture() throws Exception {
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("camera", this);
+        Configuration.get().getScripting().on("Camera.BeforeCapture", globals);
+
         BufferedImage image = captureTransformed();
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("camera", this);
-            Configuration.get().getScripting().on("Camera.AfterCapture", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
+
+        Configuration.get().getScripting().on("Camera.AfterCapture", globals);
         return image;
     }
     
