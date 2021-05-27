@@ -265,7 +265,7 @@ public class ReferenceBottomVision implements PartAlignment {
             offsets = offsets.derive(null, null, null, angleOffset);
             
             // subtract visionCenterOffset
-            offsets = offsets.subtract(partSettings.getVisionOffset());
+            offsets = offsets.subtract(partSettings.getVisionOffset().rotateXy(offsets.getRotation()));
             
             Logger.debug("Final offsets {}", offsets);
 
