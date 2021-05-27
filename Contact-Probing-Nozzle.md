@@ -5,7 +5,7 @@ What is it used for?
 
 ### Nozzle/Nozzle Tip Z Calibration
 
-Machines that home the Z axis with easily shifted Zmax switches ([e.g.](https://liteplacer.com/the-machine/assembly-instructions/pnp-head-step-11-attach-z-high-limit-switch/) Liteplacer), hard to balance dual-nozzle mid-axis sensors or even by just letting springs retract unpowered Z motors, may not provide a precise and repeatable Z reference eternally.  
+Machines that home the Z axis with easily shifted Zmax switches ([e.g.](https://liteplacer.com/the-machine/assembly-instructions/pnp-head-step-11-attach-z-high-limit-switch/) Liteplacer), hard to balance dual-nozzle mid-axis sensors or even by just letting springs retract unpowered Z motors, may not provide a precise and repeatable Z reference.  
 
 A ContactProbeNozzle can then be used to calibrate the Nozzle in Z, more specifically the point of the loaded Nozzle Tip. By probing a known reference Z touch surface, it can apply the obtained calibration offset to all future Z movements. 
 
@@ -23,6 +23,12 @@ With a ContactProbeNozzle and enabled feeder and part height probing, OpenPnP ca
 The job processor knows when a ContactProbeNozzle has this capability and will in this case allow starting a Job with unknown part heights. If only one nozzle in a multi-nozzle setup has probing capabilities, the planner will automatically restrict parts with unknown heights to this nozzle. As an alternative, part heights can also be auto-learned using auto focus, if bottom vision is enabled for the part. 
 
 ![Part height unknown](https://user-images.githubusercontent.com/9963310/113597986-c313f000-963c-11eb-84e9-b0bedb797185.png)
+
+### Feeder Z Auto-Learning
+
+The ContactProbeNozzle can also auto-learn the pick Z location of feeders. On the first pick the height will be probed and then remembered. This does not (currently) change the Z location of the feeder per se, because there is no universal way to do this (the handling of Z coordinates is feeder class specific). Instead a Z pick _offset_ is maintained and stored. 
+
+Note: some feeders like the [[BlindsFeeder]] still need a precise Z location configured (e.g. for cover actuatuation). 
 
 ## What is it _not_?
 
