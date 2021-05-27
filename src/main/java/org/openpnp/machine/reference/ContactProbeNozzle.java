@@ -125,10 +125,10 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     private double maxZOffsetMm = 2.0;
 
     @ElementMap(required = false)
-    private HashMap<Feeder, Length> probedFeederHeightOffsets = new HashMap<>();
+    private HashMap<String, Length> probedFeederHeightOffsets = new HashMap<>();
 
     @ElementMap(required = false)
-    private HashMap<Part, Length> probedPartHeightOffsets = new HashMap<>();
+    private HashMap<String, Length> probedPartHeightOffsets = new HashMap<>();
 
     private ReferenceNozzleTip zCalibratedNozzleTip;
 
@@ -188,7 +188,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                 && feeder.getPart().isPartHeightUnknown()) {
             return true;
         }
-        Length z = probedFeederHeightOffsets.get(feeder);
+        Length z = probedFeederHeightOffsets.get(feeder.getId());
         return (z == null);
     }
 
@@ -206,7 +206,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         if (part.isPartHeightUnknown()) {
             return true;
         }
-        Length z = probedPartHeightOffsets.get(part);
+        Length z = probedPartHeightOffsets.get(part.getId());
         return (z == null);
     }
 
@@ -255,7 +255,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                 Logger.debug("Nozzle "+getName()+" probed feeder "+feeder.getName()+" Z at offset "+offsetZ);
             }
             // Store the probed location offset.
-            probedFeederHeightOffsets.put(feeder, offsetZ);
+            probedFeederHeightOffsets.put(feeder.getId(), offsetZ);
 
             // Retract from probing e.g. until the probe sensor is released.
             contactProbe(false, contactProbeDepthZ);
@@ -263,7 +263,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             Configuration.get().getScripting().on("Nozzle.AfterPickProbe", globals);
         }
         else {
-            Length offsetZ = probedFeederHeightOffsets.get(feeder);
+            Length offsetZ = probedFeederHeightOffsets.get(feeder.getId());
             if (offsetZ != null) {
                 // Apply the probed offset.
                 Logger.trace("Nozzle "+getName()+" applies feeder "+feeder.getName()+" height offset "+offsetZ);
@@ -317,14 +317,14 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                 Logger.debug("Nozzle "+getName()+" probed part "+part.getId()+" height at offset "+offsetZ);
             }
             // Store the probed location offset.
-            probedPartHeightOffsets.put(part, offsetZ);
+            probedPartHeightOffsets.put(part.getId(), offsetZ);
 
             contactProbe(false, contactProbeDepthZ);
 
             Configuration.get().getScripting().on("Nozzle.AfterPlaceProbe", globals);
         }
         else {
-            Length offsetZ = probedPartHeightOffsets.get(part);
+            Length offsetZ = probedPartHeightOffsets.get(part.getId());
             if (offsetZ != null) {
                 // Apply the probed offset.
                 Logger.trace("Nozzle "+getName()+" applies part "+part.getId()+" height offset "+offsetZ);
