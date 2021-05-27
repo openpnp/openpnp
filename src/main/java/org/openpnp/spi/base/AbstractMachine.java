@@ -558,6 +558,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
                     // If there was an error cancel all pending tasks.
                     if (exception != null) {
+                        getMotionPlanner().clearQueuedMotion();
                         executor.shutdownNow();
                     }
 
