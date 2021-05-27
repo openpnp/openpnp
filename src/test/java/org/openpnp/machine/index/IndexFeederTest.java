@@ -20,6 +20,7 @@ import org.openpnp.spi.PropertySheetHolder;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.IntConsumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -1177,10 +1178,14 @@ public class IndexFeederTest {
     public void findIssuesGivesNothingIfNoHardwareIdIsPresent() {
         feeder.setSlotAddress(feederAddress);
 
-        List<Solutions.Issue> issues = new ArrayList<>();
-        feeder.findIssues(issues);
+        Solutions solutions = new Solutions();
+        solutions.findIssues();
+        solutions.publishIssues();
 
-        assertEquals(0, issues.size());
+        List<Solutions.Issue> issues = solutions.getIssues();
+        Optional<Solutions.Issue> maybeIssue = issues.stream().filter(i -> i.getSubject() == feeder).findFirst();
+
+        assertFalse(maybeIssue.isPresent());
     }
 
     @Test
@@ -1190,11 +1195,15 @@ public class IndexFeederTest {
         feeder.setSlotAddress(feederAddress);
         assertNull(feeder.getSlot().getLocation());
 
-        List<Solutions.Issue> issues = new ArrayList<>();
-        feeder.findIssues(issues);
+        Solutions solutions = new Solutions();
+        solutions.findIssues();
+        solutions.publishIssues();
 
-        assertEquals(1, issues.size());
-        Solutions.Issue issue = issues.get(0);
+        List<Solutions.Issue> issues = solutions.getIssues();
+        Optional<Solutions.Issue> maybeIssue = issues.stream().filter(i -> i.getSubject() == feeder).findFirst();
+
+        assertTrue(maybeIssue.isPresent());
+        Solutions.Issue issue = maybeIssue.get();
 
         assertEquals(feeder, issue.getSubject());
         assertEquals("Feeder slot has no configured location", issue.getIssue());
@@ -1208,11 +1217,15 @@ public class IndexFeederTest {
         feeder.setSlotAddress(feederAddress);
         setSlotLocation(feederAddress, baseLocation);
 
-        List<Solutions.Issue> issues = new ArrayList<>();
-        feeder.findIssues(issues);
+        Solutions solutions = new Solutions();
+        solutions.findIssues();
+        solutions.publishIssues();
 
-        assertEquals(1, issues.size());
-        Solutions.Issue issue = issues.get(0);
+        List<Solutions.Issue> issues = solutions.getIssues();
+        Optional<Solutions.Issue> maybeIssue = issues.stream().filter(i -> i.getSubject() == feeder).findFirst();
+
+        assertTrue(maybeIssue.isPresent());
+        Solutions.Issue issue = maybeIssue.get();
 
         assertEquals(feeder, issue.getSubject());
         assertEquals("Feeder has no configured offset", issue.getIssue());

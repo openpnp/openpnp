@@ -99,15 +99,15 @@ public class IndexFeeder extends ReferenceFeeder {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
 
         if(hardwareId == null) {
             return;
         }
 
         if(slotAddress != null && getSlot().getLocation() == null) {
-            issues.add(new Solutions.PlainIssue(
+            solutions.add(new Solutions.PlainIssue(
                     this,
                     "Feeder slot has no configured location",
                     "Select the feeder in the Feeders tab and make sure the slot has a set location",
@@ -117,7 +117,7 @@ public class IndexFeeder extends ReferenceFeeder {
         }
 
         if(offset == null) {
-            issues.add(new Solutions.PlainIssue(
+            solutions.add(new Solutions.PlainIssue(
                     this,
                     "Feeder has no configured offset",
                     "Select the feeder in the Feeders tab and make sure the feeder has an offset location from the slot",
