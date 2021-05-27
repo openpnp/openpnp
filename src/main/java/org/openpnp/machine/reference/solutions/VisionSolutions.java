@@ -118,6 +118,9 @@ public class VisionSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private double zeroKnowledgeAutoFocusDepthMm = 2.0;
 
+    @Attribute(required = false)
+    private double zeroKnowledgeBacklashSpeed = 0.2;
+
     public VisionSolutions setMachine(ReferenceMachine machine) {
         this.machine = machine;
         return this;
@@ -274,7 +277,7 @@ public class VisionSolutions implements Solutions.Subject {
                                     // Perform preliminary camera calibration. 
                                     Length fiducialDiameter = autoCalibrateCamera(camera, camera, (double) featureDiameter, diagnosticsMilliseconds);
                                     // Get the precise fiducial location.
-                                    Location fiducialLocation = getSubjectLocation(camera, camera, fiducialDiameter, diagnosticsMilliseconds);
+                                    Location fiducialLocation = centerInOnSubjectLocation(camera, camera, fiducialDiameter, diagnosticsMilliseconds);
                                     // Store it.
                                     head.setCalibrationPrimaryFiducialLocation(fiducialLocation);
                                     head.setCalibrationPrimaryFiducialDiameter(fiducialDiameter);
@@ -340,7 +343,7 @@ public class VisionSolutions implements Solutions.Subject {
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     // Set location as fiducial location.
-                                    Location fiducialLocation = getSubjectLocation(camera, camera, 
+                                    Location fiducialLocation = centerInOnSubjectLocation(camera, camera, 
                                             head.getCalibrationPrimaryFiducialDiameter(), diagnosticsMilliseconds);
                                     head.setCalibrationSecondaryFiducialLocation(fiducialLocation);
                                     return true;
@@ -443,7 +446,7 @@ public class VisionSolutions implements Solutions.Subject {
                                     // Perform preliminary camera calibration. 
                                     autoCalibrateCamera(camera, camera, (double) featureDiameter, diagnosticsMilliseconds);
                                     // Get the precise fiducial location.
-                                    Location fiducialLocation = getSubjectLocation(camera, camera, 
+                                    Location fiducialLocation = centerInOnSubjectLocation(camera, camera, 
                                             head.getCalibrationPrimaryFiducialDiameter(), diagnosticsMilliseconds);
                                     // Determine the camera head offset (remember, we reset the head offset to zero above, so 
                                     // the camera now shows the true offset).
@@ -562,7 +565,7 @@ public class VisionSolutions implements Solutions.Subject {
                                 // Perform preliminary camera calibration. 
                                 Length visionDiameter = autoCalibrateCamera(camera, defaultNozzle, Double.valueOf(featureDiameter), diagnosticsMilliseconds);
                                 // Get the nozzle location.
-                                Location nozzleLocation = getSubjectLocation(camera, defaultNozzle, visionDiameter, diagnosticsMilliseconds);
+                                Location nozzleLocation = centerInOnSubjectLocation(camera, defaultNozzle, visionDiameter, diagnosticsMilliseconds);
                                 // Determine the camera offsets, the nozzle now shows the true offset.
                                 Location headOffsets = nozzleLocation;
                                 camera.setHeadOffsets(nozzleLocation);
@@ -603,12 +606,12 @@ public class VisionSolutions implements Solutions.Subject {
     }
 
     private void perNozzleSolutions(Solutions solutions, ReferenceHead head, Camera defaultCamera, Nozzle defaultNozzle, ReferenceNozzle nozzle) {
-        if (solvedPrimaryXY && solvedSecondaryXY 
+        if (solvedPrimaryXY 
                 && (solvedPrimaryZ || defaultNozzle == nozzle)) {
             final Location oldPrimaryFiducialLocation = head.getCalibrationPrimaryFiducialLocation();
             final Location oldSecondaryFiducialLocation = head.getCalibrationPrimaryFiducialLocation();
             final Location oldNozzleOffsets = nozzle.getHeadOffsets();
-            for (boolean primary : (nozzle == defaultNozzle) ? new boolean [] {true, false} : new boolean [] {true} ) {
+            for (boolean primary : (nozzle == defaultNozzle && solvedSecondaryXY) ? new boolean [] {true, false} : new boolean [] {true} ) {
                 String qualifier = primary ? "primary" : "secondary";
                 boolean solved = solutions.add(new Solutions.Issue(
                         nozzle, 
@@ -1009,7 +1012,8 @@ public class VisionSolutions implements Solutions.Subject {
      * @return
      * @throws Exception
      */
-    public Location getSubjectLocation(ReferenceCamera camera, HeadMountable movable, Length subjectDiameter, long diagnostics) throws Exception {
+    public Location centerInOnSubjectLocation(ReferenceCamera camera, HeadMountable movable, Length subjectDiameter, long diagnostics) 
+            throws Exception {
         Location location = movable.getLocation();
         Circle expectedOffsetsAndDiameter =
                 getExpectedOffsetsAndDiameter(camera, movable, location, subjectDiameter);
@@ -1170,7 +1174,7 @@ public class VisionSolutions implements Solutions.Subject {
      * 
      * @param hm
      * @param location
-     * @param safeZ TODO
+     * @param safeZ
      * @throws Exception
      */
     public void zeroKnowledgeMoveTo(HeadMountable hm, Location location, boolean safeZ) throws Exception {
@@ -1181,6 +1185,6 @@ public class VisionSolutions implements Solutions.Subject {
         else {
             hm.moveTo(backlashCompensatedLocation);
         }
-        hm.moveTo(location);
+        hm.moveTo(location, zeroKnowledgeBacklashSpeed);
     }
 }

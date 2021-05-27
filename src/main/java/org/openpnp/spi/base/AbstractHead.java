@@ -94,7 +94,10 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Element(required = false)
     private Length calibrationPrimaryFiducialDiameter = null;
-    
+
+    @Element(required = false)
+    private Length calibrationTestObjectDiameter = null;
+
     protected Machine machine;
 
     public AbstractHead() {
@@ -441,6 +444,14 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setCalibrationPrimaryFiducialDiameter(Length calibrationPrimaryFiducialDiameter) {
         this.calibrationPrimaryFiducialDiameter = calibrationPrimaryFiducialDiameter;
+    }
+
+    public Length getCalibrationTestObjectDiameter() {
+        return calibrationTestObjectDiameter;
+    }
+
+    public void setCalibrationTestObjectDiameter(Length calibrationTestObjectDiameter) {
+        this.calibrationTestObjectDiameter = calibrationTestObjectDiameter;
     }
 
     @Override

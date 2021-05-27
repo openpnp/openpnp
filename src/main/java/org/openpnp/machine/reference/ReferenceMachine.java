@@ -483,6 +483,13 @@ public class ReferenceMachine extends AbstractMachine {
     public boolean isHomed() {
         return this.isHomed;
     }
+    @Override
+    public void setHomed(boolean isHomed) {
+        Logger.info("setHomed({})", isHomed);
+        this.isHomed = isHomed;
+        firePropertyChange("homed", null, this.isHomed);
+        fireMachineHomed(isHomed);
+    }
 
     public Solutions getSolutions() {
         if (dismissedSolutions != null) {
@@ -491,14 +498,6 @@ public class ReferenceMachine extends AbstractMachine {
             dismissedSolutions = null;
         }
         return solutions;
-    }
-
-    @Override
-    public void setHomed(boolean isHomed) {
-        Logger.info("setHomed({})", isHomed);
-        this.isHomed = isHomed;
-        firePropertyChange("homed", null, this.isHomed);
-        fireMachineHomed(isHomed);
     }
 
     //@Element(required = false)
