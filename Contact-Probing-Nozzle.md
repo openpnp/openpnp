@@ -20,7 +20,7 @@ With a ContactProbeNozzle and enabled feeder and part height probing, OpenPnP ca
 * Part height auto-learning works for feeders that have the part height _above_ the pick location Z (ReferenceLoosePartFeeder and AdvancedLoosePartFeeeder). 
 * Part height auto-learning also works in all placements, as obviously all parts are above the known board location Z. 
 
-The job processor knows when a ContactProbeNozzle has this capability and will in this case allow starting a Job with unknown part heights. If only one nozzle in a multi-nozzle setup has probing capabilities, the planner will automatically restrict parts with unknown heights to this nozzle. As an alternative, part heights can also be auto-learned using auto focus, if bottom vision is enabled for the part. 
+The job processor knows when a ContactProbeNozzle has this capability and will in this case allow starting a Job with unknown part heights. If only one nozzle in a multi-nozzle setup has probing capabilities, the planner will automatically restrict parts with unknown heights to this nozzle. As an alternative, part heights can also be auto-learned using [[Up looking Camera Auto Focus]], if bottom vision is enabled for the part. 
 
 ![Part height unknown](https://user-images.githubusercontent.com/9963310/113597986-c313f000-963c-11eb-84e9-b0bedb797185.png)
 
