@@ -80,6 +80,8 @@ Notes: The Wizard will show different fields according to the selection. If at l
 
 ![ContactSenseActuator](https://user-images.githubusercontent.com/9963310/113569966-ac0cd800-9613-11eb-9b02-da625610db6d.png)
 
+**Contact Sense Actuator** sets the actuator to sense when contact is made. See further below [how to setup the Actuator](#setting-up-a-probe-actuator). 
+
 **Start Offset** determines how high above the nominal probing location, the sensing should start. For the **Vacuum Sense** method, this must be high enough to get a clear "Part Off" result on the first sniffle.
 
 **Probe Depth** determines how far the probing should go. In fact it may go further but if the probing result is beyond the given depth an exception is thrown. 
