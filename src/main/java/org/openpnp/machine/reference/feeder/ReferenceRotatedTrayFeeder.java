@@ -162,7 +162,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         MovableUtils.moveToLocationAtSafeZ(nozzle, putLocation);
         nozzle.place();
         nozzle.moveToSafeZ();
-        if (!nozzle.isPartOff()) {
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
         // change FeedCount
