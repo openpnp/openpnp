@@ -78,6 +78,9 @@ public class VisionSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private int subSampling = 4;
     @Attribute(required = false)
+    private int superSampling = 4;
+
+    @Attribute(required = false)
     protected long diagnosticsMilliseconds = 2000;
 
     /**
@@ -1055,7 +1058,7 @@ public class VisionSolutions implements Solutions.Subject {
      * directly. We can get a pixel locations for now.  
      * 
      * @param camera
-     * @param movable TODO
+     * @param movable 
      * @param extraSearchRange Specifies an extra search range, relative to the camera view size (minimum of width, height). 
      * @param diagnostics
      * @param subjectDiameter   Provides the fiducial diameter in pixels, if known, null otherwise. 
@@ -1080,7 +1083,6 @@ public class VisionSolutions implements Solutions.Subject {
                     + Math.min(image.cols(), image.rows())*extraSearchRange);
             int expectedX = bufferedImage.getWidth()/2 + (int) (expectedOffsetAndDiameter != null ? expectedOffsetAndDiameter.getX() : 0);
             int expectedY = bufferedImage.getHeight()/2 + (int) (expectedOffsetAndDiameter != null ? expectedOffsetAndDiameter.getY() : 0);
-            int effectiveSubSampling = Math.max(1, Math.min(subSampling, (maxDiameter-minDiameter)/4));
 
             Circle result = null;
             if (movable instanceof Nozzle) {
@@ -1097,7 +1099,7 @@ public class VisionSolutions implements Solutions.Subject {
                     image.release();
                     image = OpenCvUtils.toMat(bufferedImage);
                     result = getPixelLocationShot(camera, diagnostics, image, maxDiameter,
-                            minDiameter, maxDistance, expectedX, expectedY, effectiveSubSampling);
+                            minDiameter, maxDistance, expectedX, expectedY);
                     // Accumulate
                     x += result.getX();
                     y += result.getY();
@@ -1110,7 +1112,7 @@ public class VisionSolutions implements Solutions.Subject {
             else {
                 // Fiducial can be detected by one shot.
                 result = getPixelLocationShot(camera, diagnostics, image, maxDiameter,
-                        minDiameter, maxDistance, expectedX, expectedY, effectiveSubSampling);
+                        minDiameter, maxDistance, expectedX, expectedY);
             }
             return result;
         }
@@ -1120,13 +1122,13 @@ public class VisionSolutions implements Solutions.Subject {
     }
 
     private Circle getPixelLocationShot(ReferenceCamera camera, long diagnostics, Mat image,
-            int maxDiameter, int minDiameter, int maxDistance, int expectedX, int expectedY,
-            int effectiveSubSampling) throws Exception, IOException {
+            int maxDiameter, int minDiameter, int maxDistance, int expectedX, int expectedY) 
+                    throws Exception, IOException {
         ScoreRange scoreRange = new ScoreRange();
         List<Circle> results = DetectCircularSymmetry.findCircularSymmetry(image, 
                 expectedX, expectedY, 
                 maxDiameter, minDiameter, maxDistance, minSymmetry,
-                effectiveSubSampling, diagnostics > 0, scoreRange);
+                subSampling, superSampling, diagnostics > 0, scoreRange);
         if (diagnostics > 0) {
             if (LogUtils.isDebugEnabled()) {
                 File file = Configuration.get().createResourceFile(getClass(), "loc_", ".png");
@@ -1138,7 +1140,7 @@ public class VisionSolutions implements Solutions.Subject {
                 .getCameraViews()
                 .getCameraView(camera)
                 .showFilteredImage(diagnosticImage,
-                        String.format("%.2f", scoreRange.maxScore), diagnostics);
+                        String.format("Circular Symmetry: %.1f ×", scoreRange.maxSymmetryScore), diagnostics);
             });
         }
         if (results.size() < 1) {
