@@ -107,7 +107,7 @@ public class MutableLocationProxy extends AbstractModelObject {
         }
         else {
             location = location.derive(null, null, l.getValue(), null);
-            firePropertyChange("lengthZ", null, getLengthY());
+            firePropertyChange("lengthZ", null, getLengthZ());
             firePropertyChange("location", null, getLocation());
         }
     }
