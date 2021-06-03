@@ -646,7 +646,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     else if (isTinyG) {
                                         commandBuilt = "G28.2 ";
                                         for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                            commandBuilt += variable+"0 "; // In TinyG you need to indicate the axis and only 0 is possible. 
+                                            if ("XYZ".indexOf(variable) >= 0) {
+                                                commandBuilt += variable+"0 "; // In TinyG you need to indicate the axis and only 0 is possible. 
+                                            }
                                         }
                                         commandBuilt += "; Home all axes";
                                     }
