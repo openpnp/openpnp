@@ -150,7 +150,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             if (gcodeDriver.getDetectedFirmware() == null) {
                 solutions.add(new Solutions.Issue(
                         gcodeDriver, 
-                        "Firmware was not dected ("+
+                        "Firmware was not detected ("+
                                 (machine.isEnabled() ? 
                                         (gcodeDriver.isSpeakingGcode() ? "failure, check log" : "controller may not speak Gcode") 
                                         : "machine is disabled")+"). Only if the firmware is know, can Issues & Solutions generate suggested G-code for your machine configuration.", 
