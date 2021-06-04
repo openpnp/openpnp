@@ -119,6 +119,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JTextField textFieldPocketSize;
     private JLabel lblPocketCenterline;
     private JTextField textFieldPocketCenterline;
+    private JLabel lblBlindsFeederGroupName;
+    private JTextField textBlindsFeederGroupName;
 
 
     public BlindsFeederConfigurationWizard(BlindsFeeder feeder) {
@@ -333,6 +335,13 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings.add(textFieldFeedCount, "4, 12");
         textFieldFeedCount.setColumns(5);
 
+        lblBlindsFeederGroupName = new JLabel("Feeder Group Name");
+        panelTapeSettings.add(lblBlindsFeederGroupName, "8, 12, right, default");
+        
+        textBlindsFeederGroupName = new JTextField();
+        panelTapeSettings.add(textBlindsFeederGroupName, "10, 12");
+        textBlindsFeederGroupName.setColumns(5);
+        
         btnResetFeedCount = new JButton(resetFeedCountAction);
         panelTapeSettings.add(btnResetFeedCount, "14, 12");
 
@@ -587,6 +596,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(feeder, "firstPocket", textFieldFirstPocket, "text", intConverter);
         addWrappedBinding(feeder, "lastPocket", textFieldLastPocket, "text", intConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
+        addWrappedBinding(feeder, "feederGroupName", textBlindsFeederGroupName, "text");
 
         addWrappedBinding(feeder, "coverType", comboBoxCoverType, "selectedItem");
         addWrappedBinding(feeder, "coverActuation", comboBoxCoverActuation, "selectedItem");
@@ -631,6 +641,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         //ComponentDecorators.decorateWithAutoSelect(textFieldFirstPocket);
         //ComponentDecorators.decorateWithAutoSelect(textFieldLastPocket);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
+        ComponentDecorators.decorateWithAutoSelect(textBlindsFeederGroupName);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1X);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1Y);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial2X);

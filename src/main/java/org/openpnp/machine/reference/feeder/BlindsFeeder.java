@@ -29,6 +29,7 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -127,6 +128,9 @@ public class BlindsFeeder extends ReferenceFeeder {
     private int feedersTotal = 0;
 
     @Attribute(required = false)
+    private String feederGroupName = "Location";
+
+    @Attribute(required = false)
     private int pocketCount = 0;
 
     @Attribute(required = false)
@@ -167,6 +171,8 @@ public class BlindsFeeder extends ReferenceFeeder {
     private boolean calibrating = false;
     private boolean calibrated = false;
 
+    private static final List<String> noGroupNamesList = Arrays.asList(new String[]{"Location", "LOCATION", "location", "", "None", "none", "NONE"});
+    
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
             this.setCalibrated(false);
@@ -1644,9 +1650,44 @@ public class BlindsFeeder extends ReferenceFeeder {
         return list;
     }
 
+    public static List<BlindsFeeder> getConnectedFeedersByGroupName(String groupName) {
+        // Get all the feeders with connected by location.
+        List<BlindsFeeder> list = new ArrayList<>();
+        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+            if (feeder instanceof BlindsFeeder) {
+                BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
+                if (blindsFeeder.feederGroupName == groupName) {
+                    list.add(blindsFeeder);
+                }
+            }
+        }
+        // Sort by feeder tape centerline.
+        Collections.sort(list, new Comparator<BlindsFeeder>() {
+            @Override
+            public int compare(BlindsFeeder feeder1, BlindsFeeder feeder2)  {
+                return new Double(feeder1.getPocketCenterline().getValue())
+                        .compareTo(feeder2.getPocketCenterline().convertToUnits(feeder1.getPocketCenterline().getUnits()).getValue());
+            }
+        });
+        return list;
+    }
+
+    public List<BlindsFeeder> getConnectedFeeders(Location location) {
+    	return getConnectedFeeders(location, true);
+    }
+
     public List<BlindsFeeder> getConnectedFeeders() {
-        // Get all the feeders with the same fiducial 1 location.
-        return getConnectedFeedersByLocation(fiducial1Location, true);
+    	return getConnectedFeeders(fiducial1Location, true);
+    }
+
+    
+    public List<BlindsFeeder> getConnectedFeeders(Location location, boolean fiducial1MatchOnly) {
+    	if (noGroupNamesList.contains(this.feederGroupName)) {
+            // Get all the feeders with the same fiducial 1 location.
+            return getConnectedFeedersByLocation(fiducial1Location, true);
+    	} else {
+    		return getConnectedFeedersByGroupName(this.feederGroupName);
+    	}
     }
 
     private boolean isUpdating = false;
@@ -1679,7 +1720,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     private void updateTapeNumbering()    {
         // Renumber the feeder tape lanes.
-        List<BlindsFeeder> list = getConnectedFeedersByLocation(fiducial1Location, true);
+        List<BlindsFeeder> list = getConnectedFeeders(fiducial1Location, true);
         int feedersTotal = list.size();
         int feederNo = 0;
         for (BlindsFeeder feeder : list) {
@@ -1690,7 +1731,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public boolean updateFromConnectedFeeder(Location location, boolean fiducial1MatchOnly) {
         boolean hasMatch = false;
-        for (BlindsFeeder feeder : getConnectedFeedersByLocation(location, fiducial1MatchOnly)) {
+        for (BlindsFeeder feeder : getConnectedFeeders(location, fiducial1MatchOnly)) {
             if (feeder != this) {
                 updateFromConnectedFeeder(feeder);
                 hasMatch = true;
@@ -1715,7 +1756,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 // Transform might have changed.
                 updateFeederToMachineTransform();
                 // Update all the feeders on the same 3D printed holder from this.
-                for (BlindsFeeder feeder : getConnectedFeedersByLocation(location, fiducial1MatchOnly)) {
+                for (BlindsFeeder feeder : getConnectedFeeders(location, fiducial1MatchOnly)) {
                     if (feeder != this) {
                         feeder.updateFromConnectedFeeder(this);
                     }
@@ -2029,6 +2070,16 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
+    public String getFeederGroupName() {
+        return feederGroupName;
+    }
+
+    public void setFeederGroupName(String feederGroupName) {
+    	String oldName = this.feederGroupName;
+    	this.feederGroupName = feederGroupName;
+        firePropertyChange("feederGroupName", oldName, feederGroupName);
+    }
+
     public int getFeedCount() {
         return feedCount;
     }
@@ -2056,7 +2107,6 @@ public class BlindsFeeder extends ReferenceFeeder {
     public int getFeederNo() {
         return feederNo;
     }
-
 
     public void setFeederNo(int feederNo) {
         int oldValue = this.feederNo;
