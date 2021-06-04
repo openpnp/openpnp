@@ -171,7 +171,8 @@ public class BlindsFeeder extends ReferenceFeeder {
     private boolean calibrating = false;
     private boolean calibrated = false;
 
-    private static final List<String> noGroupNamesList = Arrays.asList(new String[]{"Location", "LOCATION", "location", "", "None", "none", "NONE"});
+    private static final String defaultGroupName = "Location";
+    private static final List<String> noGroupNamesList = Arrays.asList(new String[]{defaultGroupName, "LOCATION", "location", "", "None", "none", "NONE"});
     
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
@@ -1614,6 +1615,20 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
         }
         return false;
+    }
+    
+    public static List<String> getBlindsFeederGroupNames() {
+    	List<String> list = new ArrayList<>();
+        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+            if (feeder instanceof BlindsFeeder) {
+                BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
+                String feederGroupName = blindsFeeder.getFeederGroupName();
+            	if (!list.contains(feederGroupName)) {
+            		list.add(feederGroupName);
+            	}
+            }
+        }
+        return list;
     }
 
     public static List<BlindsFeeder> getAllBlindsFeeders() {

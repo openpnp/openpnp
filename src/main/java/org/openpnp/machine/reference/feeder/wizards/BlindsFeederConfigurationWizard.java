@@ -27,6 +27,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -120,7 +121,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JLabel lblPocketCenterline;
     private JTextField textFieldPocketCenterline;
     private JLabel lblBlindsFeederGroupName;
-    private JTextField textBlindsFeederGroupName;
+    private JComboBox comboBoxBlindsFeederName;
 
 
     public BlindsFeederConfigurationWizard(BlindsFeeder feeder) {
@@ -338,9 +339,10 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         lblBlindsFeederGroupName = new JLabel("Feeder Group Name");
         panelTapeSettings.add(lblBlindsFeederGroupName, "8, 12, right, default");
         
-        textBlindsFeederGroupName = new JTextField();
-        panelTapeSettings.add(textBlindsFeederGroupName, "10, 12");
-        textBlindsFeederGroupName.setColumns(5);
+        List<String> blindsFeederGroupNames = feeder.getBlindsFeederGroupNames();
+        comboBoxBlindsFeederName = new JComboBox(blindsFeederGroupNames.toArray());
+        comboBoxBlindsFeederName.setEditable(true);
+        panelTapeSettings.add(comboBoxBlindsFeederName, "10, 12, fill, default");
         
         btnResetFeedCount = new JButton(resetFeedCountAction);
         panelTapeSettings.add(btnResetFeedCount, "14, 12");
@@ -596,7 +598,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(feeder, "firstPocket", textFieldFirstPocket, "text", intConverter);
         addWrappedBinding(feeder, "lastPocket", textFieldLastPocket, "text", intConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
-        addWrappedBinding(feeder, "feederGroupName", textBlindsFeederGroupName, "text");
+        addWrappedBinding(feeder, "feederGroupName", comboBoxBlindsFeederName, "selectedItem");
 
         addWrappedBinding(feeder, "coverType", comboBoxCoverType, "selectedItem");
         addWrappedBinding(feeder, "coverActuation", comboBoxCoverActuation, "selectedItem");
@@ -641,7 +643,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         //ComponentDecorators.decorateWithAutoSelect(textFieldFirstPocket);
         //ComponentDecorators.decorateWithAutoSelect(textFieldLastPocket);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
-        ComponentDecorators.decorateWithAutoSelect(textBlindsFeederGroupName);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1X);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1Y);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial2X);
