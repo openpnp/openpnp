@@ -1616,16 +1616,16 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
         return false;
     }
-    
+
     public static List<String> getBlindsFeederGroupNames() {
-    	List<String> list = new ArrayList<>();
+        List<String> list = new ArrayList<>();
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
             if (feeder instanceof BlindsFeeder) {
                 BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
                 String feederGroupName = blindsFeeder.getFeederGroupName();
-            	if (!list.contains(feederGroupName)) {
-            		list.add(feederGroupName);
-            	}
+                if (!list.contains(feederGroupName)) {
+                    list.add(feederGroupName);
+                }
             }
         }
         return list;
@@ -1653,19 +1653,19 @@ public class BlindsFeeder extends ReferenceFeeder {
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
             if (feeder instanceof BlindsFeeder) {
                 BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
-                if(groupedByLocation(blindsFeeder)) {
+                if (groupedByLocation(blindsFeeder)) {
                     if (blindsFeeder.isLocationInFeeder(location, fiducial1MatchOnly)) {
                         list.add(blindsFeeder);
-                    }                	
+                    }
                 }
             }
         }
         // Sort by feeder tape centerline.
         Collections.sort(list, new Comparator<BlindsFeeder>() {
             @Override
-            public int compare(BlindsFeeder feeder1, BlindsFeeder feeder2)  {
-                return new Double(feeder1.getPocketCenterline().getValue())
-                        .compareTo(feeder2.getPocketCenterline().convertToUnits(feeder1.getPocketCenterline().getUnits()).getValue());
+            public int compare(BlindsFeeder feeder1, BlindsFeeder feeder2) {
+                return new Double(feeder1.getPocketCenterline().getValue()).compareTo(feeder2.getPocketCenterline()
+                        .convertToUnits(feeder1.getPocketCenterline().getUnits()).getValue());
             }
         });
         return list;
@@ -1694,21 +1694,20 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public List<BlindsFeeder> getConnectedFeeders(Location location) {
-    	return getConnectedFeeders(location, true);
+        return getConnectedFeeders(location, true);
     }
 
     public List<BlindsFeeder> getConnectedFeeders() {
-    	return getConnectedFeeders(fiducial1Location, true);
+        return getConnectedFeeders(fiducial1Location, true);
     }
 
-    
     public List<BlindsFeeder> getConnectedFeeders(Location location, boolean fiducial1MatchOnly) {
-    	if (groupedByLocation(this)) {
+        if (groupedByLocation(this)) {
             // Get all the feeders with the same fiducial 1 location.
             return getConnectedFeedersByLocation(fiducial1Location, true);
-    	} else {
-    		return getConnectedFeedersByGroupName(this.feederGroupName);
-    	}
+        } else {
+            return getConnectedFeedersByGroupName(this.feederGroupName);
+        }
     }
 
     private boolean isUpdating = false;
