@@ -22,44 +22,34 @@ If you are using more than one controller, you will need a set of actuators for 
 Example actuators in machine.xml
 
 ```
-  <actuators>
-     <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzGetID" name="SchultzGetID" index="0">
-        <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-        <safe-z value="0.0" units="Millimeters"/>
-     </actuator>
-     <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzPrePick" name="SchultzPrePick" index="0">
-        <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-        <safe-z value="0.0" units="Millimeters"/>
-     </actuator>
-     <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzPostPick" name="SchultzPostPick" index="0">
-        <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-        <safe-z value="0.0" units="Millimeters"/>
-     </actuator>
-     <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzAdvanceIgnoreError" name="SchultzAdvanceIgnoreError" index="0">
-        <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-        <safe-z value="0.0" units="Millimeters"/>
-     </actuator>
-     <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzGetCount" name="SchultzGetCount" index="0">
-        <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-        <safe-z value="0.0" units="Millimeters"/>
-     </actuator>
-     <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzClearCount" name="SchultzClearCount" index="0">
-        <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-        <safe-z value="0.0" units="Millimeters"/>
-     </actuator>
-     <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzGetPitch" name="SchultzGetPitch" index="0">
-        <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-        <safe-z value="0.0" units="Millimeters"/>
-     </actuator>
-     <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="SchultzTogglePitch" name="SchultzTogglePitch" index="0">
-        <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-        <safe-z value="0.0" units="Millimeters"/>
-     </actuator>
-     <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzGetStatus" name="SchultzGetStatus" index="0">
-        <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-        <safe-z value="0.0" units="Millimeters"/>
-     </actuator>
-  </actuators>
+         <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzGetID" name="SchultzGetID" value-type="Double" value-type-confirmed="true" default-on-double="0.0" default-on-string="" default-off-double="0.0" default-off-string="" interlock-actuator="false" driver-id="DRV1685dcff7c76eec8" coordinated-before-actuate="false" coordinated-after-actuate="false" coordinated-before-read="false" enabled-actuation="LeaveAsIs" homed-actuation="LeaveAsIs" disabled-actuation="LeaveAsIs" index="0">
+            <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         </actuator>
+         <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzPrePick" name="SchultzPrePick" value-type="Double" value-type-confirmed="true" default-on-double="0.0" default-on-string="" default-off-double="0.0" default-off-string="" interlock-actuator="false" driver-id="DRV1685dcff7c76eec8" coordinated-before-actuate="false" coordinated-after-actuate="false" coordinated-before-read="false" enabled-actuation="LeaveAsIs" homed-actuation="LeaveAsIs" disabled-actuation="LeaveAsIs" index="0">
+            <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         </actuator>
+         <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzPostPick" name="SchultzPostPick" value-type="Double" value-type-confirmed="true" default-on-double="0.0" default-on-string="" default-off-double="0.0" default-off-string="" interlock-actuator="false" driver-id="DRV1685dcff7c76eec8" coordinated-before-actuate="false" coordinated-after-actuate="false" coordinated-before-read="false" enabled-actuation="LeaveAsIs" homed-actuation="LeaveAsIs" disabled-actuation="LeaveAsIs" index="0">
+            <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         </actuator>
+         <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzAdvIgnorErr" name="SchultzAdvIgnoreErr" value-type="Double" value-type-confirmed="true" default-on-double="0.0" default-on-string="" default-off-double="0.0" default-off-string="" interlock-actuator="false" driver-id="DRV1685dcff7c76eec8" coordinated-before-actuate="false" coordinated-after-actuate="false" coordinated-before-read="false" enabled-actuation="LeaveAsIs" homed-actuation="LeaveAsIs" disabled-actuation="LeaveAsIs" index="0">
+            <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         </actuator>
+         <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzGetCount" name="SchultzGetCount" value-type="Double" value-type-confirmed="true" default-on-double="0.0" default-on-string="" default-off-double="0.0" default-off-string="" interlock-actuator="false" driver-id="DRV1685dcff7c76eec8" coordinated-before-actuate="false" coordinated-after-actuate="false" coordinated-before-read="false" enabled-actuation="LeaveAsIs" homed-actuation="LeaveAsIs" disabled-actuation="LeaveAsIs" index="0">
+            <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         </actuator>
+         <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzClearCount" name="SchultzClearCount" value-type="Double" value-type-confirmed="true" default-on-double="0.0" default-on-string="" default-off-double="0.0" default-off-string="" interlock-actuator="false" driver-id="DRV1685dcff7c76eec8" coordinated-before-actuate="false" coordinated-after-actuate="false" coordinated-before-read="false" enabled-actuation="LeaveAsIs" homed-actuation="LeaveAsIs" disabled-actuation="LeaveAsIs" index="0">
+            <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         </actuator>
+         <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzGetPitch" name="SchultzGetPitch" value-type="Double" value-type-confirmed="true" default-on-double="0.0" default-on-string="" default-off-double="0.0" default-off-string="" interlock-actuator="false" driver-id="DRV1685dcff7c76eec8" coordinated-before-actuate="false" coordinated-after-actuate="false" coordinated-before-read="false" enabled-actuation="LeaveAsIs" homed-actuation="LeaveAsIs" disabled-actuation="LeaveAsIs" index="0">
+            <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         </actuator>
+         <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzTogglePitch" name="SchultzTogglePitch" value-type="Double" value-type-confirmed="true" default-on-double="0.0" default-on-string="" default-off-double="0.0" default-off-string="" interlock-actuator="false" driver-id="DRV1685dcff7c76eec8" coordinated-before-actuate="false" coordinated-after-actuate="false" coordinated-before-read="false" enabled-actuation="LeaveAsIs" homed-actuation="LeaveAsIs" disabled-actuation="LeaveAsIs" index="0">
+            <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         </actuator>
+         <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="actSchultzGetStatus" name="SchultzGetStatus" value-type="Double" value-type-confirmed="true" default-on-double="0.0" default-on-string="" default-off-double="0.0" default-off-string="" interlock-actuator="false" driver-id="DRV1685dcff7c76eec8" coordinated-before-actuate="false" coordinated-after-actuate="false" coordinated-before-read="false" enabled-actuation="LeaveAsIs" homed-actuation="LeaveAsIs" disabled-actuation="LeaveAsIs" index="0">
+            <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+         </actuator>
+      </actuators>
 ```
 
 ## Sub-drivers
@@ -67,58 +57,58 @@ Example actuators in machine.xml
 Add a Gcode sub-driver for each controller.  In the sub-driver, you define the Gcode that is sent and the response regex for each actuator.  Here is a sample for the above actuators.
 
 ```
-  <gcode-driver communications="serial" connection-keep-alive="false" units="Millimeters" max-feed-rate="1000" backlash-offset-x="0" backlash-offset-y="0" non-squareness-factor="0.0" backlash-feed-rate-factor="0.1" timeout-milliseconds="2000" connect-wait-time-milliseconds="3000" visual-homing-enabled="false" backslash-escaped-characters-enabled="false" name="Schultz Controller">
-     <serial line-ending-type="LF" port-name="COM5" baud="115200" flow-control="Off" data-bits="Eight" stop-bits="One" parity="None" set-dtr="false" set-rts="false" name="SerialPortCommunications"/>
-     <tcp line-ending-type="LF" ip-address="127.0.0.1" port="23" name="TcpCommunications"/>
-     <homing-fiducial-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
-     <command type="COMMAND_CONFIRM_REGEX">
-        <text><![CDATA[^ok.*]]></text>
-     </command>
-     <command type="COMMAND_ERROR_REGEX">
-        <text><![CDATA[^error.*]]></text>
-     </command>
-     <command head-mountable-id="actSchultzGetID" type="ACTUATOR_READ_WITH_DOUBLE_COMMAND">
-        <text><![CDATA[M610N{IntegerValue}]]></text>
-     </command>
-     <command head-mountable-id="actSchultzGetID" type="ACTUATOR_READ_REGEX">
-        <text><![CDATA[^ok.*ID: (?<Value>.+)]]></text>
-     </command>
-     <command head-mountable-id="actSchultzPrePick" type="ACTUATE_DOUBLE_COMMAND">
-        <text><![CDATA[M600N{IntegerValue}]]></text>
-     </command>
-     <command head-mountable-id="actSchultzPostPick" type="ACTUATE_DOUBLE_COMMAND">
-        <text><![CDATA[M601N{IntegerValue}]]></text>
-     </command>
-     <command head-mountable-id="actSchultzAdvanceIgnoreError" type="ACTUATE_DOUBLE_COMMAND">
-        <text><![CDATA[M601N{IntegerValue}X1]]></text>
-     </command>
-     <command head-mountable-id="actSchultzGetCount" type="ACTUATOR_READ_WITH_DOUBLE_COMMAND">
-        <text><![CDATA[M603N{IntegerValue}]]></text>
-     </command>
-     <command head-mountable-id="actSchultzGetCount" type="ACTUATOR_READ_REGEX">
-        <text><![CDATA[^ok.*count: (?<Value>\d+).*]]></text>
-     </command>
-     <command head-mountable-id="actSchultzClearCount" type="ACTUATE_DOUBLE_COMMAND">
-        <text><![CDATA[M623N{IntegerValue}]]></text>
-     </command>
-     <command head-mountable-id="actSchultzGetPitch" type="ACTUATOR_READ_WITH_DOUBLE_COMMAND">
-        <text><![CDATA[M608N{IntegerValue}]]></text>
-     </command>
-     <command head-mountable-id="actSchultzGetPitch" type="ACTUATOR_READ_REGEX">
-        <text><![CDATA[^ok.(?<Value>.+)]]></text>
-     </command>
-     <command head-mountable-id="SchultzTogglePitch" type="ACTUATE_DOUBLE_COMMAND">
-        <text><![CDATA[M628N{IntegerValue}]]></text>
-     </command>
-     <command head-mountable-id="actSchultzGetStatus" type="ACTUATOR_READ_WITH_DOUBLE_COMMAND">
-        <text><![CDATA[M602N{IntegerValue}]]></text>
-     </command>
-     <command head-mountable-id="actSchultzGetStatus" type="ACTUATOR_READ_REGEX">
-        <text><![CDATA[^ok.*Status: (?<Value>.+)]]></text>
-     </command>
-     <sub-drivers class="java.util.ArrayList"/>
-     <axes class="java.util.ArrayList"/>
-  </gcode-driver>
+         <driver class="org.openpnp.machine.reference.driver.GcodeDriver" id="DRV1685dcff7c76eec8" name="Schultz" motion-control-type="ToolpathFeedRate" communications="serial" connection-keep-alive="false" units="Millimeters" max-feed-rate="1000" backlash-offset-x="-1.0" backlash-offset-y="-1.0" backlash-offset-z="0.0" backlash-offset-r="0.0" non-squareness-factor="0.0" backlash-feed-rate-factor="0.1" timeout-milliseconds="5000" connect-wait-time-milliseconds="3000" visual-homing-enabled="true" backslash-escaped-characters-enabled="false" remove-comments="true" compress-gcode="false" logging-gcode="false" supporting-pre-move="false" using-letter-variables="true" infinity-timeout-milliseconds="60000">
+            <serial line-ending-type="LF" port-name="COM3" baud="115200" flow-control="RtsCts" data-bits="Eight" stop-bits="One" parity="None" set-dtr="false" set-rts="false" name="SerialPortCommunications"/>
+            <tcp line-ending-type="LF" ip-address="127.0.0.1" port="23" name="TcpCommunications"/>
+            <simulated line-ending-type="LF"/>
+            <homing-fiducial-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+            <detected-firmware><![CDATA[FIRMWARE_NAME: Schultz Feeder Controller, FIRMWARE_VERSION: 2.0]]></detected-firmware>
+            <command type="COMMAND_CONFIRM_REGEX">
+               <text><![CDATA[^ok.*]]></text>
+            </command>
+            <command type="COMMAND_ERROR_REGEX">
+               <text><![CDATA[^error.*]]></text>
+            </command>
+            <command head-mountable-id="actSchultzGetID" type="ACTUATOR_READ_COMMAND">
+               <text><![CDATA[M610N{IntegerValue}]]></text>
+            </command>
+            <command head-mountable-id="actSchultzGetID" type="ACTUATOR_READ_REGEX">
+               <text><![CDATA[^ok.*ID: (?<Value>.+)]]></text>
+            </command>
+            <command head-mountable-id="actSchultzPrePick" type="ACTUATOR_READ_COMMAND">
+               <text><![CDATA[M600N{IntegerValue}]]></text>
+            </command>
+            <command head-mountable-id="actSchultzPostPick" type="ACTUATOR_READ_COMMAND">
+               <text><![CDATA[M601N{IntegerValue}]]></text>
+            </command>
+            <command head-mountable-id="actSchultzAdvIgnorErr" type="ACTUATOR_READ_COMMAND">
+               <text><![CDATA[M601N{IntegerValue}X1]]></text>
+            </command>
+            <command head-mountable-id="actSchultzGetCount" type="ACTUATOR_READ_COMMAND">
+               <text><![CDATA[M603N{IntegerValue}]]></text>
+            </command>
+            <command head-mountable-id="actSchultzGetCount" type="ACTUATOR_READ_REGEX">
+               <text><![CDATA[^ok.*count: (?<Value>\d+).*]]></text>
+            </command>
+            <command head-mountable-id="actSchultzClearCount" type="ACTUATOR_READ_COMMAND">
+               <text><![CDATA[M623N{IntegerValue}]]></text>
+            </command>
+            <command head-mountable-id="actSchultzGetPitch" type="ACTUATOR_READ_COMMAND">
+               <text><![CDATA[M608N{IntegerValue}]]></text>
+            </command>
+            <command head-mountable-id="actSchultzGetPitch" type="ACTUATOR_READ_REGEX">
+               <text><![CDATA[^ok.(?<Value>.+)]]></text>
+            </command>
+            <command head-mountable-id="actSchultzTogglePitch" type="ACTUATOR_READ_COMMAND">
+               <text><![CDATA[M628N{IntegerValue}]]></text>
+            </command>
+            <command head-mountable-id="actSchultzGetStatus" type="ACTUATOR_READ_REGEX">
+               <text><![CDATA[^ok.*Status: (?<Value>.+)]]></text>
+            </command>
+            <command head-mountable-id="actSchultzGetStatus" type="ACTUATOR_READ_COMMAND">
+               <text><![CDATA[M602N{IntegerValue}]]></text>
+            </command>
+         </driver>
 ```
 
 # Setup
