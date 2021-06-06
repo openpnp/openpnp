@@ -63,6 +63,7 @@ Add a Gcode driver for each controller.  In the driver, you define the Gcode tha
             <simulated line-ending-type="LF"/>
             <homing-fiducial-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
             <detected-firmware><![CDATA[FIRMWARE_NAME: Schultz Feeder Controller, FIRMWARE_VERSION: 2.0]]></detected-firmware>
+            <reported-axes><![CDATA[]]></reported-axes>
             <command type="COMMAND_CONFIRM_REGEX">
                <text><![CDATA[^ok.*]]></text>
             </command>
@@ -75,13 +76,13 @@ Add a Gcode driver for each controller.  In the driver, you define the Gcode tha
             <command head-mountable-id="actSchultzGetID" type="ACTUATOR_READ_REGEX">
                <text><![CDATA[^ok.*ID: (?<Value>.+)]]></text>
             </command>
-            <command head-mountable-id="actSchultzPrePick" type="ACTUATOR_READ_COMMAND">
+            <command head-mountable-id="actSchultzPrePick" type="ACTUATE_DOUBLE_COMMAND">
                <text><![CDATA[M600N{IntegerValue}]]></text>
             </command>
-            <command head-mountable-id="actSchultzPostPick" type="ACTUATOR_READ_COMMAND">
+            <command head-mountable-id="actSchultzPostPick" type="ACTUATE_DOUBLE_COMMAND">
                <text><![CDATA[M601N{IntegerValue}]]></text>
             </command>
-            <command head-mountable-id="actSchultzAdvIgnorErr" type="ACTUATOR_READ_COMMAND">
+            <command head-mountable-id="actSchultzAdvIgnorErr" type="ACTUATE_DOUBLE_COMMAND">
                <text><![CDATA[M601N{IntegerValue}X1]]></text>
             </command>
             <command head-mountable-id="actSchultzGetCount" type="ACTUATOR_READ_COMMAND">
@@ -90,7 +91,7 @@ Add a Gcode driver for each controller.  In the driver, you define the Gcode tha
             <command head-mountable-id="actSchultzGetCount" type="ACTUATOR_READ_REGEX">
                <text><![CDATA[^ok.*count: (?<Value>\d+).*]]></text>
             </command>
-            <command head-mountable-id="actSchultzClearCount" type="ACTUATOR_READ_COMMAND">
+            <command head-mountable-id="actSchultzClearCount" type="ACTUATE_DOUBLE_COMMAND">
                <text><![CDATA[M623N{IntegerValue}]]></text>
             </command>
             <command head-mountable-id="actSchultzGetPitch" type="ACTUATOR_READ_COMMAND">
@@ -99,14 +100,14 @@ Add a Gcode driver for each controller.  In the driver, you define the Gcode tha
             <command head-mountable-id="actSchultzGetPitch" type="ACTUATOR_READ_REGEX">
                <text><![CDATA[^ok.(?<Value>.+)]]></text>
             </command>
-            <command head-mountable-id="actSchultzTogglePitch" type="ACTUATOR_READ_COMMAND">
+            <command head-mountable-id="actSchultzTogglePitch" type="ACTUATE_DOUBLE_COMMAND">
                <text><![CDATA[M628N{IntegerValue}]]></text>
-            </command>
-            <command head-mountable-id="actSchultzGetStatus" type="ACTUATOR_READ_REGEX">
-               <text><![CDATA[^ok.*Status: (?<Value>.+)]]></text>
             </command>
             <command head-mountable-id="actSchultzGetStatus" type="ACTUATOR_READ_COMMAND">
                <text><![CDATA[M602N{IntegerValue}]]></text>
+            </command>
+            <command head-mountable-id="actSchultzGetStatus" type="ACTUATOR_READ_REGEX">
+               <text><![CDATA[^ok.*Status: (?<Value>.+)]]></text>
             </command>
          </driver>
 ```
