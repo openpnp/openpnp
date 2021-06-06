@@ -1642,10 +1642,6 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
         return list;
     }
-    
-    public static boolean groupedByLocation(BlindsFeeder blindsFeeder) {
-    	return locationGroupNamesList.contains(blindsFeeder.feederGroupName);
-    }
 
     public static List<BlindsFeeder> getConnectedFeedersByLocation(Location location, boolean fiducial1MatchOnly) {
         // Get all the feeders with connected by location.
@@ -1653,10 +1649,8 @@ public class BlindsFeeder extends ReferenceFeeder {
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
             if (feeder instanceof BlindsFeeder) {
                 BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
-                if (groupedByLocation(blindsFeeder)) {
-                    if (blindsFeeder.isLocationInFeeder(location, fiducial1MatchOnly)) {
-                        list.add(blindsFeeder);
-                    }
+                if (blindsFeeder.isLocationInFeeder(location, fiducial1MatchOnly)) {
+                    list.add(blindsFeeder);
                 }
             }
         }
@@ -1671,10 +1665,10 @@ public class BlindsFeeder extends ReferenceFeeder {
         return list;
     }
 
-    public static List<BlindsFeeder> getConnectedFeedersByGroupName(String groupName) {
+    public static List<BlindsFeeder> filterFeedersByGroupName(List<BlindsFeeder> feeders, String groupName) {
         // Get all the feeders with connected by location.
         List<BlindsFeeder> list = new ArrayList<>();
-        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+        for (Feeder feeder : feeders) {
             if (feeder instanceof BlindsFeeder) {
                 BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
                 if (blindsFeeder.feederGroupName.equals(groupName)) {
@@ -1682,14 +1676,6 @@ public class BlindsFeeder extends ReferenceFeeder {
                 }
             }
         }
-        // Sort by feeder tape centerline.
-        Collections.sort(list, new Comparator<BlindsFeeder>() {
-            @Override
-            public int compare(BlindsFeeder feeder1, BlindsFeeder feeder2)  {
-                return new Double(feeder1.getPocketCenterline().getValue())
-                        .compareTo(feeder2.getPocketCenterline().convertToUnits(feeder1.getPocketCenterline().getUnits()).getValue());
-            }
-        });
         return list;
     }
 
@@ -1702,13 +1688,9 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public List<BlindsFeeder> getConnectedFeeders(Location location, boolean fiducial1MatchOnly) {
-        if (groupedByLocation(this)) {
-            // Get all the feeders with the same fiducial 1 location.
-            return getConnectedFeedersByLocation(fiducial1Location, true);
-        } else {
-            return getConnectedFeedersByGroupName(this.feederGroupName);
-        }
-    }
+        List<BlindsFeeder> feeder_list = getConnectedFeedersByLocation(fiducial1Location, fiducial1MatchOnly);
+        return filterFeedersByGroupName(feeder_list, this.feederGroupName);
+   }
 
     private boolean isUpdating = false;
 
@@ -2091,23 +2073,39 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public String getFeederGroupName() {
-    	if (locationGroupNamesList.contains(feederGroupName)) {
+        if (locationGroupNamesList.contains(feederGroupName)) {
             return defaultLocationGroupName;
-    	}
+        }
         return feederGroupName;
     }
 
-    public void setFeederGroupName(String feederGroupName) {
-    	String oldName = this.feederGroupName;
-    	if (locationGroupNamesList.contains(feederGroupName)) {
-        	this.feederGroupName = defaultLocationGroupName;
-            firePropertyChange("feederGroupName", oldName, defaultLocationGroupName);
-    	} else {
-        	this.feederGroupName = feederGroupName;
-            firePropertyChange("feederGroupName", oldName, feederGroupName);
-    	}
+    public void setFeederGroupName(String newFeederGroupName) {
+        String oldName = this.feederGroupName;
+        String feederGroupName = newFeederGroupName;
+        
+        //Check if the group name is one of the location keywords. If so reset name to default location.
+        if (locationGroupNamesList.contains(feederGroupName)) {
+            feederGroupName = defaultLocationGroupName;
+        }
+        List<BlindsFeeder> connected_feeders = getConnectedFeeders();
+
+        if (! nullLocation.equals(this.fiducial1Location)) {
+            
+        }
+        for(BlindsFeeder feeder: connected_feeders) {
+            feeder.setFeederGroupNameFromOther(feederGroupName);
+        }
+
+        //Ensure this feeder group is changed if connected feeders is empty.
+        this.feederGroupName = feederGroupName;
+
+        firePropertyChange("feederGroupName", oldName, feederGroupName);
     }
 
+    public void setFeederGroupNameFromOther(String newFeederGroupName) {
+        this.feederGroupName = newFeederGroupName;
+    }
+    
     public int getFeedCount() {
         return feedCount;
     }
