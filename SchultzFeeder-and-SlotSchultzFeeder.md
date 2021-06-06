@@ -52,9 +52,9 @@ Example actuators in machine.xml
       </actuators>
 ```
 
-## Sub-drivers
+## Gcode Driver
 
-Add a Gcode sub-driver for each controller.  In the sub-driver, you define the Gcode that is sent and the response regex for each actuator.  Here is a sample for the above actuators.
+Add a Gcode driver for each controller.  In the driver, you define the Gcode that is sent and the response regex for each actuator.  Here is a sample for the above actuators.
 
 ```
          <driver class="org.openpnp.machine.reference.driver.GcodeDriver" id="DRV1685dcff7c76eec8" name="Schultz" motion-control-type="ToolpathFeedRate" communications="serial" connection-keep-alive="false" units="Millimeters" max-feed-rate="1000" backlash-offset-x="-1.0" backlash-offset-y="-1.0" backlash-offset-z="0.0" backlash-offset-r="0.0" non-squareness-factor="0.0" backlash-feed-rate-factor="0.1" timeout-milliseconds="5000" connect-wait-time-milliseconds="3000" visual-homing-enabled="true" backslash-escaped-characters-enabled="false" remove-comments="true" compress-gcode="false" logging-gcode="false" supporting-pre-move="false" using-letter-variables="true" infinity-timeout-milliseconds="60000">
