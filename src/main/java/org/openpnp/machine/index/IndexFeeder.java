@@ -112,7 +112,7 @@ public class IndexFeeder extends ReferenceFeeder {
                     "Feeder slot has no configured location",
                     "Select the feeder in the Feeders tab and make sure the slot has a set location",
                     Solutions.Severity.Error,
-                    "URI goes here" // TODO Internet better
+                    "https://github.com/openpnp/openpnp/wiki/Index-Feeder#slots-and-feeder-locations"
             ));
         }
 
@@ -122,7 +122,7 @@ public class IndexFeeder extends ReferenceFeeder {
                     "Feeder has no configured offset",
                     "Select the feeder in the Feeders tab and make sure the feeder has an offset location from the slot",
                     Solutions.Severity.Error,
-                    "URI goes here" // TODO Internet better
+                    "https://github.com/openpnp/openpnp/wiki/Index-Feeder#slots-and-feeder-locations"
             ));
         }
     }
