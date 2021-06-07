@@ -9,3 +9,7 @@ The Index Feeder is a powered feeder design, part of the [Index PnP project](htt
 
 ## OpenPnP Setup
 **_TODO_**
+
+### Slots and Feeder Locations
+
+** TODO **
