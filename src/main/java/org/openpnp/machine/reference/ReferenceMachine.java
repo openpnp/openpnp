@@ -345,6 +345,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(SchultzFeeder.class);
         l.add(SlotSchultzFeeder.class);
         l.add(RapidFeeder.class);
+        l.add(IndexFeeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
