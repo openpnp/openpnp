@@ -128,7 +128,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     private int feedersTotal = 0;
 
     @Attribute(required = false)
-    private String feederGroupName = defaultLocationGroupName;
+    private String feederGroupName = defaultGroupName;
 
     @Attribute(required = false)
     private int pocketCount = 0;
@@ -171,8 +171,8 @@ public class BlindsFeeder extends ReferenceFeeder {
     private boolean calibrating = false;
     private boolean calibrated = false;
 
-    private static final String defaultLocationGroupName = "Location";
-    private static final List<String> locationGroupNamesList = Arrays.asList(new String[]{defaultLocationGroupName, "LOCATION", "location", "", "None", "none", "NONE"});
+    public static final String defaultGroupName = "Default";
+    private static final List<String> locationGroupNamesList = Arrays.asList(new String[]{defaultGroupName, "Location", "LOCATION", "location", "", "None", "none", "NONE"});
     
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
@@ -2074,7 +2074,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public String getFeederGroupName() {
         if (locationGroupNamesList.contains(feederGroupName)) {
-            return defaultLocationGroupName;
+            return defaultGroupName;
         }
         return feederGroupName;
     }
@@ -2085,7 +2085,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         
         //Check if the group name is one of the location keywords. If so reset name to default location.
         if (locationGroupNamesList.contains(feederGroupName)) {
-            feederGroupName = defaultLocationGroupName;
+            feederGroupName = defaultGroupName;
         }
         List<BlindsFeeder> connected_feeders = getConnectedFeeders();
 
