@@ -13,7 +13,7 @@ Rapid Feeder is a new type of automatic feeder developed by and soon available a
 4. UUID address for each feeder. Can also be used for user's own data logging system to keep track of parts inventory by scanning the QR.
 5. Supports all types of tapes, up to 0402 and 2mm pitch.
 6. Reset button on feeder or optionally undock and re-dock the feeder.
-7. Requires an Atmega32u4 motherboard, also provided by Deltaprintr and is open source in case you want to customize to fit your machine.
+7. Requires a feeder motherboard, also provided by Deltaprintr.
 
 ### Mounting the feeder
 
