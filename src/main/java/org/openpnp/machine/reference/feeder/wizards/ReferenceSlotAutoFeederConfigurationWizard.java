@@ -42,7 +42,6 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.*;
 import org.openpnp.gui.support.JBindings.Wrapper;
-import org.openpnp.machine.reference.feeder.ReferenceAutoFeeder.ActuatorType;
 import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder.Bank;
 import org.openpnp.machine.reference.feeder.ReferenceSlotAutoFeeder.Feeder;
@@ -66,13 +65,27 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     private JTextField actuatorValue;
     private JComboBox comboBoxPostPickActuator;
     private JTextField postPickActuatorValue;
-    private JComboBox actuatorType;
-    private JComboBox postPickActuatorType;
     private JButton btnTestFeedActuator;
     private JButton btnTestPostPickActuator;
     private JTextField feederNameTf;
     private JTextField bankNameTf;
     private JCheckBox ckBoxMoveBeforeFeed;
+
+    private JComboBox feederCb;
+    private JComboBox bankCb;    
+    private JComboBox feederPartCb;
+    private JTextField xOffsetTf;
+    private JTextField yOffsetTf;
+    private JTextField zOffsetTf;
+    private JTextField rotOffsetTf;
+    private JTextField xPickLocTf;
+    private JTextField yPickLocTf;
+    private JTextField zPickLocTf;
+    private JTextField rotPickLocTf;
+    private JTextField retryCountTf;
+    private LocationButtonsPanel offsetLocButtons;
+    private LocationButtonsPanel pickLocButtons;
+    private JTextField pickRetryCount;
 
     public ReferenceSlotAutoFeederConfigurationWizard(ReferenceSlotAutoFeeder feeder) {
         this.feeder = feeder;
@@ -158,7 +171,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         whateverPanel.add(feederCb, "4, 2, 3, 1");
         
         JPanel feederPanel = new JPanel();
-        feederPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Feeder", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        feederPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Feeder", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(feederPanel);
         FormLayout fl_feederPanel = new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -227,15 +240,13 @@ public class ReferenceSlotAutoFeederConfigurationWizard
 
         JPanel panelActuator = new JPanel();
         panelActuator.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -255,11 +266,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         JLabel lblActuator = new JLabel("Actuator");
         panelActuator.add(lblActuator, "4, 2, left, default");
 
-        JLabel lblActuatorType = new JLabel("Actuator Type");
-        panelActuator.add(lblActuatorType, "6, 2, left, default");
-
         JLabel lblActuatorValue = new JLabel("Actuator Value");
-        panelActuator.add(lblActuatorValue, "8, 2, left, default");
+        panelActuator.add(lblActuatorValue, "6, 2, left, default");
 
         JLabel lblFeed = new JLabel("Feed");
         panelActuator.add(lblFeed, "2, 4, right, default");
@@ -267,19 +275,16 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         comboBoxFeedActuator = new JComboBox();
         comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
         panelActuator.add(comboBoxFeedActuator, "4, 4, fill, default");
-        
-        actuatorType = new JComboBox(ActuatorType.values());
-        panelActuator.add(actuatorType, "6, 4, fill, default");
 
         actuatorValue = new JTextField();
-        panelActuator.add(actuatorValue, "8, 4");
+        panelActuator.add(actuatorValue, "6, 4");
         actuatorValue.setColumns(10);
         
         JLabel lblForBoolean = new JLabel("For Boolean: 1 = True, 0 = False");
-        panelActuator.add(lblForBoolean, "10, 4");
+        panelActuator.add(lblForBoolean, "8, 4");
 
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
-        panelActuator.add(btnTestFeedActuator, "12, 4");
+        panelActuator.add(btnTestFeedActuator, "10, 4");
 
         JLabel lblPostPick = new JLabel("Post Pick");
         panelActuator.add(lblPostPick, "2, 6, right, default");
@@ -287,19 +292,16 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         comboBoxPostPickActuator = new JComboBox();
         comboBoxPostPickActuator.setModel(new ActuatorsComboBoxModel(Configuration.get().getMachine()));
         panelActuator.add(comboBoxPostPickActuator, "4, 6, fill, default");
-        
-        postPickActuatorType = new JComboBox(ActuatorType.values());
-        panelActuator.add(postPickActuatorType, "6, 6, fill, default");
 
         postPickActuatorValue = new JTextField();
         postPickActuatorValue.setColumns(10);
-        panelActuator.add(postPickActuatorValue, "8, 6");
+        panelActuator.add(postPickActuatorValue, "6, 6");
         
         JLabel lblForBoolean_1 = new JLabel("For Boolean: 1 = True, 0 = False");
-        panelActuator.add(lblForBoolean_1, "10, 6");
+        panelActuator.add(lblForBoolean_1, "8, 6");
 
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
-        panelActuator.add(btnTestPostPickActuator, "12, 6");
+        panelActuator.add(btnTestPostPickActuator, "10, 6");
         
         JLabel lblMoveBeforeFeed = new JLabel("Move before feed");
         panelActuator.add(lblMoveBeforeFeed, "2, 8, right, default");
@@ -390,11 +392,9 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(feeder, "actuatorName", comboBoxFeedActuator, "selectedItem");
-        addWrappedBinding(feeder, "actuatorType", actuatorType, "selectedItem");
         addWrappedBinding(feeder, "actuatorValue", actuatorValue, "text", doubleConverter);
 
         addWrappedBinding(feeder, "postPickActuatorName", comboBoxPostPickActuator, "selectedItem");
-        addWrappedBinding(feeder, "postPickActuatorType", postPickActuatorType, "selectedItem");
         addWrappedBinding(feeder, "postPickActuatorValue", postPickActuatorValue, "text", doubleConverter);
         
         addWrappedBinding(feeder, "moveBeforeFeed", ckBoxMoveBeforeFeed, "selected");
@@ -526,7 +526,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     private Action testFeedActuatorAction = new AbstractAction("Test feed") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
                     Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -536,11 +536,8 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 if (actuator == null) {
                     throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
                 }
-                if (feeder.getActuatorType() == ActuatorType.Boolean) {
-                    actuator.actuate(feeder.getActuatorValue() != 0);
-                } else {
-                    actuator.actuate(feeder.getActuatorValue());
-                }
+                // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
+                actuator.actuate((Object)feeder.getActuatorValue());
             });
         }
     };
@@ -548,7 +545,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
     private Action testPostPickActuatorAction = new AbstractAction("Test post pick") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
+            UiUtils.submitUiMachineTask(() -> {
                 if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
                     Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
                     return;
@@ -560,28 +557,9 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                     throw new Exception(
                             "Feed failed. Unable to find an actuator named " + feeder.getPostPickActuatorName());
                 }
-                if (feeder.getPostPickActuatorType() == ActuatorType.Boolean) {
-                    actuator.actuate(feeder.getPostPickActuatorValue() != 0);
-                } else {
-                    actuator.actuate(feeder.getPostPickActuatorValue());
-                }
+                // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
+                actuator.actuate((Object)feeder.getPostPickActuatorValue());
             });
         }
     };
-
-    private JComboBox feederCb;
-    private JComboBox bankCb;    
-    private JComboBox feederPartCb;
-    private JTextField xOffsetTf;
-    private JTextField yOffsetTf;
-    private JTextField zOffsetTf;
-    private JTextField rotOffsetTf;
-    private JTextField xPickLocTf;
-    private JTextField yPickLocTf;
-    private JTextField zPickLocTf;
-    private JTextField rotPickLocTf;
-    private JTextField retryCountTf;
-    private LocationButtonsPanel offsetLocButtons;
-    private LocationButtonsPanel pickLocButtons;
-    private JTextField pickRetryCount;
 }

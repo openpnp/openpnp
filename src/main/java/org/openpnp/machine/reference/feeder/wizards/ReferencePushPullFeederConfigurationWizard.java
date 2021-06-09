@@ -22,7 +22,7 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -67,6 +67,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -77,7 +78,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.Dimension;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullFeederConfigurationWizard
@@ -215,7 +215,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         panelTape = new JPanel();
         panelFields.add(panelTape);
-        panelTape.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelTape.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelTape.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
@@ -632,7 +632,9 @@ extends AbstractReferenceFeederConfigurationWizard {
             if (Configuration.get().getMachine().isEnabled()) {
                 UiUtils.submitUiMachineTask(() -> {
                     MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
-                    SwingUtilities.invokeAndWait(() -> {
+                    MovableUtils.fireTargetedUserAction(feeder.getCamera());
+                    feeder.getCamera().waitForCompletion(CompletionType.WaitForStillstand);
+                    SwingUtilities.invokeLater(() -> {
                         UiUtils.messageBoxOnException(() -> {
                             editPipeline();
                         });
@@ -806,6 +808,7 @@ extends AbstractReferenceFeederConfigurationWizard {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
                 MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
+                MovableUtils.fireTargetedUserAction(feeder.getCamera());
                 SwingUtilities.invokeAndWait(() -> {
                     UiUtils.messageBoxOnException(() -> {
                         new RegionOfInterestProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region") {
@@ -832,6 +835,7 @@ extends AbstractReferenceFeederConfigurationWizard {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
                 MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
+                MovableUtils.fireTargetedUserAction(feeder.getCamera());
                 StringBuilder report = new StringBuilder();
                 feeder.performOcr(OcrWrongPartAction.ChangePart, false, report);
                 if (report.length() == 0) {
@@ -936,6 +940,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 UiUtils.submitUiMachineTask(() -> {
                     Camera camera = feeder.getCamera(); 
                     MovableUtils.moveToLocationAtSafeZ(camera, newFeeder.getPickLocation(0, null));
+                    MovableUtils.fireTargetedUserAction(camera);
                     newFeeder.autoSetup();
                     SwingUtilities.invokeLater(() -> {
                         Configuration.get().getBus().post(new FeederSelectedEvent(newFeeder, this));

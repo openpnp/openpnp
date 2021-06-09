@@ -20,7 +20,7 @@
 package org.openpnp.machine.reference.camera;
 
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeSupport;
+import java.util.WeakHashMap;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
@@ -28,23 +28,41 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.PropertySheetHolder;
 
 public class BufferedImageCamera extends ReferenceCamera {
-    private PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+    private static WeakHashMap<Camera, BufferedImageCamera> bufferedCameras = new WeakHashMap<>(); 
 
     private Camera originalCamera;
-    private BufferedImage source;
+    private BufferedImage image;
 
-    public BufferedImageCamera(Camera _originalCamera, BufferedImage _source) {
-        originalCamera = _originalCamera;
-        source = _source;
+    public BufferedImageCamera(Camera originalCamera) {
+        this.originalCamera = originalCamera;
 
         setUnitsPerPixel(originalCamera.getUnitsPerPixel());
     }
 
+    protected void setImage(BufferedImage source) {
+        this.image = source;
+    }
+
+    @Override 
+    protected boolean isBroadcasting() {
+        // Switch off any Broadcasting for this one. 
+        return false;
+    }
+
+    @Override
+    protected synchronized boolean ensureOpen() {
+        // Never really open this one.
+        return true;
+    }
+
     @Override
     public synchronized BufferedImage internalCapture() {
-        // Don't do transformImage() like regular cameras - expect the image in this camera to have already
-        // been transformed by the original camera.
-        return source;
+        return image;
+    }
+
+    @Override
+    protected BufferedImage transformImage(BufferedImage image) {
+        return image;
     }
 
     @Override
@@ -60,5 +78,15 @@ public class BufferedImageCamera extends ReferenceCamera {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         return null;
+    }
+
+    public static synchronized BufferedImageCamera get(Camera camera, BufferedImage image) {
+        BufferedImageCamera bufferedCamera = bufferedCameras.get(camera);
+        if (bufferedCamera == null) {
+            bufferedCamera = new BufferedImageCamera(camera); 
+            bufferedCameras.put(camera, bufferedCamera);
+        }
+        bufferedCamera.setImage(image);
+        return bufferedCamera;
     }
 }

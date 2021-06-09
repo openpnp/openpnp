@@ -95,7 +95,12 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         Object oldValue = this.part;
         this.part = part;
         firePropertyChange("part", oldValue, part);
-        this.partId = part.getId();
+        if (part != null) {
+            this.partId = part.getId();
+        }
+        else {
+            this.partId = "";
+        }
     }
 
     @Override
@@ -143,4 +148,14 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
     }
     
     public void postPick(Nozzle nozzle) throws Exception { }
+    
+    @Override
+    public boolean canTakeBackPart() {
+        return false;   // default feeder does not take back parts
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        throw new UnsupportedOperationException("Not supported on this Feeder");
+    }
 }

@@ -19,6 +19,14 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -26,37 +34,19 @@ import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
-import org.openpnp.gui.support.Helpers;
-import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.Location;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
-import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-
-import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import java.awt.Color;
-import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
 
 @SuppressWarnings("serial")
 public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizard {
@@ -81,52 +71,50 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                ColumnSpec.decode("max(50dlu;default)"),},
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
         panel.add(lblX, "4, 2, center, default");
 
         JLabel lblY = new JLabel("Y");
         panel.add(lblY, "6, 2, center, default");
-        
+
         JLabel lblHomingFiducial = new JLabel("Homing Fiducial");
         panel.add(lblHomingFiducial, "2, 4, right, default");
-        
+
         homingFiducialX = new JTextField();
         panel.add(homingFiducialX, "4, 4, fill, default");
         homingFiducialX.setColumns(10);
-        
+
         homingFiducialY = new JTextField();
         homingFiducialY.setText("");
         panel.add(homingFiducialY, "6, 4, fill, default");
         homingFiducialY.setColumns(10);
-        
-        JButton btnCaptureHome = new JButton(captureHomeCoordinatesAction);
-        btnCaptureHome.setHideActionText(true);
-        panel.add(btnCaptureHome, "8, 4");
-        
-        JButton btnPositionHome = new JButton(positionHomeCoordinatesAction);
-        btnPositionHome.setHideActionText(true);
-        panel.add(btnPositionHome, "10, 4");
-        
+
+        homeLocation = new LocationButtonsPanel(homingFiducialX, homingFiducialY, (JTextField) null, (JTextField) null);
+        homeLocation.setShowToolButtons(false); 
+        panel.add(homeLocation, "8, 4, 3, 1, left, fill");
+
         JLabel lblHomingMethod = new JLabel("Homing Method");
         panel.add(lblHomingMethod, "2, 6, right, default");
-        
+
         visualHomingMethod = new JComboBox(VisualHomingMethod.values());
         visualHomingMethod.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
@@ -134,10 +122,28 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
             }
         });
         panel.add(visualHomingMethod, "4, 6, 3, 1, fill, default");
-        
+
+        btnHomingTest = new JButton("Visual Test");
+        btnHomingTest.setToolTipText("Test the visual homing fiducial locator without affecting the machine coordinate system.");
+        btnHomingTest.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.submitUiMachineTask(() -> head.visualHome(head.getMachine(), false));
+            }
+        });
+        panel.add(btnHomingTest, "8, 6, fill, default");
+
+        btnVisualHome = new JButton("Visual Home");
+        btnVisualHome.setToolTipText("Perform visual homing.");
+        btnVisualHome.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.submitUiMachineTask(() -> head.visualHome(head.getMachine(), true));
+            }
+        });
+        panel.add(btnVisualHome, "10, 6, fill, default");
+
         JLabel lblWarningChangingThese = new JLabel("<html><p>\r\n<strong>Important Notice</strong>: the homing fiducial should be mounted \r\nand configured early in the build process, before you start capturing a large number of\r\nlocations for the Machine Setup (nozzle tip changer, feeders etc.) \r\n</p>\r\n<p style=\"color:red\">Each time the above settings are changed or the fiducial physically moved, all the already captured locations in the Machine Setup will be broken. </p></html>");
         lblWarningChangingThese.setForeground(Color.BLACK);
-        panel.add(lblWarningChangingThese, "4, 8, 7, 1");
+        panel.add(lblWarningChangingThese, "4, 8, 5, 1");
 
         JLabel lblParkLocation = new JLabel("Park Location");
         panel.add(lblParkLocation, "2, 12, right, default");
@@ -150,14 +156,10 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         parkY.setColumns(5);
         panel.add(parkY, "6, 12, fill, default");
 
-        JButton btnNewButton = new JButton(captureParkCoordinatesAction);
-        btnNewButton.setHideActionText(true);
-        panel.add(btnNewButton, "8, 12");
+        parkLocation = new LocationButtonsPanel(parkX, parkY, (JTextField) null, (JTextField) null);
+        parkLocation.setShowToolButtons(false); 
+        panel.add(parkLocation, "8, 12, 3, 1, left, fill");
 
-        JButton btnNewButton_1 = new JButton(positionParkCoordinatesAction);
-        btnNewButton_1.setHideActionText(true);
-        panel.add(btnNewButton_1, "10, 12");
-        
         JPanel panel_2 = new JPanel();
         panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_2);
@@ -166,17 +168,17 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 ColumnSpec.decode("max(80dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(50dlu;default)"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
         JLabel lblNewLabel_4 = new JLabel("Z Probe Actuator");
         panel_2.add(lblNewLabel_4, "2, 2, right, default");
-        
+
         comboBoxZProbeActuator = new JComboBox();
         comboBoxZProbeActuator.setModel(new ActuatorsComboBoxModel(head));
         panel_2.add(comboBoxZProbeActuator, "4, 2");
-        
+
         JPanel panel_3 = new JPanel();
         panel_3.setBorder(new TitledBorder(null, "Pump", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_3);
@@ -185,17 +187,17 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 ColumnSpec.decode("max(80dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(50dlu;default)"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
         JLabel lblVacuumPumpActuator = new JLabel("Vacuum Pump Actuator");
         panel_3.add(lblVacuumPumpActuator, "2, 2, 2, 1, right, default");
-        
+
         comboBoxPumpActuator = new JComboBox();
         comboBoxPumpActuator.setModel(new ActuatorsComboBoxModel(head));
         panel_3.add(comboBoxPumpActuator, "4, 2, fill, default");
-        
+
     }
 
     @Override
@@ -214,7 +216,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         addWrappedBinding(parkLocation, "lengthX", parkX, "text", lengthConverter);
         addWrappedBinding(parkLocation, "lengthY", parkY, "text", lengthConverter);
 
-
         addWrappedBinding(head, "zProbeActuatorName", comboBoxZProbeActuator, "selectedItem");
         addWrappedBinding(head, "pumpActuatorName", comboBoxPumpActuator, "selectedItem");
 
@@ -229,97 +230,12 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     protected void adaptDialog() {
         boolean homingCapture = (visualHomingMethod.getSelectedItem() == VisualHomingMethod.ResetToFiducialLocation);
         boolean homingFiducial = (visualHomingMethod.getSelectedItem() != VisualHomingMethod.None);
-        captureHomeCoordinatesAction.setEnabled(homingCapture);
-        positionHomeCoordinatesAction.setEnabled(homingCapture);
+        homeLocation.setEnabled(homingCapture);
+        btnHomingTest.setEnabled(homingCapture);
+        btnVisualHome.setEnabled(homingCapture);
         homingFiducialX.setEnabled(homingFiducial);
         homingFiducialY.setEnabled(homingFiducial);
     }
-
-    private static Location getParsedLocation(JTextField textFieldX, JTextField textFieldY) {
-        double x = 0, y = 0, z = 0, rotation = 0;
-        if (textFieldX != null) {
-            x = Length.parse(textFieldX.getText())
-                      .getValue();
-        }
-        if (textFieldY != null) {
-            y = Length.parse(textFieldY.getText())
-                      .getValue();
-        }
-        return new Location(Configuration.get()
-                                         .getSystemUnits(),
-                x, y, z, rotation);
-    }
-
-    private Action captureHomeCoordinatesAction =
-            new AbstractAction("Get Camera Coordinates", Icons.captureCamera) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Capture the location that the camera is centered on.");
-                }
-
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.messageBoxOnException(() -> {
-                        Location l = head.getDefaultCamera()
-                                         .getLocation();
-                        Helpers.copyLocationIntoTextFields(l, homingFiducialX, homingFiducialY, null, null);
-                    });
-                }
-            };
-
-
-    private Action positionHomeCoordinatesAction =
-            new AbstractAction("Position Camera", Icons.centerCamera) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the camera over the center of the location.");
-                }
-
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        Camera camera = head.getDefaultCamera();
-                        Location location = getParsedLocation(homingFiducialX, homingFiducialY);
-                        MovableUtils.moveToLocationAtSafeZ(camera, location);
-                    });
-                }
-            };
-
-
-    private Action captureParkCoordinatesAction =
-            new AbstractAction("Get Camera Coordinates", Icons.captureCamera) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Capture the location that the camera is centered on.");
-                }
-
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.messageBoxOnException(() -> {
-                        Location l = head.getDefaultCamera()
-                                         .getLocation();
-                        Helpers.copyLocationIntoTextFields(l, parkX, parkY, null, null);
-                    });
-                }
-            };
-
-
-    private Action positionParkCoordinatesAction =
-            new AbstractAction("Position Camera", Icons.centerCamera) {
-                {
-                    putValue(Action.SHORT_DESCRIPTION,
-                            "Position the camera over the center of the location.");
-                }
-
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    UiUtils.submitUiMachineTask(() -> {
-                        Camera camera = head.getDefaultCamera();
-                        Location location = getParsedLocation(parkX, parkY);
-                        MovableUtils.moveToLocationAtSafeZ(camera, location);
-                    });
-                }
-            };
 
     private JTextField parkX;
     private JTextField parkY;
@@ -328,6 +244,9 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JTextField homingFiducialX;
     private JTextField homingFiducialY;
 
-
     private JComboBox visualHomingMethod;
+    private LocationButtonsPanel homeLocation;
+    private LocationButtonsPanel parkLocation;
+    private JButton btnHomingTest;
+    private JButton btnVisualHome;
 }

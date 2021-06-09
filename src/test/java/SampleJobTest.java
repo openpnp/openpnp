@@ -5,7 +5,7 @@ import java.io.File;
 
 import org.apache.commons.io.FileUtils;
 import org.jcodec.api.awt.SequenceEncoder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
@@ -16,8 +16,9 @@ import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.base.AbstractCamera;
+import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
 
 import com.google.common.io.Files;
 
@@ -60,9 +61,14 @@ public class SampleJobTest {
                 new File(workingDirectory, "machine.xml"));
         }
 
+        Configurator
+        .currentConfig()
+        .level(Level.INFO) // change this for other log levels.
+        .activate();
+
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
-
+        
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
 
         if (!imperfectMachine) {
@@ -99,9 +105,12 @@ public class SampleJobTest {
         Job job = Configuration.get().loadJob(jobFile);
 
         machine.setEnabled(true);
-        machine.home();
-        jobProcessor.initialize(job);
-        while (jobProcessor.next());
+        machine.execute(() -> {
+            machine.home();
+            jobProcessor.initialize(job);
+            while (jobProcessor.next());
+            return null;
+        });
         // camera.stopContinuousCapture(encoder);
         // encoder.finish();
     }

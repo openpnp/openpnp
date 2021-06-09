@@ -22,10 +22,12 @@ package org.openpnp.machine.reference.wizards;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
@@ -39,9 +41,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JCheckBox;
-import javax.swing.UIManager;
-import java.awt.Color;
 
 public class ReferenceNozzleTipConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzleTip nozzleTip;
@@ -61,6 +60,11 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JLabel lblLowDiameter;
     private JTextField textFieldLowDiameter;
     private JCheckBox chckbxPushAndDragAllowed;
+    private JPanel panelPartDimensions;
+    private JLabel lblMaxPartHeight;
+    private JTextField maxPartHeight;
+    private JLabel lblMaxPartDiameter;
+    private JTextField maxPartDiameter;
 
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
@@ -71,7 +75,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -90,7 +94,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         contentPanel.add(panelDwellTime);
         panelDwellTime.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -122,11 +126,11 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         panelDwellTime.add(lblDwellTime, cc.xywh(2, 6, 5, 1));
 
         panelPushAndDrag = new JPanel();
-        panelPushAndDrag.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Push and Drag Usage", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelPushAndDrag.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Push and Drag Usage", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPushAndDrag);
         panelPushAndDrag.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -145,7 +149,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblLowDiameter = new JLabel("Lowest Outside Diameter");
+        lblLowDiameter = new JLabel("Outside Diameter");
         lblLowDiameter.setToolTipText("Outside diameter of the nozzle tip at the lowest ~0.75mm.");
         panelPushAndDrag.add(lblLowDiameter, "2, 4, right, default");
         
@@ -159,9 +163,49 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         
         chckbxPushAndDragAllowed = new JCheckBox("");
         panelPushAndDrag.add(chckbxPushAndDragAllowed, "4, 2");
-        
+
+        panelPartDimensions= new JPanel();
+        panelPartDimensions.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
+                "Part Dimensions", TitledBorder.LEADING, TitledBorder.TOP, null));
+        contentPanel.add(panelPartDimensions);
+
+        panelPartDimensions.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
+        lblMaxPartDiameter = new JLabel("Max. Part Diameter");
+        lblMaxPartDiameter.setToolTipText(
+                "Maximum diameter/diagonal of parts picked with this nozzle tip. ");
+        panelPartDimensions.add(lblMaxPartDiameter, "2, 2, right, default");
+
+        maxPartDiameter = new JTextField();
+        panelPartDimensions.add(maxPartDiameter, "4, 2, fill, default");
+        maxPartDiameter.setColumns(10);
+
+        lblMaxPartHeight = new JLabel("Max. Part Height");
+        lblMaxPartHeight.setToolTipText(
+                "Maximum part heights picked with this nozzle tip. Used for dynamic safe Z, if part height is unknown.");
+        panelPartDimensions.add(lblMaxPartHeight, "2, 4, right, default");
+
+        maxPartHeight = new JTextField();
+        panelPartDimensions.add(maxPartHeight, "4, 4, fill, default");
+        maxPartHeight.setColumns(10);
     }
-    
 
     @Override
     public void createBindings() {
@@ -169,20 +213,24 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         LengthConverter lengthConverter = new LengthConverter();
 
         addWrappedBinding(nozzleTip, "name", nameTf, "text");
-        
+
         addWrappedBinding(nozzleTip, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
         addWrappedBinding(nozzleTip, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
-        
+
         addWrappedBinding(nozzleTip, "diameterLow", textFieldLowDiameter, "text", lengthConverter);
-        
+
         addWrappedBinding(nozzleTip, "pushAndDragAllowed", chckbxPushAndDragAllowed, "selected");
-        
+
+        addWrappedBinding(nozzleTip, "maxPartDiameter", maxPartDiameter, "text", lengthConverter);
+        addWrappedBinding(nozzleTip, "maxPartHeight", maxPartHeight, "text", lengthConverter);
+
         ComponentDecorators.decorateWithAutoSelect(nameTf);
-        
+
         ComponentDecorators.decorateWithAutoSelect(pickDwellTf);
         ComponentDecorators.decorateWithAutoSelect(placeDwellTf);
-        
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLowDiameter);
 
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLowDiameter);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxPartDiameter);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxPartHeight);
     }
 }

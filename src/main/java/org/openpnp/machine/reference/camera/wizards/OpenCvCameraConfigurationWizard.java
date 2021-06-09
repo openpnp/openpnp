@@ -44,6 +44,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.camera.OpenCvCamera;
 import org.openpnp.machine.reference.camera.OpenCvCamera.OpenCvCaptureProperty;
 import org.openpnp.machine.reference.camera.OpenCvCamera.OpenCvCapturePropertyValue;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -70,15 +71,21 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        panelGeneral.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblDeviceId = new JLabel("USB Device Index");
         panelGeneral.add(lblDeviceId, "2, 2, right, default");
@@ -92,35 +99,25 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
         lbluseFor_di = new JLabel("(physical camera to use)");
         panelGeneral.add(lbluseFor_di, "6, 2");
 
-        lblFps = new JLabel("FPS");
-        panelGeneral.add(lblFps, "2, 4, right, default");
-
-        fpsTextField = new JTextField();
-        panelGeneral.add(fpsTextField, "4, 4");
-        fpsTextField.setColumns(10);
-
-        lbluseFor_fps = new JLabel("(refresh rate)");
-        panelGeneral.add(lbluseFor_fps, "6, 4");
-
         lblPreferredWidth = new JLabel("Preferred Width");
-        panelGeneral.add(lblPreferredWidth, "2, 6, right, default");
+        panelGeneral.add(lblPreferredWidth, "2, 4, right, default");
 
         textFieldPreferredWidth = new JTextField();
-        panelGeneral.add(textFieldPreferredWidth, "4, 6, fill, default");
+        panelGeneral.add(textFieldPreferredWidth, "4, 4, fill, default");
         textFieldPreferredWidth.setColumns(10);
 
         lbluseFor_w = new JLabel("(Use 0 for native resolution)");
-        panelGeneral.add(lbluseFor_w, "6, 6");
+        panelGeneral.add(lbluseFor_w, "6, 4");
 
         lblPreferredHeight = new JLabel("Preferred Height");
-        panelGeneral.add(lblPreferredHeight, "2, 8, right, default");
+        panelGeneral.add(lblPreferredHeight, "2, 6, right, default");
 
         textFieldPreferredHeight = new JTextField();
-        panelGeneral.add(textFieldPreferredHeight, "4, 8, fill, default");
+        panelGeneral.add(textFieldPreferredHeight, "4, 6, fill, default");
         textFieldPreferredHeight.setColumns(10);
 
         lbluseFor_h = new JLabel("(Use 0 for native resolution)");
-        panelGeneral.add(lbluseFor_h, "6, 8");
+        panelGeneral.add(lbluseFor_h, "6, 6");
 
         panel = new JPanel();
         panel.setBorder(new TitledBorder(null, "Properties (Experimental)", TitledBorder.LEADING,
@@ -285,13 +282,11 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(camera, "preferredWidth", textFieldPreferredWidth, "text", intConverter);
         addWrappedBinding(camera, "preferredHeight", textFieldPreferredHeight, "text",
                 intConverter);
-        addWrappedBinding(camera, "fps", fpsTextField, "text", intConverter);
         // Should always be last so that it doesn't trigger multiple camera reloads.
         addWrappedBinding(camera, "deviceIndex", comboBoxDeviceIndex, "selectedItem");
 
         ComponentDecorators.decorateWithAutoSelect(textFieldPreferredWidth);
         ComponentDecorators.decorateWithAutoSelect(textFieldPreferredHeight);
-        ComponentDecorators.decorateWithAutoSelect(fpsTextField);
         ComponentDecorators.decorateWithAutoSelect(propertyValueTf);
     }
     
@@ -309,8 +304,9 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
         camera.getProperties().clear();
         camera.getProperties().addAll(this.properties);
         if (camera.isDirty() || dirty) {
-            camera.setDeviceIndex(camera.getDeviceIndex());
-            dirty = false;
+            UiUtils.messageBoxOnException(() -> {
+                camera.reinitialize(); 
+            });
         }
     }
     
@@ -327,8 +323,6 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
         }
     };
 
-
-
     private JComboBox comboBoxDeviceIndex;
     private JLabel lblPreferredWidth;
     private JLabel lblPreferredHeight;
@@ -337,9 +331,6 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
     private JLabel lbluseFor_di;
     private JLabel lbluseFor_w;
     private JLabel lbluseFor_h;
-    private JLabel lblFps;
-    private JTextField fpsTextField;
-    private JLabel lbluseFor_fps;
     private JPanel panel;
     private JLabel lblProperty;
     private JLabel lblValue;

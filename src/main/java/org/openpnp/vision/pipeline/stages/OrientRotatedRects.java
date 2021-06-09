@@ -16,7 +16,8 @@ import org.simpleframework.xml.Attribute;
 public class OrientRotatedRects extends CvStage {
     public enum Orientation {
         Landscape,
-        Portrait
+        Portrait,
+        SnapToAngle,
     }
     
     @Attribute(required = false)
@@ -28,6 +29,10 @@ public class OrientRotatedRects extends CvStage {
     
     @Attribute(required = false)
     private boolean negateAngle = false;
+    
+    @Attribute(required = false)
+    @Property(description="Expected angle during perfect pick operation")
+    private int snapAngle = 0;
     
     public String getRotatedRectsStageName() {
         return rotatedRectsStageName;
@@ -52,14 +57,22 @@ public class OrientRotatedRects extends CvStage {
     public void setNegateAngle(boolean negateAngle) {
         this.negateAngle = negateAngle;
     }
-
+    
+    public void setSnapAngle(int snapAngle) {
+    	this.snapAngle = snapAngle;
+    }
+    
+    public int getSnapAngle() {
+    	return this.snapAngle;
+    }
+    
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         if (rotatedRectsStageName == null || rotatedRectsStageName.trim().equals("")) {
             return null;
         }
         
-        Object model = pipeline.getResult(rotatedRectsStageName).model;
+        Object model = pipeline.getExpectedResult(rotatedRectsStageName).model;
         
         if (model == null) {
             return null;
@@ -93,6 +106,18 @@ public class OrientRotatedRects extends CvStage {
             r2.size.height = r2.size.width;
             r2.size.width = tmp;
             r2.angle -= 90;
+        }
+        if(orientation == Orientation.SnapToAngle){
+        	double angle = (r2.angle + 360) % 90.0;
+        	if(angle > 45) {
+        		angle -= 90;
+        	}
+        	else {
+                double tmp = r2.size.height;
+                r2.size.height = r2.size.width;
+                r2.size.width = tmp;
+        	}
+        	r2.angle = angle + snapAngle;
         }
         if (negateAngle) {
             r2.angle = -r2.angle;

@@ -30,6 +30,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.camera.Webcams;
+import org.openpnp.util.UiUtils;
 
 import com.github.sarxos.webcam.WebcamDiscoveryEvent;
 import com.github.sarxos.webcam.WebcamDiscoveryListener;
@@ -54,7 +55,7 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
@@ -128,4 +129,11 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
         updateList();
     }
 
+    @Override
+    protected void saveToModel() {
+        super.saveToModel();
+        UiUtils.messageBoxOnException(() -> {
+            camera.reinitialize(); 
+        });
+    }
 }

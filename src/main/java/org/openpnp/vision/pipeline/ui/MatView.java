@@ -5,6 +5,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JComponent;
@@ -13,6 +15,8 @@ import org.opencv.core.Mat;
 import org.openpnp.util.OpenCvUtils;
 
 public class MatView extends JComponent {
+    static final boolean HIGH_QUALITY_RENDERING = true;
+
     private BufferedImage image;
 
     public MatView() {
@@ -118,6 +122,20 @@ public class MatView extends JComponent {
 
         Graphics2D g2d = (Graphics2D) g;
 
-        g2d.drawImage(image, imageX, imageY, (int) scaledWidth, (int) scaledHeight, null);
+        if (HIGH_QUALITY_RENDERING) {
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            AffineTransform t = new AffineTransform();
+            double scaleW = ((double)scaledWidth)/image.getWidth();
+            double scaleH = ((double)scaledHeight)/image.getHeight();
+            // Scaled
+            t.translate(imageX, imageY);
+            t.scale(scaleW, scaleH);
+            g2d.drawImage(image, t, null);
+        }
+        else {
+            g2d.drawImage(image, imageX, imageY, (int) scaledWidth, (int) scaledHeight, null);
+        }
     }
 }

@@ -33,6 +33,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.neoden4.Neoden4Camera;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -52,29 +53,27 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
-        		FormSpecs.RELATED_GAP_COLSPEC,
-        		FormSpecs.DEFAULT_COLSPEC,
-        		FormSpecs.RELATED_GAP_COLSPEC,
-        		FormSpecs.DEFAULT_COLSPEC,
-        		FormSpecs.RELATED_GAP_COLSPEC,
-        		FormSpecs.DEFAULT_COLSPEC,
-        		FormSpecs.RELATED_GAP_COLSPEC,
-        		FormSpecs.DEFAULT_COLSPEC,
-        		FormSpecs.RELATED_GAP_COLSPEC,
-        		FormSpecs.DEFAULT_COLSPEC,
-        		FormSpecs.RELATED_GAP_COLSPEC,
-        		FormSpecs.DEFAULT_COLSPEC,},
-        	new RowSpec[] {
-        		FormSpecs.RELATED_GAP_ROWSPEC,
-        		FormSpecs.DEFAULT_ROWSPEC,
-        		FormSpecs.RELATED_GAP_ROWSPEC,
-        		FormSpecs.DEFAULT_ROWSPEC,
-        		FormSpecs.RELATED_GAP_ROWSPEC,
-        		FormSpecs.DEFAULT_ROWSPEC,
-        		FormSpecs.RELATED_GAP_ROWSPEC,
-        		FormSpecs.DEFAULT_ROWSPEC,}));
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblIP = new JLabel("Camera IP");
         panelGeneral.add(lblIP, "2, 2, right, default");
@@ -112,21 +111,11 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
         
         lbluseForTimeout = new JLabel("(millisecs)");
         panelGeneral.add(lbluseForTimeout, "6, 6");
-
-        lblFps = new JLabel("FPS");
-        panelGeneral.add(lblFps, "2, 8, right, default");
-
-        fpsTextField = new JTextField();
-        panelGeneral.add(fpsTextField, "4, 8");
-        fpsTextField.setColumns(10);
-
-        lbluseFor_fps = new JLabel("(refresh rate)");
-        panelGeneral.add(lbluseFor_fps, "6, 8");
                 
         panelImage = new JPanel();
         contentPanel.add(panelImage);
         panelImage.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), 
-        		"Image settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        		"Image settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelImage.setLayout(new FormLayout(new ColumnSpec[] {
         		FormSpecs.RELATED_GAP_COLSPEC,
         		FormSpecs.DEFAULT_COLSPEC,
@@ -209,7 +198,6 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
         addWrappedBinding(camera, "hostPort", cameraPortTextField, "text", intConverter);
-        addWrappedBinding(camera, "fps", fpsTextField, "text", intConverter);
         addWrappedBinding(camera, "cameraId", cameraIDTextField, "text", intConverter);
         addWrappedBinding(camera, "width", imageWidthTextField, "text", intConverter);
         addWrappedBinding(camera, "height", imageHeightTextField, "text", intConverter);
@@ -235,16 +223,15 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
     protected void saveToModel() {
         super.saveToModel();
         if (camera.isDirty()) {
-            camera.setHostIP(camera.getHostIP());
+            UiUtils.messageBoxOnException(() -> {
+                camera.reinitialize(); 
+            });
         }
     }
 
     private JLabel lblIP;
     private JTextField ipTextField;
-    private JLabel lblFps;
-    private JTextField fpsTextField;
     private JLabel lbluseFor_ip;
-    private JLabel lbluseFor_fps;
     private JPanel panelImage;
     private JLabel lblImageWidth;
     private JLabel lblImageHeight;

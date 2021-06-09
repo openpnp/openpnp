@@ -34,9 +34,15 @@ import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.spi.Camera;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 
-import com.l2fprod.common.propertysheet.*;
+import com.l2fprod.common.propertysheet.Property;
+import com.l2fprod.common.propertysheet.PropertySheetPanel;
+import com.l2fprod.common.propertysheet.PropertySheetTableModel;
+import com.l2fprod.common.swing.renderer.DefaultCellRenderer;
 
 public class PipelinePanel extends JPanel {
     private final CvPipelineEditor editor;
@@ -154,7 +160,16 @@ public class PipelinePanel extends JPanel {
     }
     
     public void initializeFocus() {
-    	stagesTable.grabFocus();
+        stagesTable.grabFocus();
+        try {
+            CvPipeline pipeline = editor.getPipeline();
+            Camera camera = (Camera) pipeline.getProperty("camera");
+            if (camera != null) {
+                MovableUtils.fireTargetedUserAction(camera);
+            }
+        }
+        catch (Exception e) {
+        }
     }
 
     public void onStagePropertySheetValueChanged(Object aValue, int row, int column) {
@@ -181,6 +196,9 @@ public class PipelinePanel extends JPanel {
             try {
                 propertySheetPanel.setBeanInfo(stage.getBeanInfo());
                 propertySheetPanel.readFromObject(stage);
+                // Set the Object.class DefaultCellRenderer, it might have been customized in a previously selected stage.
+                pipelinePropertySheetTable.getRendererRegistry().registerRenderer(Object.class, new DefaultCellRenderer());
+                stage.customizePropertySheet(pipelinePropertySheetTable, editor.getPipeline());
             }
             catch (Exception ex) {
                 ex.printStackTrace();

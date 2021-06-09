@@ -30,11 +30,15 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     @Element(required = false)
     protected SimulatedCommunications simulated = new SimulatedCommunications();
 
+    public enum CommunicationsType {
+        serial, // lower case for legacy support.
+        tcp
+    }
     @Attribute(required = false, name = "communications")
-    protected String communicationsType = "serial";
+    protected CommunicationsType communicationsType = CommunicationsType.serial;
     
     @Attribute(required = false)
-    protected boolean connectionKeepAlive = true;
+    protected boolean connectionKeepAlive = false;
 
     /**
      * TODO The following properties are for backwards compatibility and can be removed after 2019-07-15. 
@@ -110,16 +114,18 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     }
 
     public void setMotionControlType(MotionControlType motionControlType) {
+        Object oldValue = this.motionControlType;
         this.motionControlType = motionControlType;
+        firePropertyChange("motionControlType", oldValue, motionControlType);
     }
 
-    public String getCommunicationsType() {
+    public CommunicationsType getCommunicationsType() {
         return communicationsType;
     }
 
-    public void setCommunicationsType(String communicationsType) {
+    public void setCommunicationsType(CommunicationsType communicationsType) {
         // If the communications type is changing we need to disconnect the old one first.
-        if (communicationsType == null || !communicationsType.equals(this.communicationsType)) {
+        if (communicationsType == null || communicationsType != this.communicationsType) {
             try {
                 disconnect();
             }
@@ -135,7 +141,9 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     }
     
     public void setConnectionKeepAlive(boolean connectionKeepAlive) {
-    	this.connectionKeepAlive = connectionKeepAlive;
+        Object oldValue = this.connectionKeepAlive;
+        this.connectionKeepAlive = connectionKeepAlive;
+        firePropertyChange("connectionKeepAlive", oldValue, connectionKeepAlive);
     }
 
     public boolean isInSimulationMode() {
@@ -151,10 +159,11 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
             return simulated;
         }
         switch (communicationsType) {
-            case "serial": {
+            case serial: {
                 return serial;
             }
-            case "tcp": {
+            case tcp: {
+                tcp.setDriver(this);
                 return tcp;
             }
             default: {
@@ -185,7 +194,9 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     }
 
     public void setFlowControl(FlowControl flowControl) {
+        Object oldValue = this.flowControl;
         serial.setFlowControl(flowControl);
+        firePropertyChange("flowControl", oldValue, flowControl);
     }
 
     public DataBits getDataBits() {

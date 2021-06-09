@@ -19,9 +19,8 @@
 
 package org.openpnp.machine.reference.camera.wizards;
 
-import java.awt.Color;
-
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -32,6 +31,7 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
@@ -57,6 +57,12 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
     private JLabel lblY;
     private JLabel lblZ;
     private JLabel lblRotation;
+    private JLabel lblCameraWidth;
+    private JTextField width;
+    private JLabel lblHeight;
+    private JTextField height;
+    private JLabel lblFocalBlur;
+    private JCheckBox simulateFocalBlur;
 
     public SimulatedUpCameraConfigurationWizard(SimulatedUpCamera camera) {
         this.camera = camera;
@@ -64,10 +70,10 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -80,45 +86,78 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
+        lblCameraWidth = new JLabel("Width");
+        panelGeneral.add(lblCameraWidth, "2, 2, right, default");
+        
+        width = new JTextField();
+        panelGeneral.add(width, "4, 2, fill, default");
+        width.setColumns(10);
+        
+        lblHeight = new JLabel("Height");
+        panelGeneral.add(lblHeight, "2, 4, right, default");
+        
+        height = new JTextField();
+        panelGeneral.add(height, "4, 4, fill, default");
+        height.setColumns(10);
+        
+        lblFocalBlur = new JLabel("Simulate Focal Blur?");
+        lblFocalBlur.setToolTipText("Simulate focal blur in order to test Auto Focus. This is very slow!");
+        panelGeneral.add(lblFocalBlur, "2, 6, right, default");
+        
+        simulateFocalBlur = new JCheckBox("");
+        panelGeneral.add(simulateFocalBlur, "4, 6");
+        
         lblX = new JLabel("X");
-        panelGeneral.add(lblX, "4, 2, center, default");
+        panelGeneral.add(lblX, "4, 8, center, default");
         
         lblY = new JLabel("Y");
-        panelGeneral.add(lblY, "6, 2, center, default");
+        panelGeneral.add(lblY, "6, 8, center, default");
         
         lblZ = new JLabel("Z");
-        panelGeneral.add(lblZ, "8, 2, center, default");
+        panelGeneral.add(lblZ, "8, 8, center, default");
         
         lblRotation = new JLabel("Rotation");
-        panelGeneral.add(lblRotation, "10, 2, center, default");
+        panelGeneral.add(lblRotation, "10, 8, center, default");
         
         lblErrorOffsets = new JLabel("Error Offsets");
-        panelGeneral.add(lblErrorOffsets, "2, 4, right, default");
+        panelGeneral.add(lblErrorOffsets, "2, 10, right, default");
         
         errorOffsetsX = new JTextField();
-        panelGeneral.add(errorOffsetsX, "4, 4, fill, default");
-        errorOffsetsX.setColumns(8);
+        panelGeneral.add(errorOffsetsX, "4, 10, fill, default");
+        errorOffsetsX.setColumns(10);
         
         errorOffsetsY = new JTextField();
-        panelGeneral.add(errorOffsetsY, "6, 4, fill, default");
-        errorOffsetsY.setColumns(8);
+        panelGeneral.add(errorOffsetsY, "6, 10, fill, default");
+        errorOffsetsY.setColumns(10);
         
         errorOffsetsZ = new JTextField();
-        panelGeneral.add(errorOffsetsZ, "8, 4, fill, default");
-        errorOffsetsZ.setColumns(8);
+        panelGeneral.add(errorOffsetsZ, "8, 10, fill, default");
+        errorOffsetsZ.setColumns(10);
         
         errorOffsetsRotation = new JTextField();
-        panelGeneral.add(errorOffsetsRotation, "10, 4, fill, default");
-        errorOffsetsRotation.setColumns(8);
+        panelGeneral.add(errorOffsetsRotation, "10, 10, fill, default");
+        errorOffsetsRotation.setColumns(10);
     }
 
     @Override
     public void createBindings() {
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        IntegerConverter intConverter = new IntegerConverter();
         LengthConverter lengthConverter = new LengthConverter();
+
+        addWrappedBinding(camera, "width", width, "text", intConverter);
+        addWrappedBinding(camera, "height", height, "text", intConverter);
+
+        addWrappedBinding(camera, "simulateFocalBlur", simulateFocalBlur, "selected");
 
         MutableLocationProxy errorOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, camera, "errorOffsets", errorOffsets,
@@ -129,6 +168,8 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         addWrappedBinding(errorOffsets, "rotation", errorOffsetsRotation, "text",
                 doubleConverter);
         
+        ComponentDecorators.decorateWithAutoSelect(width);
+        ComponentDecorators.decorateWithAutoSelect(height);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(errorOffsetsX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(errorOffsetsY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(errorOffsetsZ);

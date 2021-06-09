@@ -3,6 +3,8 @@ package org.openpnp.gui.support;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+
 public class Icons {
     public static Icon add = getIcon("/icons/general-add.svg");
     public static Icon delete = getIcon("/icons/general-remove.svg");
@@ -27,11 +29,15 @@ public class Icons {
     public static Icon centerCameraMoveNext = getIcon("/icons/position-camera-move-next.svg");
     public static Icon centerTool = getIcon("/icons/position-nozzle.svg");
     public static Icon centerToolNoSafeZ = getIcon("/icons/position-nozzle-no-safe-z.svg");
+    public static Icon contactProbeNozzle = getIcon("/icons/contact-probe-nozzle.svg");
     public static Icon centerPin = getIcon("/icons/position-actuator.svg");
     public static Icon centerPinNoSafeZ = getIcon("/icons/position-actuator-no-safe-z.svg");
     public static Icon centerCameraOnFeeder = getIcon("/icons/position-camera-on-feeder.svg");
     public static Icon centerNozzleOnFeeder = getIcon("/icons/position-nozzle-on-feeder.svg");
 
+    public static Icon colorFalse = getIcon("/icons/color-false.svg");
+    public static Icon colorTrue = getIcon("/icons/color-true.svg");
+    
     public static Icon start = getIcon("/icons/control-start.svg");
     public static Icon pause = getIcon("/icons/control-pause.svg");
     public static Icon step = getIcon("/icons/control-next.svg");
@@ -99,10 +105,16 @@ public class Icons {
     public static Icon dismiss = getIcon("/icons/dismiss.svg");
     public static Icon undo = getIcon("/icons/undo.svg");
     public static Icon info = getIcon("/icons/info.svg");
-    
+
+    public static Icon nozzleSingle = getIcon("/icons/nozzle-single.svg", 96, 96);
+    public static Icon nozzleDualNeg = getIcon("/icons/nozzle-neg.svg", 96, 96);
+    public static Icon nozzleDualCam = getIcon("/icons/nozzle-cam.svg", 96, 96);
+
+    public static Icon milestone = getIcon("/icons/milestone.svg", 96, 96);
+
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
-            return new SvgIcon(Icons.class.getResource(resourceName), width, height);
+            return new FlatSVGIcon(resourceName.substring(1), width, height);
         }
         else {
             return new ImageIcon(Icons.class.getResource(resourceName));

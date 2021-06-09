@@ -19,10 +19,15 @@
 
 package org.openpnp.model;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -34,6 +39,8 @@ import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.components.ThemeInfo;
+import org.openpnp.gui.components.ThemeSettingsPanel;
 import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.NanosecondTime;
@@ -62,6 +69,9 @@ public class Configuration extends AbstractModelObject {
 
     private static final String PREF_UNITS = "Configuration.units";
     private static final String PREF_UNITS_DEF = "Millimeters";
+
+    private static final String PREF_THEME_INFO = "Configuration.theme.info";
+    private static final String PREF_THEME_FONT_SIZE = "Configuration.theme.fontSize";
 
     private static final String PREF_LENGTH_DISPLAY_FORMAT = "Configuration.lengthDisplayFormat";
     private static final String PREF_LENGTH_DISPLAY_FORMAT_DEF = "%.3f";
@@ -170,6 +180,50 @@ public class Configuration extends AbstractModelObject {
     public void setLocale(Locale locale) {
         prefs.put(PREF_LOCALE_LANG, locale.getLanguage());
         prefs.put(PREF_LOCALE_COUNTRY, locale.getCountry());
+    }
+
+    public ThemeInfo getThemeInfo() {
+        byte[] serializedSettings = prefs.getByteArray(PREF_THEME_INFO, null);
+        if (serializedSettings != null) {
+            try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
+                ThemeInfo theme = (ThemeInfo) in.readObject();
+                return theme;
+            } catch (IOException | ClassNotFoundException ignore) {
+            }
+        }
+        return null;
+    }
+
+    public void setThemeInfo(ThemeInfo theme) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(theme);
+            out.flush();
+            prefs.putByteArray(PREF_THEME_INFO, bos.toByteArray());
+        } catch (IOException ignore) {
+        }
+    }
+
+    public ThemeSettingsPanel.FontSize getFontSize() {
+        byte[] serializedSettings = prefs.getByteArray(PREF_THEME_FONT_SIZE, null);
+        if (serializedSettings != null) {
+            try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
+                ThemeSettingsPanel.FontSize theme = (ThemeSettingsPanel.FontSize) in.readObject();
+                return theme;
+            } catch (IOException | ClassNotFoundException ignore) {
+            }
+        }
+        return null;
+    }
+
+    public void setFontSize(ThemeSettingsPanel.FontSize fontSize) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(fontSize);
+            out.flush();
+            prefs.putByteArray(PREF_THEME_FONT_SIZE, bos.toByteArray());
+        } catch (IOException ignore) {
+        }
     }
 
     public String getLengthDisplayFormat() {
@@ -347,24 +401,42 @@ public class Configuration extends AbstractModelObject {
     }
 
     public synchronized void save() throws Exception {
+        LocalDateTime now = LocalDateTime.now();
         try {
-            saveMachine(new File(configurationDirectory, "machine.xml"));
+           saveMachine(createBackedUpFile("machine.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving machine.xml (" + e.getMessage() + ")", e);
         }
         try {
-            savePackages(new File(configurationDirectory, "packages.xml"));
+            savePackages(createBackedUpFile("packages.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving packages.xml (" + e.getMessage() + ")", e);
         }
         try {
-            saveParts(new File(configurationDirectory, "parts.xml"));
+            saveParts(createBackedUpFile("parts.xml", now));
         }
         catch (Exception e) {
             throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
         }
+    }
+
+    protected File createBackedUpFile(String fileName, LocalDateTime now) throws Exception {
+        File file = new File(configurationDirectory, fileName);
+        if (file.exists()) {
+            File backupsDirectory = new File(configurationDirectory, "backups");
+            if (System.getProperty("backups") != null) {
+                backupsDirectory = new File(System.getProperty("backups"));
+            }
+
+            File singleBackupDirectory = new File(backupsDirectory, DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss").format(now));
+            singleBackupDirectory.mkdirs();
+            File backupFile = new File(singleBackupDirectory, fileName);
+            Files.copy(Paths.get(file.toURI()), Paths.get(backupFile.toURI()), 
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+        }
+        return file;
     }
 
     public Package getPackage(String id) {

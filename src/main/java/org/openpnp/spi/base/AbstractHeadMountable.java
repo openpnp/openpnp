@@ -6,13 +6,13 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Solutions;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
@@ -42,12 +42,17 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
-                axisX = (AbstractAxis) configuration.getMachine().getAxis(axisXId);
-                axisY = (AbstractAxis) configuration.getMachine().getAxis(axisYId);
-                axisZ = (AbstractAxis) configuration.getMachine().getAxis(axisZId);
-                axisRotation = (AbstractAxis) configuration.getMachine().getAxis(axisRotationId);
+                applyConfiguration(configuration);
             }
         });
+    }
+
+    public void applyConfiguration(Configuration configuration) {
+        Machine machine = configuration.getMachine();
+        axisX = (AbstractAxis) machine.getAxis(axisXId);
+        axisY = (AbstractAxis) machine.getAxis(axisYId);
+        axisZ = (AbstractAxis) machine.getAxis(axisZId);
+        axisRotation = (AbstractAxis) machine.getAxis(axisRotationId);
     }
 
     @Override
@@ -206,10 +211,16 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         return safeZ[0];
     }
 
+    @Override
     public boolean isInSafeZZone(Length z) throws Exception {
         CoordinateAxis coordAxis = getCoordinateAxisZ();
-        Length rawZ = headMountableToRawZ(coordAxis, z);
-        return coordAxis.isInSafeZone(rawZ);
+        if (coordAxis != null) {
+            Length rawZ = headMountableToRawZ(coordAxis, z);
+            return coordAxis.isInSafeZone(rawZ);
+        }
+        else {
+            return true;
+        }
     }
 
     public void setSafeZ(Length safeZ) {
@@ -281,16 +292,18 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
-        // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
-        // longer be used. It will be removed eventually:
-        // https://github.com/openpnp/openpnp/issues/255
-        // In the mean time, since Double.NaN would cause a problem for transformations, we shortcut
-        // it here by replacing any NaN values with the current value from the axes.
-        location = location.derive(currentLocation, 
-                Double.isNaN(location.getX()), 
-                Double.isNaN(location.getY()), 
-                Double.isNaN(location.getZ()), 
-                Double.isNaN(location.getRotation())); 
+        if (currentLocation != null) {
+            // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
+            // longer be used. It will be removed eventually:
+            // https://github.com/openpnp/openpnp/issues/255
+            // In the mean time, since Double.NaN would cause a problem for transformations, we shortcut
+            // it here by replacing any NaN values with the current value from the axes.
+            location = location.derive(currentLocation, 
+                    Double.isNaN(location.getX()), 
+                    Double.isNaN(location.getY()), 
+                    Double.isNaN(location.getZ()), 
+                    Double.isNaN(location.getRotation())); 
+        }
         // Subtract the Head offset.
         location = location.subtract(getHeadOffsets());
         return location;
@@ -388,7 +401,13 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                             .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
                 }
             }
-        }    
+            else if ((axis instanceof ReferenceVirtualAxis) 
+                && (Arrays.asList(options).contains(LocationOption.ReplaceVirtual))) {
+                // Replace the virtual axis coordinate with zero
+                desiredRawLocation = desiredRawLocation
+                        .put(new AxesLocation(axis, new Length(0.0, LengthUnit.Millimeters)));
+            }
+        }
         // Now transform it forward, NOT applying any options, i.e. when a moveTo() is later made, it will effectively reverse 
         // the option-less transformation and end up in the desired approximative location. 
         Location headApproximativeLocation = toTransformed(desiredRawLocation);

@@ -1,6 +1,7 @@
 package org.openpnp.gui.support;
 
 import org.openpnp.model.AbstractModelObject;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 
@@ -32,6 +33,12 @@ public class MutableLocationProxy extends AbstractModelObject {
     }
 
     public void setLengthX(Length l) {
+        if (l == null) {
+            return;
+        }
+        if (location == null) {
+            location = new Location(l.getUnits());
+        }
         if (l.getUnits() != location.getUnits()) {
             location = location.convertToUnits(l.getUnits());
             location = location.derive(l.getValue(), null, null, null);
@@ -55,6 +62,12 @@ public class MutableLocationProxy extends AbstractModelObject {
     }
 
     public void setLengthY(Length l) {
+        if (l == null) {
+            return;
+        }
+        if (location == null) {
+            location = new Location(l.getUnits());
+        }
         if (l.getUnits() != location.getUnits()) {
             location = location.convertToUnits(l.getUnits());
             location = location.derive(null, l.getValue(), null, null);
@@ -78,6 +91,12 @@ public class MutableLocationProxy extends AbstractModelObject {
     }
 
     public void setLengthZ(Length l) {
+        if (l == null) {
+            return;
+        }
+        if (location == null) {
+            location = new Location(l.getUnits());
+        }
         if (l.getUnits() != location.getUnits()) {
             location = location.convertToUnits(l.getUnits());
             location = location.derive(null, null, l.getValue(), null);
@@ -88,7 +107,7 @@ public class MutableLocationProxy extends AbstractModelObject {
         }
         else {
             location = location.derive(null, null, l.getValue(), null);
-            firePropertyChange("lengthZ", null, getLengthY());
+            firePropertyChange("lengthZ", null, getLengthZ());
             firePropertyChange("location", null, getLocation());
         }
     }
@@ -101,6 +120,12 @@ public class MutableLocationProxy extends AbstractModelObject {
     }
 
     public void setRotation(Double rotation) {
+        if (rotation == null) {
+            return;
+        }
+        if (location == null) {
+            location = new Location(Configuration.get().getSystemUnits());
+        }
         location = location.derive(null, null, null, rotation);
         firePropertyChange("rotation", null, getRotation());
         firePropertyChange("location", null, getLocation());

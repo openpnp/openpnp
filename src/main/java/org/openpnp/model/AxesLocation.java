@@ -32,7 +32,6 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.CoordinateAxis;
@@ -202,8 +201,10 @@ public class AxesLocation {
     public AxesLocation(BiFunction<Double, Double, Double> function, AxesLocation... axesLocation) {
         location = new LinkedHashMap<>();
         for (AxesLocation oneAxesLocation : axesLocation) {
-            for (Axis axis : oneAxesLocation.getAxes()) {
-                location.merge(axis, oneAxesLocation.getCoordinate(axis), function);
+            if (oneAxesLocation != null) {
+                for (Axis axis : oneAxesLocation.getAxes()) {
+                    location.merge(axis, oneAxesLocation.getCoordinate(axis), function);
+                }
             }
         }
     }

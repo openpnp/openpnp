@@ -223,6 +223,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void feed(Nozzle nozzle) throws Exception {
         setFeedCount(getFeedCount() + 1);
 
+        // Throw an exception when the feeder runs out of parts
         if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
 			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
 		}
@@ -283,28 +284,21 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
             pipeline.process();
     
-            try {
-                MainFrame.get().getCameraViews().getCameraView(camera)
-                        .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+            if (MainFrame.get() != null) {
+                try {
+                    MainFrame.get().getCameraViews().getCameraView(camera)
+                            .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
+                }
+                catch (Exception e) {
+                    // if we aren't running in the UI this will fail, and that's okay
+                }
             }
-            catch (Exception e) {
-                // if we aren't running in the UI this will fail, and that's okay
-            }
-    
+
             // Grab the results
-            Object result = null;
-            List<CvStage.Result.Circle> results = null;
-            try {
-                result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;            
-                results = (List<CvStage.Result.Circle>) result;
-            }
-            catch (ClassCastException e) {
-                throw new Exception("Unrecognized result type (should be Circles): " + result);
-            }
-            if (results.isEmpty()) {
-                throw new Exception("Feeder " + getName() + ": No tape holes found.");
-            }
-    
+            List<CvStage.Result.Circle> results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+                    .getExpectedListModel(CvStage.Result.Circle.class, 
+                            new Exception("Feeder " + getName() + ": No tape holes found."));            
+
             // Find the closest result
             results.sort((a, b) -> {
                 Double da = VisionUtils.getPixelLocation(camera, a.x, a.y)
@@ -319,7 +313,48 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             return holeLocation;
         }
     }
+   
+    /**
+     * Returns if the feeder can take back a part.
+     * Makes the assumption, that after each feed a pick followed,
+     * so the pockets are now empty.
+     */
+    @Override
+    public boolean canTakeBackPart() {
+        if (feedCount > 0 ) {  
+            return true;
+        } else {
+            return false;
+        }
+    }
 
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
+        if (nozzle.getPart() == null) {
+            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+        }
+        if (!nozzle.getPart().equals(getPart())) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+        }
+        if (!canTakeBackPart()) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
+        }
+        
+        // ok, now put the part back on the location of the last pick
+        Location putLocation = getPickLocation();
+        MovableUtils.moveToLocationAtSafeZ(nozzle, putLocation);
+        // put the part back
+        nozzle.place();
+        nozzle.moveToSafeZ();
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
+            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
+        }
+        // change FeedCount
+        setFeedCount(getFeedCount() - 1);
+    }
+        
+    
     public CvPipeline getPipeline() {
         return pipeline;
     }

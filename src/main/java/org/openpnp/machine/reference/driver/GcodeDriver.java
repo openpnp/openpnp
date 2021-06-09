@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ *
+ * This file is part of OpenPnP.
+ *
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ *
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.machine.reference.driver;
 
 import java.io.File;
@@ -9,18 +28,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
@@ -57,7 +73,7 @@ import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.spi.base.AbstractSingleTransformedAxis;
 import org.openpnp.spi.base.AbstractTransformedAxis;
 import org.openpnp.util.NanosecondTime;
-import org.openpnp.util.Triplet;
+import org.openpnp.util.TextUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -97,7 +113,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         ACTUATE_BOOLEAN_COMMAND(true, "Id", "Name", "Index", "BooleanValue", "True", "False"),
         ACTUATE_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATE_STRING_COMMAND(true, "Id", "Name", "Index", "StringValue"),
-        ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index"),
+        ACTUATOR_READ_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue", "Value"),
+        @Deprecated
         ACTUATOR_READ_WITH_DOUBLE_COMMAND(true, "Id", "Name", "Index", "DoubleValue", "IntegerValue"),
         ACTUATOR_READ_REGEX(true);
 
@@ -246,6 +263,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Element(required = false, data=true) 
     String reportedAxes = null; 
 
+    @Element(required = false, data=true)
+    String configuredAxes = null;
+
     @ElementList(required = false, inline = true)
     public ArrayList<Command> commands = new ArrayList<>();
 
@@ -258,7 +278,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     protected List<Axis> axes = null;
 
     private ReaderThread readerThread;
-    boolean disconnectRequested;
+    volatile boolean disconnectRequested;
     protected boolean connected;
     
     static public class Line {
@@ -300,6 +320,19 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Commit
     public void commit() {
         super.commit();
+
+        for (Command command : commands) {
+            if(command.type == CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND) {
+                Command actuatorReadCommand = getExactCommand(
+                        command.headMountableId,
+                        CommandType.ACTUATOR_READ_COMMAND
+                );
+
+                if(actuatorReadCommand == null) {
+                    command.type = CommandType.ACTUATOR_READ_COMMAND;
+                }
+            }
+        }
     }
 
     @Override
@@ -320,6 +353,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public synchronized void connect() throws Exception {
+        disconnectRequested = false;
         getCommunications().connect();
         connected = false;
 
@@ -373,6 +407,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             else {
                 try {
                     sendGcode(getCommand(null, CommandType.DISABLE_COMMAND));
+                    drainCommandQueue(getTimeoutAtMachineSpeed());
                 }
                 catch (Exception e) {
                     // When the connection is lost, we have IO errors. We should still be able to go on
@@ -390,7 +425,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void home(ReferenceMachine machine) throws Exception {
+    public void home(Machine machine) throws Exception {
         // Home is sent with an infinite timeout since it's tough to tell how long it will
         // take.
         String command = getCommand(null, CommandType.HOME_COMMAND);
@@ -436,7 +471,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void setGlobalOffsets(ReferenceMachine machine, AxesLocation axesLocation)
+    public void setGlobalOffsets(Machine machine, AxesLocation axesLocation)
             throws Exception {
         // Compose the command
         String command = getCommand(null, CommandType.SET_GLOBAL_OFFSETS_COMMAND);
@@ -446,7 +481,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             command = substituteVariable(command, "Id", head.getId());
             command = substituteVariable(command, "Name", head.getName());
             boolean isEmpty = true;
-            for (String variable : getAxisVariables(machine)) {
+            for (String variable : getAxisVariables((ReferenceMachine) machine)) {
                 ControllerAxis axis = axesLocation.getAxisByVariable(this, variable);
                 if (axis != null) {
                     if (hasVariable(command, variable)) {
@@ -530,6 +565,26 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         throw new Exception(getName()+" timeout waiting for response to " + command);
     }
 
+    /**
+     * This is similar to the other getCommand calls, except the head mountable id is passed in and it must match
+     * exactly. By passing in null or "*", you will get a command that matches that head mountable id or null.
+     */
+    public Command getExactCommand(String headMountableId, CommandType type) {
+        for (Command c : commands) {
+            if(c.type != type) {
+                continue;
+            }
+
+            if(c.headMountableId != null && c.headMountableId.equals(headMountableId)) {
+                return c;
+            } else if(c.headMountableId == null && headMountableId == null) {
+                return c;
+            }
+        }
+
+        return null;
+    }
+
     public Command getCommand(HeadMountable hm, CommandType type, boolean checkDefaults) {
         // If a HeadMountable is specified, see if we can find a match
         // for both the HeadMountable ID and the command type.
@@ -581,7 +636,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void moveTo(ReferenceHeadMountable hm, MoveToCommand move)
+    public void moveTo(HeadMountable hm, MoveToCommand move)
             throws Exception {
         // Get the axes that are actually moving.
         AxesLocation movedAxesLocation = move.getMovedAxesLocation();
@@ -595,7 +650,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         // Start composing the command, will decide later, whether we actually send it.
         String command = getCommand(hm, CommandType.MOVE_TO_COMMAND);
         if (command == null) {
-            return;
+            if (movedAxesLocation.isEmpty()) {
+                return;
+            }
+            throw new Exception(getName()+" MOVE_TO_COMMAND missing, please use Issues & Solutions to propose proper G-code commands.");
         }
         if (hasVariable(command, "BacklashFeedRate")) {
             throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
@@ -703,8 +761,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return motionPending;
     }
 
+    protected void drainCommandQueue(long timeout) throws InterruptedException {
+        // This does nothing in the plain GcodeDriver. It will be overridden in the GcodeAsyncDriver.
+    }
+
     @Override
-    public void waitForCompletion(ReferenceHeadMountable hm, 
+    public void waitForCompletion(HeadMountable hm,
             CompletionType completionType) throws Exception {
         if (!(completionType.isUnconditionalCoordination() 
                 || isMotionPending())) {
@@ -716,27 +778,31 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     -1 : getTimeoutAtMachineSpeed());
         }
 
-        /*
-         * If moveToCompleteRegex is specified we need to wait until we match the regex in a
-         * response before continuing. We first search the initial responses from the
-         * command for the regex. If it's not found we then collect responses for up to
-         * timeoutMillis while searching the responses for the regex. As soon as it is
-         * matched we continue. If it's not matched within the timeout we throw an
-         * Exception.
-         * 
-         * AFAIK, this was used on TinyG and it is now obsolete with new firmware :  
-         * https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/
-         */
-        String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
-        if (moveToCompleteRegex != null) {
-            receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
-                    -1 : getTimeoutAtMachineSpeed(), 
-                    (responses) -> {
-                throw new Exception("Timed out waiting for move to complete.");
-            });
+        if (completionType.isEnforcingStillstand()) {
+            if (isMotionPending()) {
+                /*
+                 * If moveToCompleteRegex is specified we need to wait until we match the regex in a
+                 * response before continuing. We first search the initial responses from the
+                 * command for the regex. If it's not found we then collect responses for up to
+                 * timeoutMillis while searching the responses for the regex. As soon as it is
+                 * matched we continue. If it's not matched within the timeout we throw an
+                 * Exception.
+                 *
+                 * AFAIK, this was used on TinyG and it is now obsolete with new firmware :
+                 * https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/
+                 */
+                String moveToCompleteRegex = getCommand(hm, CommandType.MOVE_TO_COMPLETE_REGEX);
+                if (moveToCompleteRegex != null) {
+                    receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
+                            -1 : getTimeoutAtMachineSpeed(),
+                            (responses) -> {
+                        throw new Exception("Timed out waiting for move to complete.");
+                    });
+                }
+            }
+            // Remember, we're now standing still.
+            motionPending = false;
         }
-        // Remember, we're now standing still.  
-        motionPending = false;
     }
 
     private boolean containsMatch(List<Line> responses, String regex) {
@@ -749,11 +815,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, boolean on) throws Exception {
+    public void actuate(Actuator actuator, boolean on) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATE_BOOLEAN_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
-        command = substituteVariable(command, "Index", actuator.getIndex());
+        if (actuator instanceof ReferenceActuator) {
+            command = substituteVariable(command, "Index", ((ReferenceActuator)actuator).getIndex());
+        }
         command = substituteVariable(command, "BooleanValue", on);
         command = substituteVariable(command, "True", on ? on : null);
         command = substituteVariable(command, "False", on ? null : on);
@@ -761,52 +829,58 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, double value) throws Exception {
+    public void actuate(Actuator actuator, double value) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATE_DOUBLE_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
-        command = substituteVariable(command, "Index", actuator.getIndex());
+        if (actuator instanceof ReferenceActuator) {
+            command = substituteVariable(command, "Index", ((ReferenceActuator)actuator).getIndex());
+        }
         command = substituteVariable(command, "DoubleValue", value);
         command = substituteVariable(command, "IntegerValue", (int) value);
         sendGcode(command);
     }
 
     @Override
-    public void actuate(ReferenceActuator actuator, String value) throws Exception {
+    public void actuate(Actuator actuator, String value) throws Exception {
         String command = getCommand(actuator, CommandType.ACTUATE_STRING_COMMAND);
         command = substituteVariable(command, "Id", actuator.getId());
         command = substituteVariable(command, "Name", actuator.getName());
-        command = substituteVariable(command, "Index", actuator.getIndex());
+        if (actuator instanceof ReferenceActuator) {
+            command = substituteVariable(command, "Index", ((ReferenceActuator)actuator).getIndex());
+        }
         command = substituteVariable(command, "StringValue", value);
         sendGcode(command);
     }
 
-    private String actuatorRead(ReferenceActuator actuator, Double parameter) throws Exception {
-        /**
+    @Override
+    public String actuatorRead(Actuator actuator, Object parameter) throws Exception {
+        /*
          * The logic here is a little complicated. This is the only driver method that is
-         * not fire and forget. In this case, we need to know if the command was serviced or not 
+         * not fire and forget. In this case, we need to know if the command was serviced or not
          * and throw an Exception if not.
          */
-        String command;
-        if (parameter == null) {
-            command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
-        }
-        else {
-            command = getCommand(actuator, CommandType.ACTUATOR_READ_WITH_DOUBLE_COMMAND);
-        }
+        String command = getCommand(actuator, CommandType.ACTUATOR_READ_COMMAND);
         String regex = getCommand(actuator, CommandType.ACTUATOR_READ_REGEX);
         if (command != null && regex != null) {
             command = substituteVariable(command, "Id", actuator.getId());
             command = substituteVariable(command, "Name", actuator.getName());
-            command = substituteVariable(command, "Index", actuator.getIndex());
+            if (actuator instanceof ReferenceActuator) {
+                command = substituteVariable(command, "Index", ((ReferenceActuator)actuator).getIndex());
+            }
             if (parameter != null) {
-                command = substituteVariable(command, "DoubleValue", parameter);
-                command = substituteVariable(command, "IntegerValue", (int) parameter.doubleValue());
+                if (parameter instanceof Double) { // Backwards compatibility
+                    Double doubleParameter = (Double) parameter;
+                    command = substituteVariable(command, "DoubleValue", doubleParameter);
+                    command = substituteVariable(command, "IntegerValue", (int) doubleParameter.doubleValue());
+                }
+
+                command = substituteVariable(command, "Value", parameter);
             }
             sendGcode(command);
             List<Line> responses = receiveResponses(regex, timeoutMilliseconds, (r) -> {
                 throw new Exception(String.format("Actuator \"%s\" read error: No matching responses found.", actuator.getName()));
-            }); 
+            });
 
             Pattern pattern = Pattern.compile(regex);
             for (Line line : responses) {
@@ -814,15 +888,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 if (matcher.matches()) {
                     Logger.trace("actuatorRead response: {}", line);
                     try {
-                        String s = matcher.group("Value");
-                        return s;
+                        return matcher.group("Value");
                     }
                     catch (IllegalArgumentException e) {
-                        throw new Exception(String.format("Actuator \"%s\" read error: Regex is missing \"Value\" capturing group. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex", 
+                        throw new Exception(String.format("Actuator \"%s\" read error: Regex is missing \"Value\" capturing group. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex",
                                 actuator.getName()), e);
                     }
                     catch (Exception e) {
-                        throw new Exception(String.format("Actuator \"%s\" read error: Failed to parse response. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex", 
+                        throw new Exception(String.format("Actuator \"%s\" read error: Failed to parse response. See https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex",
                                 actuator.getName()), e);
                     }
                 }
@@ -836,13 +909,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public String actuatorRead(ReferenceActuator actuator) throws Exception {
-        return actuatorRead(actuator, null); 
-    }
-
-    @Override
-    public String actuatorRead(ReferenceActuator actuator, double parameter) throws Exception {
-        return actuatorRead(actuator, (Double) parameter);
+    public String actuatorRead(Actuator actuator) throws Exception {
+        return actuatorRead(actuator, null);
     }
 
     public synchronized void disconnect() {
@@ -855,9 +923,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             getCommunications().disconnect();
         }
         catch (Exception e) {
-            Logger.error("disconnect()", e);
+            Logger.error(e, "disconnect()");
         }
-        disconnectRequested = false;
 
         closeGcodeLogger();
     }
@@ -872,7 +939,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             }
         }
         catch (Exception e) {
-            Logger.error("disconnect()", e);
+            Logger.error(e, "disconnect()");
         }
     }
 
@@ -929,7 +996,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             getCommunications().writeLine(command);
         }
         catch (IOException ex) {
-            Logger.error("{} failed to write command {}", getCommunications().getConnectionName(), command);
+            Logger.error(ex, "{} failed to write command {}", getCommunications().getConnectionName(), command);
             disconnect();
             Configuration.get().getMachine().setEnabled(false);
         }
@@ -1102,7 +1169,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     gcodeLogger = new PrintWriter(file.getAbsolutePath());
                 }
                 catch (IOException e) {
-                    Logger.warn("Cannot open Gcode log", e);
+                    Logger.warn(e, "Cannot open Gcode log");
                 }
             }
             if (gcodeLogger != null) {
@@ -1141,8 +1208,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     continue;
                 }
                 catch (IOException e) {
-                    Logger.error("Read error", e);
-                    return;
+                    if (disconnectRequested) {
+                        Logger.trace(e, "Read error while disconnecting");
+                        return;
+                    }
+                    else {
+                        Logger.error(e, "Read error");
+                        return;
+                    }
                 }
                 Line line = new Line(receivedLine);
                 Logger.trace("[{}] << {}", getCommunications().getConnectionName(), line);
@@ -1224,34 +1297,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return true;
     }
 
-    /**
-     * Find matches of variables in the format {Name:Format} and replace them with the specified
-     * value formatted using String.format with the specified Format. Format is optional and
-     * defaults to %s. A null value replaces the variable with "".
-     */
     static protected String substituteVariable(String command, String name, Object value) {
-        if (command == null) {
-            return command;
-        }
-        StringBuffer sb = new StringBuffer();
-        Matcher matcher = Pattern.compile("\\{(\\w+)(?::(.+?))?\\}").matcher(command);
-        while (matcher.find()) {
-            String n = matcher.group(1);
-            if (!n.equals(name)) {
-                continue;
-            }
-            String format = matcher.group(2);
-            if (format == null) {
-                format = "%s";
-            }
-            String v = "";
-            if (value != null) {
-                v = String.format((Locale) null, format, value);
-            }
-            matcher.appendReplacement(sb, v);
-        }
-        matcher.appendTail(sb);
-        return sb.toString();
+        return TextUtils.substituteVar(command, name, value);
     }
 
     /**
@@ -1298,7 +1345,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setMaxFeedRate(int maxFeedRate) {
+        Object oldValue = this.maxFeedRate;
         this.maxFeedRate = maxFeedRate;
+        firePropertyChange("maxFeedRate", oldValue, maxFeedRate);
     }
 
     @Override
@@ -1335,7 +1384,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setRemoveComments(boolean removeComments) {
+        Object oldValue = this.removeComments;
         this.removeComments = removeComments;
+        firePropertyChange("removeComments", oldValue, removeComments);
     }
 
     public boolean isCompressGcode() {
@@ -1343,7 +1394,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setCompressGcode(boolean compressGcode) {
+        Object oldValue = this.compressGcode;
         this.compressGcode = compressGcode;
+        firePropertyChange("compressGcode", oldValue, compressGcode);
     }
 
     public boolean isUsingLetterVariables() {
@@ -1351,7 +1404,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setUsingLetterVariables(boolean usingLetterVariables) {
+        Object oldValue = this.usingLetterVariables;
         this.usingLetterVariables = usingLetterVariables;
+        firePropertyChange("usingLetterVariables", oldValue, usingLetterVariables);
     }
 
     @Override
@@ -1360,7 +1415,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public void setSupportingPreMove(boolean supportingPreMove) {
+        Object oldValue = this.supportingPreMove;
         this.supportingPreMove = supportingPreMove;
+        firePropertyChange("supportingPreMove", oldValue, supportingPreMove);
     }
 
     public boolean isLoggingGcode() {
@@ -1378,6 +1435,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return detectedFirmware;
     }
 
+    public void setDetectedFirmware(String detectedFirmware) {
+        Object oldValue = this.detectedFirmware;
+        this.detectedFirmware = detectedFirmware;
+        firePropertyChange("detectedFirmware", oldValue, detectedFirmware);
+        firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
+    }
+
     public String getReportedAxes() {
         return reportedAxes;
     }
@@ -1386,12 +1450,27 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Object oldValue = this.reportedAxes;
         this.reportedAxes = reportedAxes;
         firePropertyChange("reportedAxes", oldValue, reportedAxes);
+        firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
     }
 
-    public void setDetectedFirmware(String detectedFirmware) {
-        Object oldValue = this.detectedFirmware;
-        this.detectedFirmware = detectedFirmware;
-        firePropertyChange("detectedFirmware", oldValue, detectedFirmware);
+    public String getConfiguredAxes() {
+        return configuredAxes;
+    }
+
+    public void setConfiguredAxes(String configuredAxes) {
+        Object oldValue = this.configuredAxes;
+        this.configuredAxes = configuredAxes;
+        firePropertyChange("configuredAxes", oldValue, configuredAxes);
+        firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
+    }
+
+    public String getFirmwareConfiguration() {
+        return detectedFirmware+"\n\n"
+                +(reportedAxes != null ? reportedAxes : "")+"\n\n"
+                +(configuredAxes != null ? configuredAxes : "");
+    }
+
+    public void setFirmwareConfiguration(String configuredAxes) {
     }
 
     protected void closeGcodeLogger() {
@@ -1415,12 +1494,13 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (!preserveOldValue) {
             setDetectedFirmware(null);
             setReportedAxes(null);
+            setConfiguredAxes(null);
         }
         boolean wasConnected = connected;
         if (!wasConnected) {
             connect();
         }
-        
+
         try {
             sendCommand("M115");
             String firmware = receiveSingleResponse("^FIRMWARE.*");
@@ -1431,6 +1511,23 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 sendCommand("M114");
                 String reportedAxes = receiveSingleResponse(".*[XYZABCDEUVW]:-?\\d+\\.\\d+.*");
                 if (reportedAxes != null) {
+                    if (firmware != null) {
+                        try {
+                            if (getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
+                                sendCommand("M584");
+                                String axisConfig = receiveSingleResponse("^Driver assignments:.*");
+                                if (axisConfig != null) {
+                                    setConfiguredAxes(axisConfig);
+                                }
+                            }
+                            else {
+                                setConfiguredAxes(null);
+                            }
+                        }
+                        catch (Exception e) {
+                            // ignore
+                        }
+                    }
                     setReportedAxes(reportedAxes);
                 }
             }
@@ -1449,13 +1546,24 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         if (detectedFirmware == null) {
             return defaultValue;
         }
-        Pattern pattern = Pattern.compile("([A-Za-z0-9_\\-]+):?([^,]+)?");
+        Pattern pattern = Pattern.compile("([A-Za-z0-9\\_\\-]+):");
         Matcher matcher = pattern.matcher(detectedFirmware);
         while (matcher.find()) {
             if (name.equals(matcher.group(1))) {
-                String value = matcher.group(2).trim();
+                String value;
+                int pos = matcher.end();
+                if (matcher.find()) {
+                    value = detectedFirmware.substring(pos, matcher.start()-1);
+                }
+                else {
+                    value = detectedFirmware.substring(pos);
+                }
                 value = value.replace("%3A", ":");
-                return value;
+                int comma = value.indexOf(",");
+                if (comma >= 0) {
+                    value = value.substring(0, comma);
+                }
+                return value.trim();
             }
         }
         return defaultValue;
@@ -1476,9 +1584,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        new GcodeDriverSolutions(this).findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        new GcodeDriverSolutions(this).findIssues(solutions);
     }
 
     @Deprecated

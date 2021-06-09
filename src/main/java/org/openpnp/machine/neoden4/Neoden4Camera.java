@@ -19,30 +19,22 @@
 
 package org.openpnp.machine.neoden4;
 
-import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.net.ConnectException;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
+import java.net.URL;
 
 import javax.imageio.ImageIO;
-import javax.xml.soap.SOAPException;
-
-import com.mashape.unirest.http.Unirest;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.neoden4.wizards.Neoden4CameraConfigurationWizard;
+import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.spi.PropertySheetHolder;
-import org.simpleframework.xml.Attribute;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
+
+import com.mashape.unirest.http.Unirest;
 
 /**
  * A Camera implementation for ONVIF compatible IP cameras.
@@ -54,8 +46,6 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
     private int cameraId = 1;
     @Attribute(required = true)
     private int hostPort = 8080;
-    @Attribute(required = false)
-    private int fps = 1;
 
     @Attribute(required = false)
     private int width = 1024;
@@ -73,7 +63,6 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
     @Attribute(required = false)
     private int shiftY = 0;
 
-    private Thread thread;
     private boolean dirty = false;
 
     //private String baseURL = "http://{hostname}:{hostport}/cameras/{cameraid}/{func}";
@@ -86,8 +75,8 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
     @Override
     public BufferedImage internalCapture() {
         //Logger.trace(String.format("internalCapture() [cameraId:%d]", cameraId));
-        if (thread == null) {
-            initCamera();
+        if (!ensureOpen()) {
+            return null;
         }
         try {
             if (snapshotURI == null) {
@@ -101,39 +90,7 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
         }
     }
 
-    @Override
-    public synchronized void startContinuousCapture(CameraListener listener) {
-        Logger.trace(String.format("startContinuousCapture() [cameraId:%d]", cameraId));
-        if (thread == null) {
-            initCamera();
-        }
-        super.startContinuousCapture(listener);
-    }
-
-    public void run() {
-        Logger.trace("run()");
-        if (fps==0) {
-            fps=1;
-        }
-
-        while (!Thread.interrupted()) {
-            try {
-                BufferedImage image = internalCapture();
-                if (image != null) { 
-                    broadcastCapture(captureForPreview());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                Thread.sleep(1000 / fps);
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
-    }
-
-    private URL getImageReadAsyURL() throws MalformedURLException, URISyntaxException {
+     private URL getImageReadAsyURL() throws MalformedURLException, URISyntaxException {
         Logger.trace(String.format("getImageReadAsyURL() [cameraId:%d, width:%d, height:%d, timeout:%d]", 
             cameraId, width, height, timeout));
         return new URIBuilder(baseURI)
@@ -231,19 +188,12 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
         Unirest.get(funcUrl.toString());
     }
 
-    private void initCamera() {
-        Logger.trace(String.format("initCamera() [cameraId:%d, width: %d, height: %d]", cameraId, width, height));
+    @Override
+    public void open() throws Exception {
+        stop();
+
+        Logger.trace(String.format("open() [cameraId:%d, width: %d, height: %d]", cameraId, width, height));
         
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            thread = null;
-        }
         try {
             setDirty(false);
             snapshotURI = null;
@@ -279,42 +229,17 @@ public class Neoden4Camera extends ReferenceCamera implements Runnable {
             e.printStackTrace();
             return;
         }
-        thread = new Thread(this);
-        thread.setDaemon(true);
-        thread.start();
-    }
 
-    @Override
-    public void close() throws IOException {
-        super.close();
-        if (thread != null) {
-            thread.interrupt();
-            try {
-                thread.join(3000);
-            }
-            catch (Exception e) {
-
-            }
-        }
+        super.open();
     }
 
     public String getHostIP() {
         return hostIP;
     }
 
-    public synchronized void setHostIP(String hostIP) {
+    public void setHostIP(String hostIP) {
         this.hostIP = hostIP;
         setDirty(true);
-
-        initCamera();
-    }
-
-    public int getFps() {
-        return fps;
-    }
-
-    public void setFps(int fps) {
-        this.fps = fps;
     }
 
     public int getCameraId() {

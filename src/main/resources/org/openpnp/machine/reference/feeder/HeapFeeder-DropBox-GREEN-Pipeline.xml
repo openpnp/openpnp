@@ -1,0 +1,16 @@
+<cv-pipeline>
+   <stages>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="capture" enabled="true" settle-first="true" count="1"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="blur" enabled="true" kernel-size="5"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="bgr2hsv" enabled="true" conversion="Bgr2Hsv"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.MaskHsv" name="mask" enabled="true" auto="false" fraction-to-mask="0.0" hue-min="50" hue-max="110" saturation-min="30" saturation-max="255" value-min="0" value-max="240" invert="false" binary-mask="true"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurMedian" name="1" enabled="true" kernel-size="5"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="maskCircle" enabled="true" diameter="450"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.FindContours" name="maskContours" enabled="true" retrieval-mode="List" approximation-method="None"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.FilterContours" name="filteredContours" enabled="true" contours-stage-name="maskContours" min-area="250.0" max-area="15000.0"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.MinAreaRectContours" name="rectRaw" enabled="true" contours-stage-name="filteredContours"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.OrientRotatedRects" name="results" enabled="true" rotated-rects-stage-name="rectRaw" orientation="Landscape" negate-angle="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="recall" enabled="true" image-stage-name="capture"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DrawRotatedRects" name="drawRect" enabled="true" rotated-rects-stage-name="results" thickness="2" draw-rect-center="true" rect-center-radius="10" show-orientation="true"/>
+   </stages>
+</cv-pipeline>

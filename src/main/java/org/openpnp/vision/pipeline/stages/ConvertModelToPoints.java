@@ -26,11 +26,11 @@ public class ConvertModelToPoints extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (modelStageName == null) {
+        if (modelStageName == null || modelStageName.trim().isEmpty()) {
             return null;
         }
-        Result result = pipeline.getResult(modelStageName);
-        if (result == null || result.model == null) {
+        Result result = pipeline.getExpectedResult(modelStageName);
+        if (result.model == null) {
             return null;
         }
         Object model = result.model;
@@ -41,9 +41,10 @@ public class ConvertModelToPoints extends CvStage {
             }
             return new Result(null, points);
         }
-        else {
+        else if (model != null) {
             return new Result(null, convertToPoint(model));
         }
+        return null;
     }
 
     private static Point convertToPoint(Object pointHolder) throws Exception {

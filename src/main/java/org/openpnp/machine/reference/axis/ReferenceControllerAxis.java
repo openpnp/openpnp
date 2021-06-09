@@ -21,15 +21,13 @@
 
 package org.openpnp.machine.reference.axis;
 
-import java.util.List;
-
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Issue;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractControllerAxis;
@@ -369,94 +367,111 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     @Override
-    public void findIssues(List<Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
 
-        if (getLetter().isEmpty()) {
-            issues.add(new Solutions.PlainIssue(
-                    this, 
-                    "Axis letter is missing. Assign the letter to continue.", 
-                    "Please assign the correct controller axis letter.", 
-                    Severity.Fundamental,
-                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
-        }
-        else if (getLetter().equals("E")) {
-            if (!getDriver().isSupportingPreMove()) {
-                issues.add(new Solutions.PlainIssue(
+        if (solutions.isTargeting(Milestone.Basics)) {
+            if (getDriver() == null) {
+                solutions.add(new Solutions.PlainIssue(
                         this, 
-                        "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
-                        "Check if your controller supports proper axes A B C instead of E.", 
+                        "Axis is not assigned to a driver.", 
+                        "Assign a driver.", 
+                        Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
+
+            }
+            if (getLetter().isEmpty()) {
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "Axis letter is missing. Assign the letter to continue.", 
+                        "Please assign the correct controller axis letter.", 
+                        Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
+            }
+            else if (getLetter().equals("E")) {
+                if (getDriver() != null && !getDriver().isSupportingPreMove()) {
+                    solutions.add(new Solutions.PlainIssue(
+                            this, 
+                            "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
+                            "Check if your controller supports proper axes A B C instead of E.", 
+                            Severity.Warning,
+                            "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version"));
+                }
+            }
+            else if (getLetter().length() != 1 || !"XYZABCDUVW".contains(getLetter())) {
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "Axis letter "+getLetter()+" is not a G-code standard letter, one of X Y Z A B C D U V W.", 
+                        "Please assign the correct controller axis letter.", 
                         Severity.Warning,
-                        "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version"));
+                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
+            }
+            if (Math.abs(getMotionLimit(1)*2 - getMotionLimit(2)) < 0.1) {
+                // HACK: migration sets the acceleration to twice the feed-rate, that's our "signal" that the user has not yet
+                // tuned them.
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "Feed-rate, acceleration, jerk etc. can now be set individually per axis.", 
+                        "Tune your machine axes for best speed and acceleration.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
             }
         }
-        final BacklashCompensationMethod oldBacklashCompensationMethod = 
-                getBacklashCompensationMethod();
-        if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
-                && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
-            issues.add(new Solutions.Issue(
-                    this, 
-                    "New directonal backlash compensation method improves performance and allows fluid motion.", 
-                    "Set axis to DirectionalCompensation.", 
-                    Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Backlash-Compensation") {
+        if (solutions.isTargeting(Milestone.Calibration)) {
+            final BacklashCompensationMethod oldBacklashCompensationMethod = 
+                    getBacklashCompensationMethod();
+            if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
+                    && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
+                solutions.add(new Solutions.Issue(
+                        this, 
+                        "New directonal backlash compensation method improves performance and allows fluid motion.", 
+                        "Set axis to DirectionalCompensation.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Backlash-Compensation") {
 
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
                         setBacklashCompensationMethod(
                                 (state == Solutions.State.Solved) ?  
                                         BacklashCompensationMethod.DirectionalCompensation 
                                         : oldBacklashCompensationMethod);
                         super.setState(state);
                     }
-                }
-            });
+                });
+            }
         }
-        if (Math.abs(getMotionLimit(1)*2 - getMotionLimit(2)) < 0.1) {
-            // HACK: migration sets the acceleration to twice the feed-rate, that's our "signal" that the user has not yet
-            // tuned them.
-            issues.add(new Solutions.PlainIssue(
-                    this, 
-                    "Feed-rate, acceleration, jerk etc. can now be set individually per axis.", 
-                    "Tune your machine axes for best speed and acceleration.", 
-                    Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
-        }
-        if (getType() == Type.Rotation) {
-            if (!isWrapAroundRotation()) {
-                issues.add(new Solutions.Issue(
-                        this, 
-                        "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
-                        "Enable Wrap Around.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+        if (solutions.isTargeting(Milestone.Advanced)) {
+            if (getType() == Type.Rotation) {
+                if (!isWrapAroundRotation()) {
+                    solutions.add(new Solutions.Issue(
+                            this, 
+                            "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
+                            "Enable Wrap Around.", 
+                            Severity.Suggestion,
+                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
+                        @Override
+                        public void setState(Solutions.State state) throws Exception {
                             setWrapAroundRotation((state == Solutions.State.Solved));
                             super.setState(state);
                         }
-                    }
-                });
-            }
-            if (!isLimitRotation()) {
-                issues.add(new Solutions.Issue(
-                        this, 
-                        "Rotation can be optimized by limiting angles to ±180°. Best combined with Wrap Around.", 
-                        "Enable Limit ±180°.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                    });
+                }
+                if (!isLimitRotation()) {
+                    solutions.add(new Solutions.Issue(
+                            this, 
+                            "Rotation can be optimized by limiting angles to ±180°. Best combined with Wrap Around.", 
+                            "Enable Limit ±180°.", 
+                            Severity.Suggestion,
+                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        if (confirmStateChange(state)) {
+                        @Override
+                        public void setState(Solutions.State state) throws Exception {
                             setLimitRotation((state == Solutions.State.Solved));
                             super.setState(state);
                         }
-                    }
-                });
+                    });
+                }
             }
         }
     }

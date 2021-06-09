@@ -59,15 +59,15 @@ public class Add extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (firstStageName == null) {
+        if (firstStageName == null || firstStageName.trim().isEmpty()) {
             return null;
         }
-        if (secondStageName == null) {
+        if (secondStageName == null || secondStageName.trim().isEmpty()) {
             return null;
         }
         // TODO STOPSHIP memory?
-        Mat first = pipeline.getResult(firstStageName).image;
-        Mat second = pipeline.getResult(secondStageName).image;
+        Mat first = pipeline.getExpectedResult(firstStageName).image;
+        Mat second = pipeline.getExpectedResult(secondStageName).image;
 
 				if(this.firstScalar < 0){
 					throw new Exception("firstScalar < 0!");

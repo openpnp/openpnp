@@ -19,8 +19,6 @@
 
 package org.openpnp.spi;
 
-import java.util.List;
-
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
@@ -59,11 +57,20 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     /**
      * Gets the Location from which the currently available Part should be picked from. This value
      * may not be valid until after a feed has been performed for Feeders who update the pick
-     * location.
+     * location. The location Z might mean part underside or part surface, depending on the feeder
+     * type, as determined by {@link #isPartHeightAbovePickLocation()}. 
      * 
      * @return
      */
     public Location getPickLocation() throws Exception;
+
+    /**
+     * @return True if the part height needs to be added to the pick location. The distinction is
+     * needed for part height probing 
+     */
+    default boolean isPartHeightAbovePickLocation() {
+        return false;
+    }
 
     /**
      * Some feeders need preparation for a Job that is best done up front and in bulk, such as vision 
@@ -101,6 +108,16 @@ public interface Feeder extends Identifiable, Named, WizardConfigurable, Propert
     public void feed(Nozzle nozzle) throws Exception;
 
     public void postPick(Nozzle nozzle) throws Exception;
+
+    /*
+     * If the feeder (currently) supports taking back a part
+     */
+    public boolean canTakeBackPart();
+    
+    /**
+     * Asks the feeder to take back the part currently on the nozzle.
+     */
+    public void takeBackPart(Nozzle nozzle) throws Exception;
     
     /**
      * If feed() throws an Exception during job processing, the job processor will retry the

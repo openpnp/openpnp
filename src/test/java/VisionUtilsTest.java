@@ -1,17 +1,21 @@
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 
 import javax.swing.Action;
 import javax.swing.Icon;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.FocusProvider;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
@@ -19,19 +23,38 @@ import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.util.VisionUtils;
 
+import com.google.common.io.Files;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class VisionUtilsTest {
+	
+	@BeforeEach
+	public void before() throws Exception {
+		/**
+		 * Create a new config directory and load the default configuration.
+		 */
+		File workingDirectory = Files.createTempDir();
+		workingDirectory = new File(workingDirectory, ".openpnp");
+		System.out.println("Configuration directory: " + workingDirectory);
+		Configuration.initialize(workingDirectory);
+		Configuration.get().load();
+
+	}
+	 
+	 
     @Test
     public void testOffsets() {
         Camera camera = new TestCamera();
         Location location = camera.getLocation();
-        Assert.assertEquals(location, new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-        Assert.assertEquals(camera.getWidth(), 640);
-        Assert.assertEquals(camera.getHeight(), 480);
+        assertEquals(location, new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+        assertEquals(camera.getWidth(), 640);
+        assertEquals(camera.getHeight(), 480);
         Location pixelOffsets = VisionUtils.getPixelCenterOffsets(camera, 100, 100);
-        Assert.assertEquals(pixelOffsets, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
+        assertEquals(pixelOffsets, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
         Location pixelLocation = VisionUtils.getPixelLocation(camera, 100, 100);
-        Assert.assertEquals(pixelLocation, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
+        assertEquals(pixelLocation, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
     }
 
     static class TestCamera extends AbstractHeadMountable implements Camera {
@@ -132,7 +155,7 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public BufferedImage captureForPreview() {
+        public BufferedImage captureTransformed() {
             return null;
         }
 
@@ -178,12 +201,24 @@ public class VisionUtilsTest {
 
         @Override
         public void close() throws IOException {
-
         }
 
         @Override
-        public BufferedImage settleAndCapture() {
+        public BufferedImage settleAndCapture() throws Exception {
             return null;
+        }
+
+        @Override
+        public BufferedImage lightSettleAndCapture() {
+            return null;
+        }
+
+        @Override
+        public void actuateLightBeforeCapture(Object light) throws Exception {
+        }
+
+        @Override
+        public void actuateLightAfterCapture() throws Exception {
         }
 
         @Override
@@ -202,6 +237,39 @@ public class VisionUtilsTest {
 
         @Override
         public void home() throws Exception {
+        }
+
+        @Override
+        public Actuator getLightActuator() {
+            return null;
+        }
+
+        @Override
+        public void ensureCameraVisible() {
+        }
+
+        @Override
+        public boolean hasNewFrame() {
+            return true;
+        }
+
+        public Location getUnitsPerPixel(Length z) {
+            return new Location(LengthUnit.Millimeters, 1, 1, 0, 0).derive(null, null, z.getValue(), null);
+        }
+
+        @Override
+        public Length getDefaultZ() {
+            return new Length(0.0, LengthUnit.Millimeters);
+        }
+
+        @Override
+        public boolean isShownInMultiCameraView() {
+            return false;
+        }
+
+        @Override
+        public FocusProvider getFocusProvider() {
+            return null;
         }
     }
 }

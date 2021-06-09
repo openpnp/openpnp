@@ -22,9 +22,6 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -32,25 +29,15 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.wizards.GcodeAsyncDriverSettings;
-import org.openpnp.model.AxesLocation;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.spi.Driver;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.Collect;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.CvStage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.convert.AnnotationStrategy;
-import org.simpleframework.xml.core.Persister;
-import org.simpleframework.xml.stream.Format;
-import org.simpleframework.xml.stream.HyphenStyle;
-import org.simpleframework.xml.stream.Style;
 
 /**
  * The GcodeAsyncDriver extends the GcodeDriver for asynchronous communication with the controller. 
@@ -128,7 +115,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     private Length junctionDeviation = new Length(0.02, LengthUnit.Millimeters);
 
     @Override
-    public void home(ReferenceMachine machine) throws Exception {
+    public void home(Machine machine) throws Exception {
         super.home(machine);
     }
 
@@ -234,7 +221,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
             commandQueue = null;
         }
         catch (Exception e) {
-            Logger.error("disconnect()", e);
+            Logger.error(e, "disconnect()");
         }
 
         super.disconnectThreads();
@@ -332,8 +319,8 @@ public class GcodeAsyncDriver extends GcodeDriver {
     }
 
     @Override
-    public void waitForCompletion(ReferenceHeadMountable hm, 
-            CompletionType completionType) throws Exception {
+    public void waitForCompletion(HeadMountable hm,
+                                  CompletionType completionType) throws Exception {
         waitedForCommands = true;
         if (!(completionType.isUnconditionalCoordination() 
                 || isMotionPending())) {
@@ -351,23 +338,28 @@ public class GcodeAsyncDriver extends GcodeDriver {
                 getReportedLocation(timeout);
             }
             else {
-                // Normal confirmation report wanted. We queue a null command to drain the queue and confirm 
-                // the last real command. 
-                confirmationComplete = false;
-                CommandLine commandLine = new CommandLine(null, 1);
-                commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
-                while (!confirmationComplete) {
-                    try {
-                        synchronized(this) { 
-                            wait(timeout);
-                        }
-                    }
-                    catch (InterruptedException e) {
-                        Logger.warn(getName() +" was interrupted while waiting for completion.", e);
-                    }
-                }
+                drainCommandQueue(timeout);
             }
             Logger.trace("{} confirmation complete.", getName());
+        }
+    }
+
+    @Override
+    protected void drainCommandQueue(long timeout) throws InterruptedException {
+        // Normal confirmation report wanted. We queue a null command to drain the queue and confirm 
+        // the last real command. 
+        confirmationComplete = false;
+        CommandLine commandLine = new CommandLine(null, 1);
+        commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
+        while (!confirmationComplete) {
+            try {
+                synchronized(this) { 
+                    wait(timeout);
+                }
+            }
+            catch (InterruptedException e) {
+                Logger.warn(e, getName() +" was interrupted while waiting for completion.");
+            }
         }
     }
 

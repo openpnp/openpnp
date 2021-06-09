@@ -3,7 +3,6 @@ package org.openpnp.spi.base;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,6 +13,7 @@ import java.util.TreeMap;
 
 import javax.swing.Icon;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
@@ -30,8 +30,13 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
+import org.openpnp.model.Solutions.Severity;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
@@ -54,8 +59,71 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     @Attribute
     protected Looking looking = Looking.Down;
 
+    @Attribute(required = false)
+    protected boolean autoVisible = false;
+
+    @Attribute(required = false)
+    protected boolean shownInMultiCameraView = true;
+
+    @Attribute(required = false)
+    protected boolean beforeCaptureLightOn = true;
+
+    @Attribute(required = false)
+    protected boolean userActionLightOn = true;
+
+    @Attribute(required = false)
+    protected boolean afterCaptureLightOff = false;
+
+    @Attribute(required = false)
+    protected boolean antiGlareLightOff = false;
+
+    /**
+     * The primary units per pixel for this camera. This is used to convert the apparent size (in
+     * pixels) of an object's image to an estimate of its physical size (in units). Note that this
+     * conversion is only valid for objects at the same distance from the camera at which the
+     * calibration of the units per pixel was performed. The units per pixel z-coordinate contains
+     * the height at which the measurement was made. In combination with {@link #cameraPrimaryZ} a
+     * camera relative Z distance can be computed (necessary for Z-movable cameras). 
+     * 
+     * Also see {@link #unitsPerPixelSecondary}.
+     */
     @Element
     protected Location unitsPerPixel = new Location(LengthUnit.Millimeters);
+
+    /**
+     * The secondary units per pixel for this camera. This is typically calibrated at a different
+     * distance from the camera than the primary {@link #unitsPerPixel} so that the two together
+     * can be used compute an object's true size (in units) assuming its actual z coordinate is known. 
+     */
+    @Element(required = false)
+    protected Location unitsPerPixelSecondary = null;
+
+    /**
+     * The Z coordinate of camera at the primary units per pixel measurement for this camera. 
+     */
+    @Element(required = false)
+    protected Length cameraPrimaryZ = null;
+
+    /**
+     * The Z coordinate of camera at the secondary units per pixel measurement for this camera. 
+     */
+    @Element(required = false)
+    protected Length cameraSecondaryZ = null;
+
+    /**
+     * The Z coordinate at which objects are assumed to be if their true height is unknown. 
+     */
+    @Element(required = false)
+    protected Length defaultZ = null;
+
+    @Attribute(required = false)
+    boolean enableUnitsPerPixel3D = false;
+
+    /**
+     * Automatically set the CameraView viewing plane Z according to taregeted user action.  
+     */
+    @Attribute(required = false)
+    boolean autoViewPlaneZ = false;
 
     @Element(required = false)
     protected VisionProvider visionProvider;
@@ -214,6 +282,10 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     @Override
     public String getName() {
         return name;
@@ -232,7 +304,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     @Override
     public void setHead(Head head) {
-        if (this.headSet) {
+        if (this.head != head && this.headSet) {
             throw new Error("Can't change head on camera " + this);
         }
         this.head = head;
@@ -253,14 +325,243 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         return super.getLocation();
     }
 
+    /**
+     * Gets the relative Z distance above the physical camera of the specified z coordinate
+     * 
+     * @param zCoordinate
+     * @return 
+     */
+    public Length getCameraRelativeZ(Length zCoordinate) {
+        Location cameraLocation = getCameraPhysicalLocation();
+        return zCoordinate.subtract(cameraLocation.getLengthZ());
+    }
+
+    /**
+     * Gets the absolute camera z coordinate from the given relative Z.
+     * 
+     * @param cameraRelativeZ
+     * @return 
+     */
+    protected Length getCameraAbsoluteZ(Length cameraRelativeZ) {
+        Location cameraLocation = getCameraPhysicalLocation();
+        return cameraRelativeZ.add(cameraLocation.getLengthZ());
+    }
+
+    /**
+     * Get the physical location of the camera i.e. do not take virtual axes into consideration.
+     * 
+     * @return 
+     */
+    public Location getCameraPhysicalLocation() {
+        Location cameraLocation = getLocation();
+        try {
+            //Replace virtual axis coordinates, if any, with the head offset
+            cameraLocation = getApproximativeLocation(cameraLocation, cameraLocation, LocationOption.ReplaceVirtual);
+        }
+        catch (Exception e1) {
+            e1.printStackTrace();
+        }
+        return cameraLocation;
+    }
+
+    @Override
+    public boolean isShownInMultiCameraView() {
+        return shownInMultiCameraView;
+    }
+
+    public void setShownInMultiCameraView(boolean shownInMultiCameraView) {
+        Object oldValue = this.shownInMultiCameraView;
+        this.shownInMultiCameraView = shownInMultiCameraView;
+        firePropertyChange("shownInMultiCameraView", oldValue, shownInMultiCameraView);
+    }
+
+    public boolean isEnableUnitsPerPixel3D() {
+        return enableUnitsPerPixel3D;
+    }
+
+    public void setEnableUnitsPerPixel3D(boolean enableUnitsPerPixel3D) {
+        this.enableUnitsPerPixel3D = enableUnitsPerPixel3D;
+    }
+
+    public boolean isAutoViewPlaneZ() {
+        return autoViewPlaneZ;
+    }
+
+    public void setAutoViewPlaneZ(boolean autoViewPlaneZ) {
+        this.autoViewPlaneZ = autoViewPlaneZ;
+    }
+
     @Override
     public Location getUnitsPerPixel() {
-        return unitsPerPixel;
+        return getUnitsPerPixel(defaultZ);
+    }
+
+    @Override
+    public Location getUnitsPerPixel(Length viewingPlaneZ) {
+        if (!isSecondaryUnitsPerPixelCalibrated()) {
+            return unitsPerPixel;
+        }
+        if (viewingPlaneZ == null) {
+            viewingPlaneZ = defaultZ;
+        }
+        LengthUnit units = unitsPerPixel.getUnits();
+        Location uppCal1 = unitsPerPixel;
+        Location uppCal2 = unitsPerPixelSecondary.convertToUnits(units);
+        double cameraRelZ1 = uppCal1.getLengthZ().subtract(cameraPrimaryZ).getValue();
+        double cameraRelZ2 = uppCal2.getLengthZ().subtract(cameraSecondaryZ).getValue();
+        if (cameraRelZ1 == cameraRelZ2) {
+            // Calibration wasn't performed at two different Z / camera Z
+            // return the primary units per pixels
+            return unitsPerPixel;
+        }
+
+        double cameraRelZ = getCameraRelativeZ(viewingPlaneZ).convertToUnits(units).getValue();
+
+        // Linearly interpolate between the two calibration points
+        double k = (cameraRelZ - cameraRelZ2) / (cameraRelZ1 - cameraRelZ2);
+        return new Location(units, k * (uppCal1.getX() - uppCal2.getX()) + uppCal2.getX(),
+                k * (uppCal1.getY() - uppCal2.getY()) + uppCal2.getY(), cameraRelZ, 0.0);
+    }
+
+    public boolean isSecondaryUnitsPerPixelCalibrated() {
+        return (enableUnitsPerPixel3D
+                && unitsPerPixelSecondary != null 
+                && unitsPerPixelSecondary.getX() != 0 
+                && unitsPerPixelSecondary.getY() != 0 
+                && cameraPrimaryZ != null
+                && cameraSecondaryZ != null
+                && defaultZ != null);
     }
 
     @Override
     public void setUnitsPerPixel(Location unitsPerPixel) {
         this.unitsPerPixel = unitsPerPixel;
+    }
+
+    /**
+     * Gets the primary units per pixel (direct access getter)
+     * 
+     * @return a location whose x and y coordinates are the measured pixels per unit for those axis
+     *         respectively and the z coordinate is the height at which the measurements were made.
+     */
+    public Location getUnitsPerPixelPrimary() {
+        return unitsPerPixel;
+    }
+
+    /**
+     * Sets the primary units per pixel (direct access setter)
+     * 
+     * @param unitsPerPixelPrimary - a location whose x and y coordinates are the measured pixels
+     * per unit for those axis respectively and the z coordinate is the height at which the measurements 
+     * were made.
+     */
+    public void setUnitsPerPixelPrimary(Location unitsPerPixelPrimary) {
+        this.unitsPerPixel = unitsPerPixelPrimary;
+    }
+
+    /**
+     * Gets the secondary units per pixel
+     * 
+     * @return a location whose x and y coordinates are the measured pixels per unit for those axis
+     *         respectively and the z coordinate is the height at which the measurements were made.
+     */
+    public Location getUnitsPerPixelSecondary() {
+        return unitsPerPixelSecondary;
+    }
+
+    /**
+     * Sets the secondary units per pixel
+     * 
+     * @param unitsPerPixelSecondary - a location whose x and y coordinates are the measured pixels
+     * per unit for those axis respectively and the z coordinate is the height at which the 
+     * measurements were made.
+     */
+    public void setUnitsPerPixelSecondary(Location unitsPerPixelSecondary) {
+        this.unitsPerPixelSecondary = unitsPerPixelSecondary;
+    }
+
+    @Override
+    public Length getDefaultZ() {
+        return defaultZ;
+    }
+
+    public void setDefaultZ(Length defaultZ) {
+        this.defaultZ = defaultZ;
+    }
+
+    /**
+     * @return Get the z coordinate of camera where the primary units per pixel measurement was made. 
+     */
+    public Length getCameraPrimaryZ() {
+        return cameraPrimaryZ;
+    }
+
+    public void setCameraPrimaryZ(Length cameraPrimaryZ) {
+        this.cameraPrimaryZ = cameraPrimaryZ;
+    }
+
+    /**
+     * @return Get the z coordinate of camera where the secondary units per pixel measurement was made. 
+     */
+    public Length getCameraSecondaryZ() {
+        return cameraSecondaryZ;
+    }
+
+    public void setCameraSecondaryZ(Length cameraSecondaryZ) {
+        this.cameraSecondaryZ = cameraSecondaryZ;
+    }
+
+    /**
+     * Estimates the Z height of an object based upon the observed units per pixel for the
+     * object. This is typically found by capturing images of a feature of the object from two
+     * different camera positions. The observed units per pixel is then computed by dividing the
+     * actual change in camera position (in machine units) by the apparent change in position of the
+     * feature (in pixels) between the two images.
+     *
+     * @param observedUnitsPerPixel - the observed units per pixel for the object
+     * @return - the estimated Z height of the object
+     */
+    public Length estimateZCoordinateOfObject(Location observedUnitsPerPixel) throws Exception {
+        if (!isSecondaryUnitsPerPixelCalibrated()) {
+            throw new Exception("Secondary Camera Units Per Pixel have not been calibrated.");
+        }
+        LengthUnit units = observedUnitsPerPixel.getUnits();
+        double uppX = Math.abs(observedUnitsPerPixel.getX());
+        double uppY = Math.abs(observedUnitsPerPixel.getY());
+
+        Location uppCal1 = unitsPerPixel.convertToUnits(units);
+        Location uppCal2 = unitsPerPixelSecondary.convertToUnits(units);
+        double cameraRelZ1 = uppCal1.getLengthZ().subtract(cameraPrimaryZ).getValue();
+        double cameraRelZ2 = uppCal2.getLengthZ().subtract(cameraSecondaryZ).getValue();
+        if (cameraRelZ1 == cameraRelZ2) {
+            throw new Exception("Camera Units Per Pixel has not been calibrated at two different " +
+                    "camera relative Z.");
+        }
+
+        if (!Double.isFinite(uppX) && !Double.isFinite(uppY)) {
+            throw new Exception("Apparent change in position or apparent size of object feature " +
+                    "is too small to estimate object Z coordinate.");
+        }
+
+        if (uppX == 0 && uppY == 0) {
+            throw new Exception("Actual change in camera position or actual feature size too " +
+                    "small to estimate object Z coordinate.");
+        }
+
+        // Compute the ratio of where the measurement falls between the two cal points using
+        // whichever measurement is larger for better accuracy
+        double k;
+        if (!Double.isFinite(uppY) || (uppX > uppY)) {
+            k = (uppX - uppCal2.getX()) / (uppCal1.getX() - uppCal2.getX());
+        }
+        else {
+            k = (uppY - uppCal2.getY()) / (uppCal1.getY() - uppCal2.getY());
+        }
+
+        // Compute the Z offset relative to the camera
+        double cameraRelZ = k * (cameraRelZ1 - cameraRelZ2) + cameraRelZ2;
+
+        return getCameraAbsoluteZ(new Length(cameraRelZ, units));
     }
 
     @Override
@@ -272,6 +573,49 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     @Override
     public Looking getLooking() {
         return looking;
+    }
+
+    @Override
+    public boolean isAutoVisible() {
+        return autoVisible;
+    }
+
+    public void setAutoVisible(boolean autoVisible) {
+        Object oldValue = this.autoVisible;
+        this.autoVisible = autoVisible;
+        firePropertyChange("autoVisible", oldValue, autoVisible);
+    }
+
+    public boolean isBeforeCaptureLightOn() {
+        return beforeCaptureLightOn;
+    }
+
+    public void setBeforeCaptureLightOn(boolean beforeCaptureLightOn) {
+        this.beforeCaptureLightOn = beforeCaptureLightOn;
+    }
+
+    public boolean isUserActionLightOn() {
+        return userActionLightOn;
+    }
+
+    public void setUserActionLightOn(boolean userActionLightOn) {
+        this.userActionLightOn = userActionLightOn;
+    }
+
+    public boolean isAfterCaptureLightOff() {
+        return afterCaptureLightOff;
+    }
+
+    public void setAfterCaptureLightOff(boolean afterCaptureLightOff) {
+        this.afterCaptureLightOff = afterCaptureLightOff;
+    }
+
+    public boolean isAntiGlareLightOff() {
+        return antiGlareLightOff;
+    }
+
+    public void setAntiGlareLightOff(boolean antiGlareLightOff) {
+        this.antiGlareLightOff = antiGlareLightOff;
     }
 
     @Override
@@ -297,13 +641,19 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     private SimpleGraph startDiagnostics() {
         if (settleDiagnostics) {
+            Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
+            if (gridColor == null) {
+                gridColor = new Color(0, 0, 0, 64);
+            } else {
+                gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
+            }
             // Diagnostics wanted, create the simple graph.
             SimpleGraph settleGraph = new SimpleGraph();
             settleGraph.setRelativePaddingLeft(0.05);
             // init difference scale
             SimpleGraph.DataScale settleScale =  settleGraph.getScale(DIFFERENCE);
             settleScale.setRelativePaddingBottom(0.3);
-            settleScale.setColor(new Color(0, 0, 0, 64));
+            settleScale.setColor(gridColor);
             SimpleGraph.DataScale captureScale =  settleGraph.getScale(BOOLEAN);
             captureScale.setRelativePaddingTop(0.8);
             captureScale.setRelativePaddingBottom(0.1);
@@ -326,7 +676,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
     }
 
-    private BufferedImage autoSettleAndCapture() {
+    private BufferedImage autoSettleAndCapture() throws Exception {
         Mat mask = null;
         Mat maskFullsize = null;
         Mat lastSettleMat = null;
@@ -335,7 +685,6 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
             long t0 = System.currentTimeMillis();
             long timeout = t0 + settleTimeoutMs;
             int debounceCount = 0;
-            final double seq = 0.01;
             SimpleGraph settleGraph = startDiagnostics();
             TreeMap<Double, BufferedImage> settleImages = null;
             if (settleGraph != null) {
@@ -372,6 +721,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                 // Do these calculations up front.
                 final int resizeToMaxGaussianKernelSize = 5;
                 int gaussianBlurEff = settleGaussianBlur;
+                @SuppressWarnings("unused")
                 int divisor = (resizeToMaxGaussianKernelSize > resizeToMaxGaussianKernelSize) ? 
                         (settleGaussianBlur+resizeToMaxGaussianKernelSize/2)/resizeToMaxGaussianKernelSize
                         : 1;
@@ -665,15 +1015,21 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     @Override
-    public BufferedImage settleAndCapture() throws Exception {
+    public BufferedImage lightSettleAndCapture() throws Exception {
+        actuateLightBeforeCapture();
         try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("camera", this);
-            Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
+            return settleAndCapture();
         }
-        catch (Exception e) {
-            Logger.warn(e);
+        finally {
+            actuateLightAfterCapture();
         }
+    }
+
+    @Override
+    public BufferedImage settleAndCapture() throws Exception {
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("camera", this);
+        Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
 
         try {
             // Make sure the camera (or its subject) stands still.
@@ -698,20 +1054,57 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
         finally {
 
-            try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("camera", this);
-                Configuration.get().getScripting().on("Camera.AfterSettle", globals);
+            Configuration.get().getScripting().on("Camera.AfterSettle", globals);
+        }
+    }
+
+    protected static void actuateLight(Actuator lightActuator, Object light) throws Exception {
+        // Make sure it is actuated in a machine task, but only if the machine is enabled.
+        Configuration.get().getMachine().executeIfEnabled(() -> {
+            // Only actuate a light when the current state is unknown or different. 
+            if (lightActuator.getLastActuationValue() == null 
+                    || !lightActuator.getLastActuationValue().equals(light)) {
+                lightActuator.actuate(light);
             }
-            catch (Exception e) {
-                Logger.warn(e);
+            return null; 
+        });
+    }
+
+    @Override
+    public void actuateLightBeforeCapture(Object light) throws Exception {
+        // Anti-glare: switch off opposite looking cameras.
+        for (Camera camera : Configuration.get().getMachine().getAllCameras()) {
+            if (camera != this
+                    && (camera instanceof AbstractCamera)
+                    && ((AbstractCamera) camera).isAntiGlareLightOff() 
+                    && camera.getLooking() != this.getLooking()) {
+                Actuator lightActuator = camera.getLightActuator();
+                if (lightActuator != null 
+                        && lightActuator.isActuated()) {
+                    AbstractActuator.assertOnOffDefined(lightActuator);
+                    actuateLight(lightActuator, lightActuator.getDefaultOffValue());
+                }
+            }
+        }
+
+        if (isBeforeCaptureLightOn()) {
+            Actuator lightActuator = getLightActuator();
+            if (lightActuator != null) {
+                AbstractActuator.assertOnOffDefined(lightActuator);
+                actuateLight(lightActuator, 
+                        (light != null ? light : lightActuator.getDefaultOnValue()));
             }
         }
     }
 
-    protected void broadcastCapture(BufferedImage img) {
-        for (ListenerEntry listener : new ArrayList<>(listeners)) {
-            listener.listener.frameReceived(img);
+    @Override
+    public void actuateLightAfterCapture() throws Exception {
+        if (isAfterCaptureLightOff()) {
+            Actuator lightActuator = getLightActuator();
+            if (lightActuator != null) {
+                AbstractActuator.assertOnOffDefined(lightActuator);
+                actuateLight(lightActuator, lightActuator.getDefaultOffValue());
+            }
         }
     }
 
@@ -885,11 +1278,16 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                 String message = "Camera settling, frame number "+n+", t=+"+String.format(Locale.US, "%.1f", tFrame)+"ms";
                 MainFrame.get().getCameraViews().getCameraView(this)
                 .showFilteredImage(img, message, 1500);
-                SwingUtilities.invokeLater(() -> {
-                    MainFrame.get().getCameraViews().ensureCameraVisible(this);
-                });
+                ensureCameraVisible();
             }
         }
+    }
+
+    @Override
+    public void ensureCameraVisible() {
+        SwingUtilities.invokeLater(() -> {
+            MainFrame.get().getCameraViews().ensureCameraVisible(this);
+        });
     }
 
     @Override
@@ -918,6 +1316,31 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         @Override
         public boolean equals(Object obj) {
             return obj.equals(listener);
+        }
+    }
+
+    @Override
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        if (solutions.isTargeting(Milestone.Vision)) {
+
+            if ((unitsPerPixel.getX() == 0) || (unitsPerPixel.getY() == 0)) {
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "Camera units per pixel has not been calibrated.", 
+                        "Calibrate the camera's units per pixel.", 
+                        Severity.Warning,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
+            }
+            else if (solutions.isTargeting(Milestone.Advanced) 
+                    && !isSecondaryUnitsPerPixelCalibrated()) {
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "Camera units per pixel can be calibrated for 3D scale estimation.", 
+                        "Calibrate the camera's units per pixel at two different heights.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
+            }
         }
     }
 }

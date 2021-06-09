@@ -9,7 +9,6 @@ import java.util.Set;
 import javax.swing.Icon;
 
 import org.openpnp.gui.support.Icons;
-import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -72,6 +71,11 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         firePropertyChange("name", null, name);
     }
     
+    protected void setPart(Part part) {
+        this.part = part;
+        firePropertyChange("part", null, part);
+    }
+    
     @Override
     public Part getPart() {
         return part;
@@ -101,6 +105,23 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
             }
         }
         return Collections.unmodifiableSet(compatibleNozzleTips);
+    }
+
+    @Override
+    public Set<NozzleTip> getCompatibleNozzleTips(Part part) {
+        Set<NozzleTip> partCompatibleNozzleTips = new HashSet<>();
+        if (part != null && part.getPackage() != null) {
+            for (NozzleTip nt : getCompatibleNozzleTips()) {
+                if (isNozzleTipAndPartCompatible(nt, part)) {
+                    partCompatibleNozzleTips.add(nt);
+                }
+            }
+        }
+        return partCompatibleNozzleTips;
+    }
+
+    protected boolean isNozzleTipAndPartCompatible(NozzleTip nt, Part part) {
+        return part.getPackage().getCompatibleNozzleTips().contains(nt);
     }
 
     @Override

@@ -1,6 +1,166 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2021-05-03 
+
+## Better Issues & Solutions 
+
+Issues & Solutions now provides guidance based on the milestones of a step-by-step 
+machine building process. Essential configuration comes first, advanced features 
+are only suggested later. Potentially problematic solutions are even taken back
+when going back to earlier milestones for troubleshooting or machine reconfiguration. 
+
+The Issues & Solutions UI has been promoted to be a top level tab. It even sports an 
+indicator on the tab to alert the user to detected issues. Solutions can now take 
+multiple choice and other input for enhanced solutions. Nozzle setup can now be done
+using a few clicks.
+
+## Nozzle Tip Changer Z Calibration, Auto-Focus, Part Height, Feeder, Placement sensing 
+
+This adds Nozzle tip changer Z calibration. Used to calibrate the nozzle to be able to 
+precisely contact probe part heights, feeder heights and placements. Also adds Auto-Focus 
+based part height sensing for parts with enabled bottom vision. 
+
+* Manual and automatic nozzle/nozzle tip/slot Z calibration for precision multi-
+  nozzle leveling and nozzle tip length calibration.
+* Bottom vision uses auto-focus to determine the part height, if unknown. 
+* ContactProbeNozzle provides on-the-fly part height probing/learning, feeder Z 
+  calibration, placement height calibration. 
+
+# 2021-03-20
+
+## (Another) OpenCV Upgrade and Arm7 (32 Bit)
+
+The OpenCV package has been updated to a new version that has automatic builds
+for Arm7. This allows OpenPnP to work with Raspberry Pi 3 and lower. Note that openpnp-capture
+is not yet ported for Arm7, so using OpenPnPCaptureCamera will not work, but OpenCvCamera and
+others should. Support is bundled into all of the usual Linux downloads for OpenPnP.
+
+https://github.com/openpnp/opencv/pull/71
+
+Thanks @falkena!
+
+
+# 2021-03-13
+
+## Dark Mode and Modern, Customizable Themes
+
+OpenPnP now supports the FlatLAF look and feel, which brings a more modern look to
+the application. With this we also get support for Dark Mode, along with a number
+of additional themes.
+
+To change your theme, visit Menu -> Window -> Customize Appearance.
+
+See https://github.com/JFormDesigner/FlatLaf for more information about themes
+and customizing, and https://github.com/openpnp/openpnp/pull/1151 for the pull request.
+
+Thank you @SG-O for this nice upgrade!
+
+## OpenCV Upgrade and Arm64 Support
+
+The OpenCV package has been updated to a new version that has automatic builds
+for Arm64. This is the last native library that was not compatible with Arm64
+which means that OpenPnP is now compatible with Raspberry Pi 4 (with a 64 bit OS) and
+Jetson Nano. Support is bundled into all of the usual Linux downloads for
+OpenPnP.
+
+## Feeder Recycle
+
+This new feature from @doppelgrau adds a Recycle button next to the Discard buttong
+which allows you to put a picked part back in the feeder if the feeder supports
+the operation. Currently supported on: Strip, Tray, AdvancedLoose, Loose, Blinds, and
+RotatedTray feeders.
+
+https://github.com/openpnp/openpnp/pull/1143
+
+Thanks @doppelgrau!
+
+## CreateFootprintTemplateImage Minimal Images
+
+Added a boolean value to disabling the default border around the part.
+
+Just enable the checkbox in the stage settings, and the border disappears.
+Warning: only works with symmetrical parts. Parts where the body is not in
+the center, one side will have border, the other will be cut off.
+
+https://github.com/openpnp/openpnp/pull/1152
+
+Thanks @doppelgrau!
+
+
+# 2021-03-12
+
+## CreateFootprintTemplateImage Stage Improvements
+
+The CreateFootprintTemplateImage CvPipeline stage can now automatically create a footprint from
+a Nozzle.Part if the footprint is not supplied to the stage.
+
+https://github.com/openpnp/openpnp/pull/1140
+
+Thanks @doppelgrau!
+
+## OrientRotatedRects Stage Improvements
+
+You can now specify a snap-to angle for this stage helping orientation in LoosePartsFeeder
+and other advanced vision feeders.
+
+https://github.com/openpnp/openpnp/pull/1138
+
+Thanks @MatSpy!
+
+## Part Size Check Option in Bottom Vision
+
+Option to check package size during bottom camera part alignment. Compares measured vs.
+expected dimension with a part configurable tolerance. This can be used to detect
+mis-picks, wrong part loaded, tombstones, etc.
+
+https://github.com/openpnp/openpnp/pull/1135
+
+Thanks @crashmatt!
+
+
+# 2021-02-04
+
+## New Thermistor Linearizing Actuator
+
+A new Actuator, the ThermistorToLinearSensorActuator, has been added. This Actuator converts
+sensor readings that have been processed with thermistor transforms, like Smoothieware does,
+to linear readings. If you use Smoothie and have linear sensors attached to the thermistor
+inputs this may be useful in linearizing the output.
+
+See https://github.com/openpnp/openpnp/wiki/ThermistorToLinearSensorActuator for more info!
+
+
+# 2021-01-14
+
+## Actuators with Profiles / Built-in Camera Lighting / Camera Automatisms
+
+Actuators that can control Camera lights in various ways have been implemented inside OpenPnP.   
+
+- Actuators can be configured for a specific (writing) value type (Boolean, Double, String, 
+  Profile).
+- Non-Boolean actuators can be configured for specific typed ON and OFF values, so they can be
+  triggered using Boolean semantics.
+- Actuators can automatically be state-initialized or actuated when Machine States change: 
+  Enabled, Homed, Disabled.
+- The GUI was reworked to adapt itself to the value types. 
+- `HttpActuator` and `ScriptActuator` were extended to support all value types.
+- The new actuator value type Profile introduces a "multiple choice" actuator. 
+- A Profile type actuator can control multiple target actuators (including itself). 
+- Each of the choice profiles controls a set of specific values to be written to the target 
+  actuators. 
+- Added a Light Actuator to the Camera. A Profile type actuator is the ideal choice to control 
+  multi-channel lights such as RGB lights or other selective/angular light sources, or to 
+  provide predefined step values for scalar light intensity. 
+- Actuator based light triggering can be configured in various ways. 
+- The pipeline `ImageCapture` stage can set/override the Light Actuator value as a parameter.
+- Camera implementations have been unified in terms of broadcasting, preview FPS etc.
+- Full support for 0 fps where only the actual vision captures are displayed.
+- Improved SwitcherCamera to only broadcast the correctly switched channel. 
+- Optional Auto-Camera-Preview: the active Camera is automatically switched in single preview. 
+- Various related bug-fixes.
+
+
 # 2020-12-29
 
 ## Retry Bug Fixes and Improvements

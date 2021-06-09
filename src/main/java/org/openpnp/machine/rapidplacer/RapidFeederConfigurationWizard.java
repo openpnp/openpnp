@@ -104,7 +104,7 @@ public class RapidFeederConfigurationWizard
         pitch.setColumns(10);
         
         JPanel panelRapidFeederScan = new JPanel();
-        panelRapidFeederScan.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Rapid Feeder Scanning", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelRapidFeederScan.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Rapid Feeder Scanning", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelRapidFeederScan);
         panelRapidFeederScan.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -251,7 +251,7 @@ public class RapidFeederConfigurationWizard
     }
     
     private Set<QrCodeLocation> locateQrCodes(Camera camera) throws Exception {
-        BufferedImage image = camera.settleAndCapture();
+        BufferedImage image = camera.lightSettleAndCapture();
         BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(
                 new BufferedImageLuminanceSource(image)));
         MultipleBarcodeReader reader = new QRCodeMultiReader();

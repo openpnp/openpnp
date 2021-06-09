@@ -4,8 +4,11 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 
 import org.openpnp.model.Footprint;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -43,6 +46,19 @@ public class CreateFootprintTemplateImage extends CvStage {
     @Property(description = "Color of the background.")
     private Color backgroundColor = Color.black; 
 
+    @Attribute(required=false)
+    @Property(description = "If enabled dimensions are only controled by the part size.")
+    private boolean minimalImageSize = false;
+
+    
+    public boolean isMinimalImageSize() {
+        return minimalImageSize;
+    }
+
+    public void setMinimalImageSize(boolean minimalImageSize) {
+        this.minimalImageSize = minimalImageSize;
+    }
+
     public FootprintView getFootprintView() {
         return footprintView;
     }
@@ -79,6 +95,12 @@ public class CreateFootprintTemplateImage extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Camera camera = (Camera) pipeline.getProperty("camera");
         Footprint footprint = (Footprint) pipeline.getProperty("footprint");
+        if (footprint == null && pipeline.getProperty("nozzle") != null) {
+            Nozzle nozzle = (Nozzle)pipeline.getProperty("nozzle");
+            if (nozzle.getPart() != null) {
+                footprint = nozzle.getPart().getPackage().getFootprint();
+            }
+        }
 
         if (camera == null) {
             throw new Exception("Property \"camera\" is required.");
@@ -87,12 +109,20 @@ public class CreateFootprintTemplateImage extends CvStage {
             throw new Exception("Property \"footprint\" is required.");
         }
 
+        double marginFactor = 1.5f;
+        int minimumMarginSize = 3;
+        
+        if (minimalImageSize) {
+            marginFactor = 1;
+            minimumMarginSize = 0;
+        }
+        
         BufferedImage template = OpenCvUtils.createFootprintTemplate(camera, footprint, 0.0,
                 footprintView == FootprintView.TopView, 
                 padsColor, 
                 (footprintView == FootprintView.Fiducial ? null : bodyColor), 
-                backgroundColor, 1.5, 3);
+                backgroundColor, marginFactor, minimumMarginSize);
 
-        return new Result(OpenCvUtils.toMat(template));
+        return new Result(OpenCvUtils.toMat(template), ColorSpace.Bgr);
     }
 }

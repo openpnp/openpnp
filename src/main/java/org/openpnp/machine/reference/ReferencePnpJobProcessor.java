@@ -34,6 +34,7 @@ import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurati
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
@@ -232,13 +233,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 throw new JobProcessorException(part, String.format("No package set for part %s.",
                         part.getId()));                
             }
-            
-            // Verify that the part height is greater than zero. Catches a common configuration
-            // error.
-            if (placement.getPart().getHeight().getValue() <= 0D) {
-                throw new JobProcessorException(placement.getPart(), String.format("Part height for %s must be greater than 0.",
-                        placement.getPart().getId()));
-            }
 
             // Make sure there is at least one compatible nozzle tip available
             validatePartNozzleTip(head, placement.getPart());
@@ -258,16 +252,21 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     .getNozzles()
                     .stream()
                     .flatMap(nozzle -> {
-                        return nozzle.getCompatibleNozzleTips().stream();
-                    })
-                    .filter(nozzleTip -> {
-                        return part.getPackage().getCompatibleNozzleTips().contains(nozzleTip);
+                        return nozzle.getCompatibleNozzleTips(part).stream();
                     })
                     .collect(Collectors.toSet());
             
             if (compatibleNozzleTips.isEmpty()) {
-                throw new JobProcessorException(part, String.format("No compatible, loadable nozzle tip found for part %s.",
-                        part.getId()));                
+                if (part.isPartHeightUnknown()) {
+                    throw new JobProcessorException(part, String.format("No part height sensing method found for part %s. "
+                            + "Check camera, contact probe nozzle and compatible, loadable nozzle tips for height sensing "
+                            + "settings or set part height manually.",
+                            part.getId()));
+                }
+                else {
+                    throw new JobProcessorException(part, String.format("No compatible, loadable nozzle tip found for part %s.",
+                            part.getId()));
+                }
             }
         }
         
@@ -666,7 +665,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             try {
                 if (!nozzle.isPartOff()) {
-                    throw new JobProcessorException(nozzle, "Part detected on nozzle before pick.");
+                    throw new JobProcessorException(nozzle, "Part vacuum-detected on nozzle before pick.");
                 }
             }
             catch (JobProcessorException e) {
@@ -699,7 +698,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         placement.getId());
                 
                 // Move to pick location.
-                MovableUtils.moveToLocationAtSafeZ(nozzle, feeder.getPickLocation());
+                nozzle.moveToPickLocation(feeder);
 
                 // Pick
                 nozzle.pick(part);
@@ -727,7 +726,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             try {
                 if(!nozzle.isPartOn()) {
-                    throw new JobProcessorException(nozzle, "No part detected after pick.");
+                    throw new JobProcessorException(nozzle, "No part vacuum-detected after pick.");
                 }
             }
             catch (JobProcessorException e) {
@@ -802,7 +801,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             try {
                 if(!nozzle.isPartOn()) {
-                    throw new JobProcessorException(nozzle, "No part detected after alignment. Part may have been lost in transit.");
+                    throw new JobProcessorException(nozzle, "No part vacuum-detected after alignment. Part may have been lost in transit.");
                 }
             }
             catch (JobProcessorException e) {
@@ -859,7 +858,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             try {
                 // Move to the placement location
-                MovableUtils.moveToLocationAtSafeZ(nozzle, placementLocation);
+               nozzle.moveToPlacementLocation(placementLocation, part);
 
                 // Place the part
                 nozzle.place();
@@ -878,7 +877,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             try {
                 if (!nozzle.isPartOn()) {
-                    throw new JobProcessorException(nozzle, "No part detected on nozzle before place.");
+                    throw new JobProcessorException(nozzle, "No part vacuum-detected on nozzle before place.");
                 }
             }
             catch (JobProcessorException e) {
@@ -895,7 +894,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
             try {
                 if (!nozzle.isPartOff()) {
-                    throw new JobProcessorException(nozzle, "Part detected on nozzle after place.");
+                    throw new JobProcessorException(nozzle, "Part vacuum-detected on nozzle after place.");
                 }
             }
             catch (JobProcessorException e) {
@@ -912,6 +911,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
             final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
+            Length partHeight = part.getHeight();
+            Location placementLocationPart = placementLocation.add(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
             try {
                 HashMap<String, Object> params = new HashMap<>();
                 params.put("job", job);
@@ -920,11 +921,13 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 params.put("nozzle", nozzle);
                 params.put("placement", placement);
                 params.put("boardLocation", boardLocation);
-                params.put("placementLocation", placementLocation);
+                params.put("placementLocationBase", placementLocation);
+                params.put("placementLocation", placementLocationPart);
                 params.put("alignmentOffsets", plannedPlacement.alignmentOffsets);
                 Configuration.get().getScripting().on("Job.Placement.BeforeAssembly", params);
             }
             catch (Exception e) {
+                throw new JobProcessorException(null, e);
             }
         }
         
@@ -934,6 +937,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
             final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
+            Length partHeight = part.getHeight();
+            Location placementLocationPart = placementLocation.add(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
             try {
                 HashMap<String, Object> params = new HashMap<>();
                 params.put("job", job);
@@ -942,7 +947,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 params.put("nozzle", nozzle);
                 params.put("placement", placement);
                 params.put("boardLocation", boardLocation);
-                params.put("placementLocation", placementLocation);
+                params.put("placementLocationBase", placementLocation);
+                params.put("placementLocation", placementLocationPart);
                 Configuration.get().getScripting().on("Job.Placement.Complete", params);
             }
             catch (Exception e) {
@@ -1000,10 +1006,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
 
-            // Add the part's height to the placement location
-            placementLocation = placementLocation.add(new Location(part.getHeight().getUnits(), 0,
-                    0, part.getHeight().getValue(), 0));
-            
+            // Note, do not add the part's height to the placement location, this will be done later to allow
+            // for on-the-fly part height probing.  
             return placementLocation;
         }
     }
