@@ -17,11 +17,12 @@ import org.pmw.tinylog.Logger;
 
 public class CameraCalibrationUtils {
 
-    private static final int maxEvaluations = 100;
-    private static final int maxIterations = 100;
+    private static final int maxEvaluations = 500;
+    private static final int maxIterations = 500;
     public static final int KEEP_ASPECT_RATIO = 1;
     public static final int KEEP_CENTER_POINT = 2;
     public static final int KEEP_DISTORTION_COEFFICENTS = 4;
+    public static final int KEEP_ROTATION = 8;
     
     
     private static int numberOfTestPatterns;
@@ -78,6 +79,7 @@ public class CameraCalibrationUtils {
         int totalNumberOfPoints;
         double allowCenterToChange;
         double allowDistortionToChange;
+        double allowRotationToChange;
         int flags;
         
         public CalibrationModel(double[][][] testPattern3dPoints, int flags) {
@@ -98,6 +100,12 @@ public class CameraCalibrationUtils {
             }
             else {
                 allowDistortionToChange = 0;
+            }
+            if ((flags & KEEP_ROTATION) == 0)  {
+                allowRotationToChange = 1;
+            }
+            else {
+                allowRotationToChange = 0;
             }
         }
         
@@ -294,15 +302,15 @@ public class CameraCalibrationUtils {
                     funcJacobian.setEntry(rowIdx, 9, (4*p1*temp004*temp033*temp068*temp076 - 2*p1*temp004*temp025*temp046 - 
                             2*p1*temp025*temp033*temp061 + temp004*temp025*temp038*temp068 - 
                             temp038*temp043*temp061 - 2*temp004*temp043*temp071 - 
-                            2*(3*temp004*temp025*temp061 - 3*temp003*temp068*temp076 + temp073 + temp077)*p2)*fx);
+                            2*(3*temp004*temp025*temp061 - 3*temp003*temp068*temp076 + temp073 + temp077)*p2)*fx*allowRotationToChange);
                     funcJacobian.setEntry(rowIdx, 10, -(4*p1*temp004*temp033*temp076*temp078 + temp004*temp025*temp038*temp078 + 
                             2*p1*temp004*temp025*temp086 - 2*p1*temp025*temp033*temp097 - 
                             temp038*temp043*temp097 + 2*temp004*temp043*temp098 + 
-                            2*(3*temp003*temp076*temp078 - 3*temp004*temp025*temp097 + temp101 + temp102)*p2)*fx);
+                            2*(3*temp003*temp076*temp078 - 3*temp004*temp025*temp097 + temp101 + temp102)*p2)*fx*allowRotationToChange);
                     funcJacobian.setEntry(rowIdx, 11, (4*p1*temp004*temp033*temp076*temp104 + temp004*temp025*temp038*temp104 - 
                             2*p1*temp004*temp025*temp106 + 2*p1*temp025*temp033*temp109 + 
                             temp038*temp043*temp109 + 2*temp004*temp043*temp110 + 
-                            2*(3*temp003*temp076*temp104 + 3*temp004*temp025*temp109 + temp113 + temp114)*p2)*fx);
+                            2*(3*temp003*temp076*temp104 + 3*temp004*temp025*temp109 + temp113 + temp114)*p2)*fx*allowRotationToChange);
                     funcJacobian.setEntry(rowIdx, 12, -(4*p1*temp004*temp031*temp033*temp076 - 2*p1*temp019*temp025*temp033 - 
                             2*p1*temp004*temp025*temp036 + temp004*temp025*temp031*temp038 - 
                             temp019*temp038*temp043 - 2*temp004*temp043*temp116 - 

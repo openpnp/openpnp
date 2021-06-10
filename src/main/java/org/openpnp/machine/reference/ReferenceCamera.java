@@ -520,11 +520,21 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     ((double)advancedCalibration.alphaPercent)/100.0, 
                     undistortionMap1, undistortionMap2);
             
+            double xScaling = (advancedCalibration.rectification.get(0, 0)[0]*advancedCalibration.rectification.get(2, 2)[0] -
+                    advancedCalibration.rectification.get(0, 2)[0]*advancedCalibration.rectification.get(2, 0)[0])/
+                    (advancedCalibration.rectification.get(2, 2)[0]*advancedCalibration.rectification.get(2, 2)[0]);
+            Logger.trace("xScaling = " + xScaling);
+            double yScaling = (advancedCalibration.rectification.get(1, 1)[0]*advancedCalibration.rectification.get(2, 2)[0] -
+                    advancedCalibration.rectification.get(1, 2)[0]*advancedCalibration.rectification.get(2, 1)[0])/
+                    (advancedCalibration.rectification.get(2, 2)[0]*advancedCalibration.rectification.get(2, 2)[0]);
+            Logger.trace("yScaling = " + yScaling);
+            double scaling = 1; //1.23; //Math.sqrt(xScaling*xScaling + yScaling*yScaling);
+            
             double dz = defaultZ.convertToUnits(LengthUnit.Millimeters).getValue();
             double distanceToCamera = advancedCalibration.getDistanceToCameraAtZ(defaultZ).getValue();
             Logger.trace("distanceToCamera@defaultZ = " + distanceToCamera);
-            double uppX = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(0, 0)[0];
-            double uppY = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(1, 1)[0];
+            double uppX = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(0, 0)[0] / scaling;
+            double uppY = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(1, 1)[0] / scaling;
             Logger.trace("primary uppX = " + uppX);
             Logger.trace("primary uppY = " + uppY);
             setUnitsPerPixelPrimary(new Location(LengthUnit.Millimeters, uppX, uppY, dz, 0));
@@ -538,8 +548,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             distanceToCamera = advancedCalibration.getDistanceToCameraAtZ(new Length(dz + 20, 
                     LengthUnit.Millimeters)).getValue();
             Logger.trace("distanceToCamera@defaultZ+20 = " + distanceToCamera);
-            uppX = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(0, 0)[0];
-            uppY = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(1, 1)[0];
+            uppX = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(0, 0)[0] / scaling;
+            uppY = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(1, 1)[0] / scaling;
             Logger.trace("secondary uppX = " + uppX);
             Logger.trace("secondary uppY = " + uppY);
             setUnitsPerPixelSecondary(new Location(LengthUnit.Millimeters, uppX, uppY, dz + 20, 0));
@@ -551,7 +561,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
             
             setEnableUnitsPerPixel3D(true);
-            
+
             if (getHead() == null) {
                 setHeadOffsets(new Location(LengthUnit.Millimeters, advancedCalibration.getVect_m_cHat_m().get(0, 0)[0],
                         advancedCalibration.getVect_m_cHat_m().get(1, 0)[0], dz, 0));
@@ -986,7 +996,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                         for (int j=0; j<numberOfPoints; j++) {
                             temp[i][j][0] = savedTestPattern3dPointsList[i][3*j][0];
                             temp[i][j][1] = savedTestPattern3dPointsList[i][3*j+1][0];
-                            temp[i][j][2] = calibrationPatternZ[i]; //savedTestPattern3dPointsList[i][3*j+2][0];
+                            temp[i][j][2] = savedTestPattern3dPointsList[i][3*j+2][0];
                         }
                     }
                     savedTestPattern3dPointsList = temp;
@@ -1163,250 +1173,91 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             savedTestPattern3dPointsList = testPattern3dPoints;
             savedTestPatternImagePointsList = testPatternImagePoints;
             calibrationPatternZ = testPatternZ;
-            
+
             int numberOfTestPatterns = Math.min(testPattern3dPoints.length, 
                     testPatternImagePoints.length);
             
-            if (numberOfTestPatterns < 2) {
-                //probably should throw an exception here
-                return;
-            }
+            int testPatternsToUse = 1 + 2 + 4; //bit mapped field
             
-            double minX = Double.POSITIVE_INFINITY;
-            double minY = Double.POSITIVE_INFINITY;
-            double meanX = 0;
-            double meanY = 0;
-            double meanZ = 0;
-            int meanCount = 0;
-            for (int iTestPattern=0; iTestPattern<numberOfTestPatterns; iTestPattern++) {
-                for (int iPt=0; iPt<testPattern3dPoints[iTestPattern].length; iPt++) {
-                    if (testPattern3dPoints[iTestPattern][iPt][0] < minX) {
-                        minX = testPattern3dPoints[iTestPattern][iPt][0];
-                    }
-                    if (testPattern3dPoints[iTestPattern][iPt][1] < minY) {
-                        minY = testPattern3dPoints[iTestPattern][iPt][1];
-                    }
-                    meanX += testPattern3dPoints[iTestPattern][iPt][0];
-                    meanY += testPattern3dPoints[iTestPattern][iPt][1];
-                    meanZ += testPatternZ[iTestPattern];
-                    meanCount++;
+            int numberOfTestPatternsToUse = 0;
+            int testBit = 1;
+            for (int i=0; i<numberOfTestPatterns; i++) {
+                if ((testPatternsToUse & testBit) != 0) {
+                    numberOfTestPatternsToUse++;
                 }
+                testBit <<= 1; //shift left
             }
-            meanX /= meanCount;
-            meanY /= meanCount;
-            meanZ /= meanCount;
             
-            TermCriteria termCriteria = new TermCriteria(TermCriteria.EPS + TermCriteria.COUNT, 5000, 0.00000001);
+            double[][][] testPattern3dPointsToUse = new double[numberOfTestPatternsToUse][][];
+            double[][][] testPatternImagePointsToUse = new double[numberOfTestPatternsToUse][][];
+            double[] testPatternZToUse = new double[numberOfTestPatternsToUse];
+            
+            testBit = 1;
+            int iTP = 0;
+            for (int i=0; i<numberOfTestPatterns; i++) {
+                if ((testPatternsToUse & testBit) != 0) {
+                    testPattern3dPointsToUse[iTP] = new double[testPattern3dPoints[i].length][];
+                    System.arraycopy((Object)testPattern3dPoints[i], 0, (Object)testPattern3dPointsToUse[iTP], 0, testPattern3dPoints[i].length);
+                    testPatternImagePointsToUse[iTP] = new double[testPatternImagePoints[i].length][];
+                    System.arraycopy((Object)testPatternImagePoints[i], 0, (Object)testPatternImagePointsToUse[iTP], 0, testPatternImagePoints[i].length);
+                    testPatternZToUse[iTP] = testPatternZ[i];
+                    iTP++;
+                }
+                testBit <<= 1; //shift left
+            }
+            testPattern3dPoints = testPattern3dPointsToUse;
+            testPatternImagePoints = testPatternImagePointsToUse;
+            testPatternZ = testPatternZToUse;
+            numberOfTestPatterns = numberOfTestPatternsToUse;
+            
+//            if (numberOfTestPatterns < 2) {
+//                //probably should throw an exception here
+//                return;
+//            }
             
             List<Mat> testPattern3dPointsList = new ArrayList<>();
-            List<Mat> testPattern2dPointsList = new ArrayList<>();
             List<Mat> testPatternImagePointsList = new ArrayList<>();
             
-            Mat R_m_c = Mat.zeros(3, 3, CvType.CV_64FC1);
-            R_m_c.put(0,  0,  1);
-            R_m_c.put(1,  1,  -1);
-            R_m_c.put(2,  2, -1);
-            Mat initRvec = Mat.zeros(3, 1, CvType.CV_64FC1);
-            Calib3d.Rodrigues(R_m_c, initRvec);
-
-            double[] ans = CameraCalibrationUtils.ComputeBestCameraParameters(testPattern3dPoints, 
-                    testPatternImagePoints, new double[] {1000, 1000, (size.width-1)/2, (size.height-1)/2,
-                            0, 0, 0, 0, 0, initRvec.get(0, 0)[0], initRvec.get(1, 0)[0], initRvec.get(2, 0)[0], 
-                            30, -100, -100, -100, -100, -100, -100}, CameraCalibrationUtils.KEEP_CENTER_POINT + 
-                            CameraCalibrationUtils.KEEP_ASPECT_RATIO);
-            Logger.trace("ans = " + ans);
-            
-            ans = CameraCalibrationUtils.ComputeBestCameraParameters(testPattern3dPoints, 
-                    testPatternImagePoints, ans);
-            Logger.trace("ans = " + ans);
-            
-            boolean use2dRig = true;
-            int maxPointsPerPattern = 42;
-            if (use2dRig) {
-                for (int iTestPattern=0; iTestPattern<numberOfTestPatterns; iTestPattern++) {
-                    double[][] tpArray = testPattern3dPoints[iTestPattern];
-                    Mat tp3dMat = new Mat();
-                    Mat tp2dMat = new Mat();
-                    for (int ptIdx=0; ptIdx<tpArray.length; ptIdx++) {
-                        Point3 pt3 = new Point3(tpArray[ptIdx]);
-                        pt3.x = pt3.x - meanX;
-                        pt3.y = pt3.y - meanY;
-                        tp3dMat.push_back(new MatOfPoint3f(pt3));
-                        tp2dMat.push_back(new MatOfPoint2f(new Point(pt3.x, pt3.y)));
-                    }
-                    testPattern3dPointsList.add(tp3dMat);
-                    testPattern2dPointsList.add(tp2dMat);
-                        
-                    tpArray = testPatternImagePoints[iTestPattern];
-                    tp3dMat = new Mat();
-                    for (int ptIdx=0; ptIdx<tpArray.length; ptIdx++) {
-                        tp3dMat.push_back(new MatOfPoint2f(new Point(tpArray[ptIdx])));
-                    }
-                    testPatternImagePointsList.add(tp3dMat);
-                }
-            }
-            else {
-                int pointsPerPattern = 0;
-                boolean done = false;
-                int indicies[] = new int[numberOfTestPatterns];
-                for (int i=0; i<numberOfTestPatterns; i++) {
-                    indicies[i] = (i*maxPointsPerPattern*numberOfTestPatterns) % testPattern3dPoints[i].length;
-                }
-                int counts[] = new int[numberOfTestPatterns];
-                while (!done) {
-                    Mat tp3d = new Mat();
-                    Mat tp2d = new Mat();
-                    if (pointsPerPattern >= maxPointsPerPattern) {
-                        pointsPerPattern = 0;
-                    }
-                    while ((pointsPerPattern < maxPointsPerPattern) && !done) {
-                        done = true;
-                        for (int idxTp=0; idxTp<numberOfTestPatterns; idxTp++) {
-                            if (counts[idxTp] < testPattern3dPoints[idxTp].length) {
-                                done = false;
-                                Point3 pt3 = new Point3(testPattern3dPoints[idxTp][indicies[idxTp]]);
-                                pt3.x = pt3.x - minX;
-                                pt3.y = pt3.y - minY;
-                                pt3.z = testPatternZ[idxTp];
-                                tp3d.push_back(new MatOfPoint3f(pt3));
-                                tp2d.push_back(new MatOfPoint2f(new Point(testPatternImagePoints[idxTp][indicies[idxTp]])));
-                                indicies[idxTp] = (indicies[idxTp]+1) % testPattern3dPoints[idxTp].length;
-                                counts[idxTp]++;
-                                pointsPerPattern++;
-                            }
-                        }
-                        
-                    }
-                    if (tp3d.rows() > 0) {
-                        Logger.trace("tp3d = " + tp3d.dump());
-                        Logger.trace("tp2d = " + tp2d.dump());
-                        testPattern3dPointsList.add(tp3d);
-                        testPatternImagePointsList.add(tp2d);
-                    }
-                }
-            }
-            
-            numberOfTestPatterns = testPattern3dPointsList.size();
-            
+            //Create lists of Mats to pass to Calib3d.calibrateCamera
+            //Note that the Z component of all the test patterns is set to zero so the camera
+            //will appear as if it is changing height rather than the pattern
             for (int iTestPattern=0; iTestPattern<numberOfTestPatterns; iTestPattern++) {
-                Mat homography = Calib3d.findHomography(new MatOfPoint2f(testPattern2dPointsList.get(iTestPattern)), 
-                        new MatOfPoint2f(testPatternImagePointsList.get(iTestPattern)), 0);
-                Logger.trace("testPattern2dPointsList = " + testPattern2dPointsList.get(iTestPattern).dump());
-                Logger.trace("testPatternImagePointsList = " + testPatternImagePointsList.get(iTestPattern).dump());
-                Logger.trace("homography = " + homography.dump());
-            }
-            
-            int flags = 0;
-            Mat solution = Mat.zeros(2, 1, CvType.CV_64FC1);
-            solution.put(0, 0, 1000);
-            double fx = solution.get(0, 0)[0];
-            double fy = fx;
-            double cx = (size.width - 1.0)/2.0;
-            double cy = (size.height - 1.0)/2.0;
-            cameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
-            cameraMatrix.put(0, 0, fx);
-            cameraMatrix.put(1, 1, fy);
-            cameraMatrix.put(0, 2, cx);
-            cameraMatrix.put(1, 2, cy);
-            
-            if (use2dRig) {
-                for (int attempt=0; attempt<3; attempt++) {
-                    Mat M = Mat.zeros(numberOfTestPatterns, 2, CvType.CV_64FC1);
-                    Mat b = Mat.zeros(numberOfTestPatterns, 1, CvType.CV_64FC1);
-                    for (int iTestPattern=0; iTestPattern<numberOfTestPatterns; iTestPattern++) {
-//                        Logger.trace("testPattern3dPointsList = " + testPattern3dPointsList.subList(iTestPattern, iTestPattern+1).get(0).dump());
-//                        Logger.trace("testPatternImagePointsList = " + testPatternImagePointsList.subList(iTestPattern, iTestPattern+1).get(0).dump());
-                        
-                        List<Mat> rvecs = new ArrayList<>();
-                        List<Mat> tvecs = new ArrayList<>();
-        
-                        cameraMatrix.put(0, 0, fx);
-                        cameraMatrix.put(1, 1, fy);
-                        cameraMatrix.put(0, 2, cx);
-                        cameraMatrix.put(1, 2, cy);
-                        
-                        double minRms = Double.POSITIVE_INFINITY;
-                        double rms = 0;
-                        do {
-                            Logger.trace("cameraMatrix = " + cameraMatrix.dump());
-                            rms = Calib3d.calibrateCamera(testPattern3dPointsList.subList(iTestPattern, iTestPattern+1), 
-                                    testPatternImagePointsList.subList(iTestPattern, iTestPattern+1), size,
-                                    cameraMatrix, distortionCoefficients, rvecs, tvecs, 
-                                    Calib3d.CALIB_USE_INTRINSIC_GUESS /*| Calib3d.CALIB_FIX_ASPECT_RATIO | Calib3d.CALIB_FIX_PRINCIPAL_POINT |  
-                                        Calib3d.CALIB_RATIONAL_MODEL |
-                                        Calib3d.CALIB_THIN_PRISM_MODEL | Calib3d.CALIB_TILTED_MODEL*/, termCriteria );
-                            Logger.trace("rms = " + rms);
-                            if (rms < minRms) {
-                                minRms = rms;
-                            }
-                        } while (false && (rms == minRms));
-                        
-                        Calib3d.Rodrigues(rvecs.get(0), rotate_m_c);
-                        
-                        Mat vect_m_tp_m = Mat.zeros(3, 1, CvType.CV_64FC1);
-                        vect_m_tp_m.put(2, 0, testPatternZ[iTestPattern]);
-                        
-                        //tvecs contains the vector from the camera to the test pattern origin with the components
-                        //expressed in the camera reference frame so: tempVect_m_c_m = vect_m_tp_m - rotate_m_c.t()*tvec
-                        Mat tempVect_m_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
-                        Core.gemm(rotate_m_c.t(), tvecs.get(0), -1, vect_m_tp_m, 1, tempVect_m_c_m);
-                        Logger.trace("tempVect_m_c_m = " + tempVect_m_c_m.dump());
-                        
-                        M.put(iTestPattern, 0, tempVect_m_c_m.get(2, 0)[0] - testPatternZ[iTestPattern]);
-                        M.put(iTestPattern, 1, -cameraMatrix.get(0, 0)[0]);
-                        b.put(iTestPattern, 0, -testPatternZ[iTestPattern]*cameraMatrix.get(0, 0)[0]);
-                        
-                        Logger.trace("cameraMatrix = " + cameraMatrix.dump());
-                        Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
-                    }
-                    Logger.trace("M = " + M.dump());
-                    Logger.trace("b = " + b.dump());
-                    
-                    Core.solve(M, b, solution, Core.DECOMP_SVD);
-                    Logger.trace("solution = " + solution.dump());
-                    
-//                    cameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
-                    fx = solution.get(0, 0)[0];
-                    fy = cameraMatrix.get(1, 1)[0] * fx / cameraMatrix.get(0, 0)[0];
-                    cx = cameraMatrix.get(0, 2)[0];
-                    cy = cameraMatrix.get(1, 2)[0];
-//                    cameraMatrix.put(0, 2, (size.width - 1.0)/2.0);
-//                    cameraMatrix.put(1, 2, (size.height - 1.0)/2.0);
-                }     
-                flags = Calib3d.CALIB_USE_INTRINSIC_GUESS | Calib3d.CALIB_FIX_FOCAL_LENGTH; // | Calib3d.CALIB_FIX_PRINCIPAL_POINT;
-
-            }
-            else {
-                cameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
-                cameraMatrix.put(0, 0, 1000);
-                cameraMatrix.put(1, 1, 1000);
-                cameraMatrix.put(0, 2, (size.width - 1.0)/2.0);
-                cameraMatrix.put(1, 2, (size.height - 1.0)/2.0);
+                double[][] tpArray = testPattern3dPoints[iTestPattern];
+                Mat tp3dMat = new Mat();
+                for (int ptIdx=0; ptIdx<tpArray.length; ptIdx++) {
+                    Point3 pt3 = new Point3(tpArray[ptIdx]);
+                    pt3.z = 0;
+                    tp3dMat.push_back(new MatOfPoint3f(pt3));
+                }
+                testPattern3dPointsList.add(tp3dMat);
                 
-                flags = Calib3d.CALIB_USE_INTRINSIC_GUESS;
+                tpArray = testPatternImagePoints[iTestPattern];
+                Mat tp2dMat = new Mat();
+                for (int ptIdx=0; ptIdx<tpArray.length; ptIdx++) {
+                    tp2dMat.push_back(new MatOfPoint2f(new Point(tpArray[ptIdx])));
+                }
+                testPatternImagePointsList.add(tp2dMat);
             }
-            
-            Mat unitZ = Mat.zeros(3, 1, CvType.CV_64FC1);
-            unitZ.put(2, 0, 1);
-            
+
             List<Mat> rvecs = new ArrayList<>();
             List<Mat> tvecs = new ArrayList<>();
             
-            double minRms = Double.POSITIVE_INFINITY;
-            double rms = 0;
-            do {
-                Logger.trace("cameraMatrix = " + cameraMatrix.dump());
-                
-                rms = Calib3d.calibrateCamera(testPattern3dPointsList, testPatternImagePointsList, size,
-                        cameraMatrix, distortionCoefficients, rvecs, tvecs, 
-                        flags /*| Calib3d.CALIB_FIX_ASPECT_RATIO |  
-                            Calib3d.CALIB_RATIONAL_MODEL |
-                            Calib3d.CALIB_THIN_PRISM_MODEL | Calib3d.CALIB_TILTED_MODEL*/, termCriteria );
-                Logger.trace("rms = " + rms);
-                if (rms < minRms) {
-                    minRms = rms;
-                }
-            } while (false && (rms == minRms));
+            cameraMatrix.release();
+            cameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
+            cameraMatrix.put(0, 0, 1000);
+            cameraMatrix.put(1, 1, 1000);
+            cameraMatrix.put(0, 2, (size.width - 1.0)/2.0);
+            cameraMatrix.put(1, 2, (size.height - 1.0)/2.0);
+            distortionCoefficients.release();
+            distortionCoefficients = Mat.zeros(5, 1, CvType.CV_64FC1);
+            
+            double rms = Calib3d.calibrateCamera(testPattern3dPointsList, 
+                    testPatternImagePointsList, size,
+                    cameraMatrix, distortionCoefficients, rvecs, tvecs, 0 /*| 
+                    Calib3d.CALIB_USE_INTRINSIC_GUESS | Calib3d.CALIB_FIX_ASPECT_RATIO | Calib3d.CALIB_FIX_PRINCIPAL_POINT |  
+                        Calib3d.CALIB_RATIONAL_MODEL |
+                        Calib3d.CALIB_THIN_PRISM_MODEL | Calib3d.CALIB_TILTED_MODEL*/ );
+            Logger.trace("rms = " + rms);
             
             for (Mat tp : testPattern3dPointsList) {
                 tp.release();
@@ -1415,64 +1266,146 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 tp.release();
             }
             
-            Logger.trace("cameraMatrix = " + cameraMatrix.dump());
-            Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
-
             boolean ok = Core.checkRange(cameraMatrix) && Core.checkRange(distortionCoefficients);
 
             Logger.info("calibrate() ok {}, rms {}", ok, rms);
 
-            //Convert the rotation vectors contained in rvecs to a rotation matrix that
-            //transforms vectors with components represented in the machine reference
-            //frame to those represented in the camera's reference frame
+            Logger.trace("cameraMatrix = " + cameraMatrix.dump());
+            Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
+
+            double[] initialParams = new double[13+2*numberOfTestPatterns];
+            initialParams[0] = cameraMatrix.get(0, 0)[0];
+            initialParams[1] = cameraMatrix.get(1, 1)[0];
+            initialParams[2] = cameraMatrix.get(0, 2)[0];
+            initialParams[3] = cameraMatrix.get(1, 2)[0];
+            initialParams[4] = distortionCoefficients.get(0, 0)[0];
+            initialParams[5] = distortionCoefficients.get(1, 0)[0];
+            initialParams[6] = distortionCoefficients.get(2, 0)[0];
+            initialParams[7] = distortionCoefficients.get(3, 0)[0];
+            initialParams[8] = distortionCoefficients.get(4, 0)[0];
+
+            //For our purposes, all of the rotation vectors should be exactly the same so just 
+            //average them to get the one rotation vector.
             Mat averageRvec = Mat.zeros(3, 1, CvType.CV_64FC1);
             double weight = 1.0/rvecs.size();
             for (Mat rvec : rvecs) {
                 Core.addWeighted(rvec, weight, averageRvec, 1, 0, averageRvec);
                 Logger.trace("rvec = " + rvec.dump());
-                rvec.release();
             }
+            initialParams[9] = averageRvec.get(0, 0)[0];
+            initialParams[10] = averageRvec.get(1, 0)[0];
+            initialParams[11] = averageRvec.get(2, 0)[0];
+            
             Calib3d.Rodrigues(averageRvec, rotate_m_c);
             averageRvec.release();
-            Logger.trace("rotate_m_c = " + rotate_m_c.dump());
+            Logger.trace("averaged rotate_m_c = " + rotate_m_c.dump());
+            Logger.trace("thetaZ = " + Math.toDegrees(Math.atan2(-rotate_m_c.get(0, 1)[0], rotate_m_c.get(0, 0)[0])));
+            Logger.trace("thetaY = " + Math.toDegrees(Math.asin(rotate_m_c.get(0, 2)[0])));
+            Logger.trace("thetaX = " + Math.toDegrees(Math.atan2(-rotate_m_c.get(1, 2)[0], rotate_m_c.get(2, 2)[0])));
 
-            //Construct a unit vector along the camera's positive z axis with components 
-            //represented in the machine reference system
-            unit_c_cz_m = Mat.zeros(3, 1, CvType.CV_64FC1);
-            Core.gemm(rotate_m_c.t(), unitZ, 1, unitZ, 0, unit_c_cz_m);
-            
             //tvecs contains the vector from the camera origin to the test pattern
             //origin with components expressed in the camera reference system
-            vect_m_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
             weight = 1.0/tvecs.size();
             int iTestPattern = 0;
-            for (Mat tvec : tvecs) {
-                Logger.trace("tvec = " + tvec.dump());
+            for (Mat vect_c_tp_c : tvecs) {
+                Logger.trace("vect_c_tp_c = " + vect_c_tp_c.dump());
                 
                 //Construct a vector from the machine origin to the test pattern origin with
                 //component in the machine reference system
                 Mat vect_m_tp_m = Mat.zeros(3, 1, CvType.CV_64FC1);
-                if (use2dRig) {
-                    vect_m_tp_m.put(2, 0, testPatternZ[iTestPattern]);
-                }
+                vect_m_tp_m.put(2, 0, testPatternZ[iTestPattern]);
+                Logger.trace("vect_m_tp_m = " + vect_m_tp_m.dump());
                 
+                Calib3d.Rodrigues(rvecs.get(iTestPattern), rotate_m_c);
+                rvecs.get(iTestPattern).release();
+                Logger.trace("rotate_m_c = " + rotate_m_c.dump());
+                Logger.trace("thetaZ = " + Math.toDegrees(Math.atan2(-rotate_m_c.get(0, 1)[0], rotate_m_c.get(0, 0)[0])));
+                Logger.trace("thetaY = " + Math.toDegrees(Math.asin(rotate_m_c.get(0, 2)[0])));
+                Logger.trace("thetaX = " + Math.toDegrees(Math.atan2(-rotate_m_c.get(1, 2)[0], rotate_m_c.get(2, 2)[0])));
+
                 //Construct a vector from the machine origin to the camera origin with components in 
                 //the machine reference system: vect_m_c_m = vect_m_tp_m - rotate_m_c.t() * vect_c_tp_c
                 Mat tempVect_m_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
-                Core.gemm(rotate_m_c.t(), tvec, -1, vect_m_tp_m, 1, tempVect_m_c_m);
-                //Ideally, all the tempVect_m_c_m vectors should have the same z component
+                Core.gemm(rotate_m_c.t(), vect_c_tp_c, -1, vect_m_tp_m, 1, tempVect_m_c_m);
+                vect_c_tp_c.release();
+                vect_m_tp_m.release();
                 Logger.trace("tempVect_m_c_m = " + tempVect_m_c_m.dump());
-                tvec.release();
                 
-                Core.addWeighted(tempVect_m_c_m, weight, vect_m_c_m, 1, 0, vect_m_c_m);
+                //Ideally, all the tempVect_m_c_m vectors should have the same z component so we 
+                //will just average the Z component
+                initialParams[12] += weight*tempVect_m_c_m.get(2,  0)[0];         //Z
+                initialParams[13 + 2*iTestPattern] = tempVect_m_c_m.get(0, 0)[0]; //X
+                initialParams[14 + 2*iTestPattern] = tempVect_m_c_m.get(1, 0)[0]; //Y
                 tempVect_m_c_m.release();
                 
                 iTestPattern++;
             }
-
+            
+            if (numberOfTestPatterns > 0) {
+                initialParams = CameraCalibrationUtils.ComputeBestCameraParameters(testPattern3dPoints, 
+                        testPatternImagePoints, initialParams, 
+                        /*CameraCalibrationUtils.KEEP_ROTATION | 
+                        CameraCalibrationUtils.KEEP_ASPECT_RATIO | */
+                        0*CameraCalibrationUtils.KEEP_CENTER_POINT);
+            }
+//            initialParams = CameraCalibrationUtils.ComputeBestCameraParameters(testPattern3dPoints, 
+//                    testPatternImagePoints, initialParams, CameraCalibrationUtils.KEEP_CENTER_POINT);
+            
+            cameraMatrix.put(0, 0, initialParams[0]);
+            cameraMatrix.put(1, 1, initialParams[1]);
+            cameraMatrix.put(0, 2, initialParams[2]);
+            cameraMatrix.put(1, 2, initialParams[3]);
+            Logger.trace("cameraMatrix = " + cameraMatrix.dump());
+            
+            distortionCoefficients.put(0, 0, initialParams[4]);
+            distortionCoefficients.put(1, 0, initialParams[5]);
+            distortionCoefficients.put(2, 0, initialParams[6]);
+            distortionCoefficients.put(3, 0, initialParams[7]);
+            distortionCoefficients.put(4, 0, initialParams[8]);
+            Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
+            
+            //Convert the rotation vector to a rotation matrix that transforms vectors with 
+            //components represented in the machine reference frame to those represented in 
+            //the camera's reference frame
+            Mat rvec = Mat.zeros(3, 1, CvType.CV_64FC1);
+            rvec.put(0,  0, initialParams[9]);
+            rvec.put(1,  0, initialParams[10]);
+            rvec.put(2,  0, initialParams[11]);
+            Calib3d.Rodrigues(rvec, rotate_m_c);
+            rvec.release();
+            Logger.trace("rotate_m_c = " + rotate_m_c.dump());
+            Logger.trace("thetaZ = " + Math.toDegrees(Math.atan2(-rotate_m_c.get(0, 1)[0], rotate_m_c.get(0, 0)[0])));
+            Logger.trace("thetaY = " + Math.toDegrees(Math.asin(rotate_m_c.get(0, 2)[0])));
+            Logger.trace("thetaX = " + Math.toDegrees(Math.atan2(-rotate_m_c.get(1, 2)[0], rotate_m_c.get(2, 2)[0])));
+            
+            //Should the camera x/y position be set to the average computed over all patterns or 
+            //just the position computed from the first pattern?  This really only matters for
+            //bottom cameras as that is where the precise x/y position of the camera is important. 
+            //For now just use the first pattern as that should be collected at the default Z for 
+            //the camera
+            vect_m_c_m.release();
+            vect_m_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
+            vect_m_c_m.put(2, 0, initialParams[12]); //Z
+            vect_m_c_m.put(0, 0, initialParams[13]); //X
+            vect_m_c_m.put(1, 0, initialParams[14]); //Y
+            Logger.trace("vect_m_c_m = " + vect_m_c_m.dump());
+            
+            //Create a unit Z vector
+            Mat unitZ = Mat.zeros(3, 1, CvType.CV_64FC1);
+            unitZ.put(2, 0, 1);
+            Logger.trace("unitZ = " + unitZ.dump());
+            
+            //Construct a unit vector along the camera's positive z axis with components 
+            //represented in the machine reference system
+            unit_c_cz_m.release();
+            unit_c_cz_m = Mat.zeros(3, 1, CvType.CV_64FC1);
+            Core.gemm(rotate_m_c.t(), unitZ, 1, unitZ, 0, unit_c_cz_m);
+            Logger.trace("unit_c_cz_m = " + unit_c_cz_m.dump());
+            
             //Compute the Z offset from the camera to the default Z plane
             double cameraToZPlane = defaultZ.convertToUnits(LengthUnit.Millimeters).getValue() - 
                     vect_m_c_m.get(2, 0)[0];
+            Logger.trace("cameraToZPlane = " + cameraToZPlane);
             
             //Construct a vector from the camera origin to the intersection of the camera 
             //Z-axis and the default Z plane with components in the machine reference system
@@ -1484,30 +1417,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Mat vect_c_defaultZPrincipalPoint_c = Mat.zeros(3, 1, CvType.CV_64FC1);
             Core.gemm(rotate_m_c, vect_c_defaultZPrincipalPoint_m, 1, vect_c_defaultZPrincipalPoint_m, 0, vect_c_defaultZPrincipalPoint_c);
             Logger.trace("vect_c_defaultZPrincipalPoint_c = " + vect_c_defaultZPrincipalPoint_c.dump());
-
+            vect_c_defaultZPrincipalPoint_c.release();
+            
             Mat vect_m_defaultZPrincipalPoint_m = Mat.zeros(3, 1, CvType.CV_64FC1);
             Core.add(vect_m_c_m, vect_c_defaultZPrincipalPoint_m, vect_m_defaultZPrincipalPoint_m);
             Logger.trace("vect_m_defaultZPrincipalPoint_m = " + vect_m_defaultZPrincipalPoint_m.dump());
-            
-            cameraToZPlane = defaultZ.convertToUnits(LengthUnit.Millimeters).getValue() - 
-                    solution.get(1, 0)[0];
-            Core.multiply(unit_c_cz_m, new Scalar(cameraToZPlane/unit_c_cz_m.get(2, 0)[0]), 
-                    vect_c_defaultZPrincipalPoint_m);
-            Logger.trace("vect_c_defaultZPrincipalPoint_m = " + vect_c_defaultZPrincipalPoint_m.dump());
-            
-            Core.gemm(rotate_m_c, vect_c_defaultZPrincipalPoint_m, 1, vect_c_defaultZPrincipalPoint_m, 0, vect_c_defaultZPrincipalPoint_c);
-            Logger.trace("vect_c_defaultZPrincipalPoint_c = " + vect_c_defaultZPrincipalPoint_c.dump());
-
-            Core.addWeighted(vect_m_defaultZPrincipalPoint_m, 1, vect_c_defaultZPrincipalPoint_m, -1, 0, vect_m_c_m);
-            Logger.trace("vect_m_c_m = " + vect_m_c_m.dump());
             
             Core.gemm(rotate_m_c.t(), vect_m_c_m, -1, vect_m_c_m, 0, vect_c_m_c);
             Logger.trace("vect_c_m_c = " + vect_c_m_c.dump());
             
             //Compute the absolute distance from the camera origin to the default Z plane principal 
             //point
-            double absoluteCameraToDefaultZPrincipalPointDistance = //2.6 + //Why does adding 2.6 here seem to make things work?????????????????????????????
-                    Core.norm(vect_c_defaultZPrincipalPoint_m, Core.NORM_L2);
+            double absoluteCameraToDefaultZPrincipalPointDistance = 
+                    Core.norm(vect_c_defaultZPrincipalPoint_m, Core.NORM_L2);  
             Logger.trace("absoluteCameraToDefaultZPrincipalPointDistance = " +
                     absoluteCameraToDefaultZPrincipalPointDistance);
             
@@ -1516,9 +1438,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             //is looking straight down onto the default Z principal point.  This is normal for top 
             //cameras, and for bottom cameras, this will make the image appear as if the bottom of 
             //the part was taken from above by an x-ray camera (which is desired).
+            vect_m_cHat_m.release();
             vect_m_cHat_m = vect_m_defaultZPrincipalPoint_m.clone();
             vect_m_cHat_m.put(2, 0, defaultZ.convertToUnits(LengthUnit.Millimeters).getValue() + 
-                    absoluteCameraToDefaultZPrincipalPointDistance);  //Why does adding 2.6 here seem to make things work?????????????????????????????
+                    absoluteCameraToDefaultZPrincipalPointDistance);
+            vect_m_defaultZPrincipalPoint_m.release();
             Logger.trace("vect_m_cHat_m = " + vect_m_cHat_m.dump());
             
             //Construct the rotation matrix that converts vectors represented in the machine reference
@@ -1541,6 +1465,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             //Construct the rotation matrix that converts vectors represented in the virtual 
             //camera's reference system to vectors represented in the camera's reference system.
             Mat rotate_cHat_c = Mat.zeros(3, 3, CvType.CV_64FC1);
+            //rotate_cHat_c = rotate_m_c * rotate_m_cHat.t()
             Core.gemm(rotate_m_c, rotate_m_cHat.t(), 1.0, rotate_m_cHat, 0.0, rotate_cHat_c);
             Logger.trace("rotate_cHat_c = " + rotate_cHat_c.dump());
             
@@ -1551,14 +1476,24 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Core.gemm(rotate_cHat_c, vect_cHat_m_cHat, -1.0, vect_c_m_c, 1.0, vect_c_cHat_c);
             Logger.trace("vect_c_cHat_c = " + vect_c_cHat_c.dump());
             
+            //Construct the vector from the virtual camera's origin to the camera's origin with 
+            //components represented in the virtual camera's reference system
+            Mat vect_cHat_c_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
+            //vect_cHat_c_cHat = -rotate_cHat_c.t() * vect_c_cHat_c
+            Core.gemm(rotate_cHat_c.t(), vect_c_cHat_c, -1.0, vect_c_m_c, 0.0, vect_cHat_c_cHat);
+            Logger.trace("vect_cHat_c_cHat = " + vect_cHat_c_cHat.dump());
+            
             //Construct the rectification matrix
             Core.gemm(vect_c_cHat_c, unitZ.t(), 1.0/absoluteCameraToDefaultZPrincipalPointDistance, 
                     rotate_cHat_c, 1.0, rectification);
             rectification = rectification.inv();
+            rectification.put(2, 0, rectification.get(2, 0)[0] / rectification.get(2, 2)[0]);
+            rectification.put(2, 1, rectification.get(2, 1)[0] / rectification.get(2, 2)[0]);
+            rectification.put(2, 2, 1);
+//            rectification.put(2, 0, rectification.get(2, 2)[0]*(rectification.get(0, 0)[0] - rectification.get(2, 2)[0])/rectification.get(0, 2)[0] );
+//            rectification.put(2, 1, rectification.get(2, 2)[0]*(rectification.get(1, 1)[0] - rectification.get(2, 2)[0])/rectification.get(1, 2)[0] );
             Logger.trace("rectification = " + rectification.dump());
-            
-//            vect_c_m_c.release();
-            vect_m_defaultZPrincipalPoint_m.release();
+
             rotate_m_cHat.release();
             
             vect_cHat_m_cHat.release();
@@ -1575,16 +1510,17 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     rectification, size, alpha, false);
             Logger.trace("virtualCameraMatrix = " + virtualCameraMatrix.dump());
 
+            Mat tempVCM = virtualCameraMatrix.clone();
+            tempVCM.put(0,  0, tempVCM.get(0, 0)[0]);
+            tempVCM.put(1,  1, tempVCM.get(1, 1)[0]);
             Calib3d.initUndistortRectifyMap(cameraMatrix,
                 distortionCoefficients, rectification,
-                virtualCameraMatrix, size, CvType.CV_32FC1,
+                tempVCM, size, CvType.CV_32FC1,
                 undistortionMap1, undistortionMap2);
         }
         
         private Mat computeVirtualCameraMatrix(Mat physicalCameraMatrix, Mat distortionCoefficients, 
                 Mat rectification, Size size, double alpha, boolean keepCenterPoint) {
-            Mat ret = Mat.eye(3, 3, CvType.CV_64FC1);
-            
             //Generate a set of points around the outer perimeter of the distorted unrectifed image
             int numberOfPointsPerSide = 250;
             MatOfPoint2f distortedPoints = new MatOfPoint2f();
@@ -1791,11 +1727,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             double f = innerF*alpha + outerF*(1-alpha);
             double cx = innerCx*alpha + outerCx*(1-alpha);
             double cy = innerCy*alpha + outerCy*(1-alpha);
+            
+            Mat ret = Mat.eye(3, 3, CvType.CV_64FC1);
+            
             ret.put(0, 0, f);
             ret.put(0, 2, cx);
             ret.put(1, 1, f);
             ret.put(1, 2, cy);
-            
+//            ret = Calib3d.getOptimalNewCameraMatrix(physicalCameraMatrix, distortionCoefficients, size, alpha, size, null, true);
+//            ret = physicalCameraMatrix.clone();
+//            ret.put(0, 0, 1000);
+//            ret.put(0, 2, cx);
+//            ret.put(1, 1, 1000);
+//            ret.put(1, 2, cy);
             return ret;
 //            return physicalCameraMatrix;
         }
@@ -1849,7 +1793,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             
             Mat vect_c_p_m = Mat.zeros(3, 1, CvType.CV_64FC1);
             Core.multiply(unit_c_cz_m, new Scalar(cameraToZPlane/unit_c_cz_m.get(2, 0)[0]), vect_c_p_m);
-
+            Logger.trace("vect_c_p_m = " + vect_c_p_m.dump());
+            
             Location offset = new Location(LengthUnit.Millimeters, vect_c_p_m.get(0, 0)[0], 
                     vect_c_p_m.get(1, 0)[0], vect_c_p_m.get(2, 0)[0], 0).convertToUnits(lengthZ.getUnits());
             

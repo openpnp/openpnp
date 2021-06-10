@@ -85,8 +85,8 @@ import org.pmw.tinylog.Logger;
 public abstract class CalibrateCameraProcess {
     static final boolean useSavedData = false;
 
-    private static final int numberOfCalibrationHeights = 3;
-    private static final int desiredTestPatternSize = 9;
+    private static final int numberOfCalibrationHeights = 2;
+    private static final int desiredTestPatternSize = 15;
     private static final int desiredPointsPerTestPattern = desiredTestPatternSize*desiredTestPatternSize;
     private static final double testPatternFillFraction = 0.90;
     private static final double trialStepSize = 0.5;
@@ -777,7 +777,7 @@ public abstract class CalibrateCameraProcess {
                         testPattern3dPoints.add( 
                                 new double[] {apparentMotionDirection*testLocation.getX(), 
                                               apparentMotionDirection*testLocation.getY(), 
-                                              0});
+                                              testPatternZ[calibrationHeightIndex]});
                         testPatternImagePoints.add(
                                 new double[] {measuredPoint.x, measuredPoint.y});
                     }
