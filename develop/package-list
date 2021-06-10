@@ -12,6 +12,11 @@ org.openpnp.gui.tablemodel
 org.openpnp.gui.wizards
 org.openpnp.imgur
 org.openpnp.logging
+org.openpnp.machine.index
+org.openpnp.machine.index.exceptions
+org.openpnp.machine.index.protocol
+org.openpnp.machine.index.sheets
+org.openpnp.machine.index.sheets.gui
 org.openpnp.machine.neoden4
 org.openpnp.machine.neoden4.wizards
 org.openpnp.machine.rapidplacer
