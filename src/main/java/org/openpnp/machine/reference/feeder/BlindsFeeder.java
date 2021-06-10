@@ -172,7 +172,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     private boolean calibrated = false;
 
     public static final String defaultGroupName = "Default";
-    private static final List<String> locationGroupNamesList = Arrays.asList(new String[]{defaultGroupName, "Location", "LOCATION", "location", "", "None", "none", "NONE"});
+    private static final List<String> locationGroupNamesList = Arrays.asList(new String[]{defaultGroupName, defaultGroupName.toUpperCase(), "LOCATION", "NONE", ""});
     
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
@@ -1631,6 +1631,19 @@ public class BlindsFeeder extends ReferenceFeeder {
         return list;
     }
 
+    public static List<BlindsFeeder> getBlindsFeedersWithGroupName(String groupName) {
+        List<BlindsFeeder> list = new ArrayList<>();
+        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+            if (feeder instanceof BlindsFeeder) {
+                BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
+                if(blindsFeeder.getFeederGroupName().equals(groupName)) {
+                    list.add(blindsFeeder);
+                }
+            }
+        }
+        return list;
+    }
+
     public static List<BlindsFeeder> getAllBlindsFeeders() {
         // Get all the BlindsFeeder instances on the machine.
         List<BlindsFeeder> list = new ArrayList<>();
@@ -1688,7 +1701,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public List<BlindsFeeder> getConnectedFeeders(Location location, boolean fiducial1MatchOnly) {
-        List<BlindsFeeder> feeder_list = getConnectedFeedersByLocation(fiducial1Location, fiducial1MatchOnly);
+        List<BlindsFeeder> feeder_list = getConnectedFeedersByLocation(location, fiducial1MatchOnly);
         return filterFeedersByGroupName(feeder_list, this.feederGroupName);
    }
 
@@ -1713,6 +1726,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 }
                 setCalibrated(feeder.calibrated);
                 setVisionEnabled(feeder.visionEnabled);
+                setFeederGroupNameFromOther(feeder.getFeederGroupName());
             }
             finally {
                 isUpdating = false;
@@ -2080,26 +2094,58 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public void setFeederGroupName(String newFeederGroupName) {
+        //Filter out a no change to group name.
+        if(this.feederGroupName.equals(newFeederGroupName)) {
+            return;
+        }
+        
         String oldName = this.feederGroupName;
-        String feederGroupName = newFeederGroupName;
+        String proposedGroupName = newFeederGroupName;
         
         //Check if the group name is one of the location keywords. If so reset name to default location.
-        if (locationGroupNamesList.contains(feederGroupName)) {
-            feederGroupName = defaultGroupName;
+        if (locationGroupNamesList.contains(newFeederGroupName.toUpperCase())) {
+            proposedGroupName = defaultGroupName;
         }
+        
         List<BlindsFeeder> connected_feeders = getConnectedFeeders();
+        List<BlindsFeeder> feedersWithNewGroupName = getBlindsFeedersWithGroupName(proposedGroupName);
+        List<String> feederGroupNames = getBlindsFeederGroupNames();
+        
+        boolean location_is_null = 
+                fiducial1Location.equals(nullLocation) ||
+                fiducial2Location.equals(nullLocation) ||
+                fiducial3Location.equals(nullLocation); 
 
-        if (! nullLocation.equals(this.fiducial1Location)) {
-            
-        }
-        for(BlindsFeeder feeder: connected_feeders) {
-            feeder.setFeederGroupNameFromOther(feederGroupName);
+        if (location_is_null) {
+            // Set fiducials to existing feeder with new group name if one exits
+            if (feedersWithNewGroupName.size() > 0) {
+                BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
+                this.updateFromConnectedFeeder(copyFeeder);
+            } else {
+                // Do not allow null located feeder to get a non default group name
+                proposedGroupName = defaultGroupName;
+                this.feederGroupName = proposedGroupName;
+            }
+        } else {
+            // Check for an attempt to join a different group
+            if (feederGroupNames.contains(proposedGroupName)) {
+                // If the feeder does not have any other connected feeders then join the group,
+                // else no change
+                if (connected_feeders.size() <= 1) {
+                    BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
+                    this.updateFromConnectedFeeder(copyFeeder);
+                } else {
+                    proposedGroupName = oldName;
+                }
+            } else {
+                for (BlindsFeeder feeder : connected_feeders) {
+                    feeder.setFeederGroupNameFromOther(proposedGroupName);
+                }
+            }
         }
 
         //Ensure this feeder group is changed if connected feeders is empty.
-        this.feederGroupName = feederGroupName;
-
-        firePropertyChange("feederGroupName", oldName, feederGroupName);
+        firePropertyChange("feederGroupName", oldName, proposedGroupName);
     }
 
     public void setFeederGroupNameFromOther(String newFeederGroupName) {

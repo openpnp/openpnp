@@ -60,6 +60,8 @@ public class BlindsFeederTest {
         BlindsFeederTestFiducials feederFiducals2 = new BlindsFeederTestFiducials(280,100, 200,100, 200,165);
         BlindsFeederTestFiducials feederFiducals3 = new BlindsFeederTestFiducials(380,100, 300,100, 300,165);
 
+        //********************************************************************************************//
+        //Test creating a new feeder
         //Create first blinds feeder and set and check its location
         BlindsFeeder blindsFeeder1 = new BlindsFeeder();
         machine.addFeeder(blindsFeeder1);
@@ -74,7 +76,9 @@ public class BlindsFeederTest {
         
         assert(blindsFeeder1.getFeedersTotal() == 1);
 
-        //Create a new feeder and connect it using fiducial 1 only
+        
+        //********************************************************************************************//
+        //Test creating another feeder and connect it in the same location using fiducial 1 only
         BlindsFeeder blindsFeeder2 = new BlindsFeeder();
         machine.addFeeder(blindsFeeder2);
 
@@ -91,7 +95,8 @@ public class BlindsFeederTest {
 
         assert(blindsFeeder1.getFeedersTotal() == 2);
 
-        //Create a new feeder at a different location
+        //********************************************************************************************//
+        //Test creating a feeder at a different location and that it does not connect to the othres
         BlindsFeeder blindsFeeder3 = new BlindsFeeder();
         machine.addFeeder(blindsFeeder3);
 
@@ -113,6 +118,8 @@ public class BlindsFeederTest {
         assert(!blindsFeeder1.getConnectedFeeders().contains(blindsFeeder3));
         assert(!blindsFeeder3.getConnectedFeeders().contains(blindsFeeder1));
 
+        //********************************************************************************************//
+        //Test setting feeder pockets
         final double pocketSizeMm = 2.8;
         final double pocketPositionMm = -1.0;
         final double pocketPitchMm = 4.0;
@@ -138,7 +145,10 @@ public class BlindsFeederTest {
         assert(blindsFeeder1.getConnectedFeeders().contains(blindsFeeder2));
         assert(blindsFeeder2.getConnectedFeeders().contains(blindsFeeder1));
 
-        //Check before moving that feeder 1/2 fiducials are at location 1
+        //********************************************************************************************//
+        //Test moving connected feeder fiducial 1 results in fiducials for conencted feeder moving relatively
+        
+        //Check before moving that feeder 1|2 fiducials are at location 1
         assert(blindsFeeder1.getFiducial1Location().equals(feederFiducals1.fiducial1));
         assert(blindsFeeder1.getFiducial2Location().equals(feederFiducals1.fiducial2));
         assert(blindsFeeder1.getFiducial3Location().equals(feederFiducals1.fiducial3));        
@@ -168,6 +178,7 @@ public class BlindsFeederTest {
         
         BlindsFeederTestFiducials feederFiducals1 = new BlindsFeederTestFiducials(180,100, 100,100, 100,165);
         BlindsFeederTestFiducials feederFiducals2 = new BlindsFeederTestFiducials(280,100, 200,100, 200,165);
+        BlindsFeederTestFiducials feederFiducals3 = new BlindsFeederTestFiducials(380,100, 300,100, 300,165);
         
         BlindsFeeder blindsFeeder1 = new BlindsFeeder();
         machine.addFeeder(blindsFeeder1);
@@ -186,7 +197,8 @@ public class BlindsFeederTest {
         assert(blindsFeeder2.getConnectedFeeders().contains(blindsFeeder1));
 
         //Change group name of feeder1, check feeder 2 at same location also changes group name
-        blindsFeeder1.setFeederGroupName("BlindsFeederTestGroup1");        
+        blindsFeeder1.setFeederGroupName("BlindsFeederTestGroup1");
+        assert(blindsFeeder1.getFeederGroupName().equals("BlindsFeederTestGroup1"));
         assert(blindsFeeder2.getFeederGroupName().equals(blindsFeeder1.getFeederGroupName()));
         
         //Check feeders are connected
@@ -225,10 +237,6 @@ public class BlindsFeederTest {
         blindsFeeder3.setFiducial2Location(feederFiducals2.fiducial2);
         blindsFeeder3.setFiducial3Location(feederFiducals2.fiducial3);
         
-        assert(!blindsFeeder1.getFiducial1Location().equals(feederFiducals2.fiducial1));
-        assert(!blindsFeeder1.getFiducial2Location().equals(feederFiducals2.fiducial2));
-        assert(!blindsFeeder1.getFiducial3Location().equals(feederFiducals2.fiducial3));
-
         assert(!blindsFeeder2.getFiducial1Location().equals(feederFiducals2.fiducial1));
         assert(!blindsFeeder2.getFiducial2Location().equals(feederFiducals2.fiducial2));
         assert(!blindsFeeder2.getFiducial3Location().equals(feederFiducals2.fiducial3));
@@ -240,15 +248,100 @@ public class BlindsFeederTest {
         assert(!blindsFeeder3.getConnectedFeeders().contains(blindsFeeder1));
         assert(!blindsFeeder1.getConnectedFeeders().contains(blindsFeeder3));
 
-//        //Create a new feeder at the first location with default group name
-//        BlindsFeeder blindsFeeder4 = new BlindsFeeder();
-//        machine.addFeeder(blindsFeeder4);
-//        
-//        //Set group name with default location.
-//        blindsFeeder4.setFeederGroupName("BlindsFeederTestGroup1");
-//        assert(blindsFeeder4.getConnectedFeeders().contains(blindsFeeder1));
-//        assert(blindsFeeder1.getConnectedFeeders().contains(blindsFeeder4));
+        //********************************************************************************************//
+        //Test assigning an existing group to a feeder at default location.
+        
+        //Create a new feeder at the first location with default group name
+        BlindsFeeder blindsFeeder4 = new BlindsFeeder();
+        machine.addFeeder(blindsFeeder4);
+        
+        //Set group name with default location to existing group
+        blindsFeeder4.setFeederGroupName("BlindsFeederTestGroup1");
+        
+        //Check it is connected to the group and has the expected fiducials
+        assert(blindsFeeder4.getConnectedFeeders().contains(blindsFeeder1));
+        assert(blindsFeeder1.getConnectedFeeders().contains(blindsFeeder4));
+        assert(blindsFeeder4.getFiducial1Location().equals(blindsFeeder1.getFiducial1Location()));
+        assert(blindsFeeder4.getFiducial2Location().equals(blindsFeeder1.getFiducial2Location()));
+        assert(blindsFeeder4.getFiducial3Location().equals(blindsFeeder1.getFiducial3Location()));
+        
+        //********************************************************************************************//
+        //Test assigning an existing group to a placed feeder that has no connected feeders.
+        //Create a new feeder at the third location
+        BlindsFeeder blindsFeeder5 = new BlindsFeeder();
+        machine.addFeeder(blindsFeeder5);
+        
+        blindsFeeder5.setFiducial1Location(feederFiducals3.fiducial1);
+        blindsFeeder5.setFiducial2Location(feederFiducals3.fiducial2);
+        blindsFeeder5.setFiducial3Location(feederFiducals3.fiducial3);
+        
+        //Set group name with default location to existing group
+        blindsFeeder5.setFeederGroupName("BlindsFeederTestGroup1");
+        assert(blindsFeeder5.getConnectedFeeders().contains(blindsFeeder1));
+        assert(blindsFeeder1.getConnectedFeeders().contains(blindsFeeder5));
+        assert(blindsFeeder5.getFiducial1Location().equals(blindsFeeder1.getFiducial1Location()));
+        assert(blindsFeeder5.getFiducial2Location().equals(blindsFeeder1.getFiducial2Location()));
+        assert(blindsFeeder5.getFiducial3Location().equals(blindsFeeder1.getFiducial3Location()));
 
+        //********************************************************************************************//
+        //Test assigning an existing group to a placed feeder with a non default name that has no connected feeders.
+        //Create a new feeder at the third location
+        BlindsFeeder blindsFeeder6 = new BlindsFeeder();
+        machine.addFeeder(blindsFeeder6);
+        
+        blindsFeeder6.setFiducial1Location(feederFiducals3.fiducial1);
+        blindsFeeder6.setFiducial2Location(feederFiducals3.fiducial2);
+        blindsFeeder6.setFiducial3Location(feederFiducals3.fiducial3);
+
+        blindsFeeder6.setFeederGroupName("BlindsFeederTemporaryTestGroup");
+        assert(blindsFeeder6.getFeederGroupName().equals("BlindsFeederTemporaryTestGroup"));
+        assert(blindsFeeder6.getConnectedFeeders().size() == 1);
+        
+        //Set group name with default location to existing group
+        blindsFeeder6.setFeederGroupName("BlindsFeederTestGroup1");
+        assert(blindsFeeder6.getConnectedFeeders().contains(blindsFeeder1));
+        assert(blindsFeeder1.getConnectedFeeders().contains(blindsFeeder6));
+        assert(blindsFeeder6.getFiducial1Location().equals(blindsFeeder1.getFiducial1Location()));
+        assert(blindsFeeder6.getFiducial2Location().equals(blindsFeeder1.getFiducial2Location()));
+        assert(blindsFeeder6.getFiducial3Location().equals(blindsFeeder1.getFiducial3Location()));
+
+        //********************************************************************************************//
+        //Test that a group of more than one named feeders will not join to another group at  the same location
+        BlindsFeeder blindsFeeder7 = new BlindsFeeder();
+        machine.addFeeder(blindsFeeder7);
+        BlindsFeeder blindsFeeder8 = new BlindsFeeder();
+        machine.addFeeder(blindsFeeder8);
+
+        blindsFeeder7.setFiducial1Location(feederFiducals2.fiducial1);
+        blindsFeeder7.setFiducial2Location(feederFiducals2.fiducial2);
+        blindsFeeder7.setFiducial3Location(feederFiducals2.fiducial3);
+        
+        blindsFeeder7.setFeederGroupName("BlindsFeederTestGroup2");
+        blindsFeeder8.setFeederGroupName("BlindsFeederTestGroup2");
+        
+        assert(blindsFeeder7.getConnectedFeeders().contains(blindsFeeder8));
+        assert(blindsFeeder8.getConnectedFeeders().contains(blindsFeeder7));
+        assert(blindsFeeder7.getFeederGroupName().contentEquals("BlindsFeederTestGroup2"));
+
+        assert(blindsFeeder7.getFiducial1Location().equals(feederFiducals2.fiducial1));
+        assert(blindsFeeder7.getFiducial2Location().equals(feederFiducals2.fiducial2));
+        assert(blindsFeeder7.getFiducial3Location().equals(feederFiducals2.fiducial3));
+        
+        //Try setting this feeder group name to the name of a different group.  Check that this is blocked.
+        blindsFeeder7.setFeederGroupName("BlindsFeederTestGroup1");
+        assert(!blindsFeeder7.getFeederGroupName().contentEquals("BlindsFeederTestGroup1"));
+        assert(!blindsFeeder7.getFeederGroupName().contentEquals("BlindsFeederTestGroup1"));
+        
+
+        //********************************************************************************************//
+        ///Test that a group of more than one named feeders will not join to another group at different location
+        blindsFeeder7.setFiducial1Location(feederFiducals3.fiducial1);
+        blindsFeeder7.setFiducial2Location(feederFiducals3.fiducial2);
+        blindsFeeder7.setFiducial3Location(feederFiducals3.fiducial3);
+
+        blindsFeeder7.setFeederGroupName("BlindsFeederTestGroup1");
+        assert(!blindsFeeder7.getFeederGroupName().contentEquals("BlindsFeederTestGroup1"));
+        assert(!blindsFeeder7.getFeederGroupName().contentEquals("BlindsFeederTestGroup1"));
 
     }
     
