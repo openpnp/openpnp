@@ -108,6 +108,12 @@ The **Advanced** milestone, while also serving as a production milestone, finall
 
 ___
 
+
+| Previous Step                 | Jump To                 | Next Step                                   |
+| ----------------------------- | ----------------------- | ------------------------------------------- |
+| [[Computer Vision]] | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Next Steps](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Next-Steps) |
+___
+
 ## Advanced Motion Control Topics
 
 ### Motion Control
