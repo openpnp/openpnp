@@ -8,4 +8,4 @@ Congratulations! If you've reached this point your machine should be fully capab
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Issues & Solutions]] | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [User Manual](https://github.com/openpnp/openpnp/wiki/User-Manual) |
+| [[Issues and Solutions]] | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [User Manual](https://github.com/openpnp/openpnp/wiki/User-Manual) |
