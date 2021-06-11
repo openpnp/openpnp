@@ -10,7 +10,7 @@ The usage of the Pipeline Editor UI in general is explained on the [[CvPipeline]
 
 # Stages
 
-* [[DetectCircularSymmetry]] searched the image for Circular Symmetry. It can be used to detect round things, regardless of their color, brightness, contrast and even if sharp edges are absent. The stage is very robust and self-tuning. 
+* [[DetectCircularSymmetry]] searched the image for Circular Symmetry. It can be used to detect round things, regardless of their color, brightness, contrast, even if sharp edges are absent. The stage is very robust and self-tuning. 
 
 
 
