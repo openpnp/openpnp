@@ -519,22 +519,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             advancedCalibration.initUndistortRectifyMap(mat.size(), 
                     ((double)advancedCalibration.alphaPercent)/100.0, 
                     undistortionMap1, undistortionMap2);
-            
-            double xScaling = (advancedCalibration.rectification.get(0, 0)[0]*advancedCalibration.rectification.get(2, 2)[0] -
-                    advancedCalibration.rectification.get(0, 2)[0]*advancedCalibration.rectification.get(2, 0)[0])/
-                    (advancedCalibration.rectification.get(2, 2)[0]*advancedCalibration.rectification.get(2, 2)[0]);
-            Logger.trace("xScaling = " + xScaling);
-            double yScaling = (advancedCalibration.rectification.get(1, 1)[0]*advancedCalibration.rectification.get(2, 2)[0] -
-                    advancedCalibration.rectification.get(1, 2)[0]*advancedCalibration.rectification.get(2, 1)[0])/
-                    (advancedCalibration.rectification.get(2, 2)[0]*advancedCalibration.rectification.get(2, 2)[0]);
-            Logger.trace("yScaling = " + yScaling);
-            double scaling = 1; //1.23; //Math.sqrt(xScaling*xScaling + yScaling*yScaling);
-            
             double dz = defaultZ.convertToUnits(LengthUnit.Millimeters).getValue();
             double distanceToCamera = advancedCalibration.getDistanceToCameraAtZ(defaultZ).getValue();
             Logger.trace("distanceToCamera@defaultZ = " + distanceToCamera);
-            double uppX = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(0, 0)[0] / scaling;
-            double uppY = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(1, 1)[0] / scaling;
+            double uppX = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(0, 0)[0];
+            double uppY = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(1, 1)[0];
             Logger.trace("primary uppX = " + uppX);
             Logger.trace("primary uppY = " + uppY);
             setUnitsPerPixelPrimary(new Location(LengthUnit.Millimeters, uppX, uppY, dz, 0));
@@ -548,8 +537,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             distanceToCamera = advancedCalibration.getDistanceToCameraAtZ(new Length(dz + 20, 
                     LengthUnit.Millimeters)).getValue();
             Logger.trace("distanceToCamera@defaultZ+20 = " + distanceToCamera);
-            uppX = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(0, 0)[0] / scaling;
-            uppY = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(1, 1)[0] / scaling;
+            uppX = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(0, 0)[0];
+            uppY = distanceToCamera / advancedCalibration.virtualCameraMatrix.get(1, 1)[0];
             Logger.trace("secondary uppX = " + uppX);
             Logger.trace("secondary uppY = " + uppY);
             setUnitsPerPixelSecondary(new Location(LengthUnit.Millimeters, uppX, uppY, dz + 20, 0));
@@ -1348,8 +1337,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                         CameraCalibrationUtils.KEEP_ASPECT_RATIO | */
                         0*CameraCalibrationUtils.KEEP_CENTER_POINT);
             }
-//            initialParams = CameraCalibrationUtils.ComputeBestCameraParameters(testPattern3dPoints, 
-//                    testPatternImagePoints, initialParams, CameraCalibrationUtils.KEEP_CENTER_POINT);
             
             cameraMatrix.put(0, 0, initialParams[0]);
             cameraMatrix.put(1, 1, initialParams[1]);
@@ -1414,11 +1401,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     vect_c_defaultZPrincipalPoint_m);
             Logger.trace("vect_c_defaultZPrincipalPoint_m = " + vect_c_defaultZPrincipalPoint_m.dump());
 
-            Mat vect_c_defaultZPrincipalPoint_c = Mat.zeros(3, 1, CvType.CV_64FC1);
-            Core.gemm(rotate_m_c, vect_c_defaultZPrincipalPoint_m, 1, vect_c_defaultZPrincipalPoint_m, 0, vect_c_defaultZPrincipalPoint_c);
-            Logger.trace("vect_c_defaultZPrincipalPoint_c = " + vect_c_defaultZPrincipalPoint_c.dump());
-            vect_c_defaultZPrincipalPoint_c.release();
-            
             Mat vect_m_defaultZPrincipalPoint_m = Mat.zeros(3, 1, CvType.CV_64FC1);
             Core.add(vect_m_c_m, vect_c_defaultZPrincipalPoint_m, vect_m_defaultZPrincipalPoint_m);
             Logger.trace("vect_m_defaultZPrincipalPoint_m = " + vect_m_defaultZPrincipalPoint_m.dump());
@@ -1490,8 +1472,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             rectification.put(2, 0, rectification.get(2, 0)[0] / rectification.get(2, 2)[0]);
             rectification.put(2, 1, rectification.get(2, 1)[0] / rectification.get(2, 2)[0]);
             rectification.put(2, 2, 1);
-//            rectification.put(2, 0, rectification.get(2, 2)[0]*(rectification.get(0, 0)[0] - rectification.get(2, 2)[0])/rectification.get(0, 2)[0] );
-//            rectification.put(2, 1, rectification.get(2, 2)[0]*(rectification.get(1, 1)[0] - rectification.get(2, 2)[0])/rectification.get(1, 2)[0] );
             Logger.trace("rectification = " + rectification.dump());
 
             rotate_m_cHat.release();
@@ -1507,15 +1487,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         protected void initUndistortRectifyMap(Size size, double alpha, Mat undistortionMap1, 
                 Mat undistortionMap2) {
             virtualCameraMatrix = computeVirtualCameraMatrix(cameraMatrix, distortionCoefficients, 
-                    rectification, size, alpha, false);
+                    rectification, size, alpha, true);
             Logger.trace("virtualCameraMatrix = " + virtualCameraMatrix.dump());
 
-            Mat tempVCM = virtualCameraMatrix.clone();
-            tempVCM.put(0,  0, tempVCM.get(0, 0)[0]);
-            tempVCM.put(1,  1, tempVCM.get(1, 1)[0]);
             Calib3d.initUndistortRectifyMap(cameraMatrix,
                 distortionCoefficients, rectification,
-                tempVCM, size, CvType.CV_32FC1,
+                virtualCameraMatrix, size, CvType.CV_32FC1,
                 undistortionMap1, undistortionMap2);
         }
         
@@ -1587,7 +1564,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             
             double outerCenterX = (outerMaxX + outerMinX) / 2;
             double outerCenterY = (outerMaxY + outerMinY) / 2;
-//            Logger.trace("outer center = (" + outerCenterX + ", " + outerCenterY + ")" );
+            Logger.trace("outer center = (" + outerCenterX + ", " + outerCenterY + ")" );
             
             double outerF;
             if ((outerMaxY - outerMinY)/(outerMaxX - outerMinX) >= aspectRatio) {
@@ -1604,8 +1581,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 outerMinY = outerCenterY - newHeight/2;
                 outerMaxY = outerCenterY + newHeight/2;
             }
-//            Logger.trace("outerX extent = (" + outerMinX + ", " + outerMaxX + ")" );
-//            Logger.trace("outerY extent = (" + outerMinY + ", " + outerMaxY + ")" );
+            Logger.trace("outerX extent = (" + outerMinX + ", " + outerMaxX + ")" );
+            Logger.trace("outerY extent = (" + outerMinY + ", " + outerMaxY + ")" );
             
             double outerCx = (size.width-1)/2 - outerF*outerCenterX;
             double outerCy = (size.height-1)/2 - outerF*outerCenterY;
@@ -1669,6 +1646,15 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     }
                 }
                 
+                if (keepCenterPoint) {
+                    double inner = Math.min(innerMaxX, -innerMinX);
+                    innerMaxX = inner;
+                    innerMinX = -inner;
+                    inner = Math.min(innerMaxY, -innerMinY);
+                    innerMaxY = inner;
+                    innerMinY = -inner;
+                }
+
                 double innerCenterOffsetX = (innerMaxX + innerMinX)/2 - innerCenterX;
                 double innerCenterOffsetY = (innerMaxY + innerMinY)/2 - innerCenterY;
                 
@@ -1689,12 +1675,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     innerMaxX = (innerMaxX + innerMinX)/2 + newWidth/2;
                     innerMinX = (innerMaxX + innerMinX)/2 - newWidth/2;
                 }
-//                Logger.trace("innerX extent = (" + innerMinX + ", " + innerMaxX + ")" );
-//                Logger.trace("innerY extent = (" + innerMinY + ", " + innerMaxY + ")" );
+                Logger.trace("innerX extent = (" + innerMinX + ", " + innerMaxX + ")" );
+                Logger.trace("innerY extent = (" + innerMinY + ", " + innerMaxY + ")" );
                 
                 innerCenterX += innerCenterOffsetX;
                 innerCenterY += innerCenterOffsetY;
-//                Logger.trace("inner center = (" + innerCenterX + ", " + innerCenterY + ")" );
+                Logger.trace("inner center = (" + innerCenterX + ", " + innerCenterY + ")" );
                 
                 fullyConstrained = (Math.abs(innerCenterOffsetX) < 0.0001) &&
                         (Math.abs(innerCenterOffsetY) < 0.0001);
@@ -1706,8 +1692,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     maxHeight = newHeight;
                     fullyConstrained = false;
                 }
-//                Logger.trace("width = " + newWidth + ", " + maxWidth);
-//                Logger.trace("height = " + newHeight + ", " + maxHeight);
+                Logger.trace("width = " + newWidth + ", " + maxWidth);
+                Logger.trace("height = " + newHeight + ", " + maxHeight);
             }
             undistortedPoints.release();
             
@@ -1734,14 +1720,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             ret.put(0, 2, cx);
             ret.put(1, 1, f);
             ret.put(1, 2, cy);
-//            ret = Calib3d.getOptimalNewCameraMatrix(physicalCameraMatrix, distortionCoefficients, size, alpha, size, null, true);
-//            ret = physicalCameraMatrix.clone();
-//            ret.put(0, 0, 1000);
-//            ret.put(0, 2, cx);
-//            ret.put(1, 1, 1000);
-//            ret.put(1, 2, cy);
+
             return ret;
-//            return physicalCameraMatrix;
         }
 
 //        private Mat convertToMachineCoordinates(Mat imagePoints, double desiredZ) {

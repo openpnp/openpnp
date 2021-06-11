@@ -132,7 +132,7 @@ public abstract class CalibrateCameraProcess {
                     "</body></html>",
             "<html><body>Place the calibration rig face down on the machine table.  Jog the "
             + "selected nozzle tip over the center of the rig and carefully lower it until it is "
-            + "just touching the rig. Click Next to pick-up the rig and retract it to safe Z." +
+            + "touching the rig. Click Next to pick-up the rig and retract it to safe Z." +
                     "</body></html>",
             "<html><body>Now jog the nozzle so that the calibration fiducial is centered in the "
             + "camera's field-of-view. Verify the fiducial stays within the green circle when the "
@@ -145,6 +145,8 @@ public abstract class CalibrateCameraProcess {
             "<html><body>Locating the %s corner of the camera's view." +
                     "</body></html>",
             "<html><body>Collecting calibration point %d of %d." +
+                    "</body></html>",
+            "<html><body>Changing nozzle height." +
                     "</body></html>",};
     private Part calibrationRig;
     private Package pkg;
@@ -326,7 +328,7 @@ public abstract class CalibrateCameraProcess {
     }
 
     /**
-     * Action to take when transitioning from step 0 to step 1
+     * Action to take after the operator has placed the calibration rig on the machine
      * 
      * @return true if the action was successful and the state machine should move to the next step
      */
@@ -492,6 +494,8 @@ public abstract class CalibrateCameraProcess {
                 Logger.trace("xScaling = " + xScaling);
                 Logger.trace("yScaling = " + yScaling);
                 
+                publish("Walking to image center.");
+                Logger.trace("Walking to image center.");
                 centralLocation = walkToPoint(imageCenterPoint, xScaling, yScaling);
 
                 return null;
@@ -704,16 +708,14 @@ public abstract class CalibrateCameraProcess {
     }
 
     /**
-     * Action to take when transitioning from step 4 to step 5
+     * Action to collect the calibration points for a test pattern (at a single Z height)
      * 
      * @return true if the action was successful and the state machine should move to the next step
      */
     private boolean step5() {
         //Collect the calibration points
  
-//        MatOfPoint3f testPattern3dPoints = new MatOfPoint3f();
         List<double[]> testPattern3dPoints = new ArrayList<>();
-//        MatOfPoint2f testPatternImagePoints = new MatOfPoint2f();
         List<double[]> testPatternImagePoints = new ArrayList<>();
         int angleIncrement;
         double observationWeight;
@@ -800,8 +802,6 @@ public abstract class CalibrateCameraProcess {
             @Override
             protected void done()  
             {
-                restoreCameraView();
-                
                 if (this.isCancelled()) {
                     CalibrateCameraProcess.this.cancel();
                     return;
@@ -809,6 +809,8 @@ public abstract class CalibrateCameraProcess {
                 
                 calibrationHeightIndex++;
                 if (calibrationHeightIndex == numberOfCalibrationHeights) {
+                    restoreCameraView();
+                    
                     double[][][] testPattern3dPointsArray = new double[testPattern3dPointsList.size()][][];
                     for (int tpIdx=0; tpIdx<testPattern3dPointsList.size(); tpIdx++) {
                         List<double[]> tp = testPattern3dPointsList.get(tpIdx);
@@ -831,6 +833,7 @@ public abstract class CalibrateCameraProcess {
                     
                     processRawCalibrationData(testPattern3dPointsArray, testPatternImagePointsArray, 
                         testPatternZ, new Size(pixelsX, pixelsY));
+                    
                     CalibrateCameraProcess.this.cancel();
                 }
                 else {
@@ -851,11 +854,35 @@ public abstract class CalibrateCameraProcess {
      * @return true if the action was successful and the state machine should move to the next step
      */
     private boolean step6() {
-        return true;
+        if (isHeadMountedCamera) {
+            return true;
+        }
+        else {
+            //change the nozzle height, center the nozzle, set step=1
+            testPatternZ[calibrationHeightIndex] = 
+                    testPatternZ[calibrationHeightIndex-1] + 10; //************************************* need to make this offset adjustable
+            movableZ = testPatternZ[calibrationHeightIndex] + 
+                    calibrationRig.getHeight().convertToUnits(LengthUnit.Millimeters).getValue();
+            
+            showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
+                    (int)(0.75*maskDiameter/2), Color.GREEN);
+        
+            Logger.trace("testPatternZ = " + testPatternZ);
+            Logger.trace("movableZ = " + movableZ);
+            
+            //Raise the calibration rig to the next calibration height
+            UiUtils.submitUiMachineTask(() -> {
+                nozzle.moveTo(nozzle.getLocation().convertToUnits(LengthUnit.Millimeters).derive(null, null, movableZ, null));
+            });
+            
+            step = 1;
+            
+            return true;
+        }
     }
     
     /**
-     * Action to take when transitioning from step 6 to step 1
+     * Action to take after the operator has manually changed the calibration rig's height
      * 
      * @return true if the action was successful and the state machine should move to the next step
      */
