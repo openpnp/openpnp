@@ -393,13 +393,13 @@ public class CalibrationSolutions implements Solutions.Subject {
                 MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveMm*mmAxis));
                 movable.moveTo(location, speed);
                 Location effective0 = machine.getVisualSolutions().getDetectedLocation(camera, camera, 
-                        location, fiducialDiameter, 2000);
+                        location, fiducialDiameter, 2000, false);
 
                 // Approach from plus.
                 MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveMm*mmAxis));
                 movable.moveTo(location, speed);
                 Location effective1 = machine.getVisualSolutions().getDetectedLocation(camera, camera, 
-                        location, fiducialDiameter, 2000);
+                        location, fiducialDiameter, 2000, false);
 
                 double mmError = effective1.subtract(effective0).dotProduct(unit).getValue();
                 if (movable == camera) {
@@ -467,21 +467,21 @@ public class CalibrationSolutions implements Solutions.Subject {
                     + "Automatic compensation not possible.");
         }
     }
+
     private double getAxisCalibrationTolerance(ReferenceCamera camera,
             ReferenceControllerAxis axis) {
-        // Get the axis resolution, but it might still be at the default 0.0001.
+        // Get the axis resolution (it might still be at the default 0.0001).
         Length resolution = new Length(axis.getResolution(), axis.getDriver().getUnits());
-        // Get a minimal pixel step size. 
-        Length pixelStep = (axis.getType() == Type.X  
+        // Get the sub-pixel resolution of the detection capability. 
+        Length subPixelUnit = (axis.getType() == Type.X  
                 ? camera.getUnitsPerPixel().getLengthX() 
-                        : camera.getUnitsPerPixel().getLengthY()).multiply(1.1);
-        if (pixelStep.compareTo(resolution) > 0) {
-            // If the pixel step is coarser than the set axis resolution or if 
-            // the axis resolution is not (yet) set properly, take the pixel step. 
-            resolution = pixelStep;
-        }
-        resolution = resolution.convertToUnits(LengthUnit.Millimeters);
-        return resolution.getValue();
+                        : camera.getUnitsPerPixel().getLengthY())
+                .multiply(1.0/machine.getVisualSolutions().getSuperSampling());
+        // Round up to the next full sub-pixel (Note, this also covers the case where the axis resolution is not yet set).
+        resolution = subPixelUnit.multiply(Math.ceil(resolution.divide(subPixelUnit)))
+                .convertToUnits(LengthUnit.Millimeters);
+        // Add 1% for safe double comparison.
+        return resolution.getValue()*1.01;
     }
 
     private Location displacedAxisLocation(HeadMountable movable, ReferenceControllerAxis axis,
@@ -505,7 +505,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             // Get the initial precise test object location.
             Location location = machine.getVisualSolutions()
                     .centerInOnSubjectLocation(defaultCamera, defaultCamera,
-                            head.getCalibrationTestObjectDiameter(), 2000);
+                            head.getCalibrationTestObjectDiameter(), 2000, false);
             // We accumulate all the detected differences and only calculate the centroid in the end. 
             int accumulated = 0;
             Location offsetsDiff = new Location(LengthUnit.Millimeters);
@@ -534,7 +534,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                 MovableUtils.moveToLocationAtSafeZ(defaultCamera, location);
                 Location newlocation = machine.getVisualSolutions()
                         .centerInOnSubjectLocation(defaultCamera, defaultCamera,
-                                head.getCalibrationTestObjectDiameter(), 2000);
+                                head.getCalibrationTestObjectDiameter(), 2000, false);
                 // Add to accumulation.
                 offsetsDiff = offsetsDiff.add(newlocation);
                 accumulated += 2;
