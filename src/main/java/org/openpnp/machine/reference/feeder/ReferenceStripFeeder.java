@@ -342,8 +342,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         }
         
         // ok, now put the part back on the location of the last pick
-        Location putLocation = getPickLocation();
-        MovableUtils.moveToLocationAtSafeZ(nozzle, putLocation);
+        nozzle.moveToPickLocation(this);
         // put the part back
         nozzle.place();
         nozzle.moveToSafeZ();

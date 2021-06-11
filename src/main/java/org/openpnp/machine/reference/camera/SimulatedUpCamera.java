@@ -9,10 +9,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.ConcurrentModificationException;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
-import java.util.List;
+import java.util.ConcurrentModificationException;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
@@ -84,19 +83,21 @@ public class SimulatedUpCamera extends ReferenceCamera {
         // determine if there are any nozzles within our bounds and if so render them
         Machine machine = Configuration.get()
                 .getMachine();
-        try {
-            for (Head head :  machine.getHeads()) {
-                for (Nozzle nozzle : head.getNozzles()) {
-                    Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
-                    if (phyBounds.contains(l.getX(), l.getY())) {
-                        drawNozzle(g, nozzle, l);
+        if (machine != null) {
+            try {
+                for (Head head :  machine.getHeads()) {
+                    for (Nozzle nozzle : head.getNozzles()) {
+                        Location l = SimulationModeMachine.getSimulatedPhysicalLocation(nozzle, getLooking());
+                        if (phyBounds.contains(l.getX(), l.getY())) {
+                            drawNozzle(g, nozzle, l);
+                        }
                     }
                 }
             }
-        }
-        catch (ConcurrentModificationException e) {
-            // If nozzles are added/removed while enumerating them here, a ConcurrentModificationExceptions 
-            // is thrown. This is not so unlikely when this camera has high fps. 
+            catch (ConcurrentModificationException e) {
+                // If nozzles are added/removed while enumerating them here, a ConcurrentModificationExceptions 
+                // is thrown. This is not so unlikely when this camera has high fps. 
+            }
         }
 
         g.setTransform(tx);

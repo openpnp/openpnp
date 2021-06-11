@@ -175,8 +175,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         }
 
         // ok, now put the part back on the location of the last pick
-        Location putLocation = getPickLocation();
-        MovableUtils.moveToLocationAtSafeZ(nozzle, putLocation);
+        nozzle.moveToPickLocation(this);
         nozzle.place();
         nozzle.moveToSafeZ();
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
