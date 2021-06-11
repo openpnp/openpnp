@@ -1692,11 +1692,8 @@ public class BlindsFeeder extends ReferenceFeeder {
         return list;
     }
 
-    public List<BlindsFeeder> getConnectedFeeders(Location location) {
-        return getConnectedFeeders(location, true);
-    }
-
     public List<BlindsFeeder> getConnectedFeeders() {
+        // Get all the feeders with the same fiducial 1 location.
         return getConnectedFeeders(fiducial1Location, true);
     }
 
