@@ -8,11 +8,52 @@ This page is dedicated to explain some of the stages in more detail. The usage o
 
 ## DetectCircularSymmetry
 
+### Operation Principle
+
+DetectCircularSymmetry searches the image for [Circular Symmetry](https://en.wikipedia.org/wiki/Circular_symmetry) i.e. for center points where the pixels of individual surrounding concentric rings show little change (variance) when compared to the overall variance in the same area. 
+
+As an example for Circular Symmetry, consider an archery target:
+
+![Archery target](https://user-images.githubusercontent.com/9963310/115282503-94247080-a14a-11eb-85ad-6f28ccc7ba6c.png) 
+
+Source:  [Wikipedia about Circular Symmetry](https://en.wikipedia.org/wiki/Circular_symmetry)
+
+The stage can be used to detect concentric things, like fiducials, sprocket holes, nozzle tips in runout calibration etc. 
+
+As an input it takes the expected diameter (minimum and maximum) of the feature to be detected. This is often a property that is well known or can easily be measured (using a caliper) without special knowledge about computer vision.
+
+Unlike other stages like **DetectCirclesHough**, or the **Countours** family of stages, it does not require sharp edges, thresholds, filtering, footprint colors etc. internally or as a prerequisite. Instead, it simply **compares the image to itself**, so **it is entirely self-tuning**, and it can robustly work with very weak contrasts, very soft images and changing ambient lights, varried/inverted colors.  
+
+### Example images
+Here is a series of images before/after detection. All these are with the same **standard pipeline**, only adjusted for nozzle tip/fiducial diameter, **no tuning**:
+
+Runout calibration with dark Samsung CP40 nozzle tips:
+
+![circular-symmetry-nozzle-tip](https://user-images.githubusercontent.com/9963310/115287362-7b1ebe00-a150-11eb-8452-99e132ef689b.gif)
+
+Same pipeline with a very low contrast, very soft/out of focus nozzle tip:
+
+![circular-symmetry-blur](https://user-images.githubusercontent.com/9963310/115287413-8a057080-a150-11eb-97e0-a4d29e204b7a.gif)
+
+Off-center view for camera position/rotation calibration: The nozzle tip is seen slightly from the side which means the various features of the nozzle are no longer concentric. The air bore is also slightly asymmetric. By simply selecting the wanted min/max diameter range it automatically snaps to the right ring. Observe how the blue center point jumps:
+
+![circular-symmetry-diameter-selection](https://user-images.githubusercontent.com/9963310/115287591-c042f000-a150-11eb-9730-4cb51530eade.gif)
+
+The same exact pipeline used for a fiducial:
+
+![circular-symmetry-fiducial](https://user-images.githubusercontent.com/9963310/115287645-cf29a280-a150-11eb-9cf6-c0d503b5d395.gif)
+
+### Diagnostics
+
+For diagnostic purposes you can enable a heat map, indicating the degree of symmetry:
+
+![circular-symmetry-diagnostics](https://user-images.githubusercontent.com/9963310/115288880-457ad480-a152-11eb-9d2e-85d5abe70aeb.gif)
+
 The standard pipeline is very simple (nozzle tip calibration example):
 
 ![Pipeline Editor](https://user-images.githubusercontent.com/9963310/115291350-ed919d00-a154-11eb-97ff-167f423240b3.png)
 
-The `DetectCircularSymmetry` stage is configured as follows:
+The **DetectCircularSymmetry** stage is configured as follows:
 
 ### General Properties
 
