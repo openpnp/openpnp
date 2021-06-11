@@ -8,4 +8,4 @@ Congratulations! If you've reached this point your machine should be fully capab
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [Camera Lighting](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [User Manual](https://github.com/openpnp/openpnp/wiki/User-Manual) |
+| [[Computer Vision]] | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [User Manual](https://github.com/openpnp/openpnp/wiki/User-Manual) |
