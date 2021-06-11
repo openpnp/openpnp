@@ -443,7 +443,7 @@ public class JogControlsPanel extends JPanel {
         panelSpecial.add(btnDiscard);
 
         JButton btnRecycle = new JButton(recycleAction);
-        btnRecycle.setEnabled(false);
+        recycleAction.setEnabled(false);
         btnRecycle.setToolTipText(Translations.getString("JogControlsPanel.btnRecycle.toolTipText")); //$NON-NLS-1$
         btnRecycle.setText(Translations.getString("JogControlsPanel.btnRecycle.text")); //$NON-NLS-1$
         panelSpecial.add(btnRecycle);
