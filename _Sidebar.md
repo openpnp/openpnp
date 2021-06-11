@@ -22,6 +22,7 @@ OpenPnP
     * [Bottom Vision](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Bottom-Vision)
     * [Vacuum Sensing](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing)
     * [Camera Lighting](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting)
+    * [[Computer Vision]]
     * [Issues and Solutions Wizard](https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions)
     * [Next Steps](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Next-Steps)
 * [[GcodeDriver]]
