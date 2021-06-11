@@ -382,10 +382,12 @@ public class BlindsFeederTest {
         testAllBlindsFeederConditions(testConditions);
         
         //********************************************************************************************//
-        //Test that a group of more than one named feeders will not join to another group at  the same location
+        //Test that a group of more than one named feeders will not join to another group at the same location
         BlindsFeeder blindsFeeder7 = new BlindsFeeder();
         machine.addFeeder(blindsFeeder7);
         BlindsFeederTestCondition testConditionFeeder7 = new BlindsFeederTestCondition(blindsFeeder7, 7);
+        List<BlindsFeederTestCondition> testConditionsGroup2 = new ArrayList<BlindsFeederTestCondition>();  
+        
         testConditions.add(testConditionFeeder7);
         
         BlindsFeeder blindsFeeder8 = new BlindsFeeder();
@@ -393,14 +395,18 @@ public class BlindsFeederTest {
         BlindsFeederTestCondition testConditionFeeder8 = new BlindsFeederTestCondition(blindsFeeder8, 8);
         testConditions.add(testConditionFeeder8);
 
-        testConditionFeeder7.setFiducials(feederFiducals2);
-        testConditionFeeder8.setFiducials(feederFiducals2);
-        blindsFeeder7.setFiducial1Location(feederFiducals2.fiducial1);
-        blindsFeeder7.setFiducial2Location(feederFiducals2.fiducial2);
-        blindsFeeder7.setFiducial3Location(feederFiducals2.fiducial3);
+        testConditionFeeder7.setFiducials(feederFiducals1);
+        blindsFeeder7.setFiducial1Location(feederFiducals1.fiducial1);
+        blindsFeeder7.setFiducial2Location(feederFiducals1.fiducial2);
+        blindsFeeder7.setFiducial3Location(feederFiducals1.fiducial3);
         
+        testConditionsGroup2.add(testConditionFeeder7);
+        testConditionsGroup2.add(testConditionFeeder8);
+        testConnectTestConditions(testConditionsGroup2);
+        testConditionFeeder8.setFiducials(feederFiducals1);
         testConditionFeeder7.setGroupName("BlindsFeederTestGroup2");
         testConditionFeeder8.setGroupName("BlindsFeederTestGroup2");
+        
         blindsFeeder7.setFeederGroupName("BlindsFeederTestGroup2");
         blindsFeeder8.setFeederGroupName("BlindsFeederTestGroup2");
         
