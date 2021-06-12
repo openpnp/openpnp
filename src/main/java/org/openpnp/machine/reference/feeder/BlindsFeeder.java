@@ -1619,6 +1619,8 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public static List<String> getBlindsFeederGroupNames() {
         List<String> list = new ArrayList<>();
+        list.add(defaultGroupName);
+        
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
             if (feeder instanceof BlindsFeeder) {
                 BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
@@ -2111,7 +2113,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         boolean location_is_null = 
                 fiducial1Location.equals(nullLocation) ||
                 fiducial2Location.equals(nullLocation) ||
-                fiducial3Location.equals(nullLocation); 
+                fiducial3Location.equals(nullLocation);
 
         if (location_is_null) {
             // Set fiducials to existing feeder with new group name if one exits
@@ -2119,7 +2121,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
                 this.updateFromConnectedFeeder(copyFeeder);
             } else {
-                // Do not allow null located feeder to get a non default group name
+                // Do not allow null located feeder to get a non-existent group name
                 proposedGroupName = defaultGroupName;
                 this.feederGroupName = proposedGroupName;
             }
@@ -2132,7 +2134,11 @@ public class BlindsFeeder extends ReferenceFeeder {
                     BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
                     this.updateFromConnectedFeeder(copyFeeder);
                 } else {
-                    proposedGroupName = oldName;
+                    if (proposedGroupName.contentEquals(defaultGroupName)) {
+                        this.feederGroupName = proposedGroupName;
+                    } else {
+                        proposedGroupName = oldName;                        
+                    }
                 }
             } else {
                 for (BlindsFeeder feeder : connected_feeders) {

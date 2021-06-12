@@ -61,6 +61,10 @@ public class BlindsFeederTest {
                 testConnectedFeeders.add(feeder);
             }
         }
+
+        void removeAllConnectedFeeders(){
+            testConnectedFeeders.clear();
+        }
         
         void setFiducial1(Location location) {
             testFiducials.fiducial1  = location;
@@ -92,7 +96,7 @@ public class BlindsFeederTest {
             assert (testFeeder.getFiducial2Location().equals(testFiducials.fiducial2)) : String.format("FeederID:%d : Fiducial 2 incorrect", testFeederID);
             assert (testFeeder.getFiducial3Location().equals(testFiducials.fiducial3)) : String.format("FeederID:%d : Fiducial 3 incorrect", testFeederID);
             
-            assert (testFeeder.getFeederGroupName().equals(testGroupName)) : String.format("FeederID %d : Group name incorrect", testFeederID);
+            assert (testFeeder.getFeederGroupName().equals(testGroupName)) : String.format("FeederID %d : Group name incorrect. Got:%s Expected:%s", testFeederID, testFeeder.getFeederGroupName(), testGroupName);
             
             List<BlindsFeeder> connectedFeeders = testFeeder.getConnectedFeeders();
 
@@ -108,7 +112,7 @@ public class BlindsFeederTest {
     public void testAllBlindsFeederConditions(List<BlindsFeederTestCondition> testConditions)  throws Exception {
         for (BlindsFeederTestCondition testCondition : testConditions) {
             try {
-                testCondition.testBlindsFeederCondition();                
+                testCondition.testBlindsFeederCondition();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 System.out.flush();
@@ -117,16 +121,53 @@ public class BlindsFeederTest {
         }
     }
     
-    public void testConnectTestConditions(List<BlindsFeederTestCondition> connectList) {
-        for(BlindsFeederTestCondition testCond1 : connectList) {
-            for(BlindsFeederTestCondition testCond2 : connectList) {
-                if(testCond1 != testCond2) {
-                    testCond1.addConnectedFeeder(testCond2.testFeeder);
-                    testCond2.addConnectedFeeder(testCond1.testFeeder);
+    public class BlindsFeederTestConditionGroup {
+        private ArrayList<BlindsFeederTestCondition> blindsFeederTestConditions;
+        
+        BlindsFeederTestConditionGroup(){
+            blindsFeederTestConditions = new ArrayList<BlindsFeederTestCondition>();
+        }
+        
+        void addTestCondition(BlindsFeederTestCondition testCondition) {
+            for(BlindsFeederTestCondition testCond : blindsFeederTestConditions) {
+                testCond.removeAllConnectedFeeders();
+            }
+            
+            if(!blindsFeederTestConditions.contains(testCondition)) {
+                blindsFeederTestConditions.add(testCondition);                
+            }
+            
+            for(BlindsFeederTestCondition testCond1 : blindsFeederTestConditions) {
+                for(BlindsFeederTestCondition testCond2 : blindsFeederTestConditions) {
+                    if(testCond1 != testCond2) {
+                        testCond1.addConnectedFeeder(testCond2.testFeeder);
+                        testCond2.addConnectedFeeder(testCond1.testFeeder);
+                    }
                 }
             }
         }
+
+        void removeTestCondition(BlindsFeederTestCondition testCondition) {
+            for(BlindsFeederTestCondition testCond : blindsFeederTestConditions) {
+                testCond.removeAllConnectedFeeders();
+            }
+            blindsFeederTestConditions.remove(testCondition);
+            for(BlindsFeederTestCondition testCond1 : blindsFeederTestConditions) {
+                for(BlindsFeederTestCondition testCond2 : blindsFeederTestConditions) {
+                    if(testCond1 != testCond2) {
+                        testCond1.addConnectedFeeder(testCond2.testFeeder);
+                        testCond2.addConnectedFeeder(testCond1.testFeeder);
+                    }
+                }
+            }
+        }
+        
+        ArrayList<BlindsFeederTestCondition> getBlindsFeederTestConditions(){
+            return blindsFeederTestConditions;
+        }
+    
     }
+
     
     @BeforeEach
     private void testBlindsFeederLoadConfiguration() throws Exception {
@@ -153,7 +194,7 @@ public class BlindsFeederTest {
     public void testBlindsFeederBasics() throws Exception {
         Machine machine = Configuration.get().getMachine();
         List<Feeder> feeders = machine.getFeeders();
-        List<BlindsFeederTestCondition> testConditions = new ArrayList<BlindsFeederTestCondition>();  
+        List<BlindsFeederTestCondition> testConditions = new ArrayList<BlindsFeederTestCondition>();
         
         BlindsFeederTestFiducials feederFiducals1 = new BlindsFeederTestFiducials(180,100, 100,100, 100,165);
 //        BlindsFeederTestFiducials feederFiducals1_bad = new BlindsFeederTestFiducials(180,100, 100,100, 100,170);
@@ -168,6 +209,9 @@ public class BlindsFeederTest {
         machine.addFeeder(blindsFeeder1);
         BlindsFeederTestCondition testConditionFeeder1 = new BlindsFeederTestCondition(blindsFeeder1, 1);
         testConditions.add(testConditionFeeder1);
+        
+        BlindsFeederTestConditionGroup testConditionsGroup1 = new BlindsFeederTestConditionGroup();
+        testConditionsGroup1.addTestCondition(testConditionFeeder1);
 
         testConditionFeeder1.setFiducials(feederFiducals1);
         blindsFeeder1.setFiducial1Location(feederFiducals1.fiducial1);
@@ -182,10 +226,10 @@ public class BlindsFeederTest {
         BlindsFeederTestCondition testConditionFeeder2 = new BlindsFeederTestCondition(blindsFeeder2, 1);
         testConditions.add(testConditionFeeder2);
 
+        testConditionsGroup1.addTestCondition(testConditionFeeder2);
         testConditionFeeder2.setFiducials(feederFiducals1);
-        testConditionFeeder2.addConnectedFeeder(blindsFeeder1);
-        testConditionFeeder1.addConnectedFeeder(blindsFeeder2);
         blindsFeeder2.setFiducial1Location(feederFiducals1.fiducial1);
+
         testAllBlindsFeederConditions(testConditions);
 
         //********************************************************************************************//
@@ -242,13 +286,13 @@ public class BlindsFeederTest {
         
         testAllBlindsFeederConditions(testConditions);
     }
-    
+
     @Test
     public void testBlindsFeederGroups() throws Exception {
         Machine machine = Configuration.get().getMachine();
         List<Feeder> feeders = machine.getFeeders();
-        List<BlindsFeederTestCondition> testConditions = new ArrayList<BlindsFeederTestCondition>();  
-        List<BlindsFeederTestCondition> testConditionsGroup1 = new ArrayList<BlindsFeederTestCondition>();  
+        List<BlindsFeederTestCondition> testConditions = new ArrayList<BlindsFeederTestCondition>();
+        BlindsFeederTestConditionGroup testConditionsGroup1 = new BlindsFeederTestConditionGroup();
 
         BlindsFeederTestFiducials feederFiducals1 = new BlindsFeederTestFiducials(180,100, 100,100, 100,165);
         BlindsFeederTestFiducials feederFiducals2 = new BlindsFeederTestFiducials(280,100, 200,100, 200,165);
@@ -258,7 +302,7 @@ public class BlindsFeederTest {
         machine.addFeeder(blindsFeeder1);
         BlindsFeederTestCondition testConditionFeeder1 = new BlindsFeederTestCondition(blindsFeeder1, 1);
         testConditions.add(testConditionFeeder1);
-        testConditionsGroup1.add(testConditionFeeder1);
+        testConditionsGroup1.addTestCondition(testConditionFeeder1);
 
         testConditionFeeder1.setFiducials(feederFiducals1);
         blindsFeeder1.setFiducial1Location(feederFiducals1.fiducial1);
@@ -273,9 +317,8 @@ public class BlindsFeederTest {
         machine.addFeeder(blindsFeeder2);
         BlindsFeederTestCondition testConditionFeeder2 = new BlindsFeederTestCondition(blindsFeeder2, 2);
         testConditions.add(testConditionFeeder2);
-        testConditionsGroup1.add(testConditionFeeder2);
-        
-        testConnectTestConditions(testConditionsGroup1);
+        testConditionsGroup1.addTestCondition(testConditionFeeder2);
+
         testConditionFeeder2.setFiducials(feederFiducals1);
         blindsFeeder2.setFiducial1Location(feederFiducals1.fiducial1);
         testAllBlindsFeederConditions(testConditions);
@@ -322,8 +365,7 @@ public class BlindsFeederTest {
         BlindsFeederTestCondition testConditionFeeder4 = new BlindsFeederTestCondition(blindsFeeder4, 4);
         testConditions.add(testConditionFeeder4);
 
-        testConditionsGroup1.add(testConditionFeeder4);
-        testConnectTestConditions(testConditionsGroup1);
+        testConditionsGroup1.addTestCondition(testConditionFeeder4);
         testConditionFeeder4.setFiducials(feederFiducals1);
         testConditionFeeder4.setGroupName("BlindsFeederTestGroup1");
         blindsFeeder4.setFeederGroupName("BlindsFeederTestGroup1");
@@ -345,8 +387,7 @@ public class BlindsFeederTest {
         testAllBlindsFeederConditions(testConditions);
 
         //Set group name with default location to existing group
-        testConditionsGroup1.add(testConditionFeeder5);
-        testConnectTestConditions(testConditionsGroup1);
+        testConditionsGroup1.addTestCondition(testConditionFeeder5);
         testConditionFeeder5.setFiducials(feederFiducals1);
         testConditionFeeder5.setGroupName("BlindsFeederTestGroup1");
         blindsFeeder5.setFeederGroupName("BlindsFeederTestGroup1");
@@ -373,8 +414,7 @@ public class BlindsFeederTest {
         assert(blindsFeeder6.getConnectedFeeders().size() == 1);
         
         //Set group name with default location to existing group
-        testConditionsGroup1.add(testConditionFeeder6);
-        testConnectTestConditions(testConditionsGroup1);
+        testConditionsGroup1.addTestCondition(testConditionFeeder6);
         testConditionFeeder6.setFiducials(feederFiducals1);
         testConditionFeeder6.setGroupName("BlindsFeederTestGroup1");
         blindsFeeder6.setFeederGroupName("BlindsFeederTestGroup1");
@@ -382,13 +422,30 @@ public class BlindsFeederTest {
         testAllBlindsFeederConditions(testConditions);
         
         //********************************************************************************************//
+        //Test assigning a feeder that is part of a name group of more than one back to default
+        
+        testConditionsGroup1.removeTestCondition(testConditionFeeder6);
+        testConditionFeeder6.setGroupName("Default");
+        blindsFeeder6.setFeederGroupName("Default");
+        testAllBlindsFeederConditions(testConditions);
+        
+        //********************************************************************************************//
+        //Test removing a feeder that is in the default group. Clears space at feederFiducals1 for next test.
+        
+        machine.removeFeeder(blindsFeeder6);
+        testConditions.remove(testConditionFeeder6);
+        testAllBlindsFeederConditions(testConditions);
+        
+        //********************************************************************************************//
         //Test that a group of more than one named feeders will not join to another group at the same location
         BlindsFeeder blindsFeeder7 = new BlindsFeeder();
         machine.addFeeder(blindsFeeder7);
-        BlindsFeederTestCondition testConditionFeeder7 = new BlindsFeederTestCondition(blindsFeeder7, 7);
-        List<BlindsFeederTestCondition> testConditionsGroup2 = new ArrayList<BlindsFeederTestCondition>();  
         
+        BlindsFeederTestCondition testConditionFeeder7 = new BlindsFeederTestCondition(blindsFeeder7, 7);
         testConditions.add(testConditionFeeder7);
+
+        BlindsFeederTestConditionGroup testConditionsGroup2 = new BlindsFeederTestConditionGroup();
+        testConditionsGroup2.addTestCondition(testConditionFeeder7);
         
         BlindsFeeder blindsFeeder8 = new BlindsFeeder();
         machine.addFeeder(blindsFeeder8);
@@ -400,9 +457,7 @@ public class BlindsFeederTest {
         blindsFeeder7.setFiducial2Location(feederFiducals1.fiducial2);
         blindsFeeder7.setFiducial3Location(feederFiducals1.fiducial3);
         
-        testConditionsGroup2.add(testConditionFeeder7);
-        testConditionsGroup2.add(testConditionFeeder8);
-        testConnectTestConditions(testConditionsGroup2);
+        testConditionsGroup2.addTestCondition(testConditionFeeder8);
         testConditionFeeder8.setFiducials(feederFiducals1);
         testConditionFeeder7.setGroupName("BlindsFeederTestGroup2");
         testConditionFeeder8.setGroupName("BlindsFeederTestGroup2");
