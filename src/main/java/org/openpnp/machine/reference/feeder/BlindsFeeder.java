@@ -2110,43 +2110,50 @@ public class BlindsFeeder extends ReferenceFeeder {
         List<BlindsFeeder> feedersWithNewGroupName = getBlindsFeedersWithGroupName(proposedGroupName);
         List<String> feederGroupNames = getBlindsFeederGroupNames();
         
+        boolean proposed_is_default = proposedGroupName.contentEquals(defaultGroupName);
+        boolean proposed_is_existing_group = feederGroupNames.contains(proposedGroupName);
+        
         boolean location_is_null = 
                 fiducial1Location.equals(nullLocation) ||
                 fiducial2Location.equals(nullLocation) ||
                 fiducial3Location.equals(nullLocation);
+        
+        boolean can_join_named_group =  
+                (location_is_null &&  (feedersWithNewGroupName.size() > 0));
 
-        if (location_is_null) {
-            // Set fiducials to existing feeder with new group name if one exits
-            if (feedersWithNewGroupName.size() > 0) {
-                BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
-                this.updateFromConnectedFeeder(copyFeeder);
-            } else {
-                // Do not allow null located feeder to get a non-existent group name
-                proposedGroupName = defaultGroupName;
-                this.feederGroupName = proposedGroupName;
+        boolean can_rename_group = (
+                !location_is_null 
+                && !proposed_is_default
+                && !proposed_is_existing_group);
+
+        boolean single_can_join_named_group = (
+                !location_is_null 
+                && feederGroupNames.contains(proposedGroupName)
+                && (connected_feeders.size() <= 1) );
+        
+        boolean can_leave_group_for_default = (
+                !location_is_null
+                && feederGroupNames.contains(oldName)
+                && proposed_is_default);
+
+        if (can_join_named_group) {
+            BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
+            this.updateFromConnectedFeeder(copyFeeder);
+        } else if (single_can_join_named_group) {
+            BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
+            this.updateFromConnectedFeeder(copyFeeder);
+        } else if (can_rename_group) {
+            for (BlindsFeeder feeder : connected_feeders) {
+                feeder.setFeederGroupNameFromOther(proposedGroupName);
             }
-        } else {
-            // Check for an attempt to join a different group
-            if (feederGroupNames.contains(proposedGroupName)) {
-                // If the feeder does not have any other connected feeders then join the group,
-                // else no change
-                if (connected_feeders.size() <= 1) {
-                    BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
-                    this.updateFromConnectedFeeder(copyFeeder);
-                } else {
-                    if (proposedGroupName.contentEquals(defaultGroupName)) {
-                        this.feederGroupName = proposedGroupName;
-                    } else {
-                        proposedGroupName = oldName;                        
-                    }
-                }
-            } else {
-                for (BlindsFeeder feeder : connected_feeders) {
-                    feeder.setFeederGroupNameFromOther(proposedGroupName);
-                }
-            }
+        } else if (can_leave_group_for_default) {
+            proposedGroupName = defaultGroupName;
+            this.feederGroupName = proposedGroupName;
         }
-
+        else {
+            proposedGroupName = oldName;
+        }
+        
         //Ensure this feeder group is changed if connected feeders is empty.
         firePropertyChange("feederGroupName", oldName, proposedGroupName);
     }
