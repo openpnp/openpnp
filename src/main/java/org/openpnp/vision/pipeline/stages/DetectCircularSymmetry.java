@@ -442,7 +442,8 @@ public class DetectCircularSymmetry extends CvStage {
             // Got the final result.
             ret = new ArrayList<>();
             if (scoreBest > minSymmetry) {
-                ret.add(bestResult);
+                // For some (unknown) reason we need to add another 0.5 to coordinates for best results. 
+                ret.add( new CvStage.Result.Circle(bestResult.x + 0.5, bestResult.y + 0.5, bestResult.diameter));
             }
         }
         else {
