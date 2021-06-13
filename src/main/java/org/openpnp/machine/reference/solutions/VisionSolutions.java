@@ -1118,8 +1118,8 @@ public class VisionSolutions implements Solutions.Subject {
         ScoreRange scoreRange = new ScoreRange();
         List<Circle> results = DetectCircularSymmetry.findCircularSymmetry(image, 
                 expectedX, expectedY, 
-                maxDiameter, minDiameter, maxDistance, minSymmetry,
-                subSampling, superSampling, diagnostics > 0, scoreRange);
+                maxDiameter, minDiameter, maxDistance, 1,
+                minSymmetry, 0.0, subSampling, superSampling, diagnostics > 0, scoreRange);
         if (diagnostics > 0) {
             if (LogUtils.isDebugEnabled()) {
                 File file = Configuration.get().createResourceFile(getClass(), "loc_", ".png");
@@ -1131,7 +1131,7 @@ public class VisionSolutions implements Solutions.Subject {
                 .getCameraViews()
                 .getCameraView(camera)
                 .showFilteredImage(diagnosticImage,
-                        String.format("Circular Symmetry: %.1f ×", scoreRange.maxSymmetryScore), diagnostics);
+                        String.format("Circular Symmetry: %.1f ×", scoreRange.finalScore), diagnostics);
             });
         }
         if (results.size() < 1) {
