@@ -2093,68 +2093,58 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public void setFeederGroupName(String newFeederGroupName) {
-        //Filter out a no change to group name.
-        if(this.feederGroupName.equals(newFeederGroupName)) {
+        // Filter out a no change to group name.
+        if (this.feederGroupName.equals(newFeederGroupName)) {
             return;
         }
-        
+
         String oldName = this.feederGroupName;
         String proposedGroupName = newFeederGroupName;
-        
-        //Check if the group name is one of the location keywords. If so reset name to default location.
+
+        // Check if the group name is one of the location keywords. If so reset name to
+        // default location.
         if (locationGroupNamesList.contains(newFeederGroupName.toUpperCase())) {
             proposedGroupName = defaultGroupName;
         }
-        
+
         List<BlindsFeeder> connected_feeders = getConnectedFeeders();
         List<BlindsFeeder> feedersWithNewGroupName = getBlindsFeedersWithGroupName(proposedGroupName);
         List<String> feederGroupNames = getBlindsFeederGroupNames();
-        
-        boolean proposed_is_default = proposedGroupName.contentEquals(defaultGroupName);
-        boolean proposed_is_existing_group = feederGroupNames.contains(proposedGroupName);
-        
-        boolean location_is_null = 
-                fiducial1Location.equals(nullLocation) ||
-                fiducial2Location.equals(nullLocation) ||
-                fiducial3Location.equals(nullLocation);
-        
-        boolean can_join_named_group =  
-                (location_is_null &&  (feedersWithNewGroupName.size() > 0));
 
-        boolean can_rename_group = (
-                !location_is_null 
-                && !proposed_is_default
-                && !proposed_is_existing_group);
+        boolean proposedIsDefault = proposedGroupName.contentEquals(defaultGroupName);
+        boolean proposedIsExistingGroup = feederGroupNames.contains(proposedGroupName);
 
-        boolean single_can_join_named_group = (
-                !location_is_null 
-                && feederGroupNames.contains(proposedGroupName)
-                && (connected_feeders.size() <= 1) );
-        
-        boolean can_leave_group_for_default = (
-                !location_is_null
-                && feederGroupNames.contains(oldName)
-                && proposed_is_default);
+        boolean locationIsNull = fiducial1Location.equals(nullLocation) || fiducial2Location.equals(nullLocation)
+                || fiducial3Location.equals(nullLocation);
 
-        if (can_join_named_group) {
+        boolean canJoinNamedGroup = (locationIsNull && (feedersWithNewGroupName.size() > 0));
+
+        boolean canRenameGroup = (!locationIsNull && !proposedIsDefault && !proposedIsExistingGroup);
+
+        boolean single_can_join_named_group = (!locationIsNull && feederGroupNames.contains(proposedGroupName)
+                && (connected_feeders.size() <= 1));
+
+        boolean can_leave_group_for_default = (!locationIsNull && feederGroupNames.contains(oldName)
+                && proposedIsDefault);
+
+        if (canJoinNamedGroup) {
             BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
             this.updateFromConnectedFeeder(copyFeeder);
         } else if (single_can_join_named_group) {
             BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
             this.updateFromConnectedFeeder(copyFeeder);
-        } else if (can_rename_group) {
+        } else if (canRenameGroup) {
             for (BlindsFeeder feeder : connected_feeders) {
                 feeder.setFeederGroupNameFromOther(proposedGroupName);
             }
         } else if (can_leave_group_for_default) {
             proposedGroupName = defaultGroupName;
             this.feederGroupName = proposedGroupName;
-        }
-        else {
+        } else {
             proposedGroupName = oldName;
         }
-        
-        //Ensure this feeder group is changed if connected feeders is empty.
+
+        // Ensure this feeder group is changed if connected feeders is empty.
         firePropertyChange("feederGroupName", oldName, proposedGroupName);
     }
 
