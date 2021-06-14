@@ -2121,23 +2121,23 @@ public class BlindsFeeder extends ReferenceFeeder {
 
         boolean canRenameGroup = (!locationIsNull && !proposedIsDefault && !proposedIsExistingGroup);
 
-        boolean single_can_join_named_group = (!locationIsNull && feederGroupNames.contains(proposedGroupName)
+        boolean singleCanJoinNamedGroup = (!locationIsNull && feederGroupNames.contains(proposedGroupName)
                 && (connected_feeders.size() <= 1));
 
-        boolean can_leave_group_for_default = (!locationIsNull && feederGroupNames.contains(oldName)
+        boolean canLeaveGroupForDefault = (!locationIsNull && feederGroupNames.contains(oldName)
                 && proposedIsDefault);
 
         if (canJoinNamedGroup) {
             BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
             this.updateFromConnectedFeeder(copyFeeder);
-        } else if (single_can_join_named_group) {
+        } else if (singleCanJoinNamedGroup) {
             BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
             this.updateFromConnectedFeeder(copyFeeder);
         } else if (canRenameGroup) {
             for (BlindsFeeder feeder : connected_feeders) {
                 feeder.setFeederGroupNameFromOther(proposedGroupName);
             }
-        } else if (can_leave_group_for_default) {
+        } else if (canLeaveGroupForDefault) {
             proposedGroupName = defaultGroupName;
             this.feederGroupName = proposedGroupName;
         } else {
