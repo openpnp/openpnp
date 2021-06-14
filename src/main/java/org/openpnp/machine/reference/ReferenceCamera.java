@@ -1246,7 +1246,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     Calib3d.CALIB_USE_INTRINSIC_GUESS | Calib3d.CALIB_FIX_ASPECT_RATIO | Calib3d.CALIB_FIX_PRINCIPAL_POINT |  
                         Calib3d.CALIB_RATIONAL_MODEL |
                         Calib3d.CALIB_THIN_PRISM_MODEL | Calib3d.CALIB_TILTED_MODEL*/ );
-            Logger.trace("rms = " + rms);
+            Logger.trace("Calib3d.calibrateCamera rms = " + rms);
             
             for (Mat tp : testPattern3dPointsList) {
                 tp.release();
@@ -1465,14 +1465,25 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Core.gemm(rotate_cHat_c.t(), vect_c_cHat_c, -1.0, vect_c_m_c, 0.0, vect_cHat_c_cHat);
             Logger.trace("vect_cHat_c_cHat = " + vect_cHat_c_cHat.dump());
             
-            //Construct the rectification matrix
-            Core.gemm(vect_c_cHat_c, unitZ.t(), 1.0/absoluteCameraToDefaultZPrincipalPointDistance, 
-                    rotate_cHat_c, 1.0, rectification);
-            rectification = rectification.inv();
+            Mat unit_m_mz_c = Mat.zeros(3, 1, CvType.CV_64FC1);
+            Core.gemm(rotate_m_c, unitZ, 1, unitZ, 0, unit_m_mz_c);
+            
+            Core.gemm(vect_cHat_c_cHat, unit_m_mz_c.t(), 1.0/(absoluteCameraToDefaultZPrincipalPointDistance*unit_m_mz_c.get(2, 0)[0]), 
+                    rotate_cHat_c.t(), vect_c_defaultZPrincipalPoint_m.get(2, 0)[0]/(absoluteCameraToDefaultZPrincipalPointDistance*unit_m_mz_c.get(2, 0)[0]), 
+                    rectification);
             rectification.put(2, 0, rectification.get(2, 0)[0] / rectification.get(2, 2)[0]);
             rectification.put(2, 1, rectification.get(2, 1)[0] / rectification.get(2, 2)[0]);
             rectification.put(2, 2, 1);
             Logger.trace("rectification = " + rectification.dump());
+            
+//            //Construct the rectification matrix
+//            Core.gemm(vect_c_cHat_c, unitZ.t(), 1.0/absoluteCameraToDefaultZPrincipalPointDistance, 
+//                    rotate_cHat_c, 1.0, rectification);
+//            rectification = rectification.inv();
+//            rectification.put(2, 0, rectification.get(2, 0)[0] / rectification.get(2, 2)[0]);
+//            rectification.put(2, 1, rectification.get(2, 1)[0] / rectification.get(2, 2)[0]);
+//            rectification.put(2, 2, 1);
+//            Logger.trace("rectification = " + rectification.dump());
 
             rotate_m_cHat.release();
             
@@ -1530,6 +1541,21 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             distortedPoints.release();
 //            Logger.trace("undistortedPoints = " + undistortedPoints.dump());
             
+            distortedPoints = new MatOfPoint2f();
+            distortedPoints.push_back(new MatOfPoint2f(
+                    new org.opencv.core.Point(physicalCameraMatrix.get(0, 2)[0], 
+                            physicalCameraMatrix.get(1, 2)[0])));
+
+            MatOfPoint2f centerPoint = new MatOfPoint2f();
+           
+            //Compute the corresponding points in the undistorted and rectified image
+            Calib3d.undistortPoints(distortedPoints, centerPoint, physicalCameraMatrix, 
+                    distortionCoefficients, rectification);
+            distortedPoints.release();
+            double centerX = centerPoint.get(0,  0)[0];
+            double centerY = centerPoint.get(0,  0)[1];
+            centerPoint.release();
+            
             double outerMaxX = Double.NEGATIVE_INFINITY;
             double outerMinX = Double.POSITIVE_INFINITY;
             double outerMaxY = Double.NEGATIVE_INFINITY;
@@ -1552,12 +1578,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
             
             if (keepCenterPoint) {
-                double outer = Math.max(outerMaxX, -outerMinX);
-                outerMaxX = outer;
-                outerMinX = -outer;
-                outer = Math.max(outerMaxY, -outerMinY);
-                outerMaxY = outer;
-                outerMinY = -outer;
+                double outer = Math.max(outerMaxX - centerX, centerX - outerMinX);
+                outerMaxX = centerX + outer;
+                outerMinX = centerX - outer;
+                outer = Math.max(outerMaxY - centerY, centerY - outerMinY);
+                outerMaxY = centerY + outer;
+                outerMinY = centerY - outer;
             }
             
             double aspectRatio = size.height/size.width;
@@ -1647,12 +1673,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 }
                 
                 if (keepCenterPoint) {
-                    double inner = Math.min(innerMaxX, -innerMinX);
-                    innerMaxX = inner;
-                    innerMinX = -inner;
-                    inner = Math.min(innerMaxY, -innerMinY);
-                    innerMaxY = inner;
-                    innerMinY = -inner;
+                    double inner = Math.min(innerMaxX - centerX, centerX - innerMinX);
+                    innerMaxX = centerX + inner;
+                    innerMinX = centerX - inner;
+                    inner = Math.min(innerMaxY - centerY, centerY - innerMinY);
+                    innerMaxY = centerY + inner;
+                    innerMinY = centerY - inner;
                 }
 
                 double innerCenterOffsetX = (innerMaxX + innerMinX)/2 - innerCenterX;
