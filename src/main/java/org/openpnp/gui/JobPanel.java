@@ -70,12 +70,12 @@ import org.openpnp.events.BoardLocationSelectedEvent;
 import org.openpnp.events.JobLoadedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.panelization.DlgAutoPanelize;
 import org.openpnp.gui.panelization.DlgPanelXOut;
 import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -97,7 +97,6 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.pmw.tinylog.Logger;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -1255,14 +1254,10 @@ public class JobPanel extends JPanel {
                         Location location = getSelection().getLocation();
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
                         MovableUtils.fireTargetedUserAction(camera);
-                        try {
-                            Map<String, Object> globals = new HashMap<>();
-                            globals.put("camera", camera);
-                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-                        }
-                        catch (Exception e) {
-                            Logger.warn(e);
-                        }
+
+                        Map<String, Object> globals = new HashMap<>();
+                        globals.put("camera", camera);
+                        Configuration.get().getScripting().on("Camera.AfterPosition", globals);
                     });
                 }
             };
@@ -1289,15 +1284,10 @@ public class JobPanel extends JPanel {
                         Location location = getSelection().getLocation();
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
                         MovableUtils.fireTargetedUserAction(camera);
-                       
-                        try {
-                            Map<String, Object> globals = new HashMap<>();
-                            globals.put("camera", camera);
-                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-                        }
-                        catch (Exception e) {
-                            Logger.warn(e);
-                        }
+
+                        Map<String, Object> globals = new HashMap<>();
+                        globals.put("camera", camera);
+                        Configuration.get().getScripting().on("Camera.AfterPosition", globals);
                     });
                 }
             };

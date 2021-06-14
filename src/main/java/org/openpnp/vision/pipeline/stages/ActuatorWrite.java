@@ -10,6 +10,7 @@ import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Stage;
+import org.openpnp.vision.pipeline.TerminalException;
 import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -59,11 +60,17 @@ public class ActuatorWrite extends CvStage {
             {
                 throw new Exception("Actuator writing (CvStage operation) failed. Unable to find an actuator named " + actuatorName);
             }
-            // Make sure this happens in a machine task, but wait for completion.
-            Configuration.get().getMachine().execute(() -> {
-                actuator.actuate(actuatorWriteValue);
-                return null;
-                });
+            try {
+                // Make sure this happens in a machine task, but wait for completion.
+                Configuration.get().getMachine().execute(() -> {
+                    actuator.actuate(actuatorWriteValue);
+                    return null;
+                    });
+            }
+            catch (Exception e) {
+                // These machine exceptions are terminal to the pipeline.
+                throw new TerminalException(e);
+            }
         }
         return null;
     }

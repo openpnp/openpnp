@@ -66,7 +66,6 @@ import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -632,28 +631,18 @@ public class JogControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
                 // move to the discard location
-                try {
-                    Map<String, Object> globals = new HashMap<>();
-                    globals.put("nozzle", nozzle);
-                    Configuration.get().getScripting().on("Job.BeforeDiscard", globals);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("nozzle", nozzle);
+                Configuration.get().getScripting().on("Job.BeforeDiscard", globals);
+
                 MovableUtils.moveToLocationAtSafeZ(nozzle, Configuration.get()
                         .getMachine()
                         .getDiscardLocation());
                 // discard the part
                 nozzle.place();
                 nozzle.moveToSafeZ();
-                try {
-                    Map<String, Object> globals = new HashMap<>();
-                    globals.put("nozzle", nozzle);
-                    Configuration.get().getScripting().on("Job.AfterDiscard", globals);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
+
+                Configuration.get().getScripting().on("Job.AfterDiscard", globals);
             });
         }
     };

@@ -150,7 +150,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             if (gcodeDriver.getDetectedFirmware() == null) {
                 solutions.add(new Solutions.Issue(
                         gcodeDriver, 
-                        "Firmware was not dected ("+
+                        "Firmware was not detected ("+
                                 (machine.isEnabled() ? 
                                         (gcodeDriver.isSpeakingGcode() ? "failure, check log" : "controller may not speak Gcode") 
                                         : "machine is disabled")+"). Only if the firmware is know, can Issues & Solutions generate suggested G-code for your machine configuration.", 
@@ -646,7 +646,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     else if (isTinyG) {
                                         commandBuilt = "G28.2 ";
                                         for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                            commandBuilt += variable+"0 "; // In TinyG you need to indicate the axis and only 0 is possible. 
+                                            if ("XYZ".indexOf(variable) >= 0) {
+                                                commandBuilt += variable+"0 "; // In TinyG you need to indicate the axis and only 0 is possible. 
+                                            }
                                         }
                                         commandBuilt += "; Home all axes";
                                     }

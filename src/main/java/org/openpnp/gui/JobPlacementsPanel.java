@@ -16,7 +16,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.PatternSyntaxException;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
+import javax.swing.UIManager;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
@@ -28,8 +44,8 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
@@ -53,7 +69,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
-import org.pmw.tinylog.Logger;
 
 public class JobPlacementsPanel extends JPanel {
     private JTable table;
@@ -477,14 +492,10 @@ public class JobPlacementsPanel extends JPanel {
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
                 MovableUtils.fireTargetedUserAction(camera);
-                try {
-                    Map<String, Object> globals = new HashMap<>();
-                    globals.put("camera", camera);
-                    Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
+
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("camera", camera);
+                Configuration.get().getScripting().on("Camera.AfterPosition", globals);
             });
         }
     };
@@ -502,24 +513,19 @@ public class JobPlacementsPanel extends JPanel {
                 // Need to keep current focus owner so that the space bar can be
                 // used after the initial click. Otherwise, button focus is lost
                 // when table is updated
-               	Component comp = MainFrame.get().getFocusOwner();
-               	Helpers.selectNextTableRow(table);
+                Component comp = MainFrame.get().getFocusOwner();
+                Helpers.selectNextTableRow(table);
                 comp.requestFocus();
-               	Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                         getSelection().getLocation());
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
                 MovableUtils.fireTargetedUserAction(camera);
-                
-                try {
-                    Map<String, Object> globals = new HashMap<>();
-                    globals.put("camera", camera);
-                    Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
+
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("camera", camera);
+                Configuration.get().getScripting().on("Camera.AfterPosition", globals);
             });
         };
     };

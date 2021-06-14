@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -48,7 +48,6 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.Cycles;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.pmw.tinylog.Logger;
 
 /**
  * A JPanel of 4 small buttons that assist in setting locations. The buttons are Capture Camera
@@ -81,7 +80,7 @@ public class LocationButtonsPanel extends JPanel {
         this.textFieldY = textFieldY;
         this.textFieldZ = textFieldZ;
         this.textFieldC = textFieldC;
-        
+
         buttonCenterCamera = new JButton(positionCameraAction);
         buttonCenterCamera.setHideActionText(true);
         add(buttonCenterCamera);
@@ -110,7 +109,7 @@ public class LocationButtonsPanel extends JPanel {
 
         setActuatorName(null);
     }
-    
+
     public Location getBaseLocation() {
         return baseLocation;
     }
@@ -119,7 +118,7 @@ public class LocationButtonsPanel extends JPanel {
         this.baseLocation = baseLocation;
     }
 
-    @Override 
+    @Override
     public void setEnabled(boolean enabled) {
         buttonCenterCamera.setEnabled(enabled);
         buttonCenterTool.setEnabled(enabled);
@@ -211,7 +210,7 @@ public class LocationButtonsPanel extends JPanel {
     /**
      * Get the Actuator with the name provided by setActuatorName() that is on the same Head as the
      * tool from getTool().
-     * 
+     *
      * @return
      * @throws Exception
      */
@@ -231,16 +230,16 @@ public class LocationButtonsPanel extends JPanel {
 
     private Location getParsedLocation() {
         double x = 0, y = 0, z = 0, rotation = 0;
-        if (textFieldX != null) {
+        if (textFieldX != null && ! textFieldX.getText().isEmpty()) {
             x = Length.parse(textFieldX.getText()).getValue();
         }
-        if (textFieldY != null) {
+        if (textFieldY != null && ! textFieldY.getText().isEmpty()) {
             y = Length.parse(textFieldY.getText()).getValue();
         }
-        if (textFieldZ != null) {
+        if (textFieldZ != null && ! textFieldZ.getText().isEmpty()) {
             z = Length.parse(textFieldZ.getText()).getValue();
         }
-        if (textFieldC != null) {
+        if (textFieldC != null && ! textFieldC.getText().isEmpty()) {
             rotation = Double.parseDouble(textFieldC.getText());
         }
         return new Location(Configuration.get().getSystemUnits(), x, y, z, rotation);
@@ -267,9 +266,9 @@ public class LocationButtonsPanel extends JPanel {
                         }
                         final Location lf = l;
                         SwingUtilities.invokeAndWait(() -> {
-                            Helpers.copyLocationIntoTextFields(lf, 
-                                    textFieldX, 
-                                    textFieldY, 
+                            Helpers.copyLocationIntoTextFields(lf,
+                                    textFieldX,
+                                    textFieldY,
                                     lz == null ? null : textFieldZ,
                                     textFieldC);
                         });
@@ -348,14 +347,10 @@ public class LocationButtonsPanel extends JPanel {
                         }
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
                         MovableUtils.fireTargetedUserAction(camera);
-                        try {
-                            Map<String, Object> globals = new HashMap<>();
-                            globals.put("camera", camera);
-                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-                        }
-                        catch (Exception e) {
-                            Logger.warn(e);
-                        }
+
+                        Map<String, Object> globals = new HashMap<>();
+                        globals.put("camera", camera);
+                        Configuration.get().getScripting().on("Camera.AfterPosition", globals);
                     });
                 }
             };
