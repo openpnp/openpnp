@@ -210,7 +210,13 @@
 			<artifactId>svgSalamander</artifactId>
 			<version>1.1.2.4</version>
 		</dependency>
-   	</dependencies>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>3.6.28</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 	<build>
 		<plugins>
 			<!-- Used to specify that the Maven Eclipse task should download sources 

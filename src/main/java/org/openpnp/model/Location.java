@@ -413,6 +413,17 @@ public class Location {
     	return (x >= x1) && (x <= x2) && (y > y1) && (y < y2);
     }
 
+    public Location offsetWithRotationFrom(Location baseLocation) {
+        // Start with the base location.
+        // Rotate the feeder's offsets by the base's rotation making the offsets
+        // normal to the base's orientation.
+        Location offsets = rotateXy(baseLocation.getRotation());
+        // Add the rotated offsets to the base location to get the final location. We add
+        // with rotation since we need to use the combined rotation of the base and the
+        // offsets.
+        return baseLocation.addWithRotation(offsets);
+    }
+
     /**
      * Performs a unit agnostic equality check. If the Object being tested is a Location in a
      * different unit, it is first converted to the units of this Location and then each value field

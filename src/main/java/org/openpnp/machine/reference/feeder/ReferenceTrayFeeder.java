@@ -30,7 +30,6 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -128,11 +127,10 @@ public class ReferenceTrayFeeder extends ReferenceFeeder {
             feed(nozzle);
         }
         // ok, now put the part back on the location of the last pick
-        Location putLocation = getPickLocation();
-        MovableUtils.moveToLocationAtSafeZ(nozzle, putLocation);
+        nozzle.moveToPickLocation(this);
         nozzle.place();
         nozzle.moveToSafeZ();
-        if (!nozzle.isPartOff()) {
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
         // change FeedCount

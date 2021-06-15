@@ -370,19 +370,20 @@ public class BlindsFeeder extends ReferenceFeeder {
             throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
         }
 
-        // if not yet open, open it
-        if (isCoverClosed()) {
+        // if not yet open, open it (this should rarely be necessary as we likely just picked the part from this feeder;
+        // however if cover opening is needed, it will only work if the machine has multiple nozzles and one is free, 
+        // as cover opening is forbidden, when a part is on he nozzle). 
+        if (!isCoverOpen()) {
             // repeat last feed operation, so that the pickLocation is the last free spot 
             setFeedCount(getFeedCount() - 1); // is immediately increased during feed
             feed(nozzle);
         }
         // ok, now put the part back on the location of the last pick
-        Location putLocation = getPickLocation();
-        MovableUtils.moveToLocationAtSafeZ(nozzle, putLocation);
+        nozzle.moveToPickLocation(this);
         // put the part back
         nozzle.place();
         nozzle.moveToSafeZ();
-        if (!nozzle.isPartOff()) {
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
         // change FeedCount
