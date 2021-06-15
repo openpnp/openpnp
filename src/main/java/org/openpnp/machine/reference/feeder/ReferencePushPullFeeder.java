@@ -216,7 +216,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     private double calibrationToleranceMm = 1.95;
     // vision and comparison sprocket hole tolerance (in size, position)
     @Attribute(required = false)
-    private double sprocketHoleToleranceMm = 0.3;
+    private double sprocketHoleToleranceMm = 0.4;
     // for rows of feeders, the tolerance in X, Y
     @Attribute(required = false)
     private double rowLocationToleranceMm = 4.0; 

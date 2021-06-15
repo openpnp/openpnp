@@ -1032,7 +1032,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 
     private void editPipeline() throws Exception {
         Camera camera = feeder.getCamera();
-        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true, false);
+        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true, true);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
