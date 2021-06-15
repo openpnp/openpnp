@@ -216,7 +216,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     private double calibrationToleranceMm = 1.95;
     // vision and comparison sprocket hole tolerance (in size, position)
     @Attribute(required = false)
-    private double sprocketHoleToleranceMm = 0.3;
+    private double sprocketHoleToleranceMm = 0.4;
     // for rows of feeders, the tolerance in X, Y
     @Attribute(required = false)
     private double rowLocationToleranceMm = 4.0; 
@@ -231,6 +231,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     private double calibrateToleranceMm = 0.3; 
     @Attribute(required = false)
     private int calibrateMinStatistic = 2; 
+
+    // Some EIA 481 standard constants.
+    static final double sprocketHoleDiameterMm = 1.5;
+    static final double sprocketHolePitchMm = 4;
 
     /*
      * visionOffset contains the difference between where the part was expected to be and where it
@@ -444,7 +448,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     private void obtainCalibratedVisionOffset() throws Exception {
         Camera camera = getCamera();
-        try (CvPipeline pipeline = getCvPipeline(camera, true, false)) {
+        try (CvPipeline pipeline = getCvPipeline(camera, true, false, false)) {
             OcrWrongPartAction ocrAction = OcrWrongPartAction.None;
             boolean ocrStop = false;
             if (visionOffset == null) {
@@ -1128,7 +1132,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         pipeline.setProperty("alphabet", ""); // empty alphabet switches OCR off
     }
 
-    public CvPipeline getCvPipeline(Camera camera, boolean clone, boolean performOcr) {
+    public CvPipeline getCvPipeline(Camera camera, boolean clone, boolean performOcr, boolean autoSetup) {
         try {
             CvPipeline pipeline = getPipeline();
             if (clone) {
@@ -1136,6 +1140,21 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("feeder", this);
+            pipeline.setProperty("sprocketHole.diameter", new Length(sprocketHoleDiameterMm, LengthUnit.Millimeters));
+            Length range;
+            if (autoSetup) { 
+                // Auto-Setup: search Range is half camera. 
+                range = camera.getWidth() > camera.getHeight() ? 
+                        camera.getUnitsPerPixel().getLengthY().multiply(camera.getHeight()/2)
+                        : camera.getUnitsPerPixel().getLengthX().multiply(camera.getWidth()/2);
+            }
+            else {
+                // Normal mode: search range is half the distance between the holes plus one pitch. 
+                range = getHole1Location().getLinearLengthTo(getHole2Location())
+                        .multiply(0.5)
+                        .add(new Length(sprocketHolePitchMm, LengthUnit.Millimeters));
+            }
+            pipeline.setProperty("sprocketHole.maxDistance", range);
             if (performOcr && getOcrRegion() != null) {
                 setupOcr(camera, pipeline);
             }
@@ -1359,8 +1378,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     calibratedPickLocation  = getLocation();
                 }
                 else {
-                    final double sprocketHoleDiameterMm = 1.5;
-                    final double sprocketHolePitchMm = 4;
                     final double partPitchMinMm = 2;
                     final double sprocketHoleToPartMinMm = 3.5; // sprocket hole to part @ 8mm
                     final double sprocketHoleToPartGridMm = 2;  // +multiples of 2mm for wider tapes 
@@ -1615,7 +1632,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public void showFeatures() throws Exception {
         Camera camera = getCamera();
-        try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
+        try (CvPipeline pipeline = getCvPipeline(camera, true, true, true)) {
 
             // Process vision and show feature without applying anything
             pipeline.process();
@@ -1634,7 +1651,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             setCalibrationTrigger(CalibrationTrigger.UntilConfident);
         }
 
-        try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
+        try (CvPipeline pipeline = getCvPipeline(camera, true, true, true)) {
             // Process vision and get some features 
             pipeline.process();
             FindFeatures feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.FromPickLocationGetHoles)
@@ -2261,7 +2278,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             throw new Exception("Feeder "+getName()+" has no OCR region defined.");
         }
         Camera camera = getCamera();
-        try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
+        try (CvPipeline pipeline = getCvPipeline(camera, true, true, false)) {
             // run a sprocket hole calibration, including OCR
             performVisionOperations(camera, pipeline, false, false, true, ocrAction, ocrStop, report); 
         }

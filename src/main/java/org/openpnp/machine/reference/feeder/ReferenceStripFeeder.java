@@ -282,6 +282,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
             pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
             pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
+            pipeline.setProperty("sprocketHole.diameter", getHoleDiameter());
+            // Search range is half-way to the next hole. 
+            pipeline.setProperty("sprocketHole.maxDistance", getHolePitch().multiply(0.5));
             pipeline.process();
     
             if (MainFrame.get() != null) {
