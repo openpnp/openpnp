@@ -131,7 +131,6 @@ Standard pipeline (Edit the pipeline and paste this using the ![Paste](https://u
    </stages>
 </cv-pipeline>
 ```
- 
 
 ## ReferenceStripFeeder 
 
@@ -157,6 +156,16 @@ Edit the pipeline and paste this using the ![Paste](https://user-images.githubus
 </cv-pipeline>
 
 ```
+
+This was tested with deliberately difficult contrast and reflective background. The inner margin is set to only 0.05, forcing the stage to detect the outer edge, i.e. perspective and shadow bias is effectively minimized: 
+
+![Strip Feeder](https://user-images.githubusercontent.com/9963310/122117060-afe48400-ce26-11eb-8317-e5020655427b.png)
+
+A deliberately bent strip was perfectly followed, zero mis-detects:
+
+![Bent Strip](https://user-images.githubusercontent.com/9963310/122117195-daced800-ce26-11eb-9a58-c42cd848de2e.jpg)
+
+
 ## ReferencePushPullFeeder
 
 The ReferencePushPullFeeder sets the **diameter** to be detected, i.e. the sprocket hole diameter according to the EIA 481 standard. A relatively accurate camera units per pixel setting is required and the tape surface needs to be near the camera focal plane in Z. 
@@ -183,3 +192,12 @@ Edit the pipeline and paste this using the ![Paste](https://user-images.githubus
 </cv-pipeline>
 ```
 
+Tested with difficult transparent tape, as always zero tuning required:
+
+![Push Pull Feeder](https://user-images.githubusercontent.com/9963310/122117329-08b41c80-ce27-11eb-8398-73b6b5d39b19.png)
+
+The exact same pipeline also works with a paper tape:
+
+![Paper tape](https://user-images.githubusercontent.com/9963310/122117831-a0b20600-ce27-11eb-826d-f80f2365714b.png)
+ 
+Note, the pipeline no longer requires a saturated "green-screen" color, it just uses whatever contrast/color difference there is. But it _does_ account for all color channels in the symmetry computation. 
