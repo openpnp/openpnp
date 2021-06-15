@@ -36,6 +36,8 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
@@ -67,10 +69,18 @@ import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.Ransac.Line;
 import org.openpnp.vision.SimpleHistogram;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.TerminalException;
+import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
 
 
 /**
@@ -116,6 +126,12 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     @Attribute(required = false)
     private boolean visionEnabled = true;
+
+    @Attribute(required = false)
+    private boolean identifierCheckEnabled = false;
+    
+    @Attribute(required = false)
+    private double identifierCenterlineOffset = 0.0;
 
     @Attribute
     private int feedCount = 0;
@@ -389,6 +405,45 @@ public class BlindsFeeder extends ReferenceFeeder {
         // change FeedCount
         setFeedCount(getFeedCount() - 1);
     }
+    
+//    public class FindIdentifiers {
+//        private Camera camera;
+//        private CvPipeline pipeline;
+//        private long showResultMilliseconds;
+//        
+//        // recognized stuff
+//        private SimpleQrc.QrcModel detectedQrcModel;
+//        private String identifier;
+//        
+//        public FindIdentifiers(Camera camera, CvPipeline pipeline, final long showResultMilliseconds) {
+//            this.camera = camera;
+//            this.pipeline = pipeline;
+//            this.showResultMilliseconds = showResultMilliseconds;
+//        }
+//
+//        public String getIdentifier() {
+//            return identifier;
+//        }
+//
+//        @SuppressWarnings("unchecked")
+//        public FindIdentifiers invoke() throws Exception {
+//            List<String> results = null;
+//            String result = null;
+//            try {
+//                // Grab the results
+//                detectedQrcModel = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+//                        .getExpectedModel(SimpleQrc.QrcModel.class);
+//                
+////                results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
+////                        .getExpectedListModel(RotatedRect.class, 
+////                                null/*???new Exception("Feeder " + getName() + ": No features found.")*/);
+//            }
+//            catch (ClassCastException e) {
+//                throw new Exception("Unrecognized result type (should be SimpleQrc.QrcModel): " + results);
+//            }
+//            return this;
+//        }
+//    }
     
     public class FindFeatures {
         private Camera camera;
@@ -828,6 +883,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             return this;
         }
     }
+    
 
     public void showFeatures() throws Exception {
         Camera camera = Configuration.get()
@@ -842,6 +898,85 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
+    public void showPartIdentifiers() throws Exception {
+        Camera camera = Configuration.get()
+                .getMachine()
+                .getDefaultHead()
+                .getDefaultCamera();
+        
+        String identifier = null;
+        BufferedImage bufferedImage = null;
+        
+        try (CvPipeline pipeline = getCvPipeline(camera, true)) {
+            
+            bufferedImage = camera.lightSettleAndCapture();
+            BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(
+                    new BufferedImageLuminanceSource(bufferedImage)));
+            
+            int cropSize = 400;
+            
+            int height = binaryBitmap.getHeight();
+            int width = binaryBitmap.getWidth();
+            
+            int top = (height - cropSize) / 2;
+            int left = (width - cropSize) / 2;
+            
+            binaryBitmap = binaryBitmap.crop(left, top, cropSize, cropSize);
+
+            com.google.zxing.Result qrCodeResult = new MultiFormatReader().decode(binaryBitmap);
+            identifier = qrCodeResult.getText();
+        }
+        catch (Exception e) {
+            identifier = new String("Identifier not found");
+        }
+        finally {
+            // Always switch off the light. 
+            camera.actuateLightAfterCapture();
+        }    
+            
+//            String identifier = VisionUtils.readQrCode(camera);
+//            
+//        if (identifier == null) {
+//            identifier = new String("Identifier not found");
+//        }
+        
+        Logger.debug("[BlindsFeeder] part identifier: {}", identifier); 
+
+        Mat image = OpenCvUtils.toMat(bufferedImage);
+        Mat resultMat = image.clone();
+
+        // calculate the diagonal text size
+        double fontScale = 1.0;
+        int [] baseLine = null;
+        
+        Size size = Imgproc.getTextSize("0", Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+        Location textSizeMm = camera.getUnitsPerPixel().multiply(size.width, size.height, 0., 0.)
+                .convertToUnits(LengthUnit.Millimeters);
+        if (textSizeMm.getY() < 0.0) {
+            textSizeMm = textSizeMm.multiply(1.0, -1.0, 0.0, 0.0);
+        }
+        final double minFontSizeMm = 0.6;
+        if (textSizeMm.getY() < minFontSizeMm) {
+            fontScale = minFontSizeMm / textSizeMm.getY();
+            textSizeMm = textSizeMm.multiply(fontScale, fontScale, 0.0, 0.0);
+        }
+
+        Size textSize = Imgproc.getTextSize(identifier, Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+        
+        Imgproc.putText(resultMat, identifier, 
+                new org.opencv.core.Point(100, 100), 
+                Imgproc.FONT_HERSHEY_PLAIN, 
+                fontScale, 
+                FluentCv.colorToScalar(Color.orange), 2, 0, false);
+        
+        BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
+        resultMat.release();
+        MainFrame.get().getCameraViews().getCameraView(camera)
+        .showFilteredImage(showResult, 1000);
+
+    } 
+
+    
     public void findPocketsAndCenterline(Camera camera) throws Exception {
         // Try to clone some info from another feeder.
         updateFromConnectedFeeder(camera.getLocation(), false);
@@ -1780,8 +1915,6 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
-
-
     public boolean isCalibrating() {
         return calibrating;
     }
@@ -2052,6 +2185,16 @@ public class BlindsFeeder extends ReferenceFeeder {
             firePropertyChange("visionEnabled", oldValue, visionEnabled);
             this.updateConnectedFeedersFromThis();
         }
+    }
+    
+    public boolean getIdentifierCheckEnabled() {
+        return identifierCheckEnabled;
+    }
+    
+    public void setIdentifierCheckEnabled(boolean identifierCheckEnabled) {
+        boolean oldValue = this.identifierCheckEnabled;
+        this.identifierCheckEnabled = identifierCheckEnabled;
+        firePropertyChange("identifierCheckEnabled", oldValue, identifierCheckEnabled);
     }
 
     public int getFeederNo() {

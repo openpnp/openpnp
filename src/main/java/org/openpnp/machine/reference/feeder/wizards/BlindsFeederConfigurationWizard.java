@@ -107,8 +107,11 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JLabel lblRotationInTape;
     private JTextField textFieldLocationRotation;
     private JButton btnAutoSetup;
+    private JButton btnIDPart;
     private JCheckBox chckbxUseVision;
+    private JCheckBox chckbxUsePartIdentifier;
     private JLabel lblUseVision;
+    private JLabel lblUsePartIdentifer;
     private JLabel lblPart;
     private JLabel lblRetryCount;
     private JTextField retryCountTf;
@@ -259,6 +262,10 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         btnAutoSetup = new JButton(autoSetup);
         btnAutoSetup.setToolTipText("Capture the pocket pitch, size and centerline from the current camera position.");
         panelTapeSettings.add(btnAutoSetup, "14, 4, 1, 3");
+
+        btnIDPart = new JButton(identifyPart);
+        btnIDPart.setToolTipText("Capture QRC or text ID for the feeder part.");
+        panelTapeSettings.add(btnIDPart, "14, 8, 1, 2");
 
         lblPocketPitch = new JLabel("Pocket Pitch");
         lblPocketPitch.setToolTipText("Picth of the part pockets in the tape.");
@@ -555,6 +562,13 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelVision.add(chckbxUseVision, "4, 2");
         panelVision.add(btnEditPipeline, "2, 4");
 
+//        lblUsePartIdentifer = new JLabel("Use part identifier?");
+//        lblUsePartIdentifer.setToolTipText("<html><p>Use vision to check qrcode identifying part.</p><html>");
+//        panelVision.add(lblUsePartIdentifer, "6, 2");
+//
+//        chckbxUsePartIdentifier = new JCheckBox("");
+//        panelVision.add(chckbxUsePartIdentifier, "8, 2");
+
         JButton btnResetPipeline = new JButton(resetPipelineAction);
 
         btnPipelineToAllFeeders = new JButton(setPipelineToAllAction);
@@ -833,6 +847,21 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                         .getDefaultCamera();
 
                 feeder.findPocketsAndCenterline(camera);
+            });
+        }
+    };
+
+    private Action identifyPart = new AbstractAction("Identify Part", Icons.captureCamera) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Capture the part identifier for a feeder.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.submitUiMachineTask(() -> {
+                feeder.showPartIdentifiers();
             });
         }
     };
