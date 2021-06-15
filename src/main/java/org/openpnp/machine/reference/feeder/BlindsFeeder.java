@@ -906,6 +906,14 @@ public class BlindsFeeder extends ReferenceFeeder {
         
         String identifier = null;
         BufferedImage bufferedImage = null;
+
+        Location mmScale = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
+
+        int cropSizePx = (int) (12.0 / mmScale.getX());
+        int height = camera.getHeight();
+        int width = camera.getWidth();
+        int top = (height - cropSizePx) / 2;
+        int left = (width - cropSizePx) / 2;
         
         try (CvPipeline pipeline = getCvPipeline(camera, true)) {
             
@@ -913,15 +921,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(
                     new BufferedImageLuminanceSource(bufferedImage)));
             
-            int cropSize = 400;
-            
-            int height = binaryBitmap.getHeight();
-            int width = binaryBitmap.getWidth();
-            
-            int top = (height - cropSize) / 2;
-            int left = (width - cropSize) / 2;
-            
-            binaryBitmap = binaryBitmap.crop(left, top, cropSize, cropSize);
+            binaryBitmap = binaryBitmap.crop(left, top, cropSizePx, cropSizePx);
 
             com.google.zxing.Result qrCodeResult = new MultiFormatReader().decode(binaryBitmap);
             identifier = qrCodeResult.getText();
@@ -933,12 +933,6 @@ public class BlindsFeeder extends ReferenceFeeder {
             // Always switch off the light. 
             camera.actuateLightAfterCapture();
         }    
-            
-//            String identifier = VisionUtils.readQrCode(camera);
-//            
-//        if (identifier == null) {
-//            identifier = new String("Identifier not found");
-//        }
         
         Logger.debug("[BlindsFeeder] part identifier: {}", identifier); 
 
@@ -955,7 +949,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         if (textSizeMm.getY() < 0.0) {
             textSizeMm = textSizeMm.multiply(1.0, -1.0, 0.0, 0.0);
         }
-        final double minFontSizeMm = 0.6;
+        final double minFontSizeMm = 1.0;
         if (textSizeMm.getY() < minFontSizeMm) {
             fontScale = minFontSizeMm / textSizeMm.getY();
             textSizeMm = textSizeMm.multiply(fontScale, fontScale, 0.0, 0.0);
@@ -967,7 +961,17 @@ public class BlindsFeeder extends ReferenceFeeder {
                 new org.opencv.core.Point(100, 100), 
                 Imgproc.FONT_HERSHEY_PLAIN, 
                 fontScale, 
-                FluentCv.colorToScalar(Color.orange), 2, 0, false);
+                FluentCv.colorToScalar(Color.orange), 4, 0, false);
+        
+        // Draw the cropping area rectangle
+        Imgproc.rectangle (
+                resultMat,
+                new org.opencv.core.Point(left, top),
+                new org.opencv.core.Point(left + cropSizePx, top + cropSizePx),
+                FluentCv.colorToScalar(Color.orange),
+                4                          //Thickness of the line
+        );
+        
         
         BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
         resultMat.release();
