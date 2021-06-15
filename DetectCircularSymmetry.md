@@ -55,6 +55,12 @@ The **DetectCircularSymmetry** stage is configured as follows:
 
 **subSampling**: To improve performance, only one pixel out of a block of subSampling × subSampling pixels is sampled. The preliminary winner is then locally searched using iteration with smaller and smaller subSampling size. The subSampling value will automatically be reduced for small diameters. Use BlurGaussian before this stage if subSampling suffers from interference/moiré effects. 
 
+**superSampling**: Can be used to achieve sub-pixel final precision: 1 means no super-sampling, 2 means half sub-pixel precision etc. Practical up to ~8.
+
+**maxTargetCount**: Maximum number of targets (e.g. sprocket holes) to be found. The targets with best symmetry score are returned. Overlap is automatically eliminated. 
+
+**corrSymmetry**: Correlated minimum circular symmetry for multiple matches, i.e. other matches must have at least this relative symmetry. Note that the symmetry score is very dynamic, so setting a robust correlation is difficult. 
+
 ## Properties used when controlled by Vision Operations
 
 **propertyName**: Sets the property name, as set by vision operations using this pipeline. Currently, this is `nozzleTip` for the nozzle tip calibration and `fiducial` for the fiducial locator. As soon as the named property is set by the vision operation, the stage is dynamically controlled and no longer uses the fixed properties in the stage itself. Proper camera Units Per Pixel scaling makes sure the dynamic properties work across machines/cameras/resolutions. 
@@ -126,3 +132,54 @@ Standard pipeline (Edit the pipeline and paste this using the ![Paste](https://u
 </cv-pipeline>
 ```
  
+
+## ReferenceStripFeeder 
+
+The ReferenceStripFeeder sets the **diameter** to be detected, i.e. the sprocket hole diameter according to the EIA 481 standard. A relatively accurate camera units per pixel setting is required and the tape surface needs to be near the camera focal plane in Z. 
+
+The ReferenceStripFeeder also controls the **maxDistance** search range: full camera scope for Auto Setup and an optimized minimal search range for routine detection of the nearest hole.
+
+
+Edit the pipeline and paste this using the ![Paste](https://user-images.githubusercontent.com/9963310/122116892-74e25080-ce26-11eb-9f49-3a50c4359d7b.png) button:
+
+```
+<cv-pipeline>
+   <stages>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="original" enabled="true" default-light="true" settle-first="true" count="1"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="predetect-1" enabled="false" kernel-size="5"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="results" enabled="true" min-diameter="10" max-diameter="100" max-distance="100" max-target-count="6" min-symmetry="1.2" corr-symmetry="0.4" property-name="sprocketHole" outer-margin="0.4" inner-margin="0.05" sub-sampling="8" super-sampling="2" diagnostics="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="recalled" enabled="false" image-stage-name="original"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="display" enabled="true" circles-stage-name="results" thickness="1">
+         <color r="255" g="0" b="0" a="255"/>
+      </cv-stage>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="0" enabled="false" prefix="debug" suffix=".png"/>
+   </stages>
+</cv-pipeline>
+
+```
+## ReferencePushPullFeeder
+
+The ReferencePushPullFeeder sets the **diameter** to be detected, i.e. the sprocket hole diameter according to the EIA 481 standard. A relatively accurate camera units per pixel setting is required and the tape surface needs to be near the camera focal plane in Z. 
+
+The ReferencePushPullFeeder also controls the **maxDistance** search range: full camera scope for Auto Setup and an optimized minimal search range for routine detection of the two reference holes.
+
+Edit the pipeline and paste this using the ![Paste](https://user-images.githubusercontent.com/9963310/122116892-74e25080-ce26-11eb-9f49-3a50c4359d7b.png) button:
+
+```
+<cv-pipeline>
+   <stages>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" default-light="true" settle-first="true" count="1"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="1" enabled="true" kernel-size="5"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.AffineWarp" name="11" enabled="true" length-unit="Millimeters" x-0="0.0" y-0="0.0" x-1="0.0" y-1="0.0" x-2="0.0" y-2="0.0" scale="1.0" rectify="true" region-of-interest-property="regionOfInterest"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="12" enabled="true" conversion="Bgr2Gray"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.SimpleOcr" name="OCR" enabled="true" alphabet="0123456789.-+_RCLDQYXJIVAFH%GMKkmuµnp" font-name="Liberation Mono" font-size-pt="7.0" font-max-pixel-size="20" auto-detect-size="false" threshold="0.75" draw-style="OverOriginalImage" debug="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="20" enabled="true" image-stage-name="0"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="results" enabled="true" min-diameter="10" max-diameter="100" max-distance="100" max-target-count="10" min-symmetry="1.2" corr-symmetry="0.2" property-name="sprocketHole" outer-margin="0.2" inner-margin="0.2" sub-sampling="8" super-sampling="1" diagnostics="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="30" enabled="false" image-stage-name="0"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="2" enabled="false" circles-stage-name="results" thickness="1">
+         <color r="255" g="0" b="0" a="255"/>
+      </cv-stage>
+   </stages>
+</cv-pipeline>
+```
+
