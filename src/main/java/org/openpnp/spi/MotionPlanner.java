@@ -23,8 +23,8 @@ package org.openpnp.spi;
 
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
-import org.openpnp.model.Solutions;
 import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.model.Solutions;
 
 /**
  * <p>
@@ -177,6 +177,11 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
      * @throws Exception 
      */
     void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception;
+    
+    /**
+     * Clear all queued motion. This should only be used when the machine task is aborted.
+     */
+    void clearQueuedMotion();
 
     /**
      * Get the planned motion at a certain time. Works into the future as far as planned and into the past
