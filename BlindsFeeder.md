@@ -197,9 +197,7 @@ Feeding starts from the right edge, this side usually points towards the center 
 
 Obviously the nozzle needs to be able to reach _all_ of the feeder area (and a bit beyond). 
 
-Ideally the camera can reach all four fiducials. However the feeder will also work if it can reach the right half of the feeder (highlighted in yellow here). This way you can exploit more of the space on your machine table. The BlindsFeeder will automatically do the right thing, if you have defined and enabled your machine Soft Limits on the Head (do that now, it will help later). 
-
-![grafik](https://user-images.githubusercontent.com/9963310/73122508-23fa5f80-3f86-11ea-96cf-db3cbbb35039.png)
+Ideally the camera can reach all four fiducials. However the feeder will also work if it can reach the right half of the feeder (highlighted in yellow here). This way you can exploit more of the space on your machine table. The BlindsFeeder will automatically do the right thing, if you have defined and enabled your machine [Soft Limits](https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits). 
 
 ## Feeder Setup in OpenPNP
 
