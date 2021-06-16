@@ -305,15 +305,19 @@ public class DetectCircularSymmetry extends CvStage {
         final int width = image.cols();
         final int height = image.rows();
         // Some sanity checks on the diameters.
-        maxDiameter |= 1; // make it odd
-        minDiameter = Math.max(3, minDiameter | 1);
+        minDiameter = Math.max(3, minDiameter | 1); // make it odd
+        maxDiameter = Math.max(minDiameter+4, maxDiameter | 1); // make it odd
+        superSampling = Math.min(16, superSampling);
         // Effective subSampling may have to be finer if the searched circular edge is finer. 
         final int subSamplingEff = Math.max(1, 
                 Math.min(subSampling, Math.min((maxDiameter-minDiameter)/4, minDiameter/2)));
         // Constrain the search range to the image.
-        final int searchRangeEff = (Math.min((xCenter-maxDiameter/2)-2, Math.min((width-xCenter-maxDiameter/2)-2,
-                Math.min((yCenter-maxDiameter/2)-2, Math.min((height-yCenter-maxDiameter/2)-2, 
-                        (searchRange+1)/2))))*2)
+        final int searchRangeEff = (
+                Math.min((xCenter-maxDiameter/2)-2-subSamplingEff, 
+                        Math.min((width-xCenter-maxDiameter/2)-2-subSamplingEff,
+                                Math.min((yCenter-maxDiameter/2)-2-subSamplingEff, 
+                                        Math.min((height-yCenter-maxDiameter/2)-2-subSamplingEff, 
+                                                (searchRange+1)/2))))*2)
                 /subSamplingEff*subSamplingEff; // round to multiple of subSamplingEff
         if (searchRangeEff < searchRange/5) {
             throw new Exception("Image too small for given parameters.");

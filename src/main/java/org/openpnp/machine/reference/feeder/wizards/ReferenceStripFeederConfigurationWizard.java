@@ -1005,6 +1005,12 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
             pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
             pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
+            pipeline.setProperty("sprocketHole.diameter", feeder.getHoleDiameter());
+            // Search Range is half camera. 
+            Length range = camera.getWidth() > camera.getHeight() ? 
+                    camera.getUnitsPerPixel().getLengthY().multiply(camera.getHeight()/2)
+                    : camera.getUnitsPerPixel().getLengthX().multiply(camera.getWidth()/2);
+            pipeline.setProperty("sprocketHole.maxDistance", range);
             return pipeline;
         }
         catch (CloneNotSupportedException e) {

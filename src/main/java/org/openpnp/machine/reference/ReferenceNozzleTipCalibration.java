@@ -1049,7 +1049,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("nozzleTip.diameter", getCalibrationTipDiameter());
         // Set the search tolerance to be somewhat larger than the threshold.
-        pipeline.setProperty("nozzleTip.tolerance", getOffsetThresholdLength().multiply(1 + detectionThresholdMargin));
+        pipeline.setProperty("nozzleTip.maxDistance", getOffsetThresholdLength().multiply(1 + detectionThresholdMargin));
         pipeline.setProperty("nozzleTip.center", measureLocation);
         Point maskCenter = VisionUtils.getLocationPixels(camera, measureLocation);
         pipeline.setProperty("MaskCircle.center", new org.opencv.core.Point(maskCenter.getX(), maskCenter.getY()));
