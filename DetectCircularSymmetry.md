@@ -79,9 +79,9 @@ The **DetectCircularSymmetry** stage is configured as follows:
 
 ## Vision Operations Control
 
-To supply the wanted diameter and maximum search distance from the vision operations, some new GUI properties have been added: 
+To supply the wanted diameter and maximum search distance from the vision operations, some new GUI properties have been added and other properties parametrized to the stage. 
 
-### Nozzle Tip Calibration 
+## Nozzle Tip Calibration 
 ![Nozzle Tip Calibration](https://user-images.githubusercontent.com/9963310/115760425-a51aef00-a3a1-11eb-867e-81e44b260686.png)
 
 **Vision Diameter**: Must be set to the physical diameter of the feature you want to detect. Typically, a feature at the very point of the nozzle tip. Either the outer diameter or the air bore. In the future, this could also be used to control Hough circle diameters or circle masks etc.
@@ -107,7 +107,7 @@ Standard pipeline (Edit the pipeline and paste this using the ![Paste](https://u
 </cv-pipeline>
 ```
 
-### Fiducial Locator
+## Fiducial Locator
 ![Fiducial Locator](https://user-images.githubusercontent.com/9963310/115297291-5597b180-a15c-11eb-940f-47a3cd2fde15.png)
 
 The **diameter** of the fiducial is automatically derived from the footprint. Therefore, the same underlying data can be used both for the classic `MatchPartTemplate` based pipeline and the new pipeline (obviously this only works if the ficucial is actually round). 
@@ -146,7 +146,7 @@ Edit the pipeline and paste this using the ![Paste](https://user-images.githubus
    <stages>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="original" enabled="true" default-light="true" settle-first="true" count="1"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="predetect-1" enabled="false" kernel-size="5"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="results" enabled="true" min-diameter="10" max-diameter="100" max-distance="100" max-target-count="6" min-symmetry="1.2" corr-symmetry="0.4" property-name="sprocketHole" outer-margin="0.4" inner-margin="0.05" sub-sampling="8" super-sampling="2" diagnostics="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="results" enabled="true" min-diameter="10" max-diameter="100" max-distance="100" max-target-count="20" min-symmetry="1.2" corr-symmetry="0.1" property-name="sprocketHole" outer-margin="0.4" inner-margin="0.05" sub-sampling="8" super-sampling="2" diagnostics="false"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="recalled" enabled="false" image-stage-name="original"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="display" enabled="true" circles-stage-name="results" thickness="1">
          <color r="255" g="0" b="0" a="255"/>
