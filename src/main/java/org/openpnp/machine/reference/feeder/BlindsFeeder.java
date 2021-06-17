@@ -1005,9 +1005,14 @@ public class BlindsFeeder extends ReferenceFeeder {
         
         final int printerDpi = 1200;
         final double srCodeSize_mm = 8.0;
+        final double marginWidthmm = 2.0;
+        final double borderWidthmm = 0.5;
 
         final double pixelsPerMm = (double) printerDpi / 25.4;
-        final int qrCodeSize = (int) (srCodeSize_mm * pixelsPerMm);
+        final int qrCodeSizePx = (int) (srCodeSize_mm * pixelsPerMm);
+        final int marginWidthPx = (int) (marginWidthmm * pixelsPerMm);
+        final int borderWidthPx = (int) (borderWidthmm * pixelsPerMm);
+        final int totalWidthPx = (marginWidthPx*2) + qrCodeSizePx;
         
         final Length extent = getFeederExtent();
         final Length extentMm = extent.convertToUnits(LengthUnit.Millimeters);
@@ -1017,30 +1022,28 @@ public class BlindsFeeder extends ReferenceFeeder {
         Hashtable<EncodeHintType, ErrorCorrectionLevel> hintMap = new Hashtable<>();
         hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
 
-        BufferedImage image = new BufferedImage(qrCodeSize*2, imageHeightpx, BufferedImage.TYPE_BYTE_BINARY );
+        BufferedImage image = new BufferedImage(totalWidthPx, imageHeightpx, BufferedImage.TYPE_BYTE_BINARY );
         Graphics2D graphics = image.createGraphics();
 
         //Fill with black border
         graphics.setBackground(Color.BLACK);
-//        graphics.setPaint ( new Color ( 0, 0, 0 ) );
-//        graphics.fillRect ( 0, 0, image.getWidth(), image.getHeight() );
         graphics.setPaint ( new Color ( 255, 255, 255 ) );
-        graphics.fillRect ( 5, 5, image.getWidth()-10, image.getHeight()-10 );
+        graphics.fillRect ( borderWidthPx, borderWidthPx*1, image.getWidth()-(2*borderWidthPx), image.getHeight()-(2*borderWidthPx) );
         
         //Draw marker at top
         graphics.setPaint ( new Color ( 0, 0, 0 ) );
-        graphics.fillRect ( 10, 10, image.getWidth()-20, 20 );
+        graphics.fillRect ( borderWidthPx*2, borderWidthPx*2, image.getWidth()-(borderWidthPx*4), (borderWidthPx*3) );
         
         for(BlindsFeeder feeder: feeders) {
             String partId = feeder.getPart().getId();
             if(partId != null){
-                com.google.zxing.common.BitMatrix bitMatrix = writer.encode(partId, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize, hintMap);
+                com.google.zxing.common.BitMatrix bitMatrix = writer.encode(partId, BarcodeFormat.QR_CODE, qrCodeSizePx, qrCodeSizePx, hintMap);
                 BufferedImage qrcImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
                 
                 double centerline = feeder.getPocketCenterline().convertToUnits(LengthUnit.Millimeters).getValue();
                 if(centerline != 0.0) {
-                    int imagePosPx = ((int) (centerline * pixelsPerMm)) - (qrCodeSize/2);
-                    image.getGraphics().drawImage(qrcImage, qrCodeSize/2, imagePosPx, null);
+                    int imagePosPx = ((int) (centerline * pixelsPerMm)) - (qrCodeSizePx/2);
+                    image.getGraphics().drawImage(qrcImage, marginWidthPx, imagePosPx, null);
                 }
             }
         }
