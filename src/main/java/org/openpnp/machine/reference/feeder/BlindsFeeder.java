@@ -23,6 +23,7 @@ package org.openpnp.machine.reference.feeder;
 
 
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
@@ -31,8 +32,19 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.metadata.IIOInvalidTreeException;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataNode;
+import javax.imageio.stream.ImageOutputStream;
 import javax.swing.Action;
 
 import org.apache.commons.io.IOUtils;
@@ -78,8 +90,13 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 import com.google.zxing.BinaryBitmap;
+import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatReader;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.HybridBinarizer;
 
 
@@ -978,8 +995,97 @@ public class BlindsFeeder extends ReferenceFeeder {
         MainFrame.get().getCameraViews().getCameraView(camera)
         .showFilteredImage(showResult, 1000);
 
-    } 
+    }
+    
+    public void generatePartNumberQRCodeImage() throws Exception {
+        QRCodeWriter writer = new QRCodeWriter();
+        List<BlindsFeeder> feeders = getConnectedFeeders();
+        
+        List<BufferedImage> qrcImageList = new ArrayList<>();
+        
+        final int printerDpi = 1200;
+        final double srCodeSize_mm = 8.0;
 
+        final double pixelsPerMm = (double) printerDpi / 25.4;
+        final int qrCodeSize = (int) (srCodeSize_mm * pixelsPerMm);
+        
+        final Length extent = getFeederExtent();
+        final Length extentMm = extent.convertToUnits(LengthUnit.Millimeters);
+        
+        final int imageHeightpx =  (int) (extentMm.getValue() * pixelsPerMm);
+        
+        Hashtable<EncodeHintType, ErrorCorrectionLevel> hintMap = new Hashtable<>();
+        hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
+
+        BufferedImage image = new BufferedImage(qrCodeSize*2, imageHeightpx, BufferedImage.TYPE_BYTE_BINARY );
+        Graphics2D graphics = image.createGraphics();
+
+        //Fill with black border
+        graphics.setBackground(Color.BLACK);
+//        graphics.setPaint ( new Color ( 0, 0, 0 ) );
+//        graphics.fillRect ( 0, 0, image.getWidth(), image.getHeight() );
+        graphics.setPaint ( new Color ( 255, 255, 255 ) );
+        graphics.fillRect ( 5, 5, image.getWidth()-10, image.getHeight()-10 );
+        
+        //Draw marker at top
+        graphics.setPaint ( new Color ( 0, 0, 0 ) );
+        graphics.fillRect ( 10, 10, image.getWidth()-20, 20 );
+        
+        for(BlindsFeeder feeder: feeders) {
+            String partId = feeder.getPart().getId();
+            if(partId != null){
+                com.google.zxing.common.BitMatrix bitMatrix = writer.encode(partId, BarcodeFormat.QR_CODE, qrCodeSize, qrCodeSize, hintMap);
+                BufferedImage qrcImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
+                
+                double centerline = feeder.getPocketCenterline().convertToUnits(LengthUnit.Millimeters).getValue();
+                if(centerline != 0.0) {
+                    int imagePosPx = ((int) (centerline * pixelsPerMm)) - (qrCodeSize/2);
+                    image.getGraphics().drawImage(qrcImage, qrCodeSize/2, imagePosPx, null);
+                }
+            }
+        }
+        
+        if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
+            File file = Configuration.get().createResourceFile(getClass(), "blinds-feeder-qrc", ".png");
+            
+            //Write image together with pixel density metadata so it will print at the correct scale.
+            final String formatName = "png";
+            for (Iterator<ImageWriter> iw = ImageIO.getImageWritersByFormatName(formatName); iw.hasNext();) {
+               ImageWriter imgWriter = iw.next();
+               ImageWriteParam writeParam = imgWriter.getDefaultWriteParam();
+               ImageTypeSpecifier typeSpecifier = ImageTypeSpecifier.createFromBufferedImageType(BufferedImage.TYPE_INT_RGB);
+               IIOMetadata metadata = imgWriter.getDefaultImageMetadata(typeSpecifier, writeParam);
+               if (metadata.isReadOnly() || !metadata.isStandardMetadataFormatSupported()) {
+                  continue;
+               }
+
+               IIOMetadataNode horiz = new IIOMetadataNode("HorizontalPixelSize");
+               horiz.setAttribute("value", Double.toString(pixelsPerMm));
+
+               IIOMetadataNode vert = new IIOMetadataNode("VerticalPixelSize");
+               vert.setAttribute("value", Double.toString(pixelsPerMm));
+
+               IIOMetadataNode dim = new IIOMetadataNode("Dimension");
+               dim.appendChild(horiz);
+               dim.appendChild(vert);
+
+               IIOMetadataNode root = new IIOMetadataNode("javax_imageio_1.0");
+               root.appendChild(dim);
+
+               metadata.mergeTree("javax_imageio_1.0", root);
+
+               final ImageOutputStream stream = ImageIO.createImageOutputStream(file);
+               try {
+                   imgWriter.setOutput(stream);
+                   imgWriter.write(metadata, new IIOImage(image, null, metadata), writeParam);
+               } finally {
+                  stream.close();
+               }
+               break;
+            }
+        }
+        graphics.dispose();
+    }
     
     public void findPocketsAndCenterline(Camera camera) throws Exception {
         // Try to clone some info from another feeder.

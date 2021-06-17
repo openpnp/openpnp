@@ -108,6 +108,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JTextField textFieldLocationRotation;
     private JButton btnAutoSetup;
     private JButton btnIDPart;
+    private JButton btnExportQrc;
     private JCheckBox chckbxUseVision;
     private JCheckBox chckbxUsePartIdentifier;
     private JLabel lblUseVision;
@@ -267,6 +268,10 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         btnIDPart.setToolTipText("Capture QRC or text ID for the feeder part.");
         panelTapeSettings.add(btnIDPart, "14, 8, 1, 2");
 
+        btnExportQrc = new JButton(exportQRCCodeImage);
+        btnExportQrc.setToolTipText("Export QR code image for feeder parts.");
+        panelTapeSettings.add(btnExportQrc, "14, 10, 1, 2");
+        
         lblPocketPitch = new JLabel("Pocket Pitch");
         lblPocketPitch.setToolTipText("Picth of the part pockets in the tape.");
         panelTapeSettings.add(lblPocketPitch, "2, 4, right, default");
@@ -865,6 +870,22 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
             });
         }
     };
+    
+    private Action exportQRCCodeImage = new AbstractAction("Export QRC Code", Icons.export) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Export QRC code image for all of the connected feeders");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
+            UiUtils.submitUiMachineTask(() -> {
+                feeder.generatePartNumberQRCodeImage();
+            });
+        }
+    };
+    
 
     private Action openCover = new AbstractAction("Open Cover", Icons.lockOpenOutline) {
         {
