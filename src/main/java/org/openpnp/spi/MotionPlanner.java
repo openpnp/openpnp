@@ -148,7 +148,7 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
          */
         WaitForUnconditionalCoordination,
         /**
-         * Like WaitForFullCoordination but wait "forever" i.e. with very long timeout. Used e.g. for homing.
+         * Like WaitForUnconditionalCoordination but wait "forever" i.e. with very long timeout. Used e.g. for homing.
          */
         WaitForStillstandIndefinitely;
 
@@ -177,11 +177,6 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
      * @throws Exception 
      */
     void waitForCompletion(HeadMountable hm, CompletionType completionType) throws Exception;
-    
-    /**
-     * Clear all queued motion. This should only be used when the machine task is aborted.
-     */
-    void clearQueuedMotion();
 
     /**
      * Get the planned motion at a certain time. Works into the future as far as planned and into the past
