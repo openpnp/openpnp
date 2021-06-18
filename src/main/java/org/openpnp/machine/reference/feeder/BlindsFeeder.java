@@ -148,8 +148,11 @@ public class BlindsFeeder extends ReferenceFeeder {
     private boolean identifierCheckEnabled = false;
     
     @Attribute(required = false)
-    private double identifierCenterlineOffset = 0.0;
+    private boolean identifierLeftSide = false;
 
+    @Element(required = false)
+    private Length identifierOffset = new Length(8.0, LengthUnit.Millimeters);
+    
     @Attribute
     private int feedCount = 0;
 
@@ -423,44 +426,6 @@ public class BlindsFeeder extends ReferenceFeeder {
         setFeedCount(getFeedCount() - 1);
     }
     
-//    public class FindIdentifiers {
-//        private Camera camera;
-//        private CvPipeline pipeline;
-//        private long showResultMilliseconds;
-//        
-//        // recognized stuff
-//        private SimpleQrc.QrcModel detectedQrcModel;
-//        private String identifier;
-//        
-//        public FindIdentifiers(Camera camera, CvPipeline pipeline, final long showResultMilliseconds) {
-//            this.camera = camera;
-//            this.pipeline = pipeline;
-//            this.showResultMilliseconds = showResultMilliseconds;
-//        }
-//
-//        public String getIdentifier() {
-//            return identifier;
-//        }
-//
-//        @SuppressWarnings("unchecked")
-//        public FindIdentifiers invoke() throws Exception {
-//            List<String> results = null;
-//            String result = null;
-//            try {
-//                // Grab the results
-//                detectedQrcModel = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
-//                        .getExpectedModel(SimpleQrc.QrcModel.class);
-//                
-////                results = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
-////                        .getExpectedListModel(RotatedRect.class, 
-////                                null/*???new Exception("Feeder " + getName() + ": No features found.")*/);
-//            }
-//            catch (ClassCastException e) {
-//                throw new Exception("Unrecognized result type (should be SimpleQrc.QrcModel): " + results);
-//            }
-//            return this;
-//        }
-//    }
     
     public class FindFeatures {
         private Camera camera;
@@ -900,7 +865,6 @@ public class BlindsFeeder extends ReferenceFeeder {
             return this;
         }
     }
-    
 
     public void showFeatures() throws Exception {
         Camera camera = Configuration.get()
@@ -915,7 +879,52 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
+    public void checkPartIdentifier() throws Exception {
+        if (!isCalibrating()) {
+
+            if ( !Configuration.get().getMachine().isHomed() ) {
+                throw new Exception("Feeder " + getName() + ": Machine not yet homed.");
+            }
+
+            if ( !isCalibrated() ) {
+                throw new Exception("Feeder " + getName() + ": fiducials not yet calibrated.");
+            }
+
+            setCalibrating(true);
+            try {
+                Camera camera = Configuration.get()
+                        .getMachine()
+                        .getDefaultHead()
+                        .getDefaultCamera();
+                
+                Length identifierRelPos = getPocketCenterline();
+                
+                Location identifierLocation = new Location(LengthUnit.Millimeters, -identifierOffset.getValue(), identifierRelPos.getValue(), 0.0, 0.0);
+                if(identifierLeftSide) {
+                    double offset = getFiducial1Location().getLinearLengthTo(getFiducial2Location()).convertToUnits(LengthUnit.Millimeters).getValue();
+                    identifierLocation = new Location(LengthUnit.Millimeters, offset+identifierOffset.getValue(), identifierRelPos.getValue(), 0.0, 0.0);
+                }
+                Location machineLocation = transformFeederToMachineLocation(identifierLocation);
+                
+                Head head = Configuration.get().getMachine().getDefaultHead();
+                if (!head.isInsideSoftLimits(camera, getFiducial2Location())) {
+                    throw new Exception("Feeder " + getName() + ": part identifier outside soft machine limits");
+                }
+                MovableUtils.moveToLocationAtSafeZ(camera, machineLocation);
+
+                findPartIdentifiers(500);
+            }
+            finally {
+                setCalibrating(false);
+            }
+        }    }
+    
     public void showPartIdentifiers() throws Exception {
+        findPartIdentifiers(1000);
+    }
+    
+    
+    public void findPartIdentifiers(final long showResultMilliseconds) throws Exception {
         Camera camera = Configuration.get()
                 .getMachine()
                 .getDefaultHead()
@@ -953,48 +962,49 @@ public class BlindsFeeder extends ReferenceFeeder {
         
         Logger.debug("[BlindsFeeder] part identifier: {}", identifier); 
 
-        Mat image = OpenCvUtils.toMat(bufferedImage);
-        Mat resultMat = image.clone();
+        if(showResultMilliseconds > 0) {
+            Mat image = OpenCvUtils.toMat(bufferedImage);
+            Mat resultMat = image.clone();
 
-        // calculate the diagonal text size
-        double fontScale = 1.0;
-        int [] baseLine = null;
-        
-        Size size = Imgproc.getTextSize("0", Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
-        Location textSizeMm = camera.getUnitsPerPixel().multiply(size.width, size.height, 0., 0.)
-                .convertToUnits(LengthUnit.Millimeters);
-        if (textSizeMm.getY() < 0.0) {
-            textSizeMm = textSizeMm.multiply(1.0, -1.0, 0.0, 0.0);
+            // calculate the diagonal text size
+            double fontScale = 1.0;
+            int [] baseLine = null;
+            
+            Size size = Imgproc.getTextSize("0", Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+            Location textSizeMm = camera.getUnitsPerPixel().multiply(size.width, size.height, 0., 0.)
+                    .convertToUnits(LengthUnit.Millimeters);
+            if (textSizeMm.getY() < 0.0) {
+                textSizeMm = textSizeMm.multiply(1.0, -1.0, 0.0, 0.0);
+            }
+            final double minFontSizeMm = 1.0;
+            if (textSizeMm.getY() < minFontSizeMm) {
+                fontScale = minFontSizeMm / textSizeMm.getY();
+                textSizeMm = textSizeMm.multiply(fontScale, fontScale, 0.0, 0.0);
+            }
+
+            Size textSize = Imgproc.getTextSize(identifier, Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
+            
+            Imgproc.putText(resultMat, identifier, 
+                    new org.opencv.core.Point(100, 100), 
+                    Imgproc.FONT_HERSHEY_PLAIN, 
+                    fontScale, 
+                    FluentCv.colorToScalar(Color.orange), 4, 0, false);
+            
+            // Draw the cropping area rectangle
+            Imgproc.rectangle (
+                    resultMat,
+                    new org.opencv.core.Point(left, top),
+                    new org.opencv.core.Point(left + cropSizePx, top + cropSizePx),
+                    FluentCv.colorToScalar(Color.orange),
+                    4                          //Thickness of the line
+            );
+            
+            
+            BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
+            resultMat.release();
+            MainFrame.get().getCameraViews().getCameraView(camera)
+            .showFilteredImage(showResult, 500);
         }
-        final double minFontSizeMm = 1.0;
-        if (textSizeMm.getY() < minFontSizeMm) {
-            fontScale = minFontSizeMm / textSizeMm.getY();
-            textSizeMm = textSizeMm.multiply(fontScale, fontScale, 0.0, 0.0);
-        }
-
-        Size textSize = Imgproc.getTextSize(identifier, Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
-        
-        Imgproc.putText(resultMat, identifier, 
-                new org.opencv.core.Point(100, 100), 
-                Imgproc.FONT_HERSHEY_PLAIN, 
-                fontScale, 
-                FluentCv.colorToScalar(Color.orange), 4, 0, false);
-        
-        // Draw the cropping area rectangle
-        Imgproc.rectangle (
-                resultMat,
-                new org.opencv.core.Point(left, top),
-                new org.opencv.core.Point(left + cropSizePx, top + cropSizePx),
-                FluentCv.colorToScalar(Color.orange),
-                4                          //Thickness of the line
-        );
-        
-        
-        BufferedImage showResult = OpenCvUtils.toBufferedImage(resultMat);
-        resultMat.release();
-        MainFrame.get().getCameraViews().getCameraView(camera)
-        .showFilteredImage(showResult, 1000);
-
     }
     
     public void generatePartNumberQRCodeImage() throws Exception {
@@ -2309,12 +2319,31 @@ public class BlindsFeeder extends ReferenceFeeder {
         this.identifierCheckEnabled = identifierCheckEnabled;
         firePropertyChange("identifierCheckEnabled", oldValue, identifierCheckEnabled);
     }
+    
+    public boolean getIdentifierLeftSide() {
+        return identifierLeftSide;
+    }
+
+    public void setIdentifierLeftSide(boolean identifierLeftSide) {
+        boolean oldValue = this.identifierLeftSide;
+        this.identifierLeftSide = identifierLeftSide;
+        firePropertyChange("identifierLeftSide", oldValue, identifierLeftSide);
+    }    
+    
+    public Length getIdentifierOffset() {
+        return identifierOffset;
+    }
+
+    public void setIdentifierOffset(Length identifierOffset) {
+        Length oldValue = this.identifierOffset;
+        this.identifierOffset = identifierOffset;
+        firePropertyChange("identifierOffset", oldValue, identifierOffset);
+    }
 
     public int getFeederNo() {
         return feederNo;
     }
-
-
+    
     public void setFeederNo(int feederNo) {
         int oldValue = this.feederNo;
         this.feederNo = feederNo;

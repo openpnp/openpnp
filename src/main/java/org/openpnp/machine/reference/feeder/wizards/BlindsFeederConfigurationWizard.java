@@ -94,6 +94,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JTextField textFieldFeedersTotal;
     private JLabel lblNormalize;
     private JCheckBox chckbxNormalize;
+    private JLabel lblIdentifierLeft;
+    private JCheckBox chckbxIdentifierLeft;
     private JLabel lblPocketPitch;
     private JTextField textFieldPocketPitch;
     private JPanel panelTapeSettings;
@@ -536,6 +538,14 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         chckbxNormalize = new JCheckBox("");
         chckbxNormalize.setToolTipText("");
         panelLocations.add(chckbxNormalize, "4, 10");
+        
+        lblIdentifierLeft = new JLabel("Id on feeder left");
+        lblIdentifierLeft.setToolTipText("<html>Feeder part identifier is on the left side, otherwise to the right\r\n</html>");
+        panelLocations.add(lblIdentifierLeft, "6, 10, right, default");
+        
+        chckbxIdentifierLeft = new JCheckBox("");
+        chckbxIdentifierLeft.setToolTipText("");
+        panelLocations.add(chckbxIdentifierLeft, "8, 10");
 
         btnCalibrateFiducials = new JButton(calibrateFiducialsAction);
         panelLocations.add(btnCalibrateFiducials, "12, 10");
@@ -631,6 +641,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
         addWrappedBinding(feeder, "normalize", chckbxNormalize, "selected");
+        addWrappedBinding(feeder, "identifierLeftSide", chckbxIdentifierLeft, "selected");
 
         addWrappedBinding(feeder, "feederNo", textFieldFeederNo, "text", intConverter);
         addWrappedBinding(feeder, "feedersTotal", textFieldFeedersTotal, "text", intConverter);
@@ -866,7 +877,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                feeder.showPartIdentifiers();
+                feeder.checkPartIdentifier();
             });
         }
     };
