@@ -627,12 +627,6 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     }
 
     @Override
-    public synchronized void clearQueuedMotion() {
-        // The motion commands are reset.
-        motionCommands = new LinkedList<>();
-    }
-
-    @Override
     public synchronized void clearMotionPlanOlderThan(double time) {
         while (motionPlan.isEmpty() == false && motionPlan.firstKey() < time) {
             motionPlan.remove(motionPlan.firstKey());
