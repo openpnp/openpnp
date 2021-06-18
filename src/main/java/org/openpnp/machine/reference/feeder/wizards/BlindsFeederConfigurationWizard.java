@@ -118,6 +118,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JLabel lblPart;
     private JLabel lblRetryCount;
     private JTextField retryCountTf;
+    private JLabel lblEnablePartIdCheck;
+    private JCheckBox chckbxPartIdCheck;
     private JLabel lblFiducial3Location;
     private JLabel lblTapeLength;
     private JTextField textFieldTapeLength;
@@ -205,6 +207,13 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelPart.add(retryCountTf, "4, 6, fill, default");
         retryCountTf.setColumns(4);
 
+        lblEnablePartIdCheck = new JLabel("Part Id Check");
+        panelPart.add(lblEnablePartIdCheck, "8, 6, right, default");
+
+        chckbxPartIdCheck = new JCheckBox("");
+        chckbxPartIdCheck.setToolTipText("");
+        panelPart.add(chckbxPartIdCheck, "10, 6");
+        
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
         panelTapeSettings.setBorder(new TitledBorder(
@@ -603,7 +612,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
         addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
         addWrappedBinding(location, "lengthZ", textFieldPartZ, "text", lengthConverter);
-
+        
         addWrappedBinding(feeder, "part", comboBoxPart, "selectedItem");
         addWrappedBinding(feeder, "feedRetryCount", retryCountTf, "text", intConverter);
 
@@ -641,6 +650,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
         addWrappedBinding(feeder, "normalize", chckbxNormalize, "selected");
+        
+        addWrappedBinding(feeder, "identifierCheckEnabled", chckbxPartIdCheck, "selected");
         addWrappedBinding(feeder, "identifierLeftSide", chckbxIdentifierLeft, "selected");
 
         addWrappedBinding(feeder, "feederNo", textFieldFeederNo, "text", intConverter);

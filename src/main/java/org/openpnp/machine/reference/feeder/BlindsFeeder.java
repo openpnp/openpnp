@@ -274,6 +274,15 @@ public class BlindsFeeder extends ReferenceFeeder {
         recalculateGeometry();
     }
 
+    private void assertPartIdentity() throws Exception {
+        // IF enabled, make sure that the part identity has been verified
+        if(identifierCheckEnabled) {
+            assertCalibration();
+            checkPartIdentifier();
+        }
+        
+    }
+    
     /**  
      * @param pocketNumber 1-based number of the pocket 
      * @return the Location of the pocket with the given number in the tape
@@ -292,6 +301,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public Location getPickLocation(double pocketNumber) throws Exception {
         assertCalibration();
+        assertPartIdentity();
         return getUncalibratedPickLocation(pocketNumber);
     }
 
@@ -334,6 +344,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public boolean isCoverOpenChecked()  throws Exception {
         assertCalibration();
+        assertPartIdentity();
         if (Double.isNaN(coverPosition.getValue())) {
             Camera camera = Configuration.get()
                     .getMachine()
@@ -356,6 +367,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
 
         assertCalibration();
+        assertPartIdentity();
         if (coverType == CoverType.BlindsCover) {
             if (coverActuation == CoverActuation.CheckOpen) {
                 if (!isCoverOpenChecked()) {
@@ -912,7 +924,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 }
                 MovableUtils.moveToLocationAtSafeZ(camera, machineLocation);
 
-                findPartIdentifiers(500);
+                findPartIdentifier(500);
             }
             finally {
                 setCalibrating(false);
@@ -920,11 +932,11 @@ public class BlindsFeeder extends ReferenceFeeder {
         }    }
     
     public void showPartIdentifiers() throws Exception {
-        findPartIdentifiers(1000);
+        findPartIdentifier(1000);
     }
     
     
-    public void findPartIdentifiers(final long showResultMilliseconds) throws Exception {
+    public void findPartIdentifier(final long showResultMilliseconds) throws Exception {
         Camera camera = Configuration.get()
                 .getMachine()
                 .getDefaultHead()
@@ -1005,6 +1017,11 @@ public class BlindsFeeder extends ReferenceFeeder {
             MainFrame.get().getCameraViews().getCameraView(camera)
             .showFilteredImage(showResult, 500);
         }
+        String feederPartId = getPart().getId();
+        if (!identifier.equals(feederPartId) )  {
+            throw new Exception("Feeder: " + getName() + " - Found identity:" + identifier +" does not match feeder part:" + feederPartId);
+        }
+        
     }
     
     public void generatePartNumberQRCodeImage() throws Exception {
@@ -1179,6 +1196,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
         // Calculate the wanted open/closed positions.
         assertCalibration();
+        assertPartIdentity();
         Length pitchHalf = pocketPitch.multiply(0.5).convertToUnits(LengthUnit.Millimeters);
         Length wantedOpenPosition = getPocketDistance();
         Length wantedClosedPosition = getPocketDistance().add(pitchHalf).modulo(pocketPitch);
@@ -1595,6 +1613,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
 
             assertCalibration();
+            assertPartIdentity();
 
             if (coverType == CoverType.BlindsCover) {
                 // Calculate the motion for the cover to be pushed in feeder local coordinates. 
