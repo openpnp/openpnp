@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 <mark@makr.zone>
+ * Copyright (C) 2019-2021 <mark@makr.zone>
  * based on the ReferenceStripFeederConfigurationWizard 
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
  * 
@@ -67,7 +67,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.BoxLayout;
 
 @SuppressWarnings("serial")
 public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationWizard {
@@ -105,10 +104,48 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
     private JComboBox ocrTextOrientation;
     private JButton btnSetOcrSettings;
 
-
+    private JPanel panelArray;
+    private JLabel label;
+    private JLabel lblGroupName;
+    private JComboBox feederGroupName;
 
     public BlindsFeederArrayConfigurationWizard(BlindsFeeder feeder) {
         this.feeder = feeder;
+        List<String> blindsFeederGroupNames = feeder.getBlindsFeederGroupNames();
+
+        panelArray = new JPanel();
+        contentPanel.add(panelArray);
+        panelArray.setBorder(new TitledBorder(null, "Array", TitledBorder.LEADING,
+                TitledBorder.TOP, null, null));
+        panelArray.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(140dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("left:default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("max(16dlu;min)"),}));
+
+        lblGroupName = new JLabel("Feeder Group Name");
+        panelArray.add(lblGroupName, "2, 2, right, default");
+        feederGroupName = new JComboBox(blindsFeederGroupNames.toArray());
+        feederGroupName.setEditable(true);
+        panelArray.add(feederGroupName, "4, 2, fill, default");
+        
+        label_1 = new JLabel(" ");
+        panelArray.add(label_1, "6, 2");
+
+        btnExtractOpenscadModel = new JButton(extract3DPrintingAction);
+        panelArray.add(btnExtractOpenscadModel, "8, 2, 1, 3, right, default");
+
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
@@ -119,8 +156,6 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -142,15 +177,13 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
-        
-                btnExtractOpenscadModel = new JButton(extract3DPrintingAction);
-                panelLocations.add(btnExtractOpenscadModel, "12, 2, right, default");
+
 
         JLabel lblX = new JLabel("X");
         panelLocations.add(lblX, "4, 4, center, default");
 
         JLabel lblY = new JLabel("Y");
-        panelLocations.add(lblY, "8, 4, center, default");
+        panelLocations.add(lblY, "6, 4, center, default");
 
         JLabel lblFiducial1Location = new JLabel("Fiducial 1");
         lblFiducial1Location.setToolTipText(
@@ -162,13 +195,13 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         textFieldFiducial1X.setColumns(8);
 
         textFieldFiducial1Y = new JTextField();
-        panelLocations.add(textFieldFiducial1Y, "8, 6");
+        panelLocations.add(textFieldFiducial1Y, "6, 6");
         textFieldFiducial1Y.setColumns(8);
 
 
         locationButtonsPanelFiducial1 = new LocationButtonsPanel(textFieldFiducial1X,
                 textFieldFiducial1Y, null, null);
-        panelLocations.add(locationButtonsPanelFiducial1, "12, 6");
+        panelLocations.add(locationButtonsPanelFiducial1, "10, 6");
 
         JLabel lblFiducial2Location = new JLabel("Fiducial 2");
         lblFiducial2Location.setToolTipText(
@@ -180,13 +213,13 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         textFieldFiducial2X.setColumns(8);
 
         textFieldFiducial2Y = new JTextField();
-        panelLocations.add(textFieldFiducial2Y, "8, 8");
+        panelLocations.add(textFieldFiducial2Y, "6, 8");
         textFieldFiducial2Y.setColumns(8);
 
 
         locationButtonsPanelFiducial2 = new LocationButtonsPanel(textFieldFiducial2X, 
                 textFieldFiducial2Y, null, null);
-        panelLocations.add(locationButtonsPanelFiducial2, "12, 8");
+        panelLocations.add(locationButtonsPanelFiducial2, "10, 8");
 
         lblFiducial3Location = new JLabel("Fiducial 3");
         lblFiducial3Location.setToolTipText("The location of the third diamond shaped fiducial counter-clockwise from the first.");
@@ -198,11 +231,11 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
 
         textFieldFiducial3Y = new JTextField();
         textFieldFiducial3Y.setColumns(8);
-        panelLocations.add(textFieldFiducial3Y, "8, 10");
+        panelLocations.add(textFieldFiducial3Y, "6, 10");
 
         locationButtonsPanelFiducial3 = new LocationButtonsPanel(textFieldFiducial3X, 
                 textFieldFiducial3Y, null, null);
-        panelLocations.add(locationButtonsPanelFiducial3, "12, 10");
+        panelLocations.add(locationButtonsPanelFiducial3, "10, 10");
 
         lblNormalize = new JLabel("Normalize");
         lblNormalize.setToolTipText("<html>\r\nNormalize the fiducial distances and shear to the theoretically correct <br />\r\nvalues (whole millimeter square grid). This means you trust the mechanics  <br />\r\nof your machine and of your 3D printer over the computer vision fiducial fixes.  <br />\r\nOverall absolute position and angle are still determined by vision. \r\n</html>");
@@ -213,7 +246,7 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         panelLocations.add(chckbxNormalize, "4, 12");
 
         btnCalibrateFiducials = new JButton(calibrateFiducialsAction);
-        panelLocations.add(btnCalibrateFiducials, "12, 12");
+        panelLocations.add(btnCalibrateFiducials, "10, 12");
 
         JPanel panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision Settings", TitledBorder.LEADING, TitledBorder.TOP,
@@ -232,19 +265,19 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblUseVision = new JLabel("Use Fiducial Vision?");
         lblUseVision.setToolTipText("<html><p>Use vision for fiducial calibration when the feeder is first used. </p>\r\n<p>Even if fiducial vision is disabled, vision will still be used for setup and <br />\r\ncover open checking</p><html>");
@@ -267,25 +300,25 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         panelVision.add(ocrAction, "4, 4, fill, default");
 
         List<String> fontList = OcrUtil.createFontSelectionList(feeder.getOcrFontName(), true);
-                        
-                        label = new JLabel(" ");
-                        panelVision.add(label, "6, 4");
-                
-                        btnSetOcrSettings = new JButton(setOcrSettingsToAllAction);
-                        panelVision.add(btnSetOcrSettings, "8, 4");
-        
-                lblOcrTextOrientation = new JLabel("OCR Text Orientation");
-                panelVision.add(lblOcrTextOrientation, "2, 6, right, default");
-        
-                ocrTextOrientation = new JComboBox(BlindsFeeder.OcrTextOrientation.values());
-                panelVision.add(ocrTextOrientation, "4, 6, fill, default");
-        
-                lblOcrMargin = new JLabel("OCR Margin");
-                panelVision.add(lblOcrMargin, "6, 6, right, default");
-        
-                ocrMargin = new JTextField();
-                panelVision.add(ocrMargin, "8, 6, fill, default");
-                ocrMargin.setColumns(10);
+
+        label = new JLabel(" ");
+        panelVision.add(label, "6, 4");
+
+        btnSetOcrSettings = new JButton(setOcrSettingsToAllAction);
+        panelVision.add(btnSetOcrSettings, "8, 4");
+
+        lblOcrTextOrientation = new JLabel("OCR Text Orientation");
+        panelVision.add(lblOcrTextOrientation, "2, 6, right, default");
+
+        ocrTextOrientation = new JComboBox(BlindsFeeder.OcrTextOrientation.values());
+        panelVision.add(ocrTextOrientation, "4, 6, fill, default");
+
+        lblOcrMargin = new JLabel("OCR Margin");
+        panelVision.add(lblOcrMargin, "6, 6, right, default");
+
+        ocrMargin = new JTextField();
+        panelVision.add(ocrMargin, "8, 6, fill, default");
+        ocrMargin.setColumns(10);
         lblOcrFontName = new JLabel("OCR Font");
         panelVision.add(lblOcrFontName, "2, 8, right, default");
         ocrFontName = new JComboBox(fontList.toArray());
@@ -329,6 +362,8 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         //IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
                 .getLengthDisplayFormat());
+
+        addWrappedBinding(feeder, "feederGroupName", feederGroupName, "selectedItem");
 
         MutableLocationProxy location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
@@ -497,7 +532,7 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
             });
         }
     };
-    private JLabel label;
+    private JLabel label_1;
 
     private void calibrateFiducials() {
         UiUtils.submitUiMachineTask(() -> {

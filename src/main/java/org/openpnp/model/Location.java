@@ -64,6 +64,8 @@ public class Location {
         this.rotation = rotation;
     }
 
+    static final public Location origin = new Location(LengthUnit.Millimeters);
+
     public double getX() {
         return x;
     }
@@ -94,6 +96,11 @@ public class Location {
 
     public Length getLinearLengthTo(Location location) {
         double distance = getLinearDistanceTo(location);
+        return new Length(distance, getUnits());
+    }
+
+    public Length getXyzLengthTo(Location location) {
+        double distance = getXyzDistanceTo(location);
         return new Length(distance, getUnits());
     }
 
@@ -256,6 +263,18 @@ public class Location {
     }
 
     /**
+     * Returns a new Location based on this Location with values multiplied by the specified factor.
+     * Units are the same as this Location.
+     * 
+     * @param factor
+     * @return
+     */
+    public Location multiply(double factor) {
+        return new Location(getUnits(), factor * getX(), factor * getY(), factor * getZ(),
+                factor * getRotation());
+    }
+
+    /**
      * Returns a new Location with the same units as this one and with any of fields specified as
      * true inverted from the values of this one. Specifically, if one of the x, y, z or rotation
      * fields are specified true in the method call, that field will be multipled by -1 in the
@@ -392,6 +411,17 @@ public class Location {
     	double y2 = y1 + getY();
     	
     	return (x >= x1) && (x <= x2) && (y > y1) && (y < y2);
+    }
+
+    public Location offsetWithRotationFrom(Location baseLocation) {
+        // Start with the base location.
+        // Rotate the feeder's offsets by the base's rotation making the offsets
+        // normal to the base's orientation.
+        Location offsets = rotateXy(baseLocation.getRotation());
+        // Add the rotated offsets to the base location to get the final location. We add
+        // with rotation since we need to use the combined rotation of the base and the
+        // offsets.
+        return baseLocation.addWithRotation(offsets);
     }
 
     /**

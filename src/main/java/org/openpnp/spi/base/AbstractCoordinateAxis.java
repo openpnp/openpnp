@@ -30,8 +30,8 @@ import org.openpnp.spi.Axis;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.Machine;
 import org.openpnp.spi.Locatable.LocationOption;
+import org.openpnp.spi.Machine;
 import org.openpnp.util.MovableUtils;
 import org.simpleframework.xml.Element;
 
@@ -67,10 +67,9 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
 
     @Override
     public void setCoordinate(double coordinate) {
-        Object oldValue = this.coordinate;
         this.coordinate = coordinate;
-        firePropertyChange("coordinate", oldValue, coordinate);
-        firePropertyChange("lengthCoordinate", null, getLengthCoordinate());
+        // Note, we do not firePropertyChange() as these changes are live from the machine thread,
+        // and coordinate changes are handled through MachineListener.machineHeadActivity(Machine, Head).
     }
 
     @Override

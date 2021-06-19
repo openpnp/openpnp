@@ -143,8 +143,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         panelPart = new JPanel();
         panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null,
-                new Color(0, 0, 0)));
+                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -213,7 +212,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         contentPanel.add(panelTapeSettings);
         panelTapeSettings.setBorder(new TitledBorder(
                 new EtchedBorder(EtchedBorder.LOWERED, null, null), "Tape Settings",
-                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         panelTapeSettings.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -600,11 +599,15 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                          firstPartLocation, secondPartLocation,
                                          part1HoleLocations, part2HoleLocations);
                                  final Location referenceHole1 = referenceHoles.get(0)
-                                                                               .derive(null, null,
-                                                                                       null, 0d);
+                                         .derive(null, null,
+                                                 null, 0d)
+                                         .derive(feeder.getReferenceHoleLocation(), 
+                                                 false,  false,  true, false);
                                  final Location referenceHole2 = referenceHoles.get(1)
-                                                                               .derive(null, null,
-                                                                                       null, 0d);
+                                         .derive(null, null,
+                                                 null, 0d)
+                                         .derive(feeder.getLastHoleLocation(), 
+                                                 false,  false,  true, false);
 
                                  feeder.setReferenceHoleLocation(referenceHole1);
                                  feeder.setLastHoleLocation(referenceHole2);
@@ -1002,6 +1005,12 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
             pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
             pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
+            pipeline.setProperty("sprocketHole.diameter", feeder.getHoleDiameter());
+            // Search Range is half camera. 
+            Length range = camera.getWidth() > camera.getHeight() ? 
+                    camera.getUnitsPerPixel().getLengthY().multiply(camera.getHeight()/2)
+                    : camera.getUnitsPerPixel().getLengthX().multiply(camera.getWidth()/2);
+            pipeline.setProperty("sprocketHole.maxDistance", range);
             return pipeline;
         }
         catch (CloneNotSupportedException e) {

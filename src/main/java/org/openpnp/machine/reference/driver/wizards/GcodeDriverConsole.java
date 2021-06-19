@@ -45,7 +45,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
 
         JPanel gcodeConsole = new JPanel();
         gcodeConsole.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Gcode console", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                "Gcode console", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(gcodeConsole);
 
         gcodeConsole.setLayout(new FormLayout(new ColumnSpec[] {

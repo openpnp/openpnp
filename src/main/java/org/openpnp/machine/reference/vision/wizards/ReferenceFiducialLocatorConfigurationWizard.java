@@ -2,7 +2,6 @@ package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -17,6 +16,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
@@ -25,10 +25,8 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
-import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.stages.SetResult;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
@@ -43,6 +41,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
     
     JCheckBox enabledAveragingCheckbox; 
     JTextField textFieldRepeatFiducialRecognition;
+    private JTextField maxDistance;
 
     public ReferenceFiducialLocatorConfigurationWizard(ReferenceFiducialLocator fiducialLocator) {
         this.fiducialLocator = fiducialLocator;
@@ -53,7 +52,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:default"),
+                ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -61,6 +60,8 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -127,6 +128,14 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
         enabledAveragingCheckbox = new JCheckBox("");
         panel.add(enabledAveragingCheckbox, "4, 6");
+        
+        JLabel lblMaxDistance = new JLabel("Max. Distance");
+        lblMaxDistance.setToolTipText("Maximum allowed distance between nominal fiducial location and detected location.");
+        panel.add(lblMaxDistance, "2, 8, right, default");
+        
+        maxDistance = new JTextField();
+        panel.add(maxDistance, "4, 8, fill, default");
+        maxDistance.setColumns(10);
 
     }
     
@@ -161,14 +170,17 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
     @Override
     public void createBindings() {
-    	IntegerConverter intConverter = new IntegerConverter();
-    	
-    	addWrappedBinding(fiducialLocator, "enabledAveraging", enabledAveragingCheckbox, "selected");
-    	addWrappedBinding(fiducialLocator, "repeatFiducialRecognition", textFieldRepeatFiducialRecognition, "text", intConverter);
-    	
-    	ComponentDecorators.decorateWithAutoSelect(textFieldRepeatFiducialRecognition);
+        IntegerConverter intConverter = new IntegerConverter();
+        LengthConverter lengthConverter = new LengthConverter();
+
+        addWrappedBinding(fiducialLocator, "enabledAveraging", enabledAveragingCheckbox, "selected");
+        addWrappedBinding(fiducialLocator, "repeatFiducialRecognition", textFieldRepeatFiducialRecognition, "text", intConverter);
+        addWrappedBinding(fiducialLocator, "maxDistance", maxDistance, "text", lengthConverter);
+
+        ComponentDecorators.decorateWithAutoSelect(textFieldRepeatFiducialRecognition);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxDistance);
     }
-    
+
     @Override
     public String getWizardName() {
         return "ReferenceFiducialLocator";

@@ -16,6 +16,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvStage.Result;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -59,6 +60,7 @@ public class CvPipeline implements AutoCloseable {
 
     private Mat workingImage;
     private Object workingModel;
+    private Exception terminalException;
     private ColorSpace workingColorSpace;
     
     private long totalProcessingTimeNs;
@@ -218,6 +220,14 @@ public class CvPipeline implements AutoCloseable {
         workingColorSpace = colorSpace;
     }
 
+    Exception getTerminalException() {
+        return terminalException;
+    }
+
+    void setTerminalException(Exception exception) {
+        this.terminalException = exception;
+    }
+
     public long getTotalProcessingTimeNs() {
       return totalProcessingTimeNs;
     }
@@ -226,7 +236,8 @@ public class CvPipeline implements AutoCloseable {
       this.totalProcessingTimeNs = totalProcessingTimeNs;
     }
 
-    public void process() {
+    public void process() throws Exception {
+        terminalException = null;
         totalProcessingTimeNs = 0;
         release();
         for (CvStage stage : stages) {
@@ -239,8 +250,16 @@ public class CvPipeline implements AutoCloseable {
                 }
                 result = stage.process(this);
             }
+            catch (TerminalException e) {
+                result = new Result(null, e.getOriginalException());
+                setTerminalException(e.getOriginalException());
+                Logger.debug("Stage \""+stage.getName()+"\" throws "+e.getOriginalException());
+            }
             catch (Exception e) {
                 result = new Result(null, e);
+                if (stage.isEnabled()) {
+                    Logger.debug("Stage \""+stage.getName()+"\" throws "+e);
+                }
             }
             processingTimeNs = System.nanoTime() - processingTimeNs;
             totalProcessingTimeNs += processingTimeNs;
@@ -287,6 +306,9 @@ public class CvPipeline implements AutoCloseable {
             }
 
             results.put(stage, new Result(image, colorSpace, model, processingTimeNs, stage));
+        }
+        if (terminalException != null) {
+            throw (terminalException);
         }
     }
 

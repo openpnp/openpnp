@@ -91,8 +91,9 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * Immediately captures an image from the camera and returns it in it's native format. Fires
      * the Camera.BeforeCapture and Camera.AfterCapture scripting events before and after.
      * @return
+     * @throws Exception 
      */
-    public BufferedImage capture();
+    public BufferedImage capture() throws Exception;
     
     public BufferedImage captureTransformed();
     
@@ -206,4 +207,6 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @return True if this Camera should be shown in multi camera view panels. 
      */
     boolean isShownInMultiCameraView();
+
+    public FocusProvider getFocusProvider();
 }

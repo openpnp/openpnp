@@ -2,13 +2,11 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-
 import javax.swing.Action;
 import javax.swing.Icon;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Configuration;
@@ -17,6 +15,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.FocusProvider;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
@@ -26,10 +25,12 @@ import org.openpnp.util.VisionUtils;
 
 import com.google.common.io.Files;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class VisionUtilsTest {
 	
-	@Before
+	@BeforeEach
 	public void before() throws Exception {
 		/**
 		 * Create a new config directory and load the default configuration.
@@ -47,13 +48,13 @@ public class VisionUtilsTest {
     public void testOffsets() {
         Camera camera = new TestCamera();
         Location location = camera.getLocation();
-        Assert.assertEquals(location, new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
-        Assert.assertEquals(camera.getWidth(), 640);
-        Assert.assertEquals(camera.getHeight(), 480);
+        assertEquals(location, new Location(LengthUnit.Millimeters, 0, 0, 0, 0));
+        assertEquals(camera.getWidth(), 640);
+        assertEquals(camera.getHeight(), 480);
         Location pixelOffsets = VisionUtils.getPixelCenterOffsets(camera, 100, 100);
-        Assert.assertEquals(pixelOffsets, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
+        assertEquals(pixelOffsets, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
         Location pixelLocation = VisionUtils.getPixelLocation(camera, 100, 100);
-        Assert.assertEquals(pixelLocation, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
+        assertEquals(pixelLocation, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
     }
 
     static class TestCamera extends AbstractHeadMountable implements Camera {
@@ -264,6 +265,11 @@ public class VisionUtilsTest {
         @Override
         public boolean isShownInMultiCameraView() {
             return false;
+        }
+
+        @Override
+        public FocusProvider getFocusProvider() {
+            return null;
         }
     }
 }

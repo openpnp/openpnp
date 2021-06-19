@@ -19,8 +19,6 @@
 
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.Color;
-
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -103,7 +101,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
 
         panelOffsets = new JPanel();
         panelOffsets.setBorder(new TitledBorder(null,
-                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -196,7 +194,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 textFieldSafeZ.setColumns(10);
                 
                 lblDynamicSafeZ = new JLabel("Dynamic Safe Z");
-                lblDynamicSafeZ.setToolTipText("");
+                lblDynamicSafeZ.setToolTipText("<html>\r\nWhen moving to Safe Z, account for the part height on the nozzle i.e. lift the nozzle higher with a taller part.<br/>\r\nThis allows you to use a lower Safe Z which might improve the machine speed. \r\n</html>");
                 lblDynamicSafeZ.setHorizontalAlignment(SwingConstants.TRAILING);
                 panelSafeZ.add(lblDynamicSafeZ, "1, 2");
                 
@@ -207,7 +205,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
 
         panelChanger = new JPanel();
         panelChanger.setBorder(new TitledBorder(null,
-                "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+                "Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelChanger);
         panelChanger
                 .setLayout(

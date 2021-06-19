@@ -32,6 +32,7 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.UIManager;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
@@ -44,6 +45,7 @@ import javax.swing.table.TableRowSorter;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
@@ -67,7 +69,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
-import org.pmw.tinylog.Logger;
 
 public class JobPlacementsPanel extends JPanel {
     private JTable table;
@@ -137,6 +138,7 @@ public class JobPlacementsPanel extends JPanel {
         table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
         table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
         table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
+        table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
         tableModel.setJobPlacementsPanel(this);
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -490,14 +492,10 @@ public class JobPlacementsPanel extends JPanel {
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
                 MovableUtils.fireTargetedUserAction(camera);
-                try {
-                    Map<String, Object> globals = new HashMap<>();
-                    globals.put("camera", camera);
-                    Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
+
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("camera", camera);
+                Configuration.get().getScripting().on("Camera.AfterPosition", globals);
             });
         }
     };
@@ -515,24 +513,19 @@ public class JobPlacementsPanel extends JPanel {
                 // Need to keep current focus owner so that the space bar can be
                 // used after the initial click. Otherwise, button focus is lost
                 // when table is updated
-               	Component comp = MainFrame.get().getFocusOwner();
-               	Helpers.selectNextTableRow(table);
+                Component comp = MainFrame.get().getFocusOwner();
+                Helpers.selectNextTableRow(table);
                 comp.requestFocus();
-               	Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
                         getSelection().getLocation());
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
                 MovableUtils.fireTargetedUserAction(camera);
-                
-                try {
-                    Map<String, Object> globals = new HashMap<>();
-                    globals.put("camera", camera);
-                    Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-                }
-                catch (Exception e) {
-                    Logger.warn(e);
-                }
+
+                Map<String, Object> globals = new HashMap<>();
+                globals.put("camera", camera);
+                Configuration.get().getScripting().on("Camera.AfterPosition", globals);
             });
         };
     };
@@ -761,22 +754,32 @@ public class JobPlacementsPanel extends JPanel {
     };
 
     static class TypeRenderer extends DefaultTableCellRenderer {
+        @Override
         public void setValue(Object value) {
             if (value == null) {
                 return;
             }
             Type type = (Type) value;
             setText(type.name());
-            if (type == Type.Fiducial) {
-                setBorder(new LineBorder(getBackground()));
-                setForeground(Color.black);
-                setBackground(typeColorFiducial);
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                                                       boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            Color alternateRowColor = UIManager.getColor("Table.alternateRowColor");
+            if (value == Type.Fiducial) {
+                c.setForeground(Color.black);
+                c.setBackground(typeColorFiducial);
+            } else if (isSelected) {
+                c.setForeground(table.getSelectionForeground());
+                c.setBackground(table.getSelectionBackground());
+            } else {
+                c.setForeground(table.getForeground());
+                c.setBackground(row%2==0 ? table.getBackground() : alternateRowColor);
             }
-            else if (type == Type.Placement) {
-                setBorder(new LineBorder(getBackground()));
-                setForeground(Color.black);
-                setBackground(typeColorPlacement);
-            }
+
+            return c;
         }
     }
 

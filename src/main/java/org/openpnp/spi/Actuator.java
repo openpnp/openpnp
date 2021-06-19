@@ -133,7 +133,7 @@ public interface Actuator
      */
     public String read() throws Exception;
 
-    public String read(double value) throws Exception;
+    public String read(Object value) throws Exception;
 
     boolean isCoordinatedBeforeActuate();
 

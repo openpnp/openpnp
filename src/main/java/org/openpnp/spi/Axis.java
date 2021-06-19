@@ -36,7 +36,14 @@ public interface Axis extends Identifiable, Named, WizardConfigurable, PropertyS
         X,
         Y,
         Z,
-        Rotation
+        Rotation;
+        
+        public String getDefaultLetter() {
+            if (this == Rotation) {
+                return "C";
+            }
+            return this.toString();
+        }
     }
 
     public Type getType();

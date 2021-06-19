@@ -72,6 +72,11 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         }
     }
 
+    @Override
+    public boolean isPartHeightAbovePickLocation() {
+        return true;
+    }
+
     /**
      * Executes the vision pipeline to locate a part.
      * @param nozzle used nozzle
@@ -107,12 +112,10 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
             // Get the result's Location
             // Update the location with the result's rotation
             partLocation = partLocation.derive(null, null, null, -(result.angle + getLocation().getRotation()));
-            // Update the location with the correct Z, which is the configured Location's Z
-            // plus the part height.
+            // Update the location with the correct Z, which is the configured Location's Z.
             partLocation =
                     partLocation.derive(null, null,
-                            this.location.convertToUnits(partLocation.getUnits()).getZ()
-                            + part.getHeight().convertToUnits(partLocation.getUnits()).getValue(),
+                            this.location.convertToUnits(partLocation.getUnits()).getZ(),
                             null);
             MainFrame.get().getCameraViews().getCameraView(camera)
             .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), 250);
@@ -144,6 +147,45 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         return testLocation;
     }
 
+    /**
+     * Returns if the feeder can take back a part.
+     * Makes the assumption, that after each feed a pick followed,
+     * so the area around the pickLocation is now empty.
+     */
+    @Override
+    public boolean canTakeBackPart() {
+        if (pickLocation != null ) {  
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
+        if (nozzle.getPart() == null) {
+            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+        }
+        if (!nozzle.getPart().equals(getPart())) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+        }
+        if (!canTakeBackPart()) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no known free space. Can not take back the part.");
+        }
+
+        // ok, now put the part back on the location of the last pick
+        nozzle.moveToPickLocation(this);
+        nozzle.place();
+        nozzle.moveToSafeZ();
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
+            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
+        }
+        // set pickLocation to null, avoid putting a second part on the same location
+        pickLocation = null;
+    }
+
+    
     public CvPipeline getPipeline() {
         return pipeline;
     }

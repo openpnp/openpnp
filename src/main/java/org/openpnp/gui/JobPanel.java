@@ -20,7 +20,6 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.FileDialog;
 import java.awt.Frame;
@@ -76,6 +75,7 @@ import org.openpnp.gui.panelization.DlgAutoPanelize;
 import org.openpnp.gui.panelization.DlgPanelXOut;
 import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -97,7 +97,6 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
-import org.pmw.tinylog.Logger;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -196,7 +195,7 @@ public class JobPanel extends JPanel {
         table.setAutoCreateRowSorter(true);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
-
+        table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
         table.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
@@ -291,7 +290,7 @@ public class JobPanel extends JPanel {
         JPanel pnlBoards = new JPanel();
         pnlBoards.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
                 Translations.getString("JobPanel.Tab.Boards"),
-                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0))); //$NON-NLS-1$
+                TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
         pnlBoards.setLayout(new BorderLayout(0, 0));
 
         JToolBar toolBarBoards = new JToolBar();
@@ -1255,14 +1254,10 @@ public class JobPanel extends JPanel {
                         Location location = getSelection().getLocation();
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
                         MovableUtils.fireTargetedUserAction(camera);
-                        try {
-                            Map<String, Object> globals = new HashMap<>();
-                            globals.put("camera", camera);
-                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-                        }
-                        catch (Exception e) {
-                            Logger.warn(e);
-                        }
+
+                        Map<String, Object> globals = new HashMap<>();
+                        globals.put("camera", camera);
+                        Configuration.get().getScripting().on("Camera.AfterPosition", globals);
                     });
                 }
             };
@@ -1289,15 +1284,10 @@ public class JobPanel extends JPanel {
                         Location location = getSelection().getLocation();
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
                         MovableUtils.fireTargetedUserAction(camera);
-                       
-                        try {
-                            Map<String, Object> globals = new HashMap<>();
-                            globals.put("camera", camera);
-                            Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-                        }
-                        catch (Exception e) {
-                            Logger.warn(e);
-                        }
+
+                        Map<String, Object> globals = new HashMap<>();
+                        globals.put("camera", camera);
+                        Configuration.get().getScripting().on("Camera.AfterPosition", globals);
                     });
                 }
             };

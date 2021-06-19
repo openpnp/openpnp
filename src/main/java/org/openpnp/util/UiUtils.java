@@ -101,5 +101,8 @@ public class UiUtils {
         }
     }
 
+    public static void messageBoxOnExceptionLater(Thrunnable thrunnable) {
+        SwingUtilities.invokeLater(() -> messageBoxOnException(thrunnable));
+    }
 
 }

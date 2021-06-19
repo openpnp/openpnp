@@ -22,7 +22,7 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -68,6 +68,7 @@ import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.util.OcrUtil;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -78,7 +79,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.Dimension;
 
 @SuppressWarnings("serial")
 public class ReferencePushPullFeederConfigurationWizard
@@ -216,7 +216,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         panelTape = new JPanel();
         panelFields.add(panelTape);
-        panelTape.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelTape.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelTape.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
@@ -626,7 +626,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                 UiUtils.submitUiMachineTask(() -> {
                     MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
                     MovableUtils.fireTargetedUserAction(feeder.getCamera());
-                    SwingUtilities.invokeAndWait(() -> {
+                    feeder.getCamera().waitForCompletion(CompletionType.WaitForStillstand);
+                    SwingUtilities.invokeLater(() -> {
                         UiUtils.messageBoxOnException(() -> {
                             editPipeline();
                         });
@@ -1024,7 +1025,7 @@ extends AbstractReferenceFeederConfigurationWizard {
 
     private void editPipeline() throws Exception {
         Camera camera = feeder.getCamera();
-        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true);
+        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true, true);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());

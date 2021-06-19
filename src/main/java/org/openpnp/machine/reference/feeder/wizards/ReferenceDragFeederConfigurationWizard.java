@@ -277,8 +277,7 @@ public class ReferenceDragFeederConfigurationWizard
 
         panelTemplate = new JPanel();
         panelTemplate.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Template Image", TitledBorder.LEADING, TitledBorder.TOP, null,
-                new Color(0, 0, 0)));
+                "Template Image", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelVisionTemplateAndAoe.add(panelTemplate, "2, 2, center, fill");
         panelTemplate.setLayout(new BoxLayout(panelTemplate, BoxLayout.Y_AXIS));
 

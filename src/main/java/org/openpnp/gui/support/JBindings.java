@@ -118,6 +118,12 @@ public class JBindings {
         public Wrapper<SV> getWrapper() {
             return wrapper;
         }
+
+        @Override
+        public String toString() {
+            return "WrappedBinding [source=" + source + ", sourceProperty=" + sourceProperty
+                    + ", wrapper=" + wrapper + ", wrappedBinding=" + wrappedBinding + "]";
+        }
     }
 
     public static class Wrapper<T> extends AbstractModelObject {

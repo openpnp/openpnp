@@ -10,14 +10,16 @@ import java.util.Set;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
+import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
-import org.openpnp.vision.pipeline.stages.BlurGaussian;
-import org.openpnp.vision.pipeline.stages.BlurMedian;
-import org.openpnp.vision.pipeline.stages.ClosestModel;
+import org.openpnp.vision.pipeline.stages.ActuatorWrite;
 import org.openpnp.vision.pipeline.stages.Add;
 import org.openpnp.vision.pipeline.stages.AffineUnwarp;
 import org.openpnp.vision.pipeline.stages.AffineWarp;
+import org.openpnp.vision.pipeline.stages.BlurGaussian;
+import org.openpnp.vision.pipeline.stages.BlurMedian;
+import org.openpnp.vision.pipeline.stages.ClosestModel;
 import org.openpnp.vision.pipeline.stages.ComposeResult;
 import org.openpnp.vision.pipeline.stages.ConvertColor;
 import org.openpnp.vision.pipeline.stages.ConvertModelToKeyPoints;
@@ -26,11 +28,12 @@ import org.openpnp.vision.pipeline.stages.CreateFootprintTemplateImage;
 import org.openpnp.vision.pipeline.stages.CreateModelTemplateImage;
 import org.openpnp.vision.pipeline.stages.CreateShapeTemplateImage;
 import org.openpnp.vision.pipeline.stages.DetectCirclesHough;
-import org.openpnp.vision.pipeline.stages.DetectLinesHough;
+import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry;
 import org.openpnp.vision.pipeline.stages.DetectEdgesCanny;
 import org.openpnp.vision.pipeline.stages.DetectEdgesLaplacian;
 import org.openpnp.vision.pipeline.stages.DetectEdgesRobertsCross;
 import org.openpnp.vision.pipeline.stages.DetectFixedCirclesHough;
+import org.openpnp.vision.pipeline.stages.DetectLinesHough;
 import org.openpnp.vision.pipeline.stages.DilateModel;
 import org.openpnp.vision.pipeline.stages.DrawCircles;
 import org.openpnp.vision.pipeline.stages.DrawContours;
@@ -42,6 +45,7 @@ import org.openpnp.vision.pipeline.stages.DrawTemplateMatches;
 import org.openpnp.vision.pipeline.stages.FilterContours;
 import org.openpnp.vision.pipeline.stages.FilterRects;
 import org.openpnp.vision.pipeline.stages.FindContours;
+import org.openpnp.vision.pipeline.stages.FitEllipseContours;
 import org.openpnp.vision.pipeline.stages.GrabCut;
 import org.openpnp.vision.pipeline.stages.HistogramEqualize;
 import org.openpnp.vision.pipeline.stages.HistogramEqualizeAdaptive;
@@ -60,7 +64,6 @@ import org.openpnp.vision.pipeline.stages.MatchPartsTemplate;
 import org.openpnp.vision.pipeline.stages.MatchTemplate;
 import org.openpnp.vision.pipeline.stages.MinAreaRect;
 import org.openpnp.vision.pipeline.stages.MinAreaRectContours;
-import org.openpnp.vision.pipeline.stages.FitEllipseContours;
 import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.OrientRotatedRects;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
@@ -75,7 +78,6 @@ import org.openpnp.vision.pipeline.stages.SizeCheck;
 import org.openpnp.vision.pipeline.stages.Threshold;
 import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
 import org.openpnp.vision.pipeline.stages.WritePartTemplateImage;
-import org.openpnp.vision.pipeline.stages.ActuatorWrite;
 
 /**
  * A JPanel based component for editing a CvPipeline. Allows the user to add and remove stages,
@@ -109,6 +111,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(DetectEdgesRobertsCross.class);
         registerStageClass(DetectEdgesLaplacian.class);
         registerStageClass(DetectFixedCirclesHough.class);
+        registerStageClass(DetectCircularSymmetry.class);
         registerStageClass(DilateModel.class);
         registerStageClass(DrawCircles.class);
         registerStageClass(DrawContours.class);
@@ -206,7 +209,7 @@ public class CvPipelineEditor extends JPanel {
     }
 
     public void process() {
-        getPipeline().process();
+        UiUtils.messageBoxOnException(() -> getPipeline().process());
         resultsPanel.refresh();
     }
 

@@ -73,10 +73,9 @@ public abstract class AbstractControllerAxis extends AbstractCoordinateAxis impl
 
     @Override
     public void setDriverCoordinate(double driverCoordinate) {
-        Object oldValue = this.driverCoordinate;
         this.driverCoordinate = driverCoordinate;
-        firePropertyChange("driverCoordinate", oldValue, driverCoordinate);
-        firePropertyChange("driverLengthCoordinate", null, getDriverLengthCoordinate());
+        // Note, we do not firePropertyChange() as these changes are live from the machine thread,
+        // and coordinate changes are handled through MachineListener.machineHeadActivity(Machine, Head).
     }
     @Override
     public void setDriverLengthCoordinate(Length driverCoordinate) {

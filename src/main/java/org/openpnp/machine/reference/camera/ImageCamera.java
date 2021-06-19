@@ -26,7 +26,6 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.net.URL;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -44,6 +43,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
@@ -89,6 +89,22 @@ public class ImageCamera extends ReferenceCamera {
 
     public ImageCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 
     public String getSourceUri() {
@@ -350,18 +366,18 @@ public class ImageCamera extends ReferenceCamera {
     
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
-        issues.add(new Solutions.Issue(
-                this, 
-                "The simulation ImageCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
-                "Replace with OpenPnpCaptureCamera.", 
-                Severity.Fundamental,
-                "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        if (solutions.isTargeting(Milestone.Connect)) {
+            solutions.add(new Solutions.Issue(
+                    this, 
+                    "The simulation ImageCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
+                    "Replace with OpenPnpCaptureCamera.", 
+                    Severity.Fundamental,
+                    "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
 
-            @Override
-            public void setState(Solutions.State state) throws Exception {
-                if (confirmStateChange(state)) {
+                @Override
+                public void setState(Solutions.State state) throws Exception {
                     if (state == Solutions.State.Solved) {
                         OpenPnpCaptureCamera camera = createReplacementCamera();
                         replaceCamera(camera);
@@ -372,7 +388,7 @@ public class ImageCamera extends ReferenceCamera {
                     }
                     super.setState(state);
                 }
-            }
-        });
+            });
+        }
     }
 }

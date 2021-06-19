@@ -6,7 +6,6 @@ import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +13,7 @@ import java.util.TreeMap;
 
 import javax.swing.Icon;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
@@ -34,7 +34,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Issue;
+import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
@@ -641,13 +641,19 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     private SimpleGraph startDiagnostics() {
         if (settleDiagnostics) {
+            Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
+            if (gridColor == null) {
+                gridColor = new Color(0, 0, 0, 64);
+            } else {
+                gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
+            }
             // Diagnostics wanted, create the simple graph.
             SimpleGraph settleGraph = new SimpleGraph();
             settleGraph.setRelativePaddingLeft(0.05);
             // init difference scale
             SimpleGraph.DataScale settleScale =  settleGraph.getScale(DIFFERENCE);
             settleScale.setRelativePaddingBottom(0.3);
-            settleScale.setColor(new Color(0, 0, 0, 64));
+            settleScale.setColor(gridColor);
             SimpleGraph.DataScale captureScale =  settleGraph.getScale(BOOLEAN);
             captureScale.setRelativePaddingTop(0.8);
             captureScale.setRelativePaddingBottom(0.1);
@@ -670,7 +676,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
     }
 
-    private BufferedImage autoSettleAndCapture() {
+    private BufferedImage autoSettleAndCapture() throws Exception {
         Mat mask = null;
         Mat maskFullsize = null;
         Mat lastSettleMat = null;
@@ -1021,14 +1027,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     @Override
     public BufferedImage settleAndCapture() throws Exception {
-        try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("camera", this);
-            Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("camera", this);
+        Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
 
         try {
             // Make sure the camera (or its subject) stands still.
@@ -1053,14 +1054,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         }
         finally {
 
-            try {
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("camera", this);
-                Configuration.get().getScripting().on("Camera.AfterSettle", globals);
-            }
-            catch (Exception e) {
-                Logger.warn(e);
-            }
+            Configuration.get().getScripting().on("Camera.AfterSettle", globals);
         }
     }
 
@@ -1326,24 +1320,27 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     }
 
     @Override
-    public void findIssues(List<Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        if (solutions.isTargeting(Milestone.Vision)) {
 
-        if ((unitsPerPixel.getX() == 0) || (unitsPerPixel.getY() == 0)) {
-             issues.add(new Solutions.PlainIssue(
-                    this, 
-                    "Camera units per pixel has not been calibrated.", 
-                    "Calibrate the camera's units per pixel.", 
-                    Severity.Warning,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
-        }
-        else if (!isSecondaryUnitsPerPixelCalibrated()) {
-            issues.add(new Solutions.PlainIssue(
-                    this, 
-                    "Camera units per pixel can be calibrated for 3D scale estimation.", 
-                    "Calibrate the camera's units per pixel at two different heights.", 
-                    Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
+            if ((unitsPerPixel.getX() == 0) || (unitsPerPixel.getY() == 0)) {
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "Camera units per pixel has not been calibrated.", 
+                        "Calibrate the camera's units per pixel.", 
+                        Severity.Warning,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
+            }
+            else if (solutions.isTargeting(Milestone.Advanced) 
+                    && !isSecondaryUnitsPerPixelCalibrated()) {
+                solutions.add(new Solutions.PlainIssue(
+                        this, 
+                        "Camera units per pixel can be calibrated for 3D scale estimation.", 
+                        "Calibrate the camera's units per pixel at two different heights.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
+            }
         }
     }
 }

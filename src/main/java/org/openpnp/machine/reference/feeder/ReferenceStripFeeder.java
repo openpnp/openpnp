@@ -282,6 +282,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
             pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
             pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
+            pipeline.setProperty("sprocketHole.diameter", getHoleDiameter());
+            // Search range is half-way to the next hole. 
+            pipeline.setProperty("sprocketHole.maxDistance", getHolePitch().multiply(0.5));
             pipeline.process();
     
             if (MainFrame.get() != null) {
@@ -313,7 +316,47 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             return holeLocation;
         }
     }
+   
+    /**
+     * Returns if the feeder can take back a part.
+     * Makes the assumption, that after each feed a pick followed,
+     * so the pockets are now empty.
+     */
+    @Override
+    public boolean canTakeBackPart() {
+        if (feedCount > 0 ) {  
+            return true;
+        } else {
+            return false;
+        }
+    }
 
+    @Override
+    public void takeBackPart(Nozzle nozzle) throws Exception {
+        // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
+        if (nozzle.getPart() == null) {
+            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+        }
+        if (!nozzle.getPart().equals(getPart())) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+        }
+        if (!canTakeBackPart()) {
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
+        }
+        
+        // ok, now put the part back on the location of the last pick
+        nozzle.moveToPickLocation(this);
+        // put the part back
+        nozzle.place();
+        nozzle.moveToSafeZ();
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
+            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
+        }
+        // change FeedCount
+        setFeedCount(getFeedCount() - 1);
+    }
+        
+    
     public CvPipeline getPipeline() {
         return pipeline;
     }

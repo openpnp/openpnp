@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.UIManager;
+
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.driver.wizards.ReferenceAdvancedMotionPlannerConfigurationWizard;
@@ -367,7 +369,13 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     }
 
     protected void startNewMotionGraph() {
-        // start a new graph 
+        Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
+        if (gridColor == null) {
+            gridColor = new Color(0, 0, 0, 64);
+        } else {
+            gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
+        }
+        // start a new graph
         SimpleGraph motionGraph = new SimpleGraph();
         motionGraph.setRelativePaddingLeft(0.05);
         for (Axis axis : getMachine().getAxes()) {
@@ -401,7 +409,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
                 vRow.setColor(new Color(00, 0x5B, 0xD9, alphaBlend)); 
 
                 SimpleGraph.DataScale sScale =  motionGraph.getScale(axis.getName());
-                sScale.setColor(new Color(0, 0, 0, 64));
+                sScale.setColor(gridColor);
                 sScale.setLabelShown(true);
 
                 SimpleGraph.DataRow sRow = motionGraph.getRow(axis.getName(), "s");
@@ -809,10 +817,10 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
     }
 
     @Override
-    public void findIssues(List<Solutions.Issue> issues) {
-        super.findIssues(issues);
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
         if (!isAllowContinuousMotion()) {
-            issues.add(new Solutions.Issue(
+            solutions.add(new Solutions.Issue(
                     this, 
                     "Use continuous motion. OpenPnP will only wait for the machine when really needed.", 
                     "Enable Continuous Motion.", 
@@ -821,10 +829,8 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
-                    if (confirmStateChange(state)) {
-                        setAllowContinuousMotion((state == Solutions.State.Solved));
-                        super.setState(state);
-                    }
+                    setAllowContinuousMotion((state == Solutions.State.Solved));
+                    super.setState(state);
                 }
             });
         }
