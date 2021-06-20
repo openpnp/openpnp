@@ -91,8 +91,6 @@ rotate([0, 0, 180]) BlindsFeeder(
     
     // For OCR, add a margin at the begin of the tape.
     margin_length_begin=20,
-    // For OCR, blinds are closed when the cover is flush with tape begin.
-    blinds_closed_when_flush=true,
     
     // Define the lanes with number, tape definitinon, part label (String array with multiple lines).
     arrayed_tape_lanes=      [

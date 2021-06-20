@@ -310,8 +310,8 @@ public class BlindsFeeder extends ReferenceFeeder {
         return this.getFeedCount()+this.getFirstPocket()-1;
     }
 
-    private boolean isBlindsReversed() {
-        return ocrAction != OcrAction.None;
+    private boolean isBlindsCoverAlignmentReversed() {
+        return false;
     }
 
     public boolean isCoverOpenState(boolean openState) {
@@ -325,7 +325,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
         if (coverType == CoverType.BlindsCover) {
             double positionError = Math.abs(coverPosition.subtract(pocketDistance).convertToUnits(LengthUnit.Millimeters).getValue());
-            return (positionError < pocketPosToleranceMm) ^ isBlindsReversed() == openState;
+            return ((positionError < pocketPosToleranceMm) ^ isBlindsCoverAlignmentReversed()) == openState;
         }
         if (coverType == CoverType.PushCover) {
             return (coverPosition.getValue() > 0.0) == openState;
@@ -1064,7 +1064,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         Location cameraOpenPosition = getPickLocation(cameraPocket);
         Location cameraClosedPosition = getPickLocation(cameraPocket-0.5);
 
-        double factor = isBlindsReversed() ? -1.0 : 1.0;
+        double factor = isBlindsCoverAlignmentReversed() ? -1.0 : 1.0;
 
         // Close cover to start with a known opposite position.
         actuateCover(false);
@@ -1477,7 +1477,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
             if (coverType == CoverType.BlindsCover) {
                 // Calculate the motion for the cover to be pushed in feeder local coordinates. 
-                Length feederX0 = (openState ^ isBlindsReversed() ? 
+                Length feederX0 = (openState ^ isBlindsCoverAlignmentReversed() ? 
                         edgeOpenDistance.multiply(-1.0)
                         .subtract(sprocketPitch.multiply(0.5)) // go half sprocket too far back
                         .subtract(nozzleTipDiameter.multiply(0.5))
@@ -1487,7 +1487,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                             .add(sprocketPitch.multiply(0.5)) // go half sprocket too far
                             .add(nozzleTipDiameter.multiply(0.5)))
                         .convertToUnits(location.getUnits());
-                Length feederX1 = (openState  ^ isBlindsReversed() ? 
+                Length feederX1 = (openState  ^ isBlindsCoverAlignmentReversed() ? 
                         edgeOpenDistance.multiply(-1.0)
                         .subtract(nozzleTipDiameter.multiply(0.5))
                         : 
