@@ -691,7 +691,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 Feeder feeder = getSelection();
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
-                Nozzle nozzle = getCompatibleNozzleAndTip(feeder, false);
+                Nozzle nozzle;
+                try {
+                    nozzle = getCompatibleNozzleAndTip(feeder, false);
+                }
+                catch (Exception e) {
+                    nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                }
                 Location pickLocation = preliminaryPickLocation(feeder, nozzle);
                 MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
                 MovableUtils.fireTargetedUserAction(camera);
@@ -711,7 +717,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-                Nozzle nozzle = getCompatibleNozzleAndTip(feeder, false);
+                Nozzle nozzle = getCompatibleNozzleAndTip(feeder, true);
 
                 Location pickLocation = preliminaryPickLocation(feeder, nozzle);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
