@@ -1803,7 +1803,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         // Sort by feeder tape centerline.
         Collections.sort(list, new Comparator<BlindsFeeder>() {
             @Override
-            public int compare(BlindsFeeder feeder1, BlindsFeeder feeder2)  {
+            public int compare(BlindsFeeder feeder1, BlindsFeeder feeder2) {
                 return new Double(feeder1.getPocketCenterline().getValue()).compareTo(feeder2.getPocketCenterline()
                         .convertToUnits(feeder1.getPocketCenterline().getUnits()).getValue());
             }

@@ -1829,11 +1829,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             int n = 0;
             for (ReferencePushPullFeeder targetFeeder : getCompatibleFeeders()) {
                 if (targetFeeder.getPart() != null) {
-                if (n++ > 0) {
-                    status += ",<br/>";
+                    if (n++ > 0) {
+                        status += ",<br/>";
+                    }
+                    status += targetFeeder.getName()+" "+targetFeeder.getPart().getId();
                 }
-                status += targetFeeder.getName()+" "+targetFeeder.getPart().getId();
-            }
             }
             status += n == 0 ? "none." : " (Count: "+n+")";
         }
