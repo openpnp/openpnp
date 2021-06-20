@@ -64,7 +64,7 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.OcrUtil;
+import org.openpnp.util.OcrUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.VisionUtils;
@@ -1120,7 +1120,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         pipeline.setProperty("regionOfInterest", getOcrRegion());
         pipeline.setProperty("fontName", getOcrFontName());
         pipeline.setProperty("fontSizePt", getOcrFontSizePt());
-        pipeline.setProperty("alphabet", OcrUtil.getConsolidatedPartsAlphabet(null, "\\"));
+        pipeline.setProperty("alphabet", OcrUtils.getConsolidatedPartsAlphabet(null, "\\"));
     }
 
     protected void setupOcr(Camera camera, CvPipeline pipeline) {
@@ -2022,7 +2022,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             return; 
         }
 
-        Part ocrPart = OcrUtil.identifyDetectedPart(ocrModel, this);
+        Part ocrPart = OcrUtils.identifyDetectedPart(ocrModel, this);
         Part currentPart = getPart();
         if (currentPart == null) {
             // No part set yet 

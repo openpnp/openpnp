@@ -66,7 +66,7 @@ import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.HslColor;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.OcrUtil;
+import org.openpnp.util.OcrUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.VisionUtils;
@@ -165,6 +165,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public enum OcrAction {
         None,
+        CheckCorrect,
         ChangePart
     }
     @Attribute(required = false) 
@@ -198,7 +199,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     private double pocketPosToleranceMm = 0.1;
 
     @Attribute(required = false) 
-    private double ascentFromFontSize = 2.2;
+    private double maxLabelSizeMm = 10.0;
 
     // Transient state
     private Length coverPosition = new Length(Double.NaN, LengthUnit.Millimeters);
@@ -208,7 +209,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public static final String defaultGroupName = "Default";
     private static final List<String> locationGroupNamesList = Arrays.asList(new String[]{defaultGroupName, defaultGroupName.toUpperCase(), "LOCATION", "NONE", ""});
-    
+
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
             this.setCalibrated(false);
@@ -254,7 +255,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         // the first one aligns with the sprocket instead of half the sprocket pitch away. 
 
         if (pocketPitch.getValue() > 0.0) {
-            boolean isSmallPitch = Math.round(sprocketPitch.divide(pocketPitch)) == 2;
+            boolean isSmallPitch = isSmallPitch();
             setPocketCount((int)(Math.floor(tapeLength.divide(pocketPitch)))
                     + (isSmallPitch ? 1 : 0));
             // The wanted pocket center position relative to the pocket pitch is 0.25 for blinds covers,
@@ -268,6 +269,10 @@ public class BlindsFeeder extends ReferenceFeeder {
             setPocketDistance(sprocketPitch.multiply(isSmallPitch ? 0.0 : 0.5)
                     .add(pocketAlign)); 
         }
+    }
+
+    public boolean isSmallPitch() {
+        return Math.round(sprocketPitch.divide(pocketPitch)) == 2;
     }
 
     private void assertCalibration() throws Exception {
@@ -345,11 +350,9 @@ public class BlindsFeeder extends ReferenceFeeder {
     public boolean isCoverOpenChecked()  throws Exception {
         assertCalibration();
         if (Double.isNaN(coverPosition.getValue())) {
-            Camera camera = Configuration.get()
-                    .getMachine()
-                    .getDefaultHead()
-                    .getDefaultCamera();
-            Location cameraOpenPosition = getPickLocation(Math.floor((this.getFirstPocket()+this.getLastPocket())/2.0));
+            Camera camera = getCamera();
+            // Look at the 2nd blind, so you have one before and after, see Findfeatures.invoke(). 
+            Location cameraOpenPosition = getPickLocation(2);
             // Move the camera over the blinds to check the open position.
             MovableUtils.moveToLocationAtSafeZ(camera, cameraOpenPosition);
             findCoverPosition(camera);
@@ -359,6 +362,12 @@ public class BlindsFeeder extends ReferenceFeeder {
         return isCoverOpen();
     }
 
+    public Camera getCamera() throws Exception {
+        return Configuration.get()
+                .getMachine()
+                .getDefaultHead()
+                .getDefaultCamera();
+    }
 
     public void feed(Nozzle nozzle) throws Exception {
         if (getFirstPocket() + getFeedCount() > getLastPocket()) {
@@ -436,12 +445,12 @@ public class BlindsFeeder extends ReferenceFeeder {
         setFeedCount(getFeedCount() - 1);
     }
 
-    private void setupOcr(Camera camera, CvPipeline pipeline) {
-        if (getOcrAction() != OcrAction.None) {
+    private void setupOcr(Camera camera, CvPipeline pipeline, boolean performOcr) {
+        if (performOcr && getOcrAction() != OcrAction.None) {
             pipeline.setProperty("regionOfInterest", getOcrRegion(camera));
             pipeline.setProperty("fontName", getOcrFontName());
             pipeline.setProperty("fontSizePt", getOcrFontSizePt());
-            pipeline.setProperty("alphabet", OcrUtil.getConsolidatedPartsAlphabet(null, "\\"));
+            pipeline.setProperty("alphabet", OcrUtils.getConsolidatedPartsAlphabet(null, "\\"));
         }
         else {
             pipeline.setProperty("regionOfInterest", null);
@@ -452,12 +461,14 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     private RegionOfInterest getOcrRegion(Camera camera) {
-        // By default we take the camera Y to define the ROI. Allow for roughly two lines of text one above 
-        // one below the camera-defined centerline.   
+        // By default we take the camera Y to define the ROI.  
         Location feederLocation = transformMachineToFeederLocation(camera.getLocation());
-        Length ascent = new Length(getOcrFontSizePt()*ascentFromFontSize/72.0, LengthUnit.Inches);
-        return getOcrRegion(camera, feederLocation.getLengthY().subtract(ascent), 
-                feederLocation.getLengthY().add(ascent)); 
+        // Distribute the label relative to the pocket centerline, according to EIA 481. 
+        Length labelHeightAbove = new Length(maxLabelSizeMm*0.5+1.0625, LengthUnit.Millimeters);
+        Length labelHeightBelow = new Length(maxLabelSizeMm*0.5-1.0625, LengthUnit.Millimeters);
+        return getOcrRegion(camera, 
+                feederLocation.getLengthY().subtract(labelHeightAbove), 
+                feederLocation.getLengthY().add(labelHeightBelow)); 
     }
 
     private RegionOfInterest getOcrRegion(Camera camera, Length feederY0, Length feederY1) {
@@ -493,7 +504,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         RegionOfInterest roi = new RegionOfInterest(cameraOffsets[0], cameraOffsets[1], cameraOffsets[2], true);
         return roi;
     }
-    
+
     public class FindFeatures {
         private Camera camera;
         private CvPipeline pipeline;
@@ -557,6 +568,21 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
             for (Line line : lines) {
                 Imgproc.line(mat, line.a, line.b, FluentCv.colorToScalar(color), 2);
+            }
+        }
+
+        private void drawOcrText(Mat mat, Color color) {
+            if (detectedOcrModel != null) {
+                Imgproc.putText(mat, detectedOcrModel.getText(), 
+                        new org.opencv.core.Point(20, mat.rows()-20), 
+                        Imgproc.FONT_HERSHEY_PLAIN, 
+                        3, 
+                        FluentCv.colorToScalar(Color.black), 6, 0, false);
+                Imgproc.putText(mat, detectedOcrModel.getText(), 
+                        new org.opencv.core.Point(20, mat.rows()-20), 
+                        Imgproc.FONT_HERSHEY_PLAIN, 
+                        3, 
+                        FluentCv.colorToScalar(color), 2, 0, false);
             }
         }
 
@@ -663,7 +689,6 @@ public class BlindsFeeder extends ReferenceFeeder {
             return angle;
         }
 
-        @SuppressWarnings("unchecked")
         public FindFeatures invoke() throws Exception {
             List<RotatedRect> results = null;
             try {
@@ -674,7 +699,9 @@ public class BlindsFeeder extends ReferenceFeeder {
 
 
                 Result ocrStageResult = pipeline.getResult("OCR"); 
-                if (ocrStageResult != null) {
+                if (ocrStageResult != null 
+                        && pipeline.getProperty("alphabet") instanceof String
+                        && ! ((String) pipeline.getProperty("alphabet")).isEmpty()) {
                     detectedOcrModel = ocrStageResult.getExpectedModel(SimpleOcr.OcrModel.class);
                 }
 
@@ -769,7 +796,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                         }
                         if (positionTolerant || Math.abs(cameraFeederY - center.getY()) < positionTolerance) {
                             if (positionTolerant || Math.abs(cameraFeederX - center.getX()) < pocketRange) {
-                                    if (angleTolerant || Math.abs(angleNorm(angle - 0)) < angleTolerance) {
+                                if (angleTolerant || Math.abs(angleNorm(angle - 0)) < angleTolerance) {
                                     if (mmSize.getX() > blindMin && mmSize.getX() < blindMax && mmSize.getY() > blindMin && mmSize.getY() < blindMax
                                             && mmSize.getX()/mmSize.getY() < blindAspect 
                                             && mmSize.getY()/mmSize.getX() < blindAspect) {
@@ -881,7 +908,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 for (RotatedRect rect : blinds) {
                     Location location = transformMachineToFeederLocation(VisionUtils.getPixelLocation(camera, rect.center.x, rect.center.y))
                             .convertToUnits(LengthUnit.Millimeters);
-                    // restrict pockets to near camera center
+                    // restrict pockets to near camera center, to limit parallax/focal plane errors.
                     if (Math.abs(location.getX() - cameraFeederX) < (2+pocketPitchPosMm*1.5)) {
                         // calculate the positive modulo distance
                         double position = location.getX() % pocketPitchPosMm;
@@ -923,6 +950,8 @@ public class BlindsFeeder extends ReferenceFeeder {
                     drawRotatedRects(resultMat, getFiducials(), Color.white);
                     drawLines(resultMat, getLines(), new Color(0, 0, 128));
                     drawPartNumbers(resultMat, Color.orange);
+                    drawOcrText(resultMat, Color.orange);
+
                     if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
                         File file = Configuration.get().createResourceFile(getClass(), "blinds-feeder", ".png");
                         Imgcodecs.imwrite(file.getAbsolutePath(), resultMat);
@@ -942,11 +971,8 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public void showFeatures() throws Exception {
-        Camera camera = Configuration.get()
-                .getMachine()
-                .getDefaultHead()
-                .getDefaultCamera();
-        try (CvPipeline pipeline = getCvPipeline(camera, true)) {
+        Camera camera = getCamera();
+        try (CvPipeline pipeline = getCvPipeline(camera, true, false)) {
 
             // Process vision and show feature without applying anything
             pipeline.process();
@@ -964,7 +990,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
         if (coverType == CoverType.BlindsCover) {
             // For a BlindsCover we can use vision to try and determine the specs.
-            try (CvPipeline pipeline = getCvPipeline(camera, true)) {
+            try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
 
                 // Reset the specs to allow FindFeatures to acquire them freely.
                 setPocketCenterline(new Length(0., LengthUnit.Millimeters)); 
@@ -993,7 +1019,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 setPocketCenterline(new Length(findFeaturesResults.getPocketCenterlineMm(), LengthUnit.Millimeters));
                 setPocketPitch(new Length(findFeaturesResults.getPocketPitchMm(), LengthUnit.Millimeters));
                 setPocketSize(new Length(findFeaturesResults.getPocketSizeMm(), LengthUnit.Millimeters));
-                
+
                 if (getOcrAction() != OcrAction.None) {
                     OcrModel detectedOcrModel = findFeaturesResults.detectedOcrModel;
                     Logger.trace("OCR text "+detectedOcrModel.getText());
@@ -1013,7 +1039,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     }
 
     public void triggerOcrAction(OcrModel detectedOcrModel, OcrAction ocrAction) throws Exception {
-        Part ocrPart = OcrUtil.identifyDetectedPart(detectedOcrModel, this);
+        Part ocrPart = OcrUtils.identifyDetectedPart(detectedOcrModel, this);
         Part currentPart = getPart();
         if (currentPart == null) {
             // No part set yet 
@@ -1027,11 +1053,50 @@ public class BlindsFeeder extends ReferenceFeeder {
             if (ocrAction == OcrAction.ChangePart) {
                 setPart(ocrPart);
             }
+            else if (ocrAction == OcrAction.CheckCorrect) {
+                throw new Exception("OCR detected wrong part in slot of feeder "+getName()
+                +", current part "+currentPart.getId()+" != OCR part "+ocrPart.getId());
+            }
+        }
+        else if (ocrPart == null) {
+            if (ocrAction == OcrAction.ChangePart
+                    || ocrAction == OcrAction.CheckCorrect) {
+                throw new Exception("OCR could not detect part in slot of feeder "+getName()
+                +", current part "+currentPart.getId());
+            }
+        }
+    }
+
+    public void performOcr(Camera camera) throws Exception {
+        // TODO: try to roll this into the isCoverOpenChecked() vision, if possible.
+
+        recalculateGeometry();
+        // Calculate the OCR detection location in local feeder coordinates. 
+        Length feederX = getOcrMargin().multiply(-0.5).convertToUnits(location.getUnits());
+        Length feederY = pocketCenterline.convertToUnits(location.getUnits());
+
+        Location feederLocation = new Location(location.getUnits(), feederX.getValue(), feederY.getValue(), 
+                location.getZ(), getPickRotationInTape());
+        Location machineLocation = transformFeederToMachineLocation(feederLocation);
+
+        // Move the camera over the label.
+        MovableUtils.moveToLocationAtSafeZ(camera, machineLocation);
+
+        try (CvPipeline pipeline = getCvPipeline(camera, true, true)) {
+            // Process vision
+            pipeline.process();
+
+            // Grab the results
+            BlindsFeeder.FindFeatures findFeaturesResults = new FindFeatures(camera, pipeline, 1000).invoke();
+
+            OcrModel detectedOcrModel = findFeaturesResults.detectedOcrModel;
+            Logger.trace("OCR text "+detectedOcrModel.getText());
+            triggerOcrAction(detectedOcrModel, getOcrAction());
         }
     }
 
     public void findCoverPosition(Camera camera) throws Exception {
-        try (CvPipeline pipeline = getCvPipeline(camera, true)) {
+        try (CvPipeline pipeline = getCvPipeline(camera, true, false)) {
             // Process vision
             pipeline.process();
 
@@ -1050,10 +1115,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         if (coverType != CoverType.BlindsCover) {
             throw new Exception("Feeder " + getName() + ": Only Blinds Cover can be calibrated.");
         }
-        Camera camera = Configuration.get()
-                .getMachine()
-                .getDefaultHead()
-                .getDefaultCamera();
+        Camera camera = getCamera();
 
         // Calculate the wanted open/closed positions.
         assertCalibration();
@@ -1125,7 +1187,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
         // Take Z off the camera
         location = location.derive(camera.getLocation(), false, false, true, false);
-        try (CvPipeline pipeline = getCvPipeline(camera, true)) {
+        try (CvPipeline pipeline = getCvPipeline(camera, true, false)) {
 
             for (int i = 0; i < fidLocMaxPasses; i++) {
                 // Move to the location
@@ -1170,10 +1232,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
             setCalibrating(true);
             try {
-                Camera camera = Configuration.get()
-                        .getMachine()
-                        .getDefaultHead()
-                        .getDefaultCamera();
+                Camera camera = getCamera();
                 setFiducial1Location(locateFiducial(camera, getFiducial1Location()));
                 setFiducial3Location(locateFiducial(camera, getFiducial3Location()));
                 Head head = Configuration.get().getMachine().getDefaultHead();
@@ -1418,21 +1477,26 @@ public class BlindsFeeder extends ReferenceFeeder {
     @Override
     public void prepareForJob(boolean visit) throws Exception {
         super.prepareForJob(visit);
-        if (visit && getCoverActuation() == CoverActuation.OpenOnJobStart
-                && ! isCoverOpen()) {
-            // Get the push nozzle for the current position. This will also throw if none is allowed.
-            // Note, we save this for pass two of the feeder prep to restore.
-            nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(null, true);
+        if (visit) {
+            if (getCoverActuation() == CoverActuation.OpenOnJobStart
+                    && ! isCoverOpen()) {
+                // Get the push nozzle for the current position. This will also throw if none is allowed.
+                // Note, we save this for pass two of the feeder prep to restore.
+                nozzleAndTipForPushing = BlindsFeeder.getNozzleAndTipForPushing(null, true);
 
-            // Actuate the cover.
-            actuateCover(true);
-            
-            if (!nozzleAndTipForPushing.isChanged()) {
-                // no need to rememeber
-                nozzleAndTipForPushing = null;
+                // Actuate the cover.
+                actuateCover(true);
+
+                if (!nozzleAndTipForPushing.isChanged()) {
+                    // no need to remember
+                    nozzleAndTipForPushing = null;
+                }
+            }
+            if (getOcrAction() != OcrAction.None) {
+                performOcr(getCamera());
             }
         }
-        else if (! visit) {
+        else {
             // in the non-visit preparation step, let's restore the nozzle tip if changed before
             if (nozzleAndTipForPushing != null) {
                 nozzleAndTipForPushing.restoreNozzleTipLoadedBefore();
@@ -1751,7 +1815,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     public static List<String> getBlindsFeederGroupNames() {
         List<String> list = new ArrayList<>();
         list.add(defaultGroupName);
-        
+
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
             if (feeder instanceof BlindsFeeder) {
                 BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
@@ -1833,7 +1897,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     public List<BlindsFeeder> getConnectedFeeders(Location location, boolean fiducial1MatchOnly) {
         List<BlindsFeeder> feeder_list = getConnectedFeedersByLocation(location, fiducial1MatchOnly);
         return filterFeedersByGroupName(feeder_list, this.feederGroupName);
-   }
+    }
 
     private boolean isUpdating = false;
 
@@ -1962,7 +2026,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
-    public CvPipeline getCvPipeline(Camera camera, boolean clone) {
+    public CvPipeline getCvPipeline(Camera camera, boolean clone, boolean performOcr) {
         try {
             CvPipeline pipeline = getPipeline();
             if (clone) {
@@ -1970,7 +2034,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
             pipeline.setProperty("camera", camera);
             pipeline.setProperty("feeder", this);
-            setupOcr(camera, pipeline);
+            setupOcr(camera, pipeline, performOcr);
 
             /* TODO: read the override property in the FilterContours stage
              * 
@@ -2302,7 +2366,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     public void setFeederGroupNameFromOther(String newFeederGroupName) {
         this.feederGroupName = newFeederGroupName;
     }
-    
+
     public int getFeedCount() {
         return feedCount;
     }
@@ -2492,7 +2556,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration"),
                 new PropertySheetWizardAdapter(new BlindsFeederArrayConfigurationWizard(this), "Feeder Array"),
-                };
+        };
     }
 
     @Override

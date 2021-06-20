@@ -57,7 +57,7 @@ import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.BlindsFeeder.OcrAction;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
-import org.openpnp.util.OcrUtil;
+import org.openpnp.util.OcrUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
@@ -299,7 +299,7 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         });
         panelVision.add(ocrAction, "4, 4, fill, default");
 
-        List<String> fontList = OcrUtil.createFontSelectionList(feeder.getOcrFontName(), true);
+        List<String> fontList = OcrUtils.createFontSelectionList(feeder.getOcrFontName(), true);
 
         label = new JLabel(" ");
         panelVision.add(label, "6, 4");
@@ -322,7 +322,7 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         lblOcrFontName = new JLabel("OCR Font");
         panelVision.add(lblOcrFontName, "2, 8, right, default");
         ocrFontName = new JComboBox(fontList.toArray());
-        lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized.<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
+        lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized or [Barcode].<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
         panelVision.add(ocrFontName, "4, 8, fill, default");
 
         lblFontSizept = new JLabel("Font Size [pt]");
@@ -545,8 +545,8 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         // The setPipeline() will make sure that all the feeders in the array have the same new clone referenced. 
         feeder.setPipeline(feeder.getPipeline().clone());
         // Prepare and edit the pipeline.
-        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-        CvPipeline pipeline = feeder.getCvPipeline(camera, false);
+        Camera camera = feeder.getCamera();
+        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());

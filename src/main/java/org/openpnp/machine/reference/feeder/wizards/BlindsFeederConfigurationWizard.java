@@ -47,6 +47,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
+import org.openpnp.machine.reference.feeder.BlindsFeeder.OcrAction;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -64,60 +65,6 @@ import com.jgoodies.forms.layout.RowSpec;
 @SuppressWarnings("serial")
 public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard {
     private final BlindsFeeder feeder;
-    private JLabel lblPart;
-    private JPanel panelPart;
-    private JTextField textFieldPartZ;
-    private JComboBox comboBoxPart;
-    private JLabel lblRotationInTape;
-    private JTextField textFieldLocationRotation;
-    private JLabel lblRetryCount;
-    private JTextField retryCountTf;
-    private JLabel lblPartTopZ;
-    private JButton btnCaptureToolZ;
-    private JLabel lblFeederNo;
-    private JTextField textFieldFeederNo;
-    private JLabel lblFeedersTotal;
-    private JTextField textFieldFeedersTotal;
-    private JLabel lblPocketPitch;
-    private JTextField textFieldPocketPitch;
-    private JPanel panelTapeSettings;
-    private JLabel lblFeedCount;
-    private JTextField textFieldFeedCount;
-    private JButton btnResetFeedCount;
-    private JButton btnAutoSetup;
-    private JLabel lblTapeLength;
-    private JTextField textFieldTapeLength;
-    private JLabel lblPartSize;
-    private JTextField textFieldPocketSize;
-    private JLabel lblPocketCenterline;
-    private JTextField textFieldPocketCenterline;
-    private JLabel lblFeederExtent;
-    private JTextField textFieldFeederExtent;
-    private JLabel lblPocketCount;
-    private JTextField textFieldPocketCount;
-    private JTextField textFieldLastPocket;
-    private JLabel lblLastPocket;
-    private JButton btnOpenCover;
-    private JLabel lblEdgeBeginDistance;
-    private JTextField textFieldEdgeOpeningDistance;
-    private JLabel lblPushSpeed;
-    private JTextField textFieldPushSpeed;
-    private JPanel panelCover;
-    private JLabel lblCoverType;
-    private JComboBox comboBoxCoverType;
-    private JLabel lblCoverOpenClose;
-    private JComboBox comboBoxCoverActuation;
-    private JButton btnOpenAll;
-    private JButton btnCloseAll;
-    private JLabel lblPushZOffset;
-    private JTextField textFieldPushZOffset;
-    private JButton btnCloseThis;
-    private JLabel lblEdgeEnd;
-    private JTextField textFieldEdgeClosingDistance;
-    private JButton btnCalibrateEdges;
-    private JButton btnShowInfo;
-    private JTextField textFieldFirstPocket;
-    private JLabel lblFirstPocket;
 
     public BlindsFeederConfigurationWizard(BlindsFeeder feeder) {
         this.feeder = feeder;
@@ -139,6 +86,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -146,13 +95,13 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 ColumnSpec.decode("right:default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblPart = new JLabel("Part");
         panelPart.add(lblPart, "2, 2, right, default");
@@ -160,7 +109,10 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         comboBoxPart = new JComboBox();
         comboBoxPart.setModel(new PartsComboBoxModel());
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        panelPart.add(comboBoxPart, "4, 2, 13, 1, left, default");
+        panelPart.add(comboBoxPart, "4, 2, 7, 1, left, default");
+        
+        btnOcrDetect = new JButton(performOcrAction);
+        panelPart.add(btnOcrDetect, "14, 2");
 
         lblRotationInTape = new JLabel("Rotation in Tape");
         lblRotationInTape.setToolTipText("<html><p>The part rotation in relation to the tape orientation. </p>\r\n<ul><li>What is 0° <strong>for the rotation of the part</strong> is determined by how the part footprint<br />\r\nis drawn in your ECAD. However look up \"Zero Component Orientation\" for the <br />\r\nstandardized way to do this. </li>\r\n<li>What is 0° <strong>for the rotation of the tape</strong> is defined in accordance to the <br />\r\nEIA-481-C \"Quadrant designations\".</li>\r\n<li>Consequently a <strong>Rotation In Tape</strong> of 0° means that the part is oriented upwards as <br />\r\ndrawn in the ECAD, when holding the tape horizontal with the sprocket holes <br/>\r\nat the top. If the tape has sprocket holes on both sides, look at the round, not <br/>\r\nthe elongated holes.</li>\r\n<li>Also consult \"EIA-481-C\" to see how parts should be oriented in the tape.</li></html>\r\n");
@@ -180,7 +132,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         btnCaptureToolZ = new JButton(captureToolCoordinatesAction);
         btnCaptureToolZ.setHideActionText(true);
-        panelPart.add(btnCaptureToolZ, "12, 4, left, default");
+        panelPart.add(btnCaptureToolZ, "14, 4, left, default");
 
         lblRetryCount = new JLabel("Retry Count");
         panelPart.add(lblRetryCount, "2, 6, right, default");
@@ -479,6 +431,25 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         return MainFrame.get().getMachineControls().getSelectedNozzle();
     }
 
+    private Action performOcrAction =
+            new AbstractAction("OCR Detect") {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Try to detect the part by OCR.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(null);
+            UiUtils.submitUiMachineTask(() -> {
+                if (feeder.getOcrAction() == OcrAction.None) {
+                    throw new Exception("OCR Action is None");
+                }
+                feeder.performOcr(feeder.getCamera());
+            });
+        }
+    };
+
     private Action captureToolCoordinatesAction =
             new AbstractAction("Get Tool Z", Icons.captureTool) {
         {
@@ -494,6 +465,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
             });
         }
     };
+
     private Action showFeaturesAction =
             new AbstractAction("Show Features") {
         {
@@ -621,5 +593,61 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
             });
         }
     };
+
+    private JLabel lblPart;
+    private JPanel panelPart;
+    private JTextField textFieldPartZ;
+    private JComboBox comboBoxPart;
+    private JLabel lblRotationInTape;
+    private JTextField textFieldLocationRotation;
+    private JLabel lblRetryCount;
+    private JTextField retryCountTf;
+    private JLabel lblPartTopZ;
+    private JButton btnCaptureToolZ;
+    private JLabel lblFeederNo;
+    private JTextField textFieldFeederNo;
+    private JLabel lblFeedersTotal;
+    private JTextField textFieldFeedersTotal;
+    private JLabel lblPocketPitch;
+    private JTextField textFieldPocketPitch;
+    private JPanel panelTapeSettings;
+    private JLabel lblFeedCount;
+    private JTextField textFieldFeedCount;
+    private JButton btnResetFeedCount;
+    private JButton btnAutoSetup;
+    private JLabel lblTapeLength;
+    private JTextField textFieldTapeLength;
+    private JLabel lblPartSize;
+    private JTextField textFieldPocketSize;
+    private JLabel lblPocketCenterline;
+    private JTextField textFieldPocketCenterline;
+    private JLabel lblFeederExtent;
+    private JTextField textFieldFeederExtent;
+    private JLabel lblPocketCount;
+    private JTextField textFieldPocketCount;
+    private JTextField textFieldLastPocket;
+    private JLabel lblLastPocket;
+    private JButton btnOpenCover;
+    private JLabel lblEdgeBeginDistance;
+    private JTextField textFieldEdgeOpeningDistance;
+    private JLabel lblPushSpeed;
+    private JTextField textFieldPushSpeed;
+    private JPanel panelCover;
+    private JLabel lblCoverType;
+    private JComboBox comboBoxCoverType;
+    private JLabel lblCoverOpenClose;
+    private JComboBox comboBoxCoverActuation;
+    private JButton btnOpenAll;
+    private JButton btnCloseAll;
+    private JLabel lblPushZOffset;
+    private JTextField textFieldPushZOffset;
+    private JButton btnCloseThis;
+    private JLabel lblEdgeEnd;
+    private JTextField textFieldEdgeClosingDistance;
+    private JButton btnCalibrateEdges;
+    private JButton btnShowInfo;
+    private JTextField textFieldFirstPocket;
+    private JLabel lblFirstPocket;
+    private JButton btnOcrDetect;
 }
 

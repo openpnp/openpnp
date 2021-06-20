@@ -23,13 +23,10 @@ package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -67,9 +64,9 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
-import org.openpnp.util.OcrUtil;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OcrUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
@@ -390,10 +387,10 @@ extends AbstractReferenceFeederConfigurationWizard {
         comboBoxWrongPartAction = new JComboBox(ReferencePushPullFeeder.OcrWrongPartAction.values());
         panelVisionEnabled.add(comboBoxWrongPartAction, "4, 8");
 
-        List<String> fontList = OcrUtil.createFontSelectionList(feeder.getOcrFontName(), true);
+        List<String> fontList = OcrUtils.createFontSelectionList(feeder.getOcrFontName(), true);
 
         lblOcrFontName = new JLabel("OCR Font Name");
-        lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized.<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
+        lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized or [Barcode].<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
         panelVisionEnabled.add(lblOcrFontName, "8, 8, right, default");
         comboBoxFontName = new JComboBox(fontList.toArray());
         panelVisionEnabled.add(comboBoxFontName, "10, 8");
@@ -943,6 +940,23 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
 
+    private void editPipeline() throws Exception {
+        Camera camera = feeder.getCamera();
+        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true, true);
+        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
+        dialog.getContentPane().setLayout(new BorderLayout());
+        dialog.getContentPane().add(editor);
+        dialog.setSize(1024, 768);
+        dialog.setVisible(true);
+    }    
+
+    private void resetPipeline() {
+        feeder.resetPipeline();
+    }
+    protected void initDataBindings() {
+    }
+
     private JLabel lblPartPitch;
     private JTextField textFieldPartPitch;
     private JTextField textFieldFeedPitch;
@@ -1022,21 +1036,4 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JLabel lblCloneLocationSettings;
     private JCheckBox checkBoxCloneLocationSettings;
     private JButton btnSetPartByOcr;
-
-    private void editPipeline() throws Exception {
-        Camera camera = feeder.getCamera();
-        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true, true);
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
-        dialog.setSize(1024, 768);
-        dialog.setVisible(true);
-    }    
-
-    private void resetPipeline() {
-        feeder.resetPipeline();
-    }
-    protected void initDataBindings() {
-    }
 }
