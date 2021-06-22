@@ -54,7 +54,6 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
-import org.openpnp.machine.reference.feeder.BlindsFeeder.OcrAction;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OcrUtils;
@@ -345,16 +344,18 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
     }
 
     protected void adaptDialog() {
-        BlindsFeeder.OcrAction action = (OcrAction) ocrAction.getSelectedItem();
-        boolean ocrEnabled = (action != OcrAction.None);
-        lblOcrMargin.setVisible(ocrEnabled);
-        ocrMargin.setVisible(ocrEnabled);
-        lblOcrFontName.setVisible(ocrEnabled);
-        ocrFontName.setVisible(ocrEnabled);
-        lblFontSizept.setVisible(ocrEnabled);
-        ocrFontSizePt.setVisible(ocrEnabled);
-        lblOcrTextOrientation.setVisible(ocrEnabled);
-        ocrTextOrientation.setVisible(ocrEnabled);
+        // This is arguably counter-intuitive, show the elements always.
+        // The code is left in, in case we reconsider.
+//        BlindsFeeder.OcrAction action = (OcrAction) ocrAction.getSelectedItem();
+//        boolean ocrEnabled = (action != OcrAction.None);
+//        lblOcrMargin.setVisible(ocrEnabled);
+//        ocrMargin.setVisible(ocrEnabled);
+//        lblOcrFontName.setVisible(ocrEnabled);
+//        ocrFontName.setVisible(ocrEnabled);
+//        lblFontSizept.setVisible(ocrEnabled);
+//        ocrFontSizePt.setVisible(ocrEnabled);
+//        lblOcrTextOrientation.setVisible(ocrEnabled);
+//        ocrTextOrientation.setVisible(ocrEnabled);
     }
 
     @Override
