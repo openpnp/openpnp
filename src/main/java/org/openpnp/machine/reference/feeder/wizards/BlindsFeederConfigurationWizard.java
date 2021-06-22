@@ -435,17 +435,14 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
             new AbstractAction("OCR Detect") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Try to detect the part by OCR.");
+                    "Try to detect and set the part by OCR.");
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(null);
             UiUtils.submitUiMachineTask(() -> {
-                if (feeder.getOcrAction() == OcrAction.None) {
-                    throw new Exception("OCR Action is None");
-                }
-                feeder.performOcr(feeder.getCamera());
+                feeder.performOcr(feeder.getCamera(), OcrAction.ChangePart);
             });
         }
     };

@@ -314,6 +314,7 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         panelVision.add(ocrTextOrientation, "4, 6, fill, default");
 
         lblOcrMargin = new JLabel("OCR Margin");
+        lblOcrMargin.setToolTipText("<html>Size of the margin where the OCR/Barcode labels are attached.<br/>When a negative value is given, the labels are assumed to be located at the end of the feeder.");
         panelVision.add(lblOcrMargin, "6, 6, right, default");
 
         ocrMargin = new JTextField();
@@ -546,7 +547,7 @@ public class BlindsFeederArrayConfigurationWizard extends AbstractConfigurationW
         feeder.setPipeline(feeder.getPipeline().clone());
         // Prepare and edit the pipeline.
         Camera camera = feeder.getCamera();
-        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true);
+        CvPipeline pipeline = feeder.getCvPipeline(camera, false, feeder.getOcrAction());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
         dialog.getContentPane().setLayout(new BorderLayout());
