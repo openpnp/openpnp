@@ -240,19 +240,16 @@ public abstract class CalibrateCameraProcess {
         pipeline.setProperty("package", pkg);
         pipeline.setProperty("footprint", footprint);
         
+        maskDiameter = Math.min(pixelsX, pixelsY) / 6;
         try {
             firstMaskCircle = (MaskCircle)pipeline.getStage("first_mask");
             secondMaskCircle = (MaskCircle)pipeline.getStage("second_mask");
-            maskDiameter = firstMaskCircle.getDiameter();
         }
         catch (Exception ex) {
-            maskDiameter = 100;
         }
         
         savedAutoToolSelect = Configuration.get().getMachine().isAutoToolSelect();
         ((ReferenceMachine) Configuration.get().getMachine()).setAutoToolSelect(false);
-//        savedAutoVisible = camera.isAutoVisible();
-//        ((ReferenceCamera) camera).setAutoVisible(false);
         
         SwingUtilities.invokeLater(() -> {
             MainFrame.get().getCameraViews().ensureCameraVisible(camera);
@@ -807,10 +804,10 @@ public abstract class CalibrateCameraProcess {
                     return;
                 }
                 
+                restoreCameraView();
+                
                 calibrationHeightIndex++;
                 if (calibrationHeightIndex == numberOfCalibrationHeights) {
-                    restoreCameraView();
-                    
                     double[][][] testPattern3dPointsArray = new double[testPattern3dPointsList.size()][][];
                     for (int tpIdx=0; tpIdx<testPattern3dPointsList.size(); tpIdx++) {
                         List<double[]> tp = testPattern3dPointsList.get(tpIdx);
@@ -870,7 +867,7 @@ public abstract class CalibrateCameraProcess {
             Logger.trace("testPatternZ = " + testPatternZ);
             Logger.trace("movableZ = " + movableZ);
             
-            //Raise the calibration rig to the next calibration height
+            //Change the calibration rig to the next calibration height
             UiUtils.submitUiMachineTask(() -> {
                 nozzle.moveTo(nozzle.getLocation().convertToUnits(LengthUnit.Millimeters).derive(null, null, movableZ, null));
             });
@@ -959,9 +956,9 @@ public abstract class CalibrateCameraProcess {
             if (Thread.interrupted()) {
                 return null;
             }
-            pipeline.process();
-            // Get the results
+            // Run the pipeline and get the results
             try {
+                pipeline.process();
                 keypoints = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
                         .getExpectedListModel(KeyPoint.class, 
                                 new Exception(part.getId()+" no matches found."));
@@ -1040,7 +1037,7 @@ public abstract class CalibrateCameraProcess {
         }
     };
 
-    private void showPoint(org.opencv.core.Point point, Color color) {
+    protected void showPoint(org.opencv.core.Point point, Color color) {
         showPointAndCircle(point, null, 0, color);
     }
     
@@ -1048,11 +1045,11 @@ public abstract class CalibrateCameraProcess {
         showPointAndCircle(null, center, radius, color);
     }
     
-    private void showPointAndCircle(org.opencv.core.Point point, org.opencv.core.Point center, int radius, Color color) {
+    protected void showPointAndCircle(org.opencv.core.Point point, org.opencv.core.Point center, int radius, Color color) {
         showPointAndCircle(point, center, radius, color, color);
     }
     
-    private void showPointAndCircle(org.opencv.core.Point point, org.opencv.core.Point center, int radius, Color pointColor, Color circleColor) {
+    protected void showPointAndCircle(org.opencv.core.Point point, org.opencv.core.Point center, int radius, Color pointColor, Color circleColor) {
         if ((point != null) || (center != null)) {
             cameraView.setCameraViewFilter(new CameraViewFilter() {
                 @Override

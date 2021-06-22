@@ -1234,7 +1234,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             double rms = Calib3d.calibrateCamera(testPattern3dPointsList, 
                     testPatternImagePointsList, size,
                     cameraMatrix, distortionCoefficients, rvecs, tvecs, 0 /*| 
-                    Calib3d.CALIB_USE_INTRINSIC_GUESS | Calib3d.CALIB_FIX_ASPECT_RATIO | Calib3d.CALIB_FIX_PRINCIPAL_POINT |  
+                    Calib3d.CALIB_USE_INTRINSIC_GUESS | Calib3d.CALIB_FIX_ASPECT_RATIO */| Calib3d.CALIB_FIX_PRINCIPAL_POINT/* |  
                         Calib3d.CALIB_RATIONAL_MODEL |
                         Calib3d.CALIB_THIN_PRISM_MODEL | Calib3d.CALIB_TILTED_MODEL*/ );
             Logger.trace("Calib3d.calibrateCamera rms = " + rms);
@@ -1326,7 +1326,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                         testPatternImagePoints, initialParams, 
                         /*CameraCalibrationUtils.KEEP_ROTATION | 
                         CameraCalibrationUtils.KEEP_ASPECT_RATIO | */
-                        0*CameraCalibrationUtils.KEEP_CENTER_POINT);
+                        0*CameraCalibrationUtils.FIX_CENTER_POINT);
             }
             
             cameraMatrix.put(0, 0, initialParams[0]);
@@ -1415,7 +1415,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             vect_m_cHat_m = vect_m_defaultZPrincipalPoint_m.clone();
             vect_m_cHat_m.put(2, 0, defaultZ.convertToUnits(LengthUnit.Millimeters).getValue() + 
                     absoluteCameraToDefaultZPrincipalPointDistance);
-            vect_m_defaultZPrincipalPoint_m.release();
+//            vect_m_defaultZPrincipalPoint_m.release();
             Logger.trace("vect_m_cHat_m = " + vect_m_cHat_m.dump());
             
             //Construct the rotation matrix that converts vectors represented in the machine reference
@@ -1456,19 +1456,42 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Core.gemm(rotate_cHat_c.t(), vect_c_cHat_c, -1.0, vect_c_m_c, 0.0, vect_cHat_c_cHat);
             Logger.trace("vect_cHat_c_cHat = " + vect_cHat_c_cHat.dump());
             
-            Mat unit_m_mz_c = Mat.zeros(3, 1, CvType.CV_64FC1);
-            Core.gemm(rotate_m_c, unitZ, 1, unitZ, 0, unit_m_mz_c);
+//            Mat unit_m_mz_c = Mat.zeros(3, 1, CvType.CV_64FC1);
+//            Core.gemm(rotate_m_c, unitZ, 1, unitZ, 0, unit_m_mz_c);
+//            Logger.trace("unit_m_mz_c = " + unit_m_mz_c.dump());
+//            
+//            Core.multiply(rotate_cHat_c.t().col(2), new Scalar(-vect_c_defaultZPrincipalPoint_m.get(2, 0)[0]/unit_m_mz_c.get(2, 0)[0]), vect_cHat_c_cHat);
+//            Logger.trace("vect_cHat_c_cHat = " + vect_cHat_c_cHat.dump());
+//            
+//            Core.gemm(rotate_m_cHat.t(), vect_cHat_c_cHat, -1, vect_m_c_m, 1.0, vect_m_cHat_m);
+//            vect_m_cHat_m.put(2, 0, vect_m_cHat_m.get(2, 0)[0] + absoluteCameraToDefaultZPrincipalPointDistance);
+//            Logger.trace("vect_m_cHat_m = " + vect_m_cHat_m.dump());
+//            
+//            Mat vect_cHat_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
+//            Core.subtract(vect_m_c_m, vect_m_cHat_m, vect_cHat_c_m);
+//            Core.gemm(rotate_m_cHat, vect_cHat_c_m, 1, vect_cHat_c_m, 0, vect_cHat_c_cHat);
+//            Logger.trace("vect_cHat_c_cHat = " + vect_cHat_c_cHat.dump());
+//            
+//            Core.gemm(vect_cHat_c_cHat, unit_m_mz_c.t(), 1.0/(absoluteCameraToDefaultZPrincipalPointDistance*unit_m_mz_c.get(2, 0)[0]), 
+//                    rotate_cHat_c.t(), vect_c_defaultZPrincipalPoint_m.get(2, 0)[0]/(absoluteCameraToDefaultZPrincipalPointDistance*unit_m_mz_c.get(2, 0)[0]), 
+//                    rectification);
+//            rectification.put(2, 0, rectification.get(2, 0)[0] / rectification.get(2, 2)[0]);
+//            rectification.put(2, 1, rectification.get(2, 1)[0] / rectification.get(2, 2)[0]);
+//            rectification.put(2, 2, 1);
+//            Logger.trace("rectification = " + rectification.dump());
             
-            Core.gemm(vect_cHat_c_cHat, unit_m_mz_c.t(), 1.0/(absoluteCameraToDefaultZPrincipalPointDistance*unit_m_mz_c.get(2, 0)[0]), 
-                    rotate_cHat_c.t(), vect_c_defaultZPrincipalPoint_m.get(2, 0)[0]/(absoluteCameraToDefaultZPrincipalPointDistance*unit_m_mz_c.get(2, 0)[0]), 
-                    rectification);
+            //Construct the rectification matrix
+            Core.gemm(vect_cHat_c_cHat, unitZ.t(), 1.414e0*1.0/(absoluteCameraToDefaultZPrincipalPointDistance*absoluteCameraToDefaultZPrincipalPointDistance), 
+                    rotate_cHat_c.t(), 1.0, rectification);
             rectification.put(2, 0, rectification.get(2, 0)[0] / rectification.get(2, 2)[0]);
             rectification.put(2, 1, rectification.get(2, 1)[0] / rectification.get(2, 2)[0]);
             rectification.put(2, 2, 1);
             Logger.trace("rectification = " + rectification.dump());
             
-//            //Construct the rectification matrix
-//            Core.gemm(vect_c_cHat_c, unitZ.t(), 1.0/absoluteCameraToDefaultZPrincipalPointDistance, 
+            rectification = CameraCalibrationUtils.computeRectificationMatrix(rotate_m_c, vect_m_c_m, rotate_m_cHat, vect_m_cHat_m, defaultZ.convertToUnits(LengthUnit.Millimeters).getValue());
+            Logger.trace("rectification = " + rectification.dump());
+            
+//            Core.gemm(vect_c_cHat_c, unitZ.t(), (absoluteCameraToDefaultZPrincipalPointDistance*absoluteCameraToDefaultZPrincipalPointDistance), 
 //                    rotate_cHat_c, 1.0, rectification);
 //            rectification = rectification.inv();
 //            rectification.put(2, 0, rectification.get(2, 0)[0] / rectification.get(2, 2)[0]);
@@ -1489,7 +1512,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         protected void initUndistortRectifyMap(Size size, double alpha, Mat undistortionMap1, 
                 Mat undistortionMap2) {
             virtualCameraMatrix = computeVirtualCameraMatrix(cameraMatrix, distortionCoefficients, 
-                    rectification, size, alpha, true);
+                    rectification, size, alpha, false);
             Logger.trace("virtualCameraMatrix = " + virtualCameraMatrix.dump());
 
             Calib3d.initUndistortRectifyMap(cameraMatrix,
@@ -1581,7 +1604,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             
             double outerCenterX = (outerMaxX + outerMinX) / 2;
             double outerCenterY = (outerMaxY + outerMinY) / 2;
-            Logger.trace("outer center = (" + outerCenterX + ", " + outerCenterY + ")" );
+//            Logger.trace("outer center = (" + outerCenterX + ", " + outerCenterY + ")" );
             
             double outerF;
             if ((outerMaxY - outerMinY)/(outerMaxX - outerMinX) >= aspectRatio) {
@@ -1598,8 +1621,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 outerMinY = outerCenterY - newHeight/2;
                 outerMaxY = outerCenterY + newHeight/2;
             }
-            Logger.trace("outerX extent = (" + outerMinX + ", " + outerMaxX + ")" );
-            Logger.trace("outerY extent = (" + outerMinY + ", " + outerMaxY + ")" );
+//            Logger.trace("outerX extent = (" + outerMinX + ", " + outerMaxX + ")" );
+//            Logger.trace("outerY extent = (" + outerMinY + ", " + outerMaxY + ")" );
             
             double outerCx = (size.width-1)/2 - outerF*outerCenterX;
             double outerCy = (size.height-1)/2 - outerF*outerCenterY;
@@ -1692,12 +1715,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     innerMaxX = (innerMaxX + innerMinX)/2 + newWidth/2;
                     innerMinX = (innerMaxX + innerMinX)/2 - newWidth/2;
                 }
-                Logger.trace("innerX extent = (" + innerMinX + ", " + innerMaxX + ")" );
-                Logger.trace("innerY extent = (" + innerMinY + ", " + innerMaxY + ")" );
+//                Logger.trace("innerX extent = (" + innerMinX + ", " + innerMaxX + ")" );
+//                Logger.trace("innerY extent = (" + innerMinY + ", " + innerMaxY + ")" );
                 
                 innerCenterX += innerCenterOffsetX;
                 innerCenterY += innerCenterOffsetY;
-                Logger.trace("inner center = (" + innerCenterX + ", " + innerCenterY + ")" );
+//                Logger.trace("inner center = (" + innerCenterX + ", " + innerCenterY + ")" );
                 
                 fullyConstrained = (Math.abs(innerCenterOffsetX) < 0.0001) &&
                         (Math.abs(innerCenterOffsetY) < 0.0001);
@@ -1709,8 +1732,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     maxHeight = newHeight;
                     fullyConstrained = false;
                 }
-                Logger.trace("width = " + newWidth + ", " + maxWidth);
-                Logger.trace("height = " + newHeight + ", " + maxHeight);
+//                Logger.trace("width = " + newWidth + ", " + maxWidth);
+//                Logger.trace("height = " + newHeight + ", " + maxHeight);
             }
             undistortedPoints.release();
             
@@ -1790,7 +1813,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             
             Mat vect_c_p_m = Mat.zeros(3, 1, CvType.CV_64FC1);
             Core.multiply(unit_c_cz_m, new Scalar(cameraToZPlane/unit_c_cz_m.get(2, 0)[0]), vect_c_p_m);
-            Logger.trace("vect_c_p_m = " + vect_c_p_m.dump());
+//            Logger.trace("vect_c_p_m = " + vect_c_p_m.dump());
             
             Location offset = new Location(LengthUnit.Millimeters, vect_c_p_m.get(0, 0)[0], 
                     vect_c_p_m.get(1, 0)[0], vect_c_p_m.get(2, 0)[0], 0).convertToUnits(lengthZ.getUnits());

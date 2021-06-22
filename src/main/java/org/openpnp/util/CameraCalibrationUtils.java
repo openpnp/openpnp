@@ -1,5 +1,25 @@
+/*
+ * Copyright (C) 2021 Tony Luken <tonyluken@att.net>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.util;
 
+import java.util.ArrayList;
 import java.util.TreeSet;
 
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresFactory;
@@ -14,47 +34,120 @@ import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.optim.ConvergenceChecker;
 import org.apache.commons.math3.optim.SimpleVectorValueChecker;
 import org.apache.commons.math3.util.Pair;
+import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.pmw.tinylog.Logger;
 
+/**
+ * Provides a set of utilities to aid in camera calibration
+ *
+ */
 public class CameraCalibrationUtils {
 
+    public static final int FIX_ASPECT_RATIO = 1;
+    public static final int FIX_CENTER_POINT = 2;
+    public static final int FIX_DISTORTION_COEFFICENTS = 4;
+    public static final int FIX_ROTATION = 8;
+    
     private static final int maxEvaluations = 500;
     private static final int maxIterations = 500;
-    public static final int KEEP_ASPECT_RATIO = 1;
-    public static final int KEEP_CENTER_POINT = 2;
-    public static final int KEEP_DISTORTION_COEFFICENTS = 4;
-    public static final int KEEP_ROTATION = 8;
     
+    //Assuming the residual errors are normally distributed (which they should be if the points are
+    //good), 3 standard deviations should exclude only 0.27% of good points while rejecting most of
+    //the extreme outliers.
+    private static final int sigmaThresholdForRejectingOutliers = 3;
     
     private static int numberOfTestPatterns;
     private static int numberOfParameters;
     private static double aspectRatio;
 
+    /**
+     * Computes the best, in a least squared error sense, camera parameters that transform the given 
+     * test pattern 3D coordinates to the corresponding 2D image points.  This is very similar to 
+     * what OpenCv's Calib3d.calibrateCamera does except this implementation takes advantage of
+     * the fact that it is known that the rotation of the camera WRT the test patterns is constant
+     * and that the Z height of the camera is also constant for all test patterns.
+     * 
+     * @param testPattern3dPoints - a numberOfTestPatterns X numberOfPointsPerTestPattern X 3 array
+     * containing the 3D machine coordinates at which the corresponding point in 
+     * testPatternImagePoints was collected.
+     * @param testPatternImagePoints - a numberOfTestPatterns X numberOfPointsPerTestPattern X 2 
+     * array containing the 2D image coordinates of the corresponding point in testPattern3dPoints.
+     * @param starting - a 13+2*numberOfTestPatterns element array containing the initial values of
+     * the camera parameters to be estimated in the following order: fx, fy, cx, cy, k1, k2, p1, p2,
+     * k3, Rx, Ry, Rz, cam_z, cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1],
+     * cam_y[numberOfTestPatterns-1].  Where fx, fy, cx, and cy are the intrinsic camera matrix
+     * components; k1, k2, p1, p2, and k3 are the intrinsic camera lens distortion coefficients; Rx,
+     * Ry, and Rz are the extrinsic camera rotation vector components; cam_z is the camera Z 
+     * coordinate; and cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1], and
+     * cam_y[numberOfTestPatterns-1] are the camera X/Y coordinates for each test pattern.
+     * @return a 13+2*numberOfTestPatterns element array containing the best fit camera parameters
+     * in the same order as the starting parameter.
+     */
     public static double[] ComputeBestCameraParameters(double[][][] testPattern3dPoints, 
             double[][][] testPatternImagePoints, double[] starting) {
         return ComputeBestCameraParameters(testPattern3dPoints, 
                 testPatternImagePoints, starting, 0);
     }
     
+    /**
+     * Computes the best, in a least squared error sense, camera parameters that transform the given 
+     * test pattern 3D coordinates to the corresponding 2D image points.  This is very similar to 
+     * what OpenCv's Calib3d.calibrateCamera does except this implementation takes advantage of
+     * the fact that it is known that the rotation of the camera WRT the test patterns is constant
+     * and that the Z height of the camera is also constant for all test patterns.
+     * 
+     * @param testPattern3dPoints - a numberOfTestPatterns X numberOfPointsPerTestPattern X 3 array
+     * containing the 3D machine coordinates at which the corresponding point in 
+     * testPatternImagePoints was collected.
+     * @param testPatternImagePoints - a numberOfTestPatterns X numberOfPointsPerTestPattern X 2 
+     * array containing the 2D image coordinates of the corresponding point in testPattern3dPoints.
+     * @param starting - a 13+2*numberOfTestPatterns element array containing the initial values of
+     * the camera parameters to be estimated in the following order: fx, fy, cx, cy, k1, k2, p1, p2,
+     * k3, Rx, Ry, Rz, cam_z, cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1],
+     * cam_y[numberOfTestPatterns-1].  Where fx, fy, cx, and cy are the intrinsic camera matrix
+     * components; k1, k2, p1, p2, and k3 are the intrinsic camera lens distortion coefficients; Rx,
+     * Ry, and Rz are the extrinsic camera rotation vector components; cam_z is the camera Z 
+     * coordinate; and cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1], and
+     * cam_y[numberOfTestPatterns-1] are the camera X/Y coordinates for each test pattern.
+     * @param flags - Flags used to force certain parameters be retained from the initial starting
+     * values. One or more of the follow flags added together: FIX_ASPECT_RATIO, FIX_CENTER_POINT,
+     * FIX_DISTORTION_COEFFICENTS, and FIX_ROTATION.
+     * @return a 13+2*numberOfTestPatterns element array containing the best fit camera parameters
+     * in the same order as the starting parameter.
+     */
     public static double[] ComputeBestCameraParameters(double[][][] testPattern3dPoints, 
             double[][][] testPatternImagePoints, double[] starting, int flags) {
         numberOfTestPatterns = testPattern3dPoints.length;
+        //The number of model parameters includes 4 camera matrix entries, 5 distortion 
+        //coefficients, 3 rotation vector coefficients, 1 camera Z component, and an X/Y camera
+        //coordinate pair for each test pattern
         numberOfParameters = 4 + 5 + 3 + 1 + 2*numberOfTestPatterns;
         aspectRatio = starting[1] / starting[0];
-        TreeSet<Integer> badPoints = new TreeSet<Integer>();
+        TreeSet<Integer> outlierPoints = new TreeSet<Integer>();
 
         LevenbergMarquardtOptimizer optimizer = new LevenbergMarquardtOptimizer();
         Optimum optimum = null;
         
+        //Up to two attempts are made.  The first uses all available data points and the second uses 
+        //only data points whose residual error from the first attempt are within 
+        //sigmaThresholdForRejectingOutliers standard deviations of the modeled value. This should
+        //help prevent any points that are extreme outliers due to measurement errors from 
+        //distorting the results.
         for (int attempt=0; attempt<2; attempt++) {
-            CalibrationModel model = new CalibrationModel(testPattern3dPoints, badPoints, flags);
+            CalibrationModel model = new CalibrationModel(testPattern3dPoints, outlierPoints, flags);
             
             RealVector observed = new ArrayRealVector();
             int iPoint = 0;
             for (int i=0; i<numberOfTestPatterns; i++) {
                 for (int j=0; j<testPatternImagePoints[i].length; j++) {
-                    if (!badPoints.contains(iPoint)) {
+                    if (!outlierPoints.contains(iPoint)) {
                         observed = observed.append(new ArrayRealVector(testPatternImagePoints[i][j]));
                     }
                     iPoint++;
@@ -63,7 +156,8 @@ public class CameraCalibrationUtils {
             
             RealVector start = new ArrayRealVector(starting);
     
-            ConvergenceChecker<LeastSquaresProblem.Evaluation> checker = LeastSquaresFactory.evaluationChecker(new SimpleVectorValueChecker(1e-6, 1e-8));
+            ConvergenceChecker<LeastSquaresProblem.Evaluation> checker = 
+                    LeastSquaresFactory.evaluationChecker(new SimpleVectorValueChecker(1e-6, 1e-8));
             
             LeastSquaresProblem lsp = LeastSquaresFactory.create(model, observed, start, checker, maxEvaluations, maxIterations);
             
@@ -74,30 +168,32 @@ public class CameraCalibrationUtils {
             Logger.trace("residuals = " + optimum.getResiduals().toString());
             Logger.trace("parameters = " + optimum.getPoint().toString());
             
-            if (badPoints.isEmpty()) {
+            double varianceThresholdForRejectingOutliers = Math.pow(
+                    sigmaThresholdForRejectingOutliers * optimum.getRMS(), 2);
+                    
+            if (outlierPoints.isEmpty()) {
                 double[] residuals = optimum.getResiduals().toArray();
-                double residualVariance = 0;
                 for (int i=0; i<residuals.length; i++) {
-                    residualVariance += residuals[i]*residuals[i];
-                }
-                residualVariance = residualVariance/residuals.length;
-                for (int i=0; i<residuals.length; i++) {
-                    if (residuals[i]*residuals[i] > 9*residualVariance) {
-                        badPoints.add(i/2);
+                    if (residuals[i]*residuals[i] > varianceThresholdForRejectingOutliers) {
+                        //reject the point if either X or Y variance exceeds the threshold
+                        outlierPoints.add(i/2);
                     }
                 }
                 
-                if (badPoints.isEmpty()) {
+                if (outlierPoints.isEmpty()) {
+                    //no outliers found so no need for a second attempt
                     break;
                 }
                 else {
-                    Logger.trace("Repeating parameter estimation with {} outliers removed from the set of {} points", badPoints.size(), residuals.length/2);
+                    Logger.trace("Index of outliers found in the data set: " + outlierPoints);
+                    Logger.trace("Repeating parameter estimation with {} outliers removed from the "
+                            + "set of {} points", outlierPoints.size(), residuals.length/2);
                 }
             }
         }
 
         RealVector ans = optimum.getPoint();
-        if ((flags & KEEP_ASPECT_RATIO) != 0) {
+        if ((flags & FIX_ASPECT_RATIO) != 0) {
             ans.setEntry(1, ans.getEntry(0));
         }
         return ans.toArray();
@@ -110,32 +206,32 @@ public class CameraCalibrationUtils {
         double allowCenterToChange;
         double allowDistortionToChange;
         double allowRotationToChange;
-        TreeSet<Integer> badPoints;
+        TreeSet<Integer> outlierPoints;
         int flags;
         
-        public CalibrationModel(double[][][] testPattern3dPoints, TreeSet<Integer> badPoints, int flags) {
-            this.badPoints = badPoints;
+        public CalibrationModel(double[][][] testPattern3dPoints, TreeSet<Integer> outlierPoints, int flags) {
+            this.outlierPoints = outlierPoints;
             this.flags = flags;
             this.testPattern3dPoints = testPattern3dPoints;
             totalNumberOfPoints = 0;
             for (int iTP=0; iTP<numberOfTestPatterns; iTP++) {
                 totalNumberOfPoints += testPattern3dPoints[iTP].length;
             }
-            totalNumberOfPoints -= badPoints.size();
+            totalNumberOfPoints -= outlierPoints.size();
             
-            if ((flags & KEEP_CENTER_POINT) == 0)  {
+            if ((flags & FIX_CENTER_POINT) == 0)  {
                 allowCenterToChange = 1;
             }
             else {
                 allowCenterToChange = 0;
             }
-            if ((flags & KEEP_DISTORTION_COEFFICENTS) == 0)  {
+            if ((flags & FIX_DISTORTION_COEFFICENTS) == 0)  {
                 allowDistortionToChange = 1;
             }
             else {
                 allowDistortionToChange = 0;
             }
-            if ((flags & KEEP_ROTATION) == 0)  {
+            if ((flags & FIX_ROTATION) == 0)  {
                 allowRotationToChange = 1;
             }
             else {
@@ -145,12 +241,13 @@ public class CameraCalibrationUtils {
         
         @Override
         public Pair<RealVector, RealMatrix> value(RealVector point) {
+            //point order is fx, fy, cx, cy, k1, k2, p1, p2, k3, Rx, Ry, Rz, cam_z, 
+            //cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1], cam_y[numberOfTestPatterns-1]
             RealVector funcValue = MatrixUtils.createRealVector(new double[2*totalNumberOfPoints]);
-            RealMatrix funcJacobian = MatrixUtils.createRealMatrix(2*totalNumberOfPoints,13+2*numberOfTestPatterns);
-            //point order is fx, fy, cx, cy, k1, k2, p1, p2, k3, Rx, Ry, Rz, cam_z, cam_i_x, cam_i_y
+            RealMatrix funcJacobian = MatrixUtils.createRealMatrix(2*totalNumberOfPoints, numberOfParameters);
             double fx = point.getEntry(0);
             double fy;
-            if ((flags & KEEP_ASPECT_RATIO) == 0) {
+            if ((flags & FIX_ASPECT_RATIO) == 0) {
                 fy = point.getEntry(1);
             }
             else {
@@ -234,7 +331,7 @@ public class CameraCalibrationUtils {
             int iPoint = 0;
             for (int iTP=0; iTP<numberOfTestPatterns; iTP++) {
                 for (int iPt=0; iPt<testPattern3dPoints[iTP].length; iPt++) {
-                    if (!badPoints.contains(iPoint)) {
+                    if (!outlierPoints.contains(iPoint)) {
                         double temp023 = cam_z - testPattern3dPoints[iTP][iPt][2];
                         double temp022 = point.getEntry(14+2*iTP) - testPattern3dPoints[iTP][iPt][1];
                         double temp021 = point.getEntry(13+2*iTP) - testPattern3dPoints[iTP][iPt][0];
@@ -364,7 +461,7 @@ public class CameraCalibrationUtils {
                         funcValue.setEntry(rowIdx, fy*temp044 + cy);
                         
                         funcJacobian.setEntry(rowIdx, 0, 0);
-                        if ((flags & KEEP_ASPECT_RATIO) == 0) {
+                        if ((flags & FIX_ASPECT_RATIO) == 0) {
                             funcJacobian.setEntry(rowIdx, 0, 0);
                             funcJacobian.setEntry(rowIdx, 1, temp044);
                         }
@@ -411,5 +508,81 @@ public class CameraCalibrationUtils {
             return new Pair<RealVector, RealMatrix>(funcValue, funcJacobian);
         }
         
+    }
+    
+    public static Mat computeRectificationMatrix(Mat rotate_m_c, Mat vect_m_c_m, Mat rotate_m_cHat, Mat vect_m_cHat_m, double defaultZ) {
+        //The rectification matrix converts normalized camera coordinates to camera hat coordinates
+        MatOfPoint2f cameraPoints = new MatOfPoint2f();
+        cameraPoints.push_back(new MatOfPoint2f(new Point(0, 0)));
+        cameraPoints.push_back(new MatOfPoint2f(new Point(-1000, -1000)));
+        cameraPoints.push_back(new MatOfPoint2f(new Point(+1000, -1000)));
+        cameraPoints.push_back(new MatOfPoint2f(new Point(+1000, +1000)));
+        cameraPoints.push_back(new MatOfPoint2f(new Point(-1000, +1000)));
+        
+        //Compute the height of the camera above defaultZ
+        double h = vect_m_c_m.get(2, 0)[0] - defaultZ;
+        
+        Mat rotate_c_cHat = Mat.eye(3, 3, CvType.CV_64FC1);
+        //rotate_c_cHat = rotate_m_cHat * rotate_m_c.t()
+        Core.gemm(rotate_m_cHat, rotate_m_c.t(), 1, rotate_m_c, 0, rotate_c_cHat);
+        
+        Mat vect_cHat_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
+        //vect_cHat_c_m = vect_m_c_m - vect_m_cHat_m
+        Core.subtract(vect_m_c_m, vect_m_cHat_m, vect_cHat_c_m);
+        
+        Mat vect_cHat_c_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
+        //vect_cHat_c_cHat = rotate_m_cHat*vect_cHat_c_m
+        Core.gemm(rotate_m_cHat, vect_cHat_c_m, 1, vect_cHat_c_m, 0, vect_cHat_c_cHat);
+        
+        MatOfPoint2f cameraHatPoints = new MatOfPoint2f();
+        
+        for (int i=0; i<cameraPoints.rows(); i++) {
+            Mat vect_c_pPrime_c = Mat.ones(3, 1, CvType.CV_64FC1);
+            vect_c_pPrime_c.put(0, 0, cameraPoints.get(i, 0));
+            Logger.trace("vect_c_pPrime_c = " + vect_c_pPrime_c.dump());
+
+            
+            Mat vect_c_pPrime_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
+            //vect_c_pPrime_cHat = rotate_c_cHat * vect_c_pPrime_c
+            Core.gemm(rotate_c_cHat, vect_c_pPrime_c, 1, vect_c_pPrime_c, 0, vect_c_pPrime_cHat);
+            vect_c_pPrime_c.release();
+            Logger.trace("vect_c_pPrime_cHat = " + vect_c_pPrime_cHat.dump());
+            
+            Mat vect_c_p_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
+            //Scale the vector so that its Z component is the height of the camera above defaultZ.
+            //This will place the end of the vector on the defaultZ plane.
+            //vect_c_p_cHat = h/vect_c_pPrime_cHat[z] * vect_c_pPrime_cHat
+            Core.multiply(vect_c_pPrime_cHat, new Scalar(h/vect_c_pPrime_cHat.get(2, 0)[0]), vect_c_p_cHat);
+            vect_c_pPrime_cHat.release();
+            Logger.trace("vect_c_p_cHat = " + vect_c_p_cHat.dump());
+            
+            Mat vect_cHat_p_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
+            //vect_cHat_p_cHat = vect_c_p_cHat + vect_cHat_c_cHat
+            Core.add(vect_c_p_cHat, vect_cHat_c_cHat, vect_cHat_p_cHat);
+            vect_c_p_cHat.release();
+            Logger.trace("vect_cHat_p_cHat = " + vect_cHat_p_cHat.dump());
+            
+            Mat vect_cHat_pHatPrime_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
+            //Normalize the vector so that its Z component is 1
+            Core.multiply(vect_cHat_p_cHat, new Scalar(1.0/vect_cHat_p_cHat.get(2, 0)[0]), vect_cHat_pHatPrime_cHat);
+            vect_cHat_p_cHat.release();
+            Logger.trace("vect_cHat_pHatPrime_cHat = " + vect_cHat_pHatPrime_cHat.dump());
+
+            cameraHatPoints.push_back(new MatOfPoint2f(new Point(vect_cHat_pHatPrime_cHat.get(0, 0)[0], vect_cHat_pHatPrime_cHat.get(1, 0)[0])));
+            vect_cHat_pHatPrime_cHat.release();
+        }
+        
+        //The rectification matrix is then just the homography matrix that takes the camera points
+        //to the camera hat points
+        Mat rectification = Calib3d.findHomography(cameraPoints, cameraHatPoints);
+        
+        //Cleanup
+        cameraPoints.release();
+        cameraHatPoints.release();
+        rotate_c_cHat.release();
+        vect_cHat_c_m.release();
+        vect_cHat_c_cHat.release();
+        
+        return rectification;
     }
 }
