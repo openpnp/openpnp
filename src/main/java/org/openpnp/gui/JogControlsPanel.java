@@ -63,6 +63,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractNozzle;
+import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -630,19 +631,7 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
-                // move to the discard location
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("nozzle", nozzle);
-                Configuration.get().getScripting().on("Job.BeforeDiscard", globals);
-
-                MovableUtils.moveToLocationAtSafeZ(nozzle, Configuration.get()
-                        .getMachine()
-                        .getDiscardLocation());
-                // discard the part
-                nozzle.place();
-                nozzle.moveToSafeZ();
-
-                Configuration.get().getScripting().on("Job.AfterDiscard", globals);
+                AbstractPnpJobProcessor.discard(nozzle);
             });
         }
     };
