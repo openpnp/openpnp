@@ -28,6 +28,7 @@ import java.awt.event.ItemListener;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -54,26 +55,6 @@ import com.jgoodies.forms.layout.RowSpec;
 @SuppressWarnings("serial")
 public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzle nozzle;
-    private JPanel panel;
-    private JLabel lblContactProbeActuator;
-    private JComboBox comboBoxContactProbeActuator;
-    private JLabel lblStartOffset;
-    private JTextField contactProbeStartOffsetZ;
-    private JLabel lblProbeDepth;
-    private JTextField contactProbeDepthZ;
-    private JLabel lblSniffleIncrement;
-    private JTextField sniffleIncrementZ;
-    private JLabel lblFinalAdjustment;
-    private JTextField contactProbeAdjustZ;
-    private JLabel lblMethod;
-    private JComboBox contactProbeMethod;
-    private JLabel lblFeederHeightProbing;
-    private JComboBox feederHeightProbing;
-    private JLabel lblPartHeightProbing;
-    private JComboBox partHeightProbing;
-    private JLabel lblZCalibration;
-    private JTextField calibrationOffsetZ;
-    private JButton btnCalibrateNow;
 
     public ContactProbeNozzleWizard(ContactProbeNozzle nozzle) {
         this.nozzle = nozzle;
@@ -95,6 +76,8 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -190,16 +173,23 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         partHeightProbing = new JComboBox(ContactProbeTrigger.values());
         panel.add(partHeightProbing, "4, 20, fill, default");
         
+        lblDiscardProbing = new JLabel("Discard Probing");
+        lblDiscardProbing.setToolTipText("<html>Enable contact probing for discard. There must be a surface that the nozzle<br/>\r\ncan probe into that is likely to brush/tilt off a part from the nozzle, like a (ESD safe) soft<br/>\r\nmaterial or a slanted surface. \r\n</html>");
+        panel.add(lblDiscardProbing, "2, 22, right, default");
+
+        discardProbing = new JCheckBox("");
+        panel.add(discardProbing, "4, 22");
+
         lblZCalibration = new JLabel("Calibration Z Offset");
-        panel.add(lblZCalibration, "2, 24, right, default");
+        panel.add(lblZCalibration, "2, 26, right, default");
         
         calibrationOffsetZ = new JTextField();
         calibrationOffsetZ.setEditable(false);
-        panel.add(calibrationOffsetZ, "4, 24, fill, default");
+        panel.add(calibrationOffsetZ, "4, 26, fill, default");
         calibrationOffsetZ.setColumns(10);
         
         btnCalibrateNow = new JButton(calibrateZAction);
-        panel.add(btnCalibrateNow, "6, 24");
+        panel.add(btnCalibrateNow, "6, 26");
     }
 
     protected void adaptDialog() {
@@ -225,6 +215,8 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         feederHeightProbing.setVisible(isActuator);
         lblPartHeightProbing.setVisible(isActuator);
         partHeightProbing.setVisible(isActuator);
+        lblDiscardProbing.setVisible(isActuator);
+        discardProbing.setVisible(isActuator);
 
         lblZCalibration.setVisible(isProbing);
         calibrationOffsetZ.setVisible(isProbing);
@@ -247,6 +239,7 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
 
         addWrappedBinding(nozzle, "feederHeightProbing", feederHeightProbing, "selectedItem");
         addWrappedBinding(nozzle, "partHeightProbing", partHeightProbing, "selectedItem");
+        addWrappedBinding(nozzle, "discardProbing", discardProbing, "selected");
 
         addWrappedBinding(nozzle, "calibrationOffsetZ", calibrationOffsetZ, "text", lengthConverter);
 
@@ -273,7 +266,30 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
             });
         }
     };
+
+    private JPanel panel;
+    private JLabel lblContactProbeActuator;
+    private JComboBox comboBoxContactProbeActuator;
+    private JLabel lblStartOffset;
+    private JTextField contactProbeStartOffsetZ;
+    private JLabel lblProbeDepth;
+    private JTextField contactProbeDepthZ;
+    private JLabel lblSniffleIncrement;
+    private JTextField sniffleIncrementZ;
+    private JLabel lblFinalAdjustment;
+    private JTextField contactProbeAdjustZ;
+    private JLabel lblMethod;
+    private JComboBox contactProbeMethod;
+    private JLabel lblFeederHeightProbing;
+    private JComboBox feederHeightProbing;
+    private JLabel lblPartHeightProbing;
+    private JComboBox partHeightProbing;
+    private JLabel lblZCalibration;
+    private JTextField calibrationOffsetZ;
+    private JButton btnCalibrateNow;
     private JLabel lblSniffleDwellTime;
     private JTextField sniffleDwellTime;
+    private JLabel lblDiscardProbing;
+    private JCheckBox discardProbing;
 
 }

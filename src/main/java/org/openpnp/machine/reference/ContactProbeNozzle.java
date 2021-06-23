@@ -118,6 +118,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     @Attribute(required=false)
     private ContactProbeTrigger partHeightProbing = ContactProbeTrigger.EachTime;
 
+    @Attribute(required=false)
+    private boolean discardProbing = false; 
+
     @Element(required=false)
     private Length calibrationOffsetZ = null;
 
@@ -202,7 +205,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         }
         if (part == null) {
             // null part means discard, i.e. we probe each time. 
-            return true;
+            return isDiscardProbing();
         }
         if (feederHeightProbing == ContactProbeTrigger.EachTime) {
             return true;
@@ -341,7 +344,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                 MovableUtils.moveToLocationAtSafeZ(this, placementLocationPart);
             }
             else {
-                super.moveToPlacementLocation(placementLocationPart, part);
+                super.moveToPlacementLocation(placementLocation, part);
             }
         }
     }
@@ -432,6 +435,14 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     public void setPartHeightProbing(ContactProbeTrigger partHeightProbing) {
         this.partHeightProbing = partHeightProbing;
+    }
+
+    public boolean isDiscardProbing() {
+        return discardProbing;
+    }
+
+    public void setDiscardProbing(boolean discardProbing) {
+        this.discardProbing = discardProbing;
     }
 
     /**
@@ -794,12 +805,15 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                                     GcodeDriver.CommandType.ACTUATE_BOOLEAN_COMMAND, suggestedCommand, false, false);
                         }
                         else {
-                            solutions.add(new Solutions.PlainIssue(
-                                    this, 
-                                    "Missing ACTUATE_BOOLEAN_COMMAND for actuator "+contactProbeActuator.getName()+" on driver "+gcodeDriver.getName()+" (no suggestion available for detected firmware).", 
-                                    "Please add the command manually.",
-                                    Severity.Error,
-                                    "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#setting-up-the-g-code"));
+                            String currentCommand = gcodeDriver.getCommand(contactProbeActuator, GcodeDriver.CommandType.ACTUATE_BOOLEAN_COMMAND);
+                            if (currentCommand == null || currentCommand.isEmpty()) {
+                                solutions.add(new Solutions.PlainIssue(
+                                        this, 
+                                        "Missing ACTUATE_BOOLEAN_COMMAND for actuator "+contactProbeActuator.getName()+" on driver "+gcodeDriver.getName()+" (no suggestion available for detected firmware).", 
+                                        "Please add the command manually.",
+                                        Severity.Error,
+                                        "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#setting-up-the-g-code"));
+                            }
                         }
                     }
                 }
