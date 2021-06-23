@@ -193,12 +193,16 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     }
 
     protected boolean isPartHeightProbingNeeded(Part part) {
-        if (isDisabled || part == null) {
+        if (isDisabled) {
             return false;
         }
         if (contactProbeMethod != ContactProbeMethod.ContactSenseActuator
                 || partHeightProbing == ContactProbeTrigger.Off) {
             return false;
+        }
+        if (part == null) {
+            // null part means discard, i.e. we probe each time. 
+            return true;
         }
         if (feederHeightProbing == ContactProbeTrigger.EachTime) {
             return true;
@@ -280,8 +284,10 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     public void moveToPlacementLocation(Location placementLocation, Part part) throws Exception {
         Length partHeight = getSafePartHeight(part);
         Location placementLocationPart = placementLocation.add(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
+        // null part means discarding. 
+        String partId = (part != null ? part.getId() : "discard");
         if (isPartHeightProbingNeeded(part)) {
-            boolean partHeightProbing = part.isPartHeightUnknown();
+            boolean partHeightProbing = (part != null && part.isPartHeightUnknown());
             // Calculate the probe starting location.
             moveAboveProbingLocation(placementLocationPart);
 
@@ -291,7 +297,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             Configuration.get().getScripting().on("Nozzle.BeforePlaceProbe", globals);
 
             Length depthZ;
-            if (partHeightProbing) {
+            if (part == null || partHeightProbing) {
                 // We're probing for the part height.
                 depthZ = nozzleTip.getMaxPartHeight();
             }
@@ -305,29 +311,32 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             if (partHeightProbing) { 
                 // Part height is difference to placement location (part is above it). 
                 partHeight = probedLocation.subtract(placementLocation).getLengthZ();
-                Logger.info("Nozzle "+getName()+" probed part "+part.getId()+" height at "+partHeight);
+                Logger.info("Nozzle "+getName()+" probed part "+partId+" height at "+partHeight);
                 if (partHeight.getValue() <= 0) {
-                    throw new Exception("Part height "+part.getId()+" probing by nozzle "+getName()+" failed (returned negative height). Check PCB Z and probing adjustment.");
+                    throw new Exception("Part height "+partId+" probing by nozzle "+getName()+" failed (returned negative height). Check PCB Z and probing adjustment.");
                 }
                 part.setHeight(partHeight);
                 offsetZ = new Length(0, LengthUnit.Millimeters);
             }
             else {
                 offsetZ = probedLocation.subtract(placementLocationPart).getLengthZ();
-                Logger.debug("Nozzle "+getName()+" probed part "+part.getId()+" height at offset "+offsetZ);
+                Logger.debug("Nozzle "+getName()+" probed part "+partId+" height at offset "+offsetZ);
             }
             // Store the probed location offset.
-            probedPartHeightOffsets.put(part.getId(), offsetZ);
+            if (part != null) {
+                probedPartHeightOffsets.put(partId, offsetZ);
+            }
 
+            // Retract.
             contactProbe(false, contactProbeDepthZ);
 
             Configuration.get().getScripting().on("Nozzle.AfterPlaceProbe", globals);
         }
         else {
-            Length offsetZ = probedPartHeightOffsets.get(part.getId());
+            Length offsetZ = probedPartHeightOffsets.get(partId);
             if (offsetZ != null) {
                 // Apply the probed offset.
-                Logger.trace("Nozzle "+getName()+" applies part "+part.getId()+" height offset "+offsetZ);
+                Logger.trace("Nozzle "+getName()+" applies part "+partId+" height offset "+offsetZ);
                 placementLocationPart = placementLocationPart.add(new Location(offsetZ .getUnits(), 0, 0, offsetZ.getValue(), 0));
                 MovableUtils.moveToLocationAtSafeZ(this, placementLocationPart);
             }
