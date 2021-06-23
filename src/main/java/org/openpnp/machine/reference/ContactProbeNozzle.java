@@ -298,8 +298,8 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
             Length depthZ;
             if (part == null || partHeightProbing) {
-                // We're probing for the part height.
-                depthZ = nozzleTip.getMaxPartHeight();
+                // We're probing for the part height, plus probe depth.
+                depthZ = nozzleTip.getMaxPartHeight().add(contactProbeDepthZ);
             }
             else {
                 depthZ = contactProbeDepthZ;
@@ -441,7 +441,8 @@ public class ContactProbeNozzle extends ReferenceNozzle {
      * @throws Exception
      */
     public void moveAboveProbingLocation(Location nominalLocation) throws Exception {
-        nominalLocation = nominalLocation.add(new Location(contactProbeStartOffsetZ .getUnits(), 0, 0, contactProbeStartOffsetZ.getValue(), 0));
+        nominalLocation = nominalLocation.add(
+                new Location(contactProbeStartOffsetZ.getUnits(), 0, 0, contactProbeStartOffsetZ.getValue(), 0));
         MovableUtils.moveToLocationAtSafeZ(this, nominalLocation);
     }
 
