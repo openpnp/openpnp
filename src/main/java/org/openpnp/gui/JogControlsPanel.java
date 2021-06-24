@@ -63,8 +63,8 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractNozzle;
-import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.BeanUtils;
+import org.openpnp.util.Cycles;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -631,7 +631,7 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Nozzle nozzle = machineControlsPanel.getSelectedNozzle();
-                AbstractPnpJobProcessor.discard(nozzle);
+                Cycles.discard(nozzle);
             });
         }
     };
