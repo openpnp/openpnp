@@ -74,10 +74,10 @@ public class CameraCalibrationUtils {
      * the fact that it is known that the rotation of the camera WRT the test patterns is constant
      * and that the Z height of the camera is also constant for all test patterns.
      * 
-     * @param testPattern3dPoints - a numberOfTestPatterns X numberOfPointsPerTestPattern X 3 array
+     * @param testPattern3dPoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 3 array
      * containing the 3D machine coordinates at which the corresponding point in 
      * testPatternImagePoints was collected.
-     * @param testPatternImagePoints - a numberOfTestPatterns X numberOfPointsPerTestPattern X 2 
+     * @param testPatternImagePoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 2 
      * array containing the 2D image coordinates of the corresponding point in testPattern3dPoints.
      * @param starting - a 13+2*numberOfTestPatterns element array containing the initial values of
      * the camera parameters to be estimated in the following order: fx, fy, cx, cy, k1, k2, p1, p2,
@@ -103,10 +103,10 @@ public class CameraCalibrationUtils {
      * the fact that it is known that the rotation of the camera WRT the test patterns is constant
      * and that the Z height of the camera is also constant for all test patterns.
      * 
-     * @param testPattern3dPoints - a numberOfTestPatterns X numberOfPointsPerTestPattern X 3 array
+     * @param testPattern3dPoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 3 array
      * containing the 3D machine coordinates at which the corresponding point in 
      * testPatternImagePoints was collected.
-     * @param testPatternImagePoints - a numberOfTestPatterns X numberOfPointsPerTestPattern X 2 
+     * @param testPatternImagePoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 2 
      * array containing the 2D image coordinates of the corresponding point in testPattern3dPoints.
      * @param starting - a 13+2*numberOfTestPatterns element array containing the initial values of
      * the camera parameters to be estimated in the following order: fx, fy, cx, cy, k1, k2, p1, p2,
@@ -117,7 +117,7 @@ public class CameraCalibrationUtils {
      * coordinate; and cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1], and
      * cam_y[numberOfTestPatterns-1] are the camera X/Y coordinates for each test pattern.
      * @param flags - Flags used to force certain parameters be retained from the initial starting
-     * values. One or more of the follow flags added together: FIX_ASPECT_RATIO, FIX_CENTER_POINT,
+     * values. Can be one or more of the follow added together: FIX_ASPECT_RATIO, FIX_CENTER_POINT,
      * FIX_DISTORTION_COEFFICENTS, and FIX_ROTATION.
      * @return a 13+2*numberOfTestPatterns element array containing the best fit camera parameters
      * in the same order as the starting parameter.
@@ -141,8 +141,13 @@ public class CameraCalibrationUtils {
         //help prevent any points that are extreme outliers due to measurement errors from 
         //distorting the results.
         for (int attempt=0; attempt<2; attempt++) {
+            //The model is used to compute the modeled 2D image points as well as the Jacobian (the
+            //derivatives of each modeled point wrt each camera parameter).  Any points in
+            //outlierPoints are omitted from the model.
             CalibrationModel model = new CalibrationModel(testPattern3dPoints, outlierPoints, flags);
             
+            //A vector of the observed 2D image points (in x0, y0, x1, y1, ... order) is created
+            //omitting any in outlierPoints
             RealVector observed = new ArrayRealVector();
             int iPoint = 0;
             for (int i=0; i<numberOfTestPatterns; i++) {
@@ -159,6 +164,7 @@ public class CameraCalibrationUtils {
             ConvergenceChecker<LeastSquaresProblem.Evaluation> checker = 
                     LeastSquaresFactory.evaluationChecker(new SimpleVectorValueChecker(1e-6, 1e-8));
             
+            //The problem in a
             LeastSquaresProblem lsp = LeastSquaresFactory.create(model, observed, start, checker, maxEvaluations, maxIterations);
             
             optimum = optimizer.optimize(lsp);
@@ -168,14 +174,15 @@ public class CameraCalibrationUtils {
             Logger.trace("residuals = " + optimum.getResiduals().toString());
             Logger.trace("parameters = " + optimum.getPoint().toString());
             
-            double varianceThresholdForRejectingOutliers = Math.pow(
-                    sigmaThresholdForRejectingOutliers * optimum.getRMS(), 2);
-                    
             if (outlierPoints.isEmpty()) {
+                double varianceThresholdForRejectingOutliers = Math.pow(
+                        sigmaThresholdForRejectingOutliers * optimum.getRMS(), 2);
+                        
                 double[] residuals = optimum.getResiduals().toArray();
                 for (int i=0; i<residuals.length; i++) {
                     if (residuals[i]*residuals[i] > varianceThresholdForRejectingOutliers) {
-                        //reject the point if either X or Y variance exceeds the threshold
+                        //reject the point if either X or Y variance exceeds the threshold (the even
+                        //i's are the X'es and the odd i's are the Y's)
                         outlierPoints.add(i/2);
                     }
                 }
@@ -199,6 +206,12 @@ public class CameraCalibrationUtils {
         return ans.toArray();
     }
     
+    /**
+     * This is the camera calibration model. It implements the MultivariateJacobianFunction
+     * interface to return the modeled 2D image points as well as the Jacobian wrt the model
+     * parameters. 
+     *
+     */
     private static class CalibrationModel implements MultivariateJacobianFunction {
 
         double[][][] testPattern3dPoints;
@@ -209,6 +222,17 @@ public class CameraCalibrationUtils {
         TreeSet<Integer> outlierPoints;
         int flags;
         
+        /**
+         * Constructor for the calibration model
+         * @param testPattern3dPoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 3 
+         * array containing the 3D machine coordinates at which the corresponding image points were 
+         * collected
+         * @param outlierPoints - a set indices to image point outliers that should be excluded 
+         * from the model
+         * @param flags - Flags used to force certain parameters be retained from the initial
+         * starting values. Can be one or more of the follow added together: FIX_ASPECT_RATIO, 
+         * FIX_CENTER_POINT, FIX_DISTORTION_COEFFICENTS, and FIX_ROTATION.
+         */
         public CalibrationModel(double[][][] testPattern3dPoints, TreeSet<Integer> outlierPoints, int flags) {
             this.outlierPoints = outlierPoints;
             this.flags = flags;
@@ -239,34 +263,44 @@ public class CameraCalibrationUtils {
             }
         }
         
+        /**
+         * This method is called whenever the solver needs to evaluate the model to obtain the 
+         * modeled 2D image points and/or their Jacobian
+         * @param cameraParameters - the camera parameters to use when evaluating the model
+         * @return the modeled 2D image points and their Jacobian evaluated at the specified set of
+         * camera parameters
+         */
         @Override
-        public Pair<RealVector, RealMatrix> value(RealVector point) {
-            //point order is fx, fy, cx, cy, k1, k2, p1, p2, k3, Rx, Ry, Rz, cam_z, 
+        public Pair<RealVector, RealMatrix> value(RealVector cameraParameters) {
+            //parameter order is fx, fy, cx, cy, k1, k2, p1, p2, k3, Rx, Ry, Rz, cam_z, 
             //cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1], cam_y[numberOfTestPatterns-1]
             RealVector funcValue = MatrixUtils.createRealVector(new double[2*totalNumberOfPoints]);
             RealMatrix funcJacobian = MatrixUtils.createRealMatrix(2*totalNumberOfPoints, numberOfParameters);
-            double fx = point.getEntry(0);
+            double fx = cameraParameters.getEntry(0);
             double fy;
             if ((flags & FIX_ASPECT_RATIO) == 0) {
-                fy = point.getEntry(1);
+                fy = cameraParameters.getEntry(1);
             }
             else {
-                fy = aspectRatio * point.getEntry(0);
+                fy = aspectRatio * cameraParameters.getEntry(0);
             }
-            double cx = point.getEntry(2);
-            double cy = point.getEntry(3);
-            double k1 = point.getEntry(4);
-            double k2 = point.getEntry(5);
-            double p1 = point.getEntry(6);
-            double p2 = point.getEntry(7);
-            double k3 = point.getEntry(8);
-            double Rx = point.getEntry(9);
-            double Ry = point.getEntry(10);
-            double Rz = point.getEntry(11);
+            double cx = cameraParameters.getEntry(2);
+            double cy = cameraParameters.getEntry(3);
+            double k1 = cameraParameters.getEntry(4);
+            double k2 = cameraParameters.getEntry(5);
+            double p1 = cameraParameters.getEntry(6);
+            double p2 = cameraParameters.getEntry(7);
+            double k3 = cameraParameters.getEntry(8);
+            double Rx = cameraParameters.getEntry(9);
+            double Ry = cameraParameters.getEntry(10);
+            double Rz = cameraParameters.getEntry(11);
             if (Rx==0 && Ry==0 && Rz == 0) {
                 Rz = 1e-6;
             }
-            double cam_z = point.getEntry(12);
+            double cam_z = cameraParameters.getEntry(12);
+            
+            //Note: all variables of the form tempnnn are the result of common subexpression
+            //optimization performed in SageMath
             double temp010 = Rz*Rz;
             double temp009 = Ry*Ry;
             double temp008 = Rx*Rx;
@@ -333,8 +367,8 @@ public class CameraCalibrationUtils {
                 for (int iPt=0; iPt<testPattern3dPoints[iTP].length; iPt++) {
                     if (!outlierPoints.contains(iPoint)) {
                         double temp023 = cam_z - testPattern3dPoints[iTP][iPt][2];
-                        double temp022 = point.getEntry(14+2*iTP) - testPattern3dPoints[iTP][iPt][1];
-                        double temp021 = point.getEntry(13+2*iTP) - testPattern3dPoints[iTP][iPt][0];
+                        double temp022 = cameraParameters.getEntry(14+2*iTP) - testPattern3dPoints[iTP][iPt][1];
+                        double temp021 = cameraParameters.getEntry(13+2*iTP) - testPattern3dPoints[iTP][iPt][0];
                         double temp026 = temp021*temp027 + temp022*temp029 + temp023*temp031;
                         double temp043 = 1.0/temp026;
                         double temp025 = temp043*temp043;
@@ -421,8 +455,10 @@ public class CameraCalibrationUtils {
                         double temp002 = 3*temp003*temp025 + temp024;
                         double temp001 = 2*p1*temp004*temp025*temp033 + temp004*temp038*temp043 + p2*temp002;
                         
+                        //the x component of the modeled image 2D point
                         funcValue.setEntry(rowIdx, fx*temp001 + cx);
                         
+                        //the partial derivatives of x wrt to each of the camera parameters
                         funcJacobian.setEntry(rowIdx, 0, temp001);
                         funcJacobian.setEntry(rowIdx, 1, 0);
                         funcJacobian.setEntry(rowIdx, 2, 1*allowCenterToChange);
@@ -458,8 +494,10 @@ public class CameraCalibrationUtils {
                                 2*(3*temp004*temp014*temp025 - 3*temp003*temp029*temp076 + temp131 + temp133)*p2)*fx);
                         rowIdx++;
                         
+                        //the y component of the modeled image 2D point
                         funcValue.setEntry(rowIdx, fy*temp044 + cy);
                         
+                        //the partial derivatives of y wrt to each of the camera parameters
                         funcJacobian.setEntry(rowIdx, 0, 0);
                         if ((flags & FIX_ASPECT_RATIO) == 0) {
                             funcJacobian.setEntry(rowIdx, 0, 0);
@@ -510,8 +548,47 @@ public class CameraCalibrationUtils {
         
     }
     
-    public static Mat computeRectificationMatrix(Mat rotate_m_c, Mat vect_m_c_m, Mat rotate_m_cHat, Mat vect_m_cHat_m, double defaultZ) {
-        //The rectification matrix converts normalized camera coordinates to camera hat coordinates
+    /**
+     * Computes the rectification matrix that converts normalized physical camera coordinates to
+     * the virtual camera coordinates
+     * @param rotate_m_c - the 3x3 rotation matrix that converts vector components from the machine
+     * coordinate system to the physical camera coordinate system
+     * @param vect_m_c_m - the 3x1 vector from the machine origin to the physical camera origin with
+     * components represented in the machine coordinate system
+     * @param rotate_m_cHat - the 3x3 rotation matrix that converts vector components from the 
+     * machine coordinate system to the virtual camera coordinate system
+     * @param vect_m_cHat_m - the 3x1 vector from the machine origin to the virtual camera origin 
+     * with components represented in the machine coordinate system
+     * @param defaultZ - the machine Z coordinate, in millimeters, that is used as the default
+     * imaging height 
+     * @return
+     */
+    public static Mat computeRectificationMatrix(Mat rotate_m_c, Mat vect_m_c_m, Mat rotate_m_cHat, 
+            Mat vect_m_cHat_m, double defaultZ) {
+        //Compute the height of the physical camera above defaultZ
+        double h = vect_m_c_m.get(2, 0)[0] - defaultZ;
+        
+        //Compute the 3x3 rotation matrix that converts vector components from physical camera 
+        //coordinate system to the virtual camera coordinate system
+        Mat rotate_c_cHat = Mat.eye(3, 3, CvType.CV_64FC1);
+        //rotate_c_cHat = rotate_m_cHat * rotate_m_c.t()
+        Core.gemm(rotate_m_cHat, rotate_m_c.t(), 1, rotate_m_c, 0, rotate_c_cHat);
+        
+        //Compute the vector from the virtual camera origin to the physical camera origin with
+        //components represented in the machine coordinate system
+        Mat vect_cHat_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
+        //vect_cHat_c_m = vect_m_c_m - vect_m_cHat_m
+        Core.subtract(vect_m_c_m, vect_m_cHat_m, vect_cHat_c_m);
+        
+        //Compute the vector from the virtual camera origin to the physical camera origin with
+        //components represented in the virtual camera coordinate system
+        Mat vect_cHat_c_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
+        //vect_cHat_c_cHat = rotate_m_cHat*vect_cHat_c_m
+        Core.gemm(rotate_m_cHat, vect_cHat_c_m, 1, vect_cHat_c_m, 0, vect_cHat_c_cHat);
+        
+        //A set of normalized physical camera points is chosen, quantity and the specific points are
+        //not important although at least four of the points need to form a quadrilateral.  Note
+        //that the Z coordinate of all these points is assumed to be 1
         MatOfPoint2f cameraPoints = new MatOfPoint2f();
         cameraPoints.push_back(new MatOfPoint2f(new Point(0, 0)));
         cameraPoints.push_back(new MatOfPoint2f(new Point(-1000, -1000)));
@@ -519,61 +596,56 @@ public class CameraCalibrationUtils {
         cameraPoints.push_back(new MatOfPoint2f(new Point(+1000, +1000)));
         cameraPoints.push_back(new MatOfPoint2f(new Point(-1000, +1000)));
         
-        //Compute the height of the camera above defaultZ
-        double h = vect_m_c_m.get(2, 0)[0] - defaultZ;
-        
-        Mat rotate_c_cHat = Mat.eye(3, 3, CvType.CV_64FC1);
-        //rotate_c_cHat = rotate_m_cHat * rotate_m_c.t()
-        Core.gemm(rotate_m_cHat, rotate_m_c.t(), 1, rotate_m_c, 0, rotate_c_cHat);
-        
-        Mat vect_cHat_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
-        //vect_cHat_c_m = vect_m_c_m - vect_m_cHat_m
-        Core.subtract(vect_m_c_m, vect_m_cHat_m, vect_cHat_c_m);
-        
-        Mat vect_cHat_c_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
-        //vect_cHat_c_cHat = rotate_m_cHat*vect_cHat_c_m
-        Core.gemm(rotate_m_cHat, vect_cHat_c_m, 1, vect_cHat_c_m, 0, vect_cHat_c_cHat);
-        
         MatOfPoint2f cameraHatPoints = new MatOfPoint2f();
         
+        //For each of the normalized physical camera points, compute its normalized coordinates in 
+        //the virtual camera's coordinate system 
         for (int i=0; i<cameraPoints.rows(); i++) {
-            Mat vect_c_pPrime_c = Mat.ones(3, 1, CvType.CV_64FC1);
+            //The normalized physical camera point is designated as point p'.  Construct a vector
+            //from the physical camera origin to p' with components represented in the physical
+            //camera's coordinate system
+            Mat vect_c_pPrime_c = Mat.ones(3, 1, CvType.CV_64FC1); //The z coordinate need to be 1
             vect_c_pPrime_c.put(0, 0, cameraPoints.get(i, 0));
             Logger.trace("vect_c_pPrime_c = " + vect_c_pPrime_c.dump());
 
-            
+            //Convert the vector's components to be represented in the virtual camera's coordinate
+            //system
             Mat vect_c_pPrime_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
             //vect_c_pPrime_cHat = rotate_c_cHat * vect_c_pPrime_c
             Core.gemm(rotate_c_cHat, vect_c_pPrime_c, 1, vect_c_pPrime_c, 0, vect_c_pPrime_cHat);
             vect_c_pPrime_c.release();
             Logger.trace("vect_c_pPrime_cHat = " + vect_c_pPrime_cHat.dump());
             
-            Mat vect_c_p_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
             //Scale the vector so that its Z component is the height of the camera above defaultZ.
-            //This will place the end of the vector on the defaultZ plane.
+            //This will place the tip of the vector on the defaultZ plane. This point on the 
+            //default Z plane is designated as point p.
+            Mat vect_c_p_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
             //vect_c_p_cHat = h/vect_c_pPrime_cHat[z] * vect_c_pPrime_cHat
             Core.multiply(vect_c_pPrime_cHat, new Scalar(h/vect_c_pPrime_cHat.get(2, 0)[0]), vect_c_p_cHat);
             vect_c_pPrime_cHat.release();
             Logger.trace("vect_c_p_cHat = " + vect_c_p_cHat.dump());
             
+            //Construct a vector from the virtual camera's origin to point p with components
+            //represented in the virtual camera's coordinate system
             Mat vect_cHat_p_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
             //vect_cHat_p_cHat = vect_c_p_cHat + vect_cHat_c_cHat
             Core.add(vect_c_p_cHat, vect_cHat_c_cHat, vect_cHat_p_cHat);
             vect_c_p_cHat.release();
             Logger.trace("vect_cHat_p_cHat = " + vect_cHat_p_cHat.dump());
             
-            Mat vect_cHat_pHatPrime_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
             //Normalize the vector so that its Z component is 1
+            Mat vect_cHat_pHatPrime_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
             Core.multiply(vect_cHat_p_cHat, new Scalar(1.0/vect_cHat_p_cHat.get(2, 0)[0]), vect_cHat_pHatPrime_cHat);
             vect_cHat_p_cHat.release();
             Logger.trace("vect_cHat_pHatPrime_cHat = " + vect_cHat_pHatPrime_cHat.dump());
 
+            //Save the normalized point
             cameraHatPoints.push_back(new MatOfPoint2f(new Point(vect_cHat_pHatPrime_cHat.get(0, 0)[0], vect_cHat_pHatPrime_cHat.get(1, 0)[0])));
             vect_cHat_pHatPrime_cHat.release();
         }
         
-        //The rectification matrix is then just the homography matrix that takes the camera points
-        //to the camera hat points
+        //The rectification matrix is the homography matrix that takes the physical camera points
+        //to the virtual camera points
         Mat rectification = Calib3d.findHomography(cameraPoints, cameraHatPoints);
         
         //Cleanup
@@ -585,4 +657,264 @@ public class CameraCalibrationUtils {
         
         return rectification;
     }
+    
+    /**
+     * Computes the virtual camera matrix
+     * @param physicalCameraMatrix - the physical camera's intrinsic matrix
+     * @param distortionCoefficients - the physical camera's lens distortion coefficients
+     * @param rectification - the rectification matrix that takes the physical camera points to the
+     * virtual camera points
+     * @param size - the physical camera's image size
+     * @param alpha - a free scaling parameter in the range 0 to 1 inclusive.  A value of a zero 
+     * ensures only valid image pixels are displayed but may result in the loss of some valid pixels
+     * around the edge of the image.  A value of one ensure all valid pixels are displayed but that
+     * may result in some invalid (usually black) pixels being displayed around the edge of the
+     * image. 
+     * @param keepPrincipalPoint - if set true, the virtual camera's principal point is set to match
+     * that of the physical camera's principal point 
+     * @return the virtual camera's intrinsic camera matrix
+     */
+    public static Mat computeVirtualCameraMatrix(Mat physicalCameraMatrix, Mat distortionCoefficients, 
+            Mat rectification, Size size, double alpha, boolean keepPrincipalPoint) {
+        //Generate a set of points around the outer perimeter of the distorted unrectifed image
+        int numberOfPointsPerSide = 250;
+        MatOfPoint2f distortedPoints = new MatOfPoint2f();
+        double xStep = (size.width - 1)/(numberOfPointsPerSide - 1);
+        double yStep = (size.height - 1)/(numberOfPointsPerSide - 1);
+        for (int iSidePt=0; iSidePt<numberOfPointsPerSide - 1; iSidePt++) {
+            //down the left side
+            distortedPoints.push_back(new MatOfPoint2f(
+                    new org.opencv.core.Point(0, iSidePt*yStep)));
+            
+            //left-to-right across the bottom
+            distortedPoints.push_back(new MatOfPoint2f(
+                    new org.opencv.core.Point(iSidePt*xStep, size.height - 1)));
+            
+            //up the right side
+            distortedPoints.push_back(new MatOfPoint2f(
+                    new org.opencv.core.Point(size.width - 1, (numberOfPointsPerSide - 1 - iSidePt)*yStep)));
+            
+            //right-to-left across the top
+            distortedPoints.push_back(new MatOfPoint2f(
+                    new org.opencv.core.Point((numberOfPointsPerSide - 1 - iSidePt)*xStep, 0)));
+        }
+//        Logger.trace("distortedPoints = " + distortedPoints.dump());
+
+        MatOfPoint2f undistortedPoints = new MatOfPoint2f();
+       
+        //Compute the corresponding points in the undistorted and rectified image
+        Calib3d.undistortPoints(distortedPoints, undistortedPoints, physicalCameraMatrix, 
+                distortionCoefficients, rectification);
+        distortedPoints.release();
+//        Logger.trace("undistortedPoints = " + undistortedPoints.dump());
+        
+        distortedPoints = new MatOfPoint2f();
+        distortedPoints.push_back(new MatOfPoint2f(
+                new org.opencv.core.Point(physicalCameraMatrix.get(0, 2)[0], 
+                        physicalCameraMatrix.get(1, 2)[0])));
+
+        MatOfPoint2f centerPoint = new MatOfPoint2f();
+       
+        //Compute the corresponding points in the undistorted and rectified image
+        Calib3d.undistortPoints(distortedPoints, centerPoint, physicalCameraMatrix, 
+                distortionCoefficients, rectification);
+        distortedPoints.release();
+        double centerX = centerPoint.get(0,  0)[0];
+        double centerY = centerPoint.get(0,  0)[1];
+        centerPoint.release();
+        
+        double outerMaxX = Double.NEGATIVE_INFINITY;
+        double outerMinX = Double.POSITIVE_INFINITY;
+        double outerMaxY = Double.NEGATIVE_INFINITY;
+        double outerMinY = Double.POSITIVE_INFINITY;
+        
+        for (int i=0; i<undistortedPoints.rows(); i++) {
+            double[] pt = undistortedPoints.get(i, 0);
+            if (pt[0] > outerMaxX) {
+                outerMaxX = pt[0];
+            }
+            else if (pt[0] < outerMinX) {
+                outerMinX = pt[0];
+            }
+            if (pt[1] > outerMaxY) {
+                outerMaxY = pt[1];
+            }
+            else if (pt[1] < outerMinY) {
+                outerMinY = pt[1];
+            }
+        }
+        
+        if (keepPrincipalPoint) {
+            double outer = Math.max(outerMaxX - centerX, centerX - outerMinX);
+            outerMaxX = centerX + outer;
+            outerMinX = centerX - outer;
+            outer = Math.max(outerMaxY - centerY, centerY - outerMinY);
+            outerMaxY = centerY + outer;
+            outerMinY = centerY - outer;
+        }
+        
+        double aspectRatio = size.height/size.width;
+        
+        double outerCenterX = (outerMaxX + outerMinX) / 2;
+        double outerCenterY = (outerMaxY + outerMinY) / 2;
+//        Logger.trace("outer center = (" + outerCenterX + ", " + outerCenterY + ")" );
+        
+        double outerF;
+        if ((outerMaxY - outerMinY)/(outerMaxX - outerMinX) >= aspectRatio) {
+            //Constrained by the height
+            outerF = size.height / (outerMaxY - outerMinY);
+            double newWidth = (outerMaxY - outerMinY)/aspectRatio;
+            outerMinX = outerCenterX - newWidth/2;
+            outerMaxX = outerCenterX + newWidth/2;
+        }
+        else {
+            //Constrained by the width
+            outerF = size.width / (outerMaxX - outerMinX);
+            double newHeight = (outerMaxY - outerMinY)/aspectRatio;
+            outerMinY = outerCenterY - newHeight/2;
+            outerMaxY = outerCenterY + newHeight/2;
+        }
+//        Logger.trace("outerX extent = (" + outerMinX + ", " + outerMaxX + ")" );
+//        Logger.trace("outerY extent = (" + outerMinY + ", " + outerMaxY + ")" );
+        
+        double outerCx = (size.width-1)/2 - outerF*outerCenterX;
+        double outerCy = (size.height-1)/2 - outerF*outerCenterY;
+        
+        
+        double innerMinX = Double.NEGATIVE_INFINITY;
+        double innerMaxX = Double.POSITIVE_INFINITY;
+        double innerMinY = Double.NEGATIVE_INFINITY;
+        double innerMaxY = Double.POSITIVE_INFINITY;
+        
+        //The following assumes the center of the outer bounding rectangle falls within the
+        //interior of the undistorted and rectified image boundary (which is where we need 
+        //to start)
+        double innerCenterX = outerCenterX;
+        double innerCenterY = outerCenterY;
+        
+        double angle = Math.atan2(size.height, size.width);
+        
+        boolean fullyConstrained = false;
+        double maxWidth = 0;
+        double maxHeight = 0;
+        
+        while (!fullyConstrained) {
+            innerMinX = Double.NEGATIVE_INFINITY;
+            innerMaxX = Double.POSITIVE_INFINITY;
+            innerMinY = Double.NEGATIVE_INFINITY;
+            innerMaxY = Double.POSITIVE_INFINITY;
+            
+            for (int i=0; i<undistortedPoints.rows(); i++) {
+                double[] pt = undistortedPoints.get(i, 0);
+                double ptAngle = Math.atan2((pt[1] - innerCenterY), (pt[0] - innerCenterX));
+                
+                //Make ptAngle in the range [-angle, 2*PI-angle)
+                if (ptAngle < -angle) {
+                    ptAngle += 2*Math.PI;
+                }
+                
+                if ((ptAngle >= -angle) && (ptAngle < angle)) {
+                    //right side
+                    if (pt[0] < innerMaxX) {
+                        innerMaxX = pt[0];
+                    }
+                }
+                else if ((ptAngle >= angle) && (ptAngle < Math.PI - angle)) {
+                    //bottom side
+                    if (pt[1] < innerMaxY) {
+                        innerMaxY = pt[1];
+                    }
+                }
+                else if ((ptAngle >= Math.PI - angle) && (ptAngle < Math.PI + angle)) {
+                    //left side
+                    if (pt[0] > innerMinX) {
+                        innerMinX = pt[0];
+                    }
+                }
+                else { //if ((ptAngle >= Math.PI + angle) && (ptAngle < 2*Math.PI - angle)) {
+                    //top side
+                    if (pt[1] > innerMinY) {
+                        innerMinY = pt[1];
+                    }
+                }
+            }
+            
+            if (keepPrincipalPoint) {
+                double inner = Math.min(innerMaxX - centerX, centerX - innerMinX);
+                innerMaxX = centerX + inner;
+                innerMinX = centerX - inner;
+                inner = Math.min(innerMaxY - centerY, centerY - innerMinY);
+                innerMaxY = centerY + inner;
+                innerMinY = centerY - inner;
+            }
+
+            double innerCenterOffsetX = (innerMaxX + innerMinX)/2 - innerCenterX;
+            double innerCenterOffsetY = (innerMaxY + innerMinY)/2 - innerCenterY;
+            
+            double newHeight;
+            double newWidth;
+            
+            if ((innerMaxY - innerMinY)/(innerMaxX - innerMinX) >= aspectRatio) {
+                //Constrained by the width, move the center up/down
+                newWidth = innerMaxX - innerMinX;
+                newHeight = newWidth*aspectRatio;
+                innerMaxY = (innerMaxY + innerMinY)/2 + newHeight/2;
+                innerMinY = (innerMaxY + innerMinY)/2 - newHeight/2;
+            }
+            else {
+                //Constrained by the height, move the center left/right
+                newHeight = innerMaxY - innerMinY;
+                newWidth = newHeight/aspectRatio;
+                innerMaxX = (innerMaxX + innerMinX)/2 + newWidth/2;
+                innerMinX = (innerMaxX + innerMinX)/2 - newWidth/2;
+            }
+//            Logger.trace("innerX extent = (" + innerMinX + ", " + innerMaxX + ")" );
+//            Logger.trace("innerY extent = (" + innerMinY + ", " + innerMaxY + ")" );
+            
+            innerCenterX += innerCenterOffsetX;
+            innerCenterY += innerCenterOffsetY;
+//            Logger.trace("inner center = (" + innerCenterX + ", " + innerCenterY + ")" );
+            
+            fullyConstrained = (Math.abs(innerCenterOffsetX) < 0.0001) &&
+                    (Math.abs(innerCenterOffsetY) < 0.0001);
+            if (newWidth > maxWidth) {
+                maxWidth = newWidth;
+                fullyConstrained = false;
+            }
+            if (newHeight > maxHeight) {
+                maxHeight = newHeight;
+                fullyConstrained = false;
+            }
+//            Logger.trace("width = " + newWidth + ", " + maxWidth);
+//            Logger.trace("height = " + newHeight + ", " + maxHeight);
+        }
+        undistortedPoints.release();
+        
+        double innerF;
+        
+        if ((innerMaxY - innerMinY)/(innerMaxX - innerMinX) >= aspectRatio) {
+            //Constrained by the width
+            innerF = size.width / (innerMaxX - innerMinX);
+        }
+        else {
+            //Constrained by the height
+            innerF = size.height / (innerMaxY - innerMinY);
+        }
+        double innerCx = (size.width-1)/2 - innerF*innerCenterX;
+        double innerCy = (size.height-1)/2 - innerF*innerCenterY;
+        
+        double f = outerF*alpha + innerF*(1-alpha);
+        double cx = outerCx*alpha + innerCx*(1-alpha);
+        double cy = outerCy*alpha + innerCy*(1-alpha);
+        
+        Mat ret = Mat.eye(3, 3, CvType.CV_64FC1);
+        
+        ret.put(0, 0, f);
+        ret.put(0, 2, cx);
+        ret.put(1, 1, f);
+        ret.put(1, 2, cy);
+
+        return ret;
+    }
+
 }

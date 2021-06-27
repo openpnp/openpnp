@@ -108,7 +108,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                         chckbxEnable = new JCheckBox("Use Calibration");
                         chckbxEnable.addActionListener(enableCalibration);
                         
-                        lblNewLabel_1 = new JLabel("Default Working Plane");
+                        lblNewLabel_1 = new JLabel("Default Working Plane Z");
                         panelCameraCalibration.add(lblNewLabel_1, "2, 4, right, default");
                         
                         textFieldDefaultZ = new JTextField();
@@ -143,12 +143,12 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                         chckbxUseSavedData.setEnabled(referenceCamera.getAdvancedCalibration().getSavedTestPattern3dPointsList() != null);
                         panelCameraCalibration.add(chckbxUseSavedData, "6, 6");
                         
-                        lblNewLabel = new JLabel("Hide Invalid Pixels");
+                        lblNewLabel = new JLabel("Show Invalid Pixels");
                         lblNewLabel.setToolTipText("<html><p width=\"500\">"
-                                + "A value of zero forces all valid pixels to be displayed but "
-                                + "the edges of the display may show invalid pixels. A value "
-                                + "of 100 forces only valid pixels to be displayed but some "
-                                + "valid pixels may be lost beyond the edge of the display."
+                                + "A value of 0 forces only valid pixels to be displayed but some "
+                                + "valid pixels may be lost beyond the edge of the display. A value"
+                                + " of 100 forces all valid pixels to be displayed but the edges "
+                                + "of the display may show invalid (usually black) pixels. "
                                 + "</p></html>");
                         panelCameraCalibration.add(lblNewLabel, "2, 8");
                         panelCameraCalibration.add(sliderAlpha, "4, 8");
@@ -190,13 +190,13 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     
                         @Override 
                         public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
-                                double[][][] testPatternImagePointsList, double[] testPatternZ, Size size) {
+                                double[][][] testPatternImagePointsList, Size size) {
                             
                             Logger.trace("processResults has been called!");
     
                             referenceCamera.getAdvancedCalibration().processRawCalibrationData(
                                     testPattern3dPointsList, testPatternImagePointsList, 
-                                    testPatternZ, size, referenceCamera.getDefaultZ());
+                                    size, referenceCamera.getDefaultZ());
                             
                             referenceCamera.getAdvancedCalibration().setEnabled(true);
                             
