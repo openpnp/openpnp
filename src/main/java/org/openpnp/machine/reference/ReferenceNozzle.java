@@ -449,16 +449,15 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public Length getSafePartHeight(Part part) {
-        if ((part == null || part.isPartHeightUnknown()) 
-                && nozzleTip != null) {
-            return nozzleTip.getMaxPartHeight();
+        if (part != null) {
+            if (part.isPartHeightUnknown() && nozzleTip != null) {
+                return nozzleTip.getMaxPartHeight();
+            }
+            else {
+                return part.getHeight();
+            }
         }
-        else if (part != null) {
-            return part.getHeight();
-        }
-        else {
-            return new Length(0, LengthUnit.Millimeters);
-        }
+        return new Length(0, LengthUnit.Millimeters);
     }
 
     @Override 
