@@ -213,6 +213,10 @@ public class ReferenceBottomVision implements PartAlignment {
             Logger.debug("Offsets accepted {}", offsets);
             // Calculate cumulative offsets over all the passes.  
             offsets = wantedLocation.subtractWithRotation(nozzleLocation);
+            
+            // subtract visionCenterOffset
+            offsets = offsets.subtract(partSettings.getVisionOffset().rotateXy(wantedAngle));
+
             Logger.debug("Final offsets {}", offsets);
             displayResult(pipeline, part, offsets, camera);
             return new PartAlignment.PartAlignmentOffset(offsets, true);
@@ -259,6 +263,10 @@ public class ReferenceBottomVision implements PartAlignment {
 
             // Set the angle on the offsets.
             offsets = offsets.derive(null, null, null, angleOffset);
+            
+            // subtract visionCenterOffset
+            offsets = offsets.subtract(partSettings.getVisionOffset().rotateXy(offsets.getRotation()));
+            
             Logger.debug("Final offsets {}", offsets);
 
             displayResult(pipeline, part, offsets, camera);
@@ -569,6 +577,9 @@ public class ReferenceBottomVision implements PartAlignment {
         @Attribute(required = false)
         protected MaxRotation maxRotation = MaxRotation.Adjust;
         
+        @Element(required = false)
+        protected Location visionOffset = new Location(LengthUnit.Millimeters);
+        
         @Element
         protected CvPipeline pipeline;
 
@@ -635,5 +646,13 @@ public class ReferenceBottomVision implements PartAlignment {
             this.checkSizeTolerancePercent = checkSizeTolerancePercent;
         }
 
+        public Location getVisionOffset() {
+            return visionOffset;
+        }
+
+        public void setVisionOffset(Location visionOffset) {
+            this.visionOffset = visionOffset.derive(null, null, 0.0, 0.0);
+        }
+        
     }
 }

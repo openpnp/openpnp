@@ -29,6 +29,7 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -127,6 +128,9 @@ public class BlindsFeeder extends ReferenceFeeder {
     private int feedersTotal = 0;
 
     @Attribute(required = false)
+    private String feederGroupName = defaultGroupName;
+
+    @Attribute(required = false)
     private int pocketCount = 0;
 
     @Attribute(required = false)
@@ -167,6 +171,9 @@ public class BlindsFeeder extends ReferenceFeeder {
     private boolean calibrating = false;
     private boolean calibrated = false;
 
+    public static final String defaultGroupName = "Default";
+    private static final List<String> locationGroupNamesList = Arrays.asList(new String[]{defaultGroupName, defaultGroupName.toUpperCase(), "LOCATION", "NONE", ""});
+    
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
             this.setCalibrated(false);
@@ -370,19 +377,20 @@ public class BlindsFeeder extends ReferenceFeeder {
             throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
         }
 
-        // if not yet open, open it
-        if (isCoverClosed()) {
+        // if not yet open, open it (this should rarely be necessary as we likely just picked the part from this feeder;
+        // however if cover opening is needed, it will only work if the machine has multiple nozzles and one is free, 
+        // as cover opening is forbidden, when a part is on he nozzle). 
+        if (!isCoverOpen()) {
             // repeat last feed operation, so that the pickLocation is the last free spot 
             setFeedCount(getFeedCount() - 1); // is immediately increased during feed
             feed(nozzle);
         }
         // ok, now put the part back on the location of the last pick
-        Location putLocation = getPickLocation();
-        MovableUtils.moveToLocationAtSafeZ(nozzle, putLocation);
+        nozzle.moveToPickLocation(this);
         // put the part back
         nozzle.place();
         nozzle.moveToSafeZ();
-        if (!nozzle.isPartOff()) {
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
         // change FeedCount
@@ -1610,6 +1618,35 @@ public class BlindsFeeder extends ReferenceFeeder {
         return false;
     }
 
+    public static List<String> getBlindsFeederGroupNames() {
+        List<String> list = new ArrayList<>();
+        list.add(defaultGroupName);
+        
+        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+            if (feeder instanceof BlindsFeeder) {
+                BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
+                String feederGroupName = blindsFeeder.getFeederGroupName();
+                if (!list.contains(feederGroupName)) {
+                    list.add(feederGroupName);
+                }
+            }
+        }
+        return list;
+    }
+
+    public static List<BlindsFeeder> getBlindsFeedersWithGroupName(String groupName) {
+        List<BlindsFeeder> list = new ArrayList<>();
+        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+            if (feeder instanceof BlindsFeeder) {
+                BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
+                if(blindsFeeder.getFeederGroupName().equals(groupName)) {
+                    list.add(blindsFeeder);
+                }
+            }
+        }
+        return list;
+    }
+
     public static List<BlindsFeeder> getAllBlindsFeeders() {
         // Get all the BlindsFeeder instances on the machine.
         List<BlindsFeeder> list = new ArrayList<>();
@@ -1636,18 +1673,37 @@ public class BlindsFeeder extends ReferenceFeeder {
         // Sort by feeder tape centerline.
         Collections.sort(list, new Comparator<BlindsFeeder>() {
             @Override
-            public int compare(BlindsFeeder feeder1, BlindsFeeder feeder2)  {
-                return new Double(feeder1.getPocketCenterline().getValue())
-                        .compareTo(feeder2.getPocketCenterline().convertToUnits(feeder1.getPocketCenterline().getUnits()).getValue());
+            public int compare(BlindsFeeder feeder1, BlindsFeeder feeder2) {
+                return new Double(feeder1.getPocketCenterline().getValue()).compareTo(feeder2.getPocketCenterline()
+                        .convertToUnits(feeder1.getPocketCenterline().getUnits()).getValue());
             }
         });
         return list;
     }
 
+    public static List<BlindsFeeder> filterFeedersByGroupName(List<BlindsFeeder> feeders, String groupName) {
+        // Get all the feeders with connected by location.
+        List<BlindsFeeder> list = new ArrayList<>();
+        for (Feeder feeder : feeders) {
+            if (feeder instanceof BlindsFeeder) {
+                BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
+                if (blindsFeeder.feederGroupName.equals(groupName)) {
+                    list.add(blindsFeeder);
+                }
+            }
+        }
+        return list;
+    }
+
     public List<BlindsFeeder> getConnectedFeeders() {
         // Get all the feeders with the same fiducial 1 location.
-        return getConnectedFeedersByLocation(fiducial1Location, true);
+        return getConnectedFeeders(fiducial1Location, true);
     }
+
+    public List<BlindsFeeder> getConnectedFeeders(Location location, boolean fiducial1MatchOnly) {
+        List<BlindsFeeder> feeder_list = getConnectedFeedersByLocation(location, fiducial1MatchOnly);
+        return filterFeedersByGroupName(feeder_list, this.feederGroupName);
+   }
 
     private boolean isUpdating = false;
 
@@ -1670,6 +1726,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 }
                 setCalibrated(feeder.calibrated);
                 setVisionEnabled(feeder.visionEnabled);
+                setFeederGroupNameFromOther(feeder.getFeederGroupName());
             }
             finally {
                 isUpdating = false;
@@ -1679,7 +1736,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     private void updateTapeNumbering()    {
         // Renumber the feeder tape lanes.
-        List<BlindsFeeder> list = getConnectedFeedersByLocation(fiducial1Location, true);
+        List<BlindsFeeder> list = getConnectedFeeders(fiducial1Location, true);
         int feedersTotal = list.size();
         int feederNo = 0;
         for (BlindsFeeder feeder : list) {
@@ -1690,7 +1747,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public boolean updateFromConnectedFeeder(Location location, boolean fiducial1MatchOnly) {
         boolean hasMatch = false;
-        for (BlindsFeeder feeder : getConnectedFeedersByLocation(location, fiducial1MatchOnly)) {
+        for (BlindsFeeder feeder : getConnectedFeeders(location, fiducial1MatchOnly)) {
             if (feeder != this) {
                 updateFromConnectedFeeder(feeder);
                 hasMatch = true;
@@ -1715,7 +1772,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 // Transform might have changed.
                 updateFeederToMachineTransform();
                 // Update all the feeders on the same 3D printed holder from this.
-                for (BlindsFeeder feeder : getConnectedFeedersByLocation(location, fiducial1MatchOnly)) {
+                for (BlindsFeeder feeder : getConnectedFeeders(location, fiducial1MatchOnly)) {
                     if (feeder != this) {
                         feeder.updateFromConnectedFeeder(this);
                     }
@@ -2029,6 +2086,73 @@ public class BlindsFeeder extends ReferenceFeeder {
         }
     }
 
+    public String getFeederGroupName() {
+        if (locationGroupNamesList.contains(feederGroupName)) {
+            return defaultGroupName;
+        }
+        return feederGroupName;
+    }
+
+    public void setFeederGroupName(String newFeederGroupName) {
+        // Filter out a no change to group name.
+        if (this.feederGroupName.equals(newFeederGroupName)) {
+            return;
+        }
+
+        String oldName = this.feederGroupName;
+        String proposedGroupName = newFeederGroupName;
+
+        // Check if the group name is one of the location keywords. If so reset name to
+        // default location.
+        if (locationGroupNamesList.contains(newFeederGroupName.toUpperCase())) {
+            proposedGroupName = defaultGroupName;
+        }
+
+        List<BlindsFeeder> connected_feeders = getConnectedFeeders();
+        List<BlindsFeeder> feedersWithNewGroupName = getBlindsFeedersWithGroupName(proposedGroupName);
+        List<String> feederGroupNames = getBlindsFeederGroupNames();
+
+        boolean proposedIsDefault = proposedGroupName.contentEquals(defaultGroupName);
+        boolean proposedIsExistingGroup = feederGroupNames.contains(proposedGroupName);
+
+        boolean locationIsNull = fiducial1Location.equals(nullLocation) || fiducial2Location.equals(nullLocation)
+                || fiducial3Location.equals(nullLocation);
+
+        boolean canJoinNamedGroup = (locationIsNull && (feedersWithNewGroupName.size() > 0));
+
+        boolean canRenameGroup = (!locationIsNull && !proposedIsDefault && !proposedIsExistingGroup);
+
+        boolean singleCanJoinNamedGroup = (!locationIsNull && feederGroupNames.contains(proposedGroupName)
+                && (connected_feeders.size() <= 1));
+
+        boolean canLeaveGroupForDefault = (!locationIsNull && feederGroupNames.contains(oldName)
+                && proposedIsDefault);
+
+        if (canJoinNamedGroup) {
+            BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
+            this.updateFromConnectedFeeder(copyFeeder);
+        } else if (singleCanJoinNamedGroup) {
+            BlindsFeeder copyFeeder = feedersWithNewGroupName.get(0);
+            this.updateFromConnectedFeeder(copyFeeder);
+        } else if (canRenameGroup) {
+            for (BlindsFeeder feeder : connected_feeders) {
+                feeder.setFeederGroupNameFromOther(proposedGroupName);
+            }
+        } else if (canLeaveGroupForDefault) {
+            proposedGroupName = defaultGroupName;
+            this.feederGroupName = proposedGroupName;
+        } else {
+            proposedGroupName = oldName;
+        }
+
+        // Ensure this feeder group is changed if connected feeders is empty.
+        firePropertyChange("feederGroupName", oldName, proposedGroupName);
+    }
+
+    public void setFeederGroupNameFromOther(String newFeederGroupName) {
+        this.feederGroupName = newFeederGroupName;
+    }
+    
     public int getFeedCount() {
         return feedCount;
     }
@@ -2056,7 +2180,6 @@ public class BlindsFeeder extends ReferenceFeeder {
     public int getFeederNo() {
         return feederNo;
     }
-
 
     public void setFeederNo(int feederNo) {
         int oldValue = this.feederNo;

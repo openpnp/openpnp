@@ -456,11 +456,12 @@ public class Motion {
             // Also include the given speed factor.
             effectiveSpeed = (time > 0 ? euclideanTime/time : 1.0) * Math.max(0.01, nominalSpeed);
             euclideanDistance = overallLimits[0];
-            double effectiveSpeedDerivatives = nominalSpeed;
 
             for (Entry<ControllerAxis, Integer> entry : axisIndex.entrySet()) {
+                double effectiveSpeedDerivatives = nominalSpeed;
                 ControllerAxis axis = entry.getKey();
-                double axisFraction = Math.abs(distance.getCoordinate(axis)) // fractional axis distance
+                double d = distance.getCoordinate(axis);
+                double axisFraction = Math.abs(d) // fractional axis distance
                         /euclideanDistance;
                 double sMin = Double.NEGATIVE_INFINITY;
                 double sMax = Double.POSITIVE_INFINITY;
@@ -482,7 +483,8 @@ public class Motion {
                 }
 
                 int options = profileOptions();
-                if (axis.getDriver() != null) {
+                if (d != 0.0 && axis.getDriver() != null) {
+                    // Axis is present in the motion and the driver is set, apply driver restrictions. 
                     if (simpleSCurve) {
                         options |= ProfileOption.SimplifiedSCurve.flag();
                     }
@@ -508,7 +510,7 @@ public class Motion {
 
                 // Compute s0 by distance rather than taking location0, because some axes may have been omitted in location. 
                 double s1 = location1.getCoordinate(axis); 
-                double s0 = s1 - distance.getCoordinate(axis);
+                double s0 = s1 - d;
 
 
                 axesProfiles[entry.getValue()] = new MotionProfile(

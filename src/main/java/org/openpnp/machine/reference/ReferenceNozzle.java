@@ -33,6 +33,7 @@ import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PropertySheetHolder;
@@ -448,15 +449,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public Length getSafePartHeight(Part part) {
-        if (part != null) {
-            if (part.isPartHeightUnknown() && nozzleTip != null) {
-                return nozzleTip.getMaxPartHeight();
-            }
-            else {
-                return part.getHeight();
-            }
+        if ((part == null || part.isPartHeightUnknown()) 
+                && nozzleTip != null) {
+            return nozzleTip.getMaxPartHeight();
         }
-        return new Length(0, LengthUnit.Millimeters);
+        else if (part != null) {
+            return part.getHeight();
+        }
+        else {
+            return new Length(0, LengthUnit.Millimeters);
+        }
     }
 
     @Override 
@@ -609,6 +611,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     // can't automatically recalibrate with manual change - reset() for now
                     this.nozzleTip.getCalibration().reset(this);
                 }
+                waitForCompletion(CompletionType.WaitForStillstand);
                 throw new Exception("Manual NozzleTip "+nt.getName()+" load on Nozzle "+getName()+" required!");
             }
         }
@@ -697,6 +700,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
 
         if (!changerEnabled) {
+            waitForCompletion(CompletionType.WaitForStillstand);
             throw new Exception("Manual NozzleTip "+nt.getName()+" unload from Nozzle "+getName()+" required!");
         }
 

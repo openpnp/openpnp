@@ -1,9 +1,5 @@
 package org.openpnp.spi.base;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -11,6 +7,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor;
+import org.openpnp.util.Cycles;
 
 public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
         implements PnpJobProcessor {
@@ -23,29 +20,14 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
 
 
     /**
-     * Discard the Part, if any, on the given Nozzle. the Nozzle is returned to Safe Z at the end of
-     * the operation.
+     * Discard the Part, if any, on the given Nozzle.
      * 
      * @param nozzle
      * @throws Exception
      */
     public static void discard(Nozzle nozzle) throws JobProcessorException {
-        if (nozzle.getPart() == null) {
-            return;
-        }
-
         try {
-            Map<String, Object> globals = new HashMap<>();
-            globals.put("nozzle", nozzle);
-            Configuration.get().getScripting().on("Job.BeforeDiscard", globals);
-
-            // move to the discard location
-            nozzle.moveToPlacementLocation(Configuration.get().getMachine().getDiscardLocation(), null);
-            // discard the part
-            nozzle.place();
-            nozzle.moveToSafeZ();
-
-            Configuration.get().getScripting().on("Job.AfterDiscard", globals);
+            Cycles.discard(nozzle);
         }
         catch (Exception e) {
             throw new JobProcessorException(nozzle, e);
