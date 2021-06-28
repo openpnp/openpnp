@@ -75,12 +75,18 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(100dlu;default)"),
+                ColumnSpec.decode("max(87dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                ColumnSpec.decode("max(39dlu;default):grow"),},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -96,83 +102,148 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-                lblCalibrationRig = new JLabel("Calibration Rig");
-                panelCameraCalibration.add(lblCalibrationRig, "2, 2, right, default");
+        chckbxAdvancedCalOverride = new JCheckBox("Override old style image transforms and distortion correction settings");
+        chckbxAdvancedCalOverride.setToolTipText("Enable this to use advanced calibration.  Disable this to restore usage of old settings.");
+        chckbxAdvancedCalOverride.addActionListener(overrideAction);
+        panelCameraCalibration.add(chckbxAdvancedCalOverride, "2, 2, 5, 1");
+
+        chckbxEnable = new JCheckBox("Use Calibration");
+        chckbxEnable.setToolTipText("Enable this to use the new image transform and distortion correction settings.  Disable this and no calibration will be applied.");
+        chckbxEnable.addActionListener(enableCalibration);
                 
-                        comboBoxPart = new JComboBox();
-                        comboBoxPart.setModel(new PartsComboBoxModel());
-                        comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-//                        comboBoxPart.setSelectedItem(advancedCalibration.getCalibrationRig());
-                        panelCameraCalibration.add(comboBoxPart, "4, 2, left, default");
-                        
-                        chckbxEnable = new JCheckBox("Use Calibration");
-                        chckbxEnable.addActionListener(enableCalibration);
-                        
-                        lblNewLabel_1 = new JLabel("Default Working Plane Z");
-                        panelCameraCalibration.add(lblNewLabel_1, "2, 4, right, default");
-                        
-                        textFieldDefaultZ = new JTextField();
-                        if (referenceCamera.getLooking() == Looking.Down) {
-                            textFieldDefaultZ.setToolTipText("<html><p width=\"500\">"
-                                + "This is the assumed Z coordinate of objects viewed by the "
-                                + "camera if their true Z coordinate is unknown. Typically this "
-                                + "is set to the Z coordinate of the working surface of the "
-                                + "board(s) to be populated.</p></html>");
-                        }
-                        else {
-                            textFieldDefaultZ.setToolTipText("<html><p width=\"500\">"
-                                    + "This is the Z coordinate to which the bottom surface of "
-                                    + "parts carried by the nozzle will be lowered for visual "
-                                    + "alignment.</p></html>");
-                        }
-                        panelCameraCalibration.add(textFieldDefaultZ, "4, 4, fill, default");
-                        textFieldDefaultZ.setColumns(10);
-                        panelCameraCalibration.add(chckbxEnable, "2, 6");
-                        
-                        sliderAlpha = new JSlider();
-                        sliderAlpha.setMajorTickSpacing(10);
-                        sliderAlpha.setMinorTickSpacing(5);
-                        sliderAlpha.setPaintTicks(true);
-                        sliderAlpha.setPaintLabels(true);
-                        sliderAlpha.addChangeListener(sliderAlphaChanged);
-                        
-                        startCameraCalibrationBtn = new JButton(startCalibration);
-                        panelCameraCalibration.add(startCameraCalibrationBtn, "4, 6");
-                        
-                        chckbxUseSavedData = new JCheckBox("Used Saved Data");
-                        chckbxUseSavedData.setEnabled(referenceCamera.getAdvancedCalibration().getSavedTestPattern3dPointsList() != null);
-                        panelCameraCalibration.add(chckbxUseSavedData, "6, 6");
-                        
-                        lblNewLabel = new JLabel("Show Invalid Pixels");
-                        lblNewLabel.setToolTipText("<html><p width=\"500\">"
-                                + "A value of 0 forces only valid pixels to be displayed but some "
-                                + "valid pixels may be lost beyond the edge of the display. A value"
-                                + " of 100 forces all valid pixels to be displayed but the edges "
-                                + "of the display may show invalid (usually black) pixels. "
-                                + "</p></html>");
-                        panelCameraCalibration.add(lblNewLabel, "2, 8");
-                        panelCameraCalibration.add(sliderAlpha, "4, 8");
+        lblCalibrationRig = new JLabel("Calibration Rig");
+        panelCameraCalibration.add(lblCalibrationRig, "2, 4, right, default");
+
+        comboBoxPart = new JComboBox();
+        comboBoxPart.setModel(new PartsComboBoxModel());
+        comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
+            panelCameraCalibration.add(comboBoxPart, "4, 4, left, default");
+        
+        lblNewLabel_1 = new JLabel("Default Working Plane Z");
+        panelCameraCalibration.add(lblNewLabel_1, "2, 6, right, default");
+        
+        textFieldDefaultZ = new JTextField();
+        panelCameraCalibration.add(textFieldDefaultZ, "4, 6, fill, default");
+        textFieldDefaultZ.setColumns(10);
+        panelCameraCalibration.add(chckbxEnable, "2, 8");
+        if (referenceCamera.getLooking() == Looking.Down) {
+            textFieldDefaultZ.setToolTipText("<html><p width=\"500\">"
+                + "This is the assumed Z coordinate of objects viewed by the "
+                + "camera if their true Z coordinate is unknown. Typically this "
+                + "is set to the Z coordinate of the working surface of the "
+                + "board(s) to be populated.</p></html>");
+        }
+        else {
+            textFieldDefaultZ.setToolTipText("<html><p width=\"500\">"
+                    + "This is the Z coordinate to which the bottom surface of "
+                    + "parts carried by the nozzle will be lowered for visual "
+                    + "alignment.</p></html>");
+        }
+        
+        
+        startCameraCalibrationBtn = new JButton(startCalibration);
+        panelCameraCalibration.add(startCameraCalibrationBtn, "4, 8");
+        
+        chckbxUseSavedData = new JCheckBox("Used Saved Data");
+        chckbxUseSavedData.setEnabled(referenceCamera.getAdvancedCalibration().getSavedTestPattern3dPointsList() != null);
+        chckbxUseSavedData.setToolTipText("Set this to reprocess previously collected calibration data - only useful for code debugging");
+        panelCameraCalibration.add(chckbxUseSavedData, "6, 8");
+        
+        lblNewLabel = new JLabel("Show Invalid Pixels");
+        lblNewLabel.setToolTipText("<html><p width=\"500\">"
+                + "A value of 0 forces only valid pixels to be displayed but some "
+                + "valid pixels may be lost beyond the edge of the display. A value"
+                + " of 100 forces all valid pixels to be displayed but the edges "
+                + "of the display may show invalid (usually black) pixels. "
+                + "</p></html>");
+        panelCameraCalibration.add(lblNewLabel, "2, 10");
+        
+        sliderAlpha = new JSlider();
+        sliderAlpha.setMajorTickSpacing(10);
+        sliderAlpha.setMinorTickSpacing(5);
+        sliderAlpha.setPaintTicks(true);
+        sliderAlpha.setPaintLabels(true);
+        sliderAlpha.addChangeListener(sliderAlphaChanged);
+        panelCameraCalibration.add(sliderAlpha, "4, 10, 3, 1");
+        
+        lblNewLabel_2 = new JLabel("Z Axis Rotation Error [Deg]");
+        panelCameraCalibration.add(lblNewLabel_2, "2, 14, right, default");
+        
+        textFieldZRotationError = new JTextField();
+        textFieldZRotationError.setEditable(false);
+        panelCameraCalibration.add(textFieldZRotationError, "4, 14, fill, default");
+        textFieldZRotationError.setColumns(10);
+        
+        lblNewLabel_3 = new JLabel("Y Axis Rotation Error [Deg]");
+        panelCameraCalibration.add(lblNewLabel_3, "2, 16, right, default");
+        
+        textFieldYRotationError = new JTextField();
+        textFieldYRotationError.setEditable(false);
+        panelCameraCalibration.add(textFieldYRotationError, "4, 16, fill, default");
+        textFieldYRotationError.setColumns(10);
+        
+        lblNewLabel_4 = new JLabel("X Axis Rotation Error [Deg]");
+        panelCameraCalibration.add(lblNewLabel_4, "2, 18, right, default");
+        
+        textFieldXRotationError = new JTextField();
+        textFieldXRotationError.setEditable(false);
+        panelCameraCalibration.add(textFieldXRotationError, "4, 18, fill, default");
+        textFieldXRotationError.setColumns(10);
     }
 
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
         
+        bind(UpdateStrategy.READ_WRITE, advancedCalibration, "overrideOldStyleSettings",
+                chckbxAdvancedCalOverride, "selected");
         bind(UpdateStrategy.READ_WRITE, advancedCalibration, "enabled",
                 chckbxEnable, "selected");
         bind(UpdateStrategy.READ_WRITE, advancedCalibration, "alphaPercent",
                 sliderAlpha, "value");
-        addWrappedBinding(advancedCalibration, "calibrationRig", 
+        bind(UpdateStrategy.READ_WRITE, advancedCalibration, "calibrationRig", 
                 comboBoxPart, "selectedItem");
-        addWrappedBinding(referenceCamera, "defaultZ", 
+        bind(UpdateStrategy.READ_WRITE, referenceCamera, "defaultZ", 
                 textFieldDefaultZ, "text", lengthConverter);
 
+        bind(UpdateStrategy.READ_WRITE, advancedCalibration, "zRotationError",
+                textFieldZRotationError, "text");
+        bind(UpdateStrategy.READ_WRITE, advancedCalibration, "yRotationError",
+                textFieldYRotationError, "text");
+        bind(UpdateStrategy.READ_WRITE, advancedCalibration, "xRotationError",
+                textFieldXRotationError, "text");
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldDefaultZ);
+        
     }
 
+    private Action overrideAction = new AbstractAction("Override Old Style") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (chckbxAdvancedCalOverride.isSelected()) {
+                chckbxEnable.setEnabled(true);
+                comboBoxPart.setEnabled(true);
+                textFieldDefaultZ.setEnabled(true);
+                startCameraCalibrationBtn.setEnabled(true);
+                chckbxUseSavedData.setEnabled(referenceCamera.getAdvancedCalibration().getSavedTestPattern3dPointsList() != null);
+                sliderAlpha.setEnabled(true);
+            }
+            else {
+                chckbxEnable.setEnabled(false);
+                comboBoxPart.setEnabled(false);
+                textFieldDefaultZ.setEnabled(false);
+                startCameraCalibrationBtn.setEnabled(false);
+                chckbxUseSavedData.setEnabled(false);
+                sliderAlpha.setEnabled(false);
+            }
+        }
+    };
+    
     private Action startCalibration = new AbstractAction("Start Camera Calibration") {
         @Override
         public void actionPerformed(ActionEvent e) {
+            startCameraCalibrationBtn.setEnabled(false);
+            
             MainFrame.get().getCameraViews().setSelectedCamera(referenceCamera);
 
             boolean savedEnabledState = referenceCamera.getAdvancedCalibration().isEnabled();
@@ -181,8 +252,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             referenceCamera.clearCalibrationCache();
             
             if (!chckbxUseSavedData.isSelected()) {
-                startCameraCalibrationBtn.setEnabled(false);
-    
                 CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(referenceCamera);
     
                 UiUtils.messageBoxOnException(() -> {
@@ -263,5 +332,12 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private JTextField textFieldDefaultZ;
     private JLabel lblNewLabel_1;
     private JCheckBox chckbxUseSavedData;
+    private JCheckBox chckbxAdvancedCalOverride;
+    private JTextField textFieldZRotationError;
+    private JTextField textFieldYRotationError;
+    private JTextField textFieldXRotationError;
+    private JLabel lblNewLabel_2;
+    private JLabel lblNewLabel_3;
+    private JLabel lblNewLabel_4;
     
 }

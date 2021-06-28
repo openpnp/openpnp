@@ -51,16 +51,16 @@ import org.pmw.tinylog.Logger;
 public class CameraCalibrationUtils {
 
     public static final int FIX_ASPECT_RATIO = 1;
-    public static final int FIX_CENTER_POINT = 2;
+    public static final int FIX_PRINCIPAL_POINT = 2;
     public static final int FIX_DISTORTION_COEFFICENTS = 4;
     public static final int FIX_ROTATION = 8;
     
     private static final int maxEvaluations = 500;
     private static final int maxIterations = 500;
     
-    //Assuming the residual errors are normally distributed (which they should be if the points are
-    //good), 3 standard deviations should exclude only 0.27% of good points while rejecting most of
-    //the extreme outliers.
+    //Assuming the residual errors are normally distributed (which they should be if the
+    //measurements are good), 3 standard deviations should exclude only 0.27% of good points while 
+    //rejecting most of the extreme outliers.
     private static final int sigmaThresholdForRejectingOutliers = 3;
     
     private static int numberOfTestPatterns;
@@ -243,7 +243,7 @@ public class CameraCalibrationUtils {
             }
             totalNumberOfPoints -= outlierPoints.size();
             
-            if ((flags & FIX_CENTER_POINT) == 0)  {
+            if ((flags & FIX_PRINCIPAL_POINT) == 0)  {
                 allowCenterToChange = 1;
             }
             else {
@@ -676,6 +676,53 @@ public class CameraCalibrationUtils {
      */
     public static Mat computeVirtualCameraMatrix(Mat physicalCameraMatrix, Mat distortionCoefficients, 
             Mat rectification, Size size, double alpha, boolean keepPrincipalPoint) {
+        Mat principalPoint = null;
+        if (keepPrincipalPoint) {
+            MatOfPoint2f point = new MatOfPoint2f();
+            point.push_back(new MatOfPoint2f(
+                    new org.opencv.core.Point(physicalCameraMatrix.get(0, 2)[0], 
+                    physicalCameraMatrix.get(1, 2)[0])));
+
+            MatOfPoint2f centerPoint = new MatOfPoint2f();
+
+            //Compute the corresponding point in the undistorted and rectified image
+            Calib3d.undistortPoints(point, centerPoint, physicalCameraMatrix, 
+                    distortionCoefficients, rectification);
+            point.release();
+
+            principalPoint = Mat.ones(3, 1, CvType.CV_64FC1);
+            principalPoint.put(0, 0, centerPoint.get(0, 0)[0]);
+            principalPoint.put(1, 0, centerPoint.get(0, 0)[1]);
+            centerPoint.release();
+        }
+        
+        Mat ret = computeVirtualCameraMatrix(physicalCameraMatrix, distortionCoefficients, 
+                rectification, size, alpha, principalPoint);
+        principalPoint.release();
+        
+        return ret;
+    }
+    
+    /**
+     * Computes the virtual camera matrix
+     * @param physicalCameraMatrix - the physical camera's intrinsic matrix
+     * @param distortionCoefficients - the physical camera's lens distortion coefficients
+     * @param rectification - the rectification matrix that takes the physical camera points to the
+     * virtual camera points
+     * @param size - the physical camera's image size
+     * @param alpha - a free scaling parameter in the range 0 to 1 inclusive.  A value of a zero 
+     * ensures only valid image pixels are displayed but may result in the loss of some valid pixels
+     * around the edge of the image.  A value of one ensure all valid pixels are displayed but that
+     * may result in some invalid (usually black) pixels being displayed around the edge of the
+     * image. 
+     * @param principalPoint - a 3x1 matrix containing the point in camera coordinates of the 
+     * desired principal point of the virtual camera 
+     * @return the virtual camera's intrinsic camera matrix
+     */
+    public static Mat computeVirtualCameraMatrix(Mat physicalCameraMatrix, Mat distortionCoefficients, 
+            Mat rectification, Size size, double alpha, Mat principalPoint) {
+        Logger.trace("size = " + size);
+        Logger.trace("principalPoint = " + principalPoint.dump());
         //Generate a set of points around the outer perimeter of the distorted unrectifed image
         int numberOfPointsPerSide = 250;
         MatOfPoint2f distortedPoints = new MatOfPoint2f();
@@ -708,20 +755,14 @@ public class CameraCalibrationUtils {
         distortedPoints.release();
 //        Logger.trace("undistortedPoints = " + undistortedPoints.dump());
         
-        distortedPoints = new MatOfPoint2f();
-        distortedPoints.push_back(new MatOfPoint2f(
-                new org.opencv.core.Point(physicalCameraMatrix.get(0, 2)[0], 
-                        physicalCameraMatrix.get(1, 2)[0])));
-
-        MatOfPoint2f centerPoint = new MatOfPoint2f();
-       
-        //Compute the corresponding points in the undistorted and rectified image
-        Calib3d.undistortPoints(distortedPoints, centerPoint, physicalCameraMatrix, 
-                distortionCoefficients, rectification);
-        distortedPoints.release();
-        double centerX = centerPoint.get(0,  0)[0];
-        double centerY = centerPoint.get(0,  0)[1];
-        centerPoint.release();
+        boolean keepPrincipalPoint = false;
+        double centerX = 0;
+        double centerY = 0;
+        if (principalPoint != null) {
+            keepPrincipalPoint = true;
+            centerX = principalPoint.get(0, 0)[0] / principalPoint.get(2, 0)[0];
+            centerY = principalPoint.get(1, 0)[0] / principalPoint.get(2, 0)[0];
+        }
         
         double outerMaxX = Double.NEGATIVE_INFINITY;
         double outerMinX = Double.POSITIVE_INFINITY;
@@ -839,6 +880,14 @@ public class CameraCalibrationUtils {
                 }
             }
             
+            if (!Double.isFinite(innerMaxX) || !Double.isFinite(innerMinX) || 
+                    !Double.isFinite(innerMaxY) || !Double.isFinite(innerMinY) ) {
+                //The assumption that the starting point was on the interior is invalid
+                innerMaxX = innerCenterX + 1;
+                innerMinX = innerCenterX - 1;
+                innerMaxY = innerCenterY + 1;
+                innerMinY = innerCenterY - 1;
+            }
             if (keepPrincipalPoint) {
                 double inner = Math.min(innerMaxX - centerX, centerX - innerMinX);
                 innerMaxX = centerX + inner;

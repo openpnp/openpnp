@@ -451,14 +451,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 return null;
             }
 
+            if (advancedCalibration.isOverrideOldStyleSettings()) {
+                //Skip all the old style image transforms and distortion corrections
+                if (advancedCalibration.isEnabled()) {
+                    //Use the new advanced image transformation and distortion correction
+                    Mat mat = OpenCvUtils.toMat(image);
+                    mat = advancedUndistort(mat);
+                    image = OpenCvUtils.toBufferedImage(mat);
+                    mat.release();
+                }
+            }
+            // Old style of image transforms and distortion correction
             // We do skip the convert to and from Mat if no transforms are needed.
             // But we must enter while calibrating.
-            if (advancedCalibration.isEnabled()) {
-                Mat mat = OpenCvUtils.toMat(image);
-                mat = advancedUndistort(mat);
-                image = OpenCvUtils.toBufferedImage(mat);
-                mat.release();
-            }
             else if (isDeinterlaced()
                 || isCropped() 
                 || isCalibrating()
@@ -860,6 +865,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     public static class AdvancedCalibration extends LensCalibrationParams {
+        @Attribute(required = false)
+        private boolean overrideOldStyleSettings = false;
+           
         @Element(required = false)
         private String calibrationRigId;
         
@@ -884,6 +892,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         @Element(name = "vect_m_cHat_m", required = false)
         private double[] vect_m_cHat_mArr = new double[3];
 
+        @Element(name = "vect_c_newPrincipalPoint_c", required = false)
+        private double[] vect_c_newPrincipalPoint_cArr = new double[3];
+        
         @ElementArray(required = false)
         private double[] calibrationPatternZ;
         
@@ -896,6 +907,29 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         @ElementArray(required = false)
         private double[][][] savedTestPatternImagePointsList;
         
+        @Attribute(required = false)
+        private double zRotationError = 0;
+
+        @Attribute(required = false)
+        private double yRotationError = 0;
+
+        @Attribute(required = false)
+        private double xRotationError = 0;
+
+        /**
+         * @return the overrideOldStyleSettings
+         */
+        public boolean isOverrideOldStyleSettings() {
+            return overrideOldStyleSettings;
+        }
+
+        /**
+         * @param overrideOldStyleSettings the overrideOldStyleSettings to set
+         */
+        public void setOverrideOldStyleSettings(boolean overrideOldStyleSettings) {
+            this.overrideOldStyleSettings = overrideOldStyleSettings;
+        }
+
         /**
          * @return the savedTestPatternImagePointsList
          */
@@ -946,6 +980,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         private Mat vect_m_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
         private Mat unit_c_cz_m = Mat.zeros(3, 1, CvType.CV_64FC1);
         private Mat vect_m_cHat_m = Mat.zeros(3, 1, CvType.CV_64FC1);
+        private Mat vect_c_newPrincipalPoint_c = Mat.zeros(3, 1, CvType.CV_64FC1);
+
 
         
         @Commit
@@ -962,6 +998,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             vect_m_c_m.put(0, 0, vect_m_c_mArr);
             unit_c_cz_m.put(0, 0, unit_c_cz_mArr);
             vect_m_cHat_m.put(0, 0, vect_m_cHat_mArr);
+            vect_c_newPrincipalPoint_c.put(0, 0, vect_c_newPrincipalPoint_cArr);
             
             //For some reason, the serialization/deserialization process doesn't seem to correctly
             //handle 3D arrays.  If an n x m x p array is serialized and then deserialized, the
@@ -1010,6 +1047,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             vect_m_c_m.get(0, 0, vect_m_c_mArr);
             unit_c_cz_m.get(0, 0, unit_c_cz_mArr);
             vect_m_cHat_m.get(0, 0, vect_m_cHat_mArr);
+            vect_c_newPrincipalPoint_c.get(0, 0, vect_c_newPrincipalPoint_cArr);
         }
 
         /**
@@ -1129,6 +1167,20 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         }
 
         /**
+         * @return the vect_c_newPrincipalPoint_c
+         */
+        public Mat getVect_c_newPrincipalPoint_c() {
+            return vect_c_newPrincipalPoint_c;
+        }
+
+        /**
+         * @param vect_c_newPrincipalPoint_c the vect_c_newPrincipalPoint_c to set
+         */
+        public void setVect_c_newPrincipalPoint_c(Mat vect_c_newPrincipalPoint_c) {
+            this.vect_c_newPrincipalPoint_c = vect_c_newPrincipalPoint_c;
+        }
+
+        /**
          * @return the calibrationPatternZ
          */
         public double[] getCalibrationPatternZ() {
@@ -1140,6 +1192,48 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
          */
         public void setCalibrationPatternZ(double[] calibrationPatternZ) {
             this.calibrationPatternZ = calibrationPatternZ;
+        }
+
+        /**
+         * @return the zRotationError
+         */
+        public double getzRotationError() {
+            return zRotationError;
+        }
+
+        /**
+         * @param zRotationError the zRotationError to set
+         */
+        public void setzRotationError(double zRotationError) {
+            this.zRotationError = zRotationError;
+        }
+
+        /**
+         * @return the yRotationError
+         */
+        public double getyRotationError() {
+            return yRotationError;
+        }
+
+        /**
+         * @param yRotationError the yRotationError to set
+         */
+        public void setyRotationError(double yRotationError) {
+            this.yRotationError = yRotationError;
+        }
+
+        /**
+         * @return the xRotationError
+         */
+        public double getxRotationError() {
+            return xRotationError;
+        }
+
+        /**
+         * @param xRotationError the xRotationError to set
+         */
+        public void setxRotationError(double xRotationError) {
+            this.xRotationError = xRotationError;
         }
 
         public void processRawCalibrationData(Size size, Length defaultZ) {
@@ -1206,7 +1300,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 Mat tp3dMat = new Mat();
                 for (int ptIdx=0; ptIdx<tpArray.length; ptIdx++) {
                     Point3 pt3 = new Point3(tpArray[ptIdx]);
-                    pt3.z = 0;
+                    pt3.z = 0; //set Z coordinate to zero
                     tp3dMat.push_back(new MatOfPoint3f(pt3));
                 }
                 testPattern3dPointsList.add(tp3dMat);
@@ -1224,8 +1318,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             
             cameraMatrix.release();
             cameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
-            cameraMatrix.put(0, 0, 1000);
-            cameraMatrix.put(1, 1, 1000);
+//            cameraMatrix.put(0, 0, 1000);
+//            cameraMatrix.put(1, 1, 1000);
             cameraMatrix.put(0, 2, (size.width - 1.0)/2.0);
             cameraMatrix.put(1, 2, (size.height - 1.0)/2.0);
             distortionCoefficients.release();
@@ -1233,12 +1327,14 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             
             //OpenCV's Calib3d.calibrateCamera is used to get an initial estimate of the intrinsic 
             //and extrinsic camera parameters.  Note that the camera model used by 
-            //Calib3d.calibrateCamera is quite general and has more degrees of freedom than is known
-            //to be necessary for modeling openpnp cameras.  For instance, it assumes the camera can
+            //Calib3d.calibrateCamera is quite general and has more degrees of freedom than is 
+            //necessary for modeling openpnp cameras.  For instance, it assumes the camera can
             //be rotated and translated differently relative each test pattern.  But in actuality, 
             //for openpnp, the camera has a fixed rotation relative to all test patterns and the 
             //camera Z coordinate (wrt to the machine) is fixed during the collection of all test 
-            //patterns.
+            //patterns.  Because it has more degrees of freedom than necessary, the RMS error of the
+            //model fit may appear good but parameter estimates may in fact be significantly in
+            //error.
             double rms = Calib3d.calibrateCamera(testPattern3dPointsList, 
                     testPatternImagePointsList, size,
                     cameraMatrix, distortionCoefficients, rvecs, tvecs, 
@@ -1255,7 +1351,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Logger.trace("cameraMatrix = " + cameraMatrix.dump());
             Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
 
-            //Setup and populate an array of camera parameters with an initial guess at the solution
+            //Setup and populate an array of camera parameters with an initial guess based on the
+            //solution obtained by Calib3d.calibrateCamera
             double[] cameraParams = new double[13+2*numberOfTestPatterns];
             cameraParams[0] = cameraMatrix.get(0, 0)[0];
             cameraParams[1] = cameraMatrix.get(1, 1)[0];
@@ -1280,6 +1377,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             cameraParams[9] = averageRvec.get(0, 0)[0];
             cameraParams[10] = averageRvec.get(1, 0)[0];
             cameraParams[11] = averageRvec.get(2, 0)[0];
+            averageRvec.release();
             
             //tvecs contains the vector from the camera origin to the test pattern origin with 
             //components expressed in the camera reference system.  Since the Z coordinate
@@ -1324,19 +1422,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
             
             //Compute a new set of camera parameters based on openpnp's more restrictive camera
-            //model
-            if (numberOfTestPatterns > 0) {
-                cameraParams = CameraCalibrationUtils.ComputeBestCameraParameters(
-                        testPattern3dPoints, testPatternImagePoints, cameraParams, 
-                        CameraCalibrationUtils.FIX_CENTER_POINT);
-            }
+            //model that avoids the excess degree of freedom problem discussed above
+            cameraParams = CameraCalibrationUtils.ComputeBestCameraParameters(
+                    testPattern3dPoints, testPatternImagePoints, cameraParams, 
+                    CameraCalibrationUtils.FIX_PRINCIPAL_POINT);
             
+            //Use the new estimates for the physical camera's matrix
             cameraMatrix.put(0, 0, cameraParams[0]);
             cameraMatrix.put(1, 1, cameraParams[1]);
             cameraMatrix.put(0, 2, cameraParams[2]);
             cameraMatrix.put(1, 2, cameraParams[3]);
             Logger.trace("cameraMatrix = " + cameraMatrix.dump());
             
+            //Use the new estimates for the physical camera's lens distortion coefficients
             distortionCoefficients.put(0, 0, cameraParams[4]);
             distortionCoefficients.put(1, 0, cameraParams[5]);
             distortionCoefficients.put(2, 0, cameraParams[6]);
@@ -1344,9 +1442,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             distortionCoefficients.put(4, 0, cameraParams[8]);
             Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
             
-            //Convert the rotation vector to a rotation matrix that transforms vectors with 
-            //components represented in the machine reference frame to those represented in 
-            //the camera's reference frame
+            //Convert the new estimate of the rotation vector to a rotation matrix that transforms
+            //vectors with components represented in the machine reference frame to those 
+            //represented in the camera's reference frame
             Mat rvec = Mat.zeros(3, 1, CvType.CV_64FC1);
             rvec.put(0,  0, cameraParams[9]);
             rvec.put(1,  0, cameraParams[10]);
@@ -1354,15 +1452,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Calib3d.Rodrigues(rvec, rotate_m_c);
             rvec.release();
             Logger.trace("rotate_m_c = " + rotate_m_c.dump());
-            Logger.trace("thetaZ = " + Math.toDegrees(Math.atan2(-rotate_m_c.get(0, 1)[0], rotate_m_c.get(0, 0)[0])));
-            Logger.trace("thetaY = " + Math.toDegrees(Math.asin(rotate_m_c.get(0, 2)[0])));
-            Logger.trace("thetaX = " + Math.toDegrees(Math.atan2(-rotate_m_c.get(1, 2)[0], rotate_m_c.get(2, 2)[0])));
             
-            //Should the camera x/y position be set to the average computed over all patterns or 
-            //just the position computed from the first pattern?  This really only matters for
-            //bottom cameras as that is where the precise x/y position of the camera is important. 
-            //For now just use the first pattern as that should be collected at the default Z for 
-            //the camera
+            //The camera x/y position is set to that determined by the first test pattern.  For top
+            //cameras this isn't terribly important (as long as all top cameras are handled the
+            //same) but for bottom cameras, the camera position needs to be set by the test pattern
+            //that was collected at defaultZ.  Otherwise, if the nozzle's Z axis is not orthogonal
+            //to the X/Y plane, a horizontal error would be introduced. 
             vect_m_c_m.release();
             vect_m_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
             vect_m_c_m.put(2, 0, cameraParams[12]); //Z
@@ -1382,11 +1477,30 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Core.gemm(rotate_m_c.t(), unitZ, 1, unitZ, 0, unit_c_cz_m);
             Logger.trace("unit_c_cz_m = " + unit_c_cz_m.dump());
             
+            //Construct a unit vector in the direction of the machine's positive z axis with 
+            //components represented in the camera reference system
+            Mat unit_c_mz_c = Mat.zeros(3, 1, CvType.CV_64FC1);
+            Core.gemm(rotate_m_c, unitZ, 1, unitZ, 0, unit_c_mz_c);
+            Logger.trace("unit_c_mz_c = " + unit_c_mz_c.dump());
+            
             //Compute the Z offset from the camera to the default Z plane
             double cameraToZPlane = defaultZ.convertToUnits(LengthUnit.Millimeters).getValue() - 
                     vect_m_c_m.get(2, 0)[0];
             Logger.trace("cameraToZPlane = " + cameraToZPlane);
             
+            //Construct a vector from the camera origin to the nearest point on the defaultZ plane
+            //with components in the camera reference system
+            Mat vect_c_defaultZ_c = Mat.zeros(3, 1, CvType.CV_64FC1);
+            Core.multiply(unit_c_mz_c, new Scalar(cameraToZPlane/unit_c_mz_c.get(2, 0)[0]), 
+                    vect_c_defaultZ_c);
+            Logger.trace("vect_c_defaultZ_c = " + vect_c_defaultZ_c.dump());
+            
+            //Normalize the vector to find the new principal point
+            Core.multiply(vect_c_defaultZ_c, new Scalar(1.0/vect_c_defaultZ_c.get(2, 0)[0]), 
+                    vect_c_newPrincipalPoint_c);
+            vect_c_defaultZ_c.release();
+            Logger.trace("vect_c_newPrincipalPoint_c = " + vect_c_newPrincipalPoint_c.dump());
+
             //Construct a vector from the camera origin to the intersection of the camera 
             //Z-axis and the default Z plane with components in the machine reference system
             Mat vect_c_defaultZPrincipalPoint_m = Mat.zeros(3, 1, CvType.CV_64FC1);
@@ -1414,7 +1528,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             //image appear as if the bottom of the part was taken from above through the top of the 
             //part by an x-ray camera (which is desired).
             vect_m_cHat_m.release();
-            vect_m_cHat_m = vect_m_defaultZPrincipalPoint_m.clone();
+//            vect_m_cHat_m = vect_m_defaultZPrincipalPoint_m.clone();
+            vect_m_cHat_m = vect_m_c_m.clone();
             vect_m_cHat_m.put(2, 0, defaultZ.convertToUnits(LengthUnit.Millimeters).getValue() + 
                     absoluteCameraToDefaultZPrincipalPointDistance);
             vect_m_defaultZPrincipalPoint_m.release();
@@ -1428,7 +1543,30 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             rotate_m_cHat.put(0,  0,  1);
             rotate_m_cHat.put(1,  1,  -1);
             rotate_m_cHat.put(2,  2, -1);
-            Logger.trace("rotate_m_cHat = " + rotate_m_cHat.dump());
+            
+            //Compute the rotation matrix that converts vector components from physical camera 
+            //coordinate system to the virtual camera coordinate system
+            Mat rotate_cHat_c = Mat.eye(3, 3, CvType.CV_64FC1);
+            //rotate_cHat_c = rotate_m_c * rotate_m_cHat.t()
+            Core.gemm(rotate_m_c, rotate_m_cHat.t(), 1, rotate_m_c, 0, rotate_cHat_c);
+            Logger.trace("rotate_cHat_c = " + rotate_cHat_c.dump());
+            zRotationError = -Math.toDegrees(Math.atan2(rotate_cHat_c.get(0, 1)[0], 
+                    rotate_cHat_c.get(0, 0)[0]));
+            while (zRotationError > 45) zRotationError -= 90;
+            while (zRotationError < -45) zRotationError += 90;
+            yRotationError = Math.toDegrees(Math.asin(rotate_cHat_c.get(0, 2)[0]));
+            while (yRotationError > 45) yRotationError -= 90;
+            while (yRotationError < -45) yRotationError += 90;
+            xRotationError = Math.toDegrees(Math.atan2(rotate_cHat_c.get(1, 2)[0], 
+                    rotate_cHat_c.get(2, 2)[0]));
+            while (xRotationError > 45) xRotationError -= 90;
+            while (xRotationError < -45) xRotationError += 90;
+            rotate_cHat_c.release();
+            
+            Logger.trace("Physical camera rotational errors from ideal (as measured by the right hand rule about each machine axis):");
+            Logger.trace("Z axis rotational error = {} degrees", zRotationError);
+            Logger.trace("Y axis rotational error = {} degrees", yRotationError);
+            Logger.trace("X axis rotational error = {} degrees", xRotationError);
             
             //Construct the rectification matrix
             rectification = CameraCalibrationUtils.computeRectificationMatrix(rotate_m_c, 
@@ -1446,7 +1584,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         protected void initUndistortRectifyMap(Size size, double alpha, Mat undistortionMap1, 
                 Mat undistortionMap2) {
             virtualCameraMatrix = CameraCalibrationUtils.computeVirtualCameraMatrix(cameraMatrix, 
-                    distortionCoefficients, rectification, size, alpha, true);
+                    distortionCoefficients, rectification, size, alpha, vect_c_newPrincipalPoint_c);
             Logger.trace("virtualCameraMatrix = " + virtualCameraMatrix.dump());
 
             Calib3d.initUndistortRectifyMap(cameraMatrix,
