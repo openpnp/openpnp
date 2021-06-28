@@ -286,7 +286,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     @Override
     public void moveToPlacementLocation(Location placementLocation, Part part) throws Exception {
         // Calculate the probe starting location.
-        Length partHeight = getSafePartHeight(part);
+        Length partHeight = ((part == null && nozzleTip != null) ? 
+                nozzleTip.getMaxPartHeight() // for discard 
+                : getSafePartHeight(part));  // for normal part operation
         Location placementLocationPart = placementLocation.add(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
         // null part means discarding. 
         String partId = (part != null ? part.getId() : "discard");
