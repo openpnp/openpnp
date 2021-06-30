@@ -346,11 +346,21 @@ public class GcodeServer extends Thread {
                 else if (Character.toUpperCase(ch) >= 'A' && Character.toUpperCase(ch) <= 'Z') {
                     // Finalize the running word.
                     commandWords = finalizeGcodeWord(currentWord, commandWords);
-                    // And start a new one.
+                    if (isDollar) {
+                        // we just support $H, the rest we ignore
+                        if (Character.toUpperCase(ch) == 'H') {
+                            currentWord = new GcodeWord(Character.toUpperCase(ch), isDollar);
+                        }
+                        break;
+                    }
+                    // And start a new word.
                     currentWord = new GcodeWord(Character.toUpperCase(ch), isDollar);
-                    isDollar = false;
                 }
                 else if (currentWord == null) {
+                    if (isDollar) {
+                        // custom command, probably TinyG setting, ignore
+                        break;
+                    }
                     // the remaining character are only allowed inside a word 
                     throw new Exception("Syntax error at col "+col+" '"+ch+"' unexpected: "+input);
                 }
