@@ -308,7 +308,7 @@ public class GcodeServer extends Thread {
             GcodeWord currentWord = null;
             int col = 0;
             boolean insideComment = false;
-            boolean isDollar = true;
+            boolean isDollar = false;
             List<GcodeWord> commandWords = new ArrayList<>();
             for (char ch : input.toCharArray()) {
                 col++;
@@ -344,6 +344,12 @@ public class GcodeServer extends Thread {
                     break;
                 }
                 else if (Character.toUpperCase(ch) >= 'A' && Character.toUpperCase(ch) <= 'Z') {
+                    if (isDollar) {
+                        // we just support $H, the rest we ignore.
+                        if (Character.toUpperCase(ch) != 'H') {
+                            break;
+                        }
+                    }
                     // Finalize the running word.
                     commandWords = finalizeGcodeWord(currentWord, commandWords);
                     // And start a new one.
@@ -351,6 +357,10 @@ public class GcodeServer extends Thread {
                     isDollar = false;
                 }
                 else if (currentWord == null) {
+                    if (isDollar) {
+                        // custom command, probably TinyG setting, ignore.
+                        break;
+                    }
                     // the remaining character are only allowed inside a word 
                     throw new Exception("Syntax error at col "+col+" '"+ch+"' unexpected: "+input);
                 }
@@ -438,6 +448,9 @@ public class GcodeServer extends Thread {
         public String toString(List<GcodeWord> commandWords) {
             StringBuilder regurg = new StringBuilder();
             for (GcodeWord word : commandWords) {
+                if (word.isDollar()) {
+                    regurg.append('$');
+                }
                 regurg.append(word.letter);
                 if (word.signum < 0) {
                     regurg.append('-');
@@ -649,7 +662,7 @@ public class GcodeServer extends Thread {
                 GcodeWord g1Word = getCodeWord(Gcode.G1, commandWords);
                 GcodeWord hWord = getLetterWord('H', commandWords);
                 GcodeWord g28Word = getCodeWord(Gcode.G28, commandWords);
-                if (g0Word != null || g1Word != null || g28Word != null) {
+                if (g0Word != null || g1Word != null || g28Word != null || (hWord != null && hWord.isDollar())) {
                     double speed = 1.0;
                     if (g28Word != null || hWord != null && hWord.isDollar()) {
                         // Homing command.
