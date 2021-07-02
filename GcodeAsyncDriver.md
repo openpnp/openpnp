@@ -139,7 +139,9 @@ This number must correspond to queue depth of your controller and best leave som
 
 `    planner_queue_size      48 # DO NOT CHANGE THIS UNLESS YOU KNOW EXACTLY WHAT YOUR ARE DOING`
 
-Other controllers have a fixed queue size, Duet3D 3 is currently at 40, but it is already discussed that this will be increased dramatically in the future, there is plenty of RAM and computing power available. 
+Duet can set it using the [`M595` command](https://duet3d.dozuki.com/Wiki/Gcode#Section_M595_Set_movement_queue_length) with the `P` word. Also use the `R` word to set a grace period (please ask other Duet users for their proved values, this is still being optimized). 
+
+Other controllers have a fixed queue size. 
 
 **Maximum Number of Jerk Steps** limits the number of interpolation steps used to ramp up and down acceleration. 
 
