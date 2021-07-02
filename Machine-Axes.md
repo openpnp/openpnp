@@ -95,13 +95,42 @@ When OpenPnP is performing a move with several axes involved (e.g. a diagonal pl
 
 **Important**: you need to set these limits **at or below** the limits configured for the controller. Otherwise you will get very strange result, as the motion planning is then completely useless. 
 
-In case of Smoothieware, look for values like these (divide by 60 where mm/min). See the [Smoothie guide](http://smoothieware.org/configuration-options): 
+In case of Smoothieware, look for values like these (divide by 60 from mm/min). See the [Smoothie guide](http://smoothieware.org/configuration-options): 
 
 <pre>
-x_axis_max_speed                             50000            # mm/min
-alpha_max_rate                               50000            # mm/min actuator max speed
-alpha_acceleration                           5000.0           # mm/sec^2
+x_axis_max_speed                             40000            # mm/min
+alpha_max_rate                               40000            # mm/min actuator max speed
+alpha_acceleration                           2000.0           # mm/sec^2
 </pre>
+
+#### What values should I set?
+
+This question is impossible to answer, as each machine is different. The problem is further confounded, as the two or three rate limits play together. The following is not quite a recipe but gives you some ideas on how to approach good values for your machine. This is done **per Axis**:
+
+1. Backup your configuration, both for OpenPnP and your controller. Note down the [Park location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Park-Location).
+2. Set very high limits in your controller configuration, so you are free to experiment on the OpenPnP side. The controller must not clip the rates you are setting in OpenPnP. Be extra sure this is the case, otherwise you can easily fool yourself in the steps below, and things can become very confusing. 
+3. If you have Duet, Smoothieware or another high performance controller, set your driver to **Simulated3rdOrderControl**. If you have TinyG and other supported S-Curve controllers, set **SimpleSCurve**. Otherwise set **ModeratedConstantAcceleration**. See [here for how to](https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings).
+4. Set your [Park location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Park-Location) to some prominent high-contrast mark on your machine table, somewhere in the middle, where you can move freely in all directions. You need to be able to judge whether the mark is precisely in the cross-hairs of your down-looking camera, after pressing **`P`**. This will be your check for the machine not having lost steps (assuming you don't have closed loop). 
+5. Go to Machine/Setup down-looking camera, into the **Vision** tab. If [[Camera Settling]] is not yet configured, enable it like so:
+   
+   ![Camera Settle Diagnostics](https://user-images.githubusercontent.com/9963310/124281237-d1917b00-db49-11eb-9147-5c3e56c350d9.png)
+
+6. Better yet: do the [[Camera Settling]] setup right now (if you haven't already) and you will get the settling times as an additional _valuable_ indicator. You may see a trade-off between aggressive machine motion and short settling times, because of shaking/vibrations. For simpler machines such as the Liteplacer, this is a significant trade-off i.e time saved on break-neck moves may easily be wasted many times over in longer settle times. Note that long settle times also mean less precision in picking/placing as the nozzle tip may be swinging all over the place for several hundred milliseconds. 
+7. Start with feed-rate 200mm/s, acceleration 500mm/s² and jerk 10000mm/s³ on **SimpleSCurve** controllerd, jerk 0mm/s³ (disabled) on other controllers (see step 3).
+8. Set different step distances (1mm, 10mm, 100mm) in the Machine Controls and for each of those do the following:
+   
+   ![Distance Control](https://user-images.githubusercontent.com/9963310/124281344-ea9a2c00-db49-11eb-8dde-19c075f71457.png)
+
+9. Use the arrow button in the **Vision** tab (_not_ the Machine Controls) to test machine motion. You should then get a graphical diagnostic of how your machine shakes/vibrates, plus (as discussed in step 6) the settle times. 
+10. Also note the sound of the motors. Try to get a feel when the motors reach their limits. Check with **`P`** as prepared in step 4 to make sure no steps are lost. 
+11. Increase acceleration on the axis and repeat from step 8 until you think you reach a critical limit/trade-off. Increase feed-rate, when the speed levels out on long moves. You can also use [Motion Planner Diagnostics](https://github.com/openpnp/openpnp/wiki/Motion-Planner#motion-planner-diagnostics) to see what happens. For **SimpleSCurve** controllers, if things _still_ level out, proceed to the next step. 
+12. Once you think you've got good acceleration governed performance, you can start experimenting with jerk. For **SimpleSCurve** controllers this is actually the main tuning knob. For those with **ModeratedConstantAcceleration**, it will dampen acceleration on short moves. For those with **Simulated3rdOrderControl**, a jerk limit is only simulated and subject to good interpolation settings, i.e. this is now the time for you to make sure, the [Interpolation](https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#interpolation)) is set up correctly.
+13. When a jerk limit is not provided, most controllers act with the so-called Constant Acceleration model. This effectively means that jerk will be infinite (in theory). By limitting jerk we can greatly reduce vibrations. As we're going from "infinite", the numbers can be quite hight. You can start from 100000mm/s³ and the go down. 
+14. The jerk limit will ease the aggressiveness of acceleration both on start/stop but also at the top speed transition. Both allows you to increase the acceleration limit in turn. By experimenting with different jerk/acceleration combinations, you can find better trade-offs with camera settling, as discussed in step 6. 
+15. Do this over and over again. Note down good settings. 
+16. Once you get good settings on all axes, set your controller config limits to the same or somewhat higher values (for safety).
+17. If you have not done proper [[Camera Settling]] setup in steps 5 and 6, switch it back to **FixedTime**. 
+18. Restore the [Park Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Park-Location) to what it was before.
 
 ## ReferenceVirtualAxis
 
