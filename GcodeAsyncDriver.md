@@ -141,7 +141,7 @@ This number must correspond to queue depth of your controller and best leave som
 
 Duet can set it using the [`M595` command](https://duet3d.dozuki.com/Wiki/Gcode#Section_M595_Set_movement_queue_length) with the `P` word. Also use the `R` word to set a grace period (please ask other Duet users for their proven values, this is still being optimized). 
 
-Other controllers have a fixed queue size. 
+Other controllers have a fixed queue size that you should try to find out. 
 
 **Maximum Number of Jerk Steps** limits the number of interpolation steps used to ramp up and down acceleration. 
 
