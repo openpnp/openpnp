@@ -123,7 +123,7 @@ This question is impossible to answer, as each machine is different. The problem
 
 9. Use the arrow button in the **Vision** tab (_not_ the Machine Controls) to test machine motion. You should then get a graphical diagnostic of how your machine shakes/vibrates, plus (as discussed in step 6) the settle times. 
 10. Also note the sound of the motors. Try to get a feel when the motors reach their limits. Check with **`P`** as prepared in step 4 to make sure no steps are lost. 
-11. Increase acceleration on the axis and repeat from step 8 until you think you reach a critical limit/trade-off. Increase feed-rate, when the speed levels out on long moves. CAUTION: for each increase of feed-rate, you also need to check if very long moves still work. For **SimpleSCurve** controllers, if things _still_ level out, proceed to the next step immediately. You can also use [Motion Planner Diagnostics](https://github.com/openpnp/openpnp/wiki/Motion-Planner#motion-planner-diagnostics) to see _where_ and _when_ which limits shapes the motion profile. 
+11. Increase acceleration on the axis and repeat from step 8 until you think you reach a critical limit/trade-off. Increase feed-rate, when the speed levels out on long moves. CAUTION: for each increase of feed-rate, you also need to check if very long moves still work. For **SimpleSCurve** controllers, if things _still_ level out, proceed to the next step immediately. You can also use [Motion Planner Diagnostics](https://github.com/openpnp/openpnp/wiki/Motion-Planner#motion-planner-diagnostics) to see _which_ limit shapes the motion profile _where_ and _when_. 
     
     ![Motion Profile](https://user-images.githubusercontent.com/9963310/96153482-0dc67200-0f0e-11eb-8d6e-fe7ac8a249eb.png)
 
