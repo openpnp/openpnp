@@ -139,7 +139,7 @@ This number must correspond to queue depth of your controller and best leave som
 
 `    planner_queue_size      48 # DO NOT CHANGE THIS UNLESS YOU KNOW EXACTLY WHAT YOUR ARE DOING`
 
-Duet can set it using the [`M595` command](https://duet3d.dozuki.com/Wiki/Gcode#Section_M595_Set_movement_queue_length) with the `P` word. Also use the `R` word to set a grace period (please ask other Duet users for their proved values, this is still being optimized). 
+Duet can set it using the [`M595` command](https://duet3d.dozuki.com/Wiki/Gcode#Section_M595_Set_movement_queue_length) with the `P` word. Also use the `R` word to set a grace period (please ask other Duet users for their proven values, this is still being optimized). 
 
 Other controllers have a fixed queue size. 
 
