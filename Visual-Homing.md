@@ -47,7 +47,7 @@ ___
 
 You can also manually set the fiducial coordinates to more "round" numbers that corresponds roughly to the fiducial location. It has to be within a few millimeters of the mechanically homed (captured) coordinates. 
 
-With the new method you can rest assured that axis transformations such as [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] are properly handled back and forth. However, naturally, the non-squareness compensation must be done **before** the homing fiducial is captured. 
+With the new method you can rest assured that axis transformations such as [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] are properly handled back and forth. However, naturally, the non-squareness compensation must be configured **before** the homing fiducial is captured. 
 
 **Homing Method** determines how the coordinate system is reset, relative to the fiducial.  
 
