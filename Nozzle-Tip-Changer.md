@@ -53,11 +53,11 @@ Using computer vision Nozzle Tip Changer locations can be calibrated in X and Y.
 
 Use the **Test** button to test the calibration. 
 
-Use the **Capture** button to capture the respective **Template Empty** or **Template Occupied** image. The camera will automatically move to the selected **Vision Location**. You can hover over the captured template thumbnail to see it enlarged in the camera view. 
+Use the **Capture** button to capture the respective **Template Empty** or **Template Occupied** image. The camera will automatically move to the selected **Vision Location**. You can hover the mouse over the captured template thumbnail to see it enlarged in the camera view. 
 
 Use the **Reset** button to remove templates images. 
 
-The two images are both used and the better match tells OpenPnP if the slot in question is empty or occupied. If this does not correspond to the state internally stored by OpenPnP, it will abort the calibration and therefore the nozzle tip load/unload operation. Nasty collisions can be safely prevented. 
+The two images are both compared, and the better match tells OpenPnP if the slot in question is empty or occupied. If this does not correspond to the state internally stored by OpenPnP, it will abort the calibration and therefore the nozzle tip load/unload operation. Nasty collisions can be safely prevented. 
 
 ![Found occupied](https://user-images.githubusercontent.com/9963310/113589665-f00ed580-9631-11eb-9522-272dbf86ee64.png)
 
