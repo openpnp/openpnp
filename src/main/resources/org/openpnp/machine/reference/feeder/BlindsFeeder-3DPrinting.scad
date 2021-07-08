@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 makr@makr.zone
+ * Copyright (C) 2019-2020 makr@makr.zone
  *
  * This 3D printed feeder is inteded to be used together with the "BlindsFeeder" feeder in OpenPNP. 
  *
@@ -18,6 +18,9 @@
  * 
  * For more information about OpenPnP visit http://openpnp.org
  */
+ 
+ debug_view = true;
+ label_view = false;
 
 // Include the BlindsFeeder Library. 
 // To learn the details about available parameters, please read the extensive comments in the library file. 
@@ -36,7 +39,7 @@ tape0402 = TapeDefinition(
     pocket_pitch=2,
     pocket_width=2.25,
     tape_play=-0.03,
-    cover_play=0.14);
+    cover_play=0.08);
 
 tape0603 = TapeDefinition(
     tape_width=8,
@@ -44,7 +47,7 @@ tape0603 = TapeDefinition(
     pocket_pitch=4,
     pocket_width=2.5,
     tape_play=-0.0,
-    cover_play=0.1);
+    cover_play=0.05);
 
 tapeSOT3 = TapeDefinition(
     tape_width=8,
@@ -53,7 +56,7 @@ tapeSOT3 = TapeDefinition(
     pocket_pitch=4,
     pocket_width=4,
     tape_play=0.05,
-    cover_play=0.1,
+    cover_play=0.05,
     blinds=false);
 
 tape12mm = TapeDefinition(
@@ -63,7 +66,7 @@ tape12mm = TapeDefinition(
     pocket_pitch=8,
     pocket_width=5,
     tape_play=0.1,
-    cover_play=0.1,
+    cover_play=0.05,
     sprocket_thorns=2);
     
 trayQLPF64 = TapeDefinition(
@@ -73,7 +76,7 @@ trayQLPF64 = TapeDefinition(
     pocket_width=12.1,
     pocket_length=12.1,
     tape_play=0.1,
-    cover_play=0.1,
+    cover_play=0.05,
     blinds=false,
     sprocket_thorns=0);
 
@@ -81,16 +84,27 @@ trayQLPF64 = TapeDefinition(
 // Create the feeder array with these tape definitions.
 // Note the BlindsFeeder has a myriad of parameters you can tweak, the ones used here are just the most important. 
 // See the Library file to learn more. 
-BlindsFeeder(
-    // Tape length from feeder edge to edge, usually multiples of 4mm. 
-    // Other values are supported if you manually adjust the edge distance in the OpenPNP feeder.
-    tape_length=84,
+rotate([0, 0, 180]) BlindsFeeder(
+    // Tape length from feeder edge to edge (not including the margin), usually multiples of 4mm. 
+    // Other values are supported if you manually adjust the default 2mm edge distance in the OpenPNP feeder.
+    tape_length=100,
     
-    // Number of lanes per tape definition.  
-    arrayed_tape_lanes=      [1,         1,         1,         1,         1],
-    // The arrayed tape definitions.
-    arrayed_tapes=           [tape0402,  tape0603,  tapeSOT3,  tape12mm,  trayQLPF64],
+    // For OCR, add a margin at the begin of the tape.
+    margin_length_begin=20,
     
-    debug = false
+    // Define the lanes with number, tape definitinon, part label (String array with multiple lines).
+    arrayed_tape_lanes=      [
+        LaneDefinition(1, tape0402,   ["R0402-1K"]), 
+        LaneDefinition(1, tape0402,   ["R0402-100K"]), 
+        LaneDefinition(1, tape0603,   ["C0603-10uF"]), 
+        LaneDefinition(1, tapeSOT3,   ["SOT23_HV-\\","DMN24H3D5L"]), 
+        LaneDefinition(1, tape12mm,   ["CSD16340Q3"]), 
+        LaneDefinition(1, trayQLPF64, ["C1810_HV-\\", "4.7nF"]), 
+        ],
+    
+    label=label_view,
+    tray=(! label_view),
+    cover=(! label_view),
+    debug=debug_view
 );
 
