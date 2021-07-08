@@ -85,13 +85,13 @@ import org.pmw.tinylog.Logger;
 public abstract class CalibrateCameraProcess {
     static final boolean useSavedData = false;
 
-    private static final int numberOfCalibrationHeights = 2;
     private static final int desiredTestPatternSize = 15;
     private static final int desiredPointsPerTestPattern = desiredTestPatternSize*desiredTestPatternSize;
     private static final double testPatternFillFraction = 0.90;
     private static final double trialStepSize = 0.5;
     private static final Location trialStep = new Location(LengthUnit.Millimeters, -trialStepSize, trialStepSize, 0, 0);
 
+    private final int numberOfCalibrationHeights;
     private final MainFrame mainFrame;
     private final CameraView cameraView;
     private final Camera camera;
@@ -212,11 +212,13 @@ public abstract class CalibrateCameraProcess {
 
     private int numberOfAngles;
     
-    public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, Part calibrationRigPart)
+    public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, 
+            Part calibrationRigPart, List<Length> calibrationHeights)
             throws Exception {
         this.mainFrame = mainFrame;
         this.cameraView = cameraView;
         this.calibrationRig = calibrationRigPart;
+        numberOfCalibrationHeights = calibrationHeights.size();
         
         camera = cameraView.getCamera();
         pixelsX = camera.getWidth();
@@ -244,13 +246,14 @@ public abstract class CalibrateCameraProcess {
         pkg = calibrationRigPart.getPackage();
         footprint = pkg.getFootprint();
         shape = footprint.getShape();
-        pipeline = ((ReferenceFiducialLocator) Configuration.get().getMachine().getFiducialLocator()).getPartSettings(calibrationRigPart).getPipeline();
+        pipeline = ((ReferenceFiducialLocator) Configuration.get().getMachine().
+                getFiducialLocator()).getPartSettings(calibrationRigPart).getPipeline();
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("part", calibrationRigPart);
         pipeline.setProperty("package", pkg);
         pipeline.setProperty("footprint", footprint);
         
-        maskDiameter = Math.min(pixelsX, pixelsY) / 6;
+        maskDiameter = Math.min(pixelsX, pixelsY) / 5;
         try {
             firstMaskCircle = (MaskCircle)pipeline.getStage("first_mask");
             secondMaskCircle = (MaskCircle)pipeline.getStage("second_mask");
@@ -353,7 +356,7 @@ public abstract class CalibrateCameraProcess {
         MainFrame.get().getMachineControls().setSelectedTool(nozzle);
         MovableUtils.fireTargetedUserAction(nozzle);
         
-        ((ReferenceCamera) camera).getCalibration().setEnabled(false);
+//        ((ReferenceCamera) camera).getCalibration().setEnabled(false);
 
         return true;
     }

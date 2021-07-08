@@ -17,9 +17,8 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.util;
+package org.openpnp.machine.reference.camera.calibration;
 
-import java.util.ArrayList;
 import java.util.TreeSet;
 
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresFactory;
@@ -164,7 +163,6 @@ public class CameraCalibrationUtils {
             ConvergenceChecker<LeastSquaresProblem.Evaluation> checker = 
                     LeastSquaresFactory.evaluationChecker(new SimpleVectorValueChecker(1e-6, 1e-8));
             
-            //The problem in a
             LeastSquaresProblem lsp = LeastSquaresFactory.create(model, observed, start, checker, maxEvaluations, maxIterations);
             
             optimum = optimizer.optimize(lsp);
@@ -175,15 +173,14 @@ public class CameraCalibrationUtils {
             Logger.trace("parameters = " + optimum.getPoint().toString());
             
             if (outlierPoints.isEmpty()) {
-                double varianceThresholdForRejectingOutliers = Math.pow(
+                double varianceThresholdForRejectingOutliers = 2*Math.pow(
                         sigmaThresholdForRejectingOutliers * optimum.getRMS(), 2);
                         
                 double[] residuals = optimum.getResiduals().toArray();
-                for (int i=0; i<residuals.length; i++) {
-                    if (residuals[i]*residuals[i] > varianceThresholdForRejectingOutliers) {
-                        //reject the point if either X or Y variance exceeds the threshold (the even
-                        //i's are the X'es and the odd i's are the Y's)
-                        outlierPoints.add(i/2);
+                for (int i=0; i<residuals.length/2; i++) {
+                    if (residuals[2*i]*residuals[2*i]+residuals[2*i+1]*residuals[2*i+1] > 
+                            varianceThresholdForRejectingOutliers) {
+                        outlierPoints.add(i);
                     }
                 }
                 
@@ -233,7 +230,8 @@ public class CameraCalibrationUtils {
          * starting values. Can be one or more of the follow added together: FIX_ASPECT_RATIO, 
          * FIX_CENTER_POINT, FIX_DISTORTION_COEFFICENTS, and FIX_ROTATION.
          */
-        public CalibrationModel(double[][][] testPattern3dPoints, TreeSet<Integer> outlierPoints, int flags) {
+        public CalibrationModel(double[][][] testPattern3dPoints, TreeSet<Integer> outlierPoints, 
+                int flags) {
             this.outlierPoints = outlierPoints;
             this.flags = flags;
             this.testPattern3dPoints = testPattern3dPoints;
@@ -551,44 +549,40 @@ public class CameraCalibrationUtils {
     /**
      * Computes the rectification matrix that converts normalized physical camera coordinates to
      * the virtual camera coordinates
-     * @param rotate_m_c - the 3x3 rotation matrix that converts vector components from the machine
-     * coordinate system to the physical camera coordinate system
-     * @param vect_m_c_m - the 3x1 vector from the machine origin to the physical camera origin with
-     * components represented in the machine coordinate system
-     * @param rotate_m_cHat - the 3x3 rotation matrix that converts vector components from the 
-     * machine coordinate system to the virtual camera coordinate system
-     * @param vect_m_cHat_m - the 3x1 vector from the machine origin to the virtual camera origin 
-     * with components represented in the machine coordinate system
+     * @param transformFromMachToPhyCamRefFrame - the 3x3 rotation matrix that converts vector 
+     * components from the machine coordinate system to the physical camera coordinate system
+     * @param vectorFromMachToPhyCamInMachRefFrame - the 3x1 vector from the machine origin to the 
+     * physical camera origin with components represented in the machine coordinate system
+     * @param transformFromMachToVirCamRefFrame - the 3x3 rotation matrix that converts vector 
+     * components from the machine coordinate system to the virtual camera coordinate system
+     * @param vectorFromMachToVirCamInMachRefFrame - the 3x1 vector from the machine origin to the 
+     * virtual camera origin with components represented in the machine coordinate system
      * @param defaultZ - the machine Z coordinate, in millimeters, that is used as the default
      * imaging height 
      * @return
      */
-    public static Mat computeRectificationMatrix(Mat rotate_m_c, Mat vect_m_c_m, Mat rotate_m_cHat, 
-            Mat vect_m_cHat_m, double defaultZ) {
-        //Compute the height of the physical camera above defaultZ
-        double h = vect_m_c_m.get(2, 0)[0] - defaultZ;
+    public static Mat computeRectificationMatrix(Mat transformFromMachToPhyCamRefFrame, 
+            Mat vectorFromMachToPhyCamInMachRefFrame, Mat transformFromMachToVirCamRefFrame, 
+            Mat vectorFromMachToVirCamInMachRefFrame, double defaultZ) {
+
+        double defaultZToPhyCamZ = vectorFromMachToPhyCamInMachRefFrame.get(2, 0)[0] - defaultZ;
         
-        //Compute the 3x3 rotation matrix that converts vector components from physical camera 
-        //coordinate system to the virtual camera coordinate system
-        Mat rotate_c_cHat = Mat.eye(3, 3, CvType.CV_64FC1);
-        //rotate_c_cHat = rotate_m_cHat * rotate_m_c.t()
-        Core.gemm(rotate_m_cHat, rotate_m_c.t(), 1, rotate_m_c, 0, rotate_c_cHat);
+        Mat transformFromPhyCamToVirCamRefFrame = Mat.eye(3, 3, CvType.CV_64FC1);
+        Core.gemm(transformFromMachToVirCamRefFrame, transformFromMachToPhyCamRefFrame.t(), 1, 
+                transformFromMachToPhyCamRefFrame, 0, transformFromPhyCamToVirCamRefFrame);
         
-        //Compute the vector from the virtual camera origin to the physical camera origin with
-        //components represented in the machine coordinate system
-        Mat vect_cHat_c_m = Mat.zeros(3, 1, CvType.CV_64FC1);
-        //vect_cHat_c_m = vect_m_c_m - vect_m_cHat_m
-        Core.subtract(vect_m_c_m, vect_m_cHat_m, vect_cHat_c_m);
+        Mat vectorFromVirCamToPhyCamInMachRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
+        Core.subtract(vectorFromMachToPhyCamInMachRefFrame, vectorFromMachToVirCamInMachRefFrame, 
+                vectorFromVirCamToPhyCamInMachRefFrame);
         
-        //Compute the vector from the virtual camera origin to the physical camera origin with
-        //components represented in the virtual camera coordinate system
-        Mat vect_cHat_c_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
-        //vect_cHat_c_cHat = rotate_m_cHat*vect_cHat_c_m
-        Core.gemm(rotate_m_cHat, vect_cHat_c_m, 1, vect_cHat_c_m, 0, vect_cHat_c_cHat);
+        Mat vectorFromVirCamToPhyCamInVirCamRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
+        Core.gemm(transformFromMachToVirCamRefFrame, vectorFromVirCamToPhyCamInMachRefFrame, 1, 
+                vectorFromVirCamToPhyCamInMachRefFrame, 0, vectorFromVirCamToPhyCamInVirCamRefFrame);
         
-        //A set of normalized physical camera points is chosen, quantity and the specific points are
-        //not important although at least four of the points need to form a quadrilateral.  Note
-        //that the Z coordinate of all these points is assumed to be 1
+        //A set of normalized physical camera points is chosen, the quantity and the specific points
+        //are not important although at least four of the points need to form a quadrilateral.  Note
+        //that because these are normalized coordinates, the Z coordinate of all points is assumed 
+        //to be 1
         MatOfPoint2f cameraPoints = new MatOfPoint2f();
         cameraPoints.push_back(new MatOfPoint2f(new Point(0, 0)));
         cameraPoints.push_back(new MatOfPoint2f(new Point(-1000, -1000)));
@@ -599,49 +593,56 @@ public class CameraCalibrationUtils {
         MatOfPoint2f cameraHatPoints = new MatOfPoint2f();
         
         //For each of the normalized physical camera points, compute its normalized coordinates in 
-        //the virtual camera's coordinate system 
+        //the virtual camera's coordinate system by projecting the point onto the defaultZ plane and
+        //then normalizing the vector from the virtual camera to the point
         for (int i=0; i<cameraPoints.rows(); i++) {
-            //The normalized physical camera point is designated as point p'.  Construct a vector
-            //from the physical camera origin to p' with components represented in the physical
-            //camera's coordinate system
-            Mat vect_c_pPrime_c = Mat.ones(3, 1, CvType.CV_64FC1); //The z coordinate need to be 1
-            vect_c_pPrime_c.put(0, 0, cameraPoints.get(i, 0));
-            Logger.trace("vect_c_pPrime_c = " + vect_c_pPrime_c.dump());
+            //The normalized physical camera point is designated as point PPrime
+            Mat vectorFromPhyCamToPPrimeInPhyCamRefFrame = Mat.ones(3, 1, CvType.CV_64FC1); //Z = 1
+            vectorFromPhyCamToPPrimeInPhyCamRefFrame.put(0, 0, cameraPoints.get(i, 0));
+            Logger.trace("vectorFromPhyCamToPPrimeInPhyCamRefFrame = " + 
+                    vectorFromPhyCamToPPrimeInPhyCamRefFrame.dump());
 
-            //Convert the vector's components to be represented in the virtual camera's coordinate
-            //system
-            Mat vect_c_pPrime_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
-            //vect_c_pPrime_cHat = rotate_c_cHat * vect_c_pPrime_c
-            Core.gemm(rotate_c_cHat, vect_c_pPrime_c, 1, vect_c_pPrime_c, 0, vect_c_pPrime_cHat);
-            vect_c_pPrime_c.release();
-            Logger.trace("vect_c_pPrime_cHat = " + vect_c_pPrime_cHat.dump());
+            Mat vectorFromPhyCamToPPrimeInVirCamRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
+            Core.gemm(transformFromPhyCamToVirCamRefFrame, vectorFromPhyCamToPPrimeInPhyCamRefFrame,
+                    1, vectorFromPhyCamToPPrimeInPhyCamRefFrame, 0, 
+                    vectorFromPhyCamToPPrimeInVirCamRefFrame);
+            vectorFromPhyCamToPPrimeInPhyCamRefFrame.release();
+            Logger.trace("vectorFromPhyCamToPPrimeInVirCamRefFrame = " + 
+                    vectorFromPhyCamToPPrimeInVirCamRefFrame.dump());
             
-            //Scale the vector so that its Z component is the height of the camera above defaultZ.
-            //This will place the tip of the vector on the defaultZ plane. This point on the 
-            //default Z plane is designated as point p.
-            Mat vect_c_p_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
-            //vect_c_p_cHat = h/vect_c_pPrime_cHat[z] * vect_c_pPrime_cHat
-            Core.multiply(vect_c_pPrime_cHat, new Scalar(h/vect_c_pPrime_cHat.get(2, 0)[0]), vect_c_p_cHat);
-            vect_c_pPrime_cHat.release();
-            Logger.trace("vect_c_p_cHat = " + vect_c_p_cHat.dump());
+            //Scale the vector so that its Z component is the height of the physical camera above 
+            //defaultZ. This will place the tip of the vector on the defaultZ plane. This point on 
+            //the default Z plane is designated as point P.
+            Mat vectorFromPhyCamToPInVirCamRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
+            Core.multiply(vectorFromPhyCamToPPrimeInVirCamRefFrame, 
+                    new Scalar(defaultZToPhyCamZ/vectorFromPhyCamToPPrimeInVirCamRefFrame.get(2, 0)[0]), 
+                    vectorFromPhyCamToPInVirCamRefFrame);
+            vectorFromPhyCamToPPrimeInVirCamRefFrame.release();
+            Logger.trace("vectorFromPhyCamToPInVirCamRefFrame = " + 
+                    vectorFromPhyCamToPInVirCamRefFrame.dump());
             
-            //Construct a vector from the virtual camera's origin to point p with components
-            //represented in the virtual camera's coordinate system
-            Mat vect_cHat_p_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
-            //vect_cHat_p_cHat = vect_c_p_cHat + vect_cHat_c_cHat
-            Core.add(vect_c_p_cHat, vect_cHat_c_cHat, vect_cHat_p_cHat);
-            vect_c_p_cHat.release();
-            Logger.trace("vect_cHat_p_cHat = " + vect_cHat_p_cHat.dump());
+            Mat vectorFromVirCamToPInVirCamRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
+            Core.add(vectorFromPhyCamToPInVirCamRefFrame, vectorFromVirCamToPhyCamInVirCamRefFrame, 
+                    vectorFromVirCamToPInVirCamRefFrame);
+            vectorFromPhyCamToPInVirCamRefFrame.release();
+            Logger.trace("vectorFromVirCamToPInVirCamRefFrame = " + 
+                    vectorFromVirCamToPInVirCamRefFrame.dump());
             
-            //Normalize the vector so that its Z component is 1
-            Mat vect_cHat_pHatPrime_cHat = Mat.zeros(3, 1, CvType.CV_64FC1);
-            Core.multiply(vect_cHat_p_cHat, new Scalar(1.0/vect_cHat_p_cHat.get(2, 0)[0]), vect_cHat_pHatPrime_cHat);
-            vect_cHat_p_cHat.release();
-            Logger.trace("vect_cHat_pHatPrime_cHat = " + vect_cHat_pHatPrime_cHat.dump());
+            //Normalize the vector so that its Z component is 1. The tip of this vector is
+            //designated PHatPrime
+            Mat vectorFromVirCamToPHatPrimeInVirCamRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
+            Core.multiply(vectorFromVirCamToPInVirCamRefFrame, 
+                    new Scalar(1.0/vectorFromVirCamToPInVirCamRefFrame.get(2, 0)[0]), 
+                    vectorFromVirCamToPHatPrimeInVirCamRefFrame);
+            vectorFromVirCamToPInVirCamRefFrame.release();
+            Logger.trace("vectorFromVirCamToPHatPrimeInVirCamRefFrame = " + 
+                    vectorFromVirCamToPHatPrimeInVirCamRefFrame.dump());
 
             //Save the normalized point
-            cameraHatPoints.push_back(new MatOfPoint2f(new Point(vect_cHat_pHatPrime_cHat.get(0, 0)[0], vect_cHat_pHatPrime_cHat.get(1, 0)[0])));
-            vect_cHat_pHatPrime_cHat.release();
+            cameraHatPoints.push_back(new MatOfPoint2f(
+                    new Point(vectorFromVirCamToPHatPrimeInVirCamRefFrame.get(0, 0)[0], 
+                            vectorFromVirCamToPHatPrimeInVirCamRefFrame.get(1, 0)[0])));
+            vectorFromVirCamToPHatPrimeInVirCamRefFrame.release();
         }
         
         //The rectification matrix is the homography matrix that takes the physical camera points
@@ -651,15 +652,16 @@ public class CameraCalibrationUtils {
         //Cleanup
         cameraPoints.release();
         cameraHatPoints.release();
-        rotate_c_cHat.release();
-        vect_cHat_c_m.release();
-        vect_cHat_c_cHat.release();
+        transformFromPhyCamToVirCamRefFrame.release();
+        vectorFromVirCamToPhyCamInMachRefFrame.release();
+        vectorFromVirCamToPhyCamInVirCamRefFrame.release();
         
         return rectification;
     }
     
     /**
-     * Computes the virtual camera matrix
+     * Computes the virtual camera matrix. This is similar to openCV's getOptimalNewCameraMatrix
+     * except that it also takes into account any image rectification.
      * @param physicalCameraMatrix - the physical camera's intrinsic matrix
      * @param distortionCoefficients - the physical camera's lens distortion coefficients
      * @param rectification - the rectification matrix that takes the physical camera points to the
@@ -690,7 +692,7 @@ public class CameraCalibrationUtils {
                     distortionCoefficients, rectification);
             point.release();
 
-            principalPoint = Mat.ones(3, 1, CvType.CV_64FC1);
+            principalPoint = Mat.ones(3, 1, CvType.CV_64FC1); //Z = 1
             principalPoint.put(0, 0, centerPoint.get(0, 0)[0]);
             principalPoint.put(1, 0, centerPoint.get(0, 0)[1]);
             centerPoint.release();
@@ -704,7 +706,8 @@ public class CameraCalibrationUtils {
     }
     
     /**
-     * Computes the virtual camera matrix
+     * Computes the virtual camera matrix.  This is similar to openCV's getOptimalNewCameraMatrix
+     * except that it also takes into account any image rectification.
      * @param physicalCameraMatrix - the physical camera's intrinsic matrix
      * @param distortionCoefficients - the physical camera's lens distortion coefficients
      * @param rectification - the rectification matrix that takes the physical camera points to the
@@ -715,14 +718,13 @@ public class CameraCalibrationUtils {
      * around the edge of the image.  A value of one ensure all valid pixels are displayed but that
      * may result in some invalid (usually black) pixels being displayed around the edge of the
      * image. 
-     * @param principalPoint - a 3x1 matrix containing the point in camera coordinates of the 
-     * desired principal point of the virtual camera 
+     * @param principalPoint - a 3x1 matrix containing the point in physical camera coordinates of 
+     * the desired principal point of the virtual camera, if null, the principal point will be 
+     * computed  
      * @return the virtual camera's intrinsic camera matrix
      */
     public static Mat computeVirtualCameraMatrix(Mat physicalCameraMatrix, Mat distortionCoefficients, 
             Mat rectification, Size size, double alpha, Mat principalPoint) {
-        Logger.trace("size = " + size);
-        Logger.trace("principalPoint = " + principalPoint.dump());
         //Generate a set of points around the outer perimeter of the distorted unrectifed image
         int numberOfPointsPerSide = 250;
         MatOfPoint2f distortedPoints = new MatOfPoint2f();
@@ -745,7 +747,6 @@ public class CameraCalibrationUtils {
             distortedPoints.push_back(new MatOfPoint2f(
                     new org.opencv.core.Point((numberOfPointsPerSide - 1 - iSidePt)*xStep, 0)));
         }
-//        Logger.trace("distortedPoints = " + distortedPoints.dump());
 
         MatOfPoint2f undistortedPoints = new MatOfPoint2f();
        
@@ -753,8 +754,9 @@ public class CameraCalibrationUtils {
         Calib3d.undistortPoints(distortedPoints, undistortedPoints, physicalCameraMatrix, 
                 distortionCoefficients, rectification);
         distortedPoints.release();
-//        Logger.trace("undistortedPoints = " + undistortedPoints.dump());
         
+        double aspectRatio = size.height/size.width;
+
         boolean keepPrincipalPoint = false;
         double centerX = 0;
         double centerY = 0;
@@ -764,11 +766,19 @@ public class CameraCalibrationUtils {
             centerY = principalPoint.get(1, 0)[0] / principalPoint.get(2, 0)[0];
         }
         
+        //First find the outer bounding rectangle (of the correct aspect ratio) that encloses all of
+        //the undistorted image. This corresponds to the edge of the image for alpha = 1.  If the 
+        //principal point was specified, the center of the bounding rectangle is placed at that 
+        //point and the rectangle is sized so that it just touches the boundary of the undistorted 
+        //image most distance from the center; otherwise, the center is placed such that the 
+        //bounding rectangle is as small as possible but still encloses all of the undistorted 
+        //image.
         double outerMaxX = Double.NEGATIVE_INFINITY;
         double outerMinX = Double.POSITIVE_INFINITY;
         double outerMaxY = Double.NEGATIVE_INFINITY;
         double outerMinY = Double.POSITIVE_INFINITY;
         
+        //Check each undistorted point to see if it is an extreme point
         for (int i=0; i<undistortedPoints.rows(); i++) {
             double[] pt = undistortedPoints.get(i, 0);
             if (pt[0] > outerMaxX) {
@@ -785,6 +795,8 @@ public class CameraCalibrationUtils {
             }
         }
         
+        //If principal point was specified, adjust the extremes to keep them centered about the
+        //specified point
         if (keepPrincipalPoint) {
             double outer = Math.max(outerMaxX - centerX, centerX - outerMinX);
             outerMaxX = centerX + outer;
@@ -794,60 +806,85 @@ public class CameraCalibrationUtils {
             outerMinY = centerY - outer;
         }
         
-        double aspectRatio = size.height/size.width;
-        
+        //Find the center of the extreme points
         double outerCenterX = (outerMaxX + outerMinX) / 2;
         double outerCenterY = (outerMaxY + outerMinY) / 2;
-//        Logger.trace("outer center = (" + outerCenterX + ", " + outerCenterY + ")" );
         
+        //Compute the normalized coordinates to pixel scaling (this is the f terms in the intrinsic 
+        //camera matrix)
         double outerF;
         if ((outerMaxY - outerMinY)/(outerMaxX - outerMinX) >= aspectRatio) {
             //Constrained by the height
             outerF = size.height / (outerMaxY - outerMinY);
-            double newWidth = (outerMaxY - outerMinY)/aspectRatio;
-            outerMinX = outerCenterX - newWidth/2;
-            outerMaxX = outerCenterX + newWidth/2;
         }
         else {
             //Constrained by the width
             outerF = size.width / (outerMaxX - outerMinX);
-            double newHeight = (outerMaxY - outerMinY)/aspectRatio;
-            outerMinY = outerCenterY - newHeight/2;
-            outerMaxY = outerCenterY + newHeight/2;
         }
-//        Logger.trace("outerX extent = (" + outerMinX + ", " + outerMaxX + ")" );
-//        Logger.trace("outerY extent = (" + outerMinY + ", " + outerMaxY + ")" );
         
+        //Compute the location of the normalized camera coordinate (0, 0, 1) in pixels relative to 
+        //the upper left corner of the image (the c terms in the intrinsic camera matrix)
         double outerCx = (size.width-1)/2 - outerF*outerCenterX;
         double outerCy = (size.height-1)/2 - outerF*outerCenterY;
         
-        
+        //Now find the inscribed rectangle (of the correct aspect ratio) that just fits within the
+        //undistorted image. This corresponds to the edge of the image for alpha = 0. If the
+        //principal point was specified, the center of the rectangle is placed at that point and the
+        //rectangle is sized so that it just touches the edge of the undistorted image nearest to 
+        //the center; otherwise, the center of the rectangle is placed such that the inscribed 
+        //rectangle is as large as possible but is still within the bounds of the undistorted image.
         double innerMinX = Double.NEGATIVE_INFINITY;
         double innerMaxX = Double.POSITIVE_INFINITY;
         double innerMinY = Double.NEGATIVE_INFINITY;
         double innerMaxY = Double.POSITIVE_INFINITY;
         
-        //The following assumes the center of the outer bounding rectangle falls within the
-        //interior of the undistorted and rectified image boundary (which is where we need 
-        //to start)
-        double innerCenterX = outerCenterX;
-        double innerCenterY = outerCenterY;
+        //To find the inscribed rectangle, the algorithm needs to start with a point that is 
+        //interior to the undistorted and rectified image boundary.  With almost any conceivable 
+        //amount of distortion and rectification, the point at the intersection of the lines 
+        //connecting opposite corners of the distorted image should fall within the interior.
         
+        //Get the four corner points
+        double x[] = new double[4];
+        double y[] = new double[4];
+        for (int i=0; i<4; i++) {
+            x[i] = undistortedPoints.get(i*numberOfPointsPerSide, 0)[0];
+            y[i] = undistortedPoints.get(i*numberOfPointsPerSide, 0)[1];
+        }
+
+        //Compute the intersection point of the lines connecting opposite corners and use that as 
+        //the starting center point
+        double denom = (x[1] - x[3])*y[0] - x[0]*(y[1] - y[3]) + x[2]*(y[1] - y[3])
+                - (x[1] - x[3])*y[2];
+        double innerCenterX = ((x[1] - x[3])*x[2]*y[0] - x[0]*(x[1] - x[3])*y[2] - 
+                (x[3]*y[1] - x[1]*y[3])*x[0] + (x[3]*y[1] - x[1]*y[3])*x[2])/denom;
+        double innerCenterY = ((x[2]*(y[1] - y[3]) - x[3]*y[1] + x[1]*y[3])*y[0] - 
+                (x[0]*(y[1] - y[3]) - x[3]*y[1] + x[1]*y[3])*y[2])/denom;
+        
+        //This is the angle from the center of the rectangle to one of its lower right corner
         double angle = Math.atan2(size.height, size.width);
         
         boolean fullyConstrained = false;
         double maxWidth = 0;
         double maxHeight = 0;
         
+        //Iterate until the rectangle is fully constrained (can't grow any larger)
         while (!fullyConstrained) {
             innerMinX = Double.NEGATIVE_INFINITY;
             innerMaxX = Double.POSITIVE_INFINITY;
             innerMinY = Double.NEGATIVE_INFINITY;
             innerMaxY = Double.POSITIVE_INFINITY;
             
+            //Find the constraining point(s) of the rectangle.  Note that all points need to be 
+            //checked (not just the corners) because a side of the rectangle may be tangent to the 
+            //boundary at some point between the corners. To do that, it is necessary to determine 
+            //which side of the rectangle each point may constrain by checking the angle from the 
+            //center of the rectangle to the point.
             for (int i=0; i<undistortedPoints.rows(); i++) {
                 double[] pt = undistortedPoints.get(i, 0);
-                double ptAngle = Math.atan2((pt[1] - innerCenterY), (pt[0] - innerCenterX));
+                
+                //Angle from the center of the rectangle to the point (remember in this context 
+                //angles are measured clock-wise since positive X is right and positive Y is down)
+                double ptAngle = Math.atan2(pt[1] - innerCenterY, pt[0] - innerCenterX);
                 
                 //Make ptAngle in the range [-angle, 2*PI-angle)
                 if (ptAngle < -angle) {
@@ -880,14 +917,18 @@ public class CameraCalibrationUtils {
                 }
             }
             
+            //At this point, if any of the limits are not finite, the assumption that the starting 
+            //point was on the interior of the undistorted and rectified image boundary was invalid.
+            //In that case, just force the limits to valid values.
             if (!Double.isFinite(innerMaxX) || !Double.isFinite(innerMinX) || 
                     !Double.isFinite(innerMaxY) || !Double.isFinite(innerMinY) ) {
-                //The assumption that the starting point was on the interior is invalid
                 innerMaxX = innerCenterX + 1;
                 innerMinX = innerCenterX - 1;
                 innerMaxY = innerCenterY + 1;
                 innerMinY = innerCenterY - 1;
             }
+            
+            //If the principal point was specified, force the limits to be centered on that point
             if (keepPrincipalPoint) {
                 double inner = Math.min(innerMaxX - centerX, centerX - innerMinX);
                 innerMaxX = centerX + inner;
@@ -897,33 +938,36 @@ public class CameraCalibrationUtils {
                 innerMinY = centerY - inner;
             }
 
+            //Compute the offsets from the current rectangle center to the limit centers
             double innerCenterOffsetX = (innerMaxX + innerMinX)/2 - innerCenterX;
             double innerCenterOffsetY = (innerMaxY + innerMinY)/2 - innerCenterY;
             
             double newHeight;
             double newWidth;
             
+            //Make adjustments to the limits based on the aspect ratio
             if ((innerMaxY - innerMinY)/(innerMaxX - innerMinX) >= aspectRatio) {
-                //Constrained by the width, move the center up/down
+                //Constrained by the width, can only move the rectangle up/down so center it between
+                //the Y limits
                 newWidth = innerMaxX - innerMinX;
                 newHeight = newWidth*aspectRatio;
                 innerMaxY = (innerMaxY + innerMinY)/2 + newHeight/2;
                 innerMinY = (innerMaxY + innerMinY)/2 - newHeight/2;
             }
             else {
-                //Constrained by the height, move the center left/right
+                //Constrained by the height, can only move the rectangle left/right so center it
+                //between the X limits
                 newHeight = innerMaxY - innerMinY;
                 newWidth = newHeight/aspectRatio;
                 innerMaxX = (innerMaxX + innerMinX)/2 + newWidth/2;
                 innerMinX = (innerMaxX + innerMinX)/2 - newWidth/2;
             }
-//            Logger.trace("innerX extent = (" + innerMinX + ", " + innerMaxX + ")" );
-//            Logger.trace("innerY extent = (" + innerMinY + ", " + innerMaxY + ")" );
             
+            //Move the center for the next possible iteration
             innerCenterX += innerCenterOffsetX;
             innerCenterY += innerCenterOffsetY;
-//            Logger.trace("inner center = (" + innerCenterX + ", " + innerCenterY + ")" );
             
+            //Check to see if the rectangle is fully constrained
             fullyConstrained = (Math.abs(innerCenterOffsetX) < 0.0001) &&
                     (Math.abs(innerCenterOffsetY) < 0.0001);
             if (newWidth > maxWidth) {
@@ -934,13 +978,13 @@ public class CameraCalibrationUtils {
                 maxHeight = newHeight;
                 fullyConstrained = false;
             }
-//            Logger.trace("width = " + newWidth + ", " + maxWidth);
-//            Logger.trace("height = " + newHeight + ", " + maxHeight);
         }
         undistortedPoints.release();
         
         double innerF;
         
+        //Compute the scaling from normalized coordinates to pixels (this is the f terms in the
+        //intrinsic camera matrix)
         if ((innerMaxY - innerMinY)/(innerMaxX - innerMinX) >= aspectRatio) {
             //Constrained by the width
             innerF = size.width / (innerMaxX - innerMinX);
@@ -949,15 +993,19 @@ public class CameraCalibrationUtils {
             //Constrained by the height
             innerF = size.height / (innerMaxY - innerMinY);
         }
+        
+        //Compute the location of the normalized camera coordinate (0, 0, 1) in pixels relative to 
+        //the upper left corner of the image (these are the c terms in the intrinsic camera matrix)
         double innerCx = (size.width-1)/2 - innerF*innerCenterX;
         double innerCy = (size.height-1)/2 - innerF*innerCenterY;
         
+        //Interpolate to the desired alpha value
         double f = outerF*alpha + innerF*(1-alpha);
         double cx = outerCx*alpha + innerCx*(1-alpha);
         double cy = outerCy*alpha + innerCy*(1-alpha);
         
+        //Populate the virtual camera matrix
         Mat ret = Mat.eye(3, 3, CvType.CV_64FC1);
-        
         ret.put(0, 0, f);
         ret.put(0, 2, cx);
         ret.put(1, 1, f);
