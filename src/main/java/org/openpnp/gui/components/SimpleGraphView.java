@@ -28,6 +28,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -141,6 +142,17 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                         min.y = Math.min(-max.y, min.y);
                     }
                 }
+                if (dataScale.isSquareAspectRatio()) {
+                    if (min != null && max != null) {
+                        double maxDiffOver2 = Math.max(max.x - min.x, max.y - min.y)/2;
+                        double midX = (max.x + min.x)/2;
+                        double midY = (max.y + min.y)/2;
+                        max.x = midX + maxDiffOver2;
+                        max.y = midY + maxDiffOver2;
+                        min.x = midX - maxDiffOver2;
+                        min.y = midY - maxDiffOver2;
+                    }
+                }
                 if (min != null && max != null && (max.y-min.y) > 0.0 && (max.x-min.x) > 0.0) {
                     double xOrigin = (w-1)*graph.getRelativePaddingLeft();
                     double xScale = (w-1)*(1.0-graph.getRelativePaddingLeft()-graph.getRelativePaddingRight())/(max.x-min.x);
@@ -252,6 +264,9 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                             if (xAxis != null) {
                                 // Convert to pixel coordinates
                                 int size = dataRow.size();
+                                boolean showLine = dataRow.isLineShown();
+                                boolean showMarker = dataRow.isMarkerShown();
+                                boolean showMarkerOnly = showMarker && !showLine;
                                 if (size >= 2) {
                                     double [] xfPlot = new double [size]; 
                                     double [] yfPlot = new double [size];
@@ -278,7 +293,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                         double n0 = Math.sqrt(dx0*dx0+dy0*dy0); 
                                         double n1 = Math.sqrt(dx1*dx1+dy1*dy1); 
                                         double cosine = ((dx0*dx1) + (dy0*dy1))/n0/n1;
-                                        if (cosine < 0.99 
+                                        if (showMarkerOnly || cosine < 0.99 
                                                 || Math.abs(xfPlot[i]-xPlot[s-1]) > 12 || Math.abs(yfPlot[i]-yPlot[s-1]) > 1.5) {
                                             // Corner point or relevant change.
                                             xPlot[s] = (int) xfPlot[i];
@@ -290,9 +305,17 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                     xPlot[s] = (int) xfPlot[size-1];
                                     yPlot[s] = (int) yfPlot[size-1];
                                     s++;
-                                    // Draw as polyline.
                                     g2d.setColor(dataRow.getColor());
-                                    g2d.drawPolyline(xPlot, yPlot, s);
+                                    if (showLine) {
+                                        // Draw as polyline.
+                                        g2d.drawPolyline(xPlot, yPlot, s);
+                                    }
+                                    if (showMarker) {
+                                        int dia = 4;
+                                        for (int p=0; p<s; p++) {
+                                            g2d.fillOval(xPlot[p]-dia/2, yPlot[p]-dia/2, dia, dia);
+                                        }
+                                    }
                                     if (selectedX != null) {
                                         drawYIndicator(g2d, dfm, fontAscent, w, min, max, yOrigin, yScale, yUnit, 
                                                 dataRow.getInterpolated(selectedX), dataRow.getColor());

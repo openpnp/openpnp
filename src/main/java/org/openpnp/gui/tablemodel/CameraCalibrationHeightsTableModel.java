@@ -47,14 +47,6 @@ public class CameraCalibrationHeightsTableModel extends AbstractTableModel {
     public CameraCalibrationHeightsTableModel(ReferenceCameraCalibrationWizard wizard) {
         this.wizard = wizard;
         refresh();
-//        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-//            public void configurationComplete(Configuration configuration) throws Exception {
-//                BeanUtils.addPropertyChangeListener(configuration.getMachine(), "feeders", event -> {
-//                    refresh();
-//                });
-//                refresh();
-//            }
-//        });
     }
 
     public void refresh() {
@@ -105,7 +97,7 @@ public class CameraCalibrationHeightsTableModel extends AbstractTableModel {
                     height.setValue(newHeight.getValue());
                 }
                 else {
-                    height = newHeight; //Or should this be heights.add(newHeight)????
+                    height = newHeight;
                 }
             }
         }

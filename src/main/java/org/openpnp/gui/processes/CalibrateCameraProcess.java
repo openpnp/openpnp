@@ -54,6 +54,7 @@ import org.openpnp.gui.components.CameraViewFilter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
@@ -66,6 +67,7 @@ import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
@@ -85,7 +87,7 @@ import org.pmw.tinylog.Logger;
 public abstract class CalibrateCameraProcess {
     static final boolean useSavedData = false;
 
-    private static final int desiredTestPatternSize = 15;
+    private static final int desiredTestPatternSize = 17;
     private static final int desiredPointsPerTestPattern = desiredTestPatternSize*desiredTestPatternSize;
     private static final double testPatternFillFraction = 0.90;
     private static final double trialStepSize = 0.5;
@@ -211,6 +213,8 @@ public abstract class CalibrateCameraProcess {
     private double observationWeight;
 
     private int numberOfAngles;
+
+    private ArrayList<Length> calibrationHeights;
     
     public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, 
             Part calibrationRigPart, List<Length> calibrationHeights)
@@ -218,6 +222,7 @@ public abstract class CalibrateCameraProcess {
         this.mainFrame = mainFrame;
         this.cameraView = cameraView;
         this.calibrationRig = calibrationRigPart;
+        this.calibrationHeights = new ArrayList<Length>(calibrationHeights);
         numberOfCalibrationHeights = calibrationHeights.size();
         
         camera = cameraView.getCamera();
@@ -356,8 +361,12 @@ public abstract class CalibrateCameraProcess {
         MainFrame.get().getMachineControls().setSelectedTool(nozzle);
         MovableUtils.fireTargetedUserAction(nozzle);
         
-//        ((ReferenceCamera) camera).getCalibration().setEnabled(false);
-
+        if (isHeadMountedCamera && Double.isFinite(calibrationHeights.get(calibrationHeightIndex).getValue())) {
+            testPatternZ = calibrationHeights.get(calibrationHeightIndex).convertToUnits(LengthUnit.Millimeters).getValue();
+            movableZ = 0;
+            movable = camera;
+            step++;
+        }
         return true;
     }
 
@@ -857,7 +866,7 @@ public abstract class CalibrateCameraProcess {
         }
         else {
             //Set the next calibration height
-            testPatternZ += 10; //************************************* need to make this offset adjustable
+            testPatternZ = calibrationHeights.get(calibrationHeightIndex).convertToUnits(LengthUnit.Millimeters).getValue();//+= 10; //************************************* need to make this offset adjustable
             movableZ = testPatternZ + 
                     calibrationRig.getHeight().convertToUnits(LengthUnit.Millimeters).getValue();
             
@@ -885,8 +894,15 @@ public abstract class CalibrateCameraProcess {
      * @return true if the action was successful and the state machine should move to the next step
      */
     private boolean step7() {
-        //Go back to have the operator touch the nozzle tip onto the rig to measure its height
-        step = 0;
+        if (isHeadMountedCamera && Double.isFinite(calibrationHeights.get(calibrationHeightIndex).getValue())) {
+            testPatternZ = calibrationHeights.get(calibrationHeightIndex).convertToUnits(LengthUnit.Millimeters).getValue();
+            //Go back to have the operator center the fiducial in the camera view
+            step = 1;
+        }
+        else {
+            //Go back to have the operator touch the nozzle tip onto the rig to measure its height
+            step = 0;
+        }
         return true;
     }
     

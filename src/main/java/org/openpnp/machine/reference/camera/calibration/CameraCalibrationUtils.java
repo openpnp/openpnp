@@ -19,8 +19,15 @@
 
 package org.openpnp.machine.reference.camera.calibration;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresFactory;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer.Optimum;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
@@ -32,15 +39,21 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.optim.ConvergenceChecker;
 import org.apache.commons.math3.optim.SimpleVectorValueChecker;
+import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest;
 import org.apache.commons.math3.util.Pair;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfInt;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Subdiv2D;
 import org.pmw.tinylog.Logger;
 
 /**
@@ -54,13 +67,17 @@ public class CameraCalibrationUtils {
     public static final int FIX_DISTORTION_COEFFICENTS = 4;
     public static final int FIX_ROTATION = 8;
     
+    //Assuming the residual errors are bivariate normally distributed, a setting of 2.4103 should
+    //exclude only 0.3% of good points while rejecting most of the extreme outliers.  Lower values
+    //will cause more points to be rejected.  Here are some other possible settings: 
+    //2.4103 -> include 98.7% and reject  0.3%
+    //1.7308 -> include 95.0% and reject  5.0%
+    //0.8326 -> include 50.0% and reject 50.0%
+    //See https://en.wikipedia.org/wiki/Circular_error_probable for a more detailed explanation
+    public static final double sigmaThresholdForRejectingOutliers = 2.4103;
+    
     private static final int maxEvaluations = 500;
     private static final int maxIterations = 500;
-    
-    //Assuming the residual errors are normally distributed (which they should be if the
-    //measurements are good), 3 standard deviations should exclude only 0.27% of good points while 
-    //rejecting most of the extreme outliers.
-    private static final int sigmaThresholdForRejectingOutliers = 3;
     
     private static int numberOfTestPatterns;
     private static int numberOfParameters;
@@ -78,21 +95,26 @@ public class CameraCalibrationUtils {
      * testPatternImagePoints was collected.
      * @param testPatternImagePoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 2 
      * array containing the 2D image coordinates of the corresponding point in testPattern3dPoints.
-     * @param starting - a 13+2*numberOfTestPatterns element array containing the initial values of
-     * the camera parameters to be estimated in the following order: fx, fy, cx, cy, k1, k2, p1, p2,
-     * k3, Rx, Ry, Rz, cam_z, cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1],
+     * @param modeledImagePoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 2 
+     * array that, upon return of this method, will contain the 2D modeled image coordinates of the 
+     * corresponding points in testPattern3dPoints.
+     * @param parameters - a 13+2*numberOfTestPatterns element array containing the camera 
+     * parameters to be estimated in the following order: fx, fy, cx, cy, k1, k2, p1, p2, k3, Rx, 
+     * Ry, Rz, cam_z, cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1],
      * cam_y[numberOfTestPatterns-1].  Where fx, fy, cx, and cy are the intrinsic camera matrix
      * components; k1, k2, p1, p2, and k3 are the intrinsic camera lens distortion coefficients; Rx,
      * Ry, and Rz are the extrinsic camera rotation vector components; cam_z is the camera Z 
-     * coordinate; and cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1], and
-     * cam_y[numberOfTestPatterns-1] are the camera X/Y coordinates for each test pattern.
-     * @return a 13+2*numberOfTestPatterns element array containing the best fit camera parameters
-     * in the same order as the starting parameter.
+     * machine coordinate; and cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1], and
+     * cam_y[numberOfTestPatterns-1] are the camera X/Y machine coordinates for each test pattern.
+     * This array needs to be initialized with approximately correct values prior to calling this 
+     * method and upon return of this method will contain the best fit camera parameters.
+     * @return the RMS error in pixels of the model's fit to the data points.
      */
-    public static double[] ComputeBestCameraParameters(double[][][] testPattern3dPoints, 
-            double[][][] testPatternImagePoints, double[] starting) {
+    public static double ComputeBestCameraParameters(double[][][] testPattern3dPoints, 
+            double[][][] testPatternImagePoints, double[][][] modeledImagePoints, 
+            List<Integer> outlierPointList, double[] parameters) {
         return ComputeBestCameraParameters(testPattern3dPoints, 
-                testPatternImagePoints, starting, 0);
+                testPatternImagePoints, modeledImagePoints, outlierPointList, parameters, 0);
     }
     
     /**
@@ -107,30 +129,36 @@ public class CameraCalibrationUtils {
      * testPatternImagePoints was collected.
      * @param testPatternImagePoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 2 
      * array containing the 2D image coordinates of the corresponding point in testPattern3dPoints.
-     * @param starting - a 13+2*numberOfTestPatterns element array containing the initial values of
-     * the camera parameters to be estimated in the following order: fx, fy, cx, cy, k1, k2, p1, p2,
-     * k3, Rx, Ry, Rz, cam_z, cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1],
+     * @param modeledImagePoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 2 
+     * array that, upon return of this method, will contain the 2D modeled image coordinates of the 
+     * corresponding points in testPattern3dPoints.
+     * @param parameters - a 13+2*numberOfTestPatterns element array containing the camera 
+     * parameters to be estimated in the following order: fx, fy, cx, cy, k1, k2, p1, p2, k3, Rx, 
+     * Ry, Rz, cam_z, cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1],
      * cam_y[numberOfTestPatterns-1].  Where fx, fy, cx, and cy are the intrinsic camera matrix
      * components; k1, k2, p1, p2, and k3 are the intrinsic camera lens distortion coefficients; Rx,
      * Ry, and Rz are the extrinsic camera rotation vector components; cam_z is the camera Z 
-     * coordinate; and cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1], and
-     * cam_y[numberOfTestPatterns-1] are the camera X/Y coordinates for each test pattern.
+     * machine coordinate; and cam_x[0], cam_y[0], ... cam_x[numberOfTestPatterns-1], and
+     * cam_y[numberOfTestPatterns-1] are the camera X/Y machine coordinates for each test pattern.
+     * This array needs to be initialized with approximately correct values prior to calling this 
+     * method and upon return of this method will contain the best fit camera parameters.
      * @param flags - Flags used to force certain parameters be retained from the initial starting
      * values. Can be one or more of the follow added together: FIX_ASPECT_RATIO, FIX_CENTER_POINT,
      * FIX_DISTORTION_COEFFICENTS, and FIX_ROTATION.
-     * @return a 13+2*numberOfTestPatterns element array containing the best fit camera parameters
-     * in the same order as the starting parameter.
+     * @return the RMS error in pixels of the model's fit to the data points.
      */
-    public static double[] ComputeBestCameraParameters(double[][][] testPattern3dPoints, 
-            double[][][] testPatternImagePoints, double[] starting, int flags) {
+    public static double ComputeBestCameraParameters(double[][][] testPattern3dPoints, 
+            double[][][] testPatternImagePoints, double[][][] modeledImagePoints, 
+            List<Integer> outlierPointList, double[] parameters, int flags) {
         numberOfTestPatterns = testPattern3dPoints.length;
         //The number of model parameters includes 4 camera matrix entries, 5 distortion 
         //coefficients, 3 rotation vector coefficients, 1 camera Z component, and an X/Y camera
         //coordinate pair for each test pattern
         numberOfParameters = 4 + 5 + 3 + 1 + 2*numberOfTestPatterns;
-        aspectRatio = starting[1] / starting[0];
+        aspectRatio = parameters[1] / parameters[0];
+        
         TreeSet<Integer> outlierPoints = new TreeSet<Integer>();
-
+        
         LevenbergMarquardtOptimizer optimizer = new LevenbergMarquardtOptimizer();
         Optimum optimum = null;
         
@@ -158,31 +186,37 @@ public class CameraCalibrationUtils {
                 }
             }
             
-            RealVector start = new ArrayRealVector(starting);
+            RealVector start = new ArrayRealVector(parameters);
     
             ConvergenceChecker<LeastSquaresProblem.Evaluation> checker = 
                     LeastSquaresFactory.evaluationChecker(new SimpleVectorValueChecker(1e-6, 1e-8));
             
-            LeastSquaresProblem lsp = LeastSquaresFactory.create(model, observed, start, checker, maxEvaluations, maxIterations);
+            LeastSquaresProblem lsp = LeastSquaresFactory.create(model, observed, start, checker, 
+                    maxEvaluations, maxIterations);
             
             optimum = optimizer.optimize(lsp);
             Logger.trace("rms error = " + optimum.getRMS());
             Logger.trace("number of evaluations = " + optimum.getEvaluations());
             Logger.trace("number of iterations = " + optimum.getIterations());
-            Logger.trace("residuals = " + optimum.getResiduals().toString());
             Logger.trace("parameters = " + optimum.getPoint().toString());
             
             if (outlierPoints.isEmpty()) {
+                //To convert from RMS to to DRMS (that is from single dimensional RMS to Distance 
+                //RMS)we need to multiply by sqrt(2) and then to convert to variance everything gets
+                //squared so it just becomes a multiply by 2
                 double varianceThresholdForRejectingOutliers = 2*Math.pow(
                         sigmaThresholdForRejectingOutliers * optimum.getRMS(), 2);
                         
                 double[] residuals = optimum.getResiduals().toArray();
                 for (int i=0; i<residuals.length/2; i++) {
-                    if (residuals[2*i]*residuals[2*i]+residuals[2*i+1]*residuals[2*i+1] > 
+                    //Check the sum of the squares of the X and Y residuals against the threshold
+                    if (residuals[2*i]*residuals[2*i] + residuals[2*i+1]*residuals[2*i+1] > 
                             varianceThresholdForRejectingOutliers) {
                         outlierPoints.add(i);
                     }
                 }
+                outlierPointList.clear();
+                outlierPointList.addAll(outlierPoints);
                 
                 if (outlierPoints.isEmpty()) {
                     //no outliers found so no need for a second attempt
@@ -200,7 +234,26 @@ public class CameraCalibrationUtils {
         if ((flags & FIX_ASPECT_RATIO) != 0) {
             ans.setEntry(1, ans.getEntry(0));
         }
-        return ans.toArray();
+        
+//        ans.addToEntry(7, 1); //////////////////////////////////////////////////////////////////////////////Remove this!!!!!
+        
+        CalibrationModel model = new CalibrationModel(testPattern3dPoints, null, flags);
+        RealVector vectModeledImagePoints = model.value(ans).getFirst();
+        int iPoint = 0;
+        for (int i=0; i<numberOfTestPatterns; i++) {
+            modeledImagePoints[i] = new double[testPatternImagePoints[i].length][2];
+            for (int j=0; j<testPatternImagePoints[i].length; j++) {
+                modeledImagePoints[i][j][0] = vectModeledImagePoints.getEntry(iPoint);
+                iPoint++;
+                modeledImagePoints[i][j][1] = vectModeledImagePoints.getEntry(iPoint);
+                iPoint++;
+            }
+        }
+        
+        System.arraycopy(ans.toArray(), 0, parameters, 0, numberOfParameters);
+        
+        //return DRMS rather than RMS
+        return Math.sqrt(2) * optimum.getRMS();
     }
     
     /**
@@ -232,14 +285,19 @@ public class CameraCalibrationUtils {
          */
         public CalibrationModel(double[][][] testPattern3dPoints, TreeSet<Integer> outlierPoints, 
                 int flags) {
-            this.outlierPoints = outlierPoints;
+            if (outlierPoints != null) {
+                this.outlierPoints = outlierPoints;
+            }
+            else {
+                this.outlierPoints = new TreeSet<Integer>();
+            }
             this.flags = flags;
             this.testPattern3dPoints = testPattern3dPoints;
             totalNumberOfPoints = 0;
             for (int iTP=0; iTP<numberOfTestPatterns; iTP++) {
                 totalNumberOfPoints += testPattern3dPoints[iTP].length;
             }
-            totalNumberOfPoints -= outlierPoints.size();
+            totalNumberOfPoints -= this.outlierPoints.size();
             
             if ((flags & FIX_PRINCIPAL_POINT) == 0)  {
                 allowCenterToChange = 1;
@@ -1014,4 +1072,80 @@ public class CameraCalibrationUtils {
         return ret;
     }
 
+    public static List<double[]> computeResidualErrors(double[][][] actual2DPoints, 
+            double[][][] modeled2DPoints) {
+        return computeResidualErrors(actual2DPoints, modeled2DPoints, null);
+    }
+    
+    public static List<double[]> computeResidualErrors(double[][][] actual2DPoints, 
+            double[][][] modeled2DPoints, Integer heightIndex) {
+        List<double[]> retList = new ArrayList<>();
+        for (int i=0; i<actual2DPoints.length; i++) {
+            if (heightIndex == null || heightIndex == i) {
+                for (int j=0; j<actual2DPoints[i].length; j++) {
+                    double[] error = new double[2];
+                    for (int k=0; k<2; k++) {
+                        error[k] = actual2DPoints[i][j][k] - modeled2DPoints[i][j][k];
+                    }
+                    retList.add(error);
+                }
+            }
+        }
+        return retList;
+    }
+    
+    public static Mat generateErrorImage(Size size, int testPatternIndex, 
+            double[][][] actual2DPoints, double[][][] modeled2DPoints, ArrayList<Integer> outlierList) {
+        if (outlierList == null) {
+            outlierList = new ArrayList<Integer>();
+        }
+        Rect rect = new Rect(new Point(0, 0), size);
+        Subdiv2D subdiv2D = new Subdiv2D(rect);
+        int iPoint = 0;
+        double maxError = 0;
+        Map<Integer, Double> idToErrorMap = new HashMap<Integer, Double>();
+        List<double[]> residualList = computeResidualErrors(actual2DPoints, modeled2DPoints);
+        for (int i=0; i<actual2DPoints.length; i++) {
+            for (int j=0; j<actual2DPoints[i].length; j++) {
+                if ((i == testPatternIndex) && !outlierList.contains(iPoint)) {
+                    double[] errXY = residualList.get(iPoint);
+                    double error = Math.sqrt(errXY[0]*errXY[0] + errXY[1]*errXY[1]);
+                    maxError = Math.max(maxError, error);
+                    int id = subdiv2D.insert(new Point(actual2DPoints[i][j][0], 
+                            actual2DPoints[i][j][1]));
+                    idToErrorMap.put(id, error);
+                }
+                iPoint++;
+            }
+        }
+        Logger.trace("maxError = " + maxError);
+        
+        Set<Integer> keys = idToErrorMap.keySet();
+        Mat grayImage = new Mat((int)size.height, (int)size.width, CvType.CV_8UC1);
+        for (int key : keys) {
+            MatOfInt id = new MatOfInt(key);
+            List<MatOfPoint2f> facetList = new ArrayList<>();
+            MatOfPoint2f facetCenters = new MatOfPoint2f();
+            subdiv2D.getVoronoiFacetList(id, facetList, facetCenters);
+            id.release();
+            facetCenters.release();
+            
+            MatOfPoint facetVertices = new MatOfPoint();
+            for (MatOfPoint2f p : facetList) {
+                for (int i=0; i<p.rows(); i++) {
+                    facetVertices.push_back(new MatOfPoint(new Point((int)p.get(i, 0)[0], (int)p.get(i, 0)[1])));
+                }
+                p.release();
+            }
+            Imgproc.fillConvexPoly(grayImage, facetVertices, new Scalar(255.0*idToErrorMap.get(key)/maxError));
+            facetVertices.release();
+        }
+        
+        double kernelSize = 1.3*Math.sqrt(size.height * size.width / actual2DPoints[testPatternIndex].length);
+        Imgproc.blur(grayImage, grayImage, new Size(kernelSize, kernelSize));
+        Mat colorImage = new Mat();
+        Imgproc.applyColorMap(grayImage, colorImage, Imgproc.COLORMAP_TURBO);
+        grayImage.release();
+        return colorImage;
+    }
 }

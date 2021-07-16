@@ -199,24 +199,43 @@ public class DetectCircularSymmetry extends CvStage {
     public Result process(CvPipeline pipeline) throws Exception {
         Camera camera = (Camera) pipeline.getProperty("camera");
         Mat mat = pipeline.getWorkingImage();
-        // Get overriding properties, if any and convert to pixels.
-        Length diameterByProperty = (Length) pipeline.getProperty(propertyName+".diameter");
+        // Get overriding properties, if any and convert to pixels if necessary.
         int minDiameter = this.minDiameter;
         int maxDiameter = this.maxDiameter;
-        if (diameterByProperty != null && diameterByProperty.getValue() > 0) {
-            double diameter = VisionUtils.toPixels(diameterByProperty, camera);
-            minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
-            maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
+        Object diameterByProperty = pipeline.getProperty(propertyName+".diameter");
+        if (diameterByProperty instanceof Length) {
+            if (((Length) diameterByProperty).getValue() > 0) {
+                double diameter = VisionUtils.toPixels((Length) diameterByProperty, camera);
+                minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
+                maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
+            }
         }
+        else if (diameterByProperty instanceof Double){
+            if ((Double)diameterByProperty > 0) {
+                double diameter = (Double)diameterByProperty;
+                minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
+                maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
+            }
+        }
+        
         int maxDistance = this.maxDistance;
-        Length maxDistanceByProperty = (Length) pipeline.getProperty(propertyName+".maxDistance");
-        if (maxDistanceByProperty != null && maxDistanceByProperty.getValue() > 0) {
-            maxDistance = (int) Math.round(VisionUtils.toPixels(maxDistanceByProperty, camera));
+        Object maxDistanceByProperty = pipeline.getProperty(propertyName+".maxDistance");
+        if (maxDistanceByProperty instanceof Length) {
+            if (((Length)maxDistanceByProperty).getValue() > 0) {
+                maxDistance = (int) Math.round(VisionUtils.toPixels((Length) maxDistanceByProperty, camera));
+            }
         }
+        else if (maxDistanceByProperty instanceof Double) {
+            maxDistance = (int) Math.round((Double) maxDistanceByProperty); 
+        }
+        
         Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
-        Location centerByProperty = (Location) pipeline.getProperty(propertyName+".center");
-        if (centerByProperty != null) {
-            center = VisionUtils.getLocationPixels(camera, centerByProperty);
+        Object centerByProperty = pipeline.getProperty(propertyName+".center");
+        if (centerByProperty instanceof Location) {
+            center = VisionUtils.getLocationPixels(camera, (Location) centerByProperty);
+        }
+        else if (centerByProperty instanceof Point) {
+            center = (Point) centerByProperty;
         }
 
         List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 
