@@ -214,7 +214,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.UNRELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.UNRELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -593,7 +593,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         panelCameraCalibration.add(textFieldRmsError, "4, 24, fill, default");
         textFieldRmsError.setColumns(10);
         
-        lblNewLabel_8 = new JLabel("View Errors For Cal Height");
+        lblNewLabel_8 = new JLabel("Selected Cal Z For Viewing");
         panelCameraCalibration.add(lblNewLabel_8, "2, 26");
         
         spinnerIndex = new JSpinner(new SpinnerListModel(calibrationHeights));
@@ -626,7 +626,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         modelErrorsTimeSequenceView.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelCameraCalibration.add(modelErrorsTimeSequenceView, "4, 30, 3, 1, fill, fill");
         
-        String legend = "\r\n<p><body style=\"text-align:left\">\r\n<p>\r\nX Residual <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nY Residual <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>\r\n</body></p>\r\n";
+        String legend = "\r\n<p><body style=\"text-align:left\">\r\n<p>\r\nX Residual <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>"
+                + "\r\n<p>\r\nY Residual <span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>\r\n</body></p>\r\n";
         lblNewLabel_17 = new JLabel("<html><p width=\"500\">"
                 + "This plot displays the residual pixel error (that is, the remaining error after "
                 + "calibration has been applied) of each calibration point in the order it "
@@ -636,7 +637,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "causes are: calibration rig movement/slippage during the collection; camera or "
                 + "lens moving in its mount; motors missing steps; belt/cog slippage; thermal "
                 + "expansion; etcetera."
-                + "</p>\r\n" + legend + "</html>");
+                + "</p>" + legend + "</html>");
         panelCameraCalibration.add(lblNewLabel_17, "8, 30, 3, 1, left, default");
         
         lblNewLabel_10 = new JLabel("Collection Sequence Number");
@@ -668,8 +669,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "non-circular; depending on the magnitude of the errors, there may be a problem "
                 + "with the calibration. Some possible causes are: bad vision detection of the "
                 + "calibration fiducial, calibration rig movement/slippage during the collection; "
-                + "loose camera mount; under or over compensated backlash; motors missing steps; "
-                + "belt/cog slippage; etcetera."
+                + "camera or lens moving in its mount; under or over compensated backlash; motors "
+                + "missing steps; belt/cog slippage; etcetera."
                 + "</p></html>");
         panelCameraCalibration.add(lblNewLabel_18, "8, 36, 3, 1, left, default");
         
@@ -696,13 +697,14 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "function of the expected location of the pixel in the image. Dark blue areas "
                 + "have very low errors while dark red areas have the highest errors.  Note that "
                 + "the color range is always scaled so that zero error is the darkest blue and "
-                + "the maximum magnitude error is the darkest red. This means this plot cannot "
+                + "the maximum magnitude error is the darkest red. Therefore, this plot cannot "
                 + "be used to judge the magnitude of the error but only its distribution about "
                 + "the image. This distribution should look more or less random with no "
                 + "discernible patterns. If patterns such as rings or stripes are clearly "
-                + "visible, the mathematical model of the camera does not fit very well with the "
-                + "physical reality of the camera and may indicate something is physically wrong "
-                + "with the camera."
+                + "visible and the residual errors observed in the other plots are large, the "
+                + "mathematical model of the camera does not fit very well with the physical "
+                + "reality of the camera and may indicate something is wrong with the camera and/"
+                + "or lens."
                 + "</p></html>");
         panelCameraCalibration.add(lblNewLabel_19, "8, 42, 3, 1, left, default");
         
