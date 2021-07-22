@@ -37,6 +37,7 @@ import org.opencv.core.Size;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -53,7 +54,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private boolean valid = false;
     
     @Element(required = false)
-    private String calibrationRigId;
+    private String calibrationRigId = "";
     
     @Element(name = "virtualCameraMatrix", required = false)
     private double[] virtualCameraMatrixArr = new double[9];
@@ -76,16 +77,19 @@ public class AdvancedCalibration extends LensCalibrationParams {
     @Attribute(required = false) int alphaPercent = 100;
     
     @ElementArray(required = false)
-    private double[][][] savedTestPattern3dPointsList;
+    private double[][][] savedTestPattern3dPointsList = new double[0][0][0];
+//            {{{Double.NaN, Double.NaN, Double.NaN}},{{Double.NaN, Double.NaN, Double.NaN}}};
     
     @ElementArray(required = false)
-    private double[][][] savedTestPatternImagePointsList;
+    private double[][][] savedTestPatternImagePointsList = new double[0][0][0]; 
+//            {{{Double.NaN, Double.NaN}},{{Double.NaN, Double.NaN}}};
     
     @ElementArray(required = false)
-    private double[][][] modeledTestPatternImagePointsList;
+    private double[][][] modeledTestPatternImagePointsList = new double[0][0][0]; 
+//            {{{Double.NaN, Double.NaN}},{{Double.NaN, Double.NaN}}};
     
     @ElementArray(required = false)
-    private Integer[] outlierPoints;
+    private Integer[] outlierPoints = new Integer[0];
     
     @Attribute(required = false)
     private double rotationErrorZ = 0;
@@ -98,6 +102,128 @@ public class AdvancedCalibration extends LensCalibrationParams {
 
     @Attribute(required = false)
     private double rmsError = 0;
+    
+    @Attribute(required = false)
+    private int desiredPointsPerTestPattern = 250;
+    
+    @Attribute(required = false)
+    private double testPatternFillFraction = 0.90;
+    
+    @Element(required = false)
+    private Location trialStep = new Location(LengthUnit.Millimeters, -0.5, 0.5, 0, 0);
+
+    private Part calibrationRig;
+    private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
+    private Mat rectificationMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
+    private Mat vectorFromMachToPhyCamInMachRefFrame = 
+            Mat.zeros(3, 1, CvType.CV_64FC1);
+    private Mat unitVectorPhyCamZInMachRefFrame = 
+            Mat.zeros(3, 1, CvType.CV_64FC1);
+    private Mat vectorFromMachToVirCamInMachRefFrame = 
+            Mat.zeros(3, 1, CvType.CV_64FC1);
+    private Mat vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame = 
+            Mat.zeros(3, 1, CvType.CV_64FC1);
+
+    private ArrayList<Integer> outlierPointList;
+
+
+    
+    @Commit 
+    public void commit() {
+        super.commit();
+        if (calibrationRigId == "") {
+            calibrationRigId = Configuration.get().getParts().get(0).getId();
+        }
+        calibrationRig = Configuration.get().getPart(calibrationRigId);
+        virtualCameraMatrix.put(0, 0, virtualCameraMatrixArr);
+        rectificationMatrix.put(0, 0, rectificationMatrixArr);
+        vectorFromMachToPhyCamInMachRefFrame.put(0, 0, vectorFromMachToPhyCamInMachRefFrameArr);
+        unitVectorPhyCamZInMachRefFrame.put(0, 0, unitVectorPhyCamZInMachRefFrameArr);
+        vectorFromMachToVirCamInMachRefFrame.put(0, 0, vectorFromMachToVirCamInMachRefFrameArr);
+        vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.put(0, 0, 
+                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrameArr);
+        
+        //For some reason, the serialization/deserialization process doesn't seem to correctly
+        //handle 3D arrays.  If an n x m x p array is serialized and then de-serialized, the
+        //array comes back as n x m*p x 1.  Is there a better way to fix this?
+        if (savedTestPattern3dPointsList != null && savedTestPattern3dPointsList.length > 0 && 
+                savedTestPattern3dPointsList[0].length > 0) {
+            if (savedTestPattern3dPointsList[0][0].length == 1) {
+                int numberOfPatterns = savedTestPattern3dPointsList.length;
+                double[][][] temp = new double[numberOfPatterns][][];
+                for (int i=0; i<numberOfPatterns; i++) {
+                    int numberOfPoints = savedTestPattern3dPointsList[i].length / 3;
+                    temp[i] = new double[numberOfPoints][3];
+                    for (int j=0; j<numberOfPoints; j++) {
+                        temp[i][j][0] = savedTestPattern3dPointsList[i][3*j][0];
+                        temp[i][j][1] = savedTestPattern3dPointsList[i][3*j+1][0];
+                        temp[i][j][2] = savedTestPattern3dPointsList[i][3*j+2][0];
+                    }
+                }
+                savedTestPattern3dPointsList = temp;
+            }
+        }
+
+        if (savedTestPatternImagePointsList != null && savedTestPatternImagePointsList.length > 0 && 
+                savedTestPatternImagePointsList[0].length > 0) {
+            if (savedTestPatternImagePointsList[0][0].length == 1) {
+                int numberOfPatterns = savedTestPatternImagePointsList.length;
+                double[][][] temp = new double[numberOfPatterns][][];
+                for (int i=0; i<numberOfPatterns; i++) {
+                    int numberOfPoints = savedTestPatternImagePointsList[i].length / 2;
+                    temp[i] = new double[numberOfPoints][2];
+                    for (int j=0; j<numberOfPoints; j++) {
+                        temp[i][j][0] = savedTestPatternImagePointsList[i][2*j][0];
+                        temp[i][j][1] = savedTestPatternImagePointsList[i][2*j+1][0];
+                    }
+                }
+                savedTestPatternImagePointsList = temp;
+            }
+        }
+        
+        if (modeledTestPatternImagePointsList != null && modeledTestPatternImagePointsList.length > 0 && 
+                modeledTestPatternImagePointsList[0].length > 0) {
+            if (modeledTestPatternImagePointsList[0][0].length == 1) {
+                int numberOfPatterns = modeledTestPatternImagePointsList.length;
+                double[][][] temp = new double[numberOfPatterns][][];
+                for (int i=0; i<numberOfPatterns; i++) {
+                    int numberOfPoints = modeledTestPatternImagePointsList[i].length / 2;
+                    temp[i] = new double[numberOfPoints][2];
+                    for (int j=0; j<numberOfPoints; j++) {
+                        temp[i][j][0] = modeledTestPatternImagePointsList[i][2*j][0];
+                        temp[i][j][1] = modeledTestPatternImagePointsList[i][2*j+1][0];
+                    }
+                }
+                modeledTestPatternImagePointsList = temp;
+            }
+        }
+        
+        if (outlierPoints != null) {
+            outlierPointList = new ArrayList<Integer>(Arrays.asList(outlierPoints));
+        }
+        else {
+            outlierPointList = new ArrayList<Integer>();
+        }
+    }
+    
+    @Persist
+    public void persist() {
+        super.persist();
+        virtualCameraMatrix.get(0, 0, virtualCameraMatrixArr);
+        rectificationMatrix.get(0, 0, rectificationMatrixArr);
+        vectorFromMachToPhyCamInMachRefFrame.get(0, 0, vectorFromMachToPhyCamInMachRefFrameArr);
+        unitVectorPhyCamZInMachRefFrame.get(0, 0, unitVectorPhyCamZInMachRefFrameArr);
+        vectorFromMachToVirCamInMachRefFrame.get(0, 0, vectorFromMachToVirCamInMachRefFrameArr);
+        vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.get(0, 0, 
+                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrameArr);
+        
+        if (outlierPointList != null) {
+            outlierPoints = outlierPointList.toArray(new Integer[0]);
+        }
+        else {
+            outlierPoints = new Integer[0];
+        }
+    }
 
     /**
      * Checks if the new advanced calibration settings are overriding the old image
@@ -206,111 +332,6 @@ public class AdvancedCalibration extends LensCalibrationParams {
      */
     public void setAlphaPercent(int alphaPercent) {
         this.alphaPercent = alphaPercent;
-    }
-
-    private Part calibrationRig;
-    private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
-    private Mat rectificationMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
-    private Mat vectorFromMachToPhyCamInMachRefFrame = 
-            Mat.zeros(3, 1, CvType.CV_64FC1);
-    private Mat unitVectorPhyCamZInMachRefFrame = 
-            Mat.zeros(3, 1, CvType.CV_64FC1);
-    private Mat vectorFromMachToVirCamInMachRefFrame = 
-            Mat.zeros(3, 1, CvType.CV_64FC1);
-    private Mat vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame = 
-            Mat.zeros(3, 1, CvType.CV_64FC1);
-
-    private ArrayList<Integer> outlierPointList;
-
-
-    
-    @Commit 
-    public void commit() {
-        super.commit();
-        if (calibrationRigId == null) {
-            calibrationRigId = Configuration.get().getParts().get(0).getId();
-        }
-        calibrationRig = Configuration.get().getPart(calibrationRigId);
-        virtualCameraMatrix.put(0, 0, virtualCameraMatrixArr);
-        rectificationMatrix.put(0, 0, rectificationMatrixArr);
-        vectorFromMachToPhyCamInMachRefFrame.put(0, 0, vectorFromMachToPhyCamInMachRefFrameArr);
-        unitVectorPhyCamZInMachRefFrame.put(0, 0, unitVectorPhyCamZInMachRefFrameArr);
-        vectorFromMachToVirCamInMachRefFrame.put(0, 0, vectorFromMachToVirCamInMachRefFrameArr);
-        vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.put(0, 0, 
-                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrameArr);
-        
-        //For some reason, the serialization/deserialization process doesn't seem to correctly
-        //handle 3D arrays.  If an n x m x p array is serialized and then de-serialized, the
-        //array comes back as n x m*p x 1.  Is there a better way to fix this?
-        if (savedTestPattern3dPointsList != null) {
-            if (savedTestPattern3dPointsList[0][0].length == 1) {
-                int numberOfPatterns = savedTestPattern3dPointsList.length;
-                double[][][] temp = new double[numberOfPatterns][][];
-                for (int i=0; i<numberOfPatterns; i++) {
-                    int numberOfPoints = savedTestPattern3dPointsList[i].length / 3;
-                    temp[i] = new double[numberOfPoints][3];
-                    for (int j=0; j<numberOfPoints; j++) {
-                        temp[i][j][0] = savedTestPattern3dPointsList[i][3*j][0];
-                        temp[i][j][1] = savedTestPattern3dPointsList[i][3*j+1][0];
-                        temp[i][j][2] = savedTestPattern3dPointsList[i][3*j+2][0];
-                    }
-                }
-                savedTestPattern3dPointsList = temp;
-            }
-        }
-
-        if (savedTestPatternImagePointsList != null) {
-            if (savedTestPatternImagePointsList[0][0].length == 1) {
-                int numberOfPatterns = savedTestPatternImagePointsList.length;
-                double[][][] temp = new double[numberOfPatterns][][];
-                for (int i=0; i<numberOfPatterns; i++) {
-                    int numberOfPoints = savedTestPatternImagePointsList[i].length / 2;
-                    temp[i] = new double[numberOfPoints][2];
-                    for (int j=0; j<numberOfPoints; j++) {
-                        temp[i][j][0] = savedTestPatternImagePointsList[i][2*j][0];
-                        temp[i][j][1] = savedTestPatternImagePointsList[i][2*j+1][0];
-                    }
-                }
-                savedTestPatternImagePointsList = temp;
-            }
-        }
-        
-        if (modeledTestPatternImagePointsList != null) {
-            if (modeledTestPatternImagePointsList[0][0].length == 1) {
-                int numberOfPatterns = modeledTestPatternImagePointsList.length;
-                double[][][] temp = new double[numberOfPatterns][][];
-                for (int i=0; i<numberOfPatterns; i++) {
-                    int numberOfPoints = modeledTestPatternImagePointsList[i].length / 2;
-                    temp[i] = new double[numberOfPoints][2];
-                    for (int j=0; j<numberOfPoints; j++) {
-                        temp[i][j][0] = modeledTestPatternImagePointsList[i][2*j][0];
-                        temp[i][j][1] = modeledTestPatternImagePointsList[i][2*j+1][0];
-                    }
-                }
-                modeledTestPatternImagePointsList = temp;
-            }
-        }
-        
-        if (outlierPoints != null) {
-            outlierPointList = new ArrayList<Integer>(Arrays.asList(outlierPoints));
-        }
-        else {
-            outlierPointList = new ArrayList<Integer>();
-        }
-    }
-    
-    @Persist
-    public void persist() {
-        super.persist();
-        virtualCameraMatrix.get(0, 0, virtualCameraMatrixArr);
-        rectificationMatrix.get(0, 0, rectificationMatrixArr);
-        vectorFromMachToPhyCamInMachRefFrame.get(0, 0, vectorFromMachToPhyCamInMachRefFrameArr);
-        unitVectorPhyCamZInMachRefFrame.get(0, 0, unitVectorPhyCamZInMachRefFrameArr);
-        vectorFromMachToVirCamInMachRefFrame.get(0, 0, vectorFromMachToVirCamInMachRefFrameArr);
-        vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.get(0, 0, 
-                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrameArr);
-        
-        outlierPoints = outlierPointList.toArray(new Integer[0]);
     }
 
     /**
@@ -505,6 +526,48 @@ public class AdvancedCalibration extends LensCalibrationParams {
         double oldValue = this.rmsError;
         this.rmsError = rmsError;
         firePropertyChange("rmsError", oldValue, rmsError);
+    }
+
+    /**
+     * @return the desiredPointsPerTestPattern
+     */
+    public int getDesiredPointsPerTestPattern() {
+        return desiredPointsPerTestPattern;
+    }
+
+    /**
+     * @param desiredPointsPerTestPattern the desiredPointsPerTestPattern to set
+     */
+    public void setDesiredPointsPerTestPattern(int desiredPointsPerTestPattern) {
+        this.desiredPointsPerTestPattern = desiredPointsPerTestPattern;
+    }
+
+    /**
+     * @return the testPatternFillFraction
+     */
+    public double getTestPatternFillFraction() {
+        return testPatternFillFraction;
+    }
+
+    /**
+     * @param testPatternFillFraction the testPatternFillFraction to set
+     */
+    public void setTestPatternFillFraction(double testPatternFillFraction) {
+        this.testPatternFillFraction = testPatternFillFraction;
+    }
+
+    /**
+     * @return the trialStep
+     */
+    public Location getTrialStep() {
+        return trialStep;
+    }
+
+    /**
+     * @param trialStep the trialStep to set
+     */
+    public void setTrialStep(Location trialStep) {
+        this.trialStep = trialStep;
     }
 
     public void processRawCalibrationData(Size size, Length defaultZ) {
@@ -845,6 +908,15 @@ public class AdvancedCalibration extends LensCalibrationParams {
         vectorFromPhyCamToDefaultZPlaneInPhyCamRefFrame.release();
         Logger.trace("vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame = " + 
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.dump());
+
+        Mat vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
+        Core.gemm(transformFromMachToPhyCamRefFrame.t(), 
+                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame, 1, 
+                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame, 0, 
+                vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame);
+        Logger.trace("vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame = " + 
+                vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame.dump());
+        vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame.release();
 
         Mat vectorFromPhyCamToDefaultZPrincipalPointInMachRefFrame = Mat.zeros(3, 1, 
                 CvType.CV_64FC1);

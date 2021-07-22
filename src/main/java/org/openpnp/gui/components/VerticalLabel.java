@@ -30,6 +30,8 @@ import javax.swing.Icon;
 import javax.swing.JLabel;
 
 public class VerticalLabel extends JLabel {
+    private static final long serialVersionUID = -4519801790471870582L;
+
     public final static int ROTATE_RIGHT = 1;
 
     public final static int DONT_ROTATE = 0;

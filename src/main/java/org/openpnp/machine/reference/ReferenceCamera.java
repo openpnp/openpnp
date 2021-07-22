@@ -303,18 +303,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             else {
                 //For movable cameras, the head offset is the location of the associated virtual
                 //camera relative to the default camera's associated virtual camera
-                ReferenceCamera defCamera = null;
+                ReferenceCamera defaultCamera = null;
                 try {
-                    defCamera = (ReferenceCamera)head.getDefaultCamera();
+                    defaultCamera = (ReferenceCamera)head.getDefaultCamera();
                 }
                 catch (Exception e) {
                     if (e instanceof ClassCastException) {
                         //TODO - need to figure out what to do if the default camera is not a 
                         //ReferenceCamera - should advancedCalibration be moved to AbstractCamera???
                     }
+                    Logger.trace(e);
                 }
-                if (defCamera != null && defCamera.getAdvancedCalibration().isValid()) {
-                    AdvancedCalibration defCameraAdvCal = defCamera.getAdvancedCalibration();
+                if (defaultCamera != null && defaultCamera.getAdvancedCalibration().isValid()) {
+                    AdvancedCalibration defCameraAdvCal = defaultCamera.getAdvancedCalibration();
                     Mat VectorFromMachToDefaultVirCamInMachRefFrame = defCameraAdvCal.
                             getVectorFromMachToVirCamInMachRefFrame();
                     Mat VectorFromDefaultVirCamToVirCamInMachRefFrame = new Mat();
@@ -496,7 +497,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
             // Old style of image transforms and distortion correction
             // We do skip the convert to and from Mat if no transforms are needed.
-            // But we must enter while calibrating.
+            // But we must enter while performing original calibration.
             else if (isDeinterlaced()
                 || isCropped() 
                 || isCalibrating()
