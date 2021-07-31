@@ -204,6 +204,10 @@ public class IssuePanel extends JPanel {
         }
         for (Solutions.Issue.Choice choice : issue.getChoices()) {
             if (choice != null) {
+                if (issue.getChoice() == null) {
+                    // Set first choice as default.
+                    issue.setChoice(choice.getValue());
+                }
                 final JRadioButton radioButton = new JRadioButton("");
                 buttonGroup.add(radioButton);
                 panel.add(radioButton, "2, "+(formRow*2)+", right, default");
