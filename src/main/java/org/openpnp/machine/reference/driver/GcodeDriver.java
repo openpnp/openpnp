@@ -639,6 +639,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Override
     public void moveTo(HeadMountable hm, MoveToCommand move)
             throws Exception {
+        if (isUsingLetterVariables() && isSupportingPreMove()) {
+            throw new Exception(getName()+" configuration error: Cannot enable both Letter Variables and Allow Pre-Move Commands.");
+        }
         // Get the axes that are actually moving.
         AxesLocation movedAxesLocation = move.getMovedAxesLocation();
         AxesLocation allAxesLocation = move.getLocation1();
@@ -654,11 +657,17 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             if (movedAxesLocation.isEmpty()) {
                 return;
             }
-            throw new Exception(getName()+" MOVE_TO_COMMAND missing, please use Issues & Solutions to propose proper G-code commands.");
+            if (isSupportingPreMove()) {
+                throw new Exception(getName()+" MOVE_TO_COMMAND missing for "+hm.getClass().getSimpleName()+" "+hm.getName()
+                +", please set the command in the driver (no automatic support by Issues & Solutions due to driver Allow Pre-Move Commands option).");
+            }
+            else {
+                throw new Exception(getName()+" MOVE_TO_COMMAND missing, please use Issues & Solutions to propose proper G-code commands.");
+            }
         }
         if (hasVariable(command, "BacklashFeedRate")) {
             throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
-                    +"Backlash compensation is now done outside of the drivers.");
+                    +"Backlash compensation is now done outside of the drivers and configured on the axes.");
         }
 
         command = substituteVariable(command, "Id", hm.getId());
@@ -1504,7 +1513,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         try {
             sendCommand("M115");
-            String firmware = receiveSingleResponse("^FIRMWARE.*");
+            String firmware = receiveSingleResponse("^.*FIRMWARE.*");
             if (firmware != null) {
                 setDetectedFirmware(firmware);
             }

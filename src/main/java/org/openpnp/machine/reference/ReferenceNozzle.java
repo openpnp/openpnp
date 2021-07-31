@@ -133,8 +133,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                             vacuumActuatorName = vacuumSenseActuatorName;
                         }
                         if (blowOffActuator != null) {
-                            // Type both the vacuum and the blow off actuators as Double (typical use).
-                            AbstractActuator.suggestValueType(vacuumActuator, ActuatorValueType.Double);
+                            // Type the vacuum and the blow off actuators (typical use).
+                            AbstractActuator.suggestValueType(vacuumActuator, ActuatorValueType.Boolean);
                             AbstractActuator.suggestValueType(blowOffActuator, ActuatorValueType.Double);
                         }
                         // Migration is done.
@@ -795,6 +795,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return (ReferenceMachine) Configuration.get().getMachine();
     }
 
+    protected boolean isVaccumSenseActuatorEnabled() {
+        return vacuumSenseActuatorName != null && !vacuumSenseActuatorName.isEmpty();
+    }
+
     protected boolean isVaccumActuatorEnabled() {
         return vacuumActuatorName != null && !vacuumActuatorName.isEmpty();
     }
@@ -804,7 +808,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if ((step == PartOnStep.AfterPick && getNozzleTip().isPartOnCheckAfterPick())
                 || (step == PartOnStep.Align && getNozzleTip().isPartOnCheckAlign())
                 || (step == PartOnStep.BeforePlace && getNozzleTip().isPartOnCheckBeforePlace())) {
-            return isVaccumActuatorEnabled() 
+            return isVaccumSenseActuatorEnabled() 
                     && (getNozzleTip().getMethodPartOn() != VacuumMeasurementMethod.None);
         }
         return false;
@@ -814,35 +818,107 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public boolean isPartOffEnabled(Nozzle.PartOffStep step) {
         if ((step == PartOffStep.AfterPlace && getNozzleTip().isPartOffCheckAfterPlace())
                 || (step == PartOffStep.BeforePick && getNozzleTip().isPartOffCheckBeforePick())) {
-            return isVaccumActuatorEnabled() 
+            return isVaccumSenseActuatorEnabled() 
                     && (getNozzleTip().getMethodPartOff() != VacuumMeasurementMethod.None);
         }
         return false;
     }
-   
 
-    protected Actuator getVacuumSenseActuator() throws Exception {
+    /**
+     * @return The actuator used to sense the vacuum on the Nozzle.
+     * @throws Exception when the actuator name cannot be resolved (dangling reference).
+     */
+    public Actuator getVacuumSenseActuator() throws Exception {
         Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
-        if (actuator == null) {
+        if (actuator == null && vacuumSenseActuatorName != null && !vacuumSenseActuatorName.isEmpty()) {
             throw new Exception(String.format("Can't find vacuum sense actuator %s", vacuumSenseActuatorName));
         }
         return actuator;
     }
 
-    protected Actuator getVacuumActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(vacuumActuatorName);
+    /**
+     * @return The actuator used to sense the vacuum on the Nozzle.
+     * @throws Exception when the actuator is not configured.
+     */
+    public Actuator getExpectedVacuumSenseActuator() throws Exception {
+        Actuator actuator = getVacuumSenseActuator();
         if (actuator == null) {
+            throw new Exception("Nozzle "+getName()+" has no vacuum sense actuator assigned.");
+        }
+        return actuator;
+    }
+
+
+    /**
+     * Set the actuator used to sense the vacuum on the Nozzle.
+     * @param actuator
+     */
+    public void setVacuumSenseActuator(Actuator actuator) {
+        setVacuumSenseActuatorName(actuator != null ? actuator.getName() : null);
+    }
+
+    /**
+     * @return The actuator used to switch the vacuum valve on the Nozzle. 
+     * @throws Exception when the actuator name cannot be resolved (dangling reference).
+     */
+    public Actuator getVacuumActuator() throws Exception {
+        Actuator actuator = getHead().getActuatorByName(vacuumActuatorName);
+        if (actuator == null && vacuumActuatorName != null && !vacuumActuatorName.isEmpty()) {
             throw new Exception(String.format("Can't find vacuum actuator %s", vacuumActuatorName));
         }
         return actuator;
     }
 
-    protected Actuator getBlowOffActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(blowOffActuatorName);
+    /**
+     * @return The actuator used to switch the vacuum valve on the Nozzle. 
+     * @throws Exception when the actuator is not configured.
+     */
+    public Actuator getExpectedVacuumActuator() throws Exception {
+        Actuator actuator = getVacuumActuator();
         if (actuator == null) {
-            throw new Exception(String.format("Can't find blow actuator %s", blowOffActuatorName));
+            throw new Exception("Nozzle "+getName()+" has no vacuum actuator assigned.");
         }
         return actuator;
+    }
+
+    /**
+     * Set the actuator used to switch the vacuum valve on the Nozzle. 
+     * @param actuator
+     */
+    public void setVacuumActuator(Actuator actuator) {
+        setVacuumActuatorName(actuator != null ? actuator.getName() : null);
+    }
+
+    /**
+     * @return The actuator used to blow off parts on the Nozzle. 
+     * @throws Exception when the actuator name cannot be resolved (dangling reference).
+     */
+    public Actuator getBlowOffActuator() throws Exception {
+        Actuator actuator = getHead().getActuatorByName(blowOffActuatorName);
+        if (actuator == null && blowOffActuatorName != null && !blowOffActuatorName.isEmpty()) {
+            throw new Exception(String.format("Can't find blow off actuator %s", blowOffActuatorName));
+        }
+        return actuator;
+    }
+
+    /**
+     * @return The actuator used to blow off parts on the Nozzle. 
+     * @throws Exception when the actuator is not configured.
+     */
+    public Actuator getExpectedBlowOffActuator() throws Exception {
+        Actuator actuator = getBlowOffActuator();
+        if (actuator == null) {
+            throw new Exception("Nozzle "+getName()+" has no blow off actuator assigned.");
+        }
+        return actuator;
+    }
+
+    /**
+     * Set the actuator used to blow off parts on the Nozzle. 
+     * @param actuator
+     */
+    public void setBlowOffActuator(Actuator actuator) {
+        setBlowOffActuatorName(actuator != null ? actuator.getName() : null);
     }
 
     protected boolean hasPartOnAnyOtherNozzle() {
@@ -868,7 +944,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             actuatePump(true);
         }
 
-        getVacuumActuator().actuate(on);
+        getExpectedVacuumActuator().actuate(on);
 
         if (! on) {
             actuatePump(false);
@@ -878,17 +954,17 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     protected void actuateVacuumValve(double value) throws Exception {
         actuatePump(true);
 
-        getVacuumActuator().actuate(value);
+        getExpectedVacuumActuator().actuate(value);
     }
 
     protected void actuateBlowValve(double value) throws Exception {
-        getBlowOffActuator().actuate(value);
+        getExpectedBlowOffActuator().actuate(value);
 
         actuatePump(false);
     }
 
-    protected double readVacuumLevel() throws Exception {
-        return Double.parseDouble(getVacuumSenseActuator().read());
+    public double readVacuumLevel() throws Exception {
+        return Double.parseDouble(getExpectedVacuumSenseActuator().read());
     }
 
     protected boolean isPartOnGraphEnabled() {

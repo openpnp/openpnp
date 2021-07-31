@@ -27,6 +27,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -119,6 +120,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JTextField textFieldPocketSize;
     private JLabel lblPocketCenterline;
     private JTextField textFieldPocketCenterline;
+    private JLabel lblBlindsFeederGroupName;
+    private JComboBox comboBoxBlindsFeederName;
 
 
     public BlindsFeederConfigurationWizard(BlindsFeeder feeder) {
@@ -333,6 +336,14 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings.add(textFieldFeedCount, "4, 12");
         textFieldFeedCount.setColumns(5);
 
+        lblBlindsFeederGroupName = new JLabel("Feeder Group Name");
+        panelTapeSettings.add(lblBlindsFeederGroupName, "8, 12, right, default");
+        
+        List<String> blindsFeederGroupNames = feeder.getBlindsFeederGroupNames();
+        comboBoxBlindsFeederName = new JComboBox(blindsFeederGroupNames.toArray());
+        comboBoxBlindsFeederName.setEditable(true);
+        panelTapeSettings.add(comboBoxBlindsFeederName, "10, 12, fill, default");
+        
         btnResetFeedCount = new JButton(resetFeedCountAction);
         panelTapeSettings.add(btnResetFeedCount, "14, 12");
 
@@ -587,6 +598,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(feeder, "firstPocket", textFieldFirstPocket, "text", intConverter);
         addWrappedBinding(feeder, "lastPocket", textFieldLastPocket, "text", intConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
+        addWrappedBinding(feeder, "feederGroupName", comboBoxBlindsFeederName, "selectedItem");
 
         addWrappedBinding(feeder, "coverType", comboBoxCoverType, "selectedItem");
         addWrappedBinding(feeder, "coverActuation", comboBoxCoverActuation, "selectedItem");

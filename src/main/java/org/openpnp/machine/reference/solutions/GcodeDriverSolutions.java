@@ -383,7 +383,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     if (gcodeDriver.isSupportingPreMove()) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
-                                "Disallow Pre-Move Commands for advanced features. Accept or Dismiss to continue.", 
+                                "Disallow Pre-Move Commands for automatic G-code setup and other advanced features. Accept or Dismiss to continue.", 
                                 "Disable Allow Letter Pre-Move Commands.", 
                                 Severity.Fundamental,
                                 "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
@@ -398,7 +398,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else if (!gcodeDriver.isUsingLetterVariables()) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
-                                "Use Axis Letter Variables for simpler use and advanced features.", 
+                                "Use Axis Letter Variables for simpler use, automatic G-code setup, and other advanced features.", 
                                 "Enable Letter Variables.", 
                                 Severity.Fundamental,
                                 "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
