@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
 import org.openpnp.gui.support.Icons;
+import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHead.NozzleSolution;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -33,12 +34,15 @@ import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
+import org.openpnp.machine.reference.driver.GcodeDriver;
+import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.CoordinateAxis;
@@ -113,11 +117,6 @@ public class HeadSolutions implements Solutions.Subject {
                             solutions.setSolutionsIssueSolved(this, false);
                             super.setState(state);
                         }
-                    }
-
-                    @Override
-                    public boolean canBeUndone() {
-                        return false;
                     }
 
                     private int multiplier;
@@ -284,6 +283,8 @@ public class HeadSolutions implements Solutions.Subject {
         LinkedHashSet<ReferenceMappedAxis> axesNegated = new LinkedHashSet<>();
         LinkedHashSet<ReferenceCamCounterClockwiseAxis> axesCam1 = new LinkedHashSet<>();
         LinkedHashSet<ReferenceCamClockwiseAxis> axesCam2 = new LinkedHashSet<>();
+        LinkedHashSet<Actuator> valveActuators = new LinkedHashSet<>();
+        LinkedHashSet<Actuator> senseActuators = new LinkedHashSet<>();
         for (Nozzle nozzle : head.getNozzles()) {
             if (nozzle instanceof AbstractNozzle) { 
                 Axis axisZ = nozzle.getAxisZ();
@@ -304,6 +305,15 @@ public class HeadSolutions implements Solutions.Subject {
                     axesCam2.add((ReferenceCamClockwiseAxis) axisZ);
                 }
             }
+            if (nozzle instanceof ReferenceNozzle) {
+                ReferenceNozzle refNozzle = (ReferenceNozzle) nozzle;
+                senseActuators.add(refNozzle.getVacuumSenseActuator());
+                // Sensing and valve actuator were sometimes shared, but we want to regenerate these as separate Actuators,
+                // so only add the valve actuator, if not shared.
+                if (refNozzle.getVacuumSenseActuator() != refNozzle.getVacuumActuator()) {
+                    valveActuators.add(refNozzle.getVacuumActuator());
+                }
+            }
         }
         for (int i = 0; i < nozzleSolutionsMultiplier; i++) {
             String suffix = nozzleSolutionsMultiplier > 1 ? String.valueOf(i+1) : "";
@@ -314,6 +324,7 @@ public class HeadSolutions implements Solutions.Subject {
                     AbstractNozzle n1 = reuseOrCreateNozzle(camera, nozzles, suffix);
                     n1.setAxisZ(reuseOrCreateAxis(camera, axesZ, ReferenceControllerAxis.class, Axis.Type.Z, suffix));
                     n1.setAxisRotation(reuseOrCreateAxis(camera, axesC, ReferenceControllerAxis.class, Axis.Type.Rotation, suffix));
+                    assignVacuumActuators(n1, valveActuators, senseActuators, suffix);
                     break;
                 }
                 case DualNegated: { 
@@ -332,6 +343,8 @@ public class HeadSolutions implements Solutions.Subject {
                     n1.setAxisRotation(c1);
                     n2.setAxisZ(z2);
                     n2.setAxisRotation(c2);
+                    assignVacuumActuators(n1, valveActuators, senseActuators, suffix1);
+                    assignVacuumActuators(n2, valveActuators, senseActuators, suffix2);
                     break;
                 }
                 case DualCam: {
@@ -348,6 +361,8 @@ public class HeadSolutions implements Solutions.Subject {
                     n1.setAxisRotation(c1);
                     n2.setAxisZ(z2);
                     n2.setAxisRotation(c2);
+                    assignVacuumActuators(n1, valveActuators, senseActuators, suffix1);
+                    assignVacuumActuators(n2, valveActuators, senseActuators, suffix2);
                     break;
                 }
             }
@@ -368,6 +383,27 @@ public class HeadSolutions implements Solutions.Subject {
         }
         head.setNozzleSolution(nozzleSolution);
         head.setNozzleSolutionsMultiplier(nozzleSolutionsMultiplier);
+    }
+
+    public void assignVacuumActuators(AbstractNozzle n, 
+            LinkedHashSet<Actuator> valveActuators, LinkedHashSet<Actuator> senseActuators,
+            String suffix) throws Exception {
+        if (n instanceof ReferenceNozzle) {
+            ReferenceNozzle nozzle = (ReferenceNozzle) n;
+            nozzle.setVacuumActuator(reuseOrCreateActuator(valveActuators, "VAC"+suffix));
+            nozzle.setVacuumSenseActuator(reuseOrCreateActuator(senseActuators, "VACS"+suffix));
+            Actuator vacuumSenseActuator = nozzle.getVacuumSenseActuator();
+            Actuator vacuumValveActuator = nozzle.getVacuumActuator();
+            if (vacuumSenseActuator.getDriver() instanceof GcodeDriver) {
+                // Sensing and valve actuator were sometimes shared, so when regenerating these as separate Actuators,
+                // the command would be lost. Instead, reuse the valve ACTUATE_BOOLEAN_COMMAND command. 
+                GcodeDriver driver = (GcodeDriver) vacuumSenseActuator.getDriver();
+                if (driver.getCommand(vacuumSenseActuator, CommandType.ACTUATE_BOOLEAN_COMMAND) != null
+                        && driver.getCommand(vacuumValveActuator, CommandType.ACTUATE_BOOLEAN_COMMAND) == null) {
+                    driver.setCommand(vacuumValveActuator, CommandType.ACTUATE_BOOLEAN_COMMAND, driver.getCommand(vacuumSenseActuator, CommandType.ACTUATE_BOOLEAN_COMMAND));
+                }
+            }
+        }
     }
 
     public static CoordinateAxis getRawAxis(Machine machine, Axis axis) { 
@@ -431,4 +467,21 @@ public class HeadSolutions implements Solutions.Subject {
         return axis;
     }
 
+    private Actuator reuseOrCreateActuator(LinkedHashSet<Actuator> actuators, String i)
+            throws Exception {
+        Actuator actuator = null;
+        for (Actuator a : actuators) {
+            actuator = a;
+            break;
+        }
+        if (actuator == null) {
+            actuator = new ReferenceActuator();
+            head.addActuator(actuator);
+        }
+        else {
+            actuators.remove(actuator);
+        }
+        actuator.setName("A"+i);
+        return actuator;
+    }
 }
