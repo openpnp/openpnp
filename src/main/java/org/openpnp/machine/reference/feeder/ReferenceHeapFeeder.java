@@ -975,7 +975,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             // discard the part
             nozzle.place();
             // blow off the part
-            Actuator blowOffValve = nozzle.getHead().getActuatorByName(((ReferenceNozzle) nozzle).getBlowOffActuatorName()); 
+            Actuator blowOffValve = ((ReferenceNozzle) nozzle).getBlowOffActuator(); 
             if (blowOffValve != null) {
                 blowOffValve.actuate(true);
             }
