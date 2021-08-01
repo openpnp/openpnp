@@ -112,7 +112,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             head.setMachine(this);
         }
     }
-    
+
     public void addHead(Head head) {
         head.setMachine(this);
         heads.add(head);
@@ -255,6 +255,16 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public List<Actuator> getActuators() {
         return Collections.unmodifiableList(actuators);
+    }
+
+    @Override
+    public List<Actuator> getAllActuators() {
+        Stream<Actuator> stream = Stream.of();
+        for (Head head : getHeads()) {
+            stream = Stream.concat(stream, head.getActuators().stream());
+        }
+        stream = Stream.concat(stream, getActuators().stream());
+        return stream.collect(Collectors.toList());
     }
 
     @Override
