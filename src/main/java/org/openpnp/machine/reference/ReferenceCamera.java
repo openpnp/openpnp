@@ -486,11 +486,16 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
 
             if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
-                //Skip all the old style image transforms and distortion corrections
-                if (advancedCalibration.isEnabled()) {
-                    //Use the new advanced image transformation and distortion correction
+                //Skip all the old style image transforms and distortion corrections except for 
+                //deinterlacing and cropping
+                if (isDeinterlaced() || isCropped() || advancedCalibration.isEnabled()) {
                     Mat mat = OpenCvUtils.toMat(image);
-                    mat = advancedUndistort(mat);
+                    mat = deinterlace(mat);
+                    mat = crop(mat);
+                    if (advancedCalibration.isEnabled()) {
+                        //Use the new advanced image transformation and distortion correction
+                        mat = advancedUndistort(mat);
+                    }
                     image = OpenCvUtils.toBufferedImage(mat);
                     mat.release();
                 }
@@ -550,6 +555,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
                         convertToUnits(LengthUnit.Millimeters).getValue() / 
                         advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
+                upp = Double.isFinite(upp) ? upp : 0;
             }
             return new Location(LengthUnit.Millimeters, upp, upp, 0, 0);
         }

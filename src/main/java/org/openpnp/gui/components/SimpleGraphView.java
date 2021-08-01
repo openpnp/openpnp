@@ -144,12 +144,18 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                 }
                 if (dataScale.isSquareAspectRatio()) {
                     if (min != null && max != null) {
+                        if (dataScale.isSymmetricIfSigned()) {
+                            if (min.x < 0.0 && max.x > 0) {
+                                max.x = Math.max(max.x, -min.x);
+                                min.x = Math.min(-max.x, min.x);
+                            }
+                        }
                         double maxDiffOver2 = Math.max(max.x - min.x, max.y - min.y)/2;
                         double midX = (max.x + min.x)/2;
                         double midY = (max.y + min.y)/2;
                         max.x = midX + maxDiffOver2;
-                        max.y = midY + maxDiffOver2;
                         min.x = midX - maxDiffOver2;
+                        max.y = midY + maxDiffOver2;
                         min.y = midY - maxDiffOver2;
                     }
                 }

@@ -116,7 +116,7 @@ public class CameraCalibrationHeightsTableModel extends AbstractTableModel {
     public Object getValueAt(int row, int col) {
         switch (col) {
             case 0:
-                return new LengthCellValueWithNans(heights.get(row), true);
+                return new LengthCellValueWithNans(heights.get(row), false);
             default:
                 return null;
         }

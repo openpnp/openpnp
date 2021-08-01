@@ -330,6 +330,7 @@ public class DetectCircularSymmetry extends CvStage {
         // Effective subSampling may have to be finer if the searched circular edge is finer. 
         final int subSamplingEff = Math.max(1, 
                 Math.min(subSampling, Math.min((maxDiameter-minDiameter)/4, minDiameter/2)));
+        
         // Constrain the search range to the image.
         final int searchRangeEff = (
                 Math.min((xCenter-maxDiameter/2)-2-subSamplingEff, 

@@ -203,6 +203,8 @@ public abstract class CalibrateCameraProcess {
     private AdvancedCalibration advCal;
     
     private int changeMaskSize = 0;
+
+    private int initialMaskDiameter;
     
     public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, 
             Part calibrationRigPart, List<Length> calibrationHeights)
@@ -248,7 +250,8 @@ public abstract class CalibrateCameraProcess {
         pipeline.setProperty("package", pkg);
         pipeline.setProperty("footprint", footprint);
         
-        maskDiameter = Math.min(pixelsX, pixelsY) / 5;
+        initialMaskDiameter = Math.min(pixelsX, pixelsY) / 4;
+        maskDiameter = initialMaskDiameter;
         
         savedAutoToolSelect = Configuration.get().getMachine().isAutoToolSelect();
         ((ReferenceMachine) Configuration.get().getMachine()).setAutoToolSelect(false);
@@ -271,9 +274,10 @@ public abstract class CalibrateCameraProcess {
      * of the corresponding machine coordinates in testPatternImagePoints
      * 
      * @param size - the size of the images
+     * @throws Exception 
      */
     protected abstract void processRawCalibrationData(double[][][] testPattern3dPoints, 
-            double[][][] testPatternImagePoints, Size size);
+            double[][][] testPatternImagePoints, Size size) throws Exception;
     
     /**
      * This method is called when the raw calibration data collection has been canceled and must 
@@ -320,7 +324,7 @@ public abstract class CalibrateCameraProcess {
             cleanup();
         }
         else {
-            mainFrame.showInstructions("Camera Calibration Instructions",
+            mainFrame.showInstructions("Camera Calibration Instructions/Status",
                     isHeadMountedCamera ? moveableCameraInstructions[step] : 
                         fixedCameraInstructions[step],
                     true, true, "Next", cancelActionListener, proceedActionListener);
@@ -385,20 +389,27 @@ public abstract class CalibrateCameraProcess {
                 future.get();
             }
             catch (Exception e) {
-                //TODO
+                e.printStackTrace();
             }
-            
-            showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
-                    (int)(0.75*maskDiameter/2), Color.GREEN);
         }
+        
+        maskDiameter = initialMaskDiameter;
+        showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
+                (int)(0.75*maskDiameter/2), Color.GREEN);
         
         Logger.trace("testPatternZ = " + testPatternZ);
         Logger.trace("movableZ = " + movableZ);
         
         //Return the nozzle to safe Z
-        UiUtils.submitUiMachineTask(() -> {
+        Future future = UiUtils.submitUiMachineTask(() -> {
             nozzle.moveToSafeZ();
         });
+        try {
+            future.get();
+        }
+        catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
         
         
         return true;
@@ -488,8 +499,8 @@ public abstract class CalibrateCameraProcess {
                 Logger.trace("xScaling = " + xScaling);
                 Logger.trace("yScaling = " + yScaling);
                 
-                publish("Walking to image center.");
-                Logger.trace("Walking to image center.");
+                publish("Finding image center.");
+                Logger.trace("Finding image center.");
                 centralLocation = walkToPoint(imageCenterPoint, xScaling, yScaling);
 
                 return null;
@@ -498,8 +509,10 @@ public abstract class CalibrateCameraProcess {
             @Override
             protected void process(List<String> chunks) {
                 for (String str : chunks) {
-                    mainFrame.showInstructions("Camera Calibration Instructions", str,
+                    if (!this.isCancelled()) {
+                        mainFrame.showInstructions("Camera Calibration Instructions", str,
                             true, false, "Next", cancelActionListener, proceedActionListener);
+                    }
                 }
             }
             
@@ -553,16 +566,16 @@ public abstract class CalibrateCameraProcess {
                 while ((cornerIdx < 4) && !isCancelled()) {
                     switch (cornerIdx) {
                         case 0:
-                            str = "Finding Upper Left Corner";
+                            str = "Finding Upper Left Image Corner";
                             break;
                         case 1:
-                            str = "Finding Lower Left Corner";
+                            str = "Finding Lower Left Image Corner";
                             break;
                         case 2:
-                            str = "Finding Lower Right Corner";
+                            str = "Finding Lower Right Image Corner";
                             break;
                         case 3:
-                            str = "Finding Upper Right Corner";
+                            str = "Finding Upper Right Image Corner";
                             break;
                     }
 
@@ -570,6 +583,8 @@ public abstract class CalibrateCameraProcess {
                     
                     Logger.trace("Walking from " + centralLocation + " to " + 
                             desiredCameraCorners.get(cornerIdx) + " " + str);
+                    
+                    maskDiameter = initialMaskDiameter;
                     
                     Location corner = walkToPoint(desiredCameraCorners.get(cornerIdx), 
                             xScaling, yScaling);
@@ -606,8 +621,10 @@ public abstract class CalibrateCameraProcess {
             @Override
             protected void process(List<String> chunks) {
                 for (String str : chunks) {
-                    mainFrame.showInstructions("Camera Calibration Instructions", str,
+                    if (!this.isCancelled()) {
+                        mainFrame.showInstructions("Camera Calibration Instructions", str,
                             true, false, "Next", cancelActionListener, proceedActionListener);
+                    }
                 }
             }
             
@@ -723,7 +740,7 @@ public abstract class CalibrateCameraProcess {
             @Override
             protected Void doInBackground() throws Exception  
             {
-                org.opencv.core.Point observedPoint = null;
+                maskDiameter = initialMaskDiameter;
                 
                 for (int iPoint = 0; (iPoint < actualPointsPerTestPattern) && !isCancelled(); 
                         iPoint++) {
@@ -750,8 +767,6 @@ public abstract class CalibrateCameraProcess {
                                 new double[] {measuredPoint.x, measuredPoint.y});
                     }
                 }
-                Logger.trace("testPattern3dPoints = " + testPattern3dPoints);
-                Logger.trace("testPatternImagePoints = " + testPatternImagePoints);
                 testPattern3dPointsList.add(testPattern3dPoints);
                 testPatternImagePointsList.add(testPatternImagePoints);
                 return null;
@@ -760,8 +775,10 @@ public abstract class CalibrateCameraProcess {
             @Override
             protected void process(List<String> chunks) {
                 for (String str : chunks) {
-                    mainFrame.showInstructions("Camera Calibration Instructions", str,
+                    if (!this.isCancelled()) {
+                        mainFrame.showInstructions("Camera Calibration Instructions", str,
                             true, false, "Next", cancelActionListener, proceedActionListener);
+                    }
                 }
             }
             
@@ -799,10 +816,16 @@ public abstract class CalibrateCameraProcess {
                         }
                     }
                     
-                    processRawCalibrationData(testPattern3dPointsArray, testPatternImagePointsArray, 
-                        new Size(pixelsX, pixelsY));
-                    
-                    CalibrateCameraProcess.this.cancel();
+                    try {
+                        processRawCalibrationData(testPattern3dPointsArray, testPatternImagePointsArray, 
+                            new Size(pixelsX, pixelsY));
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    finally {
+                        CalibrateCameraProcess.this.cleanup();
+                    }
                 }
                 else {
                     advance();
@@ -909,10 +932,10 @@ public abstract class CalibrateCameraProcess {
         //that would make the assumption of a linear relation between the error and the correction 
         //invalid. Using a low loop gain ensures the the corrective steps are small which should
         //help keep the non-linearities small as well.
-        final double loopGain = 0.25;
+        final double loopGain = 0.50;
         
         while (newError2 < oldError2) {
-            if (Thread.interrupted()) {
+            if (swingWorker.isCancelled() || Thread.interrupted()) {
                 return null;
             }
             oldError2 = newError2;
@@ -996,8 +1019,8 @@ public abstract class CalibrateCameraProcess {
                     angle = 0;
                 }
             }
-        } while (count < numberOfAngles);
-        
+        } while (count < numberOfAngles && !swingWorker.isCancelled() && !Thread.interrupted());
+
         if (observedPoint == null) {
             return null;
         }
@@ -1013,7 +1036,11 @@ public abstract class CalibrateCameraProcess {
         //Mask off everything that is not near the expected location
         pipeline.setProperty("MaskCircle.center", new org.opencv.core.Point(expectedPoint.getX(), 
                 expectedPoint.getY()));
+        pipeline.setProperty("DetectCircularSymmetry.center", new org.openpnp.model.Point(
+                expectedPoint.getX(), expectedPoint.getY()));
+        
         pipeline.setProperty("MaskCircle.diameter", maskDiameter);
+        pipeline.setProperty("DetectCircularSymmetry.maxDistance", maskDiameter/2.0);
         
         List<KeyPoint> keypoints = null;
         int attempts = 0;
@@ -1025,7 +1052,7 @@ public abstract class CalibrateCameraProcess {
         
         //Keep trying to locate the point until it is found or the maximum attempts have been made
         while ((keypoints == null) && (attempts < 3)) {
-            if (Thread.interrupted()) {
+            if (swingWorker.isCancelled() || Thread.interrupted()) {
                 return null;
             }
             // Run the pipeline and get the results
@@ -1039,6 +1066,9 @@ public abstract class CalibrateCameraProcess {
                 keypoints = null;
             }
             
+            if (Thread.interrupted()) {
+                return null;
+            }
             if (keypoints != null) {
                 Logger.trace("keypoints = " + keypoints);
                 
@@ -1057,14 +1087,14 @@ public abstract class CalibrateCameraProcess {
                 
                 Color pointColor = Color.GREEN;
                 double enclosingDiameter = 2*minDistance + bestKeyPoint.size;
-                if (enclosingDiameter > 0.80*maskDiameter) {
+                if (enclosingDiameter > 0.70*maskDiameter) {
                     //Turn the point yellow as it is getting too close to the edge of the masked
                     //circle - may want to consider increasing the maskDiameter if this continues
                     //to occur
                     pointColor = Color.YELLOW;
                     changeMaskSize++;
                 }
-                else if (enclosingDiameter < 0.50*maskDiameter) {
+                else if (enclosingDiameter < 0.10*maskDiameter) {
                     //Turn the point blue as it is near the center of the masked circle - may want 
                     //to consider decreasing the maskDiameter if this continues to occur
                     pointColor = Color.BLUE;
@@ -1073,17 +1103,22 @@ public abstract class CalibrateCameraProcess {
                 else {
                     changeMaskSize -= (int)Math.signum(changeMaskSize);
                 }
+                if (swingWorker.isCancelled() || Thread.interrupted()) {
+                    return null;
+                }
                 showPointAndCircle(bestKeyPoint.pt, new org.opencv.core.Point(expectedPoint.getX(),
                         expectedPoint.getY()), maskDiameter/2, pointColor, circleColor);
                 if (changeMaskSize > changeMaskThreshold) {
                     maskDiameter *= 1.10;
                     pipeline.setProperty("MaskCircle.diameter", maskDiameter);
+                    pipeline.setProperty("DetectCircularSymmetry.maxDistance", maskDiameter/2.0);
                     Logger.trace("Increasing mask diameter to " + maskDiameter);
                     changeMaskSize--;
                 }
                 else if (changeMaskSize < -changeMaskThreshold) {
-                    maskDiameter /= 1.10;
+                    maskDiameter *= 0.95;
                     pipeline.setProperty("MaskCircle.diameter", maskDiameter);
+                    pipeline.setProperty("DetectCircularSymmetry.maxDistance", maskDiameter/2.0);
                     Logger.trace("Decreasing mask diameter to " + maskDiameter);
                     changeMaskSize++;
                 }
@@ -1098,17 +1133,23 @@ public abstract class CalibrateCameraProcess {
      * Clean-up when the process is done/cancelled
      */
     protected void cleanup() {
+        while ((swingWorker != null) && !swingWorker.isDone()) {
+            swingWorker.cancel(true);
+        }
+        
+        
         cameraView.setCameraViewFilter(null);
+
+        try {
+            mainFrame.hideInstructions();
+        }
+        catch (Exception e) {
+            //Ok - may be already hidden
+            e.printStackTrace();
+        }
         
         ((ReferenceMachine) Configuration.get().getMachine()).
             setAutoToolSelect(savedAutoToolSelect);
-
-        if ((swingWorker != null) && !swingWorker.isDone()) {
-            swingWorker.cancel(true);
-        }
-        else {
-            mainFrame.hideInstructions();
-        }
     }
 
     /**

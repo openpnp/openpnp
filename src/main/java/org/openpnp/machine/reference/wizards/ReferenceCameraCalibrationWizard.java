@@ -27,6 +27,10 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.ContainerEvent;
+import java.awt.event.ContainerListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -43,6 +47,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -75,6 +80,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
@@ -84,6 +90,7 @@ import org.openpnp.machine.reference.ContactProbeNozzle;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.camera.calibration.CameraCalibrationUtils;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -124,6 +131,7 @@ import javax.swing.SpinnerListModel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.JSeparator;
 import javax.swing.JSpinner;
+import java.awt.Checkbox;
 
 @SuppressWarnings("serial")
 public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizard {
@@ -143,7 +151,10 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private VerticalLabel lblNewLabel_13;
     private JLabel lblNewLabel_16;
     private int heightIndex = 0;
-    private List<Length> calibrationHeightSelections;
+    private List<LengthCellValue> calibrationHeightSelections;
+    private SpinnerListModel spinnerModel;
+    private LengthUnit displayUnits;
+    private LengthUnit smallDisplayUnits;
 
 
 
@@ -163,11 +174,11 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         firePropertyChange("calibrationHeights", oldValue, calibrationHeights);
     }
 
-    public List<Length> getCalibrationHeightSelections() {
+    public List<LengthCellValue> getCalibrationHeightSelections() {
         return calibrationHeightSelections;
     }
 
-    public void setCalibrationHeightSelections(List<Length> calibrationHeightSelections) {
+    public void setCalibrationHeightSelections(List<LengthCellValue> calibrationHeightSelections) {
         this.calibrationHeightSelections = calibrationHeightSelections;
     }
 
@@ -184,9 +195,9 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 calibrationHeights.add( 
                         new Length(advancedCalibration.getSavedTestPattern3dPointsList()[i][0][2], 
                                 LengthUnit.Millimeters));
-                calibrationHeightSelections.add( 
+                calibrationHeightSelections.add(new LengthCellValue(
                         new Length(advancedCalibration.getSavedTestPattern3dPointsList()[i][0][2], 
-                                LengthUnit.Millimeters));
+                                LengthUnit.Millimeters)));
             }
         }
         else {
@@ -199,20 +210,30 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                         add(new Length(Double.NaN, LengthUnit.Millimeters)));
                 calibrationHeights.add(referenceCamera.getDefaultZ().
                         add(new Length(Double.NaN, LengthUnit.Millimeters)));
-                calibrationHeightSelections.add(referenceCamera.getDefaultZ().
-                        add(new Length(Double.NaN, LengthUnit.Millimeters)));
-                calibrationHeightSelections.add(referenceCamera.getDefaultZ().
-                        add(new Length(Double.NaN, LengthUnit.Millimeters)));
+                calibrationHeightSelections.add(new LengthCellValue(referenceCamera.getDefaultZ().
+                        add(new Length(Double.NaN, LengthUnit.Millimeters))));
+                calibrationHeightSelections.add(new LengthCellValue(referenceCamera.getDefaultZ().
+                        add(new Length(Double.NaN, LengthUnit.Millimeters))));
             }
             else {
                 //For non-movable cameras, default to defaultZ and the height half-way between 
                 //defaultZ and 0
                 calibrationHeights.add(referenceCamera.getDefaultZ());
                 calibrationHeights.add(referenceCamera.getDefaultZ().multiply(0.5));
-                calibrationHeightSelections.add(referenceCamera.getDefaultZ());
-                calibrationHeightSelections.add(referenceCamera.getDefaultZ().multiply(0.5));
+                calibrationHeightSelections.add(new LengthCellValue(referenceCamera.getDefaultZ()));
+                calibrationHeightSelections.add(new LengthCellValue(referenceCamera.getDefaultZ().
+                        multiply(0.5)));
             }
         }
+        
+        displayUnits = Configuration.get().getSystemUnits();
+        if (displayUnits.equals(LengthUnit.Inches)) {
+            smallDisplayUnits = LengthUnit.Mils;
+        }
+        else {
+            smallDisplayUnits = LengthUnit.Microns;
+        }
+            
         panelCameraCalibration = new JPanel();
         panelCameraCalibration.setBorder(new TitledBorder(null, "Camera Calibration",
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -247,11 +268,33 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.UNRELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.UNRELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.UNRELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -287,50 +330,65 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         chckbxAdvancedCalOverride.addActionListener(overrideAction);
         panelCameraCalibration.add(chckbxAdvancedCalOverride, "2, 2, 11, 1");
         
-        sliderAlpha = new JSlider();
-        sliderAlpha.setValue(100);
-        sliderAlpha.setMajorTickSpacing(10);
-        sliderAlpha.setMinorTickSpacing(5);
-        sliderAlpha.setPaintTicks(true);
-        sliderAlpha.setPaintLabels(true);
-        sliderAlpha.addChangeListener(sliderAlphaChanged);
+        separator_2 = new JSeparator();
+        panelCameraCalibration.add(separator_2, "2, 4, 13, 1");
         
-        lblNewLabel = new JLabel("Crop All Invalid Pixels");
-        lblNewLabel.setHorizontalAlignment(SwingConstants.TRAILING);
-        panelCameraCalibration.add(lblNewLabel, "2, 6");
-        sliderAlpha.setToolTipText("<html><p width=\"500\">"
-                + "A value of 0 crops all invalid pixels from the edge of the image but at the "
-                + "risk of losing some valid pixels at the edge of the image. A value"
-                + " of 100 forces all valid pixels to be displayed but at the risk of some invalid "
-                + "(usually black) pixels being displayed around the edges of the image."
-                + "</p></html>");
-        panelCameraCalibration.add(sliderAlpha, "4, 6, 5, 1");
+        lblNewLabel_31 = new JLabel("General Settings");
+        lblNewLabel_31.setFont(new Font("Tahoma", Font.BOLD, 14));
+        lblNewLabel_31.setHorizontalAlignment(SwingConstants.CENTER);
+        panelCameraCalibration.add(lblNewLabel_31, "2, 6, 7, 1");
         
-        lblNewLabel_3 = new JLabel("Show All Valid Pixels");
-        panelCameraCalibration.add(lblNewLabel_3, "10, 6");
+        checkboxDeinterlace = new JCheckBox("Deinterlace");
+        checkboxDeinterlace.setToolTipText("Removes interlacing from stacked frames");
+        panelCameraCalibration.add(checkboxDeinterlace, "4, 8");
+        
+        lblNewLabel_20 = new JLabel("Cropped Width");
+        panelCameraCalibration.add(lblNewLabel_20, "2, 10, right, default");
+        
+        textFieldCropWidth = new JTextField();
+        panelCameraCalibration.add(textFieldCropWidth, "4, 10, fill, default");
+        textFieldCropWidth.setColumns(10);
+        
+        lblNewLabel_22 = new JLabel("(Set to zero for no cropping)");
+        panelCameraCalibration.add(lblNewLabel_22, "6, 10");
+        
+        lblNewLabel_21 = new JLabel("Cropped Height");
+        panelCameraCalibration.add(lblNewLabel_21, "2, 12, right, default");
+        
+        textFieldCropHeight = new JTextField();
+        panelCameraCalibration.add(textFieldCropHeight, "4, 12, fill, default");
+        textFieldCropHeight.setColumns(10);
+        
+        lblNewLabel_23 = new JLabel("(Set to zero for no cropping)");
+        panelCameraCalibration.add(lblNewLabel_23, "6, 12");
         
         lblNewLabel_1 = new JLabel("Default Working Plane Z");
-        panelCameraCalibration.add(lblNewLabel_1, "2, 4, right, default");
+        panelCameraCalibration.add(lblNewLabel_1, "2, 14, right, default");
         
         textFieldDefaultZ = new JTextField();
-        panelCameraCalibration.add(textFieldDefaultZ, "4, 4, fill, default");
+        panelCameraCalibration.add(textFieldDefaultZ, "4, 14, fill, default");
         textFieldDefaultZ.setColumns(10);
         
         separator = new JSeparator();
-        panelCameraCalibration.add(separator, "2, 8, 13, 1");
+        panelCameraCalibration.add(separator, "2, 16, 13, 1");
+        
+        lblNewLabel_32 = new JLabel("Calibration Setup");
+        lblNewLabel_32.setFont(new Font("Tahoma", Font.BOLD, 14));
+        lblNewLabel_32.setHorizontalAlignment(SwingConstants.CENTER);
+        panelCameraCalibration.add(lblNewLabel_32, "2, 18, 7, 1");
         
         lblCalibrationRig = new JLabel("Calibration Rig");
-        panelCameraCalibration.add(lblCalibrationRig, "2, 10, right, default");
+        panelCameraCalibration.add(lblCalibrationRig, "2, 20, right, default");
         
         comboBoxPart = new JComboBox();
         comboBoxPart.setModel(new PartsComboBoxModel());
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        panelCameraCalibration.add(comboBoxPart, "4, 10, 5, 1, left, default");
+        panelCameraCalibration.add(comboBoxPart, "4, 20, 5, 1, left, default");
         
         //Someday may want to allow use of nozzle tips for bottom camera calibration but leave this
         //out for now since the pipeline for nozzle tip calibration would need to be setup first 
         //but that doesn't really make a lot of sense since the bottom camera needs to be 
-        //calibrated before nozzle tip calibration can be setup
+        //calibrated before nozzle tip calibration in normally setup
 //        chckbxUseNozzleTip = new JCheckBox("Use Nozzle Tip");
 //        chckbxUseNozzleTip.setVisible(!isMovable);
 //        chckbxUseNozzleTip.addActionListener(new AbstractAction("Use Nozzle Tip Action") {
@@ -389,7 +447,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,}));
-        panelCameraCalibration.add(panelCalibrationheights, "4, 12, 5, 1, default, top");
+        panelCameraCalibration.add(panelCalibrationheights, "4, 22, 5, 1, default, top");
         
         String heading;
         if (isMovable) {
@@ -589,104 +647,225 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         lblCaution = new JLabel(labelCautionString);
         panelCalibrationheights.add(lblCaution, "2, 8, 12, 1, fill, default");
         
+        lblNewLabel_28 = new JLabel("Calibration Points Per Cal Z");
+        lblNewLabel_28.setHorizontalAlignment(SwingConstants.TRAILING);
+        panelCameraCalibration.add(lblNewLabel_28, "2, 24, right, default");
+        
+        textFieldDesiredNumberOfPoints = new JTextField();
+        textFieldDesiredNumberOfPoints.setToolTipText("<html><p width=\"500\">"
+                + "This is the desired number of calibration points to collect at each calibration "
+                + "Z coordinate. The actual number may be rounded up or down  so as to form a grid "
+                + "of points with approximately equal pixel spacing in both X and Y. Decreasing "
+                + "this number shortens the calibration collection time but may result in bad or "
+                + "failed calibration. Increasing this may result in a higher quality calibration "
+                + "but the collection will take longer.</p></html>");
+        panelCameraCalibration.add(textFieldDesiredNumberOfPoints, "4, 24, fill, default");
+        textFieldDesiredNumberOfPoints.setColumns(10);
+        
         
         startCameraCalibrationBtn = new JButton(startCalibration);
         startCameraCalibrationBtn.setText("Start Calibration");
-        panelCameraCalibration.add(startCameraCalibrationBtn, "4, 14");
+        panelCameraCalibration.add(startCameraCalibrationBtn, "4, 26");
                 
         chckbxUseSavedData = new JCheckBox("Skip New Collection And Reprocess Prior Collection");
         chckbxUseSavedData.setEnabled(advancedCalibration.isValid());
         chckbxUseSavedData.setToolTipText("Set this to skip collection of new calibration data "
                 + "and just reprocess previously collected calibration data - only useful for "
                 + "code debugging");
-        panelCameraCalibration.add(chckbxUseSavedData, "6, 14, 5, 1");
-
+        panelCameraCalibration.add(chckbxUseSavedData, "6, 26, 5, 1");
+        
         chckbxEnable = new JCheckBox("Apply Calibration");
         chckbxEnable.setToolTipText("Enable this to apply the new image transform and distortion "
                 + "correction settings.  Disable this and no calibration will be applied (raw "
                 + "images will be displayed).");
         chckbxEnable.setEnabled(advancedCalibration.isValid());
-        panelCameraCalibration.add(chckbxEnable, "2, 16");
+        panelCameraCalibration.add(chckbxEnable, "2, 28");
+        
+        sliderAlpha = new JSlider();
+        sliderAlpha.setMaximum(100);
+        sliderAlpha.setValue(100);
+        sliderAlpha.setMajorTickSpacing(10);
+        sliderAlpha.setMinorTickSpacing(2);
+        sliderAlpha.setPaintTicks(true);
+        sliderAlpha.setPaintLabels(true);
+        sliderAlpha.addChangeListener(sliderAlphaChanged);
+        
+        lblNewLabel = new JLabel("Crop All Invalid Pixels");
+        lblNewLabel.setHorizontalAlignment(SwingConstants.TRAILING);
+        panelCameraCalibration.add(lblNewLabel, "2, 30");
+        sliderAlpha.setToolTipText("<html><p width=\"500\">"
+                + "A value of 0 crops all invalid pixels from the edge of the image but at the "
+                + "risk of losing some valid pixels at the edge of the image. A value"
+                + " of 100 forces all valid pixels to be displayed but at the risk of some invalid "
+                + "(usually black) pixels being displayed around the edges of the image."
+                + "</p></html>");
+        panelCameraCalibration.add(sliderAlpha, "4, 30, 5, 1");
+        
+        lblNewLabel_3 = new JLabel("Show All Valid Pixels");
+        panelCameraCalibration.add(lblNewLabel_3, "10, 30");
         
         separator_1 = new JSeparator();
-        panelCameraCalibration.add(separator_1, "2, 18, 13, 1");
+        panelCameraCalibration.add(separator_1, "2, 32, 13, 1");
+        
+        lblNewLabel_33 = new JLabel("Calibration Results/Diagnostics");
+        lblNewLabel_33.setHorizontalAlignment(SwingConstants.CENTER);
+        lblNewLabel_33.setFont(new Font("Tahoma", Font.BOLD, 14));
+        panelCameraCalibration.add(lblNewLabel_33, "2, 34, 7, 1");
+        
+        lblNewLabel_25 = new JLabel("X");
+        panelCameraCalibration.add(lblNewLabel_25, "4, 36");
+        
+        lblNewLabel_26 = new JLabel("Y");
+        panelCameraCalibration.add(lblNewLabel_26, "6, 36");
+        
+        lblNewLabel_27 = new JLabel("Z");
+        panelCameraCalibration.add(lblNewLabel_27, "8, 36");
+        
+        String offsetOrPositionLabel;
+        if (isMovable) {
+            offsetOrPositionLabel = "Head Offsets";
+        }
+        else {
+            offsetOrPositionLabel = "Location";
+        }
+        lblHeadOffsetOrPosition = new JLabel(offsetOrPositionLabel);
+        lblHeadOffsetOrPosition.setHorizontalAlignment(SwingConstants.TRAILING);
+        panelCameraCalibration.add(lblHeadOffsetOrPosition, "2, 38, right, default");
+        
+        textFieldXOffset = new JTextField();
+        textFieldXOffset.setEditable(false);
+        panelCameraCalibration.add(textFieldXOffset, "4, 38, fill, default");
+        textFieldXOffset.setColumns(10);
+        
+        textFieldYOffset = new JTextField();
+        textFieldYOffset.setEditable(false);
+        panelCameraCalibration.add(textFieldYOffset, "6, 38, fill, default");
+        textFieldYOffset.setColumns(10);
+        
+        textFieldZOffset = new JTextField();
+        textFieldZOffset.setEditable(false);
+        panelCameraCalibration.add(textFieldZOffset, "8, 38, fill, default");
+        textFieldZOffset.setColumns(10);
+        
+        lblNewLabel_24 = new JLabel("Units Per Pixel");
+        lblNewLabel_24.setHorizontalAlignment(SwingConstants.TRAILING);
+        panelCameraCalibration.add(lblNewLabel_24, "2, 40, right, default");
+        
+        textFieldUnitsPerPixel = new JTextField();
+        textFieldUnitsPerPixel.setToolTipText("<html><p width=\"500\">"
+                + "This is the calculated units per pixel at this camera's default Z. Note that "
+                + "the units per pixel is the same in both the X and Y directions.</p></html>");
+        textFieldUnitsPerPixel.setEditable(false);
+        panelCameraCalibration.add(textFieldUnitsPerPixel, "4, 40, fill, default");
+        textFieldUnitsPerPixel.setColumns(10);
+        
+        lblNewLabel_30 = new JLabel("(at Default Working Plane Z)");
+        panelCameraCalibration.add(lblNewLabel_30, "6, 40");
         
         lblNewLabel_5 = new JLabel("X Axis");
-        panelCameraCalibration.add(lblNewLabel_5, "4, 20");
+        panelCameraCalibration.add(lblNewLabel_5, "4, 42");
         
         lblNewLabel_6 = new JLabel("Y Axis");
-        panelCameraCalibration.add(lblNewLabel_6, "6, 20");
+        panelCameraCalibration.add(lblNewLabel_6, "6, 42");
         
         lblNewLabel_7 = new JLabel("Z Axis");
-        panelCameraCalibration.add(lblNewLabel_7, "8, 20");
+        panelCameraCalibration.add(lblNewLabel_7, "8, 42");
         
-        lblNewLabel_2 = new JLabel("Camera Mounting Errors [Deg]");
-        lblNewLabel_2.setToolTipText("<html><p width=\"500\">"
-                + "The estimated camera mounting errors using the right hand rule about "
-                + "each machine axis</p></html>");
-        panelCameraCalibration.add(lblNewLabel_2, "2, 22, right, default");
+        lblNewLabel_2 = new JLabel("Camera Mounting Error [Deg]");
+        panelCameraCalibration.add(lblNewLabel_2, "2, 44, right, default");
         
         textFieldXRotationError = new JTextField();
+        textFieldXRotationError.setToolTipText("<html><p width=\"500\">"
+                + "The estimated camera mounting error using the right hand rule about "
+                + "the machine X axis. If the camera reticle crosshairs appear too far offset (up "
+                + "or down) from the center of the image, correct this physical mounting error and "
+                + "re-calibrate the camera. Note that this error does not affect the accuracy of "
+                + "the machine but only reduces the maximum size of objects that can be centered "
+                + "on the reticle crosshairs and still be fully visible in the image."
+                + "</p></html>");
         textFieldXRotationError.setEditable(false);
-        panelCameraCalibration.add(textFieldXRotationError, "4, 22, fill, default");
+        panelCameraCalibration.add(textFieldXRotationError, "4, 44, fill, default");
         textFieldXRotationError.setColumns(10);
         
         textFieldYRotationError = new JTextField();
+        textFieldYRotationError.setToolTipText("<html><p width=\"500\">"
+                + "The estimated camera mounting error using the right hand rule about "
+                + "the machine Y axis. If the camera reticle crosshairs appear too far offset "
+                + "(left or right) from the center of the image, correct this physical mounting "
+                + "error and re-calibrate the camera. Note that this error does not affect the "
+                + "accuracy of the machine but only reduces the maximum size of objects that can "
+                + "be centered on the reticle crosshairs and still be fully visible in the image."
+                + "</p></html>");
         textFieldYRotationError.setEditable(false);
-        panelCameraCalibration.add(textFieldYRotationError, "6, 22, fill, default");
+        panelCameraCalibration.add(textFieldYRotationError, "6, 44, fill, default");
         textFieldYRotationError.setColumns(10);
         
         textFieldZRotationError = new JTextField();
+        textFieldZRotationError.setToolTipText("<html><p width=\"500\">"
+                + "The estimated camera mounting error using the right hand rule about "
+                + "the machine Z axis. If the camera image appears rotated too much, correct this "
+                + "physical mounting error and re-calibrate the camera. Note that this error does "
+                + "not affect the accuracy of the machine but is mainly asthetic.</p></html>");
         textFieldZRotationError.setEditable(false);
-        panelCameraCalibration.add(textFieldZRotationError, "8, 22, fill, default");
+        panelCameraCalibration.add(textFieldZRotationError, "8, 44, fill, default");
         textFieldZRotationError.setColumns(10);
         
-        lblNewLabel_4 = new JLabel("Model RMS Error [pixels]");
-        lblNewLabel_4.setToolTipText("<html><p width=\"500\">"
-                + "This is an overall measure of how badly the pixel locations computed by the "
-                + "mathematical camera model compare to the observed pixel locations collected "
-                + "during the calibration process. See the plots below for more details."
-                + "</p></html>");
-        panelCameraCalibration.add(lblNewLabel_4, "2, 24, right, default");
+        lblNewLabel_4 = new JLabel("Estimated Locating Accuracy");
+        lblNewLabel_4.setHorizontalAlignment(SwingConstants.TRAILING);
+        panelCameraCalibration.add(lblNewLabel_4, "2, 46, right, default");
         
         textFieldRmsError = new JTextField();
+        textFieldRmsError.setToolTipText("<html><p width=\"500\">"
+                + "This is an estimate of the accuracy of object locations measured at "
+                + "default Z that can be obtained with this camera. For a large number of "
+                + "measurements performed at random locations throughout the image, one should "
+                + "expect 63.2% of the measured locations to be within this distance of their true "
+                + "location and 98.2% within double this distance. See the plots below for more "
+                + "details."
+                + "</p></html>");
         textFieldRmsError.setEditable(false);
-        panelCameraCalibration.add(textFieldRmsError, "4, 24, fill, default");
+        panelCameraCalibration.add(textFieldRmsError, "4, 46, fill, default");
         textFieldRmsError.setColumns(10);
         
-        lblNewLabel_8 = new JLabel("Selected Cal Z For Viewing");
-        panelCameraCalibration.add(lblNewLabel_8, "2, 26");
+        lblNewLabel_29 = new JLabel("(at Default Working Plane Z)");
+        panelCameraCalibration.add(lblNewLabel_29, "6, 46");
         
-        spinnerIndex = new JSpinner(new SpinnerListModel(calibrationHeightSelections));
+        lblNewLabel_8 = new JLabel("Selected Cal Z For Plotting");
+        lblNewLabel_8.setHorizontalAlignment(SwingConstants.TRAILING);
+        panelCameraCalibration.add(lblNewLabel_8, "2, 48");
+        
+        spinnerModel = new SpinnerListModel(calibrationHeightSelections);
+        spinnerIndex = new JSpinner(spinnerModel);
         spinnerIndex.setToolTipText("This selects the data to display in the plots below.");
         spinnerIndex.addChangeListener(new ChangeListener() {
 
             @Override
             public void stateChanged(ChangeEvent e) {
-                Length selectedHeight = (Length) spinnerIndex.getValue();
-                Logger.trace("selectedHeight = " + selectedHeight);
+                LengthCellValue selectedHeight = (LengthCellValue) spinnerIndex.getValue();
+                Logger.trace("selectedHeight = " + selectedHeight.getLength());
                 heightIndex  = calibrationHeightSelections.indexOf(selectedHeight);
                 Logger.trace("heightIndex = " + heightIndex);
                 updateDiagnosticsDisplay();
             }
             
         });
-        panelCameraCalibration.add(spinnerIndex, "4, 26");
+        panelCameraCalibration.add(spinnerIndex, "4, 48");
 
         
         lblNewLabel_14 = new JLabel("Residual Errors In Collection Order");
         lblNewLabel_14.setFont(new Font("Tahoma", Font.BOLD, 13));
         lblNewLabel_14.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_14, "4, 28, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_14, "4, 50, 3, 1");
 
-        lblNewLabel_9 = new VerticalLabel("Residual Error [pixels]");
+        lblNewLabel_9 = new VerticalLabel("Residual Error [" + 
+                smallDisplayUnits.getShortName() + "]");
         lblNewLabel_9.setVerticalAlignment(SwingConstants.BOTTOM);
         lblNewLabel_9.setRotation(VerticalLabel.ROTATE_LEFT);
-        panelCameraCalibration.add(lblNewLabel_9, "2, 30");
+        panelCameraCalibration.add(lblNewLabel_9, "2, 52");
         
         modelErrorsTimeSequenceView = new SimpleGraphView();
         modelErrorsTimeSequenceView.setFont(new Font("Dialog", Font.PLAIN, 11));
-        panelCameraCalibration.add(modelErrorsTimeSequenceView, "4, 30, 3, 1, fill, fill");
+        panelCameraCalibration.add(modelErrorsTimeSequenceView, "4, 52, 3, 1, fill, fill");
         
         String legend = "\r\n<p><body style=\"text-align:left\">"
                 + "\r\n<p>\r\nX Residual "
@@ -695,38 +874,39 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "<span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>"
                 + "\r\n</body></p>\r\n";
         lblNewLabel_17 = new JLabel("<html><p width=\"500\">"
-                + "This plot displays the residual pixel error (that is, the remaining error after "
-                + "calibration has been applied) of each calibration point in the order it "
+                + "This plot displays the residual location error (that is, the remaining error "
+                + "after calibration has been applied) of each calibration point in the order it "
                 + "was collected. The residual errors should have zero mean and appear as random "
-                + "noise. If there are significant jumps or trends in the errors; depending on "
-                + "their magnitude, there may be a problem with the calibration. Some possible "
-                + "causes are: calibration rig movement/slippage during the collection; camera or "
-                + "lens moving in its mount; motors missing steps; belt/cog slippage; thermal "
-                + "expansion; etcetera."
+                + "noise. If there are significant steps in the mean level or trends in the "
+                + "errors; depending on their magnitude, there may be a problem with the "
+                + "calibration. Some possible causes are: calibration rig movement/slippage during "
+                + "the collection; camera or lens moving in its mount; motors missing steps; "
+                + "belt/cog slippage; thermal expansion/contraction; etcetera."
                 + "</p>" + legend + "</html>");
-        panelCameraCalibration.add(lblNewLabel_17, "8, 30, 3, 1, left, default");
+        panelCameraCalibration.add(lblNewLabel_17, "8, 52, 3, 1, left, default");
         
         lblNewLabel_10 = new JLabel("Collection Sequence Number");
         lblNewLabel_10.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_10, "4, 32, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_10, "4, 54, 3, 1");
 
         
         lblNewLabel_15 = new JLabel("Residual Error X-Y Scatter Plot");
         lblNewLabel_15.setFont(new Font("Tahoma", Font.BOLD, 13));
         lblNewLabel_15.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_15, "4, 34, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_15, "4, 56, 3, 1");
 
-        lblNewLabel_11 = new VerticalLabel("Y Residual Error [pixels]");
+        lblNewLabel_11 = new VerticalLabel("Y Residual Error [" + 
+                smallDisplayUnits.getShortName() + "]");
         lblNewLabel_11.setVerticalAlignment(SwingConstants.BOTTOM);
         lblNewLabel_11.setRotation(VerticalLabel.ROTATE_LEFT);
-        panelCameraCalibration.add(lblNewLabel_11, "2, 36");
+        panelCameraCalibration.add(lblNewLabel_11, "2, 58");
 
         modelErrorsScatterPlotView = new SimpleGraphView();
         modelErrorsScatterPlotView.setFont(new Font("Dialog", Font.PLAIN, 11));
-        panelCameraCalibration.add(modelErrorsScatterPlotView, "4, 36, 3, 1, fill, fill");
+        panelCameraCalibration.add(modelErrorsScatterPlotView, "4, 58, 3, 1, fill, fill");
         
         lblNewLabel_18 = new JLabel("<html><p width=\"500\">"
-                + "This plot displays the residual pixel location error of each point collected "
+                + "This plot displays the residual location error of each point collected "
                 + "during the calibration process. The green circle marks the approximate boundary "
                 + "at which points are considered to be outliers and are not used for determining "
                 + "the camera calibration parameters. The residual errors should form a single "
@@ -738,28 +918,29 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "camera or lens moving in its mount; under or over compensated backlash; motors "
                 + "missing steps; belt/cog slippage; etcetera."
                 + "</p></html>");
-        panelCameraCalibration.add(lblNewLabel_18, "8, 36, 3, 1, left, default");
+        panelCameraCalibration.add(lblNewLabel_18, "8, 58, 3, 1, left, default");
         
-        lblNewLabel_12 = new JLabel("X Residual Error [pixels]");
+        lblNewLabel_12 = new JLabel("X Residual Error [" + 
+                smallDisplayUnits.getShortName() + "]");
         lblNewLabel_12.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_12, "4, 38, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_12, "4, 60, 3, 1");
         
 
         lblNewLabel_16 = new JLabel("Residual Error Heat Map");
         lblNewLabel_16.setFont(new Font("Tahoma", Font.BOLD, 13));
         lblNewLabel_16.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_16, "4, 40, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_16, "4, 62, 3, 1");
 
         lblNewLabel_13 = new VerticalLabel("Image Y Location [pixels]");
         lblNewLabel_13.setVerticalAlignment(SwingConstants.BOTTOM);
         lblNewLabel_13.setRotation(VerticalLabel.ROTATE_LEFT);
-        panelCameraCalibration.add(lblNewLabel_13, "2, 42");
+        panelCameraCalibration.add(lblNewLabel_13, "2, 64");
 
         modelErrorsView = new MatView();
-        panelCameraCalibration.add(modelErrorsView, "4, 42, 3, 1, fill, fill");
+        panelCameraCalibration.add(modelErrorsView, "4, 64, 3, 1, fill, fill");
         
         lblNewLabel_19 = new JLabel("<html><p width=\"500\">"
-                + "This plot displays the magnitude of the residual pixel location error as a "
+                + "This plot displays the magnitude of the residual location error as a "
                 + "function of the expected location of the pixel in the image. Dark blue areas "
                 + "have very low errors while dark red areas have the highest errors.  Note that "
                 + "the color range is always scaled so that zero error is the darkest blue and "
@@ -768,38 +949,46 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "the image. This distribution should look more or less random with no "
                 + "discernible patterns. If patterns such as rings or stripes are clearly "
                 + "visible and the residual errors observed in the other plots are large, the "
-                + "mathematical model of the camera does not fit very well with the physical "
-                + "reality of the camera and may indicate something is wrong with the camera and/"
-                + "or lens."
+                + "mathematical model of the camera does not fit very well with the physics "
+                + "of the camera and may indicate something is wrong with the camera and/or lens."
                 + "</p></html>");
-        panelCameraCalibration.add(lblNewLabel_19, "8, 42, 3, 1, left, default");
+        panelCameraCalibration.add(lblNewLabel_19, "8, 64, 3, 1, left, default");
         
         lblNewLabel_12 = new JLabel("Image X Location [pixels]");
         lblNewLabel_12.setHorizontalAlignment(SwingConstants.CENTER);
-        panelCameraCalibration.add(lblNewLabel_12, "4, 44, 3, 1");
+        panelCameraCalibration.add(lblNewLabel_12, "4, 66, 3, 1");
+        
     }
 
     @Override
     public void createBindings() {
+        IntegerConverter intConverter = new IntegerConverter();
         LengthConverter lengthConverter = new LengthConverter();
         DoubleConverter doubleConverter = new DoubleConverter("%.3f");
         
         bind(UpdateStrategy.READ_WRITE, advancedCalibration, 
                 "overridingOldTransformsAndDistortionCorrectionSettings",
                 chckbxAdvancedCalOverride, "selected");
+        bind(UpdateStrategy.READ, advancedCalibration, "valid",
+                chckbxEnable, "enabled");
         bind(UpdateStrategy.READ_WRITE, advancedCalibration, "enabled",
                 chckbxEnable, "selected");
         bind(UpdateStrategy.READ, advancedCalibration, "valid",
-                chckbxEnable, "enabled");
+                spinnerIndex, "enabled");
         bind(UpdateStrategy.READ_WRITE, advancedCalibration, "alphaPercent",
                 sliderAlpha, "value");
         bind(UpdateStrategy.READ_WRITE, advancedCalibration, "calibrationRig", 
                 comboBoxPart, "selectedItem");
         bind(UpdateStrategy.READ_WRITE, referenceCamera, "defaultZ", 
                 textFieldDefaultZ, "text", lengthConverter);
-        
-        bind(UpdateStrategy.READ, advancedCalibration, "rmsError",
-                textFieldRmsError, "text", doubleConverter);
+        bind(UpdateStrategy.READ_WRITE, referenceCamera, "cropWidth", 
+                textFieldCropWidth, "text", intConverter);
+        bind(UpdateStrategy.READ_WRITE, referenceCamera, "cropHeight", 
+                textFieldCropHeight, "text", intConverter);
+        bind(UpdateStrategy.READ_WRITE, referenceCamera, "deinterlace", 
+                checkboxDeinterlace, "selected");
+        bind(UpdateStrategy.READ_WRITE, advancedCalibration, "desiredPointsPerTestPattern",
+                textFieldDesiredNumberOfPoints, "text", intConverter );
         bind(UpdateStrategy.READ, advancedCalibration, "rotationErrorZ",
                 textFieldZRotationError, "text", doubleConverter);
         bind(UpdateStrategy.READ, advancedCalibration, "rotationErrorY",
@@ -808,6 +997,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 textFieldXRotationError, "text", doubleConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldDefaultZ);
+        ComponentDecorators.decorateWithAutoSelect(textFieldDesiredNumberOfPoints);
         
         enableControls(advancedCalibration.
                 isOverridingOldTransformsAndDistortionCorrectionSettings());
@@ -818,6 +1008,9 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private void enableControls(boolean b) {
         if (b) {
             chckbxEnable.setEnabled(advancedCalibration.isValid());
+            checkboxDeinterlace.setEnabled(true);
+            textFieldCropWidth.setEnabled(true);
+            textFieldCropHeight.setEnabled(true);
             comboBoxPart.setEnabled(true);
 //            chckbxUseNozzleTip.setEnabled(true);
             textFieldDefaultZ.setEnabled(true);
@@ -828,6 +1021,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             btnHeightDown.setEnabled(true);
             btnCaptureZ.setEnabled(true);
             btnHeightProbe.setEnabled(true);
+            textFieldDesiredNumberOfPoints.setEnabled(true);
             startCameraCalibrationBtn.setEnabled(true);
             chckbxUseSavedData.setEnabled(advancedCalibration.isValid());
             sliderAlpha.setEnabled(true);
@@ -835,6 +1029,9 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         }
         else {
             chckbxEnable.setEnabled(false);
+            checkboxDeinterlace.setEnabled(false);
+            textFieldCropWidth.setEnabled(false);
+            textFieldCropHeight.setEnabled(false);
             comboBoxPart.setEnabled(false);
 //            chckbxUseNozzleTip.setEnabled(false);
             textFieldDefaultZ.setEnabled(false);
@@ -846,6 +1043,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             btnCaptureZ.setEnabled(false);
             btnHeightProbe.setEnabled(false);
             panelCalibrationheights.setEnabled(false);
+            textFieldDesiredNumberOfPoints.setEnabled(false);
             startCameraCalibrationBtn.setEnabled(false);
             chckbxUseSavedData.setEnabled(false);
             sliderAlpha.setEnabled(false);
@@ -865,10 +1063,24 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         public void actionPerformed(ActionEvent e) {
             Logger.trace("thread = " + Thread.currentThread());
             
+            ReferenceCamera defaultCamera = null;
+            try {
+                defaultCamera = (ReferenceCamera) referenceCamera.getHead().getDefaultCamera();
+            }
+            catch (Exception ex) {
+                //TODO - what do we do if the default camera is not a ReferenceCamera???
+            }
+            if (isMovable && (referenceCamera != defaultCamera) && 
+                    !defaultCamera.getAdvancedCalibration().isValid()) {
+                MessageBoxes.errorBox(MainFrame.get(), "Default Camera Not Calibrated", 
+                        "The default camera on this head must be calibrated first.");
+                return;
+            }
+            
             Part calibrationRigPart = (Part) comboBoxPart.getSelectedItem();
             if (calibrationRigPart == null) {
                 MessageBoxes.errorBox(MainFrame.get(), "Calibration rig not found", 
-                        "Please select a calibration rig!");
+                        "Select a calibration rig before starting calibration");
                 return;
             }
             
@@ -876,8 +1088,10 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             
             MainFrame.get().getCameraViews().setSelectedCamera(referenceCamera);
 
-            boolean savedEnabledState = referenceCamera.getAdvancedCalibration().isEnabled();
-            
+            boolean savedEnabledState = advancedCalibration.isEnabled();
+            boolean savedValidState = advancedCalibration.isValid();
+            advancedCalibration.setEnabled(false);
+            advancedCalibration.setValid(false);
             chckbxEnable.setSelected(false);
             referenceCamera.clearCalibrationCache();
             
@@ -891,7 +1105,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     
                         @Override 
                         public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
-                                double[][][] testPatternImagePointsList, Size size) {
+                                double[][][] testPatternImagePointsList, Size size) throws Exception {
                             
                             Logger.trace("processing thread = " + Thread.currentThread());
                             
@@ -905,16 +1119,16 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                                 else {
                                     //For head mounted cameras, we need to use the defaultZ of the 
                                     //default camera since the head offsets need to be computed at 
-                                    //a common level
+                                    //a common Z level
                                     defaultZ = head.getDefaultCamera().getDefaultZ();
                                 }
-                                referenceCamera.getAdvancedCalibration().processRawCalibrationData(
+                                advancedCalibration.processRawCalibrationData(
                                         testPattern3dPointsList, testPatternImagePointsList, 
-                                        size, referenceCamera.getDefaultZ());
+                                        size, defaultZ);
                                 
                                 //Reload the calibration heights and refresh the table
                                 calibrationHeights.clear();
-                                calibrationHeightSelections.clear();
+                                calibrationHeightSelections = new ArrayList<LengthCellValue>();
                                 int numberOfCalibrationHeights = advancedCalibration.
                                         getSavedTestPattern3dPointsList().length;
                                 for (int i=0; i<numberOfCalibrationHeights; i++) {
@@ -922,23 +1136,32 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                                             new Length(advancedCalibration.
                                                     getSavedTestPattern3dPointsList()[i][0][2], 
                                                     LengthUnit.Millimeters));
-                                    calibrationHeightSelections.add( 
+                                    calibrationHeightSelections.add(new LengthCellValue(
                                             new Length(advancedCalibration.
                                                     getSavedTestPattern3dPointsList()[i][0][2], 
-                                                    LengthUnit.Millimeters));
+                                                    LengthUnit.Millimeters)));
                                 }
+                                
                                 tableModel.refresh();
+                                spinnerModel.setList(calibrationHeightSelections);
                                 
                                 advancedCalibration.setValid(true);
-                                
+                                advancedCalibration.setEnabled(true);
                                 chckbxEnable.setSelected(true);
-                                
+                                chckbxEnable.setEnabled(true);
                                 chckbxUseSavedData.setEnabled(true);
+                                spinnerIndex.setEnabled(true);
                                 
                                 updateDiagnosticsDisplay();
                             }
                             catch (Exception e) {
+                                MessageBoxes.errorBox(MainFrame.get(), "Error", e);
                                 advancedCalibration.setValid(false);
+                                advancedCalibration.setEnabled(false);
+                                chckbxEnable.setSelected(false);
+                                chckbxEnable.setEnabled(false);
+                                chckbxUseSavedData.setEnabled(false);
+                                spinnerIndex.setEnabled(false);
                             }
                             
                             startCameraCalibrationBtn.setEnabled(true);
@@ -948,7 +1171,10 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                         protected void processCanceled() {
                             Logger.trace("cancelling thread = " + Thread.currentThread());
                             
+                            advancedCalibration.setValid(savedValidState);
+                            advancedCalibration.setEnabled(savedEnabledState);
                             chckbxEnable.setSelected(savedEnabledState);
+                            chckbxEnable.setEnabled(savedValidState);
                             
                             startCameraCalibrationBtn.setEnabled(true);
                         }
@@ -962,14 +1188,18 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                             referenceCamera.getDefaultZ());
                 
                     advancedCalibration.setValid(true);
-                    
+                    advancedCalibration.setEnabled(true);
                     chckbxEnable.setSelected(true);
-                    
                     updateDiagnosticsDisplay();
                 }
                 catch (Exception ex) {
-                    Logger.trace(ex);
+                    MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
                     advancedCalibration.setValid(false);
+                    advancedCalibration.setEnabled(false);
+                    chckbxEnable.setSelected(false);
+                    chckbxEnable.setEnabled(false);
+                    chckbxUseSavedData.setEnabled(false);
+                    spinnerIndex.setEnabled(false);
                 }
                 
                 startCameraCalibrationBtn.setEnabled(true);
@@ -992,9 +1222,20 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         @Override
         public void stateChanged(ChangeEvent e) {
             if (!sliderAlpha.getValueIsAdjusting()) {
-                double alphaPercent = (int)sliderAlpha.getValue();
+                int alphaPercent = (int)sliderAlpha.getValue();
                 Logger.trace("alphaPercent = " + alphaPercent);
+                advancedCalibration.setAlphaPercent(alphaPercent);
+                advancedCalibration.setVirtualCameraMatrix(
+                    CameraCalibrationUtils.computeVirtualCameraMatrix(
+                        advancedCalibration.getCameraMatrixMat(), 
+                        advancedCalibration.getDistortionCoefficientsMat(),
+                        advancedCalibration.getRectificationMatrix(), 
+                        new Size(referenceCamera.getWidth(), referenceCamera.getHeight()), 
+                        alphaPercent / 100.0, 
+                        advancedCalibration.
+                            getVectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame()));
                 referenceCamera.clearCalibrationCache();
+                updateDiagnosticsDisplay();
             }
         }
         
@@ -1002,73 +1243,99 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     
     private void updateDiagnosticsDisplay() {
         if (advancedCalibration.isValid()) {
-            List<double[]> residuals = CameraCalibrationUtils.computeResidualErrors(
+            Location headOffsets = referenceCamera.getHeadOffsets().convertToUnits(displayUnits);
+            textFieldXOffset.setText((new LengthCellValue(headOffsets.getLengthX())).toString());
+            textFieldYOffset.setText((new LengthCellValue(headOffsets.getLengthY())).toString());
+            textFieldZOffset.setText((new LengthCellValue(headOffsets.getLengthZ())).toString());
+            
+            Location upp = referenceCamera.getUnitsPerPixel(referenceCamera.getDefaultZ()).
+                    convertToUnits(smallDisplayUnits);
+            textFieldUnitsPerPixel.setText(
+                    (new LengthCellValue(upp.getLengthX(), true)).toString());
+            
+            upp = referenceCamera.getUnitsPerPixel(calibrationHeightSelections.get(heightIndex).
+                    getLength()).convertToUnits(smallDisplayUnits);
+            double smallUnitsPerPixel = upp.getLengthX().getValue();
+            
+            textFieldRmsError.setText((new LengthCellValue(upp.getLengthX().
+                    multiply(advancedCalibration.getRmsError()), true)).toString());
+
+            List<double[]> residuals = null;
+            try {
+                residuals = CameraCalibrationUtils.computeResidualErrors(
                     advancedCalibration.getSavedTestPatternImagePointsList(), 
                     advancedCalibration.getModeledImagePointsList(), heightIndex);
     
-            SimpleGraph sequentialErrorGraph = new SimpleGraph();
-            sequentialErrorGraph.setRelativePaddingLeft(0.15);
-            SimpleGraph.DataScale dataScale = new SimpleGraph.DataScale("Residual Error");
-            dataScale.setRelativePaddingTop(0.05);
-            dataScale.setRelativePaddingBottom(0.05);
-            dataScale.setSymmetricIfSigned(true);
-            dataScale.setColor(Color.GRAY);
-            DataRow dataRowX = new SimpleGraph.DataRow("X", Color.RED);
-            DataRow dataRowY = new SimpleGraph.DataRow("Y", Color.GREEN);
-            int iPoint = 0;
-            for (double[] residual : residuals) {
-                dataRowX.recordDataPoint(iPoint, residual[0]);
-                dataRowY.recordDataPoint(iPoint, residual[1]);
-                iPoint++;
+                SimpleGraph sequentialErrorGraph = new SimpleGraph();
+                sequentialErrorGraph.setRelativePaddingLeft(0.10);
+                SimpleGraph.DataScale dataScale = new SimpleGraph.DataScale("Residual Error");
+                dataScale.setRelativePaddingTop(0.05);
+                dataScale.setRelativePaddingBottom(0.05);
+                dataScale.setSymmetricIfSigned(true);
+                dataScale.setColor(Color.GRAY);
+                DataRow dataRowX = new SimpleGraph.DataRow("X", Color.RED);
+                DataRow dataRowY = new SimpleGraph.DataRow("Y", Color.GREEN);
+                int iPoint = 0;
+                for (double[] residual : residuals) {
+                    dataRowX.recordDataPoint(iPoint, smallUnitsPerPixel*residual[0]);
+                    dataRowY.recordDataPoint(iPoint, smallUnitsPerPixel*residual[1]);
+                    iPoint++;
+                }
+                dataScale.addDataRow(dataRowX);
+                dataScale.addDataRow(dataRowY);
+                sequentialErrorGraph.addDataScale(dataScale);
+                modelErrorsTimeSequenceView.setGraph(sequentialErrorGraph);
+                
+                SimpleGraph scatterErrorGraph = new SimpleGraph();
+                scatterErrorGraph.setRelativePaddingLeft(0.10);
+                SimpleGraph.DataScale dataScaleScatter = 
+                        new SimpleGraph.DataScale("Residual Error");
+                dataScaleScatter.setRelativePaddingTop(0.05);
+                dataScaleScatter.setRelativePaddingBottom(0.05);
+                dataScaleScatter.setSymmetricIfSigned(true);
+                dataScaleScatter.setSquareAspectRatio(true);
+                dataScaleScatter.setColor(Color.GRAY);
+                
+                DataRow dataRowXY = new SimpleGraph.DataRow("XY", Color.RED);
+                dataRowXY.setLineShown(false);
+                dataRowXY.setMarkerShown(true);
+                iPoint = 0;
+                for (double[] residual : residuals) {
+                    dataRowXY.recordDataPoint(smallUnitsPerPixel*residual[0], 
+                            smallUnitsPerPixel*residual[1]);
+                    iPoint++;
+                }
+                dataScaleScatter.addDataRow(dataRowXY);
+                
+                //Need to draw the circle in two parts
+                DataRow dataRowCircleTop = new SimpleGraph.DataRow("CircleT", Color.GREEN);
+                DataRow dataRowCircleBottom = new SimpleGraph.DataRow("CircleB", Color.GREEN);
+                double radius = smallUnitsPerPixel * advancedCalibration.getRmsError() * 
+                        CameraCalibrationUtils.sigmaThresholdForRejectingOutliers;
+                for (int i=0; i<=45; i++) {
+                    dataRowCircleTop.recordDataPoint(radius*Math.cos(i*2*Math.PI/90), 
+                            radius*Math.sin(i*2*Math.PI/90));
+                    dataRowCircleBottom.recordDataPoint(radius*Math.cos((i+45)*2*Math.PI/90), 
+                            radius*Math.sin((i+45)*2*Math.PI/90));
+                }
+                dataScaleScatter.addDataRow(dataRowCircleTop);
+                dataScaleScatter.addDataRow(dataRowCircleBottom);
+                
+                scatterErrorGraph.addDataScale(dataScaleScatter);
+                modelErrorsScatterPlotView.setGraph(scatterErrorGraph);
+                
+                Mat errorImage = CameraCalibrationUtils.generateErrorImage(
+                        new Size(referenceCamera.getWidth(), referenceCamera.getHeight()), 
+                        heightIndex, 
+                        advancedCalibration.getSavedTestPatternImagePointsList(), 
+                        advancedCalibration.getModeledImagePointsList(), 
+                        advancedCalibration.getOutlierPoints());
+                modelErrorsView.setMat(errorImage);
+                errorImage.release();
             }
-            dataScale.addDataRow(dataRowX);
-            dataScale.addDataRow(dataRowY);
-            sequentialErrorGraph.addDataScale(dataScale);
-            modelErrorsTimeSequenceView.setGraph(sequentialErrorGraph);
-            
-            SimpleGraph scatterErrorGraph = new SimpleGraph();
-            scatterErrorGraph.setRelativePaddingLeft(0.15);
-            SimpleGraph.DataScale dataScaleScatter = new SimpleGraph.DataScale("Residual Error");
-            dataScaleScatter.setRelativePaddingTop(0.05);
-            dataScaleScatter.setRelativePaddingBottom(0.05);
-            dataScaleScatter.setSymmetricIfSigned(true);
-            dataScaleScatter.setSquareAspectRatio(true);
-            dataScaleScatter.setColor(Color.GRAY);
-            
-            DataRow dataRowXY = new SimpleGraph.DataRow("XY", Color.RED);
-            dataRowXY.setLineShown(false);
-            dataRowXY.setMarkerShown(true);
-            iPoint = 0;
-            for (double[] residual : residuals) {
-                dataRowXY.recordDataPoint(residual[0], residual[1]);
-                iPoint++;
+            catch (Exception e) {
+                e.printStackTrace();
             }
-            dataScaleScatter.addDataRow(dataRowXY);
-            
-            //Need to draw the circle in two parts
-            DataRow dataRowCircleTop = new SimpleGraph.DataRow("CircleT", Color.GREEN);
-            DataRow dataRowCircleBottom = new SimpleGraph.DataRow("CircleB", Color.GREEN);
-            double radius = advancedCalibration.getRmsError() * CameraCalibrationUtils.
-                    sigmaThresholdForRejectingOutliers;
-            for (int i=0; i<=45; i++) {
-                dataRowCircleTop.recordDataPoint(radius*Math.cos(i*2*Math.PI/90), 
-                        radius*Math.sin(i*2*Math.PI/90));
-                dataRowCircleBottom.recordDataPoint(radius*Math.cos((i+45)*2*Math.PI/90), 
-                        radius*Math.sin((i+45)*2*Math.PI/90));
-            }
-            dataScaleScatter.addDataRow(dataRowCircleTop);
-            dataScaleScatter.addDataRow(dataRowCircleBottom);
-            
-            scatterErrorGraph.addDataScale(dataScaleScatter);
-            modelErrorsScatterPlotView.setGraph(scatterErrorGraph);
-            
-            Mat errorImage = CameraCalibrationUtils.generateErrorImage(
-                    new Size(referenceCamera.getWidth(), referenceCamera.getHeight()), heightIndex, 
-                    advancedCalibration.getSavedTestPatternImagePointsList(), 
-                    advancedCalibration.getModeledImagePointsList(), 
-                    advancedCalibration.getOutlierPoints());
-            modelErrorsView.setMat(errorImage);
-            errorImage.release();
         }
     }
 
@@ -1113,5 +1380,29 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private JLabel lblNewLabel_17;
     private JLabel lblNewLabel_18;
     private JLabel lblNewLabel_19;
-    
+    private JCheckBox checkboxDeinterlace;
+    private JTextField textFieldCropWidth;
+    private JTextField textFieldCropHeight;
+    private JLabel lblNewLabel_20;
+    private JLabel lblNewLabel_21;
+    private JLabel lblNewLabel_22;
+    private JLabel lblNewLabel_23;
+    private JLabel lblHeadOffsetOrPosition;
+    private JTextField textFieldXOffset;
+    private JTextField textFieldYOffset;
+    private JTextField textFieldZOffset;
+    private JTextField textFieldUnitsPerPixel;
+    private JLabel lblNewLabel_24;
+    private JLabel lblNewLabel_25;
+    private JLabel lblNewLabel_26;
+    private JLabel lblNewLabel_27;
+    private JTextField textFieldDesiredNumberOfPoints;
+    private JLabel lblNewLabel_28;
+    private JLabel lblNewLabel_29;
+    private JLabel lblNewLabel_30;
+    private JSeparator separator_2;
+    private JLabel lblNewLabel_31;
+    private JLabel lblNewLabel_32;
+    private JLabel lblNewLabel_33;
+
 }

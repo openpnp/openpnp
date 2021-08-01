@@ -51,7 +51,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private boolean overridingOldTransformsAndDistortionCorrectionSettings = false;
     
     @Attribute(required = false)
-    private boolean valid = false;
+    private Boolean valid = false;
     
     @Element(required = false)
     private String calibrationRigId = "";
@@ -104,7 +104,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private double rmsError = 0;
     
     @Attribute(required = false)
-    private int desiredPointsPerTestPattern = 250;
+    private int desiredPointsPerTestPattern = 169;
     
     @Attribute(required = false)
     private double testPatternFillFraction = 0.90;
@@ -124,16 +124,13 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private Mat vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame = 
             Mat.zeros(3, 1, CvType.CV_64FC1);
 
-    private ArrayList<Integer> outlierPointList;
+    private ArrayList<Integer> outlierPointList = new ArrayList<Integer>();
 
 
     
     @Commit 
     public void commit() {
         super.commit();
-        if (calibrationRigId == "") {
-            calibrationRigId = Configuration.get().getParts().get(0).getId();
-        }
         calibrationRig = Configuration.get().getPart(calibrationRigId);
         virtualCameraMatrix.put(0, 0, virtualCameraMatrixArr);
         rectificationMatrix.put(0, 0, rectificationMatrixArr);
@@ -182,7 +179,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         }
         
         if (modeledTestPatternImagePointsList != null && modeledTestPatternImagePointsList.length > 0 && 
-                modeledTestPatternImagePointsList[0].length > 0) {
+                modeledTestPatternImagePointsList[0] != null && modeledTestPatternImagePointsList[0].length > 0) {
             if (modeledTestPatternImagePointsList[0][0].length == 1) {
                 int numberOfPatterns = modeledTestPatternImagePointsList.length;
                 double[][][] temp = new double[numberOfPatterns][][];
@@ -198,7 +195,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
             }
         }
         
-        if (outlierPoints != null) {
+        if (outlierPoints != null && outlierPoints.length > 0) {
             outlierPointList = new ArrayList<Integer>(Arrays.asList(outlierPoints));
         }
         else {
@@ -250,7 +247,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
      * Checks if the calibration parameters validity flag is set
      * @return true if the current calibration parameters validity flag is set
      */
-    public boolean isValid() {
+    public Boolean isValid() {
         return valid;
     }
 
@@ -258,8 +255,8 @@ public class AdvancedCalibration extends LensCalibrationParams {
      * Sets the calibration parameters validity flag to the specified state
      * @param valid - the state to set the validity flag
      */
-    public void setValid(boolean valid) {
-        boolean oldSetting = this.valid;
+    public void setValid(Boolean valid) {
+        Boolean oldSetting = this.valid;
         this.valid = valid;
         firePropertyChange("valid", oldSetting, valid);
     }
@@ -570,13 +567,13 @@ public class AdvancedCalibration extends LensCalibrationParams {
         this.trialStep = trialStep;
     }
 
-    public void processRawCalibrationData(Size size, Length defaultZ) {
+    public void processRawCalibrationData(Size size, Length defaultZ) throws Exception {
         processRawCalibrationData(savedTestPattern3dPointsList, 
                 savedTestPatternImagePointsList, size, defaultZ);
     }
     
     public void processRawCalibrationData(double[][][] testPattern3dPoints, 
-            double[][][] testPatternImagePoints, Size size, Length defaultZ) {
+            double[][][] testPatternImagePoints, Size size, Length defaultZ) throws Exception {
         
         savedTestPattern3dPointsList = testPattern3dPoints;
         savedTestPatternImagePointsList = testPatternImagePoints;
@@ -652,6 +649,8 @@ public class AdvancedCalibration extends LensCalibrationParams {
         
         cameraMatrix.release();
         cameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
+        cameraMatrix.put(0, 0, 1500);
+        cameraMatrix.put(1, 1, 1500);
         cameraMatrix.put(0, 2, (size.width - 1.0)/2.0);
         cameraMatrix.put(1, 2, (size.height - 1.0)/2.0);
         distortionCoefficients.release();
@@ -696,29 +695,15 @@ public class AdvancedCalibration extends LensCalibrationParams {
         cameraParams[7] = distortionCoefficients.get(3, 0)[0];
         cameraParams[8] = distortionCoefficients.get(4, 0)[0];
 
-        //For openpnp, since the physical camera can't rotate relative to the machine axis, all
-        //of the rotation vectors should be exactly the same.  But due to the extra degrees of 
-        //freedom discussed above, they may not be exactly the same so just average them to get
-        //an estimate of the one rotation vector.
-        Mat averageRvec = Mat.zeros(3, 1, CvType.CV_64FC1);
-        double weight = 1.0/rvecs.size();
-        for (Mat rvec : rvecs) {
-            Core.addWeighted(rvec, weight, averageRvec, 1, 0, averageRvec);
-            Logger.trace("rvec = " + rvec.dump());
-        }
-        cameraParams[9] = averageRvec.get(0, 0)[0];
-        cameraParams[10] = averageRvec.get(1, 0)[0];
-        cameraParams[11] = averageRvec.get(2, 0)[0];
-        averageRvec.release();
-        
         //tvecs contains the vector from the camera origin to the test pattern origin with 
         //components expressed in the camera reference system.  Since the Z coordinate
         //of the test patterns were all set to zero before being passed to calibrateCamera, the
         //true Z coordinate of the test patterns must be accounted for here when computing the
         //location of the camera
-        weight = 1.0/tvecs.size();
+        double weight = 1.0/tvecs.size();
         int iTestPattern = 0;
         Mat transformFromMachToPhyCamRefFrame = Mat.eye(3, 3, CvType.CV_64FC1);
+        Mat sumTransformFromMachToPhyCamRefFrame = Mat.eye(3, 3, CvType.CV_64FC1);
         for (Mat vectorFromPhyCamToTestPattInPhyCamRefFrame : tvecs) {
             Logger.trace("vectorFromPhyCamToTestPattInPhyCamRefFrame = " + 
                     vectorFromPhyCamToTestPattInPhyCamRefFrame.dump());
@@ -737,6 +722,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
             Logger.trace("transformFromMachToPhyCamRefFrame = " + 
                     transformFromMachToPhyCamRefFrame.dump());
 
+            Core.add(transformFromMachToPhyCamRefFrame, sumTransformFromMachToPhyCamRefFrame, 
+                    sumTransformFromMachToPhyCamRefFrame);
+            
             Mat tempVectorFromMachToPhyCamInMachRefFrame = Mat.zeros(3, 1, 
                     CvType.CV_64FC1);
             Core.gemm(transformFromMachToPhyCamRefFrame.t(), 
@@ -769,6 +757,41 @@ public class AdvancedCalibration extends LensCalibrationParams {
             iTestPattern++;
         }
         
+        //For openpnp, since the physical camera can't rotate relative to the machine axis, all
+        //of the rotation vectors should be exactly the same.  But due to the extra degrees of 
+        //freedom discussed above, they may not be exactly the same so we need to average them to 
+        //get an estimate of the one rotation vector.  However, we can't just average the rotation
+        //vectors (similar problems arise when averaging angles close to +/-180 degrees) so we 
+        //convert to rotation matrices, sum them, and then use the Kabsch algorithm to find the 
+        //average rotation matrix and then convert back to a rotation vector.
+        Mat sDiag = new Mat();
+        Mat u = new Mat();
+        Mat vt = new Mat();
+        Core.SVDecomp(sumTransformFromMachToPhyCamRefFrame, sDiag, u, vt);
+        sumTransformFromMachToPhyCamRefFrame.release();
+        transformFromMachToPhyCamRefFrame = new Mat();
+        Core.gemm(u, vt, 1, vt, 0, transformFromMachToPhyCamRefFrame);
+        if (Core.determinant(transformFromMachToPhyCamRefFrame) < 0) {
+            Mat s = Mat.eye(3, 3, CvType.CV_64FC1);
+            s.put(2, 2, -1);
+            Core.gemm(u, s, 1, s, 0, s);
+            Core.gemm(s, vt, 1, s, 0, transformFromMachToPhyCamRefFrame);
+            s.release();
+        }
+        Logger.trace("transformFromMachToPhyCamRefFrame = " + 
+                transformFromMachToPhyCamRefFrame.dump());
+        sDiag.release();
+        u.release();
+        vt.release();
+        
+        Mat rvec = new Mat();
+        Calib3d.Rodrigues(transformFromMachToPhyCamRefFrame, rvec );
+        transformFromMachToPhyCamRefFrame.release();
+        cameraParams[9] = rvec.get(0, 0)[0];
+        cameraParams[10] = rvec.get(1, 0)[0];
+        cameraParams[11] = rvec.get(2, 0)[0];
+        rvec.release();
+
         //Compute a new set of camera parameters based on openpnp's more restrictive camera
         //model that avoids the excess degree of freedom problem discussed above
         modeledTestPatternImagePointsList = new double[numberOfTestPatterns][][];
@@ -793,7 +816,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
         
         //Convert the new estimate of the rotation vector to a rotation matrix
-        Mat rvec = Mat.zeros(3, 1, CvType.CV_64FC1);
+        rvec = Mat.zeros(3, 1, CvType.CV_64FC1);
         rvec.put(0,  0, cameraParams[9]);
         rvec.put(1,  0, cameraParams[10]);
         rvec.put(2,  0, cameraParams[11]);
@@ -961,9 +984,10 @@ public class AdvancedCalibration extends LensCalibrationParams {
         transformFromMachToPhyCamRefFrame.release();
         transformFromMachToVirCamRefFrame.release();
         Logger.trace("rectification = " + rectificationMatrix.dump());
-        
-        setValid(true);
-        setEnabled(true);
+
+        virtualCameraMatrix = CameraCalibrationUtils.computeVirtualCameraMatrix(cameraMatrix, 
+                distortionCoefficients, rectificationMatrix, size, alphaPercent / 100.0, 
+                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame);
     }
     
     public void initUndistortRectifyMap(Size size, Mat undistortionMap1, Mat undistortionMap2) {
@@ -984,13 +1008,13 @@ public class AdvancedCalibration extends LensCalibrationParams {
         
         double cameraToZPlane = z - vectorFromMachToPhyCamInMachRefFrame.get(2, 0)[0];
         
-        Mat vect_c_p_m = Mat.zeros(3, 1, CvType.CV_64FC1);
+        Mat vectorPhyCamToPointInMachRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
         Core.multiply(unitVectorPhyCamZInMachRefFrame, 
                 new Scalar(cameraToZPlane/unitVectorPhyCamZInMachRefFrame.get(2, 0)[0]), 
-                vect_c_p_m);
+                vectorPhyCamToPointInMachRefFrame);
         
-        double distance = Core.norm(vect_c_p_m);
-        vect_c_p_m.release();
+        double distance = Core.norm(vectorPhyCamToPointInMachRefFrame);
+        vectorPhyCamToPointInMachRefFrame.release();
         
         return new Length(distance, LengthUnit.Millimeters).convertToUnits(zHeight.getUnits());
     }

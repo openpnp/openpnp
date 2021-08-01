@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference.camera.calibration;
 
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresFactory;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer.Optimum;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
@@ -54,6 +56,8 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Subdiv2D;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.MessageBoxes;
 import org.pmw.tinylog.Logger;
 
 /**
@@ -76,8 +80,8 @@ public class CameraCalibrationUtils {
     // See https://en.wikipedia.org/wiki/Circular_error_probable for a more detailed explanation
     public static final double sigmaThresholdForRejectingOutliers = 2.4103;
 
-    private static final int maxEvaluations = 500;
-    private static final int maxIterations = 500;
+    private static final int maxEvaluations = 1000;
+    private static final int maxIterations = 1000;
 
     private static int numberOfTestPatterns;
     private static int numberOfParameters;
@@ -136,11 +140,12 @@ public class CameraCalibrationUtils {
      *        machine coordinates for each test pattern. This array needs to be initialized with
      *        approximately correct values prior to calling this method and upon return of this
      *        method will contain the best fit camera parameters.
-     * @return the RMS error in pixels of the model's fit to the data points.
+     * @return the DRMS error in pixels of the model's fit to the data points.
+     * @throws Exception 
      */
     public static double ComputeBestCameraParameters(double[][][] testPattern3dPoints,
             double[][][] testPatternImagePoints, double[][][] modeledImagePoints,
-            List<Integer> outlierPointList, double[] parameters) {
+            List<Integer> outlierPointList, double[] parameters) throws Exception {
         return ComputeBestCameraParameters(testPattern3dPoints, testPatternImagePoints,
                 modeledImagePoints, outlierPointList, parameters, 0);
     }
@@ -201,11 +206,12 @@ public class CameraCalibrationUtils {
      * @param flags - Flags used to force certain parameters be retained from the initial starting
      *        values. Can be one or more of the follow added together: FIX_ASPECT_RATIO,
      *        FIX_CENTER_POINT, FIX_DISTORTION_COEFFICENTS, and FIX_ROTATION.
-     * @return the RMS error in pixels of the model's fit to the data points.
+     * @return the DRMS error in pixels of the model's fit to the data points.
+     * @throws Exception 
      */
     public static double ComputeBestCameraParameters(double[][][] testPattern3dPoints,
             double[][][] testPatternImagePoints, double[][][] modeledImagePoints,
-            List<Integer> outlierPointList, double[] parameters, int flags) {
+            List<Integer> outlierPointList, double[] parameters, int flags) throws Exception {
         numberOfTestPatterns = testPattern3dPoints.length;
         // The number of model parameters includes 4 camera matrix entries, 5 distortion
         // coefficients, 3 rotation vector coefficients, 1 camera Z component, and an X/Y camera
@@ -252,7 +258,13 @@ public class CameraCalibrationUtils {
             LeastSquaresProblem lsp = LeastSquaresFactory.create(model, observed, start, checker,
                     maxEvaluations, maxIterations);
 
-            optimum = optimizer.optimize(lsp);
+            try {
+                optimum = optimizer.optimize(lsp);
+            }
+            catch (TooManyEvaluationsException e) {
+                throw(new Exception("Camera model failed to converge. Try increasing "
+                        + "the Points Per Cal Z."));
+            }
             Logger.trace("rms error = " + optimum.getRMS());
             Logger.trace("number of evaluations = " + optimum.getEvaluations());
             Logger.trace("number of iterations = " + optimum.getIterations());
@@ -279,6 +291,7 @@ public class CameraCalibrationUtils {
                 outlierPointList.addAll(outlierPoints);
 
                 if (outlierPoints.isEmpty()) {
+                    Logger.trace("No outliers found in the data set");
                     // no outliers found so no need for a second attempt
                     break;
                 }
@@ -959,6 +972,7 @@ public class CameraCalibrationUtils {
     public static Mat computeVirtualCameraMatrix(Mat physicalCameraMatrix,
             Mat distortionCoefficients, Mat rectification, Size size, double alpha,
             Mat principalPoint) {
+        Logger.trace("alpha = " + alpha);
         // Generate a set of points around the outer perimeter of the distorted unrectifed image
         int numberOfPointsPerSide = 250;
         MatOfPoint2f distortedPoints = new MatOfPoint2f();
@@ -1003,7 +1017,7 @@ public class CameraCalibrationUtils {
             Core.gemm(rectification, principalPoint, 1.0, principalPoint, 0.0,
                     virCamPrincipalPoint);
 
-            // Set the center to the normalized coordinates
+            // Set the center to the normalized virtual camera coordinates
             centerX = virCamPrincipalPoint.get(0, 0)[0] / virCamPrincipalPoint.get(2, 0)[0];
             centerY = virCamPrincipalPoint.get(1, 0)[0] / virCamPrincipalPoint.get(2, 0)[0];
             virCamPrincipalPoint.release();
@@ -1251,9 +1265,9 @@ public class CameraCalibrationUtils {
         double f = outerF * alpha + innerF * (1 - alpha);
         double cx = outerCx * alpha + innerCx * (1 - alpha);
         double cy = outerCy * alpha + innerCy * (1 - alpha);
-
+        
         // Populate the virtual camera matrix
-        Mat ret = Mat.eye(3, 3, CvType.CV_64FC1);
+        Mat ret = Mat.eye(3, 3, CvType.CV_64FC1); //needs a 1 in the lower right corner
         ret.put(0, 0, f);
         ret.put(0, 2, cx);
         ret.put(1, 1, f);
@@ -1311,9 +1325,14 @@ public class CameraCalibrationUtils {
                     double[] errXY = residualList.get(iPoint);
                     double error = Math.sqrt(errXY[0] * errXY[0] + errXY[1] * errXY[1]);
                     maxError = Math.max(maxError, error);
-                    int id = subdiv2D.insert(
-                            new Point(actual2DPoints[i][j][0], actual2DPoints[i][j][1]));
-                    idToErrorMap.put(id, error);
+                    try {
+                        int id = subdiv2D.insert(
+                                new Point(actual2DPoints[i][j][0], actual2DPoints[i][j][1]));
+                        idToErrorMap.put(id, error);
+                    }
+                    catch (Exception e) {
+                        //ok
+                    }
                 }
                 iPoint++;
             }
