@@ -79,7 +79,7 @@ public class HeadSolutions implements Solutions.Subject {
         if (camera != null) {
 
             final Camera theCamera = camera;
-            if (isDefaultHead && solutions.getTargetMilestone() == Milestone.Welcome) { 
+            if (isDefaultHead && solutions.isTargeting(Milestone.Welcome)) { 
                 solutions.add(new Solutions.Issue(
                         head, 
                         "Create nozzles for this head.", 

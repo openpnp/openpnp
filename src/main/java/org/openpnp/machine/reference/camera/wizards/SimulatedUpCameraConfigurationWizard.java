@@ -57,9 +57,8 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
     private JLabel lblY;
     private JLabel lblZ;
     private JLabel lblRotation;
-    private JLabel lblCameraWidth;
+    private JLabel lblCameraDimension;
     private JTextField width;
-    private JLabel lblHeight;
     private JTextField height;
     private JLabel lblFocalBlur;
     private JCheckBox simulateFocalBlur;
@@ -113,98 +112,95 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblCameraWidth = new JLabel("Width");
-        panelGeneral.add(lblCameraWidth, "2, 2, right, default");
-        
-        width = new JTextField();
-        panelGeneral.add(width, "4, 2, fill, default");
-        width.setColumns(10);
-        
-        lblHeight = new JLabel("Height");
-        panelGeneral.add(lblHeight, "2, 4, right, default");
-        
-        height = new JTextField();
-        panelGeneral.add(height, "4, 4, fill, default");
-        height.setColumns(10);
-        
-        lblCameraFlipped = new JLabel("View mirrored?");
-        lblCameraFlipped.setToolTipText("Simulate the camera as showing a mirrored view");
-        panelGeneral.add(lblCameraFlipped, "2, 6, right, default");
-        
-        simulatedFlipped = new JCheckBox("");
-        panelGeneral.add(simulatedFlipped, "4, 6");
-        
-        lblFocalBlur = new JLabel("Simulate Focal Blur?");
-        lblFocalBlur.setToolTipText("Simulate focal blur in order to test Auto Focus. This is very slow!");
-        panelGeneral.add(lblFocalBlur, "2, 8, right, default");
-        
-        simulateFocalBlur = new JCheckBox("");
-        panelGeneral.add(simulateFocalBlur, "4, 8");
-        
         lblX = new JLabel("X");
-        panelGeneral.add(lblX, "4, 10, center, default");
+        panelGeneral.add(lblX, "4, 2, center, default");
         
         lblY = new JLabel("Y");
-        panelGeneral.add(lblY, "6, 10, center, default");
+        panelGeneral.add(lblY, "6, 2, center, default");
         
         lblZ = new JLabel("Z");
-        panelGeneral.add(lblZ, "8, 10, center, default");
+        panelGeneral.add(lblZ, "8, 2, center, default");
         
         lblRotation = new JLabel("Rotation");
-        panelGeneral.add(lblRotation, "10, 10, center, default");
+        panelGeneral.add(lblRotation, "10, 2, center, default");
         
         lblNewLabel = new JLabel("Camera Location");
         lblNewLabel.setToolTipText("<html>\r\nThe Camera simulated location.<br/>\r\n<strong>Note:</strong>  In order to test calibration procedures, we cannot use the regular camera location.\r\n</html>");
-        panelGeneral.add(lblNewLabel, "2, 12, right, default");
+        panelGeneral.add(lblNewLabel, "2, 4, right, default");
         
         simulatedLocationX = new JTextField();
-        panelGeneral.add(simulatedLocationX, "4, 12, fill, default");
+        panelGeneral.add(simulatedLocationX, "4, 4, fill, default");
         simulatedLocationX.setColumns(10);
         
         simulatedLocationY = new JTextField();
-        panelGeneral.add(simulatedLocationY, "6, 12, fill, default");
+        panelGeneral.add(simulatedLocationY, "6, 4, fill, default");
         simulatedLocationY.setColumns(10);
         
         simulatedLocationZ = new JTextField();
-        panelGeneral.add(simulatedLocationZ, "8, 12, fill, default");
+        panelGeneral.add(simulatedLocationZ, "8, 4, fill, default");
         simulatedLocationZ.setColumns(10);
         
         simulatedLocationRotation = new JTextField();
-        panelGeneral.add(simulatedLocationRotation, "10, 12, fill, default");
+        panelGeneral.add(simulatedLocationRotation, "10, 4, fill, default");
         simulatedLocationRotation.setColumns(10);
+        
+        lblCameraDimension = new JLabel("Pixel Dimension");
+        panelGeneral.add(lblCameraDimension, "2, 6, right, default");
+        
+        width = new JTextField();
+        panelGeneral.add(width, "4, 6, fill, default");
+        width.setColumns(10);
+        
+        height = new JTextField();
+        panelGeneral.add(height, "6, 6, fill, default");
+        height.setColumns(10);
         
         lblUnitsPerPixel = new JLabel("Units per Pixel");
         lblUnitsPerPixel.setToolTipText("<html>\r\nThe camera simulated units per pixel.<br/>\r\n<strong>Note:</strong>  In order to test calibration procedures, we cannot use the regular units per pixel.\r\n</html>");
-        panelGeneral.add(lblUnitsPerPixel, "2, 14, right, default");
+        panelGeneral.add(lblUnitsPerPixel, "2, 8, right, default");
         
         simulatedUnitsPerPixelX = new JTextField();
-        panelGeneral.add(simulatedUnitsPerPixelX, "4, 14, fill, default");
+        panelGeneral.add(simulatedUnitsPerPixelX, "4, 8, fill, default");
         simulatedUnitsPerPixelX.setColumns(10);
         
         simulatedUnitsPerPixelY = new JTextField();
         simulatedUnitsPerPixelY.setText("");
-        panelGeneral.add(simulatedUnitsPerPixelY, "6, 14, fill, default");
+        panelGeneral.add(simulatedUnitsPerPixelY, "6, 8, fill, default");
         simulatedUnitsPerPixelY.setColumns(10);
         
-        lblErrorOffsets = new JLabel("Part Error Offsets");
-        lblErrorOffsets.setToolTipText("Part on nozzle error offsets");
-        panelGeneral.add(lblErrorOffsets, "2, 16, right, default");
+        lblErrorOffsets = new JLabel("Pick Error Offsets");
+        lblErrorOffsets.setToolTipText("Picked part on nozzle error offsets in simulation.");
+        panelGeneral.add(lblErrorOffsets, "2, 12, right, default");
         
         errorOffsetsX = new JTextField();
-        panelGeneral.add(errorOffsetsX, "4, 16, fill, default");
+        panelGeneral.add(errorOffsetsX, "4, 12, fill, default");
         errorOffsetsX.setColumns(10);
         
         errorOffsetsY = new JTextField();
-        panelGeneral.add(errorOffsetsY, "6, 16, fill, default");
+        panelGeneral.add(errorOffsetsY, "6, 12, fill, default");
         errorOffsetsY.setColumns(10);
         
         errorOffsetsZ = new JTextField();
-        panelGeneral.add(errorOffsetsZ, "8, 16, fill, default");
+        panelGeneral.add(errorOffsetsZ, "8, 12, fill, default");
         errorOffsetsZ.setColumns(10);
         
         errorOffsetsRotation = new JTextField();
-        panelGeneral.add(errorOffsetsRotation, "10, 16, fill, default");
+        panelGeneral.add(errorOffsetsRotation, "10, 12, fill, default");
         errorOffsetsRotation.setColumns(10);
+        
+        lblCameraFlipped = new JLabel("View mirrored?");
+        lblCameraFlipped.setToolTipText("Simulate the camera as showing a mirrored view");
+        panelGeneral.add(lblCameraFlipped, "2, 16, right, default");
+        
+        simulatedFlipped = new JCheckBox("");
+        panelGeneral.add(simulatedFlipped, "4, 16");
+        
+        lblFocalBlur = new JLabel("Simulate Focal Blur?");
+        lblFocalBlur.setToolTipText("Simulate focal blur in order to test Auto Focus. This is very slow!");
+        panelGeneral.add(lblFocalBlur, "2, 18, right, default");
+        
+        simulateFocalBlur = new JCheckBox("");
+        panelGeneral.add(simulateFocalBlur, "4, 18");
     }
 
     @Override

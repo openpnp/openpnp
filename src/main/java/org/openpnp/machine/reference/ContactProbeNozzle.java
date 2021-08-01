@@ -862,6 +862,12 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                         "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle") {
 
                     @Override
+                    public boolean isUnhandled( ) {
+                        // Never handle a conservative solution as unhandled.
+                        return false;
+                    }
+
+                    @Override
                     public void setState(Solutions.State state) throws Exception {
                         if (state == Solutions.State.Solved) {
                             ReferenceNozzle referenceNozzle = convertToReferenceNozzle((ContactProbeNozzle) nozzle);

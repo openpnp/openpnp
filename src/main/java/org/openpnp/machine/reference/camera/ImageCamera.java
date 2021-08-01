@@ -38,7 +38,9 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Footprint;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -75,6 +77,18 @@ public class ImageCamera extends ReferenceCamera {
 
     @Attribute(required = false)
     private boolean simulatedFlipped = false;
+
+    @Element(required = false)
+    private Length focalLength = new Length(6, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length sensorDiagonal = new Length(4.4, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Location primaryFiducial = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Location secondaryFiducial = new Location(LengthUnit.Millimeters);
 
     private BufferedImage source;
 
@@ -165,6 +179,38 @@ public class ImageCamera extends ReferenceCamera {
         firePropertyChange("sourceUri", oldValue, sourceUri);
     }
 
+    public Length getFocalLength() {
+        return focalLength;
+    }
+
+    public void setFocalLength(Length focalLength) {
+        this.focalLength = focalLength;
+    }
+
+    public Length getSensorDiagonal() {
+        return sensorDiagonal;
+    }
+
+    public void setSensorDiagonal(Length sensorDiagonal) {
+        this.sensorDiagonal = sensorDiagonal;
+    }
+
+    public Location getPrimaryFiducial() {
+        return primaryFiducial;
+    }
+
+    public void setPrimaryFiducial(Location primaryFiducial) {
+        this.primaryFiducial = primaryFiducial;
+    }
+
+    public Location getSecondaryFiducial() {
+        return secondaryFiducial;
+    }
+
+    public void setSecondaryFiducial(Location secondaryFiducial) {
+        this.secondaryFiducial = secondaryFiducial;
+    }
+
     @Override 
     public synchronized void open() throws Exception {
         if (sourceUri.startsWith("classpath://")) {
@@ -199,10 +245,11 @@ public class ImageCamera extends ReferenceCamera {
         double locationX = location.getX();
         double locationY = location.getY();
 
-        double pixelX = locationX / getImageUnitsPerPixel().getX();
-        double pixelY = locationY / getImageUnitsPerPixel().getY();
+        Location upp = getImageUnitsPerPixel().convertToUnits(AxesLocation.getUnits());
+        double pixelX = locationX / upp.getX();
+        double pixelY = locationY / upp.getY();
 
-        // Sub-pixel rendering.
+        // Draw the image with sub-pixel rendering.
         double dx = (pixelX - (width / 2.0));
         double dy = (source.getHeight() - (pixelY + (height / 2.0)));
         gFrame.clearRect(0, 0, width, height);
@@ -219,6 +266,22 @@ public class ImageCamera extends ReferenceCamera {
         }
         gFrame.drawImage(source, t, null);
 
+        // Draw the calibration fiducials. 
+        Location fiducial1 = getPrimaryFiducial().convertToUnits(AxesLocation.getUnits()).subtract(location);
+        if (!fiducial1.isUninitialized()) {
+            drawFiducial(gFrame, width, height, upp, upp, fiducial1);
+        }
+        Location fiducial2 = getSecondaryFiducial().convertToUnits(AxesLocation.getUnits()).subtract(location);
+        if (!fiducial2.isUninitialized()) {
+            double cameraViewDiagonal = Math.sqrt(Math.pow(upp.getX()*width, 2) + Math.pow(upp.getY()*height, 2));
+            double sensorDiagonal = getSensorDiagonal().convertToUnits(AxesLocation.getUnits()).getValue();
+            double focalLength = getFocalLength().convertToUnits(AxesLocation.getUnits()).getValue();
+            double cameraDistance = focalLength*cameraViewDiagonal/sensorDiagonal;
+            double secondaryDistance = cameraDistance + fiducial1.getZ() - fiducial2.getZ(); 
+            Location upp2 = upp.multiply(secondaryDistance/cameraDistance);
+            drawFiducial(gFrame, width, height, upp, upp2, fiducial2);
+        }
+
         if (simulation) {
             SimulationModeMachine.simulateCameraExposure(this, gFrame, width, height);
         }
@@ -226,6 +289,37 @@ public class ImageCamera extends ReferenceCamera {
         gFrame.dispose();
         return frame;
     }
+
+    protected void drawFiducial(Graphics2D gFrame, int cameraWidth, int cameraHeight, Location uppDefault,
+            Location upp, Location fiducial) {
+        int xc = (int)((cameraWidth / 2.0) + fiducial.getX()/upp.getX());
+        int yc = (int)((cameraHeight / 2.0) - fiducial.getY()/upp.getY());
+        if (upp == uppDefault) {
+            gFrame.setColor(Color.WHITE);
+            int w = 2*(int)(0.5/upp.getX());
+            int h = 2*(int)(0.5/upp.getY());
+            int x = xc - w/2;
+            int y = yc - h/2;
+            gFrame.fillOval(x, y, w, h);
+        }
+        else {
+            // Simulate focal blur
+            final int blurSteps = 8;
+            for (int blur = 0; blur <= blurSteps; blur++) { 
+                double d = 1.3 - blur*0.6/blurSteps; 
+                gFrame.setColor(new Color(255, 255, 255, blur < blurSteps ? 48 : 255));
+                int w = 2*(int)(0.5*d/upp.getX());
+                int h = 2*(int)(0.5*d/upp.getY());
+                int x = xc - w/2;
+                int y = yc - h/2;
+                if (x + w < 0 || x > cameraWidth || y + h < 0 || y > cameraHeight) { 
+                    break;
+                }
+                gFrame.fillOval(x, y, w, h);
+            }
+        }
+    }
+
     /**
      * Check if the specified location is a pick location, by looking at it and checking if a tape pocket with the 
      * shape of the blackened footprint is there.

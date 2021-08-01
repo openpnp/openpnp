@@ -108,6 +108,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
 
                     @Override
+                    public boolean isUnhandled( ) {
+                        // Never handle a conservative solution as unhandled.
+                        return false;
+                    }
+
+                    @Override
                     public void setState(Solutions.State state) throws Exception {
                         if (state == Solutions.State.Solved) {
                             convertToPlain((GcodeAsyncDriver) gcodeDriver);
@@ -463,6 +469,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
                                 @Override
+                                public boolean isUnhandled( ) {
+                                    // Never handle a conservative solution as unhandled.
+                                    return false;
+                                }
+
+                                @Override
                                 public void setState(Solutions.State state) throws Exception {
                                     gcodeDriver.setMotionControlType((state == Solutions.State.Solved) ? 
                                             newMotionControlType : oldMotionControlType);
@@ -530,6 +542,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     "Disable Remove Comments.", 
                                     Severity.Suggestion,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
+
+                                @Override
+                                public boolean isUnhandled( ) {
+                                    // Never handle a conservative solution as unhandled.
+                                    return false;
+                                }
 
                                 @Override
                                 public void setState(Solutions.State state) throws Exception {

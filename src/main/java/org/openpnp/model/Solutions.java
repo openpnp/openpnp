@@ -296,6 +296,10 @@ public class Solutions extends AbstractTableModel {
             firePropertyChange("state", oldValue, state);
         }
 
+        public boolean isUnhandled() {
+            return state == State.Open;
+        }
+
         public Object getChoice() {
             return choice;
         }
@@ -354,6 +358,24 @@ public class Solutions extends AbstractTableModel {
             }
             public abstract int get();
             public abstract void set(int value);
+        }
+        public abstract class DoubleProperty extends CustomProperty {
+            private final double min;
+            private final double max;
+
+            public DoubleProperty(String label, String toolTip, double min, double max) {
+                super(label, toolTip);
+                this.min = min;
+                this.max = max;
+            }
+            public double getMin() {
+                return min;
+            }
+            public double getMax() {
+                return max;
+            }
+            public abstract double get();
+            public abstract void set(double value);
         }
 
         public CustomProperty [] getProperties() {
@@ -491,7 +513,7 @@ public class Solutions extends AbstractTableModel {
                         StringBuilder str = new StringBuilder();
                         str.append("<ul>");
                         for (Issue issue : pendingIssues) {
-                            if (issue.getState() == State.Open 
+                            if (issue.isUnhandled() 
                                     && !issue.getFingerprint().equals(getFingerprint())) {
                                 // There is still an open issue.
                                 ok = false;
@@ -552,8 +574,7 @@ public class Solutions extends AbstractTableModel {
                                             + "<blockquote>"+XmlSerialize.escapeXml(targetMilestone.getPrevious().getDescription())+"</blockquote><br/>"
                                             + "<p>Note: Most Issues & Solutions from previous milestones are also reported on subsequent milestones. "
                                             + "But in earlier target milestones some solutions proposed are simpler, more conservative. "
-                                            + "For troubleshooting, it can therfore be beneficial to go back and try getting it to work there.</p><br/>"
-                                            + "<p>To change your nozzle configuration, you have to go back all the way to "+Milestone.Welcome.getName()+".</p>"
+                                            + "For troubleshooting, it can therfore be beneficial to go back and try getting it to work there.</p>"
                                             + "</html>",
                                             Icons.milestone)),
                 };

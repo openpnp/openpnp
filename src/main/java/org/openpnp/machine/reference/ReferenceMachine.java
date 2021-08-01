@@ -31,7 +31,6 @@ import javax.swing.Action;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.index.IndexFeeder;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.Neoden4Camera;
 import org.openpnp.machine.rapidplacer.RapidFeeder;
@@ -544,7 +543,7 @@ public class ReferenceMachine extends AbstractMachine {
             }
         }
         else {
-            // Conservative solutions.
+            // Conservative settings.
             if (!(getMotionPlanner() instanceof NullMotionPlanner)) {
                 solutions.add(new Solutions.Issue(
                         this, 
@@ -553,6 +552,12 @@ public class ReferenceMachine extends AbstractMachine {
                         Solutions.Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
                     final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
+
+                    @Override
+                    public boolean isUnhandled( ) {
+                        // Never handle a conservative solution as unhandled.
+                        return false;
+                    }
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {

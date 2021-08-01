@@ -11,6 +11,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.SpinnerNumberModel;
@@ -26,6 +27,7 @@ import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Issue;
+import org.openpnp.model.Solutions.Issue.DoubleProperty;
 import org.openpnp.model.Solutions.Issue.IntegerProperty;
 import org.openpnp.util.UiUtils;
 
@@ -36,6 +38,7 @@ import com.jgoodies.forms.layout.RowSpec;
 import com.jgoodies.forms.layout.Sizes;
 
 public class IssuePanel extends JPanel {
+    private static final int SLIDER_MAX = 10000;
     private static final int MAX_MULTIPLE_CHOICE = 10;
     final Solutions.Issue issue;
     final ReferenceMachine machine;
@@ -168,10 +171,10 @@ public class IssuePanel extends JPanel {
                     new RowSpec[] {
                             FormSpecs.DEFAULT_ROWSPEC,}));
 
-            JLabel lblMultiChoice = new JLabel(issue.getExtendedDescription());
-            panelMultiChoice.add(lblMultiChoice, "1, 1");
-            lblMultiChoice.setIcon(issue.getExtendedIcon());
-            lblMultiChoice.setIconTextGap(20);
+            JLabel lbl = new JLabel(issue.getExtendedDescription());
+            panelMultiChoice.add(lbl, "1, 1");
+            lbl.setIcon(issue.getExtendedIcon());
+            lbl.setIconTextGap(20);
             
             // Consume the row
             formRow++;
@@ -179,9 +182,9 @@ public class IssuePanel extends JPanel {
         for (Solutions.Issue.CustomProperty property : issue.getProperties()) {
             if (property instanceof IntegerProperty) {
                 IntegerProperty intProperty = (IntegerProperty) property;
-                JLabel lblSpinner = new JLabel(property.getLabel());
-                lblSpinner.setToolTipText(property.getToolTip());
-                panel.add(lblSpinner, "2, "+(formRow*2)+", right, default");
+                JLabel lbl = new JLabel(property.getLabel());
+                lbl.setToolTipText(property.getToolTip());
+                panel.add(lbl, "2, "+(formRow*2)+", right, default");
                 JSpinner spinner = new JSpinner();
                 spinner.addChangeListener(new ChangeListener() {
                     public void stateChanged(ChangeEvent e) {
@@ -198,6 +201,28 @@ public class IssuePanel extends JPanel {
                 spinner.setToolTipText(property.getToolTip());
                 spinner.setEnabled(issue.getState() == Solutions.State.Open);
                 panel.add(spinner, "4, "+(formRow*2)+", left, default");
+            }
+            else if (property instanceof DoubleProperty) {
+                DoubleProperty doubleProperty = (DoubleProperty) property;
+                JLabel lbl = new JLabel(property.getLabel());
+                lbl.setToolTipText(property.getToolTip());
+                panel.add(lbl, "2, "+(formRow*2)+", right, default");
+                JSlider slider = new JSlider(JSlider.HORIZONTAL,
+                        0, SLIDER_MAX, getSliderValue(doubleProperty));
+                slider.addChangeListener(new ChangeListener() {
+                    public void stateChanged(ChangeEvent e) {
+                        int value = (int) slider.getValue();
+                        doubleProperty.set(doubleProperty.getMin() + value*(doubleProperty.getMax() - doubleProperty.getMin())/SLIDER_MAX);
+                        int newValue = getSliderValue(doubleProperty);
+                        if (newValue != value) {
+                            slider.setValue(newValue);
+                        }
+                    }
+                });
+                double val = doubleProperty.get();
+                slider.setToolTipText(property.getToolTip());
+                slider.setEnabled(issue.getState() == Solutions.State.Open);
+                panel.add(slider, "4, "+(formRow*2)+", left, default");
             }
             // Consume the row
             formRow++;
@@ -266,6 +291,10 @@ public class IssuePanel extends JPanel {
                 formRow++;
             }
         }
+    }
+
+    public int getSliderValue(DoubleProperty doubleProperty) {
+        return (int) Math.round((doubleProperty.get() - doubleProperty.getMin())*SLIDER_MAX/(doubleProperty.getMax() - doubleProperty.getMin()));
     }
 
     private RowSpec[] dynamicRowspec(int rows) {

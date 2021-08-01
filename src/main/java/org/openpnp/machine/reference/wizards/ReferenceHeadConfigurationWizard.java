@@ -30,6 +30,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -84,14 +85,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("max(17dlu;default)"),
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblX = new JLabel("X");
@@ -99,9 +92,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
 
         JLabel lblY = new JLabel("Y");
         panel.add(lblY, "6, 2, center, default");
-        
-        lblZ = new JLabel("Z");
-        panel.add(lblZ, "8, 2, center, default");
 
         JLabel lblHomingFiducial = new JLabel("Homing Fiducial");
         panel.add(lblHomingFiducial, "2, 4, right, default");
@@ -177,50 +167,99 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         parkLocation.setShowToolButtons(false); 
         panel.add(parkLocation, "10, 10, left, fill");
         
-        lblCalibrationPrimary = new JLabel("Calibration Primary");
+        JPanel panelCalibration = new JPanel();
+        panelCalibration.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Calibration Rig", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        contentPanel.add(panelCalibration);
+        panelCalibration.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(80dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default)"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblX_1 = new JLabel("X");
+        panelCalibration.add(lblX_1, "4, 2, center, default");
+        
+        lblY_1 = new JLabel("Y");
+        panelCalibration.add(lblY_1, "6, 2, center, default");
+        
+        lblZ_1 = new JLabel("Z");
+        panelCalibration.add(lblZ_1, "8, 2, center, default");
+        
+        lblDiameter = new JLabel("Diameter");
+        lblDiameter.setToolTipText("Diameter of the fiducial.");
+        panelCalibration.add(lblDiameter, "10, 2, center, default");
+
+        lblCalibrationPrimary = new JLabel("Primary Fiducial");
         lblCalibrationPrimary.setToolTipText("Calibration primary fiducial location. Must be placed at PCB surface Z height. ");
-        panel.add(lblCalibrationPrimary, "2, 14, right, default");
+        panelCalibration.add(lblCalibrationPrimary, "2, 4, right, default");
         
         calibrationPrimaryX = new JTextField();
-        panel.add(calibrationPrimaryX, "4, 14, left, default");
+        panelCalibration.add(calibrationPrimaryX, "4, 4, left, default");
         calibrationPrimaryX.setColumns(10);
         
         calibrationPrimaryY = new JTextField();
         calibrationPrimaryY.setColumns(10);
-        panel.add(calibrationPrimaryY, "6, 14, fill, default");
+        panelCalibration.add(calibrationPrimaryY, "6, 4, fill, default");
         
         calibrationPrimaryZ = new JTextField();
-        panel.add(calibrationPrimaryZ, "8, 14, fill, default");
+        panelCalibration.add(calibrationPrimaryZ, "8, 4, fill, default");
         calibrationPrimaryZ.setColumns(10);
         
-        calibrationPrimaryLocation = new LocationButtonsPanel(calibrationPrimaryX, calibrationPrimaryY, calibrationPrimaryZ, (JTextField) null);
-        panel.add(calibrationPrimaryLocation, "10, 14, left, fill");
+        calibrationPrimaryFiducialDiameter = new JTextField();
+        panelCalibration.add(calibrationPrimaryFiducialDiameter, "10, 4, fill, default");
+        calibrationPrimaryFiducialDiameter.setColumns(10);
         
-        lblCalibrationSecondary = new JLabel("Calibration Secondary");
+        calibrationPrimaryLocation = new LocationButtonsPanel(calibrationPrimaryX, calibrationPrimaryY, calibrationPrimaryZ, (JTextField) null);
+        panelCalibration.add(calibrationPrimaryLocation, "12, 4, left, fill");
+        
+        lblCalibrationSecondary = new JLabel("Secondary Fiducial");
         lblCalibrationSecondary.setToolTipText("Calibration secondary fiducial location. Must be placed at different Z height than the primary fiducial. ");
-        panel.add(lblCalibrationSecondary, "2, 16, right, default");
+        panelCalibration.add(lblCalibrationSecondary, "2, 6, right, default");
         
         calibrationSecondaryX = new JTextField();
-        panel.add(calibrationSecondaryX, "4, 16, fill, default");
+        panelCalibration.add(calibrationSecondaryX, "4, 6, fill, default");
         calibrationSecondaryX.setColumns(10);
         
         calibrationSecondaryY = new JTextField();
-        panel.add(calibrationSecondaryY, "6, 16, fill, default");
+        panelCalibration.add(calibrationSecondaryY, "6, 6, fill, default");
         calibrationSecondaryY.setColumns(10);
         
         calibrationSecondaryZ = new JTextField();
-        panel.add(calibrationSecondaryZ, "8, 16, fill, default");
+        panelCalibration.add(calibrationSecondaryZ, "8, 6, fill, default");
         calibrationSecondaryZ.setColumns(10);
         
+        calibrationSecondaryFiducialDiameter = new JTextField();
+        calibrationSecondaryFiducialDiameter.setColumns(10);
+        panelCalibration.add(calibrationSecondaryFiducialDiameter, "10, 6, fill, default");
+        
         calibrationSecondaryLocation = new LocationButtonsPanel(calibrationSecondaryX, calibrationSecondaryY, calibrationSecondaryZ, (JTextField) null);
-        panel.add(calibrationSecondaryLocation, "10, 16, left, fill");
+        panelCalibration.add(calibrationSecondaryLocation, "12, 6, left, fill");
         
-        lblFiducialDiameter = new JLabel("Fiducial Diameter");
-        panel.add(lblFiducialDiameter, "2, 18, right, default");
+        lblTestObject = new JLabel("Test Object");
+        panelCalibration.add(lblTestObject, "2, 8, right, default");
         
-        calibrationPrimaryFiducialDiameter = new JTextField();
-        panel.add(calibrationPrimaryFiducialDiameter, "4, 18, fill, default");
-        calibrationPrimaryFiducialDiameter.setColumns(10);
+        calibrationTestObjectDiameter = new JTextField();
+        panelCalibration.add(calibrationTestObjectDiameter, "10, 8, fill, default");
+        calibrationTestObjectDiameter.setColumns(10);
 
         JPanel panel_2 = new JPanel();
         panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -291,6 +330,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         addWrappedBinding(secondaryLocation, "lengthZ", calibrationSecondaryZ, "text", lengthConverter);
 
         addWrappedBinding(head, "calibrationPrimaryFiducialDiameter", calibrationPrimaryFiducialDiameter, "text", lengthConverter);
+        addWrappedBinding(head, "calibrationSecondaryFiducialDiameter", calibrationSecondaryFiducialDiameter, "text", lengthConverter);
+        addWrappedBinding(head, "calibrationTestObjectDiameter", calibrationTestObjectDiameter, "text", lengthConverter);
 
         addWrappedBinding(head, "zProbeActuatorName", comboBoxZProbeActuator, "selectedItem");
         addWrappedBinding(head, "pumpActuatorName", comboBoxPumpActuator, "selectedItem");
@@ -306,6 +347,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationSecondaryY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationSecondaryZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationPrimaryFiducialDiameter);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationSecondaryFiducialDiameter);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationTestObjectDiameter);
 
         adaptDialog();
     }
@@ -336,7 +379,6 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JTextField calibrationPrimaryX;
     private JTextField calibrationPrimaryY;
     private JTextField calibrationPrimaryZ;
-    private JLabel lblZ;
     private LocationButtonsPanel calibrationPrimaryLocation;
     private JLabel lblCalibrationSecondary;
     private JTextField calibrationSecondaryX;
@@ -344,6 +386,12 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JTextField calibrationSecondaryZ;
     private LocationButtonsPanel calibrationSecondaryLocation;
     private JPanel panel_1;
-    private JLabel lblFiducialDiameter;
+    private JLabel lblX_1;
+    private JLabel lblY_1;
+    private JLabel lblZ_1;
+    private JLabel lblDiameter;
     private JTextField calibrationPrimaryFiducialDiameter;
+    private JTextField calibrationSecondaryFiducialDiameter;
+    private JTextField calibrationTestObjectDiameter;
+    private JLabel lblTestObject;
 }
