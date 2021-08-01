@@ -46,14 +46,14 @@ jobs:
 
       - name: Build Installers
         run: |
-          wget https://openpnp.s3-us-west-2.amazonaws.com/install4j_unix_8_0_6.tar.gz
-          tar -xzf install4j_unix_8_0_6.tar.gz
-          ./install4j8.0.6/bin/install4jc -L ${{secrets.INSTALL4J_LICENSE_KEY }}
+          wget https://download-gcdn.ej-technologies.com/install4j/install4j_unix_9_0_4.tar.gz
+          tar -xzf install4j_unix_9_0_4.tar.gz
+          ./install4j9.0.4/bin/install4jc -L ${{secrets.INSTALL4J_LICENSE_KEY }}
           wget https://s3-us-west-2.amazonaws.com/openpnp/macosx-amd64-1.8.0_131.tar.gz
           wget https://s3-us-west-2.amazonaws.com/openpnp/windows-amd64-1.8.0_131.tar.gz
           wget https://s3-us-west-2.amazonaws.com/openpnp/windows-x86-1.8.0_131.tar.gz
           VERSION=`java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version`
-          ./install4j8.0.6/bin/install4jc -r $VERSION -d installers -D mediaFileVersion=$BRANCH_NAME OpenPnP.install4j
+          ./install4j9.0.4/bin/install4jc -r $VERSION -d installers -D mediaFileVersion=$BRANCH_NAME OpenPnP.install4j
           mv installers/updates.xml installers/updates-$BRANCH_NAME.xml
           mkdir -p installers/$BRANCH_NAME/$VERSION
           cp installers/OpenPnP* installers/$BRANCH_NAME/$VERSION
