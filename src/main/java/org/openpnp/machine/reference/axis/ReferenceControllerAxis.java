@@ -451,28 +451,5 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                 }
             }
         }
-        if (solutions.isTargeting(Milestone.Calibration)) {
-            final BacklashCompensationMethod oldBacklashCompensationMethod = 
-                    getBacklashCompensationMethod();
-            if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
-                    && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
-                solutions.add(new Solutions.Issue(
-                        this, 
-                        "New directonal backlash compensation method improves performance and allows fluid motion.", 
-                        "Set axis to DirectionalCompensation.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Backlash-Compensation") {
-
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        setBacklashCompensationMethod(
-                                (state == Solutions.State.Solved) ?  
-                                        BacklashCompensationMethod.DirectionalCompensation 
-                                        : oldBacklashCompensationMethod);
-                        super.setState(state);
-                    }
-                });
-            }
-        }
     }
 }
