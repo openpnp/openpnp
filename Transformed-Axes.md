@@ -64,7 +64,7 @@ As a fantasy example, assume you have salvaged a controller from a printer that 
 
 The ReferenceCamCounterClockwiseAxis is used to transform shared Z axis that work in a seesaw or rocker configuration. 
 
-![Cam Counter-Clockwise](https://user-images.githubusercontent.com/9963310/95992296-19426c00-0e2e-11eb-98d1-ddfdbdfd5f04.png) 
+![Cam Counter-Clockwise](https://user-images.githubusercontent.com/9963310/128174983-a6bb8280-c6b7-4d06-abb0-f102d75f0ae8.png)
 
 **Type** and **Name** are the same as in the [[ReferenceControllerAxis|Machine-Axes#properties]]. 
 
@@ -73,6 +73,8 @@ The **Type** will restrict the input axes to the same **Type** i.e. only the coo
 **Input Axis** denotes the axis where the raw input coordinate is taken from. 
 
 **Cam Radius** is the important parameter of this transformation. It defines the leverage with which the angular motion of the motor translates into the linear motion of the two nozzles that are typically attached to precision linear rails. One nozzle is pressed down, while the other is typically pulled up using a spring. 
+
+**Cam Arms Angle** defines the angle between the two arms. Normally, a 180° angle is used for straight-across arms. If the angle is 0°, it describes a one-armed design that always only pushes one side i.e nozzle at a time. Other "V-shaped" arms angles could be used to describe designs, that eliminate dead-time, that the 0° one-armed design has.
 
 **Cam Wheel Radius** and **Cam Wheel Gap** are physical properties of the mechanics. However, they both just add a constant offset to the transformation. Because we relate the target Z coordinate to the nozzle **tip** rather than the nozzle **back** (where the cam wheel pushes it), such an offset is not purposeful and you will simply end up compensating for it in the nozzle offset. Leave both at zero.
 
