@@ -111,6 +111,7 @@ public class Icons {
     public static Icon nozzleDualCam = getIcon("/icons/nozzle-cam.svg", 96, 96);
 
     public static Icon milestone = getIcon("/icons/milestone.svg", 96, 96);
+    public static Icon comAxisTransform = getIcon("/icons/cam-axis-transform.svg", 283, 283);
     public static Icon safeZFixed = getIcon("/icons/safe-z-fixed.svg", 96, 96);
     public static Icon safeZDynamic = getIcon("/icons/safe-z-dynamic.svg", 96, 96);
     public static Icon safeZCapture = getIcon("/icons/safe-z-capture.svg", 96, 96);
