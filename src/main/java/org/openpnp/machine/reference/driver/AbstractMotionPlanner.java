@@ -245,13 +245,14 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                             if (refAxis.getBacklashCompensationMethod() == BacklashCompensationMethod.DirectionalSneakUp) {
                                 // Sneak up, this needs an extra move for last segment at slower speed.
                                 Length sneakOffset = effectiveBacklashOffset.subtract(backlashOffset);
-                                if (sneakOffset.divide(axisSegment) > 1.0) {
-                                    // sneakOffset is longer than the actual segment length, take the segment length 
-                                    // instead (i.e. don't initially move at all).
-                                    sneakOffset = axisSegment;
-                                }
                                 backlashCompensatedNewLocation = backlashCompensatedNewLocation.subtract(
                                         new AxesLocation(refAxis, sneakOffset));
+                                AxesLocation displacement = backlashCompensatedCurrentLocation.motionSegmentTo(backlashCompensatedNewLocation);
+                                if (Math.signum(displacement.getCoordinate(refAxis)) != Math.signum(axisSegment.getValue())) {
+                                    // Sneak length larger than displacement - just stay put then.
+                                    backlashCompensatedNewLocation = backlashCompensatedNewLocation.put(
+                                            new AxesLocation(refAxis, backlashCompensatedCurrentLocation.getLengthCoordinate(refAxis)));
+                                }
                                 needsExtraBacklashMove = true;
                                 // Take the lowest speed factor of any backlash compensated axis. 
                                 // Note, unlike in previous versions of OpenPnP this does not multiply with speed, it just lowers

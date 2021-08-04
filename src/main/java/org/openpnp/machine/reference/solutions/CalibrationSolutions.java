@@ -60,10 +60,10 @@ public class CalibrationSolutions implements Solutions.Subject {
     private int backlashCalibrationPasses = 4;
 
     @Attribute(required = false)
-    private double errorDampening = 0.8;
+    private double errorDampening = 0.9;
 
     @Attribute(required = false)
-    private double backlashTestMoveMm = 5.0;
+    private double backlashTestMoveMm = 8;
 
     @Attribute(required = false)
     private int nozzleOffsetAngles = 6;
@@ -335,7 +335,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         double toleranceMm = getAxisCalibrationTolerance(camera, axis);
 
         // Determine the needed backlash compensation at various speed factors. 
-        double[] speeds = new double [] { 0.25, 0.5, 0.75, 1 };
+        double[] speeds = new double [] { 0.1, 0.25, 0.5, 0.75, 1 };
         double[] backlashOffsetBySpeed = new double [speeds.length];
         int iSpeed = 0;
         for (double speed : speeds) {
@@ -445,7 +445,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             Location location, double displacement, boolean fullRange) throws Exception {
         AxesLocation axesLocation = movable.toRaw(location);
         if (fullRange) {
-            axesLocation = (displacement < 0 ? 
+            axesLocation = axesLocation.put(displacement < 0 ? 
                     new AxesLocation(axis, axis.getSoftLimitLow()) : 
                         new AxesLocation(axis, axis.getSoftLimitHigh()));
         }
