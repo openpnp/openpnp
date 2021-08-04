@@ -64,7 +64,7 @@ As a fantasy example, assume you have salvaged a controller from a printer that 
 
 The ReferenceCamCounterClockwiseAxis is used to transform shared Z axis that work in a seesaw or rocker configuration. 
 
-![Cam Counter-Clockwise](https://user-images.githubusercontent.com/9963310/128174983-a6bb8280-c6b7-4d06-abb0-f102d75f0ae8.png)
+![Cam Counter-Clockwise](https://user-images.githubusercontent.com/9963310/128175722-96536664-415b-4ba1-a987-dbb196a96aea.png)
 
 **Type** and **Name** are the same as in the [[ReferenceControllerAxis|Machine-Axes#properties]]. 
 
