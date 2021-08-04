@@ -66,9 +66,6 @@ public class CalibrationSolutions implements Solutions.Subject {
     private double backlashTestMoveMm = 5.0;
 
     @Attribute(required = false)
-    private double oneSidedBacklashSafetyFactor = 1.1;
-
-    @Attribute(required = false)
     private int nozzleOffsetAngles = 6;
 
     @Attribute(required = false)
@@ -417,8 +414,8 @@ public class CalibrationSolutions implements Solutions.Subject {
         }
         else if (consistent > 0) {
             // Not consistent over speed.
-            axis.setBacklashCompensationMethod(BacklashCompensationMethod.OneSidedPositioning);
-            axis.setBacklashOffset(new Length(offsetMmMax*oneSidedBacklashSafetyFactor, LengthUnit.Millimeters));
+            axis.setBacklashCompensationMethod(BacklashCompensationMethod.DirectionalSneakUp);
+            axis.setBacklashOffset(new Length(offsetMmMax, LengthUnit.Millimeters));
             axis.setBacklashSpeedFactor(speeds[consistent-1]);
         }
         else {

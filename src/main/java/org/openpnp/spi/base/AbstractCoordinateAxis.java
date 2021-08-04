@@ -85,7 +85,7 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
 
     @Override
     public Length getHomeCoordinate() {
-        return convertToSytem(homeCoordinate);
+        return convertToSystem(homeCoordinate);
     }
 
     @Override
@@ -130,7 +130,7 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
     
     protected abstract long getResolutionTicks(double coordinate);
 
-    protected Length convertToSytem(Length length) {
+    protected Length convertToSystem(Length length) {
         if (type == Axis.Type.Rotation) {
             // This is actually an angle, not a length, just take it at it numerical  value
             // and present in system units, so no conversion will take place.

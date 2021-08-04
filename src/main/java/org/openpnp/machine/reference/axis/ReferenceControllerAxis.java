@@ -65,12 +65,29 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         OneSidedOptimizedPositioning,
         /**
          * Backlash compensation is applied in the direction of travel. 
-         * Half of the offset is added to the actual target location.    
+         * The offset is added to the actual target location, if its signum point into the direction of travel.
          */
-        DirectionalCompensation;
+        DirectionalCompensation,
+        
+        /**
+         * Same as DirectionalCompensation but this method sneaks up to the target at lower speed for the last part
+         * to prevent overshoot. 
+         * 
+         * The sneaking up length is taken to be the same length as the backlash offset. The justification is that
+         * overshoot can never be more than the backlash, i.e. it will at most take up the slack. 
+         */
+        DirectionalSneakUp;
 
         public boolean isOneSidedPositioningMethod() {
             return this == OneSidedPositioning || this == OneSidedOptimizedPositioning;
+        }
+
+        public boolean isDirectionalMethod() {
+            return this == DirectionalCompensation || this == DirectionalSneakUp;
+        }
+
+        public boolean isSpeedControlledMethod() {
+            return this == OneSidedPositioning || this == OneSidedOptimizedPositioning || this == DirectionalSneakUp;
         }
     }
 
@@ -81,7 +98,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     private Length backlashOffset = new Length(0.0, LengthUnit.Millimeters);
 
     @Attribute(required = false) 
-    private double backlashSpeedFactor = 0.1; 
+    private double backlashSpeedFactor = 0.25; 
 
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
@@ -170,7 +187,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getFeedratePerSecond() {
-        return convertToSytem(feedratePerSecond);
+        return convertToSystem(feedratePerSecond);
     }
 
     public void setFeedratePerSecond(Length feedratePerSecond) {
@@ -178,7 +195,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getAccelerationPerSecond2() {
-        return convertToSytem(accelerationPerSecond2);
+        return convertToSystem(accelerationPerSecond2);
     }
 
     public void setAccelerationPerSecond2(Length accelerationPerSecond2) {
@@ -186,7 +203,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getJerkPerSecond3() {
-        return convertToSytem(jerkPerSecond3);
+        return convertToSystem(jerkPerSecond3);
     }
 
     public void setJerkPerSecond3(Length jerkPerSecond3) {
@@ -210,7 +227,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getBacklashOffset() {
-        return convertToSytem(backlashOffset);
+        return convertToSystem(backlashOffset);
     }
 
     public void setBacklashOffset(Length backlashOffset) {

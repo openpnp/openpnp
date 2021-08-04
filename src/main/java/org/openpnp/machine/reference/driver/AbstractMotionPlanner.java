@@ -232,24 +232,46 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                     Length backlashOffset = refAxis.getBacklashOffset(); 
                     if (backlashOffset.getValue() != 0) {
                         // An offset has to be applied.
-                        if (refAxis.getBacklashCompensationMethod() == BacklashCompensationMethod.DirectionalCompensation) {
+                        if (refAxis.getBacklashCompensationMethod().isDirectionalMethod()) {
                             // The compensation is determines by the direction in which the axis travels. Because we assume some 
                             // slack or play, we move a bit farther in that direction. The actual compensation is only applied, if its 
                             // signum points into the direction of travel. In that way it is compatible with the other one-sided methods,
                             // the difference is that it has to be accurate.
-                            Length effectiveBacklashOffset = Math.signum(segment.getCoordinate(refAxis)) == Math.signum(backlashOffset.getValue()) ? 
+                            Length axisSegment = segment.getLengthCoordinate(refAxis);
+                            Length effectiveBacklashOffset = Math.signum(axisSegment.getValue()) == Math.signum(backlashOffset.getValue()) ? 
                                     backlashOffset 
                                     : new Length(0, LengthUnit.Millimeters);
-                            // Note, this is applied to both the extra backlashCompensatedLocation and the newLocation, in case the 
-                            // methods are mixed across axes.
-                            backlashCompensatedNewLocation = backlashCompensatedNewLocation.add(
-                                    new AxesLocation(axis, effectiveBacklashOffset));
+                            AxesLocation effectiveBacklashAxisOffset = new AxesLocation(refAxis, effectiveBacklashOffset);
+                            if (refAxis.getBacklashCompensationMethod() == BacklashCompensationMethod.DirectionalSneakUp) {
+                                // Sneak up, this needs an extra move for last segment at slower speed.
+                                Length sneakOffset = effectiveBacklashOffset.subtract(backlashOffset);
+                                if (sneakOffset.divide(axisSegment) > 1.0) {
+                                    // sneakOffset is longer than the actual segment length, take the segment length 
+                                    // instead (i.e. don't initially move at all).
+                                    sneakOffset = axisSegment;
+                                }
+                                backlashCompensatedNewLocation = backlashCompensatedNewLocation.subtract(
+                                        new AxesLocation(refAxis, sneakOffset));
+                                needsExtraBacklashMove = true;
+                                // Take the lowest speed factor of any backlash compensated axis. 
+                                // Note, unlike in previous versions of OpenPnP this does not multiply with speed, it just lowers
+                                // it to the minimum. So an already very low speed parameter will not be lowered further.
+                                // The idea of OneSidedPositioning is also that it happens at the same speed every time i.e. the
+                                // forces and tensions in the mechanical linkage will be similar.  
+                                backlashCompensatedSpeed = Math.min(backlashCompensatedSpeed, refAxis.getBacklashSpeedFactor());
+                            }
+                            else {
+                                // Apply to the backlashCompensatedNewLocation
+                                backlashCompensatedNewLocation = backlashCompensatedNewLocation.add(
+                                        effectiveBacklashAxisOffset);
+                            }
+                            // Note, this is also applied to the newLocation, as the target coordinate actually remains offset. 
                             newLocation = newLocation.add(
-                                    new AxesLocation(axis, effectiveBacklashOffset));
+                                    effectiveBacklashAxisOffset);
                             // Remember the last backlash offset we applied. This is important to have the right starting location
                             // for the next move and other purposes such as setGlobalOffsets() or getMomentaryLocation().  
                             lastDirectionalBacklashOffset = lastDirectionalBacklashOffset.put(
-                                    new AxesLocation(refAxis, effectiveBacklashOffset));
+                                    effectiveBacklashAxisOffset);
                         }
                         else {
                             // No directional backlash compensation.
@@ -268,7 +290,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                                     needsExtraBacklashMove = true;
                                     // Take the lowest speed factor of any backlash compensated axis. 
                                     // Note, unlike in previous versions of OpenPnP this does not multiply with speed, it just lowers
-                                    // it to the minimum. So an already very low speed parameter  will not be lowered further.
+                                    // it to the minimum. So an already very low speed parameter will not be lowered further.
                                     // The idea of OneSidedPositioning is also that it happens at the same speed every time i.e. the
                                     // forces and tensions in the mechanical linkage will be similar.  
                                     backlashCompensatedSpeed = Math.min(backlashCompensatedSpeed, refAxis.getBacklashSpeedFactor());

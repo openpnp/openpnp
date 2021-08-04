@@ -21,6 +21,7 @@
 
 package org.openpnp.machine.reference.axis.wizards;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -59,7 +60,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.Color;
 
 @SuppressWarnings("serial")
 public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
@@ -532,8 +532,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
         lblBacklashOffset.setVisible(backlashMethod != BacklashCompensationMethod.None);
         backlashOffset.setVisible(backlashMethod != BacklashCompensationMethod.None);
-        lblBacklashSpeedFactor.setVisible(backlashMethod.isOneSidedPositioningMethod());
-        backlashSpeedFactor.setVisible(backlashMethod.isOneSidedPositioningMethod());
+        lblBacklashSpeedFactor.setVisible(backlashMethod.isSpeedControlledMethod());
+        backlashSpeedFactor.setVisible(backlashMethod.isSpeedControlledMethod());
 
         lblLimitRotation.setVisible(showRotationSettings);
         limitRotation.setVisible(showRotationSettings);
