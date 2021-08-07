@@ -151,6 +151,19 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             }
         }
 
+        // Note: the driver/actuator interlock can prompt locations changes (through location confirmation, 
+        // rotational axes wrap-around etc.). Therefore we need to determine the coordinates again, same as above.
+
+        // Handle soft limits and rotation axes limiting and wrap-around.
+        axesLocation = limitAxesLocation(axesLocation, false);
+
+        // Get current planned location of all the axes.
+        currentLocation = new AxesLocation(getMachine()); 
+        // The new planned locations must include all the machine axes, so put the given axesLocation into the whole set.
+        newLocation = 
+                currentLocation
+                .put(axesLocation);
+
         // Create the motion commands needed for backlash compensation if enabled.
         createBacklashCompensatedMotion(hm, speed, currentLocation, newLocation, options);
 
@@ -187,20 +200,23 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             AxesLocation newLocation) throws Exception {
         AxesLocation segment = currentLocation.motionSegmentTo(newLocation);
         List<Driver> drivers = segment.getAxesDrivers(getMachine());
-        if (drivers.size() > 1 
-                || lastPlannedDrivers.size() > 1
-                || (drivers.size() == 1 
-                && lastPlannedDrivers.size() == 1
-                && drivers.get(0) != lastPlannedDrivers.get(0))) {
-            // Either more than one driver involved in the previous/next move...
-            // ... or a different single driver involved... 
-            // ... means that we need to interlock motion across drivers and therefore wait for the previous move to complete.
-            Logger.debug("Interlock motion accross drivers {} vs. {}", lastPlannedDrivers, drivers);
-            // TODO: we might think about optimizing this i.e. not wait for hm that are unrelated. 
-            // For now we wait for the whole machine i.e. we pass null for hm.
-            waitForCompletion(null, CompletionType.WaitForStillstand);
+        if (drivers.size() > 0) {
+            if (lastPlannedDrivers.size() > 0 
+                    && (drivers.size() > 1   
+                            || lastPlannedDrivers.size() > 1
+                            || (drivers.size() == 1 
+                            && lastPlannedDrivers.size() == 1
+                            && drivers.get(0) != lastPlannedDrivers.get(0)))) {
+                // Either more than one driver involved in the previous/next move...
+                // ... or a different single driver involved... 
+                // ... means that we need to interlock motion across drivers and therefore wait for the previous move to complete.
+                Logger.debug("Interlock motion accross drivers {} vs. {}", lastPlannedDrivers, drivers);
+                // TODO: we might think about optimizing this i.e. not wait for hm that are unrelated. 
+                // For now we wait for the whole machine i.e. we pass null for hm.
+                waitForCompletion(null, CompletionType.WaitForStillstand);
+            }
+            lastPlannedDrivers = drivers;
         }
-        lastPlannedDrivers = drivers;
     }
 
     /**
