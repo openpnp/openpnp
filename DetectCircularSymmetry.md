@@ -88,7 +88,7 @@ To supply the wanted diameter and maximum search distance from the vision operat
 ## Nozzle Tip Calibration 
 ![Nozzle Tip Calibration](https://user-images.githubusercontent.com/9963310/115760425-a51aef00-a3a1-11eb-867e-81e44b260686.png)
 
-**Vision Diameter**: Must be set to the physical diameter of the feature you want to detect. Typically, a feature at the very point of the nozzle tip. Either the outer diameter or the air bore. In the future, this could also be used to control Hough circle diameters or circle masks etc.
+**Vision Diameter**: Must be set to the physical diameter of the feature you want to detect. Typically, a feature at the very point of the nozzle tip. Either the outer diameter or the air bore. 
 
 The **maxDistance** property is automatically derived from the already present **Offset Threshold**.
 
@@ -100,8 +100,9 @@ Standard pipeline (Edit the pipeline and paste this using the ![Paste](https://u
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" default-light="false" settle-first="true" count="1">
          <light class="java.lang.Double">128.0</light>
       </cv-stage>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="1" enabled="false" prefix="runoutCalibration_source" suffix=".png"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="13" enabled="false" kernel-size="7"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="results" enabled="true" min-diameter="30" max-diameter="50" max-distance="200" min-symmetry="1.2" property-name="nozzleTip" outer-margin="0.2" inner-margin="0.4" sub-sampling="8" diagnostics="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="results" enabled="true" min-diameter="30" max-diameter="50" max-distance="200" max-target-count="1" min-symmetry="1.2" corr-symmetry="0.0" property-name="nozzleTip" outer-margin="0.2" inner-margin="0.4" sub-sampling="8" super-sampling="1" diagnostics="false"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="6" enabled="true" circles-stage-name="results" thickness="2">
          <color r="255" g="0" b="51" a="255"/>
          <center-color r="0" g="204" b="255" a="255"/>
