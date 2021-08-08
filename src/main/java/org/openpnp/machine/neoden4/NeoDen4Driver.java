@@ -148,10 +148,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             n = new ReferenceNozzle("N1");
             n.setName("N1");
             head.addNozzle(n);
-            getOrCreateActuatorInHead(head, ACT_N1_VACUUM);
-            getOrCreateActuatorInHead(head, ACT_N1_BLOW);
-            n.setBlowOffActuatorName(ACT_N1_BLOW);
-            n.setVacuumActuatorName(ACT_N1_VACUUM);
+            n.setVacuumActuator(getOrCreateActuatorInHead(head, ACT_N1_VACUUM));
+            n.setBlowOffActuator(getOrCreateActuatorInHead(head, ACT_N1_BLOW));
         }
         
         n = (ReferenceNozzle) head.getNozzle("N2");
@@ -159,10 +157,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             n = new ReferenceNozzle("N2");
             n.setName("N2");
             head.addNozzle(n);
-            getOrCreateActuatorInHead(head, ACT_N2_VACUUM);
-            getOrCreateActuatorInHead(head, ACT_N2_BLOW);
-            n.setBlowOffActuatorName(ACT_N2_BLOW);
-            n.setVacuumActuatorName(ACT_N2_VACUUM);
+            n.setVacuumActuator(getOrCreateActuatorInHead(head, ACT_N2_VACUUM));
+            n.setBlowOffActuator(getOrCreateActuatorInHead(head, ACT_N2_BLOW));
         }
         
         n = (ReferenceNozzle) head.getNozzle("N3");
@@ -170,10 +166,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             n = new ReferenceNozzle("N3");
             n.setName("N3");
             head.addNozzle(n);
-            getOrCreateActuatorInHead(head, ACT_N3_VACUUM);
-            getOrCreateActuatorInHead(head, ACT_N3_BLOW);
-            n.setBlowOffActuatorName(ACT_N3_BLOW);
-            n.setVacuumActuatorName(ACT_N3_VACUUM);
+            n.setVacuumActuator(getOrCreateActuatorInHead(head, ACT_N3_VACUUM));
+            n.setBlowOffActuator(getOrCreateActuatorInHead(head, ACT_N3_BLOW));
        }
         
         n = (ReferenceNozzle) head.getNozzle("N4");
@@ -181,10 +175,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             n = new ReferenceNozzle("N4");
             n.setName("N4");
             head.addNozzle(n);
-            getOrCreateActuatorInHead(head, ACT_N4_VACUUM);
-            getOrCreateActuatorInHead(head, ACT_N4_BLOW);
-            n.setBlowOffActuatorName(ACT_N4_BLOW);
-            n.setVacuumActuatorName(ACT_N4_VACUUM);
+            n.setVacuumActuator(getOrCreateActuatorInHead(head, ACT_N4_VACUUM));
+            n.setBlowOffActuator(getOrCreateActuatorInHead(head, ACT_N4_BLOW));
         }
         
         a = (ReferenceActuator) machine.getActuatorByName("Lights-Down");

@@ -1,3 +1,7 @@
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import javax.swing.Action;
 
 import org.junit.jupiter.api.Test;
@@ -29,8 +33,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PnpJobProcessor;
 import org.openpnp.spi.PropertySheetHolder;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class ReferenceJobProcessorRetryTests {
     /**
@@ -328,8 +330,8 @@ public class ReferenceJobProcessorRetryTests {
             nozzle.setAxis(new ReferenceVirtualAxis(Type.Z));
             nozzle.setAxis(new ReferenceVirtualAxis(Type.Rotation));
             nozzle.setChangerEnabled(true);
-            nozzle.setVacuumActuatorName(name + "_VAC");
-            nozzle.setVacuumSenseActuatorName(name + "_VAC");
+            nozzle.setVacuumActuator(actuator);
+            nozzle.setVacuumSenseActuator(actuator);
             
             for (String ntName : compatibleNozzleTipNames) {
                 NozzleTip nt = machine.getNozzleTipByName(ntName);

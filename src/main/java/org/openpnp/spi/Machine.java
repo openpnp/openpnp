@@ -100,6 +100,12 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public List<Actuator> getActuators();
 
     /**
+     * Gets a list of all Actuator attached to the Machine and to all the Heads.
+     * @return
+     */
+    public List<Actuator> getAllActuators();
+
+    /**
      * Get the Actuator attached to this Machine and not to a Head that has the specified id.
      * 
      * @param id
