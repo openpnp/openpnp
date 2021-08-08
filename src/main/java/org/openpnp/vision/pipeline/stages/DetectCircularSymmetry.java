@@ -370,6 +370,10 @@ public class DetectCircularSymmetry extends CvStage {
         final int ySearch = yCenter - r - y0SearchRange;
         final int wSearchRange = x1SearchRange - x0SearchRange;
         final int hSearchRange = y1SearchRange - y0SearchRange;
+        
+        if (wSearchRange < 1 || hSearchRange < 1) {
+            throw new Exception("Circular symmetry stage: search range is cropped to nothing.");
+        }
 
         // Create super sampling offsets if needed.
         double [] superSamplingOffsets;
