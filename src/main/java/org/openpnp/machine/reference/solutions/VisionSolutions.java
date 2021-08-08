@@ -218,7 +218,7 @@ public class VisionSolutions implements Solutions.Subject {
         }
 
         private ReferenceCamera camera; 
-        protected double featureDiameter;
+        protected int featureDiameter;
 
         @Override 
         public void activate() throws Exception {
@@ -228,22 +228,22 @@ public class VisionSolutions implements Solutions.Subject {
         @Override
         public Solutions.Issue.CustomProperty[] getProperties() {
             return new Solutions.Issue.CustomProperty[] {
-                    new Solutions.Issue.DoubleProperty(
+                    new Solutions.Issue.IntegerProperty(
                             "Detected feature diameter",
                             "Adjust the nozzle tip feature diameter that should be detected.",
-                            3, Math.min(camera.getWidth(), camera.getHeight())*0.5) {
+                            3, Math.min(camera.getWidth(), camera.getHeight())/4) {
                         @Override
-                        public double get() {
+                        public int get() {
                             return featureDiameter;
                         }
                         @Override
-                        public void set(double value) {
+                        public void set(int value) {
                             featureDiameter = value;
                             try {
                                 UiUtils.submitUiMachineTask(() -> {
                                     try {
                                         // This show a diagnostic detection image in the camera view for 2000ms.
-                                        getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.4, "Diameter "+(int)value+" px");
+                                        getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.05, "Diameter "+(int)value+" px");
                                     }
                                     catch (Exception e) {
                                         Toolkit.getDefaultToolkit().beep();
@@ -329,7 +329,8 @@ public class VisionSolutions implements Solutions.Subject {
                     }
                     else {
                         head.setCalibrationPrimaryFiducialDiameter(oldFiducialDiameter);
-                        head.setCalibrationPrimaryFiducialLocation(oldPrimaryFiducialLocation);
+                        head.setCalibrationPrimaryFiducialLocation(head.getCalibrationPrimaryFiducialLocation()
+                                .derive(oldPrimaryFiducialLocation, true, true, false, false));
                         cameraCalibrationState.restoreTo(camera);
                         // Persist this unsolved state.
                         solutions.setSolutionsIssueSolved(this, false);
@@ -402,9 +403,11 @@ public class VisionSolutions implements Solutions.Subject {
                                 });
                     }
                     else {
-                        head.setCalibrationSecondaryFiducialLocation(oldSecondaryFiducialLocation);
+                        head.setCalibrationSecondaryFiducialLocation(head.getCalibrationSecondaryFiducialLocation()
+                                .derive(oldSecondaryFiducialLocation, true, true, false, false));
                         head.setCalibrationSecondaryFiducialDiameter(oldSecondaryFiducialDiameter);
-                        camera.setUnitsPerPixelSecondary(oldUnitsPerPixelSecondary);
+                        camera.setUnitsPerPixelSecondary(camera.getUnitsPerPixelSecondary()
+                                .derive(oldUnitsPerPixelSecondary, true, true, false, false));
                         // Persist this unsolved state.
                         solutions.setSolutionsIssueSolved(this, false);
                         super.setState(state);
@@ -809,7 +812,8 @@ public class VisionSolutions implements Solutions.Subject {
             camera.setRotation(rotation);
             //TODO: when Tony Luken's solution is integrated(?): 
             //camera.getCalibration().setEnabled(calibrationEnabled);
-            camera.setUnitsPerPixel(unitsPerPixel);
+            camera.setUnitsPerPixel(camera.getUnitsPerPixel()
+                    .derive(unitsPerPixel, true, true, false, false));
         }
     }
 
@@ -966,7 +970,9 @@ public class VisionSolutions implements Solutions.Subject {
                 featureDiameter = new Length(expectedOffsetsAndDiameter.getDiameter()*unitsPerPixel.getX(), unitsPerPixel.getUnits());
                 if (secondary) {
                     // Keep Z (for now).
-                    unitsPerPixel = unitsPerPixel.derive(camera.getUnitsPerPixelSecondary(), false, false, true, false);
+                    if (camera.getUnitsPerPixelSecondary() != null) {
+                        unitsPerPixel = unitsPerPixel.derive(camera.getUnitsPerPixelSecondary(), false, false, true, false);
+                    }
                     camera.setUnitsPerPixelSecondary(unitsPerPixel);
                     camera.setCameraSecondaryZ(camera.getCameraPhysicalLocation().getLengthZ());
                 }
@@ -1149,7 +1155,7 @@ public class VisionSolutions implements Solutions.Subject {
         ScoreRange scoreRange = new ScoreRange();
         List<Circle> results = DetectCircularSymmetry.findCircularSymmetry(image, 
                 expectedX, expectedY, 
-                maxDiameter, minDiameter, maxDistance, 1,
+                maxDiameter, minDiameter, maxDistance, maxDistance, maxDistance, 1,
                 minSymmetry, 0.0, subSampling, superSampling, diagnostics != null, scoreRange);
         if (diagnostics != null) {
             if (LogUtils.isDebugEnabled()) {

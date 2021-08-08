@@ -322,6 +322,11 @@ public class CalibrationSolutions implements Solutions.Subject {
         // Use the primary calibration fiducial for calibration.
         Location location = head.getCalibrationPrimaryFiducialLocation();
         Length fiducialDiameter = head.getCalibrationPrimaryFiducialDiameter();
+        MovableUtils.moveToLocationAtSafeZ(movable, location);
+        location = machine.getVisualSolutions()
+                .centerInOnSubjectLocation(camera, movable,
+                        fiducialDiameter, "Backlash Calibration", false);
+
         // General note: We always use mm.
         // Calculate the unit vector for the axis in both logical and axis coordinates. 
         Location unit = new Location(LengthUnit.Millimeters, 
