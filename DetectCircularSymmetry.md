@@ -75,7 +75,11 @@ The **DetectCircularSymmetry** stage is configured as follows:
 
 **maxDiameter**: Maximum diameter, in pixels, of the wanted circular feature. This should always be a bit larger than the actual diameter, because the symmetry analysis needs some margin area to detect radial image gradients. 
 
-**maxDistance**: Maximum search distance, in pixels, from the nominal location of the feature (usually from the center of the camera view). 
+**maxDistance**: Maximum search distance (radius), in pixels, from the nominal location of the feature (usually from the center of the camera view). The search distance will be cropped to the image margin. 
+
+**searchWidth**: Maximum search width, in pixels, across the nominal location of the feature. If 0 is given, 2 × **maxDistance** is taken i.e. there is no limit applied.
+
+**searchHeight**: Maximum search height, in pixels, across the nominal location of the feature. If 0 is given, 2 × **maxDistance** is taken i.e. there is no limit applied.
 
 ## Vision Operations Control
 
