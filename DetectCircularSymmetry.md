@@ -125,6 +125,7 @@ Standard pipeline (Edit the pipeline and paste this using the ![Paste](https://u
 <cv-pipeline>
    <stages>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="image" enabled="true" default-light="true" settle-first="true" count="1"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="debug_source" enabled="false" prefix="fidloc_source_" suffix=".png"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="blur" enabled="false" kernel-size="3"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="circular" enabled="true" min-diameter="10" max-diameter="100" max-distance="200" min-symmetry="1.2" property-name="fiducial" outer-margin="0.2" inner-margin="0.4" sub-sampling="8" diagnostics="false"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertModelToKeyPoints" name="results" enabled="true" model-stage-name="circular"/>
