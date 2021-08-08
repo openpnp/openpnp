@@ -185,6 +185,7 @@ Edit the pipeline and paste this using the ![Paste](https://user-images.githubus
 <cv-pipeline>
    <stages>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" default-light="true" settle-first="true" count="1"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="deb0" enabled="false" prefix="push_pull_" suffix=".png"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="1" enabled="true" kernel-size="5"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.AffineWarp" name="11" enabled="true" length-unit="Millimeters" x-0="0.0" y-0="0.0" x-1="0.0" y-1="0.0" x-2="0.0" y-2="0.0" scale="1.0" rectify="true" region-of-interest-property="regionOfInterest"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="12" enabled="true" conversion="Bgr2Gray"/>
@@ -195,6 +196,7 @@ Edit the pipeline and paste this using the ![Paste](https://user-images.githubus
       <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="2" enabled="false" circles-stage-name="results" thickness="1">
          <color r="255" g="0" b="0" a="255"/>
       </cv-stage>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="deb1" enabled="false" prefix="push_pull_result_" suffix=".png"/>
    </stages>
 </cv-pipeline>
 ```
