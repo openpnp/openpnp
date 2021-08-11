@@ -388,8 +388,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private void editCalibrationPipeline() throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
         ReferenceNozzleTipCalibration calibration = nozzleTip.getCalibration();
+        // Use the current Nozzle location as the nominal detection location, this allows testing off-center detection.
         CvPipeline pipeline = calibration
-                .getPipeline(camera, calibration.getCalibrationLocation(camera));
+                .getPipeline(camera, getUiCalibrationNozzle(nozzleTip).getLocation());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
         dialog.setVisible(true);

@@ -68,6 +68,11 @@ public class HttpActuator extends ReferenceActuator {
     public HttpActuator() {}
 
     @Override
+    public boolean isDriverless() {
+        return true;
+    }
+
+    @Override
     protected void driveActuation(boolean on) throws Exception {
         if (on && this.onUrl.isEmpty()) {
             driveActuation("1");

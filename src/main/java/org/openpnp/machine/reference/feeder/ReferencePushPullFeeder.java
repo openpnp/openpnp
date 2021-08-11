@@ -1796,7 +1796,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     return diff;
                 }
                 // same part pitch is favored
-                diff = (getPartPitch().equals(feeder1.getPartPitch())?0:1) - (getPartPitch().equals(getPartPitch())?0:1);
+                diff = (getPartPitch().equals(feeder1.getPartPitch())?0:1) - (getPartPitch().equals(feeder2.getPartPitch())?0:1);
                 if (diff != 0) {
                     return diff;
                 }

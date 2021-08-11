@@ -4,10 +4,10 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openpnp.scripting.Scripting;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ScriptActuatorConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.scripting.Scripting;
 import org.simpleframework.xml.Element;
 
 public class ScriptActuator extends ReferenceActuator {
@@ -21,6 +21,11 @@ public class ScriptActuator extends ReferenceActuator {
         File scriptsDirectory = scripting.getScriptsDirectory();
         File script = new File(scriptsDirectory, scriptName);
         scripting.execute(script, globals);
+    }
+
+    @Override
+    public boolean isDriverless() {
+        return true;
     }
 
     @Override
