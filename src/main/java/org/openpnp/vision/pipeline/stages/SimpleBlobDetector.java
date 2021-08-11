@@ -32,6 +32,10 @@ import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.Feature2D;
+import org.openpnp.model.Area;
+import org.openpnp.model.Length;
+import org.openpnp.spi.Camera;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
@@ -240,6 +244,28 @@ public class SimpleBlobDetector extends CvStage {
     }
 
     public Result process(CvPipeline pipeline) throws Exception {
+        Camera camera = (Camera) pipeline.getProperty("camera");
+
+        double areaMax = this.areaMax;
+        double areaMin = this.areaMin;
+        Object areaByProperty = pipeline.getProperty("SimpleBlobDetector.area");
+        if (areaByProperty instanceof Double ) {
+            Double area = (Double)areaByProperty;
+            //if the area is specified on the pipeline, use the areaMax and areaMin fields as 
+            //fractional margins above and below the specified area
+            areaMax = area * (1+this.areaMax);
+            areaMin = area * (1-this.areaMin);
+        }
+        else if ((areaByProperty instanceof Area) && (camera != null)) {
+            Length workingZ = (Length) pipeline.getProperty("workingZ");
+            if (workingZ == null) {
+                workingZ = camera.getDefaultZ();
+            }
+            double area = (Double)VisionUtils.toPixels((Area)areaByProperty, camera, workingZ);
+            areaMax = area * (1+this.areaMax);
+            areaMin = area * (1-this.areaMin);
+        }
+        
         Mat mat = pipeline.getWorkingImage();
         
         Feature2D blobDetector = org.opencv.features2d.SimpleBlobDetector.create();

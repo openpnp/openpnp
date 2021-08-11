@@ -54,9 +54,9 @@ public class Length {
         return new Length(value - length.getValue(), units);
     }
 
-    public Length multiply(Length length) {
+    public Area multiply(Length length) {
         length = length.convertToUnits(units);
-        return new Length(value * length.getValue(), units);
+        return new Area(value * length.getValue(), AreaUnit.fromLinearUnit(units));
     }
 
     public Length add(double d) {

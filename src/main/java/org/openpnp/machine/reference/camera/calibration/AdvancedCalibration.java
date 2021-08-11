@@ -109,9 +109,21 @@ public class AdvancedCalibration extends LensCalibrationParams {
     @Attribute(required = false)
     private double testPatternFillFraction = 0.90;
     
+    @Attribute(required = false)
+    private double walkingLoopGain = 0.50;
+    
+    @Attribute(required = false)
+    private int fiducialDiameter = 50;
+    
     @Element(required = false)
     private Location trialStep = new Location(LengthUnit.Millimeters, -0.5, 0.5, 0, 0);
 
+    @Attribute(required = false)
+    private boolean calibrationFiducialsFixed = false;
+
+    @Attribute(required = false)
+    private boolean usingCalibrationRig = true;
+    
     private Part calibrationRig;
     private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
     private Mat rectificationMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
@@ -125,6 +137,8 @@ public class AdvancedCalibration extends LensCalibrationParams {
             Mat.zeros(3, 1, CvType.CV_64FC1);
 
     private ArrayList<Integer> outlierPointList = new ArrayList<Integer>();
+
+
 
 
     
@@ -551,6 +565,34 @@ public class AdvancedCalibration extends LensCalibrationParams {
      */
     public void setTestPatternFillFraction(double testPatternFillFraction) {
         this.testPatternFillFraction = testPatternFillFraction;
+    }
+
+    /**
+     * @return the walkingLoopGain
+     */
+    public double getWalkingLoopGain() {
+        return walkingLoopGain;
+    }
+
+    /**
+     * @param walkingLoopGain the walkingLoopGain to set
+     */
+    public void setWalkingLoopGain(double walkingLoopGain) {
+        this.walkingLoopGain = walkingLoopGain;
+    }
+
+    /**
+     * @return the fiducialDiameter
+     */
+    public int getFiducialDiameter() {
+        return fiducialDiameter;
+    }
+
+    /**
+     * @param fiducialDiameter the fiducialDiameter to set
+     */
+    public void setFiducialDiameter(int fiducialDiameter) {
+        this.fiducialDiameter = fiducialDiameter;
     }
 
     /**
@@ -1017,6 +1059,22 @@ public class AdvancedCalibration extends LensCalibrationParams {
         vectorPhyCamToPointInMachRefFrame.release();
         
         return new Length(distance, LengthUnit.Millimeters).convertToUnits(zHeight.getUnits());
+    }
+
+    public boolean isCalibrationFiducialsFixed() {
+        return calibrationFiducialsFixed;
+    }
+    
+    public void setCalibrationFiducialsFixed(boolean calibrationFiducialsFixed) {
+        this.calibrationFiducialsFixed = calibrationFiducialsFixed;
+    }
+
+    public boolean isUsingCalibrationRig() {
+        return usingCalibrationRig;
+    }
+    
+    public void setUsingCalibrationRig(boolean usingCalibrationRig) {
+        this.usingCalibrationRig = usingCalibrationRig;
     }
     
 }
