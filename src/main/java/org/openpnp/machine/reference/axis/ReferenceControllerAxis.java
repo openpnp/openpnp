@@ -31,6 +31,7 @@ import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractControllerAxis;
+import org.openpnp.util.SimpleGraph;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -96,6 +97,9 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     @Element(required = false)
     private Length backlashOffset = new Length(0.0, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length sneakUpOffset = new Length(0.0, LengthUnit.Millimeters);
 
     @Attribute(required = false) 
     private double backlashSpeedFactor = 0.25; 
@@ -164,6 +168,9 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Element(required = false)
     private double resolution = 0.0001; // 
 
+    private SimpleGraph stepTestGraph;
+    private SimpleGraph backlashDistanceTestGraph;
+    private SimpleGraph backlashSpeedTestGraph;
 
     public double getResolution() {
         if (resolution <= 0.0) {
@@ -232,6 +239,14 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     public void setBacklashOffset(Length backlashOffset) {
         this.backlashOffset = convertFromSytem(backlashOffset);
+    }
+
+    public Length getSneakUpOffset() {
+        return sneakUpOffset;
+    }
+
+    public void setSneakUpOffset(Length sneakUpOffset) {
+        this.sneakUpOffset = sneakUpOffset;
     }
 
     public double getBacklashSpeedFactor() {
@@ -328,6 +343,36 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     public void setInvertLinearRotational(boolean invertLinearRotational) {
         this.invertLinearRotational = invertLinearRotational;
+    }
+
+    public SimpleGraph getStepTestGraph() {
+        return stepTestGraph;
+    }
+
+    public void setStepTestGraph(SimpleGraph stepTestGraph) {
+        Object oldValue = this.stepTestGraph;
+        this.stepTestGraph = stepTestGraph;
+        firePropertyChange("stepTestGraph", oldValue, stepTestGraph);
+    }
+
+    public SimpleGraph getBacklashSpeedTestGraph() {
+        return backlashSpeedTestGraph;
+    }
+
+    public void setBacklashSpeedTestGraph(SimpleGraph backlashSpeedTestGraph) {
+        Object oldValue = this.backlashSpeedTestGraph;
+        this.backlashSpeedTestGraph = backlashSpeedTestGraph;
+        firePropertyChange("backlashSpeedTestGraph", oldValue, backlashSpeedTestGraph);
+    }
+
+    public SimpleGraph getBacklashDistanceTestGraph() {
+        return backlashDistanceTestGraph;
+    }
+
+    public void setBacklashDistanceTestGraph(SimpleGraph backlashDistanceTestGraph) {
+        Object oldValue = this.backlashDistanceTestGraph;
+        this.backlashDistanceTestGraph = backlashDistanceTestGraph;
+        firePropertyChange("backlashDistanceTestGraph", oldValue, backlashDistanceTestGraph);
     }
 
     @Override

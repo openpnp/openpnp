@@ -81,7 +81,7 @@ public class VisionSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private int subSampling = 4;
     @Attribute(required = false)
-    private int superSampling = 4;
+    private int superSampling = 12;
 
     @Attribute(required = false)
     protected long diagnosticsMilliseconds = 2000;

@@ -513,6 +513,10 @@ public class ReferenceMachine extends AbstractMachine {
     @Element(required = false)
     private CalibrationSolutions calibrationSolutions = new CalibrationSolutions(); 
 
+    public CalibrationSolutions getCalibrationSolutions() {
+        return calibrationSolutions;
+    }
+
     @Override
     public void findIssues(Solutions solutions) {
         kinematicSolutions.setMachine(this).findIssues(solutions);

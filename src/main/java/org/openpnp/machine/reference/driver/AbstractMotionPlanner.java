@@ -260,7 +260,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                             AxesLocation effectiveBacklashAxisOffset = new AxesLocation(refAxis, effectiveBacklashOffset);
                             if (refAxis.getBacklashCompensationMethod() == BacklashCompensationMethod.DirectionalSneakUp) {
                                 // Sneak up, this needs an extra move for last segment at slower speed.
-                                Length sneakOffset = effectiveBacklashOffset.subtract(backlashOffset);
+                                Length sneakOffset = refAxis.getSneakUpOffset().multiply(Math.signum(axisSegment.getValue())).subtract(effectiveBacklashOffset);
                                 backlashCompensatedNewLocation = backlashCompensatedNewLocation.subtract(
                                         new AxesLocation(refAxis, sneakOffset));
                                 AxesLocation displacement = backlashCompensatedCurrentLocation.motionSegmentTo(backlashCompensatedNewLocation);
