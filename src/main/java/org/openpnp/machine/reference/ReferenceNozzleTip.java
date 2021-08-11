@@ -9,7 +9,6 @@ import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
-import javax.swing.UIManager;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
@@ -951,12 +950,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public static final String VALVE_ON = "ON"; 
 
     protected final SimpleGraph startNewVacuumGraph(double vacuumLevel, boolean valveSwitchingOn) {
-        Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
-        if (gridColor == null) {
-            gridColor = new Color(0, 0, 0, 64);
-        } else {
-            gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
-        }
         // start a new graph 
         SimpleGraph vacuumGraph = new SimpleGraph();
         vacuumGraph.setRelativePaddingLeft(0.05);
@@ -964,7 +957,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         // init pressure scale
         SimpleGraph.DataScale vacuumScale =  vacuumGraph.getScale(PRESSURE);
         vacuumScale.setRelativePaddingBottom(0.3);
-        vacuumScale.setColor(gridColor);
+        vacuumScale.setColor(SimpleGraph.getDefaultGridColor());
         // init valve scale
         SimpleGraph.DataScale valveScale =  vacuumGraph.getScale(BOOLEAN);
         valveScale.setRelativePaddingTop(0.75);
