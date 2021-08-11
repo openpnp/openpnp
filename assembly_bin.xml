@@ -1,0 +1,30 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0 http://maven.apache.org/xsd/assembly-2.1.0.xsd">
+	<id>bin</id>
+	<formats>
+		<format>tar.gz</format>
+	</formats>
+	<fileSets>
+		<fileSet>
+			<directory>${project.basedir}</directory>
+			<outputDirectory></outputDirectory>
+			<includes>
+				<include>openpnp.sh</include>
+				<include>CHANGES.md</include>
+				<include>SPONSORS.md</include>
+				<include>LICENSE.txt</include>
+				<include>OPENPNP_2_0.md</include>
+				<include>samples/**</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>${project.build.directory}</directory>
+			<outputDirectory>target</outputDirectory>
+			<includes>
+				<include>*.jar</include>
+				<include>lib/**</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+</assembly>
