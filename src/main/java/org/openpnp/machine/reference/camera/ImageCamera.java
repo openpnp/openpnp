@@ -25,6 +25,8 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
@@ -290,34 +292,73 @@ public class ImageCamera extends ReferenceCamera {
         return frame;
     }
 
+    protected void blurObjectIntoView(Graphics2D gView, BufferedImage frame) {
+        AffineTransform tx = gView.getTransform();
+        gView.setTransform(new AffineTransform());
+        double radius = 0.2/getImageUnitsPerPixel().convertToUnits(LengthUnit.Millimeters).getX();
+        ConvolveOp op = null;
+        if (radius > 0.01) {
+            int size = (int)Math.ceil(radius) * 2 + 1;
+            float[] data = new float[size * size];
+            double sum = 0;
+            int num = 0;
+            for (int i = 0; i < data.length; i++) {
+                double x = i/size - size/2.0 + 0.5;
+                double y = i%size - size/2.0 + 0.5;
+                double r = Math.sqrt(x*x+y*y);
+                // rough approximation
+                float weight = (float) Math.max(0, Math.min(1, radius + 1 - r));
+                data[i] = weight;
+                sum += weight;
+                if (weight > 0) {
+                    num++;
+                }
+            }
+            if (num > 1) {
+                for (int i = 0; i < data.length; i++) {
+                    data[i] /= sum;
+                }
+
+                Kernel kernel = new Kernel(size, size, data);
+                op = new ConvolveOp(kernel, ConvolveOp.EDGE_NO_OP, null);
+            }
+        }
+        gView.drawImage(frame, op, 0, 0);
+        gView.setTransform(tx);
+    }
+
     protected void drawFiducial(Graphics2D gFrame, int cameraWidth, int cameraHeight, Location uppDefault,
             Location upp, Location fiducial) {
-        int xc = (int)((cameraWidth / 2.0) + fiducial.getX()/upp.getX());
-        int yc = (int)((cameraHeight / 2.0) - fiducial.getY()/upp.getY());
+        // Coordinates
+        double xc = (cameraWidth / 2.0) + fiducial.getX()/upp.getX();
+        double yc = (cameraHeight / 2.0) - fiducial.getY()/upp.getY();
+        double w = 1.0/upp.getX();
+        double h = 1.0/upp.getY();
+        if (xc + w < 0 || xc - w > cameraWidth || yc + h < 0 || yc - w > cameraHeight) { 
+            return;
+        }
+        AffineTransform oldTx = gFrame.getTransform();
+        AffineTransform tx = new AffineTransform();
+        tx.translate(xc - w/2, yc - h/2);
+
         if (upp == uppDefault) {
+            gFrame.setTransform(tx);
             gFrame.setColor(Color.WHITE);
-            int w = 2*(int)(0.5/upp.getX());
-            int h = 2*(int)(0.5/upp.getY());
-            int x = xc - w/2;
-            int y = yc - h/2;
-            gFrame.fillOval(x, y, w, h);
+            gFrame.fillOval(0, 0, (int)w, (int)h);
         }
         else {
             // Simulate focal blur
-            final int blurSteps = 8;
-            for (int blur = 0; blur <= blurSteps; blur++) { 
-                double d = 1.3 - blur*0.6/blurSteps; 
-                gFrame.setColor(new Color(255, 255, 255, blur < blurSteps ? 48 : 255));
-                int w = 2*(int)(0.5*d/upp.getX());
-                int h = 2*(int)(0.5*d/upp.getY());
-                int x = xc - w/2;
-                int y = yc - h/2;
-                if (x + w < 0 || x > cameraWidth || y + h < 0 || y > cameraHeight) { 
-                    break;
-                }
-                gFrame.fillOval(x, y, w, h);
-            }
+            BufferedImage frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = frame.createGraphics();
+            g.setTransform(tx);
+            // Clear with transparent background
+            g.setBackground(new Color(0, 0, 0, 0));
+            g.clearRect(-width/2, -height/2, width, height);
+            g.fillOval(0, 0, (int)w, (int)h);
+            blurObjectIntoView(gFrame, frame); 
         }
+
+        gFrame.setTransform(oldTx);
     }
 
     /**
