@@ -581,10 +581,14 @@ public class VisionSolutions implements Solutions.Subject {
                 && (solvedPrimaryZ || defaultNozzle == nozzle)) {
             final Location oldPrimaryFiducialLocation = head.getCalibrationPrimaryFiducialLocation();
             final Location oldSecondaryFiducialLocation = head.getCalibrationPrimaryFiducialLocation();
+            final Location oldPrimaryUpp = defaultCamera.getUnitsPerPixelPrimary();
+            final Location oldSecondaryUpp = defaultCamera.getUnitsPerPixelSecondary();
+            
             final Location oldNozzleOffsets = nozzle.getHeadOffsets();
             final Length oldPrimaryZ = defaultCamera.getCameraPrimaryZ();
             final Length oldSecondaryZ = defaultCamera.getCameraSecondaryZ();
-            // TODO? final boolean oldEnabled3D = defaultCamera.isEnableUnitsPerPixel3D();
+            final boolean oldEnabled3D = defaultCamera.isEnableUnitsPerPixel3D();
+            final boolean oldAutoViewPlaneZ = defaultCamera.isAutoViewPlaneZ();
             for (boolean primary : (nozzle == defaultNozzle && solvedSecondaryXY) ? new boolean [] {true, false} : new boolean [] {true} ) {
                 String qualifier = primary ? "primary" : "secondary";
                 solutions.add(new Solutions.Issue(
@@ -645,6 +649,7 @@ public class VisionSolutions implements Solutions.Subject {
                                                         .derive(nozzleLocation, false, false, true, false);
                                                 defaultCamera.setUnitsPerPixelSecondary(upp);
                                                 defaultCamera.setEnableUnitsPerPixel3D(true);
+                                                defaultCamera.setAutoViewPlaneZ(true);
                                                 solvedSecondaryZ = true;
                                             }
                                         }
@@ -700,11 +705,20 @@ public class VisionSolutions implements Solutions.Subject {
                                         .derive(oldSecondaryFiducialLocation, false, false, true, false));
                             }
                             if (primary) {
+                                // Restore UPP Z stuff.
+                                Location upp = defaultCamera.getUnitsPerPixelPrimary()
+                                        .derive(oldPrimaryUpp, false, false, true, false);
+                                defaultCamera.setUnitsPerPixelPrimary(upp);
                                 defaultCamera.setCameraPrimaryZ(oldPrimaryZ);
                             }
                             else {
+                                // Restore UPP Z stuff.
+                                Location upp = defaultCamera.getUnitsPerPixelSecondary()
+                                        .derive(oldSecondaryUpp, false, false, true, false);
+                                defaultCamera.setUnitsPerPixelSecondary(upp);
                                 defaultCamera.setCameraSecondaryZ(oldSecondaryZ);
-                                // TODO? defaultCamera.setEnableUnitsPerPixel3D(oldEnabled3D);
+                                defaultCamera.setEnableUnitsPerPixel3D(oldEnabled3D);
+                                defaultCamera.setAutoViewPlaneZ(oldAutoViewPlaneZ);
                             }
                         }
                     }

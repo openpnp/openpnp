@@ -602,7 +602,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("max(100dlu;default)"),}));
         
-        lblStepTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nAbsolute step error <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRelative step error <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nUnavoidable  <span style=\"color:#008000\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
+        lblStepTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nAbsolute error <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRelative error <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nResolution <span style=\"color:#008000\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
         panelDiagnostics.add(lblStepTest, "2, 2, right, default");
         
         stepTestGraph = new SimpleGraphView();

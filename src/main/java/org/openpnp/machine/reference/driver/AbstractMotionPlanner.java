@@ -246,7 +246,13 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 if (axis instanceof ReferenceControllerAxis) {
                     ReferenceControllerAxis refAxis = ((ReferenceControllerAxis) axis);
                     Length backlashOffset = refAxis.getBacklashOffset(); 
-                    if (backlashOffset.getValue() != 0) {
+                    if (backlashOffset.getValue() == 0 
+                            || refAxis.getBacklashCompensationMethod() == BacklashCompensationMethod.None) {
+                        // Remove any lingering directional backlash compensation (after settings changed).
+                        lastDirectionalBacklashOffset = lastDirectionalBacklashOffset.put(
+                                new AxesLocation(refAxis, 0));
+                    }
+                    else {
                         // An offset has to be applied.
                         if (refAxis.getBacklashCompensationMethod().isDirectionalMethod()) {
                             // The compensation is determines by the direction in which the axis travels. Because we assume some 

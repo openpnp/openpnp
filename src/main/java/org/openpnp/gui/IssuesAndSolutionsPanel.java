@@ -107,6 +107,8 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(20dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(50dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -274,7 +276,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         
         JLabel lblDismissed = new JLabel("Include Dismissed?");
         lblDismissed.setToolTipText("<html>Include already dismissed solutions.</html>");
-        toolbar.add(lblDismissed, "13, 3, right, default");
+        toolbar.add(lblDismissed, "15, 3, right, default");
         
         showDismissed = new JCheckBox("");
         showDismissed.addItemListener(new ItemListener() {
@@ -282,21 +284,21 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 findIssuesAndSolutions(); 
             }
         });
-        toolbar.add(showDismissed, "15, 3");
+        toolbar.add(showDismissed, "17, 3");
         
         JLabel label_2 = new JLabel(" ");
-        toolbar.add(label_2, "17, 3");
+        toolbar.add(label_2, "19, 3");
         
         JButton btnInfoMilestone = new JButton(infoMilestoneAction);
-        toolbar.add(btnInfoMilestone, "19, 3, 1, 3");
+        toolbar.add(btnInfoMilestone, "21, 3, 1, 3");
 
         label_1 = new JLabel(" - ");
-        toolbar.add(label_1, "4, 5, 14, 1");
+        toolbar.add(label_1, "4, 5, 16, 1");
 
         labelWarn = new JLabel(" After each round of solving issues, please run Find Issues & Solutions again to catch dependent issues. ");
         labelWarn.setBorder(UIManager.getBorder("ToolTip.border"));
         labelWarn.setBackground(UIManager.getColor("ToolTip.background"));
-        toolbar.add(labelWarn, "2, 7, 20, 1, left, default");
+        toolbar.add(labelWarn, "2, 7, 22, 1, left, default");
         labelWarn.setHorizontalAlignment(SwingConstants.RIGHT);
         labelWarn.setForeground(UIManager.getColor("ToolTip.foreground"));
         labelWarn.setOpaque(true);

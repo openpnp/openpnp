@@ -77,10 +77,13 @@ public class CalibrationSolutions implements Solutions.Subject {
     private double backlashTestMoveLargeMm = 100;
 
     @Attribute(required = false)
-    private double maxSneakUpOffsetMm = 8;
+    private double stepTestMm = 1;
+
+    @Attribute(required = false)
+    private double maxSneakUpOffsetMm = 3;
 
     @Element(required=false)
-    private double[] backlashProbingSpeeds = new double [] { 0.25, 0.5, 0.75, 1 };
+    private double[] backlashProbingSpeeds = new double [] { 0.25, 0.33, 0.5, 0.75, 1 };
 
     @Attribute(required = false)
     private double backlashDistanceFactor = Math.pow(2.0, 0.5); 
@@ -343,6 +346,9 @@ public class CalibrationSolutions implements Solutions.Subject {
         if (!(axis.isSoftLimitLowEnabled() && axis.isSoftLimitHighEnabled())) {
             throw new Exception("Axis "+axis.getName()+" must have soft limits enabled for backlash calibration.");
         }
+        // Make sure to disable any backlash compensation.
+        axis.setBacklashCompensationMethod(BacklashCompensationMethod.None);
+
         // Use the primary calibration fiducial for calibration.
         Location location = head.getCalibrationPrimaryFiducialLocation();
         Length fiducialDiameter = head.getCalibrationPrimaryFiducialDiameter();
@@ -409,11 +415,9 @@ public class CalibrationSolutions implements Solutions.Subject {
         speedGraph.getRow(SCALE, BACKLASH)
         .setColor(new Color(0xFF, 0, 0));
 
-        // Perform a step test over 1mm
+        // Perform a step test over a small distance.
+        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveLargeMm*mmAxis, false));
         double minimumSpeed = backlashProbingSpeeds[0];
-        double stepTestMm = 0.5;
-        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveMm*mmAxis, false));
-        axis.setBacklashCompensationMethod(BacklashCompensationMethod.None);
         int step = 0;
         Location referenceLocation = location;
         Location stepLocation0 = null;
@@ -421,6 +425,8 @@ public class CalibrationSolutions implements Solutions.Subject {
         double largestStep = Double.NEGATIVE_INFINITY;
         for (double stepPos = -stepTestMm/2; stepPos < stepTestMm/2; stepPos += stepMm) {
             step++;
+            Location startMoveLocation = displacedAxisLocation(movable, axis, location, (stepPos - stepTestMm)*mmAxis, false);
+            movable.moveTo(startMoveLocation);
             Location nominalStepLocation = displacedAxisLocation(movable, axis, location, stepPos*mmAxis, false);
             movable.moveTo(nominalStepLocation, minimumSpeed);
             Location stepLocation1 = machine.getVisualSolutions().getDetectedLocation(camera, movable, 
@@ -472,6 +478,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         int iDistance = 0;
         double maxBacklash = Double.NEGATIVE_INFINITY;
         double maxBacklashDistance = 0;
+        boolean maxBacklashOpen = true;
         double minBacklash = Double.POSITIVE_INFINITY;
         double minBacklashDistance = 0;
         LengthConverter lengthConverter = new LengthConverter();
@@ -539,13 +546,17 @@ public class CalibrationSolutions implements Solutions.Subject {
                 }
 
                 if (pass == 0 && distance > maxBacklash && distance <= maxSneakUpOffsetMm) {
-                    if (mmError > maxBacklash - toleranceMm) {
+                    if (maxBacklashOpen && mmError >= maxBacklash - toleranceMm) {
                         if (mmError > maxBacklash) {
                             maxBacklash = mmError;
                         }
                         // Take the last distance i.e the smallest (this is a descending loop) that has an 
                         // error within tolerance of the maxBacklash.
                         maxBacklashDistance = distance;
+                    }
+                    else {
+                        // Once it dips under the maximum minus tolerance, its not eligible.
+                        maxBacklashOpen = false;
                     }
                     if (mmError < minBacklash) {
                         minBacklash = mmError;
@@ -624,7 +635,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         Logger.debug("Axis "+axis.getName()+" backlash offsets analysis, consistent: "+consistent+", avg offset: "+offsetMmAvg+", max offset: "+offsetMmMax);
         // Set the backlash method according to consistency.
         if (consistent == backlashProbingSpeeds.length 
-                && Math.abs(offsetMmAvg - maxBacklash) <= toleranceMm) {
+                /*&& Math.abs(offsetMmAvg - maxBacklash) <= toleranceMm*/) {
             // We got consistent backlash over all the speeds and distances.
             if (offsetMmAvg < toleranceMm) {
                 // Smaller than resolution, no need for compensation.
