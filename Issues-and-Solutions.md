@@ -96,7 +96,7 @@ The **Vision** milestone sets up the cameras for Computer Vision. A calibration 
 The **Calibration** milestone brings Kinematics and Vision together to calibrate the machine. Nozzle head offsets, backlash compensation etc. See the [[Calibration Solutions]] page for more information.
 
 ### Production Milestone 
-The **Production** milestone handles recurrent configuration tasks such as feeder setup as well as production issues such as board, placement and job handling. This is currently empty, but feeder issues are already in the pipeline. More is planned in the future. 
+The **Production** milestone handles recurrent configuration tasks such as feeder setup as well as production issues such as board, placement and job handling.  
 
 ### Advanced Milestone
 The **Advanced** milestone, while also serving as a production milestone, finally exposes all the advanced features, such as advanced driver settings, motion planner, asynchronous driver, contact probing nozzle etc. For the most problematic of these settings, Issues & Solutions will propose taking them back when going back to earlier milestones.
