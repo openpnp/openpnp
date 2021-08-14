@@ -285,7 +285,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                             .calibrateAxisBacklash((ReferenceHead)(camera.getHead()), camera,
                                     camera, (ReferenceControllerAxis)axis);
                             MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
-                            return;
+                            return true;
                         }
                     }
                 }
