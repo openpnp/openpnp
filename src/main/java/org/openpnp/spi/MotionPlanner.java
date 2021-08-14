@@ -23,8 +23,8 @@ package org.openpnp.spi;
 
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Motion;
-import org.openpnp.model.Solutions;
 import org.openpnp.model.Motion.MotionOption;
+import org.openpnp.model.Solutions;
 
 /**
  * <p>
@@ -148,7 +148,7 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
          */
         WaitForUnconditionalCoordination,
         /**
-         * Like WaitForFullCoordination but wait "forever" i.e. with very long timeout. Used e.g. for homing.
+         * Like WaitForUnconditionalCoordination but wait "forever" i.e. with very long timeout. Used e.g. for homing.
          */
         WaitForStillstandIndefinitely;
 

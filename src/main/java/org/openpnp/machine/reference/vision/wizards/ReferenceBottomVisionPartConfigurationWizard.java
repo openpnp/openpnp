@@ -13,12 +13,18 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -46,6 +52,9 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private JComboBox comboBoxMaxRotation;
     private JComboBox comboBoxcheckPartSizeMethod;
     private JTextField textPartSizeTolerance;
+    private JTextField tfBottomVisionOffsetX;
+    private JTextField tfBottomVisionOffsetY;
+    private JTextField testAlignmentAngle;
 
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision, Part part) {
         this.bottomVision = bottomVision;
@@ -55,15 +64,40 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
-        panel.setLayout(new FormLayout(
-                new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("right:default"),
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC,
-                        FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, },
-                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("right:max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblEnabled = new JLabel("Enabled?");
         panel.add(lblEnabled, "2, 2");
@@ -71,26 +105,32 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
 
-        JButton btnTestAlighment = new JButton("Test Alignment");
-        btnTestAlighment.addActionListener((e) -> {
-            UiUtils.submitUiMachineTask(() -> {
-                testAlignment();
-            });
-        });
-
         JLabel lblPrerotate = new JLabel("Pre-rotate");
         panel.add(lblPrerotate, "2, 4, right, default");
 
         comboBoxPreRotate = new JComboBox(ReferenceBottomVision.PreRotateUsage.values());
         panel.add(comboBoxPreRotate, "4, 4");
 
-        JLabel lblTest = new JLabel("Test");
-        panel.add(lblTest, "2, 6");
-        panel.add(btnTestAlighment, "4, 6");
+        JLabel lblTestAngle = new JLabel("Test Placement Angle");
+        panel.add(lblTestAngle, "2, 6, right, default");
+
+        JButton btnTestAlighment = new JButton("Test Alignment");
+        btnTestAlighment.addActionListener((e) -> {
+            UiUtils.submitUiMachineTask(() -> {
+                testAlignment(chckbxCenterAfterTest.isSelected());
+            });
+        });
+
+        testAlignmentAngle = new JTextField();
+        testAlignmentAngle.setText("0.000");
+        panel.add(testAlignmentAngle, "4, 6, right, default");
+        testAlignmentAngle.setColumns(10);
+        panel.add(btnTestAlighment, "6, 6");
 
         chckbxCenterAfterTest = new JCheckBox("Center After Test");
+        chckbxCenterAfterTest.setToolTipText("Center and rotate the part after the test.");
         chckbxCenterAfterTest.setSelected(true);
-        panel.add(chckbxCenterAfterTest, "6, 6");
+        panel.add(chckbxCenterAfterTest, "8, 6");
 
         JLabel lblPipeline = new JLabel("Pipeline");
         panel.add(lblPipeline, "2, 8");
@@ -120,7 +160,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         panel.add(btnLoadDefault, "6, 8");
 
         JLabel lblMaxRotation = new JLabel("Rotation");
-        panel.add(lblMaxRotation, "2, 10, right, top");
+        panel.add(lblMaxRotation, "2, 10, right, default");
 
         comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
         comboBoxMaxRotation.setToolTipText(
@@ -138,10 +178,37 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
         textPartSizeTolerance = new JTextField();
         panel.add(textPartSizeTolerance, "4, 14, fill, default");
+        
+        JLabel lblBottomVisionX = new JLabel("X");
+        panel.add(lblBottomVisionX, "4, 16");
+        
+        JLabel lblBottomVisionY = new JLabel("Y");
+        panel.add(lblBottomVisionY, "6, 16");
+        
+        JLabel lblVisionCenterOffset = new JLabel("Vision center offset");
+        lblVisionCenterOffset.setToolTipText("Offset relative to the pick location/center of the part to the center of the rectangel detected by the bottom vision");
+        panel.add(lblVisionCenterOffset, "2, 18");
+        
+        tfBottomVisionOffsetX = new JTextField();
+        panel.add(tfBottomVisionOffsetX, "4, 18, fill, default");
+        tfBottomVisionOffsetX.setColumns(10);
+        
+        tfBottomVisionOffsetY = new JTextField();
+        panel.add(tfBottomVisionOffsetY, "6, 18, fill, default");
+        tfBottomVisionOffsetY.setColumns(10);
+        
+        JButton btnAutoVisionCenterOffset = new JButton("Detect");
+        btnAutoVisionCenterOffset.setToolTipText("Center part over bottom vision camera. Button will runn bottom vision an calculates the offset.");
+        panel.add(btnAutoVisionCenterOffset, "8, 18");
+        btnAutoVisionCenterOffset.addActionListener((e) -> {
+            UiUtils.submitUiMachineTask(() -> {
+                determineVisionOffset();
+            });
+        });
 
     }
 
-    private void testAlignment() throws Exception {
+    private void testAlignment(boolean centerAfterTest) throws Exception {
         if (!bottomVision.isEnabled()) {
             MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled in Machine Setup.");
             return;
@@ -153,19 +220,21 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         }
 
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
+                .convertReverse(testAlignmentAngle.getText());
 
         // perform the alignment
         PartAlignment.PartAlignmentOffset alignmentOffset = VisionUtils.findPartAlignmentOffsets(bottomVision, part,
-                null, new Location(LengthUnit.Millimeters, 0, 0, 0, nozzle.getLocation().getRotation()), nozzle);
+                null, new Location(LengthUnit.Millimeters, 0, 0, 0, angle), nozzle);
         Location offsets = alignmentOffset.getLocation();
 
-        if (!chckbxCenterAfterTest.isSelected()) {
+        if (!centerAfterTest) {
             return;
         }
 
-        // position the part over camera center
+        // Nominal position of the part over camera center
         Location cameraLocation = bottomVision.getCameraLocationAtPartHeight(part, VisionUtils.getBottomVisionCamera(),
-                nozzle, nozzle.getLocation().getRotation());
+                nozzle, angle);
 
         if (alignmentOffset.getPreRotated()) {
             // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
@@ -201,6 +270,30 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         nozzle.moveTo(location);
     }
 
+    private void determineVisionOffset() throws Exception {
+        if (!bottomVision.isEnabled()) {
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled in Machine Setup.");
+            return;
+        }
+
+        if (!enabledCheckbox.isSelected()) {
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled for this part.");
+            return;
+        }
+
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        
+        Location center = nozzle.getLocation();
+
+        // perform the alignment
+        testAlignment(true);
+        
+        Location visionOffset = center.subtract(nozzle.getLocation()).add(partSettings.getVisionOffset());
+        tfBottomVisionOffsetX.setText(Double.toString(visionOffset.getX()));
+        tfBottomVisionOffsetY.setText(Double.toString(visionOffset.getY()));
+    }
+
+    
     private void editPipeline() throws Exception {
         CvPipeline pipeline = partSettings.getPipeline();
         pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
@@ -226,5 +319,16 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
         addWrappedBinding(partSettings, "preRotateUsage", comboBoxPreRotate, "selectedItem");
         addWrappedBinding(partSettings, "maxRotation", comboBoxMaxRotation, "selectedItem");
+        
+        
+        LengthConverter lengthConverter = new LengthConverter();
+        MutableLocationProxy bottomVisionOffsetProxy = new MutableLocationProxy();
+        addWrappedBinding(partSettings, "visionOffset", bottomVisionOffsetProxy, "location");
+        bind(UpdateStrategy.READ_WRITE, bottomVisionOffsetProxy, "lengthX", tfBottomVisionOffsetX, "text", lengthConverter);
+        bind(UpdateStrategy.READ_WRITE, bottomVisionOffsetProxy, "lengthY", tfBottomVisionOffsetY, "text", lengthConverter);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfBottomVisionOffsetX);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfBottomVisionOffsetY);
+
+        
     }
 }

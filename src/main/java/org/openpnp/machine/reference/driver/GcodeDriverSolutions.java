@@ -150,7 +150,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             if (gcodeDriver.getDetectedFirmware() == null) {
                 solutions.add(new Solutions.Issue(
                         gcodeDriver, 
-                        "Firmware was not dected ("+
+                        "Firmware was not detected ("+
                                 (machine.isEnabled() ? 
                                         (gcodeDriver.isSpeakingGcode() ? "failure, check log" : "controller may not speak Gcode") 
                                         : "machine is disabled")+"). Only if the firmware is know, can Issues & Solutions generate suggested G-code for your machine configuration.", 
@@ -379,7 +379,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     if (gcodeDriver.isSupportingPreMove()) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
-                                "Disallow Pre-Move Commands for advanced features. Accept or Dismiss to continue.", 
+                                "Disallow Pre-Move Commands for automatic G-code setup and other advanced features. Accept or Dismiss to continue.", 
                                 "Disable Allow Letter Pre-Move Commands.", 
                                 Severity.Fundamental,
                                 "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
@@ -394,7 +394,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else if (!gcodeDriver.isUsingLetterVariables()) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
-                                "Use Axis Letter Variables for simpler use and advanced features.", 
+                                "Use Axis Letter Variables for simpler use, automatic G-code setup, and other advanced features.", 
                                 "Enable Letter Variables.", 
                                 Severity.Fundamental,
                                 "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version") {
@@ -646,7 +646,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     else if (isTinyG) {
                                         commandBuilt = "G28.2 ";
                                         for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                            commandBuilt += variable+"0 "; // In TinyG you need to indicate the axis and only 0 is possible. 
+                                            if ("XYZ".indexOf(variable) >= 0) {
+                                                commandBuilt += variable+"0 "; // In TinyG you need to indicate the axis and only 0 is possible. 
+                                            }
                                         }
                                         commandBuilt += "; Home all axes";
                                     }

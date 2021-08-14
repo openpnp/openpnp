@@ -282,6 +282,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             pipeline.setProperty("DetectFixedCirclesHough.minDistance", pxMinDistance);
             pipeline.setProperty("DetectFixedCirclesHough.minDiameter", pxMinDiameter);
             pipeline.setProperty("DetectFixedCirclesHough.maxDiameter", pxMaxDiameter);
+            pipeline.setProperty("sprocketHole.diameter", getHoleDiameter());
+            // Search range is half-way to the next hole. 
+            pipeline.setProperty("sprocketHole.maxDistance", getHolePitch().multiply(0.5));
             pipeline.process();
     
             if (MainFrame.get() != null) {
@@ -342,12 +345,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         }
         
         // ok, now put the part back on the location of the last pick
-        Location putLocation = getPickLocation();
-        MovableUtils.moveToLocationAtSafeZ(nozzle, putLocation);
+        nozzle.moveToPickLocation(this);
         // put the part back
         nozzle.place();
         nozzle.moveToSafeZ();
-        if (!nozzle.isPartOff()) {
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
         // change FeedCount

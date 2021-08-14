@@ -112,7 +112,7 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
             head.setMachine(this);
         }
     }
-    
+
     public void addHead(Head head) {
         head.setMachine(this);
         heads.add(head);
@@ -255,6 +255,16 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     @Override
     public List<Actuator> getActuators() {
         return Collections.unmodifiableList(actuators);
+    }
+
+    @Override
+    public List<Actuator> getAllActuators() {
+        Stream<Actuator> stream = Stream.of();
+        for (Head head : getHeads()) {
+            stream = Stream.concat(stream, head.getActuators().stream());
+        }
+        stream = Stream.concat(stream, getActuators().stream());
+        return stream.collect(Collectors.toList());
     }
 
     @Override
@@ -554,6 +564,24 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
                     }
                     catch (Exception e) {
                         exception = e;
+                    }
+
+                    if (exception != null) {
+                        try {
+                            // If there was an exception, we still need to execute the moves that were already in the queue
+                            // when it happened. When full asynchronous operation is configured (location confirmation flow control)
+                            // OpenPnP will not necessarily know which commands were executed successfully. We therefore issue a 
+                            // WaitForStillstand, which will result in a position report and sync OpenPnP's internal position 
+                            // with that of the machine.  
+                            Logger.trace(exception, "Exception caught, executing pending motion");
+                            getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
+                        }
+                        catch (Exception e) {
+                            // If there is a second exception, there is likely something fundamentally wrong with the driver or communications. 
+                            // We rely on user diagnosis to re-home the machine when necessary, there is really nothing we can do, except log this 
+                            // secondary exception and hope the first one is conclusive for the user. 
+                            Logger.error(e, "Secondary exception when executing pending motion planner commands");
+                        }
                     }
 
                     // If there was an error cancel all pending tasks.
