@@ -64,6 +64,7 @@ import org.openpnp.util.HslColor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.TravellingSalesman;
+import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.Ransac.Line;
@@ -554,16 +555,6 @@ public class BlindsFeeder extends ReferenceFeeder {
 
         }
 
-        private double angleNorm(double angle) {
-            while (angle > 45) {
-                angle -= 90;
-            }
-            while (angle < -45) {
-                angle += 90;
-            }
-            return angle;
-        }
-
         @SuppressWarnings("unchecked")
         public FindFeatures invoke() throws Exception {
             List<RotatedRect> results = null;
@@ -639,7 +630,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                         double angle = transformPixelToFeederAngle(result.angle);
                         Location mmSize = mmScale.multiply(result.size.width, result.size.height, 0, 0);
                         if (positionTolerant || cameraFeederLocation.getLinearDistanceTo(center) < positionTolerance) {
-                            if (angleTolerant || Math.abs(angleNorm(angle - 45)) < angleTolerance) {
+                            if (angleTolerant || Math.abs(Utils2D.angleNorm(angle - 45)) < angleTolerance) {
                                 if (mmSize.getX() > fidMin && mmSize.getX() < fidMax 
                                         && mmSize.getY() > fidMin && mmSize.getY() < fidMax
                                         && mmSize.getX()/mmSize.getY() < fidAspect 
@@ -664,7 +655,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                         }
                         if (positionTolerant || Math.abs(cameraFeederY - center.getY()) < positionTolerance) {
                             if (positionTolerant || Math.abs(cameraFeederX - center.getX()) < pocketRange) {
-                                    if (angleTolerant || Math.abs(angleNorm(angle - 0)) < angleTolerance) {
+                                    if (angleTolerant || Math.abs(Utils2D.angleNorm(angle - 0)) < angleTolerance) {
                                     if (mmSize.getX() > blindMin && mmSize.getX() < blindMax && mmSize.getY() > blindMin && mmSize.getY() < blindMax
                                             && mmSize.getX()/mmSize.getY() < blindAspect 
                                             && mmSize.getY()/mmSize.getX() < blindAspect) {
