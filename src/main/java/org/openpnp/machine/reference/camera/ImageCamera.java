@@ -269,12 +269,14 @@ public class ImageCamera extends ReferenceCamera {
         gFrame.drawImage(source, t, null);
 
         // Draw the calibration fiducials. 
-        Location fiducial1 = getPrimaryFiducial().convertToUnits(AxesLocation.getUnits()).subtract(location);
+        Location fiducial1 = getPrimaryFiducial();
         if (fiducial1.isInitialized()) {
+            fiducial1 = fiducial1.convertToUnits(AxesLocation.getUnits()).subtract(location);
             drawFiducial(gFrame, width, height, upp, upp, fiducial1);
         }
-        Location fiducial2 = getSecondaryFiducial().convertToUnits(AxesLocation.getUnits()).subtract(location);
-        if (!fiducial2.isInitialized()) {
+        Location fiducial2 = getSecondaryFiducial();
+        if (fiducial2.isInitialized()) {
+            fiducial2 = fiducial2.convertToUnits(AxesLocation.getUnits()).subtract(location);
             double cameraViewDiagonal = Math.sqrt(Math.pow(upp.getX()*width, 2) + Math.pow(upp.getY()*height, 2));
             double sensorDiagonal = getSensorDiagonal().convertToUnits(AxesLocation.getUnits()).getValue();
             double focalLength = getFocalLength().convertToUnits(AxesLocation.getUnits()).getValue();
