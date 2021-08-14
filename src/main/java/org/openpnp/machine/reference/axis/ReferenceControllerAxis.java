@@ -170,7 +170,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getFeedratePerSecond() {
-        return convertToSytem(feedratePerSecond);
+        return convertToSystem(feedratePerSecond);
     }
 
     public void setFeedratePerSecond(Length feedratePerSecond) {
@@ -178,7 +178,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getAccelerationPerSecond2() {
-        return convertToSytem(accelerationPerSecond2);
+        return convertToSystem(accelerationPerSecond2);
     }
 
     public void setAccelerationPerSecond2(Length accelerationPerSecond2) {
@@ -186,7 +186,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getJerkPerSecond3() {
-        return convertToSytem(jerkPerSecond3);
+        return convertToSystem(jerkPerSecond3);
     }
 
     public void setJerkPerSecond3(Length jerkPerSecond3) {
@@ -210,7 +210,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getBacklashOffset() {
-        return convertToSytem(backlashOffset);
+        return convertToSystem(backlashOffset);
     }
 
     public void setBacklashOffset(Length backlashOffset) {
