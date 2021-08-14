@@ -277,9 +277,6 @@ public class Solutions extends AbstractTableModel {
             return solution;
         }
         public Severity getSeverity() {
-            //            if (state != State.Open) {
-            //                return Severity.None;
-            //            }
             return severity;
         }
         public String getFingerprint() {
@@ -463,6 +460,7 @@ public class Solutions extends AbstractTableModel {
     public boolean isSolutionsIssueSolved(Issue issue) {
         return solvedSolutions.contains(issue.getFingerprint());
     }
+
     public void setSolutionsIssueSolved(Issue issue, boolean solved) {
         if (solved) {
             dismissedSolutions.remove(issue.getFingerprint());
@@ -634,10 +632,6 @@ public class Solutions extends AbstractTableModel {
         pendingIssues.sort(new Comparator<Issue>() {
             @Override
             public int compare(Issue o1, Issue o2) {
-                //                int d = o1.getState().ordinal() - o2.getState().ordinal();
-                //                if (d != 0) {
-                //                    return d;
-                //                }
                 if (o1.getSeverity() == Severity.Fundamental && o2.getSeverity() != Severity.Fundamental) {
                     return -1;
                 }
