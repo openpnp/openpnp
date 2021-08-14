@@ -38,7 +38,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Set;
 
-import javax.swing.JComponent;
+import javax.swing.*;
 
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.SimpleGraph.DataRow;
