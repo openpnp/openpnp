@@ -65,6 +65,7 @@ import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.TravellingSalesman;
+import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.Ransac;
@@ -1479,7 +1480,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             Location partLocation = camera.getLocation().convertToUnits(LengthUnit.Millimeters);
                             double angle1 = Math.atan2(calibratedHole1Location.getY()-partLocation.getY(), calibratedHole1Location.getX()-partLocation.getX());
                             double angle2 = Math.atan2(calibratedHole2Location.getY()-partLocation.getY(), calibratedHole2Location.getX()-partLocation.getX());
-                            double angleDiff = angleNorm180((angle2-angle1)*180/Math.PI);
+                            double angleDiff = Utils2D.angleNorm(Math.toDegrees(angle2-angle1), 180);
                             if (angleDiff > 0) {
                                 // The holes 1 and 2 must appear counter-clockwise from the part location, swap them! 
                                 Location swap = calibratedHole2Location;
@@ -1617,16 +1618,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 throw new Exception("Unrecognized result type (should be Result.Circle, RotatedRect, KeyPoint): " + resultsList);
             }
             return this;
-        }
-
-        private double angleNorm180(double angle) {
-            while (angle > 180) {
-                angle -= 360;
-            }
-            while (angle < -180) {
-                angle += 360;
-            }
-            return angle;
         }
     }
 

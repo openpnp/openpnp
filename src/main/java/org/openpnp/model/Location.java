@@ -455,4 +455,11 @@ public class Location {
         result = 31 * result + (int) (temp ^ temp >>> 32);
         return result;
     }
+
+    /**
+     * @return true if at least one of the coordinates are non-zero, assuming the location is therefore initialized.
+     */
+    public boolean isInitialized() {
+        return !this.equals(origin);
+    }
 }

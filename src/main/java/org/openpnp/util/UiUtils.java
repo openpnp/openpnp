@@ -47,8 +47,16 @@ public class UiUtils {
     public static <T> Future<T> submitUiMachineTask(final Callable<T> callable) {
         return submitUiMachineTask(callable, (result) -> {
         } , (t) -> {
-            MessageBoxes.errorBox(MainFrame.get(), "Error", t);
+            showError(t);
         });
+    }
+
+    /**
+     * Show an error using a message box.
+     * @param t
+     */
+    public static void showError(Throwable t) {
+        MessageBoxes.errorBox(MainFrame.get(), "Error", t);
     }
 
     /**
@@ -97,7 +105,7 @@ public class UiUtils {
             thrunnable.thrun();
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+            showError(e);
         }
     }
 

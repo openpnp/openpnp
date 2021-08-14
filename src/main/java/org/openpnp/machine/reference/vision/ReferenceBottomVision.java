@@ -130,7 +130,7 @@ public class ReferenceBottomVision implements PartAlignment {
             wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
                            .getRotation();
         }
-        wantedAngle = angleNorm(wantedAngle, 180.);
+        wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);
         // Wanted location.
         Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, wantedAngle);
                 
@@ -159,10 +159,10 @@ public class ReferenceBottomVision implements PartAlignment {
                 // is which. We can assume that the part is never picked more than +/-45º rotated.
                 // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
                 if (partSettings.getMaxRotation() == MaxRotation.Adjust ) {
-                    angleOffset = angleNorm(angleOffset);
+                    angleOffset = Utils2D.angleNorm(angleOffset);
                 } else {
                     // turning more than 180° in one direction makes no sense
-                    angleOffset = angleNorm(angleOffset, 180);
+                    angleOffset = Utils2D.angleNorm(angleOffset, 180);
                 }
 
                 // When we rotate the nozzle later to compensate for the angle offset, the X, Y offsets 
@@ -248,10 +248,10 @@ public class ReferenceBottomVision implements PartAlignment {
             // is which. We can assume that the part is never picked more than +/-45º rotated.
             // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
             if (partSettings.getMaxRotation() == MaxRotation.Adjust ) {
-                angleOffset = angleNorm(angleOffset);
+                angleOffset = Utils2D.angleNorm(angleOffset);
             } else {
                 // turning more than 180° in one direction makes no sense
-                angleOffset = angleNorm(angleOffset, 180);
+                angleOffset = Utils2D.angleNorm(angleOffset, 180);
             }
             
             if (!partSizeCheck(part, partSettings, rect, camera) ) {
@@ -420,18 +420,6 @@ public class ReferenceBottomVision implements PartAlignment {
         catch (Exception e) {
             throw new Error(e);
         }
-    }
-
-    private static double angleNorm(double val, double lim) {
-        double clip = lim * 2;
-        while (Math.abs(val) > lim) {
-            val += (val < 0.) ? clip : -clip;
-        }
-        return val;
-    }
-
-    private static double angleNorm(double val) {
-        return angleNorm(val, 45.);
     }
 
     @Override
