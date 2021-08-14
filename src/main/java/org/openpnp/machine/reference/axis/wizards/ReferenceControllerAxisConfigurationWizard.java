@@ -21,6 +21,9 @@
 
 package org.openpnp.machine.reference.axis.wizards;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -36,21 +39,28 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.DriversComboBoxModel;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
+import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Driver;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.util.UiUtils;
@@ -59,7 +69,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.Color;
 
 @SuppressWarnings("serial")
 public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
@@ -251,7 +260,53 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             });
         }
     };    
+
+    private Action backlashCalibrateAction = new AbstractAction("Calibrate now", Icons.axisCartesian) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "<html>\r\n" + 
+                    "<p>Calibrate the axis backlash compensation settings using the calibration fiducial.</p>\r\n" + 
+                    "<p>Make sure the calibration rig is set up and present.</p>" +
+                    "<p>Consider using this function from Issues & Solutions where you get step by step instructions,<br/>\r\n" + 
+                    "for the needed preparatory steps and the calibration in proper sequence. You also get extensive Wiki links.</p>\r\n" + 
+                    "</html>");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.submitUiMachineTask(() -> {
+                HeadMountable hm = ((AbstractControllerAxis) axis).getDefaultHeadMountable();
+                if (hm instanceof ReferenceCamera) {
+                    ReferenceCamera camera = (ReferenceCamera) hm;
+                    if (camera.getHead() != null && camera.getLooking() == Looking.Down) {
+                        if (Configuration.get().getMachine() instanceof ReferenceMachine) {
+                            ReferenceMachine refMachine = (ReferenceMachine) Configuration.get().getMachine();
+                            refMachine.getCalibrationSolutions()
+                            .calibrateAxisBacklash((ReferenceHead)(camera.getHead()), camera,
+                                    camera, (ReferenceControllerAxis)axis);
+                            MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+                            return true;
+                        }
+                    }
+                }
+                throw new Exception("Only an axis on a down-looking camera can be calibrated.");
+            });
+        }
+    };    
+
     private JLabel lblNotMmmin;
+    private JPanel panelBacklashDiagnostics;
+    private JLabel lblStepTest;
+    private JLabel lblNewLabel;
+    private SimpleGraphView stepTestGraph;
+    private JLabel lblBacklashSpeedTest;
+    private SimpleGraphView backlashSpeedTestGraph;
+    private JLabel lblBacklashDistanceTest;
+    private SimpleGraphView backlashDistanceTestGraph;
+    private JLabel lblSneakupDistance;
+    private JTextField sneakUpOffset;
+    private JButton btnCalibrate;
+    private JLabel label;
 
     public ReferenceControllerAxisConfigurationWizard(ReferenceControllerAxis axis) {
         super(axis);
@@ -261,22 +316,14 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         contentPanel.add(panelControllerSettings);
         panelControllerSettings.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(50dlu;default):grow"),
+                ColumnSpec.decode("max(50dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -331,60 +378,34 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         homeCoordinate = new JTextField();
         panelControllerSettings.add(homeCoordinate, "4, 8, fill, default");
         homeCoordinate.setColumns(10);
-        
-        lblBacklashCompensation = new JLabel("Backlash Compensation");
-        lblBacklashCompensation.setToolTipText("<html>\r\n<p>Backlash compensation is used to avoid the effects of any looseness or play in the <br/>\r\nmechanical linkages of the given axis.  When the actuator reverses the direction of travel, <br/>\r\nthere is often a moment where nothing happens, because the slack from a belt or play <br/>\r\nfrom a screw or rack and pinion etc. needs to be bridged, before mechanical force can again <br/>\r\nbe transmitted.</p>\r\n\r\n<ul>\r\n<li>\r\n<strong>None:</strong>\r\nNo backlash compensation is performed. </li>\r\n<li>\r\n<strong>OneSidedPositioning:</strong><br/>\r\nBacklash compensation is applied by always moving to the end position from one side.<br/>\r\nThe backlash offset does not need to be very precise, i.e. it can be larger than the actual<br/> \r\nbacklash and the machine will still end up in the correct precise position.<br/>\r\nThe machine always needs to perform an extra move and it will force a complete machine<br/>\r\n still-stand between motion segments.</li>\r\n<li>\r\n<strong>OneSidedOptimizedPositioning:</strong><br/>\r\nWorks like OneSidedPositioning except it will only perform an extra move when moving <br/>\r\nfrom the wrong side. Only half of the extra moves are needed.</li>\r\n<li>\r\n<strong>DirectionalCompensation (Experimental!):</strong><br/>\r\nBacklash compensation is applied in the direction of travel. The offset is added to the <br/>\r\nactual target coordinate, if moving in the direction of the offset (which can be positive <br/>\r\nor negative), no offset is added if moving against the offset.<br/>\r\nNo extra moves are needed. The machine can also move more fluidly, as there is no <br/>\r\ndirection change needed.<br/>\r\nHowever: the offset needs to precisely match the physical backlash.</li>\r\n</ul>\r\n</html>");
-        panelControllerSettings.add(lblBacklashCompensation, "2, 12, right, default");
-        
-        backlashCompensationMethod = new JComboBox(BacklashCompensationMethod.values());
-        panelControllerSettings.add(backlashCompensationMethod, "4, 12, fill, default");
-        backlashCompensationMethod.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
-                adaptDialog();
-            }
-        });
-        
-        lblBacklashOffset = new JLabel("Backlash Offset");
-        panelControllerSettings.add(lblBacklashOffset, "2, 14, right, default");
-
-        backlashOffset = new JTextField();
-        panelControllerSettings.add(backlashOffset, "4, 14, fill, default");
-        backlashOffset.setColumns(10);
-        
-        lblBacklashSpeedFactor = new JLabel("Backlash Speed Factor");
-        panelControllerSettings.add(lblBacklashSpeedFactor, "2, 16, right, default");
-        
-        backlashSpeedFactor = new JTextField();
-        panelControllerSettings.add(backlashSpeedFactor, "4, 16, fill, default");
-        backlashSpeedFactor.setColumns(10);
 
         lblResolution = new JLabel("Resolution [Driver Units]");
         lblResolution.setToolTipText("<html>Numeric resolution of this axis. Coordinates will be rounded to the nearest multiple<br/>\r\nwhen comparing them in order to determine whether a move is necessary. <br/>\r\nFor the GcodeDriver, make sure the resolution can be expressed with the format in the <br/>\r\n<code>MOVE_TO_COMMAND</code>. Default is 0.0001 which corresponds to the %.4f <br/>\r\n(four fractional digits) format in the <code>MOVE_TO_COMMAND</code>.<br/>\r\nNote, the resolution is given and applied in driver (not system) units.\r\n</html>");
-        panelControllerSettings.add(lblResolution, "2, 20, right, default");
+        panelControllerSettings.add(lblResolution, "2, 12, right, default");
 
         resolution = new JTextField();
-        panelControllerSettings.add(resolution, "4, 20, fill, default");
+        panelControllerSettings.add(resolution, "4, 12, fill, default");
         resolution.setColumns(10);
 
         lblLimitRotation = new JLabel("Limit to ±180°");
         lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180°. ");
-        panelControllerSettings.add(lblLimitRotation, "2, 22, right, default");
+        panelControllerSettings.add(lblLimitRotation, "2, 14, right, default");
 
         limitRotation = new JCheckBox("");
-        panelControllerSettings.add(limitRotation, "4, 22");
+        panelControllerSettings.add(limitRotation, "4, 14");
 
         lblWrapAroundRotation = new JLabel("Wrap Around");
         lblWrapAroundRotation.setToolTipText("<html>Always rotate the axis the shorter way around. E.g. if it is at 270° and is commanded <br/>\r\nto go to 0° it will instead go to 360°.<br/>\r\nIf this is combined with Limit to ±180°, the axis is reset to its wrap-around coordinate <br/>\r\nusing a driver Global Offset command. With the GcodeDriver you must configure the<br/> <code>SET_GLOBAL_OFFSETS_COMMAND</code> or this will not work.\r\n</html>\r\n");
-        panelControllerSettings.add(lblWrapAroundRotation, "2, 24, right, default");
+        panelControllerSettings.add(lblWrapAroundRotation, "2, 16, right, default");
 
         wrapAroundRotation = new JCheckBox("");
-        panelControllerSettings.add(wrapAroundRotation, "4, 24");
+        panelControllerSettings.add(wrapAroundRotation, "4, 16");
 
         lblPremoveCommand = new JLabel("Pre-Move Command");
-        panelControllerSettings.add(lblPremoveCommand, "2, 28, right, top");
+        panelControllerSettings.add(lblPremoveCommand, "2, 20, right, top");
 
         scrollPane = new JScrollPane();
-        panelControllerSettings.add(scrollPane, "4, 28, 3, 1, fill, fill");
+        panelControllerSettings.add(scrollPane, "4, 20, 3, 1, fill, fill");
 
         preMoveCommand = new JTextArea();
         preMoveCommand.setRows(1);
@@ -395,7 +416,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         contentPanel.add(panelKinematics);
         panelKinematics.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -520,20 +541,114 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 adaptDialog();
             }
         });
+        
+        panelBacklashDiagnostics = new JPanel();
+        panelBacklashDiagnostics.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Backlash Calibration", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        contentPanel.add(panelBacklashDiagnostics);
+        panelBacklashDiagnostics.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("max(100dlu;default)"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("max(100dlu;default)"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("max(100dlu;default)"),}));
+        
+        lblBacklashCompensation = new JLabel("Backlash Compensation");
+        panelBacklashDiagnostics.add(lblBacklashCompensation, "2, 2, right, default");
+        lblBacklashCompensation.setToolTipText("<html>\r\n<p>Backlash compensation is used to avoid the effects of any looseness or play in the <br/>\r\nmechanical linkages of the given axis.  When the actuator reverses the direction of travel, <br/>\r\nthere is often a moment where nothing happens, because the slack from a belt or play <br/>\r\nfrom a screw or rack and pinion etc. needs to be bridged, before mechanical force can again <br/>\r\nbe transmitted.</p>\r\n\r\n<ul>\r\n<li>\r\n<strong>None:</strong>\r\nNo backlash compensation is performed. </li>\r\n<li>\r\n<strong>OneSidedPositioning:</strong><br/>\r\nBacklash compensation is applied by always moving to the end position from one side.<br/>\r\nThe backlash offset does not need to be very precise, i.e. it can be larger than the actual<br/> \r\nbacklash and the machine will still end up in the correct precise position.<br/>\r\nThe machine always needs to perform an extra move and it will force a complete machine<br/>\r\n still-stand between motion segments.</li>\r\n<li>\r\n<strong>OneSidedOptimizedPositioning:</strong><br/>\r\nWorks like OneSidedPositioning except it will only perform an extra move when moving <br/>\r\nfrom the wrong side. Only half of the extra moves are needed.</li>\r\n<li>\r\n<strong>DirectionalCompensation (Experimental!):</strong><br/>\r\nBacklash compensation is applied in the direction of travel. The offset is added to the <br/>\r\nactual target coordinate, if moving in the direction of the offset (which can be positive <br/>\r\nor negative), no offset is added if moving against the offset.<br/>\r\nNo extra moves are needed. The machine can also move more fluidly, as there is no <br/>\r\ndirection change needed.<br/>\r\nHowever: the offset needs to precisely match the physical backlash.</li>\r\n</ul>\r\n</html>");
+        
+        backlashCompensationMethod = new JComboBox(BacklashCompensationMethod.values());
+        panelBacklashDiagnostics.add(backlashCompensationMethod, "4, 2");
+        backlashCompensationMethod.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                adaptDialog();
+            }
+        });
+        
+                btnCalibrate = new JButton(backlashCalibrateAction);
+                panelBacklashDiagnostics.add(btnCalibrate, "6, 2");
+                
+                label = new JLabel(" ");
+                panelBacklashDiagnostics.add(label, "8, 2");
+        
+                lblBacklashOffset = new JLabel("Backlash Offset");
+                panelBacklashDiagnostics.add(lblBacklashOffset, "2, 4, right, default");
+        
+                backlashOffset = new JTextField();
+                panelBacklashDiagnostics.add(backlashOffset, "4, 4");
+                backlashOffset.setColumns(10);
+        
+        lblSneakupDistance = new JLabel("Sneak-up Distance");
+        panelBacklashDiagnostics.add(lblSneakupDistance, "2, 6, right, default");
+        
+        sneakUpOffset = new JTextField();
+        panelBacklashDiagnostics.add(sneakUpOffset, "4, 6");
+        sneakUpOffset.setColumns(10);
+        
+        lblBacklashSpeedFactor = new JLabel("Backlash Speed Factor");
+        panelBacklashDiagnostics.add(lblBacklashSpeedFactor, "2, 8, right, default");
+        
+        backlashSpeedFactor = new JTextField();
+        panelBacklashDiagnostics.add(backlashSpeedFactor, "4, 8");
+        backlashSpeedFactor.setColumns(10);
+        
+        lblStepTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nAbsolute error <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRelative error <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nResolution <span style=\"color:#008000\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
+        panelBacklashDiagnostics.add(lblStepTest, "2, 10, right, default");
+        
+        stepTestGraph = new SimpleGraphView();
+        stepTestGraph.setPreferredSize(new Dimension(300, 200));
+        stepTestGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
+        panelBacklashDiagnostics.add(stepTestGraph, "4, 10, 5, 1, fill, default");
+        
+        lblBacklashDistanceTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nBacklash at distance <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nOvershoot at distance <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
+        panelBacklashDiagnostics.add(lblBacklashDistanceTest, "2, 12, right, default");
+        
+        backlashDistanceTestGraph = new SimpleGraphView();
+        backlashDistanceTestGraph.setPreferredSize(new Dimension(300, 200));
+        backlashDistanceTestGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
+        panelBacklashDiagnostics.add(backlashDistanceTestGraph, "4, 12, 5, 1, fill, default");
+        
+        lblBacklashSpeedTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nBacklash at speed <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n</body>\r\n</html>");
+        panelBacklashDiagnostics.add(lblBacklashSpeedTest, "2, 14, right, default");
+        
+        backlashSpeedTestGraph = new SimpleGraphView();
+        backlashSpeedTestGraph.setPreferredSize(new Dimension(300, 200));
+        backlashSpeedTestGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
+        panelBacklashDiagnostics.add(backlashSpeedTestGraph, "4, 14, 5, 1, fill, default");
     }
 
     protected void adaptDialog() {
         Driver selectedDriver = driverConverter.convertReverse((String) driver.getSelectedItem());
         BacklashCompensationMethod backlashMethod = (BacklashCompensationMethod) backlashCompensationMethod.getSelectedItem();
         boolean showPreMove = (selectedDriver != null && selectedDriver.isSupportingPreMove());
-        boolean showRotationSettings = (Axis.Type)type.getSelectedItem() == Type.Rotation;
+        boolean showRotationSettings = type.getSelectedItem() == Type.Rotation;
+        boolean showDiagnostics = type.getSelectedItem() == Type.X || type.getSelectedItem() == Type.Y;
         lblPremoveCommand.setVisible(showPreMove);
         scrollPane.setVisible(showPreMove);
 
         lblBacklashOffset.setVisible(backlashMethod != BacklashCompensationMethod.None);
         backlashOffset.setVisible(backlashMethod != BacklashCompensationMethod.None);
-        lblBacklashSpeedFactor.setVisible(backlashMethod.isOneSidedPositioningMethod());
-        backlashSpeedFactor.setVisible(backlashMethod.isOneSidedPositioningMethod());
+        lblSneakupDistance.setVisible(backlashMethod == BacklashCompensationMethod.DirectionalSneakUp);
+        sneakUpOffset.setVisible(backlashMethod == BacklashCompensationMethod.DirectionalSneakUp);
+        lblBacklashSpeedFactor.setVisible(backlashMethod.isSpeedControlledMethod());
+        backlashSpeedFactor.setVisible(backlashMethod.isSpeedControlledMethod());
 
         lblLimitRotation.setVisible(showRotationSettings);
         limitRotation.setVisible(showRotationSettings);
@@ -561,6 +676,9 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnCaptureSafeZoneHigh.setVisible(!showRotationSettings);
         btnPositionSafeZoneLow.setVisible(!showRotationSettings);
         btnPositionSafeZoneHigh.setVisible(!showRotationSettings);
+        
+        panelBacklashDiagnostics.setVisible(showDiagnostics);
+        btnCalibrate.setVisible(showDiagnostics);
     }
 
     @Override
@@ -575,6 +693,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         addWrappedBinding(axis, "homeCoordinate", homeCoordinate, "text", lengthConverter);
         addWrappedBinding(axis, "backlashCompensationMethod", backlashCompensationMethod, "selectedItem");
         addWrappedBinding(axis, "backlashOffset", backlashOffset, "text", lengthConverter);
+        addWrappedBinding(axis, "sneakUpOffset", sneakUpOffset, "text", lengthConverter);
         addWrappedBinding(axis, "backlashSpeedFactor", backlashSpeedFactor, "text", doubleConverter);
         addWrappedBinding(axis, "resolution", resolution, "text", doubleConverter);
         addWrappedBinding(axis, "preMoveCommand", preMoveCommand, "text");
@@ -596,9 +715,14 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         addWrappedBinding(axis, "accelerationPerSecond2", accelerationPerSecond2, "text", lengthConverter);
         addWrappedBinding(axis, "jerkPerSecond3", jerkPerSecond3, "text", lengthConverter);
 
+        addWrappedBinding(axis, "stepTestGraph", stepTestGraph, "graph");
+        addWrappedBinding(axis, "backlashDistanceTestGraph", backlashDistanceTestGraph, "graph");
+        addWrappedBinding(axis, "backlashSpeedTestGraph", backlashSpeedTestGraph, "graph");
+
         ComponentDecorators.decorateWithAutoSelect(letter);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homeCoordinate);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(backlashOffset);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(sneakUpOffset);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(feedratePerSecond);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(accelerationPerSecond2);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(jerkPerSecond3);

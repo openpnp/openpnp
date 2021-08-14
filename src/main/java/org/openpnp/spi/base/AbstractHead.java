@@ -8,6 +8,7 @@ import javax.swing.Icon;
 
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
@@ -84,6 +85,21 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Element(required = false)
     protected Location homingFiducialLocation = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Location calibrationPrimaryFiducialLocation = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Location calibrationSecondaryFiducialLocation = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length calibrationPrimaryFiducialDiameter = null;
+
+    @Element(required = false)
+    private Length calibrationSecondaryFiducialDiameter = null;
+
+    @Element(required = false)
+    private Length calibrationTestObjectDiameter = null;
 
     protected Machine machine;
 
@@ -407,6 +423,46 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     public void setHomingFiducialLocation(Location homingFiducialLocation) {
         this.homingFiducialLocation = homingFiducialLocation;
+    }
+
+    public Location getCalibrationPrimaryFiducialLocation() {
+        return calibrationPrimaryFiducialLocation;
+    }
+
+    public void setCalibrationPrimaryFiducialLocation(Location calibrationPrimaryFiducialLocation) {
+        this.calibrationPrimaryFiducialLocation = calibrationPrimaryFiducialLocation;
+    }
+
+    public Location getCalibrationSecondaryFiducialLocation() {
+        return calibrationSecondaryFiducialLocation;
+    }
+
+    public void setCalibrationSecondaryFiducialLocation(Location calibrationSecondaryFiducialLocation) {
+        this.calibrationSecondaryFiducialLocation = calibrationSecondaryFiducialLocation;
+    }
+
+    public Length getCalibrationPrimaryFiducialDiameter() {
+        return calibrationPrimaryFiducialDiameter;
+    }
+
+    public void setCalibrationPrimaryFiducialDiameter(Length calibrationPrimaryFiducialDiameter) {
+        this.calibrationPrimaryFiducialDiameter = calibrationPrimaryFiducialDiameter;
+    }
+
+    public Length getCalibrationSecondaryFiducialDiameter() {
+        return calibrationSecondaryFiducialDiameter;
+    }
+
+    public void setCalibrationSecondaryFiducialDiameter(Length calibrationSecondaryFiducialDiameter) {
+        this.calibrationSecondaryFiducialDiameter = calibrationSecondaryFiducialDiameter;
+    }
+
+    public Length getCalibrationTestObjectDiameter() {
+        return calibrationTestObjectDiameter;
+    }
+
+    public void setCalibrationTestObjectDiameter(Length calibrationTestObjectDiameter) {
+        this.calibrationTestObjectDiameter = calibrationTestObjectDiameter;
     }
 
     @Override

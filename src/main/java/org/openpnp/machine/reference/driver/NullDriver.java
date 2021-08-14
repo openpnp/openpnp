@@ -26,6 +26,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.solutions.GcodeDriverSolutions;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;

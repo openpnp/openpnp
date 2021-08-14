@@ -28,6 +28,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.psh.NozzlesPropertySheetHolder;
+import org.openpnp.machine.reference.solutions.HeadSolutions;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
@@ -162,7 +163,7 @@ public class ReferenceHead extends AbstractHead {
         return (ReferenceMachine) Configuration.get().getMachine();
     }
 
-    enum NozzleSolution {
+    public enum NozzleSolution {
         Standalone,
         DualNegated,
         DualCam
@@ -173,19 +174,19 @@ public class ReferenceHead extends AbstractHead {
     @Attribute(required=false) 
     int nozzleSolutionsMultiplier = 1;
 
-    NozzleSolution getNozzleSolution() {
+    public NozzleSolution getNozzleSolution() {
         return nozzleSolution;
     }
 
-    void setNozzleSolution(NozzleSolution nozzleSolution) {
+    public void setNozzleSolution(NozzleSolution nozzleSolution) {
         this.nozzleSolution = nozzleSolution;
     }
 
-    int getNozzleSolutionsMultiplier() {
+    public int getNozzleSolutionsMultiplier() {
         return nozzleSolutionsMultiplier;
     }
 
-    void setNozzleSolutionsMultiplier(int nozzleSolutionsMultiplier) {
+    public void setNozzleSolutionsMultiplier(int nozzleSolutionsMultiplier) {
         this.nozzleSolutionsMultiplier = nozzleSolutionsMultiplier;
     }
 

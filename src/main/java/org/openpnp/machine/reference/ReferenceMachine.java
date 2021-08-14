@@ -29,10 +29,8 @@ import java.util.Set;
 import javax.swing.Action;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.index.IndexFeeder;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.Neoden4Camera;
 import org.openpnp.machine.rapidplacer.RapidFeeder;
@@ -79,6 +77,9 @@ import org.openpnp.machine.reference.psh.NozzleTipsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.SignalersPropertySheetHolder;
 import org.openpnp.machine.reference.signaler.ActuatorSignaler;
 import org.openpnp.machine.reference.signaler.SoundSignaler;
+import org.openpnp.machine.reference.solutions.CalibrationSolutions;
+import org.openpnp.machine.reference.solutions.KinematicSolutions;
+import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
@@ -482,6 +483,13 @@ public class ReferenceMachine extends AbstractMachine {
     public boolean isHomed() {
         return this.isHomed;
     }
+    @Override
+    public void setHomed(boolean isHomed) {
+        Logger.info("setHomed({})", isHomed);
+        this.isHomed = isHomed;
+        firePropertyChange("homed", null, this.isHomed);
+        fireMachineHomed(isHomed);
+    }
 
     public Solutions getSolutions() {
         if (dismissedSolutions != null) {
@@ -492,16 +500,29 @@ public class ReferenceMachine extends AbstractMachine {
         return solutions;
     }
 
-    @Override
-    public void setHomed(boolean isHomed) {
-        Logger.info("setHomed({})", isHomed);
-        this.isHomed = isHomed;
-        firePropertyChange("homed", null, this.isHomed);
-        fireMachineHomed(isHomed);
+    //@Element(required = false)
+    private KinematicSolutions kinematicSolutions = new KinematicSolutions(); 
+
+    @Element(required = false)
+    private VisionSolutions visualSolutions = new VisionSolutions();
+
+    public VisionSolutions getVisualSolutions() {
+        return visualSolutions;
+    }
+
+    @Element(required = false)
+    private CalibrationSolutions calibrationSolutions = new CalibrationSolutions(); 
+
+    public CalibrationSolutions getCalibrationSolutions() {
+        return calibrationSolutions;
     }
 
     @Override
     public void findIssues(Solutions solutions) {
+        kinematicSolutions.setMachine(this).findIssues(solutions);
+        visualSolutions.setMachine(this).findIssues(solutions);
+        calibrationSolutions.setMachine(this).findIssues(solutions);
+
         if (solutions.isTargeting(Milestone.Advanced)) {
             if (getMotionPlanner() instanceof NullMotionPlanner) {
                 solutions.add(new Solutions.Issue(
@@ -520,15 +541,13 @@ public class ReferenceMachine extends AbstractMachine {
                         else {
                             setMotionPlanner(oldMotionPlanner);
                         }
-                        // Reselect the tree path to reload the wizard with potentially different property sheets. 
-                        MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
                         super.setState(state);
                     }
                 });
             }
         }
         else {
-            // Conservative solutions.
+            // Conservative settings.
             if (!(getMotionPlanner() instanceof NullMotionPlanner)) {
                 solutions.add(new Solutions.Issue(
                         this, 
@@ -539,6 +558,12 @@ public class ReferenceMachine extends AbstractMachine {
                     final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
 
                     @Override
+                    public boolean isUnhandled( ) {
+                        // Never handle a conservative solution as unhandled.
+                        return false;
+                    }
+
+                    @Override
                     public void setState(Solutions.State state) throws Exception {
                         if ((state == Solutions.State.Solved)) {
                             setMotionPlanner(new NullMotionPlanner());
@@ -546,8 +571,6 @@ public class ReferenceMachine extends AbstractMachine {
                         else {
                             setMotionPlanner(oldMotionPlanner);
                         }
-                        // Reselect the tree path to reload the wizard with potentially different property sheets. 
-                        MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
                         super.setState(state);
                     }
                 });
