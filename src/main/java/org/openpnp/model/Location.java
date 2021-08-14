@@ -457,9 +457,9 @@ public class Location {
     }
 
     /**
-     * @return true if all the coordinates are zero, assuming the location is therefore uninitialized.
+     * @return true if at least one of the coordinates are non-zero, assuming the location is therefore initialized.
      */
-    public boolean isUninitialized() {
-        return this.equals(origin);
+    public boolean isInitialized() {
+        return !this.equals(origin);
     }
 }
