@@ -474,5 +474,12 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         BeanProperty<JComboBox, Boolean> jComboBoxBeanProperty = BeanProperty.create("enabled");
         AutoBinding<JCheckBox, Boolean, JComboBox, Boolean> autoBinding_9 = Bindings.createAutoBinding(UpdateStrategy.READ, calibrationEnabledCheckbox, jCheckBoxBeanProperty, recalibrationCb, jComboBoxBeanProperty);
         autoBinding_9.bind();
+        //
+        AutoBinding<JCheckBox, Boolean, JTextField, Boolean> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ, calibrationEnabledCheckbox, jCheckBoxBeanProperty, calibrationTipDiameter, jTextFieldBeanProperty);
+        autoBinding_2.bind();
+        //
+        BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty_1 = BeanProperty.create("enabled");
+        AutoBinding<JCheckBox, Boolean, JCheckBox, Boolean> autoBinding_11 = Bindings.createAutoBinding(UpdateStrategy.READ, calibrationEnabledCheckbox, jCheckBoxBeanProperty, failHoming, jCheckBoxBeanProperty_1);
+        autoBinding_11.bind();
     }
 }

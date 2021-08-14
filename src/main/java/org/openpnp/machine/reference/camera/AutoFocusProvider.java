@@ -169,7 +169,7 @@ public class AutoFocusProvider implements FocusProvider {
      * @param filteredImage
      * @return
      */
-    public static double focusScore(BufferedImage image, int diameter, BufferedImage filteredImage) {
+    protected double focusScore(BufferedImage image, int diameter, BufferedImage filteredImage) {
         diameter &= ~1; // Must be an even number.
         final int bands = image.getRaster().getNumBands();
         final int width = image.getWidth();

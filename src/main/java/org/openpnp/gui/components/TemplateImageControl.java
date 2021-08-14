@@ -104,16 +104,16 @@ public class TemplateImageControl extends JComponent implements MouseMotionListe
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
-        Font font = getFont();
-        FontMetrics dfm = g2d.getFontMetrics(font);
-        g2d.setFont(font);
-        int w = getWidth();
-        int h = getHeight();
         if (gridColor == null) {
             gridColor = new Color(0, 0, 0, 64);
         } else {
             gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
         }
+        Font font = getFont();
+        FontMetrics dfm = g2d.getFontMetrics(font);
+        g2d.setFont(font);
+        int w = getWidth();
+        int h = getHeight();
         BufferedImage image = getImage();
         if (image != null) {
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
