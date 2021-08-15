@@ -37,6 +37,7 @@ import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
 import org.pmw.tinylog.writers.RollingFileWriter;
+import org.I18n.I18n;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -118,6 +119,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+		I18n.i18ninit();
         monkeyPatchBeansBinding();
         
         for (String s : args) {

@@ -1,4 +1,5 @@
 package org.openpnp.vision.pipeline.stages;
+import org.I18n.I18n;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;

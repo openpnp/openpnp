@@ -19,6 +19,7 @@
  */
 
 package org.openpnp.vision.pipeline.stages;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.Font;

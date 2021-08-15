@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.vision.pipeline.stages;
+import org.I18n.I18n;
 
 import org.opencv.core.Mat;
 import org.openpnp.vision.FluentCv.ColorSpace;

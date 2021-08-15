@@ -1,4 +1,5 @@
 package org.openpnp.vision.pipeline.ui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -375,7 +376,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.navigateFirst);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "First pipeline stage.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("First pipeline stage."));
         }
 
         @Override
@@ -396,7 +397,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.navigatePrevious);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "Previous pipeline stage.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Previous pipeline stage."));
         }
 
         @Override
@@ -419,7 +420,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.navigateNext);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "Next pipeline stage.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Next pipeline stage."));
         }
 
         @Override
@@ -442,7 +443,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.navigateLast);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "Last pipeline stage.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Last pipeline stage."));
         }
 
         @Override
@@ -463,7 +464,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.pinDisabled);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "Pin pipeline stage output.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Pin pipeline stage output."));
         }
 
         @Override
@@ -485,7 +486,7 @@ public class ResultsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.colorTrue);
             putValue(NAME, "");
-            putValue(SHORT_DESCRIPTION, "Images displayed in true color.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Images displayed in true color."));
         }
 
         @Override
@@ -493,12 +494,12 @@ public class ResultsPanel extends JPanel {
             if (displayTrueColors) {
                 displayTrueColors = false;
                 putValue(SMALL_ICON, Icons.colorFalse);
-                putValue(SHORT_DESCRIPTION, "Images displayed assuming BGR color space - colors may not look correct.");
+                putValue(SHORT_DESCRIPTION, I18n.gettext("Images displayed assuming BGR color space - colors may not look correct."));
             }
             else {
                 displayTrueColors = true;
                 putValue(SMALL_ICON, Icons.colorTrue);
-                putValue(SHORT_DESCRIPTION, "Images displayed in true color.");
+                putValue(SHORT_DESCRIPTION, I18n.gettext("Images displayed in true color."));
             }
             updateAllEverything();
         }

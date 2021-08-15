@@ -1,4 +1,5 @@
 package org.openpnp.vision.pipeline.stages;
+import org.I18n.I18n;
 
 import java.io.File;
 import java.io.FileReader;

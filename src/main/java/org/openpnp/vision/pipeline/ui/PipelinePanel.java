@@ -1,4 +1,5 @@
 package org.openpnp.vision.pipeline.ui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -236,8 +237,8 @@ public class PipelinePanel extends JPanel {
     public Action newStageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New stage...");
-            putValue(SHORT_DESCRIPTION, "Create a new stage.");
+            putValue(NAME, I18n.gettext("New stage..."));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Create a new stage."));
         }
 
         @Override
@@ -275,8 +276,8 @@ public class PipelinePanel extends JPanel {
     public Action deleteStageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Stage...");
-            putValue(SHORT_DESCRIPTION, "Delete the selected stage.");
+            putValue(NAME, I18n.gettext("Delete Stage..."));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Delete the selected stage."));
         }
 
         @Override
@@ -291,8 +292,8 @@ public class PipelinePanel extends JPanel {
     public final Action copyAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy pipeline to clipboard");
-            putValue(SHORT_DESCRIPTION, "Copy the pipeline to the clipboard in text format.");
+            putValue(NAME, I18n.gettext("Copy pipeline to clipboard"));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Copy the pipeline to the clipboard in text format."));
         }
 
         @Override
@@ -312,7 +313,7 @@ public class PipelinePanel extends JPanel {
     public final Action pasteAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create pipeline from clipboard");
+            putValue(NAME, I18n.gettext("Create pipeline from clipboard"));
             putValue(SHORT_DESCRIPTION,
                     "Create a new pipeline from a definition on the clipboard.");
         }
@@ -336,8 +337,8 @@ public class PipelinePanel extends JPanel {
     public final Action refreshAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.refresh);
-            putValue(NAME, "Update picture from current view.");
-            putValue(SHORT_DESCRIPTION, "Update picture from current view.");
+            putValue(NAME, I18n.gettext("Update picture from current view."));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Update picture from current view."));
         }
 
         @Override
