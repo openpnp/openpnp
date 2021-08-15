@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.rapidplacer;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -76,7 +77,7 @@ public class RapidFeederConfigurationWizard
     private void createUi() {
         
         panelRapidFeederConfig = new JPanel();
-        panelRapidFeederConfig.setBorder(new TitledBorder(null, "Rapid Feeder Config", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelRapidFeederConfig.setBorder(new TitledBorder(null, I18n.gettext("Rapid Feeder Config"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelRapidFeederConfig);
         panelRapidFeederConfig.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -104,7 +105,7 @@ public class RapidFeederConfigurationWizard
         pitch.setColumns(10);
         
         JPanel panelRapidFeederScan = new JPanel();
-        panelRapidFeederScan.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Rapid Feeder Scanning", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelRapidFeederScan.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), I18n.gettext("Rapid Feeder Scanning"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelRapidFeederScan);
         panelRapidFeederScan.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

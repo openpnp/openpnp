@@ -19,6 +19,7 @@
  */
 
 package org.openpnp.machine.neoden4.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 
@@ -54,7 +55,7 @@ public class Neoden4DriverConfigurationWizard extends AbstractConfigurationWizar
 
         JPanel panelMachineDetails = new JPanel();
         panelMachineDetails.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Machine Details", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Machine Details"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelMachineDetails);
         panelMachineDetails.setLayout(new FormLayout(
                 new ColumnSpec[] { 

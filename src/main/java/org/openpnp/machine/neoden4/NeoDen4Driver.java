@@ -1,4 +1,5 @@
 package org.openpnp.machine.neoden4;
+import org.I18n.I18n;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -292,7 +293,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     int expect(int expected) throws Exception {
         int received = read();
         if (received != expected) {
-            throw new Exception(String.format("Expected %02x but received %02x.", expected, received));
+            throw new Exception(String.format(I18n.gettext("Expected %02x but received %02x."), expected, received));
         }
         return received;
     }
@@ -356,7 +357,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         pollFor(0x07, 0x43);
         
         if (! waitForStatusReady(100, 30000)) {
-            throw new Exception("home timeout while waiting for status==ready");
+            throw new Exception(I18n.gettext("home timeout while waiting for status==ready"));
         }
 
         /* Initialize coordinates correctly after home is completed */
@@ -371,13 +372,13 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     public void setGlobalOffsets(Machine machine, AxesLocation location)
             throws Exception {
         // TODO: if the driver can do it, please implement to support visual homing. 
-        throw new Exception("Not supported in this driver");
+        throw new Exception(I18n.gettext("Not supported in this driver"));
     }
 
     @Override
     public AxesLocation getReportedLocation(long timeout) throws Exception {
         // TODO: if the driver can do it, please implement. 
-        throw new Exception("Not supported in this driver");
+        throw new Exception(I18n.gettext("Not supported in this driver"));
     }
 
     private void moveXy(double x, double y) throws Exception {
@@ -395,7 +396,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         pollFor(0x08, 0x4d);
 
         if (! waitForStatusReady(100, 30000)) {
-            throw new Exception("moveXy timeout while waiting for status==ready");
+            throw new Exception(I18n.gettext("moveXy timeout while waiting for status==ready"));
         }
     }
 

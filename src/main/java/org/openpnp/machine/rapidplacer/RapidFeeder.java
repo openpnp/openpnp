@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.rapidplacer;
+import org.I18n.I18n;
 
 import javax.swing.Action;
 
@@ -63,7 +64,7 @@ public class RapidFeeder extends ReferenceFeeder {
             actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
         }
         if (actuator == null) {
-            throw new Exception("Feed failed. Unable to find an actuator named " + actuatorName);
+            throw new Exception(I18n.gettext("Feed failed. Unable to find an actuator named ") + actuatorName);
         }
         actuator.actuate(String.format("%s %d", address, pitch));
     }
