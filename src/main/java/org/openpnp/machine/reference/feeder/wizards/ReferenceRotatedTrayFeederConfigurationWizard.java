@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -113,7 +114,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		this.includePickLocation = includePickLocation;
 
 		panelPart = new JPanel();
-		panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings",
+		panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), I18n.gettext("General Settings"),
 				TitledBorder.LEADING, TitledBorder.TOP, null));
 		contentPanel.add(panelPart);
 		panelPart.setLayout(new FormLayout(new ColumnSpec[] {
@@ -150,12 +151,12 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		lblWarningThisFeeder.setHorizontalAlignment(SwingConstants.LEFT);
 		warningPanel.add(lblWarningThisFeeder);
 
-		JLabel lblPart = new JLabel("Part");
+		JLabel lblPart = new JLabel(I18n.gettext("Part"));
 		panelPart.add(lblPart, "2, 2, right, default");
 		comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
 		panelPart.add(comboBoxPart, "4, 2, left, default");
 
-		JLabel lblRetryCount = new JLabel("Feed Retry Count");
+		JLabel lblRetryCount = new JLabel(I18n.gettext("Feed Retry Count"));
 		panelPart.add(lblRetryCount, "2, 4, right, default");
 
 		retryCountTf = new JTextField();
@@ -163,7 +164,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		panelPart.add(retryCountTf, "4, 4");
 		retryCountTf.setColumns(3);
 		
-		lblPickRetryCount = new JLabel("Pick Retry Count");
+		lblPickRetryCount = new JLabel(I18n.gettext("Pick Retry Count"));
 		panelPart.add(lblPickRetryCount, "2, 6, right, default");
 		
 		pickRetryCount = new JTextField();
@@ -174,7 +175,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		if (includePickLocation) {
 			panelLocation = new JPanel();
 			panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-					"Tray Component Locations", TitledBorder.LEADING, TitledBorder.TOP, null));
+					I18n.gettext("Tray Component Locations"), TitledBorder.LEADING, TitledBorder.TOP, null));
 			contentPanel.add(panelLocation);
 			panelLocation.setLayout(new FormLayout(
 					new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
@@ -188,7 +189,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC }));
 
 			JLabel firstComponent = new JLabel(
-					"<html><b>Point A:</b><br /><span style='font-size:7px'>First Row - First Component</span></html>");
+					I18n.gettext("<html><b>Point A:</b><br /><span style='font-size:7px'>First Row - First Component</span></html>"));
 			panelLocation.add(firstComponent, "2, 4");
 
 			lblX_1 = new JLabel("X");
@@ -209,7 +210,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			panelLocation.add(locationButtonsPanel, "8, 4");
 
 			JLabel firstRowLastComponent = new JLabel(
-					"<html><b>Point B:</b><br /><span style='font-size:8px'>First Row - Last Component</span></html>");
+					I18n.gettext("<html><b>Point B:</b><br /><span style='font-size:8px'>First Row - Last Component</span></html>"));
 			panelLocation.add(firstRowLastComponent, "2, 6");
 
 			textFieldFirstRowLastLocationX = new JTextField();
@@ -225,7 +226,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			panelLocation.add(lastLocationButtonsPanel, "8, 6");
 
 			JLabel lastComponent = new JLabel(
-					"<html><b>Point C:</b><br /><span style='font-size:8px'>Last Row - Last Component</span></html>");
+					I18n.gettext("<html><b>Point C:</b><br /><span style='font-size:8px'>Last Row - Last Component</span></html>"));
 			panelLocation.add(lastComponent, "2, 8");
 
 			textFieldLastLocationX = new JTextField();
@@ -242,7 +243,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 			panelParameters = new JPanel();
 			panelParameters.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-					"Tray Parameters", TitledBorder.LEADING, TitledBorder.TOP, null));
+					I18n.gettext("Tray Parameters"), TitledBorder.LEADING, TitledBorder.TOP, null));
 			contentPanel.add(panelParameters);
 
 			panelParameters.setLayout(new FormLayout(
@@ -259,21 +260,21 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 							FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
 							FormSpecs.DEFAULT_ROWSPEC }));
 
-			JLabel lblTrayRows = new JLabel("Number of Tray Rows");
+			JLabel lblTrayRows = new JLabel(I18n.gettext("Number of Tray Rows"));
 			panelParameters.add(lblTrayRows, "2, 2");
 
 			textFieldTrayCountRows = new JTextField();
 			panelParameters.add(textFieldTrayCountRows, "4, 2");
 			textFieldTrayCountRows.setColumns(10);
 
-			JLabel lblTrayCols = new JLabel("Number of Tray Columns");
+			JLabel lblTrayCols = new JLabel(I18n.gettext("Number of Tray Columns"));
 			panelParameters.add(lblTrayCols, "6, 2");
 
 			textFieldTrayCountCols = new JTextField();
 			panelParameters.add(textFieldTrayCountCols, "8, 2");
 			textFieldTrayCountCols.setColumns(10);
 
-			JLabel lblFeedCount = new JLabel("Feed Count");
+			JLabel lblFeedCount = new JLabel(I18n.gettext("Feed Count"));
 			panelParameters.add(lblFeedCount, "2, 4");
 
 			textFieldFeedCount = new JTextField();
@@ -304,7 +305,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			panelParameters.add(textFieldComponentRotation, "4, 6");
 			textFieldComponentRotation.setColumns(10);
 
-			JLabel lblComponentZHeight = new JLabel("Z Height");
+			JLabel lblComponentZHeight = new JLabel(I18n.gettext("Z Height"));
 			panelParameters.add(lblComponentZHeight, "6, 6");
 
 			textFieldComponentZHeight = new JTextField();
@@ -362,14 +363,14 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			btnCalcOffsetsRotation.setHorizontalAlignment(SwingConstants.LEFT);
 			panelParameters.add(btnCalcOffsetsRotation, "2, 12");
 
-			JLabel lblRowOffset = new JLabel("Row Offset");
+			JLabel lblRowOffset = new JLabel(I18n.gettext("Row Offset"));
 			panelParameters.add(lblRowOffset, "2, 14");
 
 			textFieldOffsetsX = new JTextField();
 			panelParameters.add(textFieldOffsetsX, "4, 14");
 			textFieldOffsetsX.setColumns(10);
 
-			JLabel lblColOffset = new JLabel("Column Offset");
+			JLabel lblColOffset = new JLabel(I18n.gettext("Column Offset"));
 			panelParameters.add(lblColOffset, "6, 14");
 
 			textFieldOffsetsY = new JTextField();
@@ -385,7 +386,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 			panelIllustration = new JPanel();
 			panelIllustration.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-					"Tray Illustration", TitledBorder.LEADING, TitledBorder.TOP, null));
+					I18n.gettext("Tray Illustration"), TitledBorder.LEADING, TitledBorder.TOP, null));
 			contentPanel.add(panelIllustration);
 
 			InputStream stream = getClass().getResourceAsStream("/illustrations/rotatedtrayfeeder.png");
@@ -472,11 +473,11 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		lblComponentCount.setText("Components left: " + String.valueOf(componentleft));
 
 		if ((feeder.getOffsets().getX() == 0) && (feeder.getTrayCountCols() > 1)) {
-			MessageBoxes.errorBox(this, "Error",
+			MessageBoxes.errorBox(this, I18n.gettext("Error"),
 					"Column Offset  must be greater than 0 if Number of Tray Columns is greater than 1 or feed failure will occur.");
 		}
 		if ((feeder.getOffsets().getY() == 0) && (feeder.getTrayCountRows() > 1)) {
-			MessageBoxes.errorBox(this, "Error",
+			MessageBoxes.errorBox(this, I18n.gettext("Error"),
 					"Row Offset must be greater than 0 if Number of Tray Rows is greater than 1 or feed failure will occur.");
 		}
 	}

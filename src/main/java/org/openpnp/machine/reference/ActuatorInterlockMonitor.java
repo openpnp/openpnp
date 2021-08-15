@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.Wizard;

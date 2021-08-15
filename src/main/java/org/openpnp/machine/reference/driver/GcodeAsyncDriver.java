@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.driver;
+import org.I18n.I18n;
 
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -292,7 +293,7 @@ public class GcodeAsyncDriver extends GcodeDriver {
     protected void bailOnError() throws Exception {
         super.bailOnError();
         if (writerThread == null || ! writerThread.isAlive()) {
-            throw new Exception(getCommunications().getConnectionName()+" IO Error on writing to the controller.");
+            throw new Exception(getCommunications().getConnectionName()+I18n.gettext(" IO Error on writing to the controller."));
         }
     }
     /**

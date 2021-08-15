@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.feeder;
+import org.I18n.I18n;
 
 import java.util.List;
 
@@ -74,7 +75,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     @Override
     public void feed(Nozzle nozzle) throws Exception {
         if (getFeeder() == null) {
-            throw new Exception("No feeder loaded in slot.");
+            throw new Exception(I18n.gettext("No feeder loaded in slot."));
         }
         super.feed(nozzle);
     }
@@ -82,7 +83,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
     @Override
     public void postPick(Nozzle nozzle) throws Exception {
         if (getFeeder() == null) {
-            throw new Exception("No feeder loaded in slot.");
+            throw new Exception(I18n.gettext("No feeder loaded in slot."));
         }
         super.postPick(nozzle);
     }
@@ -117,7 +118,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
 
     public void setBank(Bank bank) throws Exception {
         if (bank == null) {
-            throw new Exception("Bank is required.");
+            throw new Exception(I18n.gettext("Bank is required."));
         }
         this.bank = bank;
     }
@@ -130,7 +131,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
         if (feeder != null) {
           // Make sure the feeder is in our bank.
           if (getBank().getFeeder(feeder.getId()) == null) {
-              throw new Exception("Can't set feeder from another bank.");
+              throw new Exception(I18n.gettext("Can't set feeder from another bank."));
           }
         }
         getBank().setFeeder(this, feeder);
@@ -189,7 +190,7 @@ public class ReferenceSlotAutoFeeder extends ReferenceAutoFeeder {
 
         public Bank(@Attribute(name = "id") String id) {
             if (id == null) {
-                throw new Error("Id is required.");
+                throw new Error(I18n.gettext("Id is required."));
             }
             this.id = id;
             this.name = id;

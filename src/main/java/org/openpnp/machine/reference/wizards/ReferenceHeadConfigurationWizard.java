@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -61,7 +62,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private void createUi() {
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, I18n.gettext("Locations"), TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -93,7 +94,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         JLabel lblY = new JLabel("Y");
         panel.add(lblY, "6, 2, center, default");
 
-        JLabel lblHomingFiducial = new JLabel("Homing Fiducial");
+        JLabel lblHomingFiducial = new JLabel(I18n.gettext("Homing Fiducial"));
         panel.add(lblHomingFiducial, "2, 4, right, default");
 
         homingFiducialX = new JTextField();
@@ -109,7 +110,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         homeLocation.setShowToolButtons(false); 
         panel.add(homeLocation, "10, 4, left, fill");
 
-        JLabel lblHomingMethod = new JLabel("Homing Method");
+        JLabel lblHomingMethod = new JLabel(I18n.gettext("Homing Method"));
         panel.add(lblHomingMethod, "2, 6, right, default");
 
         visualHomingMethod = new JComboBox(VisualHomingMethod.values());
@@ -152,7 +153,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         lblWarningChangingThese.setForeground(Color.BLACK);
         panel.add(lblWarningChangingThese, "4, 8, 7, 1");
 
-        JLabel lblParkLocation = new JLabel("Park Location");
+        JLabel lblParkLocation = new JLabel(I18n.gettext("Park Location"));
         panel.add(lblParkLocation, "2, 10, right, default");
 
         parkX = new JTextField();
@@ -262,7 +263,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         calibrationTestObjectDiameter.setColumns(10);
 
         JPanel panel_2 = new JPanel();
-        panel_2.setBorder(new TitledBorder(null, "Z Probe", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel_2.setBorder(new TitledBorder(null, I18n.gettext("Z Probe"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_2);
         panel_2.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -273,7 +274,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblNewLabel_4 = new JLabel("Z Probe Actuator");
+        JLabel lblNewLabel_4 = new JLabel(I18n.gettext("Z Probe Actuator"));
         panel_2.add(lblNewLabel_4, "2, 2, right, default");
 
         comboBoxZProbeActuator = new JComboBox();
@@ -281,7 +282,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         panel_2.add(comboBoxZProbeActuator, "4, 2");
 
         JPanel panel_3 = new JPanel();
-        panel_3.setBorder(new TitledBorder(null, "Pump", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel_3.setBorder(new TitledBorder(null, I18n.gettext("Pump"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_3);
         panel_3.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -292,7 +293,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblVacuumPumpActuator = new JLabel("Vacuum Pump Actuator");
+        JLabel lblVacuumPumpActuator = new JLabel(I18n.gettext("Vacuum Pump Actuator"));
         panel_3.add(lblVacuumPumpActuator, "2, 2, 2, 1, right, default");
 
         comboBoxPumpActuator = new JComboBox();

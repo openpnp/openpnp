@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder;
+import org.I18n.I18n;
 
 
 
@@ -225,7 +226,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
         // Throw an exception when the feeder runs out of parts
         if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
-			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
+			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + I18n.gettext(" empty."));
 		}
 
         updateVisionOffsets(nozzle);
@@ -259,13 +260,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         // and look for the hole
         Location actualLocation = findClosestHole(camera);
         if (actualLocation == null) {
-            throw new Exception("Unable to locate reference hole. End of strip?");
+            throw new Exception(I18n.gettext("Unable to locate reference hole. End of strip?"));
         }
         // make sure it's not too far away
         Length distance = actualLocation.getLinearLengthTo(expectedLocation)
                 .convertToUnits(LengthUnit.Millimeters);
         if (distance.getValue() > 2) {
-            throw new Exception("Unable to locate reference hole. End of strip?");
+            throw new Exception(I18n.gettext("Unable to locate reference hole. End of strip?"));
         }
         visionLocation = actualLocation;
     }
@@ -335,13 +336,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void takeBackPart(Nozzle nozzle) throws Exception {
         // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
         if (nozzle.getPart() == null) {
-            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+            throw new UnsupportedOperationException(I18n.gettext("No part loaded that could be taken back."));
         }
         if (!nozzle.getPart().equals(getPart())) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + I18n.gettext(" this feeder only supports ") + getPart().getName());
         }
         if (!canTakeBackPart()) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
+            throw new UnsupportedOperationException("Feeder: " + getName() + I18n.gettext(" - Currently no free slot. Can not take back the part."));
         }
         
         // ok, now put the part back on the location of the last pick
@@ -350,7 +351,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         nozzle.place();
         nozzle.moveToSafeZ();
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
-            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
+            throw new Exception("Feeder: " + getName() + I18n.gettext(" - Putting part back failed, check nozzle tip"));
         }
         // change FeedCount
         setFeedCount(getFeedCount() - 1);
@@ -516,6 +517,6 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 // double partCount = Math.floor(holeToHoleDistance / partPitch);
 //
 //// if (feedCount > partCount) {
-//// throw new Exception(String.format("No more parts available in feeder %s", getName()));
+//// throw new Exception(String.format(I18n.gettext("No more parts available in feeder %s"), getName()));
 //// }
 //

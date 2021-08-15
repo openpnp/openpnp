@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder;
+import org.I18n.I18n;
 
 import java.util.List;
 
@@ -68,7 +69,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         }
         // throw if feed results in no parts
         if (pickLocation == null) {
-            throw new Exception("Feeder " + getName() + ": No parts found.");
+            throw new Exception("Feeder " + getName() + I18n.gettext(": No parts found."));
         }
     }
 
@@ -165,13 +166,13 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
     public void takeBackPart(Nozzle nozzle) throws Exception {
         // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
         if (nozzle.getPart() == null) {
-            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+            throw new UnsupportedOperationException(I18n.gettext("No part loaded that could be taken back."));
         }
         if (!nozzle.getPart().equals(getPart())) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + I18n.gettext(" this feeder only supports ") + getPart().getName());
         }
         if (!canTakeBackPart()) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no known free space. Can not take back the part.");
+            throw new UnsupportedOperationException("Feeder: " + getName() + I18n.gettext(" - Currently no known free space. Can not take back the part."));
         }
 
         // ok, now put the part back on the location of the last pick
@@ -179,7 +180,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         nozzle.place();
         nozzle.moveToSafeZ();
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
-            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
+            throw new Exception("Feeder: " + getName() + I18n.gettext(" - Putting part back failed, check nozzle tip"));
         }
         // set pickLocation to null, avoid putting a second part on the same location
         pickLocation = null;

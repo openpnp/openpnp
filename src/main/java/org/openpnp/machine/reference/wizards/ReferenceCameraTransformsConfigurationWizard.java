@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 
@@ -44,7 +45,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
 
         panelTransforms = new JPanel();
         panelTransforms.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Image Transforms", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Image Transforms"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelTransforms);
         panelTransforms.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -74,86 +75,86 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblRotation = new JLabel("Rotation");
+        lblRotation = new JLabel(I18n.gettext("Rotation"));
         panelTransforms.add(lblRotation, "2, 2, right, default");
 
         textFieldRotation = new JTextField();
         panelTransforms.add(textFieldRotation, "4, 2");
         textFieldRotation.setColumns(10);
 
-        lblOffsetX = new JLabel("Offset X");
+        lblOffsetX = new JLabel(I18n.gettext("Offset X"));
         panelTransforms.add(lblOffsetX, "2, 4, right, default");
 
         textFieldOffsetX = new JTextField();
         panelTransforms.add(textFieldOffsetX, "4, 4");
         textFieldOffsetX.setColumns(10);
 
-        lblOffsetY = new JLabel("Offset Y");
+        lblOffsetY = new JLabel(I18n.gettext("Offset Y"));
         panelTransforms.add(lblOffsetY, "2, 6, right, default");
 
         textFieldOffsetY = new JTextField();
         panelTransforms.add(textFieldOffsetY, "4, 6");
         textFieldOffsetY.setColumns(10);
 
-        lblFlipX = new JLabel("Flip Vertical");
+        lblFlipX = new JLabel(I18n.gettext("Flip Vertical"));
         panelTransforms.add(lblFlipX, "2, 8, right, default");
 
         chckbxFlipX = new JCheckBox("");
         panelTransforms.add(chckbxFlipX, "4, 8");
 
-        lblFlipY = new JLabel("Flip Horizontal");
+        lblFlipY = new JLabel(I18n.gettext("Flip Horizontal"));
         panelTransforms.add(lblFlipY, "2, 10, right, default");
 
         checkBoxFlipY = new JCheckBox("");
         panelTransforms.add(checkBoxFlipY, "4, 10");
         
-        lblCropX = new JLabel("Crop Width");
+        lblCropX = new JLabel(I18n.gettext("Crop Width"));
         panelTransforms.add(lblCropX, "2, 12, right, default");
         
         cropWidthTextField = new JTextField();
         panelTransforms.add(cropWidthTextField, "4, 12");
         cropWidthTextField.setColumns(10);
         
-        lblNewLabel = new JLabel("(Use 0 for no cropping)");
+        lblNewLabel = new JLabel(I18n.gettext("(Use 0 for no cropping)"));
         panelTransforms.add(lblNewLabel, "5, 12");
         
-        lblCropHeight = new JLabel("Crop Height");
+        lblCropHeight = new JLabel(I18n.gettext("Crop Height"));
         panelTransforms.add(lblCropHeight, "2, 14, right, default");
         
         cropHeightTextField = new JTextField();
         panelTransforms.add(cropHeightTextField, "4, 14");
         cropHeightTextField.setColumns(10);
         
-        lblNewLabel_1 = new JLabel("(Use 0 for no cropping)");
+        lblNewLabel_1 = new JLabel(I18n.gettext("(Use 0 for no cropping)"));
         panelTransforms.add(lblNewLabel_1, "5, 14");
         
-        lblScaleWidth = new JLabel("Scale Width");
+        lblScaleWidth = new JLabel(I18n.gettext("Scale Width"));
         panelTransforms.add(lblScaleWidth, "2, 16, right, default");
         
         scaleWidthTf = new JTextField();
         panelTransforms.add(scaleWidthTf, "4, 16, fill, default");
         scaleWidthTf.setColumns(10);
         
-        lbluseFor = new JLabel("(Use 0 for no scaling)");
+        lbluseFor = new JLabel(I18n.gettext("(Use 0 for no scaling)"));
         panelTransforms.add(lbluseFor, "5, 16");
         
-        lblScaleHeight = new JLabel("Scale Height");
+        lblScaleHeight = new JLabel(I18n.gettext("Scale Height"));
         panelTransforms.add(lblScaleHeight, "2, 18, right, default");
         
         scaleHeightTf = new JTextField();
         panelTransforms.add(scaleHeightTf, "4, 18, fill, default");
         scaleHeightTf.setColumns(10);
         
-        label = new JLabel("(Use 0 for no scaling)");
+        label = new JLabel(I18n.gettext("(Use 0 for no scaling)"));
         panelTransforms.add(label, "5, 18");
         
-        lblDeinterlace = new JLabel("De-Interlace");
+        lblDeinterlace = new JLabel(I18n.gettext("De-Interlace"));
         panelTransforms.add(lblDeinterlace, "2, 20");
         
         deinterlaceChk = new JCheckBox("");
         panelTransforms.add(deinterlaceChk, "4, 20");
         
-        lblremovesInterlacingFrom = new JLabel("(Removes interlacing from stacked frames)");
+        lblremovesInterlacingFrom = new JLabel(I18n.gettext("(Removes interlacing from stacked frames)"));
         panelTransforms.add(lblremovesInterlacingFrom, "5, 20");
     }
 

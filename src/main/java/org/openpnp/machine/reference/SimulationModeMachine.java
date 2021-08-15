@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -362,14 +363,14 @@ public class SimulationModeMachine extends ReferenceMachine {
                                         if ((Boolean)value == true) {
                                             // Pick
                                             if (!((ImageCamera) camera).isPickLocation(location, nozzle)) {
-                                                throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
+                                                throw new Exception("Nozzle "+nozzle.getName()+I18n.gettext(" part ")+nozzle.getPart().getId()
                                                         +" pick location not recognized.");
                                             }
                                         }
                                         else {
                                             // Pick
                                             if (!((ImageCamera) camera).isPlaceLocation(location, nozzle)) {
-                                                throw new Exception("Nozzle "+nozzle.getName()+" part "+nozzle.getPart().getId()
+                                                throw new Exception("Nozzle "+nozzle.getName()+I18n.gettext(" part ")+nozzle.getPart().getId()
                                                         +" place location not recognized.");
                                             }
                                         }

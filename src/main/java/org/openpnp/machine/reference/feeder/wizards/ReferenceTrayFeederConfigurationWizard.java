@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 
@@ -86,7 +87,7 @@ public class ReferenceTrayFeederConfigurationWizard
         JLabel lblY = new JLabel("Y");
         panelFields.add(lblY, "6, 2");
 
-        JLabel lblFeedStartLocation = new JLabel("Offsets");
+        JLabel lblFeedStartLocation = new JLabel(I18n.gettext("Offsets"));
         panelFields.add(lblFeedStartLocation, "2, 4, right, default");
 
         textFieldOffsetsX = new JTextField();
@@ -97,7 +98,7 @@ public class ReferenceTrayFeederConfigurationWizard
         panelFields.add(textFieldOffsetsY, "6, 4, 2, 1, fill, default");
         textFieldOffsetsY.setColumns(10);
 
-        JLabel lblTrayCount = new JLabel("Tray Count");
+        JLabel lblTrayCount = new JLabel(I18n.gettext("Tray Count"));
         panelFields.add(lblTrayCount, "2, 6, right, default");
 
         textFieldTrayCountX = new JTextField();
@@ -111,7 +112,7 @@ public class ReferenceTrayFeederConfigurationWizard
         JSeparator separator = new JSeparator();
         panelFields.add(separator, "4, 8, 4, 1");
 
-        JLabel lblFeedCount = new JLabel("Feed Count");
+        JLabel lblFeedCount = new JLabel(I18n.gettext("Feed Count"));
         panelFields.add(lblFeedCount, "2, 10, right, default");
 
         textFieldFeedCount = new JTextField();
@@ -160,11 +161,11 @@ public class ReferenceTrayFeederConfigurationWizard
     protected void saveToModel() {
         super.saveToModel();
         if (feeder.getOffsets().getX() == 0 && feeder.getTrayCountX() > 1) {
-            MessageBoxes.errorBox(this, "Error",
+            MessageBoxes.errorBox(this, I18n.gettext("Error"),
                     "X offset must be greater than 0 if X tray count is greater than 1 or feed failure will occur.");
         }
         if (feeder.getOffsets().getY() == 0 && feeder.getTrayCountY() > 1) {
-            MessageBoxes.errorBox(this, "Error",
+            MessageBoxes.errorBox(this, I18n.gettext("Error"),
                     "Y offset must be greater than 0 if Y tray count is greater than 1 or feed failure will occur.");
         }
     }

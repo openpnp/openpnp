@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -91,7 +92,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         this.feeder = feeder;
         
         JPanel slotPanel = new JPanel();
-        slotPanel.setBorder(new TitledBorder(null, "Slot", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        slotPanel.setBorder(new TitledBorder(null, I18n.gettext("Slot"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(slotPanel);
         slotPanel.setLayout(new BoxLayout(slotPanel, BoxLayout.Y_AXIS));
         
@@ -141,14 +142,14 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         JButton deleteFeederBtn = new JButton(deleteFeederAction);
         panel_1.add(deleteFeederBtn);
         
-        JLabel lblPickRetryCount = new JLabel("Pick Retry Count");
+        JLabel lblPickRetryCount = new JLabel(I18n.gettext("Pick Retry Count"));
         whateverPanel.add(lblPickRetryCount, "2, 10, right, default");
         
         pickRetryCount = new JTextField();
         pickRetryCount.setColumns(10);
         whateverPanel.add(pickRetryCount, "4, 10, fill, default");
         
-        JLabel lblBank = new JLabel("Bank");
+        JLabel lblBank = new JLabel(I18n.gettext("Bank"));
         whateverPanel.add(lblBank, "2, 12, right, default");
         
         bankCb = new JComboBox();
@@ -164,14 +165,14 @@ public class ReferenceSlotAutoFeederConfigurationWizard
             }
         });
         
-        JLabel lblFeeder = new JLabel("Feeder");
+        JLabel lblFeeder = new JLabel(I18n.gettext("Feeder"));
         whateverPanel.add(lblFeeder, "2, 2, right, default");
         
         feederCb = new JComboBox();
         whateverPanel.add(feederCb, "4, 2, 3, 1");
         
         JPanel feederPanel = new JPanel();
-        feederPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Feeder", TitledBorder.LEADING, TitledBorder.TOP, null));
+        feederPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), I18n.gettext("Feeder"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(feederPanel);
         FormLayout fl_feederPanel = new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -205,10 +206,10 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         JLabel lblZ_1 = new JLabel("Z");
         feederPanel.add(lblZ_1, "8, 2");
         
-        JLabel lblRotation_1 = new JLabel("Rotation");
+        JLabel lblRotation_1 = new JLabel(I18n.gettext("Rotation"));
         feederPanel.add(lblRotation_1, "10, 2");
         
-        JLabel lblOffsets = new JLabel("Offsets");
+        JLabel lblOffsets = new JLabel(I18n.gettext("Offsets"));
         feederPanel.add(lblOffsets, "2, 4");
         
         xOffsetTf = new JTextField();
@@ -230,7 +231,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         offsetLocButtons = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, rotOffsetTf);
         feederPanel.add(offsetLocButtons, "12, 4");
         
-        JLabel lblPart = new JLabel("Part");
+        JLabel lblPart = new JLabel(I18n.gettext("Part"));
         feederPanel.add(lblPart, "2, 6, right, default");
         
         feederPartCb = new JComboBox();
@@ -240,7 +241,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
 
         JPanel panelActuator = new JPanel();
         panelActuator.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Actuators"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -263,13 +264,13 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblActuator = new JLabel("Actuator");
+        JLabel lblActuator = new JLabel(I18n.gettext("Actuator"));
         panelActuator.add(lblActuator, "4, 2, left, default");
 
-        JLabel lblActuatorValue = new JLabel("Actuator Value");
+        JLabel lblActuatorValue = new JLabel(I18n.gettext("Actuator Value"));
         panelActuator.add(lblActuatorValue, "6, 2, left, default");
 
-        JLabel lblFeed = new JLabel("Feed");
+        JLabel lblFeed = new JLabel(I18n.gettext("Feed"));
         panelActuator.add(lblFeed, "2, 4, right, default");
 
         comboBoxFeedActuator = new JComboBox();
@@ -286,7 +287,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
         panelActuator.add(btnTestFeedActuator, "10, 4");
 
-        JLabel lblPostPick = new JLabel("Post Pick");
+        JLabel lblPostPick = new JLabel(I18n.gettext("Post Pick"));
         panelActuator.add(lblPostPick, "2, 6, right, default");
 
         comboBoxPostPickActuator = new JComboBox();
@@ -303,9 +304,9 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
         panelActuator.add(btnTestPostPickActuator, "10, 6");
         
-        JLabel lblMoveBeforeFeed = new JLabel("Move before feed");
+        JLabel lblMoveBeforeFeed = new JLabel(I18n.gettext("Move before feed"));
         panelActuator.add(lblMoveBeforeFeed, "2, 8, right, default");
-        lblMoveBeforeFeed.setToolTipText("Move nozzle to pick location before actuating feed actuator");
+        lblMoveBeforeFeed.setToolTipText(I18n.gettext("Move nozzle to pick location before actuating feed actuator"));
         
         ckBoxMoveBeforeFeed = new JCheckBox();
         panelActuator.add(ckBoxMoveBeforeFeed, "4, 8, left, default");
@@ -331,10 +332,10 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         JLabel lblZ = new JLabel("Z");
         whateverPanel.add(lblZ, "8, 4, center, default");
         
-        JLabel lblRotation = new JLabel("Rotation");
+        JLabel lblRotation = new JLabel(I18n.gettext("Rotation"));
         whateverPanel.add(lblRotation, "10, 4, center, default");
         
-        JLabel lblPickLocation = new JLabel("Location");
+        JLabel lblPickLocation = new JLabel(I18n.gettext("Location"));
         whateverPanel.add(lblPickLocation, "2, 6, right, default");
         
         xPickLocTf = new JTextField();
@@ -356,7 +357,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         rotPickLocTf.setColumns(10);
         whateverPanel.add(pickLocButtons, "12, 6");
         
-        JLabel lblRetryCount = new JLabel("Feed Retry Count");
+        JLabel lblRetryCount = new JLabel(I18n.gettext("Feed Retry Count"));
         whateverPanel.add(lblRetryCount, "2, 8, right, default");
         
         retryCountTf = new JTextField();
@@ -515,7 +516,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             Bank bank = (Bank) bankCb.getSelectedItem();
             if (ReferenceSlotAutoFeeder.getBanks().size() < 2) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Can't delete the only bank. There must always be one bank defined.");
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Error", I18n.gettext("Can't delete the only bank. There must always be one bank defined."));
                 return;
             }
             ReferenceSlotAutoFeeder.getBanks().remove(bank);
@@ -534,7 +535,7 @@ public class ReferenceSlotAutoFeederConfigurationWizard
                 Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
+                    throw new Exception(I18n.gettext("Feed failed. Unable to find an actuator named ") + feeder.getActuatorName());
                 }
                 // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
                 actuator.actuate((Object)feeder.getActuatorValue());

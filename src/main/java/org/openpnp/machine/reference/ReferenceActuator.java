@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
@@ -243,7 +244,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
             }
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(MainFrame.get(), "Error actuating "+getName(), e);
+            MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Error actuating ")+getName(), e);
         }
     }
 

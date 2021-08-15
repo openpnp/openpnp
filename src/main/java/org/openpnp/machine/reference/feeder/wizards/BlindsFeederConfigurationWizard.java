@@ -21,6 +21,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -129,7 +130,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         panelPart = new JPanel();
         panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("General Settings"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -164,7 +165,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
             // in WindowBuilder but doesn't happen during normal run.
         }
 
-        lblPart = new JLabel("Part");
+        lblPart = new JLabel(I18n.gettext("Part"));
         panelPart.add(lblPart, "2, 2, right, default");
 
         comboBoxPart = new JComboBox();
@@ -172,7 +173,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
         panelPart.add(comboBoxPart, "4, 2, 13, 1, left, default");
 
-        lblRotationInTape = new JLabel("Rotation In Tape");
+        lblRotationInTape = new JLabel(I18n.gettext("Rotation In Tape"));
         lblRotationInTape.setToolTipText("<html><p>The part rotation in relation to the tape orientation. </p>\r\n<ul><li>What is 0° <strong>for the rotation of the part</strong> is determined by how the part footprint<br />\r\nis drawn in your ECAD. However look up \"Zero Component Orientation\" for the <br />\r\nstandardized way to do this. </li>\r\n<li>What is 0° <strong>for the rotation of the tape</strong> is defined in accordance to the <br />\r\nEIA-481-C \"Quadrant designations\".</li>\r\n<li>Consequently a <strong>Rotation In Tape</strong> of 0° means that the part is oriented upwards as <br />\r\ndrawn in the ECAD, when holding the tape horizontal with the sprocket holes <br/>\r\nat the top. If the tape has sprocket holes on both sides, look at the round, not <br/>\r\nthe elongated holes.</li>\r\n<li>Also consult \"EIA-481-C\" to see how parts should be oriented in the tape.</li></html>\r\n");
         panelPart.add(lblRotationInTape, "2, 4, right, default");
 
@@ -180,8 +181,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
         textFieldLocationRotation.setColumns(4);
 
-        lblPartTopZ = new JLabel("Part Z");
-        lblPartTopZ.setToolTipText("Part pickup Z");
+        lblPartTopZ = new JLabel(I18n.gettext("Part Z"));
+        lblPartTopZ.setToolTipText(I18n.gettext("Part pickup Z"));
         panelPart.add(lblPartTopZ, "8, 4, right, default");
 
         textFieldPartZ = new JTextField();
@@ -195,7 +196,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         btnExtractOpenscadModel = new JButton(extract3DPrintingAction);
         panelPart.add(btnExtractOpenscadModel, "16, 4");
 
-        lblRetryCount = new JLabel("Retry Count");
+        lblRetryCount = new JLabel(I18n.gettext("Retry Count"));
         panelPart.add(lblRetryCount, "2, 6, right, default");
 
         retryCountTf = new JTextField();
@@ -237,8 +238,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblTapeLength = new JLabel("Tape Length");
-        lblTapeLength.setToolTipText("Length of the tape.");
+        lblTapeLength = new JLabel(I18n.gettext("Tape Length"));
+        lblTapeLength.setToolTipText(I18n.gettext("Length of the tape."));
         panelTapeSettings.add(lblTapeLength, "2, 2, right, default");
 
         textFieldTapeLength = new JTextField();
@@ -246,8 +247,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         textFieldTapeLength.setColumns(10);
         panelTapeSettings.add(textFieldTapeLength, "4, 2");
 
-        lblFeederExtent = new JLabel("Feeder Extent");
-        lblFeederExtent.setToolTipText("Total feeder holder extent (all tapes).");
+        lblFeederExtent = new JLabel(I18n.gettext("Feeder Extent"));
+        lblFeederExtent.setToolTipText(I18n.gettext("Total feeder holder extent (all tapes)."));
         panelTapeSettings.add(lblFeederExtent, "8, 2, right, default");
 
         textFieldFeederExtent = new JTextField();
@@ -260,26 +261,26 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings.add(btnShowInfo, "14, 2");
 
         btnAutoSetup = new JButton(autoSetup);
-        btnAutoSetup.setToolTipText("Capture the pocket pitch, size and centerline from the current camera position.");
+        btnAutoSetup.setToolTipText(I18n.gettext("Capture the pocket pitch, size and centerline from the current camera position."));
         panelTapeSettings.add(btnAutoSetup, "14, 4, 1, 3");
 
-        lblPocketPitch = new JLabel("Pocket Pitch");
-        lblPocketPitch.setToolTipText("Picth of the part pockets in the tape.");
+        lblPocketPitch = new JLabel(I18n.gettext("Pocket Pitch"));
+        lblPocketPitch.setToolTipText(I18n.gettext("Picth of the part pockets in the tape."));
         panelTapeSettings.add(lblPocketPitch, "2, 4, right, default");
 
         textFieldPocketPitch = new JTextField();
         panelTapeSettings.add(textFieldPocketPitch, "4, 4");
         textFieldPocketPitch.setColumns(5);
 
-        lblPartSize = new JLabel("Pocket Size");
-        lblPartSize.setToolTipText("Size of the pocket across the tape.");
+        lblPartSize = new JLabel(I18n.gettext("Pocket Size"));
+        lblPartSize.setToolTipText(I18n.gettext("Size of the pocket across the tape."));
         panelTapeSettings.add(lblPartSize, "8, 4, right, default");
 
         textFieldPocketSize = new JTextField();
         textFieldPocketSize.setColumns(5);
         panelTapeSettings.add(textFieldPocketSize, "10, 4");
 
-        lblPocketCount = new JLabel("Pocket Count");
+        lblPocketCount = new JLabel(I18n.gettext("Pocket Count"));
         panelTapeSettings.add(lblPocketCount, "2, 6, right, default");
 
         textFieldPocketCount = new JTextField();
@@ -287,49 +288,49 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings.add(textFieldPocketCount, "4, 6");
         textFieldPocketCount.setColumns(10);
 
-        lblPocketCenterline = new JLabel("Pocket Centerline");
-        lblPocketCenterline.setToolTipText("Centerline of the pockets i.e. the perpendicular distance between the tape pocket centerline and fiducial 1.");
+        lblPocketCenterline = new JLabel(I18n.gettext("Pocket Centerline"));
+        lblPocketCenterline.setToolTipText(I18n.gettext("Centerline of the pockets i.e. the perpendicular distance between the tape pocket centerline and fiducial 1."));
         panelTapeSettings.add(lblPocketCenterline, "8, 6, right, default");
 
         textFieldPocketCenterline = new JTextField();
         panelTapeSettings.add(textFieldPocketCenterline, "10, 6");
         textFieldPocketCenterline.setColumns(5);
 
-        lblFirstPocket = new JLabel("First Pocket");
-        lblFirstPocket.setToolTipText("First pocket of the tape that contains a part. Use the Show Features Button to indicate pocket numbers.");
+        lblFirstPocket = new JLabel(I18n.gettext("First Pocket"));
+        lblFirstPocket.setToolTipText(I18n.gettext("First pocket of the tape that contains a part. Use the Show Features Button to indicate pocket numbers."));
         panelTapeSettings.add(lblFirstPocket, "2, 8, right, default");
 
         textFieldFirstPocket = new JTextField();
         panelTapeSettings.add(textFieldFirstPocket, "4, 8, fill, default");
         textFieldFirstPocket.setColumns(10);
 
-        lblFeederNo = new JLabel("Feeder No.");
+        lblFeederNo = new JLabel(I18n.gettext("Feeder No."));
         panelTapeSettings.add(lblFeederNo, "8, 8, right, default");
-        lblFeederNo.setToolTipText("Feeder lane number inside the same holder.");
+        lblFeederNo.setToolTipText(I18n.gettext("Feeder lane number inside the same holder."));
 
         textFieldFeederNo = new JTextField();
         panelTapeSettings.add(textFieldFeederNo, "10, 8");
         textFieldFeederNo.setEditable(false);
         textFieldFeederNo.setColumns(10);
 
-        lblLastPocket = new JLabel("Last Pocket");
-        lblLastPocket.setToolTipText("Last pocket of the tape that contains a part. Use the Show Features Button to indicate pocket numbers.");
+        lblLastPocket = new JLabel(I18n.gettext("Last Pocket"));
+        lblLastPocket.setToolTipText(I18n.gettext("Last pocket of the tape that contains a part. Use the Show Features Button to indicate pocket numbers."));
         panelTapeSettings.add(lblLastPocket, "2, 10, right, default");
 
         textFieldLastPocket = new JTextField();
         panelTapeSettings.add(textFieldLastPocket, "4, 10");
         textFieldLastPocket.setColumns(5);
 
-        lblFeedersTotal = new JLabel("Feeders Total");
+        lblFeedersTotal = new JLabel(I18n.gettext("Feeders Total"));
         panelTapeSettings.add(lblFeedersTotal, "8, 10, right, default");
-        lblFeedersTotal.setToolTipText("Total number of feeder lanes in the same holder. ");
+        lblFeedersTotal.setToolTipText(I18n.gettext("Total number of feeder lanes in the same holder. "));
 
         textFieldFeedersTotal = new JTextField();
         panelTapeSettings.add(textFieldFeedersTotal, "10, 10");
         textFieldFeedersTotal.setEditable(false);
         textFieldFeedersTotal.setColumns(5);
 
-        lblFeedCount = new JLabel("Feed Count");
+        lblFeedCount = new JLabel(I18n.gettext("Feed Count"));
         panelTapeSettings.add(lblFeedCount, "2, 12, right, default");
 
         textFieldFeedCount = new JTextField();
@@ -348,7 +349,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings.add(btnResetFeedCount, "14, 12");
 
         panelCover = new JPanel();
-        panelCover.setBorder(new TitledBorder(null, "Cover Settings", TitledBorder.LEADING,
+        panelCover.setBorder(new TitledBorder(null, I18n.gettext("Cover Settings"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelCover);
         panelCover.setLayout(new FormLayout(new ColumnSpec[] {
@@ -380,13 +381,13 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblCoverType = new JLabel("Cover Type");
+        lblCoverType = new JLabel(I18n.gettext("Cover Type"));
         panelCover.add(lblCoverType, "2, 2, right, default");
 
         comboBoxCoverType = new JComboBox(BlindsFeeder.CoverType.values());
         panelCover.add(comboBoxCoverType, "4, 2, fill, default");
 
-        lblCoverOpenClose = new JLabel("Cover Open/Close");
+        lblCoverOpenClose = new JLabel(I18n.gettext("Cover Open/Close"));
         panelCover.add(lblCoverOpenClose, "8, 2, right, default");
 
         comboBoxCoverActuation = new JComboBox(BlindsFeeder.CoverActuation.values());
@@ -395,15 +396,15 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         btnOpenCover = new JButton(openCover);
         panelCover.add(btnOpenCover, "14, 2");
 
-        lblPushSpeed = new JLabel("Push speed");
-        lblPushSpeed.setToolTipText("Speed factor when pushing the cover.");
+        lblPushSpeed = new JLabel(I18n.gettext("Push speed"));
+        lblPushSpeed.setToolTipText(I18n.gettext("Speed factor when pushing the cover."));
         panelCover.add(lblPushSpeed, "2, 4, right, default");
 
         textFieldPushSpeed = new JTextField();
         panelCover.add(textFieldPushSpeed, "4, 4");
         textFieldPushSpeed.setColumns(10);
 
-        lblPushZOffset = new JLabel("Push Z Offset");
+        lblPushZOffset = new JLabel(I18n.gettext("Push Z Offset"));
         panelCover.add(lblPushZOffset, "8, 4, right, default");
 
         textFieldPushZOffset = new JTextField();
@@ -417,19 +418,19 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelCover.add(btnOpenAll, "14, 6");
 
         btnCloseAll = new JButton(closeAllCovers);
-        btnCloseAll.setToolTipText("Close the opened covers of all the feeders of the machine (including those of enabled feeders where the cover state is unknown).");
+        btnCloseAll.setToolTipText(I18n.gettext("Close the opened covers of all the feeders of the machine (including those of enabled feeders where the cover state is unknown)."));
         panelCover.add(btnCloseAll, "14, 8");
 
-        lblEdgeBeginDistance = new JLabel("Edge Distance Open");
-        lblEdgeBeginDistance.setToolTipText("Distance from first sprocket to the edge used for opening the cover (fiducial 1 side).");
+        lblEdgeBeginDistance = new JLabel(I18n.gettext("Edge Distance Open"));
+        lblEdgeBeginDistance.setToolTipText(I18n.gettext("Distance from first sprocket to the edge used for opening the cover (fiducial 1 side)."));
         panelCover.add(lblEdgeBeginDistance, "2, 10, right, default");
 
         textFieldEdgeOpeningDistance = new JTextField();
         panelCover.add(textFieldEdgeOpeningDistance, "4, 10");
         textFieldEdgeOpeningDistance.setColumns(10);
 
-        lblEdgeEnd = new JLabel("Edge Distance Closed");
-        lblEdgeEnd.setToolTipText("Distance from last sprocket to the edge used for closing the cover (fiducial 2 side).");
+        lblEdgeEnd = new JLabel(I18n.gettext("Edge Distance Closed"));
+        lblEdgeEnd.setToolTipText(I18n.gettext("Distance from last sprocket to the edge used for closing the cover (fiducial 2 side)."));
         panelCover.add(lblEdgeEnd, "8, 10, right, default");
 
         textFieldEdgeClosingDistance = new JTextField();
@@ -441,7 +442,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
-        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, I18n.gettext("Locations"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -476,7 +477,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         JLabel lblY = new JLabel("Y");
         panelLocations.add(lblY, "8, 2");
 
-        JLabel lblFiducial1Location = new JLabel("Fiducial 1");
+        JLabel lblFiducial1Location = new JLabel(I18n.gettext("Fiducial 1"));
         lblFiducial1Location.setToolTipText(
                 "The location of the first diamond shaped fiducial (marked by a square besides it).");
         panelLocations.add(lblFiducial1Location, "2, 4, right, default");
@@ -494,7 +495,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 textFieldFiducial1Y, null, null);
         panelLocations.add(locationButtonsPanelFiducial1, "12, 4");
 
-        JLabel lblFiducial2Location = new JLabel("Fiducial 2");
+        JLabel lblFiducial2Location = new JLabel(I18n.gettext("Fiducial 2"));
         lblFiducial2Location.setToolTipText(
                 "The location of the second diamond shaped fiducial counter-clockwise from the first.");
         panelLocations.add(lblFiducial2Location, "2, 6, right, default");
@@ -512,8 +513,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 textFieldFiducial2Y, null, null);
         panelLocations.add(locationButtonsPanelFiducial2, "12, 6");
 
-        lblFiducial3Location = new JLabel("Fiducial 3");
-        lblFiducial3Location.setToolTipText("The location of the third diamond shaped fiducial counter-clockwise from the first.");
+        lblFiducial3Location = new JLabel(I18n.gettext("Fiducial 3"));
+        lblFiducial3Location.setToolTipText(I18n.gettext("The location of the third diamond shaped fiducial counter-clockwise from the first."));
         panelLocations.add(lblFiducial3Location, "2, 8, right, default");
 
         textFieldFiducial3X = new JTextField();
@@ -528,8 +529,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                 textFieldFiducial3Y, null, null);
         panelLocations.add(locationButtonsPanelFiducial3, "12, 8");
 
-        lblNormalize = new JLabel("Normalize");
-        lblNormalize.setToolTipText("<html>\r\nNormalize the fiducial distances and shear to the theoretically correct <br />\r\nvalues (whole millimeter square grid). This means you trust the mechanics  <br />\r\nof your machine and of your 3D printer over the computer vision fiducial fixes.  <br />\r\nOverall absolute position and angle are still determined by vision. \r\n</html>");
+        lblNormalize = new JLabel(I18n.gettext("Normalize"));
+        lblNormalize.setToolTipText(I18n.gettext("<html>\r\nNormalize the fiducial distances and shear to the theoretically correct <br />\r\nvalues (whole millimeter square grid). This means you trust the mechanics  <br />\r\nof your machine and of your 3D printer over the computer vision fiducial fixes.  <br />\r\nOverall absolute position and angle are still determined by vision. \r\n</html>"));
         panelLocations.add(lblNormalize, "2, 10, right, default");
 
         chckbxNormalize = new JCheckBox("");
@@ -540,7 +541,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelLocations.add(btnCalibrateFiducials, "12, 10");
 
         JPanel panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision Settings", TitledBorder.LEADING, TitledBorder.TOP,
+        panelVision.setBorder(new TitledBorder(null, I18n.gettext("Vision Settings"), TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panelVision);
         panelVision.setLayout(new FormLayout(new ColumnSpec[] {
@@ -556,8 +557,8 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblUseVision = new JLabel("Use Fiducial Vision?");
-        lblUseVision.setToolTipText("<html><p>Use vision for fiducial calibration when the feeder is first used. </p>\r\n<p>Even if fiducial vision is disabled, vision will still be used for setup and <br />\r\ncover open checking</p><html>");
+        lblUseVision = new JLabel(I18n.gettext("Use Fiducial Vision?"));
+        lblUseVision.setToolTipText(I18n.gettext("<html><p>Use vision for fiducial calibration when the feeder is first used. </p>\r\n<p>Even if fiducial vision is disabled, vision will still be used for setup and <br />\r\ncover open checking</p><html>"));
         panelVision.add(lblUseVision, "2, 2");
 
         JButton btnEditPipeline = new JButton(editPipelineAction);
@@ -659,7 +660,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
             new AbstractAction("Extract 3D-Printing Files", Icons.openSCadIcon) {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Extract OpenSCAD files to generate models for 3D-printing the BlindsFeeders.");
+                    I18n.gettext("Extract OpenSCAD files to generate models for 3D-printing the BlindsFeeders."));
         }
 
         @Override
@@ -677,7 +678,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
                                 .getResource(fileName));
                         File file = new File(directory,  fileName);
                         if (file.exists()) {
-                            throw new Exception("File "+file.getAbsolutePath()+" already esists.");
+                            throw new Exception("File "+file.getAbsolutePath()+I18n.gettext(" already esists."));
                         }
                         try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
                             out.print(fileContent);
@@ -761,14 +762,14 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
             new AbstractAction("Set Pipeline To All") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Set this pipeline to all the BlindsFeeders on the machine.");
+                    I18n.gettext("Set this pipeline to all the BlindsFeeders on the machine."));
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will replace the pipeline of all the other BlindsFeeders on the machine with the pipeline of this BlindsFeeder. Are you sure?",
+                        I18n.gettext("This will replace the pipeline of all the other BlindsFeeders on the machine with the pipeline of this BlindsFeeder. Are you sure?"),
                         null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     UiUtils.messageBoxOnException(() -> {

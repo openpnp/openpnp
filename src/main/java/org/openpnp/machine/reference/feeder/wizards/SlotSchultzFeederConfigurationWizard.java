@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -126,7 +127,7 @@ extends AbstractConfigurationWizard {
         this.feeder = feeder;
 
         JPanel slotPanel = new JPanel();
-        slotPanel.setBorder(new TitledBorder(null, "Slot", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        slotPanel.setBorder(new TitledBorder(null, I18n.gettext("Slot"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(slotPanel);
         slotPanel.setLayout(new BoxLayout(slotPanel, BoxLayout.Y_AXIS));
 
@@ -175,24 +176,24 @@ extends AbstractConfigurationWizard {
         whateverPanel.add(panel_1, "12, 2");
 
         JButton loadFeederBtn = new JButton(loadFeederAction);
-        loadFeederBtn.setToolTipText("Load installed feeder to slot.");
+        loadFeederBtn.setToolTipText(I18n.gettext("Load installed feeder to slot."));
         panel_1.add(loadFeederBtn);
 
         //        JButton newFeederBtn = new JButton(newFeederAction);
         //        panel_1.add(newFeederBtn);
 
         JButton deleteFeederBtn = new JButton(deleteFeederAction);
-        deleteFeederBtn.setToolTipText("Remove selected feeder from database.");
+        deleteFeederBtn.setToolTipText(I18n.gettext("Remove selected feeder from database."));
         panel_1.add(deleteFeederBtn);
 
-        JLabel lblPickRetryCount = new JLabel("Pick Retry Count");
+        JLabel lblPickRetryCount = new JLabel(I18n.gettext("Pick Retry Count"));
         whateverPanel.add(lblPickRetryCount, "2, 12, right, default");
 
         pickRetryCount = new JTextField();
         pickRetryCount.setColumns(10);
         whateverPanel.add(pickRetryCount, "4, 12, fill, default");
 
-        JLabel lblBank = new JLabel("Bank");
+        JLabel lblBank = new JLabel(I18n.gettext("Bank"));
         whateverPanel.add(lblBank, "2, 14, right, default");
 
         bankCb = new JComboBox();
@@ -208,14 +209,14 @@ extends AbstractConfigurationWizard {
             }
         });
 
-        JLabel lblFeeder = new JLabel("Feeder");
+        JLabel lblFeeder = new JLabel(I18n.gettext("Feeder"));
         whateverPanel.add(lblFeeder, "2, 2, right, default");
 
         feederCb = new JComboBox();
         whateverPanel.add(feederCb, "4, 2, 3, 1");
 
         JPanel feederPanel = new JPanel();
-        feederPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Feeder", TitledBorder.LEADING, TitledBorder.TOP, null));
+        feederPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), I18n.gettext("Feeder"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(feederPanel);
         FormLayout fl_feederPanel = new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -249,10 +250,10 @@ extends AbstractConfigurationWizard {
         JLabel lblZ_1 = new JLabel("Z");
         feederPanel.add(lblZ_1, "8, 2");
 
-        JLabel lblRotation_1 = new JLabel("Rotation");
+        JLabel lblRotation_1 = new JLabel(I18n.gettext("Rotation"));
         feederPanel.add(lblRotation_1, "10, 2");
 
-        JLabel lblOffsets = new JLabel("Offsets");
+        JLabel lblOffsets = new JLabel(I18n.gettext("Offsets"));
         feederPanel.add(lblOffsets, "2, 4");
 
         xOffsetTf = new JTextField();
@@ -275,7 +276,7 @@ extends AbstractConfigurationWizard {
         offsetLocButtons = new LocationButtonsPanel(xOffsetTf, yOffsetTf, zOffsetTf, null);
         feederPanel.add(offsetLocButtons, "12, 4");
 
-        JLabel lblPart = new JLabel("Part");
+        JLabel lblPart = new JLabel(I18n.gettext("Part"));
         feederPanel.add(lblPart, "2, 6, right, default");
 
         feederPartCb = new JComboBox();
@@ -285,7 +286,7 @@ extends AbstractConfigurationWizard {
 
         JPanel panelActuator = new JPanel();
         panelActuator.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Actuators"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -320,17 +321,17 @@ extends AbstractConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblActuatorValue = new JLabel("Feeder Number:");
+        JLabel lblActuatorValue = new JLabel(I18n.gettext("Feeder Number:"));
         panelActuator.add(lblActuatorValue, "4, 2, right, default");
 
         actuatorValue = new JTextField();
         panelActuator.add(actuatorValue, "6, 2");
         actuatorValue.setColumns(6);
 
-        JLabel lblActuator = new JLabel("Actuator");
+        JLabel lblActuator = new JLabel(I18n.gettext("Actuator"));
         panelActuator.add(lblActuator, "4, 4, left, default");
 
-        JLabel lblGetID = new JLabel("Get ID");
+        JLabel lblGetID = new JLabel(I18n.gettext("Get ID"));
         panelActuator.add(lblGetID, "2, 6, right, default");
 
         comboBoxIdActuator = new JComboBox();
@@ -344,7 +345,7 @@ extends AbstractConfigurationWizard {
         idText.setColumns(10);
         panelActuator.add(idText, "8, 6");
 
-        JLabel lblFeed = new JLabel("Pre Pick");
+        JLabel lblFeed = new JLabel(I18n.gettext("Pre Pick"));
         panelActuator.add(lblFeed, "2, 8, right, default");
 
         comboBoxFeedActuator = new JComboBox();
@@ -354,7 +355,7 @@ extends AbstractConfigurationWizard {
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
         panelActuator.add(btnTestFeedActuator, "6, 8");
 
-        JLabel lblPostPick = new JLabel("Post Pick");
+        JLabel lblPostPick = new JLabel(I18n.gettext("Post Pick"));
         panelActuator.add(lblPostPick, "2, 10, right, default");
 
         comboBoxPostPickActuator = new JComboBox();
@@ -364,7 +365,7 @@ extends AbstractConfigurationWizard {
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
         panelActuator.add(btnTestPostPickActuator, "6, 10");
 
-        JLabel lblFeedCount = new JLabel("Get Feed Count");
+        JLabel lblFeedCount = new JLabel(I18n.gettext("Get Feed Count"));
         panelActuator.add(lblFeedCount, "2, 12, right, default");
 
         comboBoxFeedCountActuator = new JComboBox();
@@ -378,7 +379,7 @@ extends AbstractConfigurationWizard {
         feedCountValue.setColumns(8);
         panelActuator.add(feedCountValue, "8, 12");
 
-        JLabel lblClearCount = new JLabel("Clear Feed Count");
+        JLabel lblClearCount = new JLabel(I18n.gettext("Clear Feed Count"));
         panelActuator.add(lblClearCount, "2, 14, right, default");
 
         comboBoxClearCountActuator = new JComboBox();
@@ -388,7 +389,7 @@ extends AbstractConfigurationWizard {
         btnClearCountActuator = new JButton(clearCountActuatorAction);
         panelActuator.add(btnClearCountActuator, "6, 14");
 
-        JLabel lblGetPitch = new JLabel("Get Pitch");
+        JLabel lblGetPitch = new JLabel(I18n.gettext("Get Pitch"));
         panelActuator.add(lblGetPitch, "2, 16, right, default");
 
         comboBoxPitchActuator = new JComboBox();
@@ -402,7 +403,7 @@ extends AbstractConfigurationWizard {
         pitchValue.setColumns(8);
         panelActuator.add(pitchValue, "8, 16");
 
-        JLabel lblTogglePitch = new JLabel("Toggle Pitch");
+        JLabel lblTogglePitch = new JLabel(I18n.gettext("Toggle Pitch"));
         panelActuator.add(lblTogglePitch, "2, 18, right, default");
 
         comboBoxTogglePitchActuator = new JComboBox();
@@ -412,10 +413,10 @@ extends AbstractConfigurationWizard {
         btnTogglePitchActuator = new JButton(togglePitchActuatorAction);
         panelActuator.add(btnTogglePitchActuator, "6, 18");
 
-        JLabel lblTogglePitchDesc = new JLabel("Toggle between 2 MM and 4 MM");
+        JLabel lblTogglePitchDesc = new JLabel(I18n.gettext("Toggle between 2 MM and 4 MM"));
         panelActuator.add(lblTogglePitchDesc, "8, 18, left, default");
 
-        JLabel lblGetStatus = new JLabel("Get Status");
+        JLabel lblGetStatus = new JLabel(I18n.gettext("Get Status"));
         panelActuator.add(lblGetStatus, "2, 20, right, default");
 
         comboBoxStatusActuator = new JComboBox();
@@ -450,10 +451,10 @@ extends AbstractConfigurationWizard {
         JLabel lblZ = new JLabel("Z");
         whateverPanel.add(lblZ, "8, 4, center, default");
 
-        JLabel lblRotation = new JLabel("Rotation");
+        JLabel lblRotation = new JLabel(I18n.gettext("Rotation"));
         whateverPanel.add(lblRotation, "10, 4, center, default");
 
-        JLabel lblPickLocation = new JLabel("Location");
+        JLabel lblPickLocation = new JLabel(I18n.gettext("Location"));
         whateverPanel.add(lblPickLocation, "2, 6, right, default");
 
         xPickLocTf = new JTextField();
@@ -478,9 +479,9 @@ extends AbstractConfigurationWizard {
         JButton fiducialAlign = new JButton(updateLocationAction);
         whateverPanel.add(fiducialAlign, "14, 6");
         fiducialAlign.setIcon(Icons.fiducialCheck);
-        fiducialAlign.setToolTipText("Update feeder location based on fiducial");
+        fiducialAlign.setToolTipText(I18n.gettext("Update feeder location based on fiducial"));
 
-        JLabel lblFiducialPart = new JLabel("Fiducial Part");
+        JLabel lblFiducialPart = new JLabel(I18n.gettext("Fiducial Part"));
         whateverPanel.add(lblFiducialPart, "2, 8, right, default");
 
         fiducialPartTf = new JTextField();
@@ -489,7 +490,7 @@ extends AbstractConfigurationWizard {
             feeder.setFiducialPart(fiducialPartTf.getText());
         });
 
-        JLabel lblFeedRetryCount = new JLabel("Feed Retry Count");
+        JLabel lblFeedRetryCount = new JLabel(I18n.gettext("Feed Retry Count"));
         whateverPanel.add(lblFeedRetryCount, "2, 10, right, default");
 
         feedRetryCount = new JTextField();
@@ -688,7 +689,7 @@ extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent e) {
             Bank bank = (Bank) bankCb.getSelectedItem();
             if (SlotSchultzFeeder.getBanks().size() < 2) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Can't delete the only bank. There must always be one bank defined.");
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Error", I18n.gettext("Can't delete the only bank. There must always be one bank defined."));
                 return;
             }
             SlotSchultzFeeder.getBanks().remove(bank);
@@ -701,7 +702,7 @@ extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getIdActuatorName() == null || feeder.getIdActuatorName().equals("")) {
                     Logger.warn("No getIdActuatorName specified for feeder {}.", feeder.getName());
@@ -725,7 +726,7 @@ extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
                     Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
@@ -734,7 +735,7 @@ extends AbstractConfigurationWizard {
                 Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
+                    throw new Exception(I18n.gettext("Feed failed. Unable to find an actuator named ") + feeder.getActuatorName());
                 }
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
@@ -747,7 +748,7 @@ extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
                     Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
@@ -771,7 +772,7 @@ extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getFeedCountActuatorName() == null || feeder.getFeedCountActuatorName().equals("")) {
                     Logger.warn("No feedCountActuatorName specified for feeder {}.", feeder.getName());
@@ -795,7 +796,7 @@ extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getClearCountActuatorName() == null || feeder.getClearCountActuatorName().equals("")) {
                     Logger.warn("No clearCountActuatorName specified for feeder {}.", feeder.getName());
@@ -820,7 +821,7 @@ extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getPitchActuatorName() == null || feeder.getPitchActuatorName().equals("")) {
                     Logger.warn("No feedCountActuatorName specified for feeder {}.", feeder.getName());
@@ -844,7 +845,7 @@ extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getTogglePitchActuatorName() == null || feeder.getTogglePitchActuatorName().equals("")) {
                     Logger.warn("No togglePitchActuatorName specified for feeder {}.", feeder.getName());
@@ -869,7 +870,7 @@ extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getStatusActuatorName() == null || feeder.getStatusActuatorName().equals("")) {
                     Logger.warn("No statusActuatorName specified for feeder {}.", feeder.getName());
@@ -900,7 +901,7 @@ extends AbstractConfigurationWizard {
                     }
                     Location newLocation = feeder.getFiducialLocation(feeder.getLocation(), feeder.getFiducialPart());
                     if (newLocation == null) {
-                        throw new Exception("Unable to locate fiducial");
+                        throw new Exception(I18n.gettext("Unable to locate fiducial"));
                     } else {
                         xPickLocTf.setText(newLocation.getLengthX().toString());
                         yPickLocTf.setText(newLocation.getLengthY().toString());

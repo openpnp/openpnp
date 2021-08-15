@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -143,7 +144,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         panelPart = new JPanel();
         panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("General Settings"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -168,7 +169,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             // in WindowBuilder but doesn't happen during normal run.
         }
 
-        lblPart = new JLabel("Part");
+        lblPart = new JLabel(I18n.gettext("Part"));
         panelPart.add(lblPart, "2, 2, right, default");
 
         comboBoxPart = new JComboBox();
@@ -185,14 +186,14 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         lblPartInfo = new JLabel("");
         panelPart.add(lblPartInfo,"6, 2, left, default");
         
-        lblRotationInTape = new JLabel("Rotation In Tape");
+        lblRotationInTape = new JLabel(I18n.gettext("Rotation In Tape"));
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
         textFieldLocationRotation = new JTextField();
         panelPart.add(textFieldLocationRotation, "4, 4, fill, default");
         textFieldLocationRotation.setColumns(4);
 
-        lblRetryCount = new JLabel("Feed Retry Count");
+        lblRetryCount = new JLabel(I18n.gettext("Feed Retry Count"));
         panelPart.add(lblRetryCount, "2, 6, right, default");
 
         retryCountTf = new JTextField();
@@ -200,7 +201,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelPart.add(retryCountTf, "4, 6, fill, default");
         retryCountTf.setColumns(3);
         
-        lblPickRetryCount = new JLabel("Pick Retry Count");
+        lblPickRetryCount = new JLabel(I18n.gettext("Pick Retry Count"));
         panelPart.add(lblPickRetryCount, "2, 8, right, default");
         
         pickRetryCount = new JTextField();
@@ -211,7 +212,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
         panelTapeSettings.setBorder(new TitledBorder(
-                new EtchedBorder(EtchedBorder.LOWERED, null, null), "Tape Settings",
+                new EtchedBorder(EtchedBorder.LOWERED, null, null), I18n.gettext("Tape Settings"),
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         panelTapeSettings.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -229,34 +230,34 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         btnAutoSetup = new JButton(autoSetup);
         panelTapeSettings.add(btnAutoSetup, "2, 2, 11, 1");
 
-        lblTapeType = new JLabel("Tape Type");
+        lblTapeType = new JLabel(I18n.gettext("Tape Type"));
         panelTapeSettings.add(lblTapeType, "2, 4, right, default");
 
         comboBoxTapeType = new JComboBox(TapeType.values());
         panelTapeSettings.add(comboBoxTapeType, "4, 4, fill, default");
 
-        JLabel lblTapeWidth = new JLabel("Tape Width");
+        JLabel lblTapeWidth = new JLabel(I18n.gettext("Tape Width"));
         panelTapeSettings.add(lblTapeWidth, "8, 4, right, default");
 
         textFieldTapeWidth = new JTextField();
         panelTapeSettings.add(textFieldTapeWidth, "10, 4");
         textFieldTapeWidth.setColumns(5);
 
-        lblPartPitch = new JLabel("Part Pitch");
+        lblPartPitch = new JLabel(I18n.gettext("Part Pitch"));
         panelTapeSettings.add(lblPartPitch, "2, 6, right, default");
 
         textFieldPartPitch = new JTextField();
         panelTapeSettings.add(textFieldPartPitch, "4, 6");
         textFieldPartPitch.setColumns(5);
 
-        lblFeedCount = new JLabel("Feed Count");
+        lblFeedCount = new JLabel(I18n.gettext("Feed Count"));
         panelTapeSettings.add(lblFeedCount, "8, 6, right, default");
 
         textFieldFeedCount = new JTextField();
         panelTapeSettings.add(textFieldFeedCount, "10, 6");
         textFieldFeedCount.setColumns(10);
 
-        btnResetFeedCount = new JButton(new AbstractAction("Reset") {
+        btnResetFeedCount = new JButton(new AbstractAction(I18n.gettext("Reset")) {
             @Override
             public void actionPerformed(ActionEvent e) {
                 textFieldFeedCount.setText("0");
@@ -265,13 +266,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         });
         panelTapeSettings.add(btnResetFeedCount, "12, 6");
 
-        lblMaxFeedCount = new JLabel("Max Feed Count");
+        lblMaxFeedCount = new JLabel(I18n.gettext("Max Feed Count"));
         panelTapeSettings.add(lblMaxFeedCount,"8, 8, right, default");
         textFieldMaxFeedCount = new JTextField();
         panelTapeSettings.add(textFieldMaxFeedCount,"10,8");
         textFieldMaxFeedCount.setColumns(10);
-        textFieldMaxFeedCount.setToolTipText("Max number of parts to feed from this strip.  If set to zero, this setting is ignored.");
-        btnMaxFeedCount = new JButton(new AbstractAction("Auto Set MaxFeedCount") {
+        textFieldMaxFeedCount.setToolTipText(I18n.gettext("Max number of parts to feed from this strip.  If set to zero, this setting is ignored."));
+        btnMaxFeedCount = new JButton(new AbstractAction(I18n.gettext("Auto Set MaxFeedCount")) {
         	@Override
         	public void actionPerformed(ActionEvent e) {
         		Location h0 = feeder.getReferenceHoleLocation();
@@ -282,11 +283,11 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         		textFieldMaxFeedCount.setText(Integer.toString(ipart_count));
         	}
         });
-        btnMaxFeedCount.setToolTipText("Calculate the Max Feed Count using the feeder's hole locations and part pitch");
+        btnMaxFeedCount.setToolTipText(I18n.gettext("Calculate the Max Feed Count using the feeder's hole locations and part pitch"));
         panelTapeSettings.add(btnMaxFeedCount,"12,8");
         
         JPanel panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP,
+        panelVision.setBorder(new TitledBorder(null, I18n.gettext("Vision"), TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panelVision);
         panelVision.setLayout(new FormLayout(
@@ -295,13 +296,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblUseVision = new JLabel("Use Vision?");
+        lblUseVision = new JLabel(I18n.gettext("Use Vision?"));
         panelVision.add(lblUseVision, "2, 2");
 
         chckbxUseVision = new JCheckBox("");
         panelVision.add(chckbxUseVision, "4, 2");
 
-        JButton btnEditPipeline = new JButton("Edit Pipeline");
+        JButton btnEditPipeline = new JButton(I18n.gettext("Edit Pipeline"));
         btnEditPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
@@ -311,7 +312,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         });
         panelVision.add(btnEditPipeline, "2, 4");
 
-        JButton btnResetPipeline = new JButton("Reset Pipeline");
+        JButton btnResetPipeline = new JButton(I18n.gettext("Reset Pipeline"));
         btnResetPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 resetPipeline();
@@ -321,7 +322,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
 
         panelLocations = new JPanel();
         contentPanel.add(panelLocations);
-        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, I18n.gettext("Locations"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelLocations.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -342,7 +343,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         JLabel lblZ_1 = new JLabel("Z");
         panelLocations.add(lblZ_1, "8, 2");
 
-        JLabel lblFeedStartLocation = new JLabel("Reference Hole Location");
+        JLabel lblFeedStartLocation = new JLabel(I18n.gettext("Reference Hole Location"));
         lblFeedStartLocation.setToolTipText(
                 "The location of the first tape hole past the first part in the direction of more parts.");
         panelLocations.add(lblFeedStartLocation, "2, 4, right, default");
@@ -363,7 +364,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 textFieldFeedStartY, textFieldFeedStartZ, null);
         panelLocations.add(locationButtonsPanelFeedStart, "10, 4");
 
-        JLabel lblFeedEndLocation = new JLabel("Next Hole Location");
+        JLabel lblFeedEndLocation = new JLabel(I18n.gettext("Next Hole Location"));
         lblFeedEndLocation.setToolTipText(
                 "The location of another hole after the reference hole. This can be any hole along the tape as long as it's past the reference hole.");
         panelLocations.add(lblFeedEndLocation, "2, 6, right, default");
@@ -464,7 +465,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         }
     }
     
-    private Action autoSetup = new AbstractAction("Auto Setup") {
+    private Action autoSetup = new AbstractAction(I18n.gettext("Auto Setup")) {
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
@@ -474,7 +475,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                                .getDefaultCamera();
             }
             catch (Exception ex) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Auto Setup Failure", ex);
+                MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Auto Setup Failure"), ex);
                 return;
             }
 
@@ -503,7 +504,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                     catch (Exception e) {
                         if (!hasShownError) {
                             hasShownError = true;
-                            MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                            MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Error"), e);
                         }
                         else {
                             Logger.debug("{}: {}", "Error", e);
@@ -547,7 +548,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                  MovableUtils.fireTargetedUserAction(autoSetupCamera);
                                  part1HoleLocations = findHoles(autoSetupCamera);
                                  if (part1HoleLocations.size() < 1) {
-                                     throw new Exception("No hole found at selected location");
+                                     throw new Exception(I18n.gettext("No hole found at selected location"));
                                  }
 
                                  cameraView.setText(
@@ -592,7 +593,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                  MovableUtils.fireTargetedUserAction(autoSetupCamera);
                                  List<Location> part2HoleLocations = findHoles(autoSetupCamera);
                                  if (part2HoleLocations.size() < 1) {
-                                     throw new Exception("No hole found at selected location");
+                                     throw new Exception(I18n.gettext("No hole found at selected location"));
                                  }
 
                                  List<Location> referenceHoles = deriveReferenceHoles(
@@ -617,7 +618,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                  Length partPitchMM = partPitch.convertToUnits(LengthUnit.Millimeters);
                                  long standardPitchIncrements = Math.round(partPitchMM.getValue() / 2.0);
                                  if (standardPitchIncrements == 0) {
-                                     throw new Exception("The same part was selected both times");
+                                     throw new Exception(I18n.gettext("The same part was selected both times"));
                                  }
                                  partPitchMM.setValue(2.0 * standardPitchIncrements);
 
@@ -674,7 +675,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             FindHoles findHolesResults = new FindHoles(camera, pipeline).invoke();
             List<CvStage.Result.Circle> inLine = findHolesResults.getInLine();
             if (inLine.isEmpty()) {
-                throw new Exception("Feeder " + getName() + ": No tape holes found.");
+                throw new Exception("Feeder " + getName() + I18n.gettext(": No tape holes found."));
             }
     
             List<Location> holeLocations = new ArrayList<>();
@@ -949,7 +950,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         }
 
         if (!correctOrientation) {
-            throw new Exception("The tape is oriented incorrectly for the feed direction of the components selected");
+            throw new Exception(I18n.gettext("The tape is oriented incorrectly for the feed direction of the components selected"));
         }
 
         List<Location> referenceHoles = new ArrayList<>();

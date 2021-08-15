@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -95,7 +96,7 @@ public class ActuatorInterlockMonitorConfigurationWizard extends AbstractConfigu
 
     protected void createUi(AbstractMachine machine) {
         panelInterlock = new JPanel();
-        panelInterlock.setBorder(new TitledBorder(null, "Axis Interlock", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelInterlock.setBorder(new TitledBorder(null, I18n.gettext("Axis Interlock"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelInterlock);
         panelInterlock.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -126,7 +127,7 @@ public class ActuatorInterlockMonitorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
                 
-                lblFunction = new JLabel("Interlock Type");
+                lblFunction = new JLabel(I18n.gettext("Interlock Type"));
                 panelInterlock.add(lblFunction, "2, 2, right, default");
                 
                 interlockType = new JComboBox(ActuatorInterlockMonitor.InterlockType.values());
@@ -138,8 +139,8 @@ public class ActuatorInterlockMonitorConfigurationWizard extends AbstractConfigu
                 });
                 panelInterlock.add(interlockType, "4, 2, 3, 1");
         
-                lblConfirmationGoodRange = new JLabel("Confirmation range");
-                lblConfirmationGoodRange.setToolTipText("<html>\r\nOn interlock the actuator will be read and the numeric value compared to this range <br/>\r\n(lower/upper limit). If the value is outside the range, the interlock fails, i.e. an error is raised.\r\n</html>");
+                lblConfirmationGoodRange = new JLabel(I18n.gettext("Confirmation range"));
+                lblConfirmationGoodRange.setToolTipText(I18n.gettext("<html>\r\nOn interlock the actuator will be read and the numeric value compared to this range <br/>\r\n(lower/upper limit). If the value is outside the range, the interlock fails, i.e. an error is raised.\r\n</html>"));
                 panelInterlock.add(lblConfirmationGoodRange, "2, 4, right, default");
         
                 confirmationGoodMin = new JTextField();
@@ -150,16 +151,16 @@ public class ActuatorInterlockMonitorConfigurationWizard extends AbstractConfigu
                 panelInterlock.add(confirmationGoodMax, "6, 4, fill, default");
                 confirmationGoodMax.setColumns(10);
         
-                lblConfirmationPattern = new JLabel("Confirmation pattern");
-                lblConfirmationPattern.setToolTipText("<html>\r\nOn interlock the actuator will be read. The reading will be compared to the pattern.<br/>\r\nIf the reading does not match, the interlock fails, i.e. an error is raised. \r\n</html>");
+                lblConfirmationPattern = new JLabel(I18n.gettext("Confirmation pattern"));
+                lblConfirmationPattern.setToolTipText(I18n.gettext("<html>\r\nOn interlock the actuator will be read. The reading will be compared to the pattern.<br/>\r\nIf the reading does not match, the interlock fails, i.e. an error is raised. \r\n</html>"));
                 panelInterlock.add(lblConfirmationPattern, "2, 6, right, default");
         
                 confirmationPattern = new JTextField();
                 panelInterlock.add(confirmationPattern, "4, 6, 3, 1, fill, default");
                 confirmationPattern.setColumns(10);
         
-                lblRegex = new JLabel("Regex?");
-                lblRegex.setToolTipText("Use a regular expression to match the pattern.");
+                lblRegex = new JLabel(I18n.gettext("Regex?"));
+                lblRegex.setToolTipText(I18n.gettext("Use a regular expression to match the pattern."));
                 panelInterlock.add(lblRegex, "8, 6, right, default");
         
                 confirmationByRegex = new JCheckBox("");
@@ -190,7 +191,7 @@ public class ActuatorInterlockMonitorConfigurationWizard extends AbstractConfigu
         panelInterlock.add(interlockAxis4, "4, 16, 3, 1, fill, default");
         
         panelCondition = new JPanel();
-        panelCondition.setBorder(new TitledBorder(null, "Interlock Conditions", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelCondition.setBorder(new TitledBorder(null, I18n.gettext("Interlock Conditions"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelCondition);
         panelCondition.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -209,8 +210,8 @@ public class ActuatorInterlockMonitorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblActuator = new JLabel("Boolean Actuator");
-        lblActuator.setToolTipText("The interlock is only active if this actuator has the chosen known or unknown state.");
+        lblActuator = new JLabel(I18n.gettext("Boolean Actuator"));
+        lblActuator.setToolTipText(I18n.gettext("The interlock is only active if this actuator has the chosen known or unknown state."));
         panelCondition.add(lblActuator, "2, 2, right, default");
         
         conditionalActuator = new JComboBox(new ActuatorsComboBoxModel(actuator.getHead() != null ? actuator.getHead() : machine));
@@ -225,8 +226,8 @@ public class ActuatorInterlockMonitorConfigurationWizard extends AbstractConfigu
         conditionalActuatorState = new JComboBox(ActuatorInterlockMonitor.ActuatorState.values());
         panelCondition.add(conditionalActuatorState, "8, 2, 3, 1, fill, default");
         
-        lblSpeed = new JLabel("Speed [%]");
-        lblSpeed.setToolTipText("<html>The interlock is only active if the effective speed factor is within this range.<br/>\r\nTypically used to allow slow movement even when the interlock confirmation failed.\r\n</html>");
+        lblSpeed = new JLabel(I18n.gettext("Speed [%]"));
+        lblSpeed.setToolTipText(I18n.gettext("<html>The interlock is only active if the effective speed factor is within this range.<br/>\r\nTypically used to allow slow movement even when the interlock confirmation failed.\r\n</html>"));
         panelCondition.add(lblSpeed, "2, 4, right, default");
         
         conditionalSpeedPercentMin = new JTextField();

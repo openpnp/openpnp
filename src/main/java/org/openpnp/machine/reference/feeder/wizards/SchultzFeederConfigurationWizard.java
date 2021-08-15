@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -94,7 +95,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
 
         JPanel panelActuator = new JPanel();
         panelActuator.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Actuators"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -131,17 +132,17 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblActuatorValue = new JLabel("Feeder Number:");
+        JLabel lblActuatorValue = new JLabel(I18n.gettext("Feeder Number:"));
         panelActuator.add(lblActuatorValue, "4, 2, right, default");
 
         actuatorValue = new JTextField();
         panelActuator.add(actuatorValue, "6, 2");
         actuatorValue.setColumns(6);
 
-        JLabel lblActuator = new JLabel("Actuator");
+        JLabel lblActuator = new JLabel(I18n.gettext("Actuator"));
         panelActuator.add(lblActuator, "4, 4, left, default");
 
-        JLabel lblGetID = new JLabel("Get ID");
+        JLabel lblGetID = new JLabel(I18n.gettext("Get ID"));
         panelActuator.add(lblGetID, "2, 6, right, default");
 
         comboBoxIdActuator = new JComboBox();
@@ -155,7 +156,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         idText.setColumns(10);
         panelActuator.add(idText, "8, 6");
 
-        JLabel lblFeed = new JLabel("Pre Pick");
+        JLabel lblFeed = new JLabel(I18n.gettext("Pre Pick"));
         panelActuator.add(lblFeed, "2, 8, right, default");
 
         comboBoxFeedActuator = new JComboBox();
@@ -165,7 +166,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
         panelActuator.add(btnTestFeedActuator, "6, 8");
 
-        JLabel lblPostPick = new JLabel("Post Pick");
+        JLabel lblPostPick = new JLabel(I18n.gettext("Post Pick"));
         panelActuator.add(lblPostPick, "2, 10, right, default");
 
         comboBoxPostPickActuator = new JComboBox();
@@ -175,7 +176,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
         panelActuator.add(btnTestPostPickActuator, "6, 10");
 
-        JLabel lblFeedCount = new JLabel("Get Feed Count");
+        JLabel lblFeedCount = new JLabel(I18n.gettext("Get Feed Count"));
         panelActuator.add(lblFeedCount, "2, 12, right, default");
 
         comboBoxFeedCountActuator = new JComboBox();
@@ -189,7 +190,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         feedCountValue.setColumns(8);
         panelActuator.add(feedCountValue, "8, 12");
 
-        JLabel lblClearCount = new JLabel("Clear Feed Count");
+        JLabel lblClearCount = new JLabel(I18n.gettext("Clear Feed Count"));
         panelActuator.add(lblClearCount, "2, 14, right, default");
 
         comboBoxClearCountActuator = new JComboBox();
@@ -199,7 +200,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         btnClearCountActuator = new JButton(clearCountActuatorAction);
         panelActuator.add(btnClearCountActuator, "6, 14");
 
-        JLabel lblGetPitch = new JLabel("Get Pitch");
+        JLabel lblGetPitch = new JLabel(I18n.gettext("Get Pitch"));
         panelActuator.add(lblGetPitch, "2, 16, right, default");
 
         comboBoxPitchActuator = new JComboBox();
@@ -213,7 +214,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         pitchValue.setColumns(8);
         panelActuator.add(pitchValue, "8, 16");
 
-        JLabel lblTogglePitch = new JLabel("Toggle Pitch");
+        JLabel lblTogglePitch = new JLabel(I18n.gettext("Toggle Pitch"));
         panelActuator.add(lblTogglePitch, "2, 18, right, default");
 
         comboBoxTogglePitchActuator = new JComboBox();
@@ -223,10 +224,10 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         btnTogglePitchActuator = new JButton(togglePitchActuatorAction);
         panelActuator.add(btnTogglePitchActuator, "6, 18");
 
-        JLabel lblTogglePitchDesc = new JLabel("Toggle between 2 MM and 4 MM");
+        JLabel lblTogglePitchDesc = new JLabel(I18n.gettext("Toggle between 2 MM and 4 MM"));
         panelActuator.add(lblTogglePitchDesc, "8, 18, left, default");
 
-        JLabel lblGetStatus = new JLabel("Get Status");
+        JLabel lblGetStatus = new JLabel(I18n.gettext("Get Status"));
         panelActuator.add(lblGetStatus, "2, 20, right, default");
 
         comboBoxStatusActuator = new JComboBox();
@@ -275,7 +276,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getIdActuatorName() == null || feeder.getIdActuatorName().equals("")) {
                     Logger.warn("No getIdActuatorName specified for feeder {}.", feeder.getName());
@@ -299,7 +300,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getActuatorName() == null || feeder.getActuatorName().equals("")) {
                     Logger.warn("No actuatorName specified for feeder {}.", feeder.getName());
@@ -308,7 +309,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
                 Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
+                    throw new Exception(I18n.gettext("Feed failed. Unable to find an actuator named ") + feeder.getActuatorName());
                 }
                 AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
                 actuator.actuate(feeder.getActuatorValue());
@@ -321,7 +322,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getPostPickActuatorName() == null || feeder.getPostPickActuatorName().equals("")) {
                     Logger.warn("No postPickActuatorName specified for feeder {}.", feeder.getName());
@@ -346,7 +347,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getFeedCountActuatorName() == null || feeder.getFeedCountActuatorName().equals("")) {
                     Logger.warn("No feedCountActuatorName specified for feeder {}.", feeder.getName());
@@ -370,7 +371,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getClearCountActuatorName() == null || feeder.getClearCountActuatorName().equals("")) {
                     Logger.warn("No clearCountActuatorName specified for feeder {}.", feeder.getName());
@@ -396,7 +397,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getPitchActuatorName() == null || feeder.getPitchActuatorName().equals("")) {
                     Logger.warn("No pitchActuatorName specified for feeder {}.", feeder.getName());
@@ -420,7 +421,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getTogglePitchActuatorName() == null || feeder.getTogglePitchActuatorName().equals("")) {
                     Logger.warn("No togglePitchActuatorName specified for feeder {}.", feeder.getName());
@@ -445,7 +446,7 @@ public class SchultzFeederConfigurationWizard extends AbstractReferenceFeederCon
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 if (!(Configuration.get().getMachine().isEnabled())) {
-                    throw new Exception ("Start machine first.");
+                    throw new Exception (I18n.gettext("Start machine first."));
                 }
                 if (feeder.getStatusActuatorName() == null || feeder.getStatusActuatorName().equals("")) {
                     Logger.warn("No statusActuatorName specified for feeder {}.", feeder.getName());

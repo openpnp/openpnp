@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -354,7 +355,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     protected Actuator getContactProbeActuator() throws Exception {
         Actuator actuator = getHead().getActuatorByName(contactProbeActuatorName);
         if (actuator == null) {
-            throw new Exception(String.format("Can't find contact probe actuator %s", contactProbeActuatorName));
+            throw new Exception(String.format(I18n.gettext("Can't find contact probe actuator %s"), contactProbeActuatorName));
         }
         return actuator;
     }

@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -64,7 +65,7 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
 
         JPanel panelActuator = new JPanel();
         panelActuator.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Actuators"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -87,13 +88,13 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblActuator = new JLabel("Actuator");
+        JLabel lblActuator = new JLabel(I18n.gettext("Actuator"));
         panelActuator.add(lblActuator, "4, 2, left, default");
 
-        JLabel lblActuatorValue = new JLabel("Actuator Value");
+        JLabel lblActuatorValue = new JLabel(I18n.gettext("Actuator Value"));
         panelActuator.add(lblActuatorValue, "6, 2, left, default");
 
-        JLabel lblFeed = new JLabel("Feed");
+        JLabel lblFeed = new JLabel(I18n.gettext("Feed"));
         panelActuator.add(lblFeed, "2, 4, right, default");
 
         comboBoxFeedActuator = new JComboBox();
@@ -104,13 +105,13 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         panelActuator.add(actuatorValue, "6, 4");
         actuatorValue.setColumns(10);
 
-        JLabel lblForBoolean = new JLabel("For Boolean: 1 = True, 0 = False");
+        JLabel lblForBoolean = new JLabel(I18n.gettext("For Boolean: 1 = True, 0 = False"));
         panelActuator.add(lblForBoolean, "8, 4");
 
         btnTestFeedActuator = new JButton(testFeedActuatorAction);
         panelActuator.add(btnTestFeedActuator, "10, 4");
 
-        JLabel lblPostPick = new JLabel("Post Pick");
+        JLabel lblPostPick = new JLabel(I18n.gettext("Post Pick"));
         panelActuator.add(lblPostPick, "2, 6, right, default");
 
         comboBoxPostPickActuator = new JComboBox();
@@ -121,15 +122,15 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         postPickActuatorValue.setColumns(10);
         panelActuator.add(postPickActuatorValue, "6, 6");
 
-        JLabel label = new JLabel("For Boolean: 1 = True, 0 = False");
+        JLabel label = new JLabel(I18n.gettext("For Boolean: 1 = True, 0 = False"));
         panelActuator.add(label, "8, 6");
 
         btnTestPostPickActuator = new JButton(testPostPickActuatorAction);
         panelActuator.add(btnTestPostPickActuator, "10, 6");
 
-        JLabel lblMoveBeforeFeed = new JLabel("Move before feed");
+        JLabel lblMoveBeforeFeed = new JLabel(I18n.gettext("Move before feed"));
         panelActuator.add(lblMoveBeforeFeed, "2, 8, right, default");
-        lblMoveBeforeFeed.setToolTipText("Move nozzle to pick location before actuating feed actuator");
+        lblMoveBeforeFeed.setToolTipText(I18n.gettext("Move nozzle to pick location before actuating feed actuator"));
 
         ckBoxMoveBeforeFeed = new JCheckBox();
         panelActuator.add(ckBoxMoveBeforeFeed, "4, 8, left, default");
@@ -165,7 +166,7 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
                 Actuator actuator = Configuration.get().getMachine().getActuatorByName(feeder.getActuatorName());
 
                 if (actuator == null) {
-                    throw new Exception("Feed failed. Unable to find an actuator named " + feeder.getActuatorName());
+                    throw new Exception(I18n.gettext("Feed failed. Unable to find an actuator named ") + feeder.getActuatorName());
                 }
                 // Use the generic Object method to interpret the value as the actuator.valueType.
                 actuator.actuate((Object)feeder.getActuatorValue());

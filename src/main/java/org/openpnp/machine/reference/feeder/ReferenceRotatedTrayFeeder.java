@@ -19,6 +19,7 @@
  */
 
 package org.openpnp.machine.reference.feeder;
+import org.I18n.I18n;
 
 import javax.swing.Action;
 
@@ -65,7 +66,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		int partX, partY;
 
 		if (feedCount >= (trayCountCols * trayCountRows)) {
-			throw new Exception("Tray empty.");
+			throw new Exception(I18n.gettext("Tray empty."));
 		}
 
 		if (trayCountCols >= trayCountRows) {
@@ -108,7 +109,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		int partX, partY;
 
 		if (feedCount >= (trayCountCols * trayCountRows)) {
-			throw new Exception("Tray empty.");
+			throw new Exception(I18n.gettext("Tray empty."));
 		}
 
 		if (trayCountCols >= trayCountRows) {
@@ -147,13 +148,13 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
     public void takeBackPart(Nozzle nozzle) throws Exception {
         // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
         if (nozzle.getPart() == null) {
-            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+            throw new UnsupportedOperationException(I18n.gettext("No part loaded that could be taken back."));
         }
         if (!nozzle.getPart().equals(getPart())) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + I18n.gettext(" this feeder only supports ") + getPart().getName());
         }
         if (!canTakeBackPart()) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
+            throw new UnsupportedOperationException("Feeder: " + getName() + I18n.gettext(" - Currently no free slot. Can not take back the part."));
         }
 
         // ok, now put the part back on the location of the last pick
@@ -161,7 +162,7 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         nozzle.place();
         nozzle.moveToSafeZ();
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
-            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
+            throw new Exception("Feeder: " + getName() + I18n.gettext(" - Putting part back failed, check nozzle tip"));
         }
         // change FeedCount
         setFeedCount(getFeedCount() - 1);

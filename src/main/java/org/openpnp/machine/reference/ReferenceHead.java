@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.util.ArrayList;
 
@@ -70,13 +71,13 @@ public class ReferenceHead extends AbstractHead {
             HeadMountable hm = getDefaultCamera();
             Part homePart = Configuration.get().getPart("FIDUCIAL-HOME");
             if (homePart == null) {
-                throw new Exception("Visual homing is missing the FIDUCIAL-HOME part. Please create it.");
+                throw new Exception(I18n.gettext("Visual homing is missing the FIDUCIAL-HOME part. Please create it."));
             }
             Location homingLocation = Configuration.get().getMachine().getFiducialLocator()
                     .getHomeFiducialLocation(getHomingFiducialLocation(), homePart);
             if (homingLocation == null) {
                 // Homing failed
-                throw new Exception("Visual homing failed");
+                throw new Exception(I18n.gettext("Visual homing failed"));
             }
 
             if (apply) {

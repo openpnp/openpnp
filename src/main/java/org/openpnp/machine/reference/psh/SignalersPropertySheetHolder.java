@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.psh;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.util.List;
@@ -55,7 +56,7 @@ public class SignalersPropertySheetHolder extends SimplePropertySheetHolder {
                 machine.addSignaler(signaler);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Error"), e);
             }
         }
     };

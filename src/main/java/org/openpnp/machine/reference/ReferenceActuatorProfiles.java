@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.util.ArrayList;
 
@@ -614,7 +615,7 @@ public class ReferenceActuatorProfiles extends AbstractTableModel {
         Profile profile = findProfile(name);
         if (profile == null) {
             // None found.
-            throw new Exception("Actuator "+actuator+" profile "+name+" not found.");
+            throw new Exception("Actuator "+actuator+" profile "+name+I18n.gettext(" not found."));
         }
         actuate(actuator, profile);
         return profile.getName();
@@ -632,7 +633,7 @@ public class ReferenceActuatorProfiles extends AbstractTableModel {
         Profile profile = findProfile(on);
         if (profile == null) {
             // None found.
-            throw new Exception("Actuator "+actuator+" "+(on ? getColumnName(1) : getColumnName(2))+" profile not found.");
+            throw new Exception("Actuator "+actuator+" "+(on ? getColumnName(1) : getColumnName(2))+I18n.gettext(" profile not found."));
         }
         actuate(actuator, profile);
         return profile.getName();

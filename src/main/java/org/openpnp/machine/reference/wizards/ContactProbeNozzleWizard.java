@@ -19,6 +19,7 @@
 
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;

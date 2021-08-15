@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
@@ -571,11 +572,11 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
 
         if (!(homing || Configuration.get().getMachine().isHomed())) {
-            throw new Exception("Machine not yet homed, nozzle tip calibration request aborted");
+            throw new Exception(I18n.gettext("Machine not yet homed, nozzle tip calibration request aborted"));
         }
 
         if (nozzle == null) {
-            throw new Exception("Nozzle to nozzle tip mismatch.");
+            throw new Exception(I18n.gettext("Nozzle to nozzle tip mismatch."));
         }
         Camera camera = VisionUtils.getBottomVisionCamera();
         ReferenceCamera referenceCamera = null;
@@ -593,10 +594,10 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             }
             else {
                 if (! isCalibrated(nozzle)) {
-                    throw new Exception("Calibrate the nozzle tip first."); 
+                    throw new Exception(I18n.gettext("Calibrate the nozzle tip first.")); 
                 }
                 if (referenceCamera == null) {
-                    throw new Exception("For calibration the bottom vision camera must be a ReferenceCamera."); 
+                    throw new Exception(I18n.gettext("For calibration the bottom vision camera must be a ReferenceCamera.")); 
                 }
                 excenter = VisionUtils.getPixelCenterOffsets(camera, 
                         camera.getWidth()/2 + Math.min(camera.getWidth(), camera.getHeight())*excenterRatio, 
@@ -825,7 +826,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             // add all results from pipeline to a Location-list post processing
             // are there any results from the pipeline?
             if (0==results.size()) {
-                // Don't throw new Exception("No results from vision. Check pipeline.");      
+                // Don't throw new Exception(I18n.gettext("No results from vision. Check pipeline."));      
                 // Instead the number of obtained fixes is evaluated later.
                 return null;
             }
@@ -844,7 +845,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 }
                 else {
                     Logger.error("[nozzleTipCalibration] Unrecognized result " + result);
-                    throw new Exception("Unrecognized result " + result);
+                    throw new Exception(I18n.gettext("Unrecognized result ") + result);
                 }
             }
 
@@ -863,7 +864,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
 
             // check for a valid resultset
             if (locations.size() == 0) {
-                // Don't throw new Exception("No valid results from pipeline within threshold");
+                // Don't throw new Exception(I18n.gettext("No valid results from pipeline within threshold"));
                 // Instead the number of obtained fixes is evaluated later.
                 return null;
             } else if (locations.size() > 1) {

@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -59,7 +60,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         this.nozzleTip = nozzleTip;
         
         panelPartOnVacuumSensing = new JPanel();
-        panelPartOnVacuumSensing.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Part On Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelPartOnVacuumSensing.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), I18n.gettext("Part On Vacuum Sensing"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPartOnVacuumSensing);
         panelPartOnVacuumSensing.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -94,7 +95,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("default:grow"),}));
         
-        lblPartOnMeasurement = new JLabel("Measurement Method");
+        lblPartOnMeasurement = new JLabel(I18n.gettext("Measurement Method"));
         panelPartOnVacuumSensing.add(lblPartOnMeasurement, "2, 2, right, default");
         
         methodPartOn = new JComboBox(ReferenceNozzleTip.VacuumMeasurementMethod.values());
@@ -105,8 +106,8 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         });
         panelPartOnVacuumSensing.add(methodPartOn, "4, 2, 3, 1");
         
-        lblEstablishPartOnLevel = new JLabel("Establish Level?");
-        lblEstablishPartOnLevel.setToolTipText("<html>While the nozzle is pressed down on the part in the pick operation,<br/>\r\nthe vacuum level is repeatedly measured until it builds up to the Vacuum Range <br/>\r\nor the Pick Dwell Time timeout expires, whichever comes first.\r\n</html>");
+        lblEstablishPartOnLevel = new JLabel(I18n.gettext("Establish Level?"));
+        lblEstablishPartOnLevel.setToolTipText(I18n.gettext("<html>While the nozzle is pressed down on the part in the pick operation,<br/>\r\nthe vacuum level is repeatedly measured until it builds up to the Vacuum Range <br/>\r\nor the Pick Dwell Time timeout expires, whichever comes first.\r\n</html>"));
         panelPartOnVacuumSensing.add(lblEstablishPartOnLevel, "2, 4, right, default");
         
         establishPartOnLevel = new JCheckBox("");
@@ -117,7 +118,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         });
         panelPartOnVacuumSensing.add(establishPartOnLevel, "4, 4");
         
-        lblPerformPartOnChecks = new JLabel("Perform Checks?");
+        lblPerformPartOnChecks = new JLabel(I18n.gettext("Perform Checks?"));
         panelPartOnVacuumSensing.add(lblPerformPartOnChecks, "2, 6, right, default");
         
         partOnCheckAfterPick = new JCheckBox("After Pick");
@@ -129,16 +130,16 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         partOnCheckBeforePlace = new JCheckBox("Before Place");
         panelPartOnVacuumSensing.add(partOnCheckBeforePlace, "10, 6");
         
-        lblPartOnLowValue = new JLabel("Low Value");
+        lblPartOnLowValue = new JLabel(I18n.gettext("Low Value"));
         panelPartOnVacuumSensing.add(lblPartOnLowValue, "4, 8");
         
-        lblPartOnHighValue = new JLabel("High Value");
+        lblPartOnHighValue = new JLabel(I18n.gettext("High Value"));
         panelPartOnVacuumSensing.add(lblPartOnHighValue, "6, 8");
         
-        lblPartOnLastReading = new JLabel("Last Reading");
+        lblPartOnLastReading = new JLabel(I18n.gettext("Last Reading"));
         panelPartOnVacuumSensing.add(lblPartOnLastReading, "10, 8");
         
-        lblPartOnNozzle = new JLabel("Vacuum Range");
+        lblPartOnNozzle = new JLabel(I18n.gettext("Vacuum Range"));
         panelPartOnVacuumSensing.add(lblPartOnNozzle, "2, 10, right, default");
         
         vacuumLevelPartOnLow = new JTextField();
@@ -154,7 +155,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(vacuumLevelPartOnReading, "10, 10, fill, top");
         vacuumLevelPartOnReading.setColumns(10);
         
-        lblPartOnDifferenceRange = new JLabel("Difference Range");
+        lblPartOnDifferenceRange = new JLabel(I18n.gettext("Difference Range"));
         panelPartOnVacuumSensing.add(lblPartOnDifferenceRange, "2, 12, right, default");
         
         vacuumDifferencePartOnLow = new JTextField();
@@ -178,7 +179,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOnVacuumSensing.add(vacuumPartOnGraph, "4, 16, 9, 1, default, fill");
         
         panelPartOffVacuumSensing = new JPanel();
-        panelPartOffVacuumSensing.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Part Off Vacuum Sensing", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelPartOffVacuumSensing.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), I18n.gettext("Part Off Vacuum Sensing"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPartOffVacuumSensing);
         panelPartOffVacuumSensing.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -215,7 +216,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("default:grow"),}));
         
-        lblPartOffMeasurement = new JLabel("Measurement Method");
+        lblPartOffMeasurement = new JLabel(I18n.gettext("Measurement Method"));
         panelPartOffVacuumSensing.add(lblPartOffMeasurement, "2, 2");
         
         methodPartOff = new JComboBox(ReferenceNozzleTip.VacuumMeasurementMethod.values());
@@ -226,8 +227,8 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         });
         panelPartOffVacuumSensing.add(methodPartOff, "4, 2, 3, 1");
         
-        lblEstablishPartOffLevel = new JLabel("Establish Level?");
-        lblEstablishPartOffLevel.setToolTipText("<html>While the nozzle is pressed down on the part in the place operation,<br/>\r\nthe vacuum level is repeatedly measured until it decays to the Vacuum Range <br/>\r\nor the Place Dwell Time timeout expires, whichever comes first.\r\n</html>");
+        lblEstablishPartOffLevel = new JLabel(I18n.gettext("Establish Level?"));
+        lblEstablishPartOffLevel.setToolTipText(I18n.gettext("<html>While the nozzle is pressed down on the part in the place operation,<br/>\r\nthe vacuum level is repeatedly measured until it decays to the Vacuum Range <br/>\r\nor the Place Dwell Time timeout expires, whichever comes first.\r\n</html>"));
         panelPartOffVacuumSensing.add(lblEstablishPartOffLevel, "2, 4, right, default");
         
         establishPartOffLevel = new JCheckBox("");
@@ -238,7 +239,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         });
         panelPartOffVacuumSensing.add(establishPartOffLevel, "4, 4");
         
-        lblPerformPartOffChecks = new JLabel("Perform Checks?");
+        lblPerformPartOffChecks = new JLabel(I18n.gettext("Perform Checks?"));
         panelPartOffVacuumSensing.add(lblPerformPartOffChecks, "2, 6, right, default");
         
         partOffCheckAfterPlace = new JCheckBox("After Place");
@@ -247,16 +248,16 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         partOffCheckBeforePick = new JCheckBox("Before Pick");
         panelPartOffVacuumSensing.add(partOffCheckBeforePick, "6, 6");
         
-        lblPartOffLowValue = new JLabel("Low Value");
+        lblPartOffLowValue = new JLabel(I18n.gettext("Low Value"));
         panelPartOffVacuumSensing.add(lblPartOffLowValue, "4, 8");
         
-        lblPartOffHighValue = new JLabel("High Value");
+        lblPartOffHighValue = new JLabel(I18n.gettext("High Value"));
         panelPartOffVacuumSensing.add(lblPartOffHighValue, "6, 8");
         
-        lblPartOffLastReading = new JLabel("Last Reading");
+        lblPartOffLastReading = new JLabel(I18n.gettext("Last Reading"));
         panelPartOffVacuumSensing.add(lblPartOffLastReading, "10, 8");
         
-        lblPartOffNozzle = new JLabel("Vacuum Range");
+        lblPartOffNozzle = new JLabel(I18n.gettext("Vacuum Range"));
         panelPartOffVacuumSensing.add(lblPartOffNozzle, "2, 10, right, default");
         
         vacuumLevelPartOffLow = new JTextField();
@@ -272,8 +273,8 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(vacuumLevelPartOffReading, "10, 10, fill, default");
         vacuumLevelPartOffReading.setColumns(10);
         
-        lblProbingTimePartOff = new JLabel("Valve open/close (ms)");
-        lblProbingTimePartOff.setToolTipText("<html>\r\n<p>The valve is opened and closed to create a small underpressure pulse. </p>\r\n<p>The open time should be quite short, no point in creating full pick suction.</p>\r\n<p>The close time can be used to wait for the system to react to the pulse.<br/>\r\nincluding delays in sensor signal propagation and readout.</p>\r\n</html>");
+        lblProbingTimePartOff = new JLabel(I18n.gettext("Valve open/close (ms)"));
+        lblProbingTimePartOff.setToolTipText(I18n.gettext("<html>\r\n<p>The valve is opened and closed to create a small underpressure pulse. </p>\r\n<p>The open time should be quite short, no point in creating full pick suction.</p>\r\n<p>The close time can be used to wait for the system to react to the pulse.<br/>\r\nincluding delays in sensor signal propagation and readout.</p>\r\n</html>"));
         panelPartOffVacuumSensing.add(lblProbingTimePartOff, "2, 12, right, default");
         
         partOffProbingMilliseconds = new JTextField();
@@ -284,7 +285,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
         panelPartOffVacuumSensing.add(partOffDwellMilliseconds, "6, 12, fill, default");
         partOffDwellMilliseconds.setColumns(10);
         
-        lblPartOffDifferenceRange = new JLabel("Difference Range");
+        lblPartOffDifferenceRange = new JLabel(I18n.gettext("Difference Range"));
         panelPartOffVacuumSensing.add(lblPartOffDifferenceRange, "2, 14, right, default");
         
         vacuumDifferencePartOffLow = new JTextField();

@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder;
+import org.I18n.I18n;
 
 import javax.swing.Action;
 
@@ -94,7 +95,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
             actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
         }
         if (actuator == null) {
-            throw new Exception("Feed failed. Unable to find an actuator named " + actuatorName);
+            throw new Exception(I18n.gettext("Feed failed. Unable to find an actuator named ") + actuatorName);
         }
         if (isMoveBeforeFeed()) {
             MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
@@ -113,7 +114,7 @@ public class ReferenceAutoFeeder extends ReferenceFeeder {
             actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
         }
         if (actuator == null) {
-            throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
+            throw new Exception(I18n.gettext("Post pick failed. Unable to find an actuator named ") + postPickActuatorName);
         }
         // Note by using the Object generic method, the value will be properly interpreted according to actuator.valueType.
         actuator.actuate((Object)postPickActuatorValue);

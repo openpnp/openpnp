@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -64,7 +65,7 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
 
 
         panelChanger = new JPanel();
-        panelChanger.setBorder(new TitledBorder(null, "Nozzle Tip Changer", TitledBorder.LEADING,
+        panelChanger.setBorder(new TitledBorder(null, I18n.gettext("Nozzle Tip Changer"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelChanger);
         panelChanger
@@ -90,7 +91,7 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
                 
-        lblChangerEnabled = new JLabel("Automatic Tool Changer Enabled?");
+        lblChangerEnabled = new JLabel(I18n.gettext("Automatic Tool Changer Enabled?"));
         panelChanger.add(lblChangerEnabled, "2, 2, right, default");
 
         chckbxChangerEnabled = new JCheckBox("");
@@ -109,7 +110,7 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
         });
         panelChanger.add(chckbxChangerEnabled, "4, 2");
         
-        lblChangeOnManual = new JLabel("Change On Manual Pick?");
+        lblChangeOnManual = new JLabel(I18n.gettext("Change On Manual Pick?"));
         panelChanger.add(lblChangeOnManual, "2, 4, right, default");
         
         chckbxChangeOnManualFeed = new JCheckBox("");
@@ -124,7 +125,7 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
         lblZ = new JLabel("Z");
         panelChanger.add(lblZ, "8, 6, center, default");
         
-        lblManualChangeLocation = new JLabel("Manual Change Location");
+        lblManualChangeLocation = new JLabel(I18n.gettext("Manual Change Location"));
         lblManualChangeLocation.setToolTipText("r");
         panelChanger.add(lblManualChangeLocation, "2, 8, right, default");
         

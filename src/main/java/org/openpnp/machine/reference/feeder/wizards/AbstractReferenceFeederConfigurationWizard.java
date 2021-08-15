@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 
@@ -87,7 +88,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
 
         panelPart = new JPanel();
         panelPart.setBorder(
-                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), I18n.gettext("General Settings"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -114,12 +115,12 @@ public abstract class AbstractReferenceFeederConfigurationWizard
             // in WindowBuilder but doesn't happen during normal run.
         }
         
-        JLabel lblPart = new JLabel("Part");
+        JLabel lblPart = new JLabel(I18n.gettext("Part"));
         panelPart.add(lblPart, "2, 2, right, default");
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
         panelPart.add(comboBoxPart, "4, 2, left, default");
         
-        JLabel lblRetryCount = new JLabel("Feed Retry Count");
+        JLabel lblRetryCount = new JLabel(I18n.gettext("Feed Retry Count"));
         panelPart.add(lblRetryCount, "2, 4, right, default");
         
         feedRetryCount = new JTextField();
@@ -127,7 +128,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         panelPart.add(feedRetryCount, "4, 4");
         feedRetryCount.setColumns(3);
         
-        lblPickRetryCount = new JLabel("Pick Retry Count");
+        lblPickRetryCount = new JLabel(I18n.gettext("Pick Retry Count"));
         panelPart.add(lblPickRetryCount, "2, 6, right, default");
         
         pickRetryCount = new JTextField();
@@ -165,7 +166,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
             lblZ = new JLabel("Z");
             panelLocation.add(lblZ, "6, 2");
 
-            lblRotation = new JLabel("Rotation");
+            lblRotation = new JLabel(I18n.gettext("Rotation"));
             panelLocation.add(lblRotation, "8, 2");
 
             textFieldLocationX = new JTextField();

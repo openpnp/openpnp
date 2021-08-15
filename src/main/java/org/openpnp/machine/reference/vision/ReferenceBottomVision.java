@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.vision;
+import org.I18n.I18n;
 
 import java.awt.Rectangle;
 import java.util.HashMap;
@@ -73,10 +74,10 @@ public class ReferenceBottomVision implements PartAlignment {
         }
 
         if (part == null || nozzle.getPart() == null) {
-            throw new Exception("No part on nozzle.");
+            throw new Exception(I18n.gettext("No part on nozzle."));
         }
         if (part != nozzle.getPart()) {
-            throw new Exception("Part mismatch with part on nozzle.");
+            throw new Exception(I18n.gettext("Part mismatch with part on nozzle."));
         }
 
         Camera camera = VisionUtils.getBottomVisionCamera();
@@ -487,7 +488,7 @@ public class ReferenceBottomVision implements PartAlignment {
     
     @Override
     public String getPropertySheetHolderTitle() {
-        return "Bottom Vision";
+        return I18n.gettext("Bottom Vision");
     }
 
     @Override

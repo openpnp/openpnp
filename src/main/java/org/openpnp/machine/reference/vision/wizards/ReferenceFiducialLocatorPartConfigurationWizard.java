@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.vision.wizards;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -38,7 +39,7 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
         this.partSettings = fiducialLocator.getPartSettings(part);
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, I18n.gettext("General"), TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -52,10 +53,10 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblPipeline = new JLabel("Pipeline");
+        JLabel lblPipeline = new JLabel(I18n.gettext("Pipeline"));
         panel.add(lblPipeline, "2, 2");
 
-        JButton editPipelineButton = new JButton("Edit");
+        JButton editPipelineButton = new JButton(I18n.gettext("Edit"));
         editPipelineButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
@@ -65,10 +66,10 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
         });
         panel.add(editPipelineButton, "4, 2");
 
-        JButton btnLoadDefault = new JButton("Reset to Default");
+        JButton btnLoadDefault = new JButton(I18n.gettext("Reset to Default"));
         btnLoadDefault.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current part pipeline with the default pipeline. Are you sure?",
+                    I18n.gettext("This will replace the current part pipeline with the default pipeline. Are you sure?"),
                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
@@ -83,7 +84,7 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
     private void editPipeline() throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
         CvPipelineEditor editor = new CvPipelineEditor(fiducialLocator.getFiducialPipeline(camera, part));
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Fiducial Locator Pipeline", editor);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), I18n.gettext("Fiducial Locator Pipeline"), editor);
         dialog.setVisible(true);
     }
 
@@ -94,7 +95,7 @@ public class ReferenceFiducialLocatorPartConfigurationWizard extends AbstractCon
     
     @Override
     public String getWizardName() {
-        return "ReferenceFiducialLocator";
+        return I18n.gettext("ReferenceFiducialLocator");
     }
     
 }

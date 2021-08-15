@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.vision.wizards;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -48,7 +49,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         this.bottomVision = bottomVision;
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, I18n.gettext("General"), TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -72,16 +73,16 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblEnabled = new JLabel("Enabled?");
+        JLabel lblEnabled = new JLabel(I18n.gettext("Enabled?"));
         panel.add(lblEnabled, "2, 2");
 
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
 
-        JLabel lblPipeline = new JLabel("Pipeline");
+        JLabel lblPipeline = new JLabel(I18n.gettext("Pipeline"));
         panel.add(lblPipeline, "2, 4");
 
-        JButton editPipelineButton = new JButton("Edit");
+        JButton editPipelineButton = new JButton(I18n.gettext("Edit"));
         editPipelineButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
@@ -91,10 +92,10 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         });
         panel.add(editPipelineButton, "4, 4");
 
-        JButton btnResetToDefault = new JButton("Reset to Default");
+        JButton btnResetToDefault = new JButton(I18n.gettext("Reset to Default"));
         btnResetToDefault.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current pipeline with the built in default pipeline. Are you sure?",
+                    I18n.gettext("This will replace the current pipeline with the built in default pipeline. Are you sure?"),
                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
@@ -105,7 +106,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         });
         panel.add(btnResetToDefault, "6, 4");
 
-        JButton btnResetAllTo = new JButton("Reset All Parts");
+        JButton btnResetAllTo = new JButton(I18n.gettext("Reset All Parts"));
         btnResetAllTo.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "This will replace all custom part pipelines with the current pipeline. Are you sure?",
@@ -124,31 +125,31 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         });
         panel.add(btnResetAllTo, "8, 4");
 
-        JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
-        lblPreRot.setToolTipText("Pre-rotate default setting for bottom vision. Can be overridden on individual parts.");
+        JLabel lblPreRot = new JLabel(I18n.gettext("Rotate parts prior to vision?"));
+        lblPreRot.setToolTipText(I18n.gettext("Pre-rotate default setting for bottom vision. Can be overridden on individual parts."));
         panel.add(lblPreRot, "2, 6");
 
         preRotCheckbox = new JCheckBox("");
         panel.add(preRotCheckbox, "4, 6");
         
-        JLabel lblMaxVisionPasses = new JLabel("Max. vision passes");
-        lblMaxVisionPasses.setToolTipText("The maximum number of bottom vision passes performed to get a good fix on the part.");
+        JLabel lblMaxVisionPasses = new JLabel(I18n.gettext("Max. vision passes"));
+        lblMaxVisionPasses.setToolTipText(I18n.gettext("The maximum number of bottom vision passes performed to get a good fix on the part."));
         panel.add(lblMaxVisionPasses, "2, 8, right, default");
         
         textFieldMaxVisionPasses = new JTextField();
         panel.add(textFieldMaxVisionPasses, "4, 8");
         textFieldMaxVisionPasses.setColumns(10);
         
-        JLabel lblMaxLinearOffset = new JLabel("Max. linear offset");
-        lblMaxLinearOffset.setToolTipText("The maximum linear part offset accepted as a good fix i.e. where no additional vision pass is needed.");
+        JLabel lblMaxLinearOffset = new JLabel(I18n.gettext("Max. linear offset"));
+        lblMaxLinearOffset.setToolTipText(I18n.gettext("The maximum linear part offset accepted as a good fix i.e. where no additional vision pass is needed."));
         panel.add(lblMaxLinearOffset, "2, 10, right, default");
         
         textFieldMaxLinearOffset = new JTextField();
         panel.add(textFieldMaxLinearOffset, "4, 10, fill, default");
         textFieldMaxLinearOffset.setColumns(10);
         
-        JLabel lblMaxAngularOffset = new JLabel("Max. angular offset");
-        lblMaxAngularOffset.setToolTipText("The maximum angular part offset accepted as a good fix i.e. where no additional vision pass is needed.");
+        JLabel lblMaxAngularOffset = new JLabel(I18n.gettext("Max. angular offset"));
+        lblMaxAngularOffset.setToolTipText(I18n.gettext("The maximum angular part offset accepted as a good fix i.e. where no additional vision pass is needed."));
         panel.add(lblMaxAngularOffset, "6, 10, right, default");
         
         textFieldMaxAngularOffset = new JTextField();
@@ -186,7 +187,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
 
     @Override
     public String getWizardName() {
-        return "ReferenceBottomVision";
+        return I18n.gettext("ReferenceBottomVision");
     }
     
     @Override

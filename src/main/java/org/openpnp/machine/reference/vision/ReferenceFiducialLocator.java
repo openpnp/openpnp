@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.vision;
+import org.I18n.I18n;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
@@ -148,7 +149,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         for (Placement fiducial : tsm.getTravel()) {
             Location measuredLocation = getFiducialLocation(boardLocation, fiducial);
             if (measuredLocation == null) {
-                throw new Exception("Unable to locate " + fiducial.getId());
+                throw new Exception(I18n.gettext("Unable to locate ") + fiducial.getId());
             }
             expectedLocations.add(fiducial.getLocation().invert(boardSide==Side.Bottom, false, false, false));
             measuredLocations.add(measuredLocation);
@@ -203,7 +204,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
         if (errString.length() > 0) {
             errString = errString.substring(0, errString.length()-2); //strip off the last comma and space
             boardLocation.setPlacementTransform(savedPlacementTransform);
-            throw new Exception("Fiducial locator results are invalid because: " + errString + ".  Potential remidies include " +
+            throw new Exception("Fiducial locator results are invalid because: " + errString + I18n.gettext(".  Potential remidies include ") +
                     "setting the initial board X, Y, Z, and Rotation in the Boards panel; using a different set of fiducials; " +
                     "or changing the allowable tolerances in the <tolerances> section of the fiducial-locator section in machine.xml.");
         }
@@ -510,7 +511,7 @@ public class ReferenceFiducialLocator implements FiducialLocator {
 
     @Override
     public String getPropertySheetHolderTitle() {
-        return "Fiducal Locator";
+        return I18n.gettext("Fiducal Locator");
     }
 
     @Override

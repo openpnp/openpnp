@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -53,7 +54,7 @@ public class ReferenceActuatorConfigurationWizard extends AbstractActuatorConfig
     @Override 
     protected void createUi(AbstractMachine machine) {
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelProperties.setBorder(new TitledBorder(null, I18n.gettext("Properties"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -66,13 +67,13 @@ public class ReferenceActuatorConfigurationWizard extends AbstractActuatorConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblDriver = new JLabel("Driver");
+        lblDriver = new JLabel(I18n.gettext("Driver"));
         panelProperties.add(lblDriver, "2, 2, right, default");
         
         driver = new JComboBox(new DriversComboBoxModel(machine, true));
         panelProperties.add(driver, "4, 2, fill, default");
         
-        lblName = new JLabel("Name");
+        lblName = new JLabel(I18n.gettext("Name"));
         panelProperties.add(lblName, "2, 4, right, default");
         
         nameTf = new JTextField();

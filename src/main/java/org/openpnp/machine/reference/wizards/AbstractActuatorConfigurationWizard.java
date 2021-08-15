@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ItemEvent;
@@ -121,7 +122,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         panelOffsets = new JPanel();
         headMountablePanel.add(panelOffsets);
         panelOffsets.setBorder(new TitledBorder(null,
-                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Coordinate System"), TitledBorder.LEADING, TitledBorder.TOP, null));
         panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -152,10 +153,10 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         JLabel lblZ = new JLabel("Z");
         panelOffsets.add(lblZ, "8, 2");
 
-        lblRotation = new JLabel("Rotation");
+        lblRotation = new JLabel(I18n.gettext("Rotation"));
         panelOffsets.add(lblRotation, "10, 2, left, default");
 
-        lblAxis = new JLabel("Axis");
+        lblAxis = new JLabel(I18n.gettext("Axis"));
         panelOffsets.add(lblAxis, "2, 4, right, default");
 
         axisX = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.X, true));
@@ -170,7 +171,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         axisRotation = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Rotation, true));
         panelOffsets.add(axisRotation, "10, 4, fill, default");
 
-        lblOffset = new JLabel("Offset");
+        lblOffset = new JLabel(I18n.gettext("Offset"));
         panelOffsets.add(lblOffset, "2, 6, right, default");
 
         locationX = new JTextField();
@@ -189,8 +190,8 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         panelOffsets.add(locationRotation, "10, 6, fill, default");
         locationRotation.setColumns(10);
         
-        lblAxisInterlock = new JLabel("Axis Interlock?");
-        lblAxisInterlock.setToolTipText("Enable to get an extra Wizard tab to configure an Axis Interlocking Actuator");
+        lblAxisInterlock = new JLabel(I18n.gettext("Axis Interlock?"));
+        lblAxisInterlock.setToolTipText(I18n.gettext("Enable to get an extra Wizard tab to configure an Axis Interlocking Actuator"));
         panelOffsets.add(lblAxisInterlock, "2, 8, right, default");
         
         interlockActuator = new JCheckBox("");
@@ -203,7 +204,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
 
         panelSafeZ = new JPanel();
         headMountablePanel.add(panelSafeZ);
-        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
+        panelSafeZ.setBorder(new TitledBorder(null, I18n.gettext("Safe Z"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -214,7 +215,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblSafeZ = new JLabel("Safe Z");
+        lblSafeZ = new JLabel(I18n.gettext("Safe Z"));
         panelSafeZ.add(lblSafeZ, "2, 2, right, default");
 
         textFieldSafeZ = new JTextField();
@@ -224,7 +225,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         
         panelCoordination = new JPanel();
         contentPanel.add(panelCoordination);
-        panelCoordination.setBorder(new TitledBorder(null, "Machine Coordination", TitledBorder.LEADING,
+        panelCoordination.setBorder(new TitledBorder(null, I18n.gettext("Machine Coordination"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelCoordination.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -239,29 +240,29 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblBeforeActuation = new JLabel("Before Actuation?");
-        lblBeforeActuation.setToolTipText("<html>\r\nCoordinate with the machine, before the actuator is actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>");
+        lblBeforeActuation = new JLabel(I18n.gettext("Before Actuation?"));
+        lblBeforeActuation.setToolTipText(I18n.gettext("<html>\r\nCoordinate with the machine, before the actuator is actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>"));
         panelCoordination.add(lblBeforeActuation, "2, 2, right, default");
         
         coordinatedBeforeActuate = new JCheckBox("");
         panelCoordination.add(coordinatedBeforeActuate, "4, 2, center, bottom");
         
-        lblAfterActuation = new JLabel("After Actuation?");
-        lblAfterActuation.setToolTipText("<html>\r\nCoordinate with the machine, after the actuator was actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that the actuation as well as all the pending commands (including motion)<br/>\r\nwere sent and executed and any position report processed.\r\n</html>");
+        lblAfterActuation = new JLabel(I18n.gettext("After Actuation?"));
+        lblAfterActuation.setToolTipText(I18n.gettext("<html>\r\nCoordinate with the machine, after the actuator was actuated, i.e. wait for the controllers <br/>\r\nto acknowledge that the actuation as well as all the pending commands (including motion)<br/>\r\nwere sent and executed and any position report processed.\r\n</html>"));
         panelCoordination.add(lblAfterActuation, "2, 4, right, default");
         
         coordinatedAfterActuate = new JCheckBox("");
         panelCoordination.add(coordinatedAfterActuate, "4, 4");
         
-        lblBeforeRead = new JLabel("Before Read?");
-        lblBeforeRead.setToolTipText("<html>\r\nCoordinate with the machine, before the actuator is read, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>");
+        lblBeforeRead = new JLabel(I18n.gettext("Before Read?"));
+        lblBeforeRead.setToolTipText(I18n.gettext("<html>\r\nCoordinate with the machine, before the actuator is read, i.e. wait for the controllers <br/>\r\nto acknowledge that all the pending commands (including motion) were sent and executed. \r\n</html>"));
         panelCoordination.add(lblBeforeRead, "2, 6, right, default");
         
         coordinatedBeforeRead = new JCheckBox("");
         panelCoordination.add(coordinatedBeforeRead, "4, 6");
         
         generalPanel = new JPanel();
-        generalPanel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        generalPanel.setBorder(new TitledBorder(null, I18n.gettext("General"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(generalPanel);
         generalPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -289,8 +290,8 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblValueType = new JLabel("Value Type");
-        lblValueType.setToolTipText("<html>\r\n<p>\r\nDetermines the primary data type of Actuator write values. \r\n</p>\r\n<ul>\r\n<li><strong>Boolean:</strong><br/>ON/OFF switching Actuator.</li>\r\n<li><strong>Double:</strong><br/>Numeric Actuator to drive scalar values.</li>\r\n<li><strong>String:</strong><br/>Textual Actuator to drive arbitrary codes and values.</li>\r\n<li><strong>Profile:</strong><br/>Multiple-choice Actuator that can define a number of named profiles<br/>\r\nand drive other Actuators.<br/>\r\nPress Apply to enable the Profiles configuration Wizard.</li>\r\n</ul>\r\n<strong>Note:</strong> the primary data type will not be enforced in the operation of the actuator.<br/>\r\nMixed type usage is still possible (for backwards compatibility). \r\n</html>");
+        lblValueType = new JLabel(I18n.gettext("Value Type"));
+        lblValueType.setToolTipText(I18n.gettext("<html>\r\n<p>\r\nDetermines the primary data type of Actuator write values. \r\n</p>\r\n<ul>\r\n<li><strong>Boolean:</strong><br/>ON/OFF switching Actuator.</li>\r\n<li><strong>Double:</strong><br/>Numeric Actuator to drive scalar values.</li>\r\n<li><strong>String:</strong><br/>Textual Actuator to drive arbitrary codes and values.</li>\r\n<li><strong>Profile:</strong><br/>Multiple-choice Actuator that can define a number of named profiles<br/>\r\nand drive other Actuators.<br/>\r\nPress Apply to enable the Profiles configuration Wizard.</li>\r\n</ul>\r\n<strong>Note:</strong> the primary data type will not be enforced in the operation of the actuator.<br/>\r\nMixed type usage is still possible (for backwards compatibility). \r\n</html>"));
         generalPanel.add(lblValueType, "2, 2, right, default");
         
         valueType = new JComboBox(Actuator.ActuatorValueType.values());
@@ -302,49 +303,49 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         });
         generalPanel.add(valueType, "4, 2, fill, default");
         
-        lblOnDouble = new JLabel("ON Value");
+        lblOnDouble = new JLabel(I18n.gettext("ON Value"));
         generalPanel.add(lblOnDouble, "2, 4, right, default");
         
         defaultOnDouble = new JTextField();
         generalPanel.add(defaultOnDouble, "4, 4, fill, default");
         defaultOnDouble.setColumns(10);
         
-        lblOffDouble = new JLabel("OFF Value");
+        lblOffDouble = new JLabel(I18n.gettext("OFF Value"));
         generalPanel.add(lblOffDouble, "6, 4, right, default");
         
         defaultOffDouble = new JTextField();
         generalPanel.add(defaultOffDouble, "8, 4, fill, default");
         defaultOffDouble.setColumns(10);
         
-        lblOnString = new JLabel("ON Value");
+        lblOnString = new JLabel(I18n.gettext("ON Value"));
         generalPanel.add(lblOnString, "2, 5, right, default");
         
         defaultOnString = new JTextField();
         generalPanel.add(defaultOnString, "4, 5, fill, default");
         defaultOnString.setColumns(10);
         
-        lblOffString = new JLabel("OFF Value");
+        lblOffString = new JLabel(I18n.gettext("OFF Value"));
         generalPanel.add(lblOffString, "6, 5, right, default");
         
         defaultOffString = new JTextField();
         generalPanel.add(defaultOffString, "8, 5");
         defaultOffString.setColumns(10);
         
-        lblMachineState = new JLabel("Machine State");
+        lblMachineState = new JLabel(I18n.gettext("Machine State"));
         generalPanel.add(lblMachineState, "2, 9, right, default");
         
-        lblEnableActuation = new JLabel("Enabled");
+        lblEnableActuation = new JLabel(I18n.gettext("Enabled"));
         generalPanel.add(lblEnableActuation, "4, 9, center, default");
         
-        lblHomingActuation = new JLabel("Homed");
+        lblHomingActuation = new JLabel(I18n.gettext("Homed"));
         lblHomingActuation.setToolTipText("");
         generalPanel.add(lblHomingActuation, "6, 9, center, default");
         
-        lblDisableActuation = new JLabel("Disabled");
+        lblDisableActuation = new JLabel(I18n.gettext("Disabled"));
         generalPanel.add(lblDisableActuation, "8, 9, center, default");
         
-        lblMachineStateActuation = new JLabel("Actuation");
-        lblMachineStateActuation.setToolTipText("<html>\r\nWhen the machine state changes, a specific actuation value can be assumed or set. \r\n</html>\r\n");
+        lblMachineStateActuation = new JLabel(I18n.gettext("Actuation"));
+        lblMachineStateActuation.setToolTipText(I18n.gettext("<html>\r\nWhen the machine state changes, a specific actuation value can be assumed or set. \r\n</html>\r\n"));
         generalPanel.add(lblMachineStateActuation, "2, 11, right, default");
         
         enabledActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
@@ -356,7 +357,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         disabledActuation = new JComboBox(ReferenceActuator.MachineStateActuation.values());
         generalPanel.add(disabledActuation, "8, 11, fill, default");
         
-        lblIndex = new JLabel("Index");
+        lblIndex = new JLabel(I18n.gettext("Index"));
         generalPanel.add(lblIndex, "2, 15, right, default");
         
         indexTextField = new JTextField();

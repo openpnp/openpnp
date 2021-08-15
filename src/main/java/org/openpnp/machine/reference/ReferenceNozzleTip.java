@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -325,9 +326,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new ReferenceNozzleTipPartDetectionWizard(this), "Part Detection"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleTipToolChangerWizard(this), "Tool Changer"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this), "Calibration")
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipPartDetectionWizard(this), I18n.gettext("Part Detection")),
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipToolChangerWizard(this), I18n.gettext("Tool Changer")),
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this), I18n.gettext("Calibration"))
                 };
     }
 

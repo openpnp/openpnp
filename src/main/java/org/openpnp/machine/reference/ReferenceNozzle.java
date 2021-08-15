@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
@@ -292,10 +293,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public void pick(Part part) throws Exception {
         Logger.debug("{}.pick()", getName());
         if (part == null) {
-            throw new Exception("Can't pick null part");
+            throw new Exception(I18n.gettext("Can't pick null part"));
         }
         if (nozzleTip == null) {
-            throw new Exception("Can't pick, no nozzle tip loaded");
+            throw new Exception(I18n.gettext("Can't pick, no nozzle tip loaded"));
         }
 
         Map<String, Object> globals = new HashMap<>();
@@ -338,7 +339,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public void place() throws Exception {
         Logger.debug("{}.place()", getName());
         if (nozzleTip == null) {
-            throw new Exception("Can't place, no nozzle tip loaded");
+            throw new Exception(I18n.gettext("Can't place, no nozzle tip loaded"));
         }
 
         Map<String, Object> globals = new HashMap<>();
@@ -474,7 +475,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public Length getEffectiveSafeZ() throws Exception {
         Length safeZ = super.getEffectiveSafeZ();
         if (safeZ == null) {
-            throw new Exception("Nozzle "+getName()+" has no Z axis with Safe Zone mapped.");
+            throw new Exception("Nozzle "+getName()+I18n.gettext(" has no Z axis with Safe Zone mapped."));
         }
         if (enableDynamicSafeZ) { 
             // if a part is loaded, decrease (higher) safeZ
@@ -535,7 +536,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         // bert stop
         
         if (!getCompatibleNozzleTips().contains(nt)) {
-            throw new Exception("Can't load incompatible nozzle tip.");
+            throw new Exception(I18n.gettext("Can't load incompatible nozzle tip."));
         }
         
         if (nt.getNozzleAttachedTo() != null) {
@@ -621,7 +622,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     this.nozzleTip.getCalibration().reset(this);
                 }
                 waitForCompletion(CompletionType.WaitForStillstand);
-                throw new Exception("Manual NozzleTip "+nt.getName()+" load on Nozzle "+getName()+" required!");
+                throw new Exception("Manual NozzleTip "+nt.getName()+" load on Nozzle "+getName()+I18n.gettext(" required!"));
             }
         }
 
@@ -710,7 +711,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         if (!changerEnabled) {
             waitForCompletion(CompletionType.WaitForStillstand);
-            throw new Exception("Manual NozzleTip "+nt.getName()+" unload from Nozzle "+getName()+" required!");
+            throw new Exception("Manual NozzleTip "+nt.getName()+" unload from Nozzle "+getName()+I18n.gettext(" required!"));
         }
 
         ensureZCalibrated();
@@ -725,7 +726,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     protected void assertManualChangeLocation() throws Exception {
         if (isManualNozzleTipChangeLocationUndefined()) {
-            throw new Exception("Nozzle "+getName()+" Manual Change Location is not configured!");
+            throw new Exception("Nozzle "+getName()+I18n.gettext(" Manual Change Location is not configured!"));
         }
     }
 
@@ -762,10 +763,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new ReferenceNozzleCompatibleNozzleTipsWizard(this), "Nozzle Tips"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleVacuumWizard(this), "Vacuum"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleToolChangerWizard(this), "Tool Changer"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleCameraOffsetWizard(this), "Offset Wizard"),
+                new PropertySheetWizardAdapter(new ReferenceNozzleCompatibleNozzleTipsWizard(this), I18n.gettext("Nozzle Tips")),
+                new PropertySheetWizardAdapter(new ReferenceNozzleVacuumWizard(this), I18n.gettext("Vacuum")),
+                new PropertySheetWizardAdapter(new ReferenceNozzleToolChangerWizard(this), I18n.gettext("Tool Changer")),
+                new PropertySheetWizardAdapter(new ReferenceNozzleCameraOffsetWizard(this), I18n.gettext("Offset Wizard")),
         };
     }
 
@@ -784,7 +785,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (getHead().getNozzles().size() == 1) {
-                MessageBoxes.errorBox(null, "Error: Nozzle Not Deleted", "Can't delete last nozzle. There must be at least one nozzle.");
+                MessageBoxes.errorBox(null, "Error: Nozzle Not Deleted", I18n.gettext("Can't delete last nozzle. There must be at least one nozzle."));
                 return;
             }
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
@@ -842,7 +843,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (vacuumSenseActuator == null && vacuumSenseActuatorName != null && !vacuumSenseActuatorName.isEmpty()) {
             vacuumSenseActuator = getHead().getActuatorByName(vacuumSenseActuatorName);
             if (vacuumSenseActuator == null) {
-                throw new Exception(String.format("Can't find vacuum sense actuator %s", vacuumSenseActuatorName));
+                throw new Exception(String.format(I18n.gettext("Can't find vacuum sense actuator %s"), vacuumSenseActuatorName));
             }
         }
         return vacuumSenseActuator;

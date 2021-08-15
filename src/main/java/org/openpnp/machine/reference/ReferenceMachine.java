@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -278,15 +279,15 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        children.add(new AxesPropertySheetHolder(this, "Axes", getAxes(), null));
-        children.add(new SignalersPropertySheetHolder(this, "Signalers", getSignalers(), null));
-        children.add(new SimplePropertySheetHolder("Feeders", getFeeders()));
-        children.add(new SimplePropertySheetHolder("Heads", getHeads()));
-        children.add(new NozzleTipsPropertySheetHolder("Nozzle Tips", getNozzleTips(), null));
-        children.add(new CamerasPropertySheetHolder(null, "Cameras", getCameras(), null));
-        children.add(new ActuatorsPropertySheetHolder(null, "Actuators", getActuators(), null));
-        children.add(new DriversPropertySheetHolder(this, "Drivers", getDrivers(), null));
-        children.add(new SimplePropertySheetHolder("Job Processors",
+        children.add(new AxesPropertySheetHolder(this, I18n.gettext("Axes"), getAxes(), null));
+        children.add(new SignalersPropertySheetHolder(this, I18n.gettext("Signalers"), getSignalers(), null));
+        children.add(new SimplePropertySheetHolder(I18n.gettext("Feeders"), getFeeders()));
+        children.add(new SimplePropertySheetHolder(I18n.gettext("Heads"), getHeads()));
+        children.add(new NozzleTipsPropertySheetHolder(I18n.gettext("Nozzle Tips"), getNozzleTips(), null));
+        children.add(new CamerasPropertySheetHolder(null, I18n.gettext("Cameras"), getCameras(), null));
+        children.add(new ActuatorsPropertySheetHolder(null, I18n.gettext("Actuators"), getActuators(), null));
+        children.add(new DriversPropertySheetHolder(this, I18n.gettext("Drivers"), getDrivers(), null));
+        children.add(new SimplePropertySheetHolder(I18n.gettext("Job Processors"),
                 Arrays.asList(getPnpJobProcessor())));
 
         List<PropertySheetHolder> vision = new ArrayList<>();
@@ -294,7 +295,7 @@ public class ReferenceMachine extends AbstractMachine {
             vision.add(alignment);
         }
         vision.add(getFiducialLocator());
-        children.add(new SimplePropertySheetHolder("Vision", vision));
+        children.add(new SimplePropertySheetHolder(I18n.gettext("Vision"), vision));
         return children.toArray(new PropertySheetHolder[] {});
     }
 
@@ -527,8 +528,8 @@ public class ReferenceMachine extends AbstractMachine {
             if (getMotionPlanner() instanceof NullMotionPlanner) {
                 solutions.add(new Solutions.Issue(
                         this, 
-                        "Advanced Motion Planner not set. Accept or Dismiss to continue.", 
-                        "Change to ReferenceAdvancedMotionPlanner", 
+                        I18n.gettext("Advanced Motion Planner not set. Accept or Dismiss to continue."), 
+                        I18n.gettext("Change to ReferenceAdvancedMotionPlanner"), 
                         Solutions.Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
                     final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
@@ -580,7 +581,7 @@ public class ReferenceMachine extends AbstractMachine {
             solutions.add(new Solutions.Issue(
                     this, 
                     "OpenPnP can often automatically select the right tool for you in Machine Controls.", 
-                    "Enable Auto tool select.", 
+                    I18n.gettext("Enable Auto tool select."), 
                     Solutions.Severity.Suggestion,
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#configuration") {
 

@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -50,7 +51,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         this.nozzleOffsetLocation = new MutableLocationProxy();
 
         JPanel instructionPanel = new JPanel();
-        instructionPanel.setBorder(new TitledBorder(null, "Nozzle Offset Wizard Steps", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        instructionPanel.setBorder(new TitledBorder(null, I18n.gettext("Nozzle Offset Wizard Steps"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
         instructionPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -97,7 +98,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
                 FormSpecs.DEFAULT_ROWSPEC,})
         );
 
-        JLabel introductionLabel = new JLabel("The Semi Automatic Nozzle Offset Wizard will help you to measure the offset between machine head and this nozzle.");
+        JLabel introductionLabel = new JLabel(I18n.gettext("The Semi Automatic Nozzle Offset Wizard will help you to measure the offset between machine head and this nozzle."));
         instructionPanel.add(introductionLabel, "2, 2, fill, default");
         
         JButton adviceUrlButton = new JButton();
@@ -112,7 +113,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         adviceUrlButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         instructionPanel.add(adviceUrlButton, "2, 4");
             
-        JLabel step1Label = new JLabel("1. Select the head camera which you will use to set the offset.");
+        JLabel step1Label = new JLabel(I18n.gettext("1. Select the head camera which you will use to set the offset."));
         instructionPanel.add(step1Label, "2, 7");
 
         // We need to know through which camera we are doing the wizard, only relevant if there is more than one
@@ -130,35 +131,35 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
 
         instructionPanel.add(camerasComboBox, "2, 9");
 
-        JLabel step2Label = new JLabel("2. Place an object on the table where the nozzle tip can leave a mark. Putty, flour or carbon paper are a good choice for this.");
+        JLabel step2Label = new JLabel(I18n.gettext("2. Place an object on the table where the nozzle tip can leave a mark. Putty, flour or carbon paper are a good choice for this."));
         instructionPanel.add(step2Label, "2, 11");
 
-        JLabel step3Label = new JLabel("3. Move the nozzle tip over the object.");
+        JLabel step3Label = new JLabel(I18n.gettext("3. Move the nozzle tip over the object."));
         instructionPanel.add(step3Label, "2, 13");
 
-        JLabel step4Label = new JLabel("4. Lower the nozzle tip (jog panel) until the tip leaves a mark on the object.");
+        JLabel step4Label = new JLabel(I18n.gettext("4. Lower the nozzle tip (jog panel) until the tip leaves a mark on the object."));
         instructionPanel.add(step4Label, "2, 15");
 
-        JLabel step5Label = new JLabel("5. To exclude tip runout from the measurement turn the nozzle about 360°. ");
+        JLabel step5Label = new JLabel(I18n.gettext("5. To exclude tip runout from the measurement turn the nozzle about 360°. "));
         instructionPanel.add(step5Label, "2, 17");
         
-        JLabel step6Label = new JLabel("6. If you want an offset in Z, switch the \"Include Z?\" checkbox on. ");
+        JLabel step6Label = new JLabel(I18n.gettext("6. If you want an offset in Z, switch the \"Include Z?\" checkbox on. "));
         instructionPanel.add(step6Label, "2, 19");
         
         JPanel panel = new JPanel();
         instructionPanel.add(panel, "2, 21, left, fill");
         
-        JLabel lblIncludeZ = new JLabel("Include Z?");
+        JLabel lblIncludeZ = new JLabel(I18n.gettext("Include Z?"));
         panel.add(lblIncludeZ);
         
         chckbxIncludeZ = new JCheckBox("");
         panel.add(chckbxIncludeZ);
         
-        JLabel step7Label = new JLabel("7. Press \"Store nozzle mark position\".");
+        JLabel step7Label = new JLabel(I18n.gettext("7. Press \"Store nozzle mark position\"."));
         instructionPanel.add(step7Label, "2, 23");
         
         JPanel nozzleMarkPositionPanel = new JPanel();
-        nozzleMarkPositionPanel.setBorder(new TitledBorder(null, "Nozzle mark position", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        nozzleMarkPositionPanel.setBorder(new TitledBorder(null, I18n.gettext("Nozzle mark position"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
         nozzleMarkPositionPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -206,12 +207,12 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         JLabel step8Label = new JLabel("8. Jog the camera over the center of the mark. Press \"Calculate nozzle offset\" when finished.");
         instructionPanel.add(step8Label, "2, 29");
 
-        JButton applyNozzleOffsetButton = new JButton("Calculate nozzle offset");
+        JButton applyNozzleOffsetButton = new JButton(I18n.gettext("Calculate nozzle offset"));
         applyNozzleOffsetButton.setAction(applyNozzleOffsetAction);
         instructionPanel.add(applyNozzleOffsetButton, "2, 31");
 
         JPanel nozzleOffsetPanel = new JPanel();
-        nozzleOffsetPanel.setBorder(new TitledBorder(null, "Nozzle head offsets", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        nozzleOffsetPanel.setBorder(new TitledBorder(null, I18n.gettext("Nozzle head offsets"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         nozzleOffsetPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -257,10 +258,10 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
 
         contentPanel.add(instructionPanel);
                 
-                        JLabel step9Label = new JLabel("9. Apply the new nozzle offsets by pressing the \"Apply\" button");
+                        JLabel step9Label = new JLabel(I18n.gettext("9. Apply the new nozzle offsets by pressing the \"Apply\" button"));
                         instructionPanel.add(step9Label, "2, 35");
                 
-                        JLabel step10Label = new JLabel("10. Confirm the new settings by toggling the position camera / nozzle buttons from the Jog Panel.");
+                        JLabel step10Label = new JLabel(I18n.gettext("10. Confirm the new settings by toggling the position camera / nozzle buttons from the Jog Panel."));
                         instructionPanel.add(step10Label, "2, 37");
                         initDataBindings();
     }
@@ -278,7 +279,7 @@ public class ReferenceNozzleCameraOffsetWizard extends AbstractConfigurationWiza
         }
     };
 
-    private Action storePositionAction = new AbstractAction("Store nozzle mark position") {
+    private Action storePositionAction = new AbstractAction(I18n.gettext("Store nozzle mark position")) {
         @Override
         public void actionPerformed(ActionEvent e) {
             nozzleMarkLocation.setLocation(nozzle.getLocation().subtract(nozzle.getHeadOffsets()));

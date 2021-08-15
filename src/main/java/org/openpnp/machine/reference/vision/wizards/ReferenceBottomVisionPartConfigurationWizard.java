@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.vision.wizards;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -62,7 +63,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         this.partSettings = bottomVision.getPartSettings(part);
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel.setBorder(new TitledBorder(null, I18n.gettext("General"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -99,13 +100,13 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblEnabled = new JLabel("Enabled?");
+        JLabel lblEnabled = new JLabel(I18n.gettext("Enabled?"));
         panel.add(lblEnabled, "2, 2");
 
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
 
-        JLabel lblPrerotate = new JLabel("Pre-rotate");
+        JLabel lblPrerotate = new JLabel(I18n.gettext("Pre-rotate"));
         panel.add(lblPrerotate, "2, 4, right, default");
 
         comboBoxPreRotate = new JComboBox(ReferenceBottomVision.PreRotateUsage.values());
@@ -114,7 +115,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         JLabel lblTestAngle = new JLabel("Test Placement Angle");
         panel.add(lblTestAngle, "2, 6, right, default");
 
-        JButton btnTestAlighment = new JButton("Test Alignment");
+        JButton btnTestAlighment = new JButton(I18n.gettext("Test Alignment"));
         btnTestAlighment.addActionListener((e) -> {
             UiUtils.submitUiMachineTask(() -> {
                 testAlignment(chckbxCenterAfterTest.isSelected());
@@ -127,15 +128,15 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         testAlignmentAngle.setColumns(10);
         panel.add(btnTestAlighment, "6, 6");
 
-        chckbxCenterAfterTest = new JCheckBox("Center After Test");
+        chckbxCenterAfterTest = new JCheckBox(I18n.gettext("Center After Test"));
         chckbxCenterAfterTest.setToolTipText("Center and rotate the part after the test.");
         chckbxCenterAfterTest.setSelected(true);
         panel.add(chckbxCenterAfterTest, "8, 6");
 
-        JLabel lblPipeline = new JLabel("Pipeline");
+        JLabel lblPipeline = new JLabel(I18n.gettext("Pipeline"));
         panel.add(lblPipeline, "2, 8");
 
-        JButton editPipelineButton = new JButton("Edit");
+        JButton editPipelineButton = new JButton(I18n.gettext("Edit"));
         editPipelineButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
@@ -145,10 +146,10 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         });
         panel.add(editPipelineButton, "4, 8");
 
-        JButton btnLoadDefault = new JButton("Reset to Default");
+        JButton btnLoadDefault = new JButton(I18n.gettext("Reset to Default"));
         btnLoadDefault.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current part pipeline with the default pipeline. Are you sure?", null,
+                    I18n.gettext("This will replace the current part pipeline with the default pipeline. Are you sure?"), null,
                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
@@ -159,21 +160,21 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         });
         panel.add(btnLoadDefault, "6, 8");
 
-        JLabel lblMaxRotation = new JLabel("Rotation");
+        JLabel lblMaxRotation = new JLabel(I18n.gettext("Rotation"));
         panel.add(lblMaxRotation, "2, 10, right, default");
 
         comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
         comboBoxMaxRotation.setToolTipText(
-                "Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1");
+                I18n.gettext("Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1"));
         panel.add(comboBoxMaxRotation, "4, 10, fill, default");
 
-        JLabel lblPartCheckType = new JLabel("Part size check");
+        JLabel lblPartCheckType = new JLabel(I18n.gettext("Part size check"));
         panel.add(lblPartCheckType, "2, 12");
 
         comboBoxcheckPartSizeMethod = new JComboBox(PartSettings.PartSizeCheckMethod.values());
         panel.add(comboBoxcheckPartSizeMethod, "4, 12, fill, default");
 
-        JLabel lblPartSizeTolerance = new JLabel("Size tolerance (%)");
+        JLabel lblPartSizeTolerance = new JLabel(I18n.gettext("Size tolerance (%)"));
         panel.add(lblPartSizeTolerance, "2, 14");
 
         textPartSizeTolerance = new JTextField();
@@ -210,12 +211,12 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
     private void testAlignment(boolean centerAfterTest) throws Exception {
         if (!bottomVision.isEnabled()) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled in Machine Setup.");
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", I18n.gettext("Bottom vision is not enabled in Machine Setup."));
             return;
         }
 
         if (!enabledCheckbox.isSelected()) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled for this part.");
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", I18n.gettext("Bottom vision is not enabled for this part."));
             return;
         }
 
@@ -241,7 +242,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
             // value below.
             if (Math.abs(alignmentOffset.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(0.,
                     0.)) > 19.999) {
-                throw new Exception("Offset too big");
+                throw new Exception(I18n.gettext("Offset too big"));
             }
             nozzle.moveTo(cameraLocation.subtractWithRotation(alignmentOffset.getLocation()));
             return;
@@ -272,12 +273,12 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
     private void determineVisionOffset() throws Exception {
         if (!bottomVision.isEnabled()) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled in Machine Setup.");
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", I18n.gettext("Bottom vision is not enabled in Machine Setup."));
             return;
         }
 
         if (!enabledCheckbox.isSelected()) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", "Bottom vision is not enabled for this part.");
+            MessageBoxes.errorBox(getTopLevelAncestor(), "Error", I18n.gettext("Bottom vision is not enabled for this part."));
             return;
         }
 
@@ -300,13 +301,13 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
 
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), I18n.gettext("Bottom Vision Pipeline"), editor);
         dialog.setVisible(true);
     }
 
     @Override
     public String getWizardName() {
-        return "ReferenceBottomVision";
+        return I18n.gettext("ReferenceBottomVision");
     }
 
     @Override

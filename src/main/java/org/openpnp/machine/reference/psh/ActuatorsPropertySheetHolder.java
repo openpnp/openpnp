@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.psh;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.util.List;
@@ -60,7 +61,7 @@ public class ActuatorsPropertySheetHolder extends SimplePropertySheetHolder {
                 }
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Camera Error", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Camera Error"), e);
             }
         }
     };

@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -71,7 +72,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         this.nozzleTip = nozzleTip;
         
         panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel.setBorder(new TitledBorder(null, I18n.gettext("Properties"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -82,7 +83,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblName = new JLabel("Name");
+        lblName = new JLabel(I18n.gettext("Name"));
         panel.add(lblName, "2, 2, right, default");
         
         nameTf = new JTextField();
@@ -90,7 +91,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         nameTf.setColumns(10);
         
         panelDwellTime = new JPanel();
-        panelDwellTime.setBorder(new TitledBorder(null, "Dwell Times", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelDwellTime.setBorder(new TitledBorder(null, I18n.gettext("Dwell Times"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelDwellTime);
         panelDwellTime.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -107,14 +108,14 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
           
-        lblPickDwellTime = new JLabel("Pick Dwell Time (ms)");
+        lblPickDwellTime = new JLabel(I18n.gettext("Pick Dwell Time (ms)"));
         panelDwellTime.add(lblPickDwellTime, "2, 2, right, default");
         
         pickDwellTf = new JTextField();
         panelDwellTime.add(pickDwellTf, "4, 2");
         pickDwellTf.setColumns(10);
         
-        lblPlaceDwellTime = new JLabel("Place Dwell Time (ms)");
+        lblPlaceDwellTime = new JLabel(I18n.gettext("Place Dwell Time (ms)"));
         panelDwellTime.add(lblPlaceDwellTime, "2, 4, right, default");
         
         placeDwellTf = new JTextField();
@@ -122,11 +123,11 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         placeDwellTf.setColumns(10);
         
         CellConstraints cc = new CellConstraints();
-        lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
+        lblDwellTime = new JLabel(I18n.gettext("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time."));
         panelDwellTime.add(lblDwellTime, cc.xywh(2, 6, 5, 1));
 
         panelPushAndDrag = new JPanel();
-        panelPushAndDrag.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Push and Drag Usage", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelPushAndDrag.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), I18n.gettext("Push and Drag Usage"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPushAndDrag);
         panelPushAndDrag.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -150,15 +151,15 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblLowDiameter = new JLabel("Outside Diameter");
-        lblLowDiameter.setToolTipText("Outside diameter of the nozzle tip at the lowest ~0.75mm.");
+        lblLowDiameter.setToolTipText(I18n.gettext("Outside diameter of the nozzle tip at the lowest ~0.75mm."));
         panelPushAndDrag.add(lblLowDiameter, "2, 4, right, default");
         
         textFieldLowDiameter = new JTextField();
         panelPushAndDrag.add(textFieldLowDiameter, "4, 4");
         textFieldLowDiameter.setColumns(10);
         
-        lblPushAndDragAllowed = new JLabel("Push & Drag allowed?");
-        lblPushAndDragAllowed.setToolTipText("<html>\r\n<p>\r\nDetermines if the NozzleTip is allowed to be used <br/>\r\nfor pushing and dragging. \r\n</p><p>\r\nShould only be enabled for NozzleTips that are <br/>\r\nsturdy enough to take the lateral forces, including <br/>\r\nthe occasional snag. </p>\r\n</html>");
+        lblPushAndDragAllowed = new JLabel(I18n.gettext("Push & Drag allowed?"));
+        lblPushAndDragAllowed.setToolTipText(I18n.gettext("<html>\r\n<p>\r\nDetermines if the NozzleTip is allowed to be used <br/>\r\nfor pushing and dragging. \r\n</p><p>\r\nShould only be enabled for NozzleTips that are <br/>\r\nsturdy enough to take the lateral forces, including <br/>\r\nthe occasional snag. </p>\r\n</html>"));
         panelPushAndDrag.add(lblPushAndDragAllowed, "2, 2, right, default");
         
         chckbxPushAndDragAllowed = new JCheckBox("");

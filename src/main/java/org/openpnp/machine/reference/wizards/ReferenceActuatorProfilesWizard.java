@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -103,7 +104,7 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
     protected void createUi() {
         AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         panelInterlock = new JPanel();
-        panelInterlock.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelInterlock.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), I18n.gettext("Actuators"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelInterlock);
         panelInterlock.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -197,7 +198,7 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
         panelInterlock.add(actuator6, "4, 12, fill, default");
 
         panelCondition = new JPanel();
-        panelCondition.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Profiles", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelCondition.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), I18n.gettext("Profiles"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelCondition);
         panelCondition.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -321,7 +322,7 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
             new AbstractAction("", Icons.add) {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Add a new profile.</html>");
+                    I18n.gettext("<html>Add a new profile.</html>"));
         }
 
         @Override
@@ -336,7 +337,7 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
             new AbstractAction("", Icons.delete) {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Delete the selected profile.</html>");
+                    I18n.gettext("<html>Delete the selected profile.</html>"));
         }
 
         @Override
@@ -354,7 +355,7 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
             new AbstractAction("", Icons.arrowUp) {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Move the profile up one position.</html>");
+                    I18n.gettext("<html>Move the profile up one position.</html>"));
         }
 
         @Override
@@ -382,7 +383,7 @@ public class ReferenceActuatorProfilesWizard extends AbstractConfigurationWizard
             new AbstractAction("", Icons.arrowDown) {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Move the profile down one position.</html>");
+                    I18n.gettext("<html>Move the profile down one position.</html>"));
         }
 
         @Override

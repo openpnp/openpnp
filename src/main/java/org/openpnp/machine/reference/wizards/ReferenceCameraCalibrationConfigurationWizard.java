@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 
@@ -33,7 +34,7 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         this.referenceCamera = referenceCamera;
 
         panelLensCalibration = new JPanel();
-        panelLensCalibration.setBorder(new TitledBorder(null, "Lens Calibration",
+        panelLensCalibration.setBorder(new TitledBorder(null, I18n.gettext("Lens Calibration"),
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelLensCalibration);
         panelLensCalibration.setLayout(new FormLayout(
@@ -50,7 +51,7 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         startLensCalibrationBtn = new JButton(startCalibration);
         panelLensCalibration.add(startLensCalibrationBtn, "2, 2, 3, 1");
 
-        lblApplyCalibration = new JLabel("Apply Calibration?");
+        lblApplyCalibration = new JLabel(I18n.gettext("Apply Calibration?"));
         panelLensCalibration.add(lblApplyCalibration, "2, 4, right, default");
 
         calibrationEnabledChk = new JCheckBox("");
@@ -65,7 +66,7 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         // "selected");
     }
 
-    private Action startCalibration = new AbstractAction("Start Lens Calibration") {
+    private Action startCalibration = new AbstractAction(I18n.gettext("Start Lens Calibration")) {
         @Override
         public void actionPerformed(ActionEvent e) {
             MainFrame.get().getCameraViews().setSelectedCamera(referenceCamera);
@@ -76,7 +77,7 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
             String message =
                     "Go to https://github.com/openpnp/openpnp/wiki/Camera-Lens-Calibration for detailed instructions.\n"
                             + "When you have your calibration card ready, hold it in front of the camera so that the entire card is visible.\n"
-                            + "Each time the screen flashes an image is captured. After the flash you should move the card to a new orientation.";
+                            + I18n.gettext("Each time the screen flashes an image is captured. After the flash you should move the card to a new orientation.");
             cameraView.setText(message);
             cameraView.flash();
 
@@ -95,7 +96,7 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         }
     };
 
-    private Action cancelCalibration = new AbstractAction("Cancel Lens Calibration") {
+    private Action cancelCalibration = new AbstractAction(I18n.gettext("Cancel Lens Calibration")) {
         @Override
         public void actionPerformed(ActionEvent e) {
             startLensCalibrationBtn.setAction(startCalibration);

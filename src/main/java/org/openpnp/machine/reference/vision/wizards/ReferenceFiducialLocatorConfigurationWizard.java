@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.vision.wizards;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -47,7 +48,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         this.fiducialLocator = fiducialLocator;
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, I18n.gettext("General"), TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -69,10 +70,10 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblPipeline = new JLabel("Pipeline");
+        JLabel lblPipeline = new JLabel(I18n.gettext("Pipeline"));
         panel.add(lblPipeline, "2, 2");
 
-        JButton editPipelineButton = new JButton("Edit");
+        JButton editPipelineButton = new JButton(I18n.gettext("Edit"));
         editPipelineButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
@@ -82,7 +83,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         });
         panel.add(editPipelineButton, "4, 2");
 
-        JButton btnResetToDefault = new JButton("Reset to Default");
+        JButton btnResetToDefault = new JButton(I18n.gettext("Reset to Default"));
         btnResetToDefault.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "This will replace the current pipeline with the built in default pipeline. Are you sure?",
@@ -96,7 +97,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         });
         panel.add(btnResetToDefault, "6, 2");
 
-        JButton btnResetAllTo = new JButton("Reset All Parts");
+        JButton btnResetAllTo = new JButton(I18n.gettext("Reset All Parts"));
         btnResetAllTo.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "This will replace all custom part pipelines with the current pipeline. Are you sure?",
@@ -114,16 +115,16 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         });
         panel.add(btnResetAllTo, "8, 2");
         
-        JLabel lblRepeatFiducialRecognition = new JLabel("Repeat Recognition");
+        JLabel lblRepeatFiducialRecognition = new JLabel(I18n.gettext("Repeat Recognition"));
         panel.add(lblRepeatFiducialRecognition, "2, 4");
         
         textFieldRepeatFiducialRecognition = new JTextField();
-        textFieldRepeatFiducialRecognition.setToolTipText("To dial-in on fiducials the recognition is repeated several times, but at least 3 times. (default: 3)");
+        textFieldRepeatFiducialRecognition.setToolTipText(I18n.gettext("To dial-in on fiducials the recognition is repeated several times, but at least 3 times. (default: 3)"));
         panel.add(textFieldRepeatFiducialRecognition, "4, 4");
         textFieldRepeatFiducialRecognition.setColumns(2);
 
-        JLabel lblEnabledAveraging = new JLabel("Average Matches?");
-        lblEnabledAveraging.setToolTipText("Finally calculates the arithmetic average over all matches (except the first). Needs 3 or more repeated recognitions to work.");
+        JLabel lblEnabledAveraging = new JLabel(I18n.gettext("Average Matches?"));
+        lblEnabledAveraging.setToolTipText(I18n.gettext("Finally calculates the arithmetic average over all matches (except the first). Needs 3 or more repeated recognitions to work."));
         panel.add(lblEnabledAveraging, "2, 6");
 
         enabledAveragingCheckbox = new JCheckBox("");
@@ -147,7 +148,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         pipeline.setProperty("package", defaultPart.getPackage());
         pipeline.setProperty("footprint", defaultPart.getPackage().getFootprint());
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Fiducial Locator Pipeline", editor);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), I18n.gettext("Fiducial Locator Pipeline"), editor);
         dialog.setVisible(true);
 }
 
@@ -183,6 +184,6 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
     @Override
     public String getWizardName() {
-        return "ReferenceFiducialLocator";
+        return I18n.gettext("ReferenceFiducialLocator");
     }
 }

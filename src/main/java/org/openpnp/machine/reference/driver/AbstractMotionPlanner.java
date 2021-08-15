@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.driver;
+import org.I18n.I18n;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -100,7 +101,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         for (Axis axis : getMachine().getAxes()) {
             if (axis instanceof ControllerAxis) {
                 if (((ControllerAxis) axis).getDriver() == null) {
-                    throw new Exception("Axis "+axis.getName()+" has no driver set.");
+                    throw new Exception("Axis "+axis.getName()+I18n.gettext(" has no driver set."));
                 }
             }
             else if (axis instanceof ReferenceVirtualAxis) {
@@ -522,7 +523,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                             if (silent) {
                                 return null;    
                             }
-                            throw new Exception(String.format("Can't move %s to %s, lower than soft limit %s.",
+                            throw new Exception(String.format(I18n.gettext("Can't move %s to %s, lower than soft limit %s."),
                                     refAxis.getName(), coordinate, limit));
                         }
                     }
@@ -534,7 +535,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                             if (silent) {
                                 return null;    
                             }
-                            throw new Exception(String.format("Can't move %s to %s, higher than soft limit %s.",
+                            throw new Exception(String.format(I18n.gettext("Can't move %s to %s, higher than soft limit %s."),
                                     refAxis.getName(), coordinate, limit));
                         }
                     }

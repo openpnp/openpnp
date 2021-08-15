@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -54,7 +55,7 @@ public class ReferenceLoosePartFeederConfigurationWizard
         this.feeder = feeder;
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, I18n.gettext("Vision"), TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(
@@ -62,7 +63,7 @@ public class ReferenceLoosePartFeederConfigurationWizard
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JButton btnEditPipeline = new JButton("Edit Pipeline");
+        JButton btnEditPipeline = new JButton(I18n.gettext("Edit Pipeline"));
         btnEditPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
@@ -72,7 +73,7 @@ public class ReferenceLoosePartFeederConfigurationWizard
         });
         panel.add(btnEditPipeline, "2, 2");
 
-        JButton btnResetPipeline = new JButton("Reset Pipeline");
+        JButton btnResetPipeline = new JButton(I18n.gettext("Reset Pipeline"));
         btnResetPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 resetPipeline();
@@ -80,7 +81,7 @@ public class ReferenceLoosePartFeederConfigurationWizard
         });
         panel.add(btnResetPipeline, "4, 2");
         
-        JLabel lblWarningThisFeeder = new JLabel("Warning: This feeder is incomplete and experimental. Use at your own risk.");
+        JLabel lblWarningThisFeeder = new JLabel(I18n.gettext("Warning: This feeder is incomplete and experimental. Use at your own risk."));
         lblWarningThisFeeder.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
         lblWarningThisFeeder.setForeground(Color.RED);
         lblWarningThisFeeder.setHorizontalAlignment(SwingConstants.LEFT);
@@ -88,7 +89,7 @@ public class ReferenceLoosePartFeederConfigurationWizard
 
     private void editPipeline() throws Exception {
         if (feeder.getPart() == null) {
-            throw new Exception("Feeder "+feeder.getName()+" has no part.");
+            throw new Exception("Feeder "+feeder.getName()+I18n.gettext(" has no part."));
         }
         CvPipeline pipeline = feeder.getPipeline();
         pipeline.setProperty("camera", Configuration.get().getMachine().getDefaultHead().getDefaultCamera());

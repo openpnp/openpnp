@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -78,7 +79,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         this.nozzleTip = nozzleTip;
 
         panelChanger = new JPanel();
-        panelChanger.setBorder(new TitledBorder(null, "Nozzle Tip Changer", TitledBorder.LEADING,
+        panelChanger.setBorder(new TitledBorder(null, I18n.gettext("Nozzle Tip Changer"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelChanger);
         panelChanger.setLayout(new FormLayout(new ColumnSpec[] {
@@ -117,11 +118,11 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
 
-        label = new JLabel("Post 1 Actuator");
+        label = new JLabel(I18n.gettext("Post 1 Actuator"));
         panelChanger.add(label, "2, 5, right, center");
-        label = new JLabel("Post 2 Actuator");
+        label = new JLabel(I18n.gettext("Post 2 Actuator"));
         panelChanger.add(label, "2, 7, right, center");
-        label = new JLabel("Post 3 Actuator");
+        label = new JLabel(I18n.gettext("Post 3 Actuator"));
         panelChanger.add(label, "2, 9, right, center");
 
         Machine myMachine = null;
@@ -153,7 +154,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         lblZ_1 = new JLabel("Z");
         panelChanger.add(lblZ_1, "8, 2, center, default");
 
-        lblSpeed = new JLabel("Speed");
+        lblSpeed = new JLabel(I18n.gettext("Speed"));
         panelChanger.add(lblSpeed, "10, 2, center, default");
 
         lblSpeed1_2 = new JLabel("1 ↔ 2");
@@ -165,7 +166,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         lblSpeed3_4 = new JLabel("3 ↔ 4");
         panelChanger.add(lblSpeed3_4, "8, 9, right, default");
 
-        lblStartLocation = new JLabel("First Location");
+        lblStartLocation = new JLabel(I18n.gettext("First Location"));
         lblStartLocation.setToolTipText("<html>First location in a nozzle tip loading motion sequence.<br/>\r\nThis is the first way-point when loading the nozzle tip and the<br/>\r\nlast way-point when unloading it.\r\n</hml>");
         panelChanger.add(lblStartLocation, "2, 4, right, default");
 
@@ -182,7 +183,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         textFieldChangerStartZ.setColumns(8);
 
         textFieldChangerStartToMidSpeed = new JTextField();
-        textFieldChangerStartToMidSpeed.setToolTipText("Speed between First location and Second location");
+        textFieldChangerStartToMidSpeed.setToolTipText(I18n.gettext("Speed between First location and Second location"));
         panelChanger.add(textFieldChangerStartToMidSpeed, "10, 5, fill, default");
         textFieldChangerStartToMidSpeed.setColumns(8);
 
@@ -191,7 +192,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         changerStartLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
         panelChanger.add(changerStartLocationButtonsPanel, "12, 4, fill, default");
 
-        lblMiddleLocation = new JLabel("Second Location");
+        lblMiddleLocation = new JLabel(I18n.gettext("Second Location"));
         panelChanger.add(lblMiddleLocation, "2, 6, right, default");
 
         textFieldChangerMidX = new JTextField();
@@ -207,7 +208,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         textFieldChangerMidZ.setColumns(8);
 
         textFieldChangerMidToMid2Speed = new JTextField();
-        textFieldChangerMidToMid2Speed.setToolTipText("Speed between Second location and Third location");
+        textFieldChangerMidToMid2Speed.setToolTipText(I18n.gettext("Speed between Second location and Third location"));
         textFieldChangerMidToMid2Speed.setColumns(8);
         panelChanger.add(textFieldChangerMidToMid2Speed, "10, 7, fill, default");
 
@@ -216,7 +217,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         changerMidLocationButtonsPanel.setShowPositionToolNoSafeZ(true);
         panelChanger.add(changerMidLocationButtonsPanel, "12, 6, fill, default");
 
-        lblMiddleLocation_1 = new JLabel("Third Location");
+        lblMiddleLocation_1 = new JLabel(I18n.gettext("Third Location"));
         panelChanger.add(lblMiddleLocation_1, "2, 8, right, default");
 
         textFieldMidX2 = new JTextField();
@@ -232,7 +233,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         panelChanger.add(textFieldMidZ2, "8, 8, fill, default");
 
         textFieldChangerMid2ToEndSpeed = new JTextField();
-        textFieldChangerMid2ToEndSpeed.setToolTipText("Speed between Third location and Last location");
+        textFieldChangerMid2ToEndSpeed.setToolTipText(I18n.gettext("Speed between Third location and Last location"));
         textFieldChangerMid2ToEndSpeed.setColumns(8);
         panelChanger.add(textFieldChangerMid2ToEndSpeed, "10, 9, fill, default");
 
@@ -240,7 +241,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         changerMidButtons2.setShowPositionToolNoSafeZ(true);
         panelChanger.add(changerMidButtons2, "12, 8, fill, default");
 
-        lblEndLocation = new JLabel("Last Location");
+        lblEndLocation = new JLabel(I18n.gettext("Last Location"));
         panelChanger.add(lblEndLocation, "2, 10, right, default");
 
         textFieldChangerEndX = new JTextField();

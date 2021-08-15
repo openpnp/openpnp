@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -71,7 +72,7 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
 
         JPanel panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
-        panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING,
+        panelGeneral.setBorder(new TitledBorder(null, I18n.gettext("General"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -82,14 +83,14 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblSimulationMode = new JLabel("Simulation Mode");
+        JLabel lblSimulationMode = new JLabel(I18n.gettext("Simulation Mode"));
         panelGeneral.add(lblSimulationMode, "2, 2, right, default");
 
         simulationMode = new JComboBox(SimulationMode.values());
         panelGeneral.add(simulationMode, "4, 2, fill, default");
 
         JPanel panelLocations = new JPanel();
-        panelLocations.setBorder(new TitledBorder(null, "Simulated Imperfections", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, I18n.gettext("Simulated Imperfections"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelLocations);
         panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
@@ -139,64 +140,64 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("default:grow"),}));
 
-        JLabel lblNozzleTipRunout = new JLabel("Nozzle Tip Runout");
-        lblNozzleTipRunout.setToolTipText("Simulates runout of that radius on all nozzle tips.");
+        JLabel lblNozzleTipRunout = new JLabel(I18n.gettext("Nozzle Tip Runout"));
+        lblNozzleTipRunout.setToolTipText(I18n.gettext("Simulates runout of that radius on all nozzle tips."));
         panelLocations.add(lblNozzleTipRunout, "2, 2, right, default");
 
         simulatedRunout = new JTextField();
         panelLocations.add(simulatedRunout, "4, 2");
         simulatedRunout.setColumns(10);
         
-        JLabel lblWarnRunout = new JLabel("<html>Be aware that runout will be apparent as an offset in the cross-hairs of the Down-looking Camera, whenever the the Nozzle is positioned. This also happens when watching a Job perform.<html>");
+        JLabel lblWarnRunout = new JLabel(I18n.gettext("<html>Be aware that runout will be apparent as an offset in the cross-hairs of the Down-looking Camera, whenever the the Nozzle is positioned. This also happens when watching a Job perform.<html>"));
         panelLocations.add(lblWarnRunout, "6, 2, 3, 5, fill, top");
         
-        JLabel lblRunoutPhase = new JLabel("Runout Phase");
-        lblRunoutPhase.setToolTipText("Phase angle for the simulated runout.");
+        JLabel lblRunoutPhase = new JLabel(I18n.gettext("Runout Phase"));
+        lblRunoutPhase.setToolTipText(I18n.gettext("Phase angle for the simulated runout."));
         panelLocations.add(lblRunoutPhase, "2, 4, right, default");
         
         simulatedRunoutPhase = new JTextField();
         panelLocations.add(simulatedRunoutPhase, "4, 4, fill, default");
         simulatedRunoutPhase.setColumns(10);
         
-                JLabel lblNonsquarenessFactor = new JLabel("Non-Squareness Factor");
-                lblNonsquarenessFactor.setToolTipText("Creates simulated Non-Squareness by that factor. ");
+                JLabel lblNonsquarenessFactor = new JLabel(I18n.gettext("Non-Squareness Factor"));
+                lblNonsquarenessFactor.setToolTipText(I18n.gettext("Creates simulated Non-Squareness by that factor. "));
                 panelLocations.add(lblNonsquarenessFactor, "2, 8, right, default");
         
                 simulatedNonSquarenessFactor = new JTextField();
                 panelLocations.add(simulatedNonSquarenessFactor, "4, 8");
                 simulatedNonSquarenessFactor.setColumns(10);
         
-        JLabel lblPickPlace = new JLabel("Pick & Place Checking?");
+        JLabel lblPickPlace = new JLabel(I18n.gettext("Pick & Place Checking?"));
         panelLocations.add(lblPickPlace, "2, 12, right, default");
         
         pickAndPlaceChecking = new JCheckBox("");
         panelLocations.add(pickAndPlaceChecking, "4, 12");
         
-        JLabel lblCameraLags = new JLabel("Camera Lag [s]");
+        JLabel lblCameraLags = new JLabel(I18n.gettext("Camera Lag [s]"));
         panelLocations.add(lblCameraLags, "2, 16, right, default");
         
         simulatedCameraLag = new JTextField();
         panelLocations.add(simulatedCameraLag, "4, 16, fill, default");
         simulatedCameraLag.setColumns(10);
         
-                JLabel lblCameraNoise = new JLabel("Camera Noise");
-                lblCameraNoise.setToolTipText("<html>\r\nCreates simulated noise in the camera image (number of sparks) <br/>\r\nto satisfy Camera Settling that the frame has changed. \r\n</html>");
+                JLabel lblCameraNoise = new JLabel(I18n.gettext("Camera Noise"));
+                lblCameraNoise.setToolTipText(I18n.gettext("<html>\r\nCreates simulated noise in the camera image (number of sparks) <br/>\r\nto satisfy Camera Settling that the frame has changed. \r\n</html>"));
                 panelLocations.add(lblCameraNoise, "2, 18, right, default");
         
                 simulatedCameraNoise = new JTextField();
                 panelLocations.add(simulatedCameraNoise, "4, 18");
                 simulatedCameraNoise.setColumns(10);
 
-        JLabel lblVibrationAmplitude = new JLabel("Vibration Amplitude");
-        lblVibrationAmplitude.setToolTipText("Simulates Vibration, the amplitude is given in relation to the past acceleration at Eigenfrequency (try 0.1 for a strong vibration).");
+        JLabel lblVibrationAmplitude = new JLabel(I18n.gettext("Vibration Amplitude"));
+        lblVibrationAmplitude.setToolTipText(I18n.gettext("Simulates Vibration, the amplitude is given in relation to the past acceleration at Eigenfrequency (try 0.1 for a strong vibration)."));
         panelLocations.add(lblVibrationAmplitude, "2, 20, right, default");
 
         simulatedVibrationAmplitude = new JTextField();
         panelLocations.add(simulatedVibrationAmplitude, "4, 20, fill, default");
         simulatedVibrationAmplitude.setColumns(10);
         
-        JLabel lblDuration = new JLabel("Vibration Duration [s]");
-        lblDuration.setToolTipText("Vibration duration in seconds (exponential decay to ~1%).");
+        JLabel lblDuration = new JLabel(I18n.gettext("Vibration Duration [s]"));
+        lblDuration.setToolTipText(I18n.gettext("Vibration duration in seconds (exponential decay to ~1%)."));
         panelLocations.add(lblDuration, "2, 22, right, default");
         
         simulatedVibrationDuration = new JTextField();
@@ -211,8 +212,8 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         panelLocations.add(lblY, "6, 26");
         lblY.setHorizontalAlignment(SwingConstants.CENTER);
 
-        JLabel lblDiscardPoint = new JLabel("Homing Error");
-        lblDiscardPoint.setToolTipText("<html>\r\nSimulates an initial homing error by that offset. Used to test visial homing. <br/>\r\nSet the homing fiducial to the PCB fiducial in the lower left corner of the test image.<br/>\r\nUse coordinates 5.736, 6.112 to get original coordinates through Visual homing.\r\n</html>");
+        JLabel lblDiscardPoint = new JLabel(I18n.gettext("Homing Error"));
+        lblDiscardPoint.setToolTipText(I18n.gettext("<html>\r\nSimulates an initial homing error by that offset. Used to test visial homing. <br/>\r\nSet the homing fiducial to the PCB fiducial in the lower left corner of the test image.<br/>\r\nUse coordinates 5.736, 6.112 to get original coordinates through Visual homing.\r\n</html>"));
         panelLocations.add(lblDiscardPoint, "2, 28, right, default");
 
         homingErrorX = new JTextField();
@@ -223,14 +224,14 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         panelLocations.add(homingErrorY, "6, 28");
         homingErrorY.setColumns(10);
         
-        JButton btnResetFeeders = new JButton("Reset Feeders");
+        JButton btnResetFeeders = new JButton(I18n.gettext("Reset Feeders"));
         btnResetFeeders.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 machine.resetAllFeeders();
             }
         });
         
-        JLabel lblMachineTableZ = new JLabel("Machine Table Z");
+        JLabel lblMachineTableZ = new JLabel(I18n.gettext("Machine Table Z"));
         panelLocations.add(lblMachineTableZ, "2, 30, right, default");
         
         machineTableZ = new JTextField();

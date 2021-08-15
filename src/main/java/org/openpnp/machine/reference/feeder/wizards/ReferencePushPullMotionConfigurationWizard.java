@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.GraphicsEnvironment;
@@ -125,12 +126,12 @@ extends AbstractConfigurationWizard {
         JPanel panelFields = new JPanel();
         panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
         panelLocations = new JPanel();
-        panelLocations.setBorder(new TitledBorder(null, "Tape Settings", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, I18n.gettext("Tape Settings"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
 
         panelPushPull = new JPanel();
         panelFields.add(panelPushPull);
-        panelPushPull.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Push-Pull Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelPushPull.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), I18n.gettext("Push-Pull Settings"), TitledBorder.LEADING, TitledBorder.TOP, null));
         panelPushPull.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),
@@ -182,7 +183,7 @@ extends AbstractConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         RowSpec.decode("default:grow"),}));
 
-        lblActuatorId = new JLabel("Actuator");
+        lblActuatorId = new JLabel(I18n.gettext("Actuator"));
         panelPushPull.add(lblActuatorId, "2, 4, right, default");
 
         Head head = null;
@@ -197,7 +198,7 @@ extends AbstractConfigurationWizard {
         panelPushPull.add(comboBoxFeedActuator, "4, 4");
         comboBoxFeedActuator.setModel(new ActuatorsComboBoxModel(head));
 
-        lblPeelOffActuatorId = new JLabel("Peel Off Actuator");
+        lblPeelOffActuatorId = new JLabel(I18n.gettext("Peel Off Actuator"));
         panelPushPull.add(lblPeelOffActuatorId, "6, 4, right, default");
 
         comboBoxPeelOffActuator = new JComboBox();
@@ -214,18 +215,18 @@ extends AbstractConfigurationWizard {
         panelPushPull.add(lblZ, "8, 8");
 
         lblPush = new JLabel("↓");
-        lblPush.setToolTipText("Locations that are included when pushing.");
+        lblPush.setToolTipText(I18n.gettext("Locations that are included when pushing."));
         panelPushPull.add(lblPush, "10, 8, center, default");
 
         lblMulti = new JLabel("↑↓");
-        lblMulti.setToolTipText("<html>Locations that are included, when actuating multiple times.<br/>\r\nThe combination with the push ↓ and pull ↑ switch is taken.</html>");
+        lblMulti.setToolTipText(I18n.gettext("<html>Locations that are included, when actuating multiple times.<br/>\r\nThe combination with the push ↓ and pull ↑ switch is taken.</html>"));
         panelPushPull.add(lblMulti, "12, 8, 3, 1, center, default");
 
         lblPull = new JLabel("↑");
-        lblPull.setToolTipText("Locations that are included when pulling.");
+        lblPull.setToolTipText(I18n.gettext("Locations that are included when pulling."));
         panelPushPull.add(lblPull, "16, 8, center, default");
 
-        JLabel lblFeedStartLocation = new JLabel("Start Location");
+        JLabel lblFeedStartLocation = new JLabel(I18n.gettext("Start Location"));
         panelPushPull.add(lblFeedStartLocation, "2, 10, right, default");
 
         textFieldFeedStartX = new JTextField();
@@ -241,12 +242,12 @@ extends AbstractConfigurationWizard {
         textFieldFeedStartZ.setColumns(8);
 
         chckbxMulti0 = new JCheckBox("");
-        chckbxMulti0.setToolTipText("Include the Start Location in multi-actuating motion (if the pull switch is also set).");
+        chckbxMulti0.setToolTipText(I18n.gettext("Include the Start Location in multi-actuating motion (if the pull switch is also set)."));
         chckbxMulti0.setSelected(true);
         panelPushPull.add(chckbxMulti0, "12, 10, 3, 1, center, default");
 
         chckbxPull0 = new JCheckBox("");
-        chckbxPull0.setToolTipText("Go to the Start Location when pulling.");
+        chckbxPull0.setToolTipText(I18n.gettext("Go to the Start Location when pulling."));
         chckbxPull0.setSelected(true);
         panelPushPull.add(chckbxPull0, "16, 10, center, default");
 
@@ -255,7 +256,7 @@ extends AbstractConfigurationWizard {
         locationButtonsPanelFeedStart.setShowPositionToolNoSafeZ(true);
         panelPushPull.add(locationButtonsPanelFeedStart, "18, 10, 3, 1, fill, default");
 
-        lblFeedSpeed0_1 = new JLabel("Speed ↕");
+        lblFeedSpeed0_1 = new JLabel(I18n.gettext("Speed ↕"));
         panelPushPull.add(lblFeedSpeed0_1, "8, 12, right, default");
 
         textFieldFeedPush1 = new JTextField();
@@ -266,7 +267,7 @@ extends AbstractConfigurationWizard {
         panelPushPull.add(textFieldFeedPull0, "14, 12, 3, 1");
         textFieldFeedPull0.setColumns(10);
 
-        lblFeedMid1Location = new JLabel("Mid 1 Location");
+        lblFeedMid1Location = new JLabel(I18n.gettext("Mid 1 Location"));
         panelPushPull.add(lblFeedMid1Location, "2, 14, right, default");
 
         textFieldFeedMid1X = new JTextField();
@@ -282,17 +283,17 @@ extends AbstractConfigurationWizard {
         textFieldFeedMid1Z.setColumns(10);
 
         chckbxPush1 = new JCheckBox("");
-        chckbxPush1.setToolTipText("Go to the Mid 1 Location when pushing.");
+        chckbxPush1.setToolTipText(I18n.gettext("Go to the Mid 1 Location when pushing."));
         chckbxPush1.setSelected(true);
         panelPushPull.add(chckbxPush1, "10, 14, center, default");
 
         chckbxMulti1 = new JCheckBox("");
-        chckbxMulti1.setToolTipText("Include the Mid 1 Location in multi-actuation motion (if the push/pull switch is also set).");
+        chckbxMulti1.setToolTipText(I18n.gettext("Include the Mid 1 Location in multi-actuation motion (if the push/pull switch is also set)."));
         chckbxMulti1.setSelected(true);
         panelPushPull.add(chckbxMulti1, "12, 14, 3, 1, center, default");
 
         chckbxPull1 = new JCheckBox("");
-        chckbxPull1.setToolTipText("Go to the Mid 1 Location when pulling.");
+        chckbxPull1.setToolTipText(I18n.gettext("Go to the Mid 1 Location when pulling."));
         chckbxPull1.setSelected(true);
         panelPushPull.add(chckbxPull1, "16, 14, center, default");
 
@@ -300,7 +301,7 @@ extends AbstractConfigurationWizard {
         locationButtonsPanelFeedMid1.setShowPositionToolNoSafeZ(true);
         panelPushPull.add(locationButtonsPanelFeedMid1, "18, 14, 3, 1, fill, default");
 
-        lblFeedSpeed1_2 = new JLabel("Speed ↕");
+        lblFeedSpeed1_2 = new JLabel(I18n.gettext("Speed ↕"));
         panelPushPull.add(lblFeedSpeed1_2, "8, 16, right, default");
 
         textFieldFeedPush2 = new JTextField();
@@ -311,7 +312,7 @@ extends AbstractConfigurationWizard {
         textFieldFeedPull1.setColumns(10);
         panelPushPull.add(textFieldFeedPull1, "14, 16, 3, 1");
 
-        lblFeedMid2Location = new JLabel("Mid 2 Location");
+        lblFeedMid2Location = new JLabel(I18n.gettext("Mid 2 Location"));
         panelPushPull.add(lblFeedMid2Location, "2, 18, right, default");
 
         textFieldFeedMid2X = new JTextField();
@@ -327,17 +328,17 @@ extends AbstractConfigurationWizard {
         textFieldFeedMid2Z.setColumns(10);
 
         chckbxPush2 = new JCheckBox("");
-        chckbxPush2.setToolTipText("Go to the Mid 2 Location when pushing.");
+        chckbxPush2.setToolTipText(I18n.gettext("Go to the Mid 2 Location when pushing."));
         chckbxPush2.setSelected(true);
         panelPushPull.add(chckbxPush2, "10, 18, center, default");
 
         chckbxMulti2 = new JCheckBox("");
-        chckbxMulti2.setToolTipText("Include the Mid 2 Location in multi-actuation motion (if the push/pull switch is also set).");
+        chckbxMulti2.setToolTipText(I18n.gettext("Include the Mid 2 Location in multi-actuation motion (if the push/pull switch is also set)."));
         chckbxMulti2.setSelected(true);
         panelPushPull.add(chckbxMulti2, "12, 18, 3, 1, center, default");
 
         chckbxPull2 = new JCheckBox("");
-        chckbxPull2.setToolTipText("Go to the Mid 2 Location when pulling.");
+        chckbxPull2.setToolTipText(I18n.gettext("Go to the Mid 2 Location when pulling."));
         chckbxPull2.setSelected(true);
         panelPushPull.add(chckbxPull2, "16, 18, center, default");
 
@@ -345,7 +346,7 @@ extends AbstractConfigurationWizard {
         locationButtonsPanelFeedMid2.setShowPositionToolNoSafeZ(true);
         panelPushPull.add(locationButtonsPanelFeedMid2, "18, 18, 3, 1, fill, default");
 
-        lblFeedSpeed2_3 = new JLabel("Speed ↕");
+        lblFeedSpeed2_3 = new JLabel(I18n.gettext("Speed ↕"));
         panelPushPull.add(lblFeedSpeed2_3, "8, 20, right, default");
 
         textFieldFeedPush3 = new JTextField();
@@ -356,7 +357,7 @@ extends AbstractConfigurationWizard {
         textFieldFeedPull2.setColumns(10);
         panelPushPull.add(textFieldFeedPull2, "14, 20, 3, 1");
 
-        lblFeedMid3Location = new JLabel("Mid 3 Location");
+        lblFeedMid3Location = new JLabel(I18n.gettext("Mid 3 Location"));
         panelPushPull.add(lblFeedMid3Location, "2, 22, right, default");
 
         textFieldFeedMid3X = new JTextField();
@@ -372,17 +373,17 @@ extends AbstractConfigurationWizard {
         textFieldFeedMid3Z.setColumns(10);
 
         chckbxPush3 = new JCheckBox("");
-        chckbxPush3.setToolTipText("Go to the Mid 3 Location when pushing.");
+        chckbxPush3.setToolTipText(I18n.gettext("Go to the Mid 3 Location when pushing."));
         chckbxPush3.setSelected(true);
         panelPushPull.add(chckbxPush3, "10, 22, center, default");
 
         chckbxMulti3 = new JCheckBox("");
-        chckbxMulti3.setToolTipText("Include the Mid 3 Location in multi-actuation motion (if the push/pull switch is also set).");
+        chckbxMulti3.setToolTipText(I18n.gettext("Include the Mid 3 Location in multi-actuation motion (if the push/pull switch is also set)."));
         chckbxMulti3.setSelected(true);
         panelPushPull.add(chckbxMulti3, "12, 22, 3, 1, center, default");
 
         chckbxPull3 = new JCheckBox("");
-        chckbxPull3.setToolTipText("Go to the Mid 3 Location when pulling.");
+        chckbxPull3.setToolTipText(I18n.gettext("Go to the Mid 3 Location when pulling."));
         chckbxPull3.setSelected(true);
         panelPushPull.add(chckbxPull3, "16, 22, center, default");
 
@@ -390,7 +391,7 @@ extends AbstractConfigurationWizard {
         locationButtonsPanelFeedMid3.setShowPositionToolNoSafeZ(true);
         panelPushPull.add(locationButtonsPanelFeedMid3, "18, 22, 3, 1, fill, default");
 
-        lblFeedSpeed3_4 = new JLabel("Speed ↕");
+        lblFeedSpeed3_4 = new JLabel(I18n.gettext("Speed ↕"));
         panelPushPull.add(lblFeedSpeed3_4, "8, 24, right, default");
 
         textFieldFeedPush4 = new JTextField();
@@ -401,7 +402,7 @@ extends AbstractConfigurationWizard {
         textFieldFeedPull3.setColumns(10);
         panelPushPull.add(textFieldFeedPull3, "14, 24, 3, 1");
 
-        JLabel lblFeedEndLocation = new JLabel("End Location");
+        JLabel lblFeedEndLocation = new JLabel(I18n.gettext("End Location"));
         panelPushPull.add(lblFeedEndLocation, "2, 26, right, default");
 
         textFieldFeedEndX = new JTextField();
@@ -417,12 +418,12 @@ extends AbstractConfigurationWizard {
         textFieldFeedEndZ.setColumns(8);
 
         chckbxPushEnd = new JCheckBox("");
-        chckbxPushEnd.setToolTipText("Go to the End Location when pushing.");
+        chckbxPushEnd.setToolTipText(I18n.gettext("Go to the End Location when pushing."));
         chckbxPushEnd.setSelected(true);
         panelPushPull.add(chckbxPushEnd, "10, 26, center, default");
 
         chckbxMultiEnd = new JCheckBox("");
-        chckbxMultiEnd.setToolTipText("Include the End Location in multi-actuation motion (if the push switch is also set).");
+        chckbxMultiEnd.setToolTipText(I18n.gettext("Include the End Location in multi-actuation motion (if the push switch is also set)."));
         chckbxMultiEnd.setSelected(true);
         panelPushPull.add(chckbxMultiEnd, "12, 26, 3, 1, center, default");
 

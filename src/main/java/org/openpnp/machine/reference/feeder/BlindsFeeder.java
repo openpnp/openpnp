@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.feeder;
+import org.I18n.I18n;
 
 
 import java.awt.Color;
@@ -324,7 +325,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public void feed(Nozzle nozzle) throws Exception {
         if (getFirstPocket() + getFeedCount() > getLastPocket()) {
-            throw new Exception("Feeder "+getName()+" part "+getPart().getId()+" empty.");
+            throw new Exception("Feeder "+getName()+" part "+getPart().getId()+I18n.gettext(" empty."));
         }
 
         assertCalibration();
@@ -333,7 +334,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 if (!isCoverOpenChecked()) {
                     // Invalidate position to measure again after user intervention.
                     coverPosition = new Length(Double.NaN, LengthUnit.Millimeters);
-                    throw new Exception("Feeder "+getName()+" "+getPart().getName()+": cover is not open. Please open manually.");
+                    throw new Exception("Feeder "+getName()+" "+getPart().getName()+I18n.gettext(": cover is not open. Please open manually."));
                 }
             }
             else if (coverActuation == CoverActuation.OpenOnFirstUse || coverActuation == CoverActuation.OpenOnJobStart) {
@@ -369,13 +370,13 @@ public class BlindsFeeder extends ReferenceFeeder {
     public void takeBackPart(Nozzle nozzle) throws Exception {
         // first check if we can and want to take back this part (should be always be checked before calling, but to be sure)
         if (nozzle.getPart() == null) {
-            throw new UnsupportedOperationException("No part loaded that could be taken back.");
+            throw new UnsupportedOperationException(I18n.gettext("No part loaded that could be taken back."));
         }
         if (!nozzle.getPart().equals(getPart())) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + " this feeder only supports " + getPart().getName());
+            throw new UnsupportedOperationException("Feeder: " + getName() + " - Can not take back " + nozzle.getPart().getName() + I18n.gettext(" this feeder only supports ") + getPart().getName());
         }
         if (!canTakeBackPart()) {
-            throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
+            throw new UnsupportedOperationException("Feeder: " + getName() + I18n.gettext(" - Currently no free slot. Can not take back the part."));
         }
 
         // if not yet open, open it (this should rarely be necessary as we likely just picked the part from this feeder;
@@ -392,7 +393,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         nozzle.place();
         nozzle.moveToSafeZ();
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
-            throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
+            throw new Exception("Feeder: " + getName() + I18n.gettext(" - Putting part back failed, check nozzle tip"));
         }
         // change FeedCount
         setFeedCount(getFeedCount() - 1);
@@ -820,7 +821,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 }
             }
             catch (ClassCastException e) {
-                throw new Exception("Unrecognized result type (should be RotatedRect): " + results);
+                throw new Exception(I18n.gettext("Unrecognized result type (should be RotatedRect): ") + results);
             }
 
             return this;
@@ -845,7 +846,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         updateFromConnectedFeeder(camera.getLocation(), false);
 
         if (nullLocation.equals(fiducial1Location) || nullLocation.equals(fiducial2Location) || nullLocation.equals(fiducial3Location)) {
-            throw new Exception("Feeder " + getName() + ": Please set the fiducials first (camera center is outside any previously defined fiducial area).");
+            throw new Exception("Feeder " + getName() + I18n.gettext(": Please set the fiducials first (camera center is outside any previously defined fiducial area)."));
         }
 
         if (coverType == CoverType.BlindsCover) {
@@ -864,16 +865,16 @@ public class BlindsFeeder extends ReferenceFeeder {
                 BlindsFeeder.FindFeatures findFeaturesResults = new FindFeatures(camera, pipeline, 1000).invoke();
 
                 if (Double.isNaN(findFeaturesResults.getPocketCenterlineMm())) {
-                    throw new Exception("Feeder " + getName() + ": Tape centerline not found.");
+                    throw new Exception(I18n.gettext("Feeder ") + getName() + I18n.gettext(": Tape centerline not found."));
                 }
 
                 if (Double.isNaN(findFeaturesResults.getPocketPitchMm())) {
-                    throw new Exception("Feeder " + getName() + ": Pocket pitch not found.");
+                    throw new Exception(I18n.gettext("Feeder ") + getName() + I18n.gettext(": Pocket pitch not found."));
                 }
                 // TODO: validate pitch against known EIA pitch values {2, 4, 8, 12, 16...}
 
                 if (Double.isNaN(findFeaturesResults.getPocketSizeMm())) {
-                    throw new Exception("Feeder " + getName() + ": Pocket size not found.");
+                    throw new Exception(I18n.gettext("Feeder ") + getName() + I18n.gettext(": Pocket size not found."));
                 }
 
                 setPocketCenterline(new Length(findFeaturesResults.getPocketCenterlineMm(), LengthUnit.Millimeters));
@@ -901,7 +902,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             BlindsFeeder.FindFeatures findFeaturesResults = new FindFeatures(camera, pipeline, 1000).invoke();
 
             if (Double.isNaN(findFeaturesResults.getPocketPositionMm())) {
-                throw new Exception("Feeder " + getName() + ": Pocket position not found.");
+                throw new Exception(I18n.gettext("Feeder ") + getName() + I18n.gettext(": Pocket position not found."));
             }
 
             setCoverPosition(new Length(findFeaturesResults.getPocketPositionMm(), LengthUnit.Millimeters));
@@ -910,7 +911,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public void calibrateCoverEdges()  throws Exception {
         if (coverType != CoverType.BlindsCover) {
-            throw new Exception("Feeder " + getName() + ": Only Blinds Cover can be calibrated.");
+            throw new Exception("Feeder " + getName() + I18n.gettext(": Only Blinds Cover can be calibrated."));
         }
         Camera camera = Configuration.get()
                 .getMachine()
@@ -981,7 +982,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     private Location locateFiducial(Camera camera, Location location) throws Exception {
         if (location.equals(nullLocation)) {
-            throw new Exception("Feeder " + getName() + ": Fiducial location not set.");
+            throw new Exception("Feeder " + getName() + I18n.gettext(": Fiducial location not set."));
         }
 
         // Take Z off the camera
@@ -1000,7 +1001,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 BlindsFeeder.FindFeatures findFeaturesResults = new FindFeatures(camera, pipeline, 250).invoke();
                 List<RotatedRect> fiducials = findFeaturesResults.getFiducials();
                 if (fiducials.isEmpty()) {
-                    throw new Exception("Feeder " + getName() + ": Fiducial not found.");
+                    throw new Exception(I18n.gettext("Feeder ") + getName() + I18n.gettext(": Fiducial not found."));
                 }
                 // Convert location.
                 RotatedRect bestFiducial = fiducials.get(0);
@@ -1026,7 +1027,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         if (!isCalibrating()) {
 
             if ( !Configuration.get().getMachine().isHomed() ) {
-                throw new Exception("Feeder " + getName() + ": Machine not yet homed.");
+                throw new Exception(I18n.gettext("Feeder ") + getName() + I18n.gettext(": Machine not yet homed."));
             }
 
             setCalibrating(true);
@@ -1104,7 +1105,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 new CoverActuation [] { CoverActuation.Manual, CoverActuation.CheckOpen, CoverActuation.OpenOnFirstUse, CoverActuation.OpenOnJobStart }, 
                 openState); 
         if (feederList.size() == 0) {
-            throw new Exception("[BlindsFeeder] No feeders found to "+(openState ? "open." : "close."));
+            throw new Exception("[BlindsFeeder] No feeders found to "+(openState ? "open." : I18n.gettext("close.")));
         }
         actuateListedFeederCovers(preferredNozzle, feederList, openState, false);
     }
@@ -1255,7 +1256,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 }
             }
             // None could be loaded.
-            throw new Exception("BlindsFeeder: No empty Nozzle/NozzleTip found that allows pushing.");
+            throw new Exception(I18n.gettext("BlindsFeeder: No empty Nozzle/NozzleTip found that allows pushing."));
         }
         // None compatible.
         return new NozzleAndTipForPushing(null, null, false);
@@ -1313,11 +1314,11 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public void actuateCover(Nozzle preferredNozzle, boolean openState, boolean loadNozzleTipIfNeeded, boolean restoreNozzleTip) throws Exception {
         if (coverType == CoverType.NoCover) {
-            throw new Exception("Feeder " + getName() + ": has no cover to actuate.");
+            throw new Exception("Feeder " + getName() + I18n.gettext(": has no cover to actuate."));
         }
         else {
             if (location.getZ() == 0.0) {
-                throw new Exception("Feeder " + getName() + " Part Z not set.");
+                throw new Exception(I18n.gettext("Feeder ") + getName() + I18n.gettext(" Part Z not set."));
             }
 
             // Get the nozzle for pushing
@@ -1325,12 +1326,12 @@ public class BlindsFeeder extends ReferenceFeeder {
             Nozzle nozzle = nozzleAndTipForPushing.getNozzle();
             NozzleTip nozzleTip = nozzleAndTipForPushing.getNozzleTip();
             if (nozzleTip == null) {
-                throw new Exception("Feeder " + getName() + 
+                throw new Exception(I18n.gettext("Feeder ") + getName() + 
                         ": loaded nozzle tips do not allow pushing. Check the nozzle tip configuration or change the nozzle tip.");
             }
             Length nozzleTipDiameter = nozzleTip.getDiameterLow(); 
             if (nozzleTipDiameter.getValue() == 0.) {
-                throw new Exception("Feeder " + getName() + ": current nozzle tip "+nozzleTip.getId()+
+                throw new Exception(I18n.gettext("Feeder ") + getName() + ": current nozzle tip "+nozzleTip.getId()+
                         " has push diameter not set. Check the nozzle tip configuration.");
             }
 

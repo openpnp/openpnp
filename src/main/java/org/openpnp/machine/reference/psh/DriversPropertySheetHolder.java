@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.psh;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.util.List;
@@ -55,7 +56,7 @@ public class DriversPropertySheetHolder extends SimplePropertySheetHolder {
                 machine.addDriver(driver);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Driver Error", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Driver Error"), e);
             }
         }
     };

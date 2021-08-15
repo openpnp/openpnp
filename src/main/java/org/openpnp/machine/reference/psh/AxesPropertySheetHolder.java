@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.psh;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.util.List;
@@ -59,7 +60,7 @@ public class AxesPropertySheetHolder extends SimplePropertySheetHolder {
                 machine.addAxis(axis);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Axis Error", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Axis Error"), e);
             }
         }
     };

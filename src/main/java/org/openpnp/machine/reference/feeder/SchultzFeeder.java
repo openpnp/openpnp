@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder;
+import org.I18n.I18n;
 
 import javax.swing.Action;
 
@@ -149,7 +150,7 @@ public class SchultzFeeder extends ReferenceFeeder {
             actuator = Configuration.get().getMachine().getActuatorByName(actuatorName);
         }
         if (actuator == null) {
-            throw new Exception("Feed failed. Unable to find an actuator named " + actuatorName);
+            throw new Exception(I18n.gettext("Feed failed. Unable to find an actuator named ") + actuatorName);
         }
         MovableUtils.moveToLocationAtSafeZ(nozzle, getPickLocation().derive(null, null, Double.NaN, null));
         AbstractActuator.suggestValueType(actuator, Actuator.ActuatorValueType.Double);
@@ -166,7 +167,7 @@ public class SchultzFeeder extends ReferenceFeeder {
             actuator = Configuration.get().getMachine().getActuatorByName(postPickActuatorName);
         }
         if (actuator == null) {
-            throw new Exception("Post pick failed. Unable to find an actuator named " + postPickActuatorName);
+            throw new Exception(I18n.gettext("Post pick failed. Unable to find an actuator named ") + postPickActuatorName);
         }
         // TODO: check status before feed?
         

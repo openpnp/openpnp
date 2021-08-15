@@ -19,6 +19,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.util.List;
 
@@ -64,7 +65,7 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
     @Override 
     protected void createUi(AbstractMachine machine) {
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING,
+        panelProperties.setBorder(new TitledBorder(null, I18n.gettext("Properties"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
@@ -86,43 +87,43 @@ public class HttpActuatorConfigurationWizard extends AbstractActuatorConfigurati
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblName = new JLabel("Name");
+        lblName = new JLabel(I18n.gettext("Name"));
         panelProperties.add(lblName, "2, 2, right, default");
 
         nameTf = new JTextField();
         panelProperties.add(nameTf, "4, 2");
         nameTf.setColumns(20);
 
-        lblOnUrl = new JLabel("On URL");
+        lblOnUrl = new JLabel(I18n.gettext("On URL"));
         panelProperties.add(lblOnUrl, "2, 4, right, default");
 
         onUrlTf = new JTextField();
         panelProperties.add(onUrlTf, "4, 4, fill, default");
         onUrlTf.setColumns(40);
 
-        lblOffUrl = new JLabel("Off URL");
+        lblOffUrl = new JLabel(I18n.gettext("Off URL"));
         panelProperties.add(lblOffUrl, "2, 6, right, default");
 
         offUrlTf = new JTextField();
         panelProperties.add(offUrlTf, "4, 6, fill, default");
         offUrlTf.setColumns(40);
 
-        lblParametricUrl = new JLabel("Parametric URL");
-        lblParametricUrl.setToolTipText("<html>\r\nUse a parametric template to encode non-boolean actuation values into the URL.<br/>\r\nThe {val} placeholder can be used. <br/>\r\nFormatting is possible in the form of {val:%f} etc.<br/>\r\n<br/>\r\n<strong>Note:</strong> no escaping is performed. If using String actuation values, <br/>\r\nyou can use complex URI fragments e.g. drive multiple parameters. \r\n</html>");
+        lblParametricUrl = new JLabel(I18n.gettext("Parametric URL"));
+        lblParametricUrl.setToolTipText(I18n.gettext("<html>\r\nUse a parametric template to encode non-boolean actuation values into the URL.<br/>\r\nThe {val} placeholder can be used. <br/>\r\nFormatting is possible in the form of {val:%f} etc.<br/>\r\n<br/>\r\n<strong>Note:</strong> no escaping is performed. If using String actuation values, <br/>\r\nyou can use complex URI fragments e.g. drive multiple parameters. \r\n</html>"));
         panelProperties.add(lblParametricUrl, "2, 8, right, default");
 
         paramUrl = new JTextField();
         panelProperties.add(paramUrl, "4, 8, fill, default");
         paramUrl.setColumns(40);
 
-        lblReadUrl = new JLabel("Read URL");
+        lblReadUrl = new JLabel(I18n.gettext("Read URL"));
         panelProperties.add(lblReadUrl, "2, 10, right, default");
 
         readUrlTf = new JTextField();
         panelProperties.add(readUrlTf, "4, 10, fill, default");
         readUrlTf.setColumns(40);
         
-        lblRegex = new JLabel("Regular Expression");
+        lblRegex = new JLabel(I18n.gettext("Regular Expression"));
         panelProperties.add(lblRegex, "2, 12, right, default");
 
         regexTf = new JTextField();

@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -94,7 +95,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
 
         panelCalibration = new JPanel();
-        panelCalibration.setBorder(new TitledBorder(null, "Calibration",
+        panelCalibration.setBorder(new TitledBorder(null, I18n.gettext("Calibration"),
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelCalibration);
         panelCalibration.setLayout(new FormLayout(new ColumnSpec[] {
@@ -135,13 +136,13 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(buttonCenterTool, "4, 2, left, default");
 
 
-        lblCalibrationInfo = new JLabel("Status");
+        lblCalibrationInfo = new JLabel(I18n.gettext("Status"));
         panelCalibration.add(lblCalibrationInfo, "2, 4, right, default");
 
         lblCalibrationStatus = new JLabel(getCalibrationStatus());
         panelCalibration.add(lblCalibrationStatus, "4, 4, 3, 1, left, default");
 
-        lblCalibrate = new JLabel("Calibration");
+        lblCalibrate = new JLabel(I18n.gettext("Calibration"));
         panelCalibration.add(lblCalibrate, "2, 6, right, default");
 
         panel_1 = new JPanel();
@@ -151,11 +152,11 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         flowLayout_1.setVgap(0);
         panelCalibration.add(panel_1, "4, 6, left, fill");
 
-        btnCalibrate = new JButton("Calibrate");
+        btnCalibrate = new JButton(I18n.gettext("Calibrate"));
         panel_1.add(btnCalibrate);
 
 
-        btnReset = new JButton("Reset");
+        btnReset = new JButton(I18n.gettext("Reset"));
         panel_1.add(btnReset);
         btnReset.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -171,8 +172,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
 
 
-        btnCalibrateCamera = new JButton("Calibrate Camera Position and Rotation");
-        btnCalibrateCamera.setToolTipText("<html>\r\nCalibrate the bottom vision camera position and rotation <br />\r\naccording to a pattern of measured nozzle positions.\r\n</html>");
+        btnCalibrateCamera = new JButton(I18n.gettext("Calibrate Camera Position and Rotation"));
+        btnCalibrateCamera.setToolTipText(I18n.gettext("<html>\r\nCalibrate the bottom vision camera position and rotation <br />\r\naccording to a pattern of measured nozzle positions.\r\n</html>"));
         panelCalibration.add(btnCalibrateCamera, "6, 6, 3, 1");
         btnCalibrateCamera.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -180,29 +181,29 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
             }
         });
 
-        lblAngleIncrements = new JLabel("Circle Divisions");
+        lblAngleIncrements = new JLabel(I18n.gettext("Circle Divisions"));
         panelCalibration.add(lblAngleIncrements, "2, 8, right, default");
 
         angleIncrementsTf = new JTextField();
         panelCalibration.add(angleIncrementsTf, "4, 8, left, default");
         angleIncrementsTf.setColumns(3);
 
-        lblAllowMisdectects = new JLabel("Allowed Misdectects");
-        lblAllowMisdectects.setToolTipText("Number of missed detections tolerated before a calibration fails.");
+        lblAllowMisdectects = new JLabel(I18n.gettext("Allowed Misdectects"));
+        lblAllowMisdectects.setToolTipText(I18n.gettext("Number of missed detections tolerated before a calibration fails."));
         panelCalibration.add(lblAllowMisdectects, "6, 8, right, default");
 
         allowMisdetectsTf = new JTextField();
         panelCalibration.add(allowMisdetectsTf, "8, 8, left, default");
         allowMisdetectsTf.setColumns(3);
 
-        lblOffsetThreshold = new JLabel("Offset Threshold");
+        lblOffsetThreshold = new JLabel(I18n.gettext("Offset Threshold"));
         panelCalibration.add(lblOffsetThreshold, "2, 10, right, default");
 
         offsetThresholdTf = new JTextField();
         panelCalibration.add(offsetThresholdTf, "4, 10, left, default");
         offsetThresholdTf.setColumns(10);
 
-        lblCalibrationZOffset = new JLabel("Calibration Z Offset");
+        lblCalibrationZOffset = new JLabel(I18n.gettext("Calibration Z Offset"));
         lblCalibrationZOffset.setToolTipText("<html>\r\n<p>\r\nWhen the vision-detected feature of a nozzle is higher up on the nozzle tip <br />\r\nit is recommended to shift the focus plane with the \"Z Offset\".\r\n</p>\r\n<p>If a nozzle tip is named \"unloaded\" it is used as a stand-in for calibration<br />\r\nof the bare nozzle tip holder. Again the \"Z Offset\" can be used to calibrate at the <br />\r\nproper focal plane. \r\n</p>\r\n</html>");
         panelCalibration.add(lblCalibrationZOffset, "6, 10, right, default");
 
@@ -218,8 +219,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(calibrationTipDiameter, "4, 12, left, default");
         calibrationTipDiameter.setColumns(10);
 
-        lblRecalibration = new JLabel("Automatic Recalibration");
-        lblRecalibration.setToolTipText("<html>\r\n<p>Determines when a recalibration is automatically executed:</p>\r\n<p><ul><li>On each nozzle tip change.</li>\r\n<li>On each nozzle tip change but only in Jobs.</li>\r\n<li>On machine homing and when first loaded. </li></ul></p>\r\n<p>Manual with stored calibration (only recommended for machines <br /> \r\nwith C axis homing).</p>\r\n</html>");
+        lblRecalibration = new JLabel(I18n.gettext("Automatic Recalibration"));
+        lblRecalibration.setToolTipText(I18n.gettext("<html>\r\n<p>Determines when a recalibration is automatically executed:</p>\r\n<p><ul><li>On each nozzle tip change.</li>\r\n<li>On each nozzle tip change but only in Jobs.</li>\r\n<li>On machine homing and when first loaded. </li></ul></p>\r\n<p>Manual with stored calibration (only recommended for machines <br /> \r\nwith C axis homing).</p>\r\n</html>"));
         panelCalibration.add(lblRecalibration, "2, 14, right, default");
 
         recalibrationCb = new JComboBox(ReferenceNozzleTipCalibration.RecalibrationTrigger.values());
@@ -238,7 +239,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         failHoming = new JCheckBox("");
         panelCalibration.add(failHoming, "8, 14");
 
-        lblNewLabel = new JLabel("Pipeline");
+        lblNewLabel = new JLabel(I18n.gettext("Pipeline"));
         panelCalibration.add(lblNewLabel, "2, 16, right, default");
 
         panel = new JPanel();
@@ -246,10 +247,10 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         flowLayout.setVgap(0);
         panelCalibration.add(panel, "4, 16, fill, default");
 
-        btnEditPipeline = new JButton("Edit");
+        btnEditPipeline = new JButton(I18n.gettext("Edit"));
         panel.add(btnEditPipeline);
 
-        btnResetPipeline = new JButton("Reset");
+        btnResetPipeline = new JButton(I18n.gettext("Reset"));
         panel.add(btnResetPipeline);
         btnResetPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -343,13 +344,13 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                     return refNozzle; 
                 }
             }
-            throw new Exception("Please unload the nozzle tip on the selected nozzle.");
+            throw new Exception(I18n.gettext("Please unload the nozzle tip on the selected nozzle."));
         }
         else {
             // For real nozzle tips, the nozzle where it is currently attached to is well-defined.
             refNozzle = nozzleTip.getNozzleAttachedTo();
             if (refNozzle == null) {
-                throw new Exception("Please load the nozzle tip on a nozzle.");
+                throw new Exception(I18n.gettext("Please load the nozzle tip on a nozzle."));
             }
             return refNozzle;
         }

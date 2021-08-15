@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -43,7 +44,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
 
         JPanel panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
-        panelGeneral.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING,
+        panelGeneral.setBorder(new TitledBorder(null, I18n.gettext("General"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -60,19 +61,19 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        JLabel lblHomeAfterEnabled = new JLabel("Home after enabled?");
+        JLabel lblHomeAfterEnabled = new JLabel(I18n.gettext("Home after enabled?"));
         panelGeneral.add(lblHomeAfterEnabled, "2, 2, right, default");
         
         checkBoxHomeAfterEnabled = new JCheckBox("");
         panelGeneral.add(checkBoxHomeAfterEnabled, "4, 2");
         
-        JLabel lblAutoToolSelect = new JLabel("Auto tool select?");
+        JLabel lblAutoToolSelect = new JLabel(I18n.gettext("Auto tool select?"));
         panelGeneral.add(lblAutoToolSelect, "2, 4, right, default");
         
         autoToolSelect = new JCheckBox("");
         panelGeneral.add(autoToolSelect, "4, 4");
         
-        JLabel lblMotionPlanning = new JLabel("Motion Planning");
+        JLabel lblMotionPlanning = new JLabel(I18n.gettext("Motion Planning"));
         panelGeneral.add(lblMotionPlanning, "2, 6, right, default");
         
         Object[] classNames = machine.getCompatibleMotionPlannerClasses().stream()
@@ -81,7 +82,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         panelGeneral.add(motionPlannerClass, "4, 6, fill, default");
         
                 JPanel panelLocations = new JPanel();
-        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, I18n.gettext("Locations"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelLocations);
         panelLocations.setLayout(new FormLayout(
@@ -106,11 +107,11 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         panelLocations.add(lblZ, "8, 2");
         lblZ.setHorizontalAlignment(SwingConstants.CENTER);
         
-                JLabel lblRotation = new JLabel("Rotation");
+                JLabel lblRotation = new JLabel(I18n.gettext("Rotation"));
         panelLocations.add(lblRotation, "10, 2");
         lblRotation.setHorizontalAlignment(SwingConstants.CENTER);
         
-                JLabel lblDiscardPoint = new JLabel("Discard Location");
+                JLabel lblDiscardPoint = new JLabel(I18n.gettext("Discard Location"));
         panelLocations.add(lblDiscardPoint, "2, 4");
         
                 discardXTf = new JTextField();

@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.psh;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.util.List;
@@ -44,7 +45,7 @@ public class NozzleTipsPropertySheetHolder extends SimplePropertySheetHolder {
                 configuration.getMachine().addNozzleTip(nozzleTip);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Error"), e);
             }
         }
     };

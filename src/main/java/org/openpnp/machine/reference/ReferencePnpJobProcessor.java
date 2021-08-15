@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -99,7 +100,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     public synchronized void initialize(Job job) throws Exception {
         if (job == null) {
-            throw new Exception("Can't initialize with a null Job.");
+            throw new Exception(I18n.gettext("Can't initialize with a null Job."));
         }
         this.job = job;
         currentStep = new PreFlight();
@@ -222,7 +223,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // Make sure the part is not null
             if (placement.getPart() == null) {
-                throw new JobProcessorException(placement, String.format("Part not found for board %s, placement %s.",
+                throw new JobProcessorException(placement, String.format(I18n.gettext("Part not found for board %s, placement %s."),
                         boardLocation.getBoard().getName(), placement.getId()));
             }
             
@@ -230,7 +231,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             
             // Make sure the part has a package assigned
             if (part.getPackage() == null) {
-                throw new JobProcessorException(part, String.format("No package set for part %s.",
+                throw new JobProcessorException(part, String.format(I18n.gettext("No package set for part %s."),
                         part.getId()));                
             }
 
@@ -264,7 +265,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             part.getId()));
                 }
                 else {
-                    throw new JobProcessorException(part, String.format("No compatible, loadable nozzle tip found for part %s.",
+                    throw new JobProcessorException(part, String.format(I18n.gettext("No compatible, loadable nozzle tip found for part %s."),
                             part.getId()));
                 }
             }
@@ -465,7 +466,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             Logger.debug("Planner complete in {}ms: {}", (System.currentTimeMillis() - t), plannedPlacements);
 
             if (plannedPlacements.isEmpty()) {
-                throw new JobProcessorException(planner, "Planner failed to plan any placements. Please contact support.");
+                throw new JobProcessorException(planner, I18n.gettext("Planner failed to plan any placements. Please contact support."));
             }
 
             for (PlannedPlacement plannedPlacement : plannedPlacements) {
@@ -1198,7 +1199,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         plannedPlacement.jobPlacement.setError(e);
                         return this;
                     default:
-                        throw new Error("Unhandled Error Handling case " + plannedPlacement.jobPlacement.getPlacement().getErrorHandling());
+                        throw new Error(I18n.gettext("Unhandled Error Handling case ") + plannedPlacement.jobPlacement.getPlacement().getErrorHandling());
                 }
             }
         }

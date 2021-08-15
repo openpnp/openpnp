@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder;
+import org.I18n.I18n;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
@@ -117,7 +118,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
         Logger.debug("feed({})", nozzle);
 
         if (actuatorName == null) {
-            throw new Exception("No actuator name set.");
+            throw new Exception(I18n.gettext("No actuator name set."));
         }
 
 
@@ -126,7 +127,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
         Actuator actuator = head.getActuatorByName(actuatorName);
 
         if (actuator == null) {
-            throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
+            throw new Exception(String.format(I18n.gettext("No Actuator found with name %s on feed Head %s"),
                     actuatorName, head.getName()));
         }
 
@@ -214,15 +215,15 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
         }
 
         if (camera == null) {
-            throw new Exception("No vision capable camera found on head.");
+            throw new Exception(I18n.gettext("No vision capable camera found on head."));
         }
         
         if (vision.getTemplateImage() == null) {
-            throw new Exception("Template image is required when vision is enabled.");
+            throw new Exception(I18n.gettext("Template image is required when vision is enabled."));
         }
         
         if (vision.getAreaOfInterest().getWidth() == 0 || vision.getAreaOfInterest().getHeight() == 0) {
-            throw new Exception("Area of Interest is required when vision is enabled.");
+            throw new Exception(I18n.gettext("Area of Interest is required when vision is enabled."));
         }
 
         head.moveToSafeZ();

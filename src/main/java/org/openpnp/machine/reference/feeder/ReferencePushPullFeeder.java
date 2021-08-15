@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.feeder;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -298,7 +299,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public void assertCalibrated(boolean tapeFeed) throws Exception {
         if (getHole1Location().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getHole2Location()) < 3) {
-            throw new Exception("Feeder "+getName()+" sprocket hole locations undefined/too close together.");
+            throw new Exception("Feeder "+getName()+I18n.gettext(" sprocket hole locations undefined/too close together."));
         }
         if ((visionOffset == null && calibrationTrigger != CalibrationTrigger.None)
                 || (tapeFeed && calibrationTrigger == CalibrationTrigger.UntilConfident && !isPrecisionSufficient())
@@ -307,7 +308,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             obtainCalibratedVisionOffset();
             if (visionOffset == null) {
                 // no lock obtained
-                throw new Exception(String.format("Vision failed on feeder %s.", getName()));
+                throw new Exception(String.format(I18n.gettext("Vision failed on feeder %s."), getName()));
             }
         }
     }
@@ -342,14 +343,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Logger.debug("feed({})", nozzle);
 
         if (actuatorName == null || actuatorName.isEmpty()) {
-            throw new Exception(String.format("No actuator name set on feeder %s.", getName()));
+            throw new Exception(String.format(I18n.gettext("No actuator name set on feeder %s."), getName()));
         }
 
 
         Head head = nozzle.getHead();
         Actuator actuator = head.getActuatorByName(actuatorName);
         if (actuator == null) {
-            throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
+            throw new Exception(String.format(I18n.gettext("No Actuator found with name %s on feed Head %s"),
                     actuatorName, head.getName()));
         }
 
@@ -1446,7 +1447,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
                     if (autoSetupMode != null) {
                         if (bestLine == null) {
-                            throw new Exception("No line of sprocket holes can be recognized"); 
+                            throw new Exception(I18n.gettext("No line of sprocket holes can be recognized")); 
                         }
                     }
                     if (bestLine != null) {
@@ -1471,7 +1472,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                         if (autoSetupMode  == FindFeaturesMode.FromPickLocationGetHoles) {
                             // because we sorted the holes by distance, the first two are our holes 1 and 2
                             if (holes.size() < 2) {
-                                throw new Exception("At least two sprocket holes need to be recognized"); 
+                                throw new Exception(I18n.gettext("At least two sprocket holes need to be recognized")); 
                             }
                             calibratedHole1Location = VisionUtils.getPixelLocation(camera, holes.get(0).x, holes.get(0).y)
                                     .convertToUnits(LengthUnit.Millimeters);
@@ -1515,7 +1516,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             }
                             if (calibratedHole1Location == null || calibratedHole2Location == null) {
                                 if (autoSetupMode  == FindFeaturesMode.CalibrateHoles) {
-                                    throw new Exception("The two reference sprocket holes cannot be recognized"); 
+                                    throw new Exception(I18n.gettext("The two reference sprocket holes cannot be recognized")); 
                                 }
                             }
                             else {
@@ -1615,7 +1616,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 }
             }
             catch (ClassCastException e) {
-                throw new Exception("Unrecognized result type (should be Result.Circle, RotatedRect, KeyPoint): " + resultsList);
+                throw new Exception(I18n.gettext("Unrecognized result type (should be Result.Circle, RotatedRect, KeyPoint): ") + resultsList);
             }
             return this;
         }
@@ -1890,10 +1891,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         ReferencePushPullFeeder templateFeeder = getTemplateFeeder(compatiblePart);
         if (templateFeeder == null) {
             if (compatiblePart == null) {
-                throw new Exception("Feeder "+getName()+": No suitable template feeder found to clone."); 
+                throw new Exception("Feeder "+getName()+I18n.gettext(": No suitable template feeder found to clone.")); 
             }
             else {
-                throw new Exception("Feeder "+getName()+": No template feeder found to clone for part "+compatiblePart.getId()+" compatibility.");
+                throw new Exception("Feeder "+getName()+": No template feeder found to clone for part "+compatiblePart.getId()+I18n.gettext(" compatibility."));
             }
         }
         cloneFeederSettings(cloneLocationSettings, cloneTapeSettings, clonePushPullSettings, cloneVisionSettings,
@@ -2046,7 +2047,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Configuration cfg = Configuration.get();
         Part ocrPart = cfg.getPart(partId);
         if (ocrPart == null) {
-            throw new Exception("OCR could not identify/find part id in feeder "+getName()
+            throw new Exception(I18n.gettext("OCR could not identify/find part id in feeder ")+getName()
             +", OCR detected part id "+partId+" (avg. score="+ocrModel.getAvgScore()+")");
         }
         Part currentPart = getPart();
@@ -2070,7 +2071,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
             if (ocrAction == OcrWrongPartAction.SwapFeeders) {
                 if (otherFeeder == null) {
-                    throw new Exception("OCR detected part "+ocrPart.getId()+" in slot of feeder "+getName()
+                    throw new Exception("OCR detected part "+ocrPart.getId()+I18n.gettext(" in slot of feeder ")+getName()
                     +" is not present in any other feeder. Cannot swap out feeders.");
                 }
                 swapOutFeeders(otherFeeder);
@@ -2103,7 +2104,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 setOcrDetectedPart(ocrPart, true);
             }
             if (ocrStop) {
-                throw new Exception("OCR detected different part in feeder "+getName()
+                throw new Exception(I18n.gettext("OCR detected different part in feeder ")+getName()
                 +", current part "+currentPart.getId()+" vs. OCR part "+ocrPart.getId()+". Action performed: "+ocrAction.toString()+". Please review.");
             }
             else if (report != null) {
@@ -2160,7 +2161,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     rowUnit = rowUnit.multiply(0.0, 1.0, 0.0, 0.0);
                 }
                 else {
-                    throw new Exception("Closest feeder "+closestFeeder.getName()+" "+closestFeeder.getPart().getId()+" does not form a row in X and Y");
+                    throw new Exception("Closest feeder "+closestFeeder.getName()+" "+closestFeeder.getPart().getId()+I18n.gettext(" does not form a row in X and Y"));
                 }
             }
         }
@@ -2174,7 +2175,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected void setOcrDetectedPart(Part ocrPart, boolean clone) throws Exception {
         if (isUsedAsTemplate()) {
             if (!compatiblePartPackages(ocrPart, getPart())) {
-                throw new Exception("Feeder "+getName()+" is used as a template and can only be OCR-assigned parts with same tape specification or package.");
+                throw new Exception("Feeder "+getName()+I18n.gettext(" is used as a template and can only be OCR-assigned parts with same tape specification or package."));
             }
             setPart(ocrPart);
         }
@@ -2257,7 +2258,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
         }
         if (ocrFeederList.size() == 0) {
-            throw new Exception("No enabled feeder with OCR found.");
+            throw new Exception(I18n.gettext("No enabled feeder with OCR found."));
         }
         // Now bulk-OCR. 
         performOcrOnFeederList(ocrFeederList, ocrAction, ocrStop, report);
@@ -2266,7 +2267,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public void performOcr(OcrWrongPartAction ocrAction, boolean ocrStop, StringBuilder report) throws Exception {
         if (getOcrRegion() == null) {
-            throw new Exception("Feeder "+getName()+" has no OCR region defined.");
+            throw new Exception("Feeder "+getName()+I18n.gettext(" has no OCR region defined."));
         }
         Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true, true, false)) {
@@ -2355,7 +2356,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration"),
+                new PropertySheetWizardAdapter(getConfigurationWizard(), I18n.gettext("Configuration")),
                 new PropertySheetWizardAdapter(new ReferencePushPullMotionConfigurationWizard(this), "Push-Pull Motion"),
         };
     }

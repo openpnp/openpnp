@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.feeder.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -121,7 +122,7 @@ public class ReferenceLeverFeederConfigurationWizard
         panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
 
         panelGeneral = new JPanel();
-        panelGeneral.setBorder(new TitledBorder(null, "General Settings", TitledBorder.LEADING,
+        panelGeneral.setBorder(new TitledBorder(null, I18n.gettext("General Settings"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
 
         panelFields.add(panelGeneral);
@@ -135,28 +136,28 @@ public class ReferenceLeverFeederConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblPartPitch = new JLabel("Part Pitch");
+        lblPartPitch = new JLabel(I18n.gettext("Part Pitch"));
         panelGeneral.add(lblPartPitch, "2, 2, right, default");
 
         textFieldPartPitch = new JTextField();
         panelGeneral.add(textFieldPartPitch, "4, 2");
         textFieldPartPitch.setColumns(5);
 
-        lblFeedRate = new JLabel("Feed Speed %");
+        lblFeedRate = new JLabel(I18n.gettext("Feed Speed %"));
         panelGeneral.add(lblFeedRate, "2, 4");
 
         textFieldFeedRate = new JTextField();
         panelGeneral.add(textFieldFeedRate, "4, 4");
         textFieldFeedRate.setColumns(5);
 
-        lblActuatorId = new JLabel("Actuator Name");
+        lblActuatorId = new JLabel(I18n.gettext("Actuator Name"));
         panelGeneral.add(lblActuatorId, "2, 6, right, default");
 
         textFieldActuatorId = new JTextField();
         panelGeneral.add(textFieldActuatorId, "4, 6");
         textFieldActuatorId.setColumns(5);
 
-        lblPeelOffActuatorId = new JLabel("Peel Off Actuator Name");
+        lblPeelOffActuatorId = new JLabel(I18n.gettext("Peel Off Actuator Name"));
         panelGeneral.add(lblPeelOffActuatorId, "6, 6, right, default");
 
         textFieldPeelOffActuatorId = new JTextField();
@@ -165,7 +166,7 @@ public class ReferenceLeverFeederConfigurationWizard
 
         panelLocations = new JPanel();
         panelFields.add(panelLocations);
-        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
+        panelLocations.setBorder(new TitledBorder(null, I18n.gettext("Locations"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -199,7 +200,7 @@ public class ReferenceLeverFeederConfigurationWizard
         JLabel lblZ = new JLabel("Z");
         panelLocations.add(lblZ, "8, 4");
 
-        JLabel lblFeedStartLocation = new JLabel("Feed Start Location");
+        JLabel lblFeedStartLocation = new JLabel(I18n.gettext("Feed Start Location"));
         panelLocations.add(lblFeedStartLocation, "2, 6, right, default");
 
         textFieldFeedStartX = new JTextField();
@@ -218,7 +219,7 @@ public class ReferenceLeverFeederConfigurationWizard
                 textFieldFeedStartY, textFieldFeedStartZ, null);
         panelLocations.add(locationButtonsPanelFeedStart, "10, 6");
 
-        JLabel lblFeedEndLocation = new JLabel("Feed End Location");
+        JLabel lblFeedEndLocation = new JLabel(I18n.gettext("Feed End Location"));
         panelLocations.add(lblFeedEndLocation, "2, 8, right, default");
 
         textFieldFeedEndX = new JTextField();
@@ -239,7 +240,7 @@ public class ReferenceLeverFeederConfigurationWizard
         
         //
         panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
+        panelVision.setBorder(new TitledBorder(null, I18n.gettext("Vision"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelFields.add(panelVision);
         panelVision.setLayout(new BoxLayout(panelVision, BoxLayout.Y_AXIS));
@@ -264,7 +265,7 @@ public class ReferenceLeverFeederConfigurationWizard
 
         panelTemplate = new JPanel();
         panelTemplate.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Template Image", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Template Image"), TitledBorder.LEADING, TitledBorder.TOP, null));
         panelVisionTemplateAndAoe.add(panelTemplate, "2, 2, center, fill");
         panelTemplate.setLayout(new BoxLayout(panelTemplate, BoxLayout.Y_AXIS));
 
@@ -289,7 +290,7 @@ public class ReferenceLeverFeederConfigurationWizard
         panel.add(btnCancelChangeTemplateImage);
 
         panelAoE = new JPanel();
-        panelAoE.setBorder(new TitledBorder(null, "Area of Interest", TitledBorder.LEADING,
+        panelAoE.setBorder(new TitledBorder(null, I18n.gettext("Area of Interest"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         panelVisionTemplateAndAoe.add(panelAoE, "4, 2, fill, fill");
         panelAoE.setLayout(new FormLayout(
@@ -313,10 +314,10 @@ public class ReferenceLeverFeederConfigurationWizard
         lblY_1 = new JLabel("Y");
         panelAoE.add(lblY_1, "4, 2");
 
-        lblWidth = new JLabel("Width");
+        lblWidth = new JLabel(I18n.gettext("Width"));
         panelAoE.add(lblWidth, "6, 2");
 
-        lblHeight = new JLabel("Height");
+        lblHeight = new JLabel(I18n.gettext("Height"));
         panelAoE.add(lblHeight, "8, 2");
 
         textFieldAoiX = new JTextField();

@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
@@ -718,11 +719,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Override
     public PropertySheet[] getPropertySheets() {
         PropertySheet[] sheets = new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
-                new PropertySheetWizardAdapter(new CameraVisionConfigurationWizard(this), "Vision"),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
-                new PropertySheetWizardAdapter(new ReferenceCameraPositionConfigurationWizard(getMachine(), this), "Position"),
-                new PropertySheetWizardAdapter(new ReferenceCameraCalibrationConfigurationWizard(this), "Lens Calibration"),
+                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), I18n.gettext("General Configuration")),
+                new PropertySheetWizardAdapter(new CameraVisionConfigurationWizard(this), I18n.gettext("Vision")),
+                new PropertySheetWizardAdapter(getConfigurationWizard(), I18n.gettext("Device Settings")),
+                new PropertySheetWizardAdapter(new ReferenceCameraPositionConfigurationWizard(getMachine(), this), I18n.gettext("Position")),
+                new PropertySheetWizardAdapter(new ReferenceCameraCalibrationConfigurationWizard(this), I18n.gettext("Lens Calibration")),
                 new PropertySheetWizardAdapter(new ReferenceCameraTransformsConfigurationWizard(this), "Image Transforms")
         };
         if (getFocusSensingMethod() != FocusSensingMethod.None) {

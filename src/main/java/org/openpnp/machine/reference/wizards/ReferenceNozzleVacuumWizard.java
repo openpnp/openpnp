@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.wizards;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 
@@ -74,21 +75,21 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        label = new JLabel("Vacuum Actuator");
+        label = new JLabel(I18n.gettext("Vacuum Actuator"));
         panel.add(label, "2, 2, right, center");
         
         vacuumComboBoxActuator = new JComboBox();
         vacuumComboBoxActuator.setMaximumRowCount(15);
         vacuumComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(vacuumComboBoxActuator, "4, 2");
-        label = new JLabel("Blow Off Actuator");
+        label = new JLabel(I18n.gettext("Blow Off Actuator"));
         panel.add(label, "2, 4, right, center");
 
         blowOffComboBoxActuator = new JComboBox();
         blowOffComboBoxActuator.setMaximumRowCount(15);
         blowOffComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(blowOffComboBoxActuator, "4, 4");
-        lblSensingActuator = new JLabel("Sensing Actuator");
+        lblSensingActuator = new JLabel(I18n.gettext("Sensing Actuator"));
         panel.add(lblSensingActuator, "2, 6, right, default");
 
         vacuumSenseActuator = new JComboBox(new ActuatorsComboBoxModel(nozzle.getHead()));
