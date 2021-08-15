@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.axis;
+import org.I18n.I18n;
 
 import java.util.Arrays;
 
@@ -201,16 +202,16 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
 
     public double[] getLinearTransform() throws Exception {
         if (factorX != 0.0 && inputAxisX == null) {
-            throw new Exception(getName()+" has X factor but no input axis."); 
+            throw new Exception(getName()+I18n.gettext(" has X factor but no input axis.")); 
         }
         if (factorY != 0.0 && inputAxisY == null) {
-            throw new Exception(getName()+" has Y factor but no input axis."); 
+            throw new Exception(getName()+I18n.gettext(" has Y factor but no input axis.")); 
         }
         if (factorZ != 0.0 && inputAxisZ == null) {
-            throw new Exception(getName()+" has Z factor but no input axis."); 
+            throw new Exception(getName()+I18n.gettext(" has Z factor but no input axis.")); 
         }
         if (factorRotation != 0.0 && inputAxisRotation == null) {
-            throw new Exception(getName()+" has Rotation factor but no input axis."); 
+            throw new Exception(getName()+I18n.gettext(" has Rotation factor but no input axis.")); 
         }
         return new double[] { 
                 inputAxisX != null ? factorX : 0.0,
@@ -305,7 +306,7 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
             if (axis instanceof ReferenceLinearTransformAxis) {
                 int i = axis.getType().ordinal();
                 if (linearAxes[i] != null) {
-                    throw new Exception("Axes "+linearAxes[i].getName()+" and "+axis.getName()
+                    throw new Exception("Axes "+linearAxes[i].getName()+I18n.gettext(" and ")+axis.getName()
                     +" both have the same type in a linear transformation.");
                 }
                 linearAxes[i] = (ReferenceLinearTransformAxis) axis;
@@ -353,7 +354,7 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
         int j = inputType.ordinal();
         if (inputAxis != null) {
             if (inputAxes[j] != null && inputAxes[j] != inputAxis) {
-                throw new Exception("Axes "+axis.getName()+" has a different input "+inputType
+                throw new Exception("Axes "+axis.getName()+I18n.gettext(" has a different input ")+inputType
                         +" axis than other linear transformation axes.");
             }
             inputAxes[j] = inputAxis;

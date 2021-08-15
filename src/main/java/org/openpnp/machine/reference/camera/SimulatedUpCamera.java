@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.camera;
+import org.I18n.I18n;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -172,7 +173,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
         }
 
         if (footprint.getUnits() != units) {
-            throw new Error("Not yet supported.");
+            throw new Error(I18n.gettext("Not yet supported."));
         }
 
         // First draw the body in dark grey.

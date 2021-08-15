@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.axis.wizards;
+import org.I18n.I18n;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -44,7 +45,7 @@ public class ReferenceVirtualAxisConfigurationWizard extends AbstractAxisConfigu
     public ReferenceVirtualAxisConfigurationWizard(ReferenceVirtualAxis axis) {
         super(axis);
         panelTransformation = new JPanel();
-        panelTransformation.setBorder(new TitledBorder(null, "Virtual Axis", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelTransformation.setBorder(new TitledBorder(null, I18n.gettext("Virtual Axis"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTransformation);
         panelTransformation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -69,7 +70,7 @@ public class ReferenceVirtualAxisConfigurationWizard extends AbstractAxisConfigu
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         RowSpec.decode("bottom:default:grow"),}));
 
-        JLabel lblHomeCoordinate = new JLabel("Home / Safe Z");
+        JLabel lblHomeCoordinate = new JLabel(I18n.gettext("Home / Safe Z"));
         panelTransformation.add(lblHomeCoordinate, "2, 2, right, default");
 
         homeCoordinate = new JTextField();

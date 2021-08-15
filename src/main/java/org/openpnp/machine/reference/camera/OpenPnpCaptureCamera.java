@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.camera;
+import org.I18n.I18n;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -208,7 +209,7 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     public synchronized double estimateCaptureFps() throws Exception {
         ensureOpen();
         if (stream == null || format == null) {
-            throw new Exception("Camera stream not properly initialized."); 
+            throw new Exception(I18n.gettext("Camera stream not properly initialized.")); 
         }
         // Stop the broadcasting thread.
         stop();

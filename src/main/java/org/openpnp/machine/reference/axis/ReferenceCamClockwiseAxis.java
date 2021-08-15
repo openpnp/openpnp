@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.axis;
+import org.I18n.I18n;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceCamClockwiseAxisConfigurationWizard;
@@ -54,7 +55,7 @@ public class ReferenceCamClockwiseAxis extends AbstractSingleTransformedAxis {
     @Override
     public AxesLocation toRaw(AxesLocation location, LocationOption... options) throws Exception {
         if (getCounterClockwiseAxis() == null) {
-            throw new Exception(getName()+" has no counter-clock input axis set");
+            throw new Exception(getName()+I18n.gettext(" has no counter-clock input axis set"));
         }
         double transformedCoordinate = location.getCoordinate(this);
         double rawCoordinate = getCounterClockwiseAxis().toRawCoordinate(transformedCoordinate, true);

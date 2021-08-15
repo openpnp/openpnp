@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.driver;
+import org.I18n.I18n;
 
 import java.io.IOException;
 
@@ -192,7 +193,7 @@ public class NullDriver extends AbstractDriver {
     }
     private void checkEnabled() throws Exception {
         if (!enabled) {
-            throw new Exception("Driver is not yet enabled!");
+            throw new Exception(I18n.gettext("Driver is not yet enabled!"));
         }
     }
 

@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.driver.wizards;
+import org.I18n.I18n;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -38,7 +39,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         this.driver = driver;
 
         JPanel settingsPanel = new JPanel();
-        settingsPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        settingsPanel.setBorder(new TitledBorder(null, I18n.gettext("Settings"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(settingsPanel);
         settingsPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -55,7 +56,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         JPanel interpolationPanel = new JPanel();
-        interpolationPanel.setBorder(new TitledBorder(null, "Interpolation", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        interpolationPanel.setBorder(new TitledBorder(null, I18n.gettext("Interpolation"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(interpolationPanel);
         interpolationPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -89,7 +90,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
                 RowSpec.decode("fill:default:grow"),}));
 
         JLabel lblMaximumNumberOf = new JLabel("Maximum Number of Steps");
-        lblMaximumNumberOf.setToolTipText("<html>\r\nMaximum number of steps that can be used for interpolation of one move.<br>\r\nUse a portion of your controller's maximum queue depth. <br/>\r\nIf the number is exceeded, the motion planner will fall back to a single moderated move. \r\n</html>");
+        lblMaximumNumberOf.setToolTipText(I18n.gettext("<html>\r\nMaximum number of steps that can be used for interpolation of one move.<br>\r\nUse a portion of your controller's maximum queue depth. <br/>\r\nIf the number is exceeded, the motion planner will fall back to a single moderated move. \r\n</html>"));
         interpolationPanel.add(lblMaximumNumberOf, "2, 2, right, default");
 
         interpolationMaxSteps = new JTextField();
@@ -97,7 +98,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         interpolationMaxSteps.setColumns(10);
         
         JLabel lblMaxumNumberOf = new JLabel("Maximum Number of Jerk Steps");
-        lblMaxumNumberOf.setToolTipText("<html>\r\nMaximum number of interpolation steps used to simulate jerk control.<br/>\r\nThis means the acceleration will be ramped up or down in so many steps <br/>\r\nrelative to maximum acceleration.\r\n</html>");
+        lblMaxumNumberOf.setToolTipText(I18n.gettext("<html>\r\nMaximum number of interpolation steps used to simulate jerk control.<br/>\r\nThis means the acceleration will be ramped up or down in so many steps <br/>\r\nrelative to maximum acceleration.\r\n</html>"));
         interpolationPanel.add(lblMaxumNumberOf, "2, 4, right, default");
         
         interpolationJerkSteps = new JTextField();
@@ -106,7 +107,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
 
         JLabel lblInterpolationTimeStep = new JLabel("Minimum Step Time [s]");
         interpolationPanel.add(lblInterpolationTimeStep, "2, 6, right, default");
-        lblInterpolationTimeStep.setToolTipText("<html>\r\n<p>The minimal time step used to interpolate advanced motion paths. Specified in seconds.</p>\r\n</html>\r\n");
+        lblInterpolationTimeStep.setToolTipText(I18n.gettext("<html>\r\n<p>The minimal time step used to interpolate advanced motion paths. Specified in seconds.</p>\r\n</html>\r\n"));
 
         interpolationTimeStep = new JTextField();
         interpolationPanel.add(interpolationTimeStep, "4, 6");
@@ -114,7 +115,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
 
         JLabel lblInterpolationMinimumTicks = new JLabel("Minimum Axis Resolution Ticks");
         interpolationPanel.add(lblInterpolationMinimumTicks, "2, 8, right, default");
-        lblInterpolationMinimumTicks.setToolTipText("<html>\r\n<p>Minimum step axis distance used to interpolate advanced motion paths.</p>\r\n<p>This is given in resolution ticks of the axes.</p>\r\n</html>\r\n");
+        lblInterpolationMinimumTicks.setToolTipText(I18n.gettext("<html>\r\n<p>Minimum step axis distance used to interpolate advanced motion paths.</p>\r\n<p>This is given in resolution ticks of the axes.</p>\r\n</html>\r\n"));
 
         interpolationMinStep = new JTextField();
         interpolationPanel.add(interpolationMinStep, "4, 8");
@@ -143,7 +144,7 @@ public class GcodeAsyncDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(confirmationFlowControl, "4, 2");
 
         JLabel lblRequestLocation = new JLabel("Location Confirmation?");
-        lblRequestLocation.setToolTipText("<html>Request the controller to report the location after a motion has completed.<br/>\r\nIf it has changed, the internal OpenPnP location is updated. The location report is <br/>\r\nalso used to synchronize OpenPnP when confirmation flow control is disabled.<br/>\r\nAt least on of the two options need to be enabled. Location Confirmation allows<br/>\r\nmore extensive asynchronous operation. \r\n</html>\r\n");
+        lblRequestLocation.setToolTipText(I18n.gettext("<html>Request the controller to report the location after a motion has completed.<br/>\r\nIf it has changed, the internal OpenPnP location is updated. The location report is <br/>\r\nalso used to synchronize OpenPnP when confirmation flow control is disabled.<br/>\r\nAt least on of the two options need to be enabled. Location Confirmation allows<br/>\r\nmore extensive asynchronous operation. \r\n</html>\r\n"));
         settingsPanel.add(lblRequestLocation, "2, 4, right, default");
 
         reportedLocationConfirmation = new JCheckBox("");

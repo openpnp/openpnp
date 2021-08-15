@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.driver.wizards;
+import org.I18n.I18n;
 
 
 import java.util.HashSet;
@@ -128,7 +129,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
     }
     private void createUi() {
         panelSettings = new JPanel();
-        panelSettings.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Motion Planner", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelSettings.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), I18n.gettext("Motion Planner"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelSettings);
         panelSettings.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -158,28 +159,28 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblContinuousMotion = new JLabel("Allow continous motion?");
-        lblContinuousMotion.setToolTipText("<html>\r\n<p>Often, OpenPnP directs the controller(s) to execute motion that involves multiple<br/>\r\nsegments. For example, consider a move to Safe Z, followed by a move over the target <br/>\r\nlocation, followed by a move to lower the the nozzle down to pick or place a part. </p> \r\n<p>If the motion planner and/or the motion controller get these commands as one<br/>\r\nsequence, they can apply certain optimizations to them. There are also no delays<br/>\r\nintroduced when communicating back and forth. Furthermore, the planning can go <br/>\r\nahead in parallel while the controller is still executing the last commands.</p>\r\n<p>By allowing continuous motion, you enable these optimizations. However, the <br/>\r\nMachine setup i.e. Gcode, custom scripts etc. must be configured in awareness that the <br/>\r\nplanner no longer waits for motion to complete each time, unless explicitly told to. </p>\r\n</html>");
+        lblContinuousMotion.setToolTipText(I18n.gettext("<html>\r\n<p>Often, OpenPnP directs the controller(s) to execute motion that involves multiple<br/>\r\nsegments. For example, consider a move to Safe Z, followed by a move over the target <br/>\r\nlocation, followed by a move to lower the the nozzle down to pick or place a part. </p> \r\n<p>If the motion planner and/or the motion controller get these commands as one<br/>\r\nsequence, they can apply certain optimizations to them. There are also no delays<br/>\r\nintroduced when communicating back and forth. Furthermore, the planning can go <br/>\r\nahead in parallel while the controller is still executing the last commands.</p>\r\n<p>By allowing continuous motion, you enable these optimizations. However, the <br/>\r\nMachine setup i.e. Gcode, custom scripts etc. must be configured in awareness that the <br/>\r\nplanner no longer waits for motion to complete each time, unless explicitly told to. </p>\r\n</html>"));
         panelSettings.add(lblContinuousMotion, "2, 2, right, default");
 
         allowContinuousMotion = new JCheckBox("");
         panelSettings.add(allowContinuousMotion, "4, 2");
 
         JLabel lblAllowUncoordinated = new JLabel("Allow uncoordinated?");
-        lblAllowUncoordinated.setToolTipText("<html>\r\nAllowing uncoordinated motion, will enable the planner to use advanced features<br/>\r\nsuch as overshooting, motion blending etc. This requires a driver that supports<br/>\r\nsimulated or true 3rd-order motion control (with these features on the controller).\r\n</html>");
+        lblAllowUncoordinated.setToolTipText(I18n.gettext("<html>\r\nAllowing uncoordinated motion, will enable the planner to use advanced features<br/>\r\nsuch as overshooting, motion blending etc. This requires a driver that supports<br/>\r\nsimulated or true 3rd-order motion control (with these features on the controller).\r\n</html>"));
         panelSettings.add(lblAllowUncoordinated, "2, 4, right, default");
 
         allowUncoordinated = new JCheckBox("");
         panelSettings.add(allowUncoordinated, "4, 4");
 
         lblRetime = new JLabel("Interpolation Retiming?");
-        lblRetime.setToolTipText("<html>\r\nInterpolation can only approximate the true 3rd-order motion profiles,<br/>\r\nsome deviations are expected. Re-timing will stretch the motion<br/>\r\nto match the original 3rd-order timing. However this will slightly reduce<br/>\r\nthe peak feedrate. By switching this off, you get the planned peak feedrate but slightly shorter<br/>\r\nmove duration.\r\n</html>\r\n");
+        lblRetime.setToolTipText(I18n.gettext("<html>\r\nInterpolation can only approximate the true 3rd-order motion profiles,<br/>\r\nsome deviations are expected. Re-timing will stretch the motion<br/>\r\nto match the original 3rd-order timing. However this will slightly reduce<br/>\r\nthe peak feedrate. By switching this off, you get the planned peak feedrate but slightly shorter<br/>\r\nmove duration.\r\n</html>\r\n"));
         panelSettings.add(lblRetime, "2, 6, right, default");
 
         interpolationRetiming = new JCheckBox("");
         panelSettings.add(interpolationRetiming, "4, 6, right, top");
 
         panel = new JPanel();
-        panel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Test Motion", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), I18n.gettext("Test Motion"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -229,7 +230,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
             Logger.error(e, "Cannot determine Name of machine.");
         }
         
-        lblEnabled = new JLabel("Enabled?");
+        lblEnabled = new JLabel(I18n.gettext("Enabled?"));
         panel.add(lblEnabled, "4, 2");
 
         lblX = new JLabel("X");
@@ -255,7 +256,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                         panel.add(lblSpeed1, "2, 6, right, default");
         
                 toMid1Speed = new JTextField();
-                toMid1Speed.setToolTipText("Speed between First location and Second location");
+                toMid1Speed.setToolTipText(I18n.gettext("Speed between First location and Second location"));
                 panel.add(toMid1Speed, "4, 6, fill, default");
                 toMid1Speed.setColumns(5);
         
@@ -285,7 +286,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                         panel.add(lblSpeed2, "2, 10, right, default");
         
                 toMid2Speed = new JTextField();
-                toMid2Speed.setToolTipText("Speed between Second location and Third location");
+                toMid2Speed.setToolTipText(I18n.gettext("Speed between Second location and Third location"));
                 toMid2Speed.setColumns(5);
                 panel.add(toMid2Speed, "4, 10, fill, default");
         
@@ -374,7 +375,7 @@ public class ReferenceAdvancedMotionPlannerConfigurationWizard extends AbstractC
                         panel.add(lblSpeedEnd, "2, 15, right, default");
         
                 toEndSpeed = new JTextField();
-                toEndSpeed.setToolTipText("Speed between Third location and Last location");
+                toEndSpeed.setToolTipText(I18n.gettext("Speed between Third location and Last location"));
                 toEndSpeed.setColumns(5);
                 panel.add(toEndSpeed, "4, 15, fill, default");
         

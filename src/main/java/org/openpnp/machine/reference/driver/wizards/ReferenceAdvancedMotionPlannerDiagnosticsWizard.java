@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.driver.wizards;
+import org.I18n.I18n;
 
 
 import java.awt.Font;
@@ -66,7 +67,7 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
             new AbstractAction("Test", Icons.start) {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "<html>Test the motion defined in the Motion Planner Wizard.</html>");
+                    I18n.gettext("<html>Test the motion defined in the Motion Planner Wizard.</html>"));
         }
 
         @Override
@@ -77,7 +78,7 @@ public class ReferenceAdvancedMotionPlannerDiagnosticsWizard extends AbstractCon
                 UiUtils.submitUiMachineTask(() -> {
                     if (motionPlanner.getInitialLocation(false) == null
                             || motionPlanner.getInitialLocation(true) == null) {
-                        throw new Exception("Test Motion undefined. Please go to the Motion Planner tab and define/enable the Test Motion locations.");
+                        throw new Exception(I18n.gettext("Test Motion undefined. Please go to the Motion Planner tab and define/enable the Test Motion locations."));
                     }
                     Location l = selectedTool.getLocation();
                     boolean reverse = (l.getXyzcDistanceTo(motionPlanner.getInitialLocation(true)) 

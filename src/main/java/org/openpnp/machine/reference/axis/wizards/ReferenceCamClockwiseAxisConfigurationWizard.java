@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.axis.wizards;
+import org.I18n.I18n;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -55,7 +56,7 @@ public class ReferenceCamClockwiseAxisConfigurationWizard extends AbstractAxisCo
     public ReferenceCamClockwiseAxisConfigurationWizard(AbstractMachine machine, ReferenceCamClockwiseAxis axis) {
         super(axis);
         panelTransformation = new JPanel();
-        panelTransformation.setBorder(new TitledBorder(null, "Cam Clockwise Axis", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelTransformation.setBorder(new TitledBorder(null, I18n.gettext("Cam Clockwise Axis"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTransformation);
         panelTransformation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

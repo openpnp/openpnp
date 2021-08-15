@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.axis.wizards;
+import org.I18n.I18n;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -80,7 +81,7 @@ public class ReferenceLinearTransformAxisConfigurationWizard extends AbstractAxi
         super(axis);
 
         panelTransformation = new JPanel();
-        panelTransformation.setBorder(new TitledBorder(null, "Linear Transformation", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelTransformation.setBorder(new TitledBorder(null, I18n.gettext("Linear Transformation"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTransformation);
         panelTransformation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -203,7 +204,7 @@ public class ReferenceLinearTransformAxisConfigurationWizard extends AbstractAxi
         offset.setColumns(10);
 
         lblCompensation = new JLabel("Compensation?");
-        lblCompensation.setToolTipText("<html>Determines, whether this transformation is a compensation transformation e.g. Non-Squareness Compensation.<br/>\r\nThis can be used by OpenPnP to optimize some motion where precision is not needed. Initial calibration <br/>and simulation are other applications. \r\n</html>");
+        lblCompensation.setToolTipText(I18n.gettext("<html>Determines, whether this transformation is a compensation transformation e.g. Non-Squareness Compensation.<br/>\r\nThis can be used by OpenPnP to optimize some motion where precision is not needed. Initial calibration <br/>and simulation are other applications. \r\n</html>"));
         panelTransformation.add(lblCompensation, "2, 24, right, default");
 
         compensation = new JCheckBox("");

@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.driver;
+import org.I18n.I18n;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -140,10 +141,10 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         byte[] b = new byte[1];
         int l = serialPort.readBytes(b, 1);
         if (l == -1) {
-            throw new IOException("Read error.");
+            throw new IOException(I18n.gettext("Read error."));
         }
         if (l == 0) {
-            throw new TimeoutException("Read timeout.");
+            throw new TimeoutException(I18n.gettext("Read timeout."));
         }
         return b[0];
     }
@@ -151,7 +152,7 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
     public void writeBytes(byte[] data) throws IOException {
         int l = serialPort.writeBytes(data, data.length);
         if (l == -1) {
-            throw new IOException("Write error.");
+            throw new IOException(I18n.gettext("Write error."));
         }
     }
 

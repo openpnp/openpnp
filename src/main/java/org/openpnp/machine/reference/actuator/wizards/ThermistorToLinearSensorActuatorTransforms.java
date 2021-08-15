@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.actuator.wizards;
+import org.I18n.I18n;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -48,7 +49,7 @@ public class ThermistorToLinearSensorActuatorTransforms extends AbstractConfigur
     private void createUi() {
         
         panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Thermistor", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel.setBorder(new TitledBorder(null, I18n.gettext("Thermistor"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -138,7 +139,7 @@ public class ThermistorToLinearSensorActuatorTransforms extends AbstractConfigur
         vRef.setColumns(10);
         
         panel_2 = new JPanel();
-        panel_2.setBorder(new TitledBorder(null, "Linear Transform", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel_2.setBorder(new TitledBorder(null, I18n.gettext("Linear Transform"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel_2);
         panel_2.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

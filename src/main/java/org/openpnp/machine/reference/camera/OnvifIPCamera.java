@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.camera;
+import org.I18n.I18n;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -247,7 +248,7 @@ public class OnvifIPCamera extends ReferenceCamera implements Runnable {
             }
         }
 
-        throw new Exception("No JPEG profiles available for camera at " + hostIP);
+        throw new Exception(I18n.gettext("No JPEG profiles available for camera at ") + hostIP);
     }
 
     public List<VideoResolution> getSupportedResolutions() {

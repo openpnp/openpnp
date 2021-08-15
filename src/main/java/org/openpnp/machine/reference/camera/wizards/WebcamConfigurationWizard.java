@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.camera.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 
@@ -55,7 +56,7 @@ public class WebcamConfigurationWizard extends AbstractConfigurationWizard
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("General"), TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},

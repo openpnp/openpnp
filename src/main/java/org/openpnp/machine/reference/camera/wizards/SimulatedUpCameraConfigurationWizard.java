@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.camera.wizards;
+import org.I18n.I18n;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -80,7 +81,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("General"), TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -121,7 +122,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         lblZ = new JLabel("Z");
         panelGeneral.add(lblZ, "8, 2, center, default");
         
-        lblRotation = new JLabel("Rotation");
+        lblRotation = new JLabel(I18n.gettext("Rotation"));
         panelGeneral.add(lblRotation, "10, 2, center, default");
         
         lblNewLabel = new JLabel("Camera Location");

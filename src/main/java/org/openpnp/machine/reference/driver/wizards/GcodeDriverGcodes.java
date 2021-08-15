@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.driver.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.FileDialog;
@@ -61,7 +62,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         this.driver = driver;
 
         JPanel gcodePanel = new JPanel();
-        gcodePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Gcode", TitledBorder.LEADING, TitledBorder.TOP, null));
+        gcodePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), I18n.gettext("Gcode"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(gcodePanel);
         gcodePanel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),
@@ -129,7 +130,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         textAreaCommand.setRows(5);
 
         JPanel importExportPanel = new JPanel();
-        importExportPanel.setBorder(new TitledBorder(null, "Import / Export", TitledBorder.LEADING,
+        importExportPanel.setBorder(new TitledBorder(null, I18n.gettext("Import / Export"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(importExportPanel);
         importExportPanel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -314,7 +315,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 w.close();
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Export Failed", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Export Failed"), e);
             }
         }
     };
@@ -346,7 +347,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 // copySettings(d, driver);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Import Failed", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Import Failed"), e);
             }
         }
     };
@@ -370,7 +371,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 MessageBoxes.infoBox("Copied Gcode", "Copied Gcode to Clipboard");
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Copy Failed", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Copy Failed"), e);
             }
         }
     };
@@ -394,7 +395,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 MessageBoxes.infoBox("Pasted Gcode", "Pasted Gcode from Clipboard");
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Paste Failed", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Paste Failed"), e);
             }
         }
     };
@@ -420,7 +421,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
                 }
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Reset Failed", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Reset Failed"), e);
             }
         }
     };

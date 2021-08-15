@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.driver.wizards;
+import org.I18n.I18n;
 
 import java.awt.Cursor;
 import java.awt.FileDialog;
@@ -52,7 +53,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         this.driver = driver;
         
         JPanel settingsPanel = new JPanel();
-        settingsPanel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        settingsPanel.setBorder(new TitledBorder(null, I18n.gettext("Settings"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(settingsPanel);
         settingsPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -86,7 +87,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 RowSpec.decode("max(50dlu;default)"),}));
         
         JLabel lblMotionControlType = new JLabel("Motion Control Type");
-        lblMotionControlType.setToolTipText("<html>\r\n<p>Determines how the OpenPnP MotionPlanner will plan the motion and how it will talk <br/>\r\nto the controller:</p>\r\n<ul>\r\n\r\n<li><strong>ToolpathFeedRate:</strong><br/>\r\nApply the nominal driver feed-rate limit multiplied by the speed factor to the tool-path.<br/>\r\nThe driver feed-rate must be specified. No acceleration control is applied.</li>\r\n\r\n<li><strong>EuclideanAxisLimits:</strong><br/>\r\nApply axis feed-rate, acceleration and jerk limits multiplied by the proper speed factors. <br/>\r\nThe Euclidean Metric is calculated to allow the machine to run faster in a diagonal.<br/>\r\nOpenPnP only sets the speed factor maximum, ramping up and down the speed is <br/>\r\nentirely left to the controller. </li>  \r\n\r\n<li><strong>ConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control. </li>\r\n\r\n<li><strong>ModeratedConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control but<br/>\r\nmoderate the acceleration and velocity to resemble those of 3rd order control, resulting<br/>\r\nin a move that takes the same amount of time and has similar average acceleration. <br/>\r\nThis will already reduce vibrations a bit.</li>\r\n\r\n<li><strong>SimpleSCurve:</strong><br/>\r\nApply motion planning assuming a controller with simplified S-Curve motion control. <br/>\r\nSimplified S-Curves have no constant acceleration phase, only jerk phases (e.g. TinyG, Marlin).</li>\r\n\r\n<li><strong>Simulated3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control but<br/>\r\nsimulating 3rd order control with time step interpolation. </li> \r\n\r\n<li><strong>Full3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with full 3rd order motion control.</li> \r\n\r\n</html>");
+        lblMotionControlType.setToolTipText(I18n.gettext("<html>\r\n<p>Determines how the OpenPnP MotionPlanner will plan the motion and how it will talk <br/>\r\nto the controller:</p>\r\n<ul>\r\n\r\n<li><strong>ToolpathFeedRate:</strong><br/>\r\nApply the nominal driver feed-rate limit multiplied by the speed factor to the tool-path.<br/>\r\nThe driver feed-rate must be specified. No acceleration control is applied.</li>\r\n\r\n<li><strong>EuclideanAxisLimits:</strong><br/>\r\nApply axis feed-rate, acceleration and jerk limits multiplied by the proper speed factors. <br/>\r\nThe Euclidean Metric is calculated to allow the machine to run faster in a diagonal.<br/>\r\nOpenPnP only sets the speed factor maximum, ramping up and down the speed is <br/>\r\nentirely left to the controller. </li>  \r\n\r\n<li><strong>ConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control. </li>\r\n\r\n<li><strong>ModeratedConstantAcceleration:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control but<br/>\r\nmoderate the acceleration and velocity to resemble those of 3rd order control, resulting<br/>\r\nin a move that takes the same amount of time and has similar average acceleration. <br/>\r\nThis will already reduce vibrations a bit.</li>\r\n\r\n<li><strong>SimpleSCurve:</strong><br/>\r\nApply motion planning assuming a controller with simplified S-Curve motion control. <br/>\r\nSimplified S-Curves have no constant acceleration phase, only jerk phases (e.g. TinyG, Marlin).</li>\r\n\r\n<li><strong>Simulated3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with constant acceleration motion control but<br/>\r\nsimulating 3rd order control with time step interpolation. </li> \r\n\r\n<li><strong>Full3rdOrderControl:</strong><br/>\r\nApply motion planning assuming a controller with full 3rd order motion control.</li> \r\n\r\n</html>"));
         settingsPanel.add(lblMotionControlType, "2, 2, right, default");
         
         motionControlType = new JComboBox(MotionControlType.values());
@@ -99,7 +100,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(unitsCb, "8, 4, fill, default");
         
         JLabel lblMaxFeedRate = new JLabel("Max Feed Rate [/min]");
-        lblMaxFeedRate.setToolTipText("<html><p>Maximum tool-path feed-rate in driver units per minute. </p>\r\n<p>Set to 0 to disable and only use axis feed-rate limits. Diagonal moves will then be faster. </p>\r\n</html>");
+        lblMaxFeedRate.setToolTipText(I18n.gettext("<html><p>Maximum tool-path feed-rate in driver units per minute. </p>\r\n<p>Set to 0 to disable and only use axis feed-rate limits. Diagonal moves will then be faster. </p>\r\n</html>"));
         settingsPanel.add(lblMaxFeedRate, "6, 6, right, default");
         
         maxFeedRateTf = new JTextField();
@@ -121,7 +122,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         connectWaitTimeTf.setColumns(10);
         
         JLabel lblLetterVariables = new JLabel("Letter Variables?");
-        lblLetterVariables.setToolTipText("Axis variables in Gcode are named using the Axis Letters rather than the Axis Type.");
+        lblLetterVariables.setToolTipText(I18n.gettext("Axis variables in Gcode are named using the Axis Letters rather than the Axis Type."));
         settingsPanel.add(lblLetterVariables, "2, 8, right, default");
         
         letterVariables = new JCheckBox("");
@@ -149,19 +150,19 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(compressGcode, "8, 10");
         
         JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters?");
-        lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
+        lblBackslashEscapedCharacters.setToolTipText(I18n.gettext("Allows insertion of unicode characters into Gcode strings as \\uxxxx ")
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
         settingsPanel.add(lblBackslashEscapedCharacters, "2, 12, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
-        backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
+        backslashEscapedCharacters.setToolTipText(I18n.gettext("Allows insertion of unicode characters into Gcode strings as \\uxxxx ")
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
         settingsPanel.add(backslashEscapedCharacters, "4, 12");
         
         JLabel lblLogGcode = new JLabel("Log Gcode?");
-        lblLogGcode.setToolTipText("Log the generated Gcode into a separate file in the .openpnp2 driver subdirectory.");
+        lblLogGcode.setToolTipText(I18n.gettext("Log the generated Gcode into a separate file in the .openpnp2 driver subdirectory."));
         settingsPanel.add(lblLogGcode, "6, 12, right, default");
         
         loggingGcode = new JCheckBox("");
@@ -263,7 +264,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 w.close();
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Export Failed", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Export Failed"), e);
             }
         }
     };
@@ -295,7 +296,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 // copySettings(d, driver);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Import Failed", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Import Failed"), e);
             }
         }
     };
@@ -319,7 +320,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 MessageBoxes.infoBox("Copied Gcode", "Copied Gcode to Clipboard");
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Copy Failed", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Copy Failed"), e);
             }
         }
     };
@@ -343,7 +344,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 MessageBoxes.infoBox("Pasted Gcode", "Pasted Gcode from Clipboard");
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.get(), "Paste Failed", e);
+                MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Paste Failed"), e);
             }
         }
     };

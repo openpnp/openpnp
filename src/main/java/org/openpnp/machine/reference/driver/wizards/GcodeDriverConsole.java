@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.driver.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -45,7 +46,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
 
         JPanel gcodeConsole = new JPanel();
         gcodeConsole.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Gcode console", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Gcode console"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(gcodeConsole);
 
         gcodeConsole.setLayout(new FormLayout(new ColumnSpec[] {

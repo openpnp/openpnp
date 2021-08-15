@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.camera;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -405,7 +406,7 @@ public class ImageCamera extends ReferenceCamera {
             org.openpnp.model.Package pkg = part.getPackage();
             Footprint footprint = pkg.getFootprint();
             if (footprint == null) {
-                throw new Exception("Part "+part.getId()+" has no footprint.");
+                throw new Exception("Part "+part.getId()+I18n.gettext(" has no footprint."));
             }
 
             BufferedImage template = OpenCvUtils.createFootprintTemplate(this, footprint, physicalLocation.getRotation(),

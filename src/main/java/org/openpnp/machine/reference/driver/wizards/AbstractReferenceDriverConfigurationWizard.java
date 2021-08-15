@@ -1,4 +1,5 @@
 package org.openpnp.machine.reference.driver.wizards;
+import org.I18n.I18n;
 
 import java.awt.Component;
 import java.awt.event.ItemEvent;
@@ -55,7 +56,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         
         panelController = new JPanel();
-        panelController.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelController.setBorder(new TitledBorder(null, I18n.gettext("Properties"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelController);
         panelController.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -75,7 +76,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
 
         //Selector code
         JPanel panelComms = new JPanel();
-        panelComms.setBorder(new TitledBorder(null, "Communications method", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelComms.setBorder(new TitledBorder(null, I18n.gettext("Communications method"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelComms);
         panelComms.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -115,7 +116,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
 
         //Serial config code
         panelSerial = new JPanel();
-        panelSerial.setBorder(new TitledBorder(null, "Serial Port", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelSerial.setBorder(new TitledBorder(null, I18n.gettext("Serial Port"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelSerial);
         panelSerial.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

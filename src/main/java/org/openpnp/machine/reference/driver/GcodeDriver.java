@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.driver;
+import org.I18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
@@ -441,7 +442,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         String homeCompleteRegex = getCommand(null, CommandType.HOME_COMPLETE_REGEX);
         if (homeCompleteRegex != null) {
             receiveResponses(homeCompleteRegex, timeout, (responses) -> { 
-                throw new Exception("Timed out waiting for home to complete."); 
+                throw new Exception(I18n.gettext("Timed out waiting for home to complete.")); 
             });
         }
 
@@ -504,7 +505,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     else {
                         // It is imperative that the axis global offset is really set. Otherwise all bets 
                         // are off and collisions in subsequent moves are very likely. 
-                        throw new Exception("Axis variable "+variable+" is missing in SET_GLOBAL_OFFSETS_COMMAND.");
+                        throw new Exception("Axis variable "+variable+I18n.gettext(" is missing in SET_GLOBAL_OFFSETS_COMMAND."));
                     }
                 }
                 else {
@@ -545,10 +546,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public AxesLocation getReportedLocation(long timeout) throws Exception {
         String command = getCommand(null, CommandType.GET_POSITION_COMMAND);
         if (command == null) {
-            throw new Exception(getName()+" configuration error: missing GET_POSITION_COMMAND.");
+            throw new Exception(getName()+I18n.gettext(" configuration error: missing GET_POSITION_COMMAND."));
         }
         if (getCommand(null, CommandType.POSITION_REPORT_REGEX) == null) {
-            throw new Exception(getName()+" configuration error: missing POSITION_REPORT_REGEX.");
+            throw new Exception(getName()+I18n.gettext(" configuration error: missing POSITION_REPORT_REGEX."));
         }
 
         // TODO: true queued reporting. For now it is sufficient to poll one for one.
@@ -563,7 +564,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             return lastReportedLocation;
         }
         // Timeout expired.
-        throw new Exception(getName()+" timeout waiting for response to " + command);
+        throw new Exception(getName()+I18n.gettext(" timeout waiting for response to ") + command);
     }
 
     /**
@@ -666,7 +667,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             }
         }
         if (hasVariable(command, "BacklashFeedRate")) {
-            throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
+            throw new Exception(getName()+I18n.gettext(" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. ")
                     +"Backlash compensation is now done outside of the drivers and configured on the axes.");
         }
 
@@ -726,7 +727,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 command = substituteVariable(command, variable+"F", coordinate);
                 command = substituteVariable(command, variable+"L", axis.getLetter());
                 if (hasVariable(command, "BacklashOffset"+variable)) {
-                    throw new Exception(getName()+" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. "
+                    throw new Exception(getName()+I18n.gettext(" configuration upgrade needed: Please remove the extra backlash compensation move from your MOVE_TO_COMMAND. ")
                             +"Backlash compensation is now done outside of the drivers.");
                 }
                 command = substituteVariable(command, variable+"Decreasing", direction < 0 ? true : null);
@@ -806,7 +807,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                     receiveResponses(moveToCompleteRegex, completionType == CompletionType.WaitForStillstandIndefinitely ?
                             -1 : getTimeoutAtMachineSpeed(),
                             (responses) -> {
-                        throw new Exception("Timed out waiting for move to complete.");
+                        throw new Exception(I18n.gettext("Timed out waiting for move to complete."));
                     });
                 }
             }
@@ -1029,17 +1030,17 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             return receivedConfirmation;
         }
         // Timeout expired.
-        throw new Exception(getCommunications().getConnectionName()+" timeout waiting for response to "+command);
+        throw new Exception(getCommunications().getConnectionName()+I18n.gettext(" timeout waiting for response to ")+command);
     }
 
     protected void bailOnError() throws Exception {
         if (errorResponse != null) {
             Line error = errorResponse; 
             errorResponse = null;
-            throw new Exception(getCommunications().getConnectionName()+" error response from controller: " + error);
+            throw new Exception(getCommunications().getConnectionName()+I18n.gettext(" error response from controller: ") + error);
         }
         if (readerThread == null || !readerThread.isAlive()) {
-            throw new Exception(getCommunications().getConnectionName()+" IO Error on reading from the controller.");
+            throw new Exception(getCommunications().getConnectionName()+I18n.gettext(" IO Error on reading from the controller."));
         }
     }
 

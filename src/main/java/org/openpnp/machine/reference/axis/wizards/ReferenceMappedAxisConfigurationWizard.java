@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.machine.reference.axis.wizards;
+import org.I18n.I18n;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -68,7 +69,7 @@ public class ReferenceMappedAxisConfigurationWizard extends AbstractAxisConfigur
     public ReferenceMappedAxisConfigurationWizard(AbstractMachine machine, ReferenceMappedAxis axis) {
         super(axis);
         panelTransformation = new JPanel();
-        panelTransformation.setBorder(new TitledBorder(null, "Axis Mapping", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelTransformation.setBorder(new TitledBorder(null, I18n.gettext("Axis Mapping"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTransformation);
         panelTransformation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -107,7 +108,7 @@ public class ReferenceMappedAxisConfigurationWizard extends AbstractAxisConfigur
         panelTransformation.add(lblTo, "8, 4, center, default");
         
         lblMapPointA = new JLabel("Map Point A");
-        lblMapPointA.setToolTipText("<html>Choose two exemplary points on the axis that you like to map.<br/>\r\nSet the desired Input and Output to create an Offset, Scaling, Negating (etc.).<br/>\r\nNote, the range will not be limited to these points they are just examples.\r\n</html>");
+        lblMapPointA.setToolTipText(I18n.gettext("<html>Choose two exemplary points on the axis that you like to map.<br/>\r\nSet the desired Input and Output to create an Offset, Scaling, Negating (etc.).<br/>\r\nNote, the range will not be limited to these points they are just examples.\r\n</html>"));
         panelTransformation.add(lblMapPointA, "2, 6, right, default");
         
         mapInput0 = new JTextField();

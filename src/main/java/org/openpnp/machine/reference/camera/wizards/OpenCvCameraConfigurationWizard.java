@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.machine.reference.camera.wizards;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -71,7 +72,7 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("General"), TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -120,7 +121,7 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
         panelGeneral.add(lbluseFor_h, "6, 6");
 
         panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Properties (Experimental)", TitledBorder.LEADING,
+        panel.setBorder(new TitledBorder(null, I18n.gettext("Properties (Experimental)"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -140,7 +141,7 @@ public class OpenCvCameraConfigurationWizard extends AbstractConfigurationWizard
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblProperty = new JLabel("Property");
+        lblProperty = new JLabel(I18n.gettext("Property"));
         panel.add(lblProperty, "2, 2");
 
         lblValue = new JLabel("Value");
