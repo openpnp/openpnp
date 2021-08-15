@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -72,14 +73,14 @@ public class AboutDialog extends JDialog {
     }
 
     private void createUi() {
-        setTitle("About OpenPnP");
+        setTitle(I18n.gettext("About OpenPnP"));
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 347, 360);
         getContentPane().setLayout(new BorderLayout());
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
-        JButton okButton = new JButton("OK");
+        JButton okButton = new JButton(I18n.gettext("OK"));
         okButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 setVisible(false);
@@ -100,7 +101,7 @@ public class AboutDialog extends JDialog {
         lblCopyright.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
         lblCopyright.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblCopyright);
-        JLabel lblVersion = new JLabel("Version: " + Main.getVersion());
+        JLabel lblVersion = new JLabel(I18n.gettext("Version: ") + Main.getVersion());
         lblVersion.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
         lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblVersion);
@@ -110,10 +111,10 @@ public class AboutDialog extends JDialog {
 
         releaseNotes = new JTextPane();
         releaseNotes.setEditable(false);
-        tabbedPane.addTab("Release Notes", null, new JScrollPane(releaseNotes), null);
+        tabbedPane.addTab(I18n.gettext("Release Notes"), null, new JScrollPane(releaseNotes), null);
 
         credits = new JTextPane();
         credits.setEditable(false);
-        tabbedPane.addTab("Credits", null, new JScrollPane(credits), null);
+        tabbedPane.addTab(I18n.gettext("Credits"), null, new JScrollPane(credits), null);
     }
 }

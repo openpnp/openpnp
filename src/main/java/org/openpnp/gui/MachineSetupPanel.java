@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -108,11 +109,11 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
         
-                cbExp = new JCheckBox("Expand");
+                cbExp = new JCheckBox(I18n.gettext("Expand"));
                 panel_1.add(cbExp);
                 cbExp.setAction(action);
 
-        JLabel lblSearch = new JLabel("Search");
+        JLabel lblSearch = new JLabel(I18n.gettext("Search"));
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -233,7 +234,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                         String title = propertySheet.getPropertySheetTitle();
                         JPanel panel = propertySheet.getPropertySheetPanel();
                         if (title == null) {
-                            title = "Configuration";
+                            title = I18n.gettext("Configuration");
                         }
                         if (panel != null) {
                             tabbedPane.add(title, panel);
@@ -368,7 +369,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
     };
     private class SwingAction extends AbstractAction {
         public SwingAction() {
-            putValue(NAME, "Expand");
+            putValue(NAME, I18n.gettext("Expand"));
             putValue(SHORT_DESCRIPTION, "Expand machine configuration tree");
         }
         

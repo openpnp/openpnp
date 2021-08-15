@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.support;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -111,7 +112,7 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
             validateInput();
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Validation Error", e.getMessage());
+            MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Validation Error"), e.getMessage());
         }
         for (WrappedBinding wrappedBinding : wrappedBindings) {
             wrappedBinding.save();
@@ -170,7 +171,7 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         return null;
     }
 
-    protected Action applyAction = new AbstractAction("Apply") {
+    protected Action applyAction = new AbstractAction(I18n.gettext("Apply")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             saveToModel();
@@ -178,7 +179,7 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         }
     };
 
-    protected Action resetAction = new AbstractAction("Reset") {
+    protected Action resetAction = new AbstractAction(I18n.gettext("Reset")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             loadFromModel();

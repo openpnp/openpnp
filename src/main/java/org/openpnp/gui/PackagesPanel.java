@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
@@ -113,7 +114,7 @@ public class PackagesPanel extends JPanel {
         JPanel panel_1 = new JPanel();
         toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel("Search");
+        JLabel lblSearch = new JLabel(I18n.gettext("Search"));
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -177,9 +178,9 @@ public class PackagesPanel extends JPanel {
                 int selectedTab = tabbedPane.getSelectedIndex();
                 tabbedPane.removeAll();
                 if (pkg != null) {
-                    tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
-                    tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg.getFootprint())));
-                    tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
+                    tabbedPane.add(I18n.gettext("Nozzle Tips"), new PackageNozzleTipsPanel(pkg));
+                    tabbedPane.add(I18n.gettext("Vision"), new JScrollPane(new PackageVisionPanel(pkg.getFootprint())));
+                    tabbedPane.add(I18n.gettext("Settings"), new JScrollPane(new PackageSettingsPanel(pkg)));
                     if (selectedTab != -1) {
                         tabbedPane.setSelectedIndex(selectedTab);
                     }
@@ -252,16 +253,16 @@ public class PackagesPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Package...");
-            putValue(SHORT_DESCRIPTION, "Create a new package, specifying it's ID.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Create a new package, specifying it's ID."));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
-                    "Please enter an ID for the new package.")) != null) {
+                    I18n.gettext("Please enter an ID for the new package."))) != null) {
                 if (configuration.getPackage(id) != null) {
-                    MessageBoxes.errorBox(frame, "Error", "Package ID " + id + " already exists.");
+                    MessageBoxes.errorBox(frame, "Error", "Package ID " + id + I18n.gettext(" already exists."));
                     continue;
                 }
                 Package this_package = new Package(id);
@@ -277,8 +278,8 @@ public class PackagesPanel extends JPanel {
     public final Action deletePackageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Package");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected package.");
+            putValue(NAME, I18n.gettext("Delete Package"));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Delete the currently selected package."));
         }
 
         @Override
@@ -288,7 +289,7 @@ public class PackagesPanel extends JPanel {
             for (Package pkg : selections) {
                 for (Part part : Configuration.get().getParts()) {
                     if (part.getPackage() == pkg) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                        MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Error"),
                                 pkg.getId() + " cannot be deleted. It is used by "
                                         + part.getId());
                         return;
@@ -319,9 +320,9 @@ public class PackagesPanel extends JPanel {
     public final Action copyPackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Package to Clipboard");
+            putValue(NAME, I18n.gettext("Copy Package to Clipboard"));
             putValue(SHORT_DESCRIPTION,
-                    "Copy the currently selected package to the clipboard in text format.");
+                    I18n.gettext("Copy the currently selected package to the clipboard in text format."));
         }
 
         @Override
@@ -339,7 +340,7 @@ public class PackagesPanel extends JPanel {
                 clipboard.setContents(stringSelection, null);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Copy Failed"), e);
             }
         }
     };
@@ -347,8 +348,8 @@ public class PackagesPanel extends JPanel {
     public final Action pastePackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create Package from Clipboard");
-            putValue(SHORT_DESCRIPTION, "Create a new package from a definition on the clipboard.");
+            putValue(NAME, I18n.gettext("Create Package from Clipboard"));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Create a new package from a definition on the clipboard."));
         }
 
         @Override
@@ -370,7 +371,7 @@ public class PackagesPanel extends JPanel {
                 Helpers.selectLastTableRow(table);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Paste Failed"), e);
             }
         }
     };

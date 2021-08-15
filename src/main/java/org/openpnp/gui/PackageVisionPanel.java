@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -82,7 +83,7 @@ public class PackageVisionPanel extends JPanel {
         JPanel propertiesPanel = new JPanel();
         add(propertiesPanel, BorderLayout.NORTH);
         propertiesPanel.setBorder(
-                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Settings",
+                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), I18n.gettext("Settings"),
                         TitledBorder.LEADING, TitledBorder.TOP, null));
         propertiesPanel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -91,20 +92,20 @@ public class PackageVisionPanel extends JPanel {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblUnits = new JLabel("Units");
+        JLabel lblUnits = new JLabel(I18n.gettext("Units"));
         propertiesPanel.add(lblUnits, "2, 2, right, default");
 
         unitsCombo = new JComboBox(LengthUnit.values());
         propertiesPanel.add(unitsCombo, "4, 2, left, default");
 
-        JLabel lblBodyWidth = new JLabel("Body Width");
+        JLabel lblBodyWidth = new JLabel(I18n.gettext("Body Width"));
         propertiesPanel.add(lblBodyWidth, "2, 4, right, default");
 
         bodyWidthTf = new JTextField();
         propertiesPanel.add(bodyWidthTf, "4, 4, left, default");
         bodyWidthTf.setColumns(10);
 
-        JLabel lblBodyHeight = new JLabel("Body Length");
+        JLabel lblBodyHeight = new JLabel(I18n.gettext("Body Length"));
         propertiesPanel.add(lblBodyHeight, "2, 6, right, default");
 
         bodyHeightTf = new JTextField();
@@ -114,7 +115,7 @@ public class PackageVisionPanel extends JPanel {
         JPanel tablePanel = new JPanel();
         add(tablePanel, BorderLayout.CENTER);
         tablePanel.setBorder(
-                new TitledBorder(null, "Pads", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+                new TitledBorder(null, I18n.gettext("Pads"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
 
         table = new AutoSelectTextTable(tableModel);
         table.setAutoCreateRowSorter(true);
@@ -211,8 +212,8 @@ public class PackageVisionPanel extends JPanel {
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Pad...");
-            putValue(SHORT_DESCRIPTION, "Create a new pad, specifying it's ID.");
+            putValue(NAME, I18n.gettext("New Pad..."));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Create a new pad, specifying it's ID."));
         }
 
         @Override
@@ -233,8 +234,8 @@ public class PackageVisionPanel extends JPanel {
     public final Action deleteAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Pad");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected pad.");
+            putValue(NAME, I18n.gettext("Delete Pad"));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Delete the currently selected pad."));
         }
 
         @Override

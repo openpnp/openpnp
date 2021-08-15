@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.processes;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -56,14 +57,14 @@ public class MultiPlacementBoardLocationProcess {
 
     private int step = -1;
     private String[] instructionsAuto = new String[] {
-            "<html><body>Select two or more (four or more is better) easily identifiable placements in the placements table. They should be near the corners of the board. Click Next to continue and the camera will move near one of the selected placements.</body></html>",
-            "<html><body>Now, manually jog the camera's crosshairs over the center of %s. Try to be as precise as possible. Click Next to continue to the next placement.</body></html>",
-            "<html><body>The board's location and rotation have been set. Click Finish to position the camera at the board's origin, or Cancel to reject the changes.</body></html>",};
+            I18n.gettext("<html><body>Select two or more (four or more is better) easily identifiable placements in the placements table. They should be near the corners of the board. Click Next to continue and the camera will move near one of the selected placements.</body></html>"),
+            I18n.gettext("<html><body>Now, manually jog the camera's crosshairs over the center of %s. Try to be as precise as possible. Click Next to continue to the next placement.</body></html>"),
+            I18n.gettext("<html><body>The board's location and rotation have been set. Click Finish to position the camera at the board's origin, or Cancel to reject the changes.</body></html>"),};
 
     private String[] instructionsManual = new String[] {
-            "<html><body>Select two or more (four or more is better) easily identifiable placements in the placements table. They should be near the corners of the board. Click Next to continue.</body></html>",
-            "<html><body>Now, manually jog the camera's crosshairs over the center of %s. Try to be as precise as possible. Click Next to continue to the next placement.</body></html>",
-            "<html><body>The board's location and rotation have been set. Click Finish to position the camera at the board's origin, or Cancel to reject the changes.</body></html>",};
+            I18n.gettext("<html><body>Select two or more (four or more is better) easily identifiable placements in the placements table. They should be near the corners of the board. Click Next to continue.</body></html>"),
+            I18n.gettext("<html><body>Now, manually jog the camera's crosshairs over the center of %s. Try to be as precise as possible. Click Next to continue to the next placement.</body></html>"),
+            I18n.gettext("<html><body>The board's location and rotation have been set. Click Finish to position the camera at the board's origin, or Cancel to reject the changes.</body></html>"),};
 
     private String placementId;
     private List<Placement> placements;
@@ -165,7 +166,7 @@ public class MultiPlacementBoardLocationProcess {
         placements = jobPanel.getJobPlacementsPanel().getSelections();
         nPlacements = placements.size();
         if (nPlacements < 2) {
-            MessageBoxes.errorBox(mainFrame, "Error", "Please select at least two placements.");
+            MessageBoxes.errorBox(mainFrame, "Error", I18n.gettext("Please select at least two placements."));
             return false;
         }
         
@@ -195,7 +196,7 @@ public class MultiPlacementBoardLocationProcess {
         //Save the result of the current placement measurement
         Location measuredLocation = camera.getLocation();
         if (measuredLocation == null) {
-            MessageBoxes.errorBox(mainFrame, "Error", "Please position the camera.");
+            MessageBoxes.errorBox(mainFrame, "Error", I18n.gettext("Please position the camera."));
             return false;
         }
         measuredLocations.add(measuredLocation);

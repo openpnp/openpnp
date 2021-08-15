@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -55,7 +56,7 @@ public class Welcome2_0Dialog extends JDialog {
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-        JLabel lblOpenpnp = new JLabel("Welcome to OpenPnP 2.0");
+        JLabel lblOpenpnp = new JLabel(I18n.gettext("Welcome to OpenPnP 2.0"));
         lblOpenpnp.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblOpenpnp.setFont(new Font("Lucida Grande", Font.BOLD, 32));
         contentPanel.add(lblOpenpnp);
@@ -63,7 +64,7 @@ public class Welcome2_0Dialog extends JDialog {
         lblCopyright.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
         lblCopyright.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblCopyright);
-        JLabel lblVersion = new JLabel("Version: " + Main.getVersion());
+        JLabel lblVersion = new JLabel(I18n.gettext("Version: ") + Main.getVersion());
         lblVersion.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
         lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblVersion);

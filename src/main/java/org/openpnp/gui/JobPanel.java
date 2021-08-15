@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -611,7 +612,7 @@ public class JobPanel extends JPanel {
                         configuration.saveBoard(board);
                     }
                     catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(), "Board Save Error", //$NON-NLS-1$
+                        MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Board Save Error"), //$NON-NLS-1$
                                 e.getMessage());
                         return false;
                     }
@@ -636,7 +637,7 @@ public class JobPanel extends JPanel {
                 return true;
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(frame, "Job Save Error", e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, I18n.gettext("Job Save Error"), e.getMessage()); //$NON-NLS-1$
                 return false;
             }
         }
@@ -673,7 +674,7 @@ public class JobPanel extends JPanel {
             return true;
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(frame, "Job Save Error", e.getMessage()); //$NON-NLS-1$
+            MessageBoxes.errorBox(frame, I18n.gettext("Job Save Error"), e.getMessage()); //$NON-NLS-1$
             return false;
         }
     }
@@ -740,7 +741,7 @@ public class JobPanel extends JPanel {
     
     private boolean checkJobStopped() {
         if (state != State.Stopped) {
-            MessageBoxes.errorBox(this, "Error", "Job must be stopped first."); //$NON-NLS-1$ //$NON-NLS-2$
+            MessageBoxes.errorBox(this, "Error", I18n.gettext("Job must be stopped first.")); //$NON-NLS-1$ //$NON-NLS-2$
             return false;
         }
         return true;
@@ -751,7 +752,7 @@ public class JobPanel extends JPanel {
             return;
         }
         if (getSelection() == null) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", //$NON-NLS-1$
+            MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Import Failed"), //$NON-NLS-1$
                     "Please select a board in the Jobs tab to import into."); //$NON-NLS-1$
             return;
         }
@@ -761,7 +762,7 @@ public class JobPanel extends JPanel {
             boardImporter = boardImporterClass.newInstance();
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e); //$NON-NLS-1$
+            MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Import Failed"), e); //$NON-NLS-1$
             return;
         }
 
@@ -787,7 +788,7 @@ public class JobPanel extends JPanel {
             }
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Import Failed", e); //$NON-NLS-1$
+            MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Import Failed"), e); //$NON-NLS-1$
         }
     }
 
@@ -826,7 +827,7 @@ public class JobPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, "Job Load Error", e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, I18n.gettext("Job Load Error"), e.getMessage()); //$NON-NLS-1$
             }
         }
     };
@@ -922,7 +923,7 @@ public class JobPanel extends JPanel {
              * the current placement in the thrown error and add this feature.
              */
             
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Job Error", t.getMessage());
+            MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Job Error"), t.getMessage());
             if (state == State.Running || state == State.Pausing) {
                 setState(State.Paused);
             }
@@ -1021,7 +1022,7 @@ public class JobPanel extends JPanel {
                     setState(State.Pausing);
                 }
                 else {
-                    throw new Exception("Don't know how to change from state " + state);
+                    throw new Exception(I18n.gettext("Don't know how to change from state ") + state);
                 }
             });
         }
@@ -1128,7 +1129,7 @@ public class JobPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, "Unable to create new board", e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, I18n.gettext("Unable to create new board"), e.getMessage()); //$NON-NLS-1$
             }
             updatePanelizationIconState();
         }
@@ -1167,7 +1168,7 @@ public class JobPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, "Board load failed", e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, I18n.gettext("Board load failed"), e.getMessage()); //$NON-NLS-1$
             }
             updatePanelizationIconState();
         }
@@ -1533,7 +1534,7 @@ public class JobPanel extends JPanel {
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, "Job Load Error", e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, I18n.gettext("Job Load Error"), e.getMessage()); //$NON-NLS-1$
             }
         }
     }

@@ -20,6 +20,7 @@
  */
 
 package org.openpnp.gui.processes;
+import org.I18n.I18n;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -53,11 +54,11 @@ public class RegionOfInterestProcess {
 
     private int step = -1;
     private String[] instructions = new String[] {
-            "<html><body>Click on what will become the upper left corner of your region of interest. Click again to reset and retry. Click Next to continue.</body></html>",
-            "<html><body>Now, click on what will become the upper right corner of your region of interest. Click again to reset and retry. Click Next to continue.</body></html>",
-            "<html><body>Next, click on what will become the lower left corner of your region of interest. Click again to reset and retry. Click Next to continue.</body></html>",
-            "<html><body>Finally, click to toggle beween a rectangular and parallelogrammatic region. Click Next to continue.</body></html>",
-            "<html><body>The region of interest has been defined. Click Finish to accept it, or Cancel to quit.</body></html>",};
+            I18n.gettext("<html><body>Click on what will become the upper left corner of your region of interest. Click again to reset and retry. Click Next to continue.</body></html>"),
+            I18n.gettext("<html><body>Now, click on what will become the upper right corner of your region of interest. Click again to reset and retry. Click Next to continue.</body></html>"),
+            I18n.gettext("<html><body>Next, click on what will become the lower left corner of your region of interest. Click again to reset and retry. Click Next to continue.</body></html>"),
+            I18n.gettext("<html><body>Finally, click to toggle beween a rectangular and parallelogrammatic region. Click Next to continue.</body></html>"),
+            I18n.gettext("<html><body>The region of interest has been defined. Click Finish to accept it, or Cancel to quit.</body></html>"),};
 
     private Map<Integer, Point> regionStakeout = new HashMap<>();
     private boolean rectify = false;

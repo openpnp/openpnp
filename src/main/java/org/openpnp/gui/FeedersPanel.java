@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -140,7 +141,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel("Search");
+        JLabel lblSearch = new JLabel(I18n.gettext("Search"));
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -452,14 +453,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
         
         if (Configuration.get().getParts().size() == 0) {
-            MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+            MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Error"),
                     "There are currently no parts defined in the system. Please create at least one part before creating a feeder.");
             return;
         }
 
         String title;
         if (part == null) {
-            title = "Select Feeder...";
+            title = I18n.gettext("Select Feeder...");
         }
         else {
             title = "Select Feeder for " + part.getId() + "...";
@@ -512,7 +513,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Feeder...");
-            putValue(SHORT_DESCRIPTION, "Create a new feeder.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Create a new feeder."));
         }
 
         @Override
@@ -524,8 +525,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action deleteFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Feeder");
-            putValue(SHORT_DESCRIPTION, "Delete the selected feeder.");
+            putValue(NAME, I18n.gettext("Delete Feeder"));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Delete the selected feeder."));
         }
 
         @Override
@@ -556,7 +557,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         {
             putValue(SMALL_ICON, Icons.feed);
             putValue(NAME, "Feed");
-            putValue(SHORT_DESCRIPTION, "Command the selected feeder to perform a feed operation.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Command the selected feeder to perform a feed operation."));
         }
 
         @Override
@@ -580,8 +581,8 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action pickFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.pick);
-            putValue(NAME, "Pick");
-            putValue(SHORT_DESCRIPTION, "Perform a feed and pick on the selected feeder.");
+            putValue(NAME, I18n.gettext("Pick"));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Perform a feed and pick on the selected feeder."));
         }
 
         @Override
@@ -596,7 +597,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
     public static void pickFeeder(Feeder feeder) throws Exception, JobProcessorException {
         if (feeder.getPart() == null) {
-            throw new Exception("Feeder "+feeder.getName()+" has no part.");
+            throw new Exception("Feeder "+feeder.getName()+I18n.gettext(" has no part."));
         }
         // Simulate a "one feeder" job, prepare the feeder.
         if (feeder.getJobPreparationLocation() != null) {
@@ -626,7 +627,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         // Perform the vacuum check, if enabled.
         if (nozzle.isPartOnEnabled(Nozzle.PartOnStep.AfterPick)) {
             if(!nozzle.isPartOn()) {
-                throw new JobProcessorException(nozzle, "No part detected.");
+                throw new JobProcessorException(nozzle, I18n.gettext("No part detected."));
             }
         }
         // The part is now on the nozzle.
@@ -670,9 +671,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action moveCameraToPickLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCameraOnFeeder);
-            putValue(NAME, "Move Camera");
+            putValue(NAME, I18n.gettext("Move Camera"));
             putValue(SHORT_DESCRIPTION,
-                    "Move the camera to the selected feeder's current pick location.");
+                    I18n.gettext("Move the camera to the selected feeder's current pick location."));
         }
 
         @Override
@@ -698,9 +699,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action moveToolToPickLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerNozzleOnFeeder);
-            putValue(NAME, "Move Tool");
+            putValue(NAME, I18n.gettext("Move Tool"));
             putValue(SHORT_DESCRIPTION,
-                    "Move the tool to the selected feeder's current pick location.");
+                    I18n.gettext("Move the tool to the selected feeder's current pick location."));
         }
 
         @Override

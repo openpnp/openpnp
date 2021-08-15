@@ -1,4 +1,5 @@
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -93,7 +94,7 @@ public class JobPlacementsPanel extends JPanel {
         createUi();
     }
     private void createUi() {
-        setBorder(new TitledBorder(null, "Placements", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        setBorder(new TitledBorder(null, I18n.gettext("Placements"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
         Configuration configuration = Configuration.get();
         
@@ -275,7 +276,7 @@ public class JobPlacementsPanel extends JPanel {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblNewLabel = new JLabel("Search");
+        JLabel lblNewLabel = new JLabel(I18n.gettext("Search"));
         panel_1.add(lblNewLabel);
 
         searchTextField = new JTextField();
@@ -418,13 +419,13 @@ public class JobPlacementsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Placement");
-            putValue(SHORT_DESCRIPTION, "Create a new placement and add it to the board.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Create a new placement and add it to the board."));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (Configuration.get().getParts().size() == 0) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Error"),
                         "There are currently no parts defined in the system. Please create at least one part before creating a placement.");
                 return;
             }
@@ -438,7 +439,7 @@ public class JobPlacementsPanel extends JPanel {
             // Check if the new placement ID is unique
             for(Placement compareplacement : boardLocation.getBoard().getPlacements()) {
             	if (compareplacement.getId().equals(id)) {
-            		MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+            		MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Error"),
                             "The ID for the new placement already exists");
                     return;
             	}
@@ -478,7 +479,7 @@ public class JobPlacementsPanel extends JPanel {
     public final Action moveCameraToPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCamera);
-            putValue(NAME, "Move Camera To Placement Location");
+            putValue(NAME, I18n.gettext("Move Camera To Placement Location"));
             putValue(SHORT_DESCRIPTION, "Position the camera at the placement's location.");
         }
 
@@ -502,7 +503,7 @@ public class JobPlacementsPanel extends JPanel {
     public final Action moveCameraToPlacementLocationNext = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCameraMoveNext);
-            putValue(NAME, "Move Camera To Next Placement Location ");
+            putValue(NAME, I18n.gettext("Move Camera To Next Placement Location "));
             putValue(SHORT_DESCRIPTION,
                     "Position the camera at the next placements location.");
         }
@@ -533,7 +534,7 @@ public class JobPlacementsPanel extends JPanel {
     public final Action moveToolToPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerTool);
-            putValue(NAME, "Move Tool To Placement Location");
+            putValue(NAME, I18n.gettext("Move Tool To Placement Location"));
             putValue(SHORT_DESCRIPTION, "Position the tool at the placement's location.");
         }
 
@@ -553,7 +554,7 @@ public class JobPlacementsPanel extends JPanel {
     public final Action captureCameraPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.captureCamera);
-            putValue(NAME, "Capture Camera Placement Location");
+            putValue(NAME, I18n.gettext("Capture Camera Placement Location"));
             putValue(SHORT_DESCRIPTION,
                     "Set the placement's location to the camera's current position.");
         }
@@ -574,7 +575,7 @@ public class JobPlacementsPanel extends JPanel {
     public final Action captureToolPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.captureTool);
-            putValue(NAME, "Capture Tool Placement Location");
+            putValue(NAME, I18n.gettext("Capture Tool Placement Location"));
             putValue(SHORT_DESCRIPTION,
                     "Set the placement's location to the tool's current position.");
         }
@@ -793,31 +794,31 @@ public class JobPlacementsPanel extends JPanel {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorReady);
-                setText("Ready");
+                setText(I18n.gettext("Ready"));
             }
             else if (status == Status.MissingFeeder) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorError);
-                setText("Missing Feeder");
+                setText(I18n.gettext("Missing Feeder"));
             }
             else if (status == Status.ZeroPartHeight) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorWarning);
-                setText("Part Height");
+                setText(I18n.gettext("Part Height"));
             }
             else if (status == Status.MissingPart) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorError);
-                setText("Missing Part");
+                setText(I18n.gettext("Missing Part"));
             }
             else if (status == Status.Disabled) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorDisabled);
-                setText("Disabled");
+                setText(I18n.gettext("Disabled"));
             }
             else {
                 setBorder(new LineBorder(getBackground()));

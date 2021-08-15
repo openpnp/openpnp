@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.AWTEvent;
 import java.awt.BorderLayout;
@@ -609,15 +610,15 @@ public class MainFrame extends JFrame {
                     }
                 });
 
-        tabs.addTab("Job", null, jobPanel, null); //$NON-NLS-1$
-        tabs.addTab("Parts", null, partsPanel, null); //$NON-NLS-1$
-        tabs.addTab("Packages", null, packagesPanel, null); //$NON-NLS-1$
-        tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
-        tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
+        tabs.addTab(I18n.gettext("Job"), null, jobPanel, null); //$NON-NLS-1$
+        tabs.addTab(I18n.gettext("Parts"), null, partsPanel, null); //$NON-NLS-1$
+        tabs.addTab(I18n.gettext("Packages"), null, packagesPanel, null); //$NON-NLS-1$
+        tabs.addTab(I18n.gettext("Feeders"), null, feedersPanel, null); //$NON-NLS-1$
+        tabs.addTab(I18n.gettext("Machine Setup"), null, machineSetupPanel, null); //$NON-NLS-1$
         tabs.addTab("Issues & Solutions", null, issuesAndSolutionsPanel, null); //$NON-NLS-1$
 
         LogPanel logPanel = new LogPanel();
-        tabs.addTab("Log", null, logPanel, null); //$NON-NLS-1$
+        tabs.addTab(I18n.gettext("Log"), null, logPanel, null); //$NON-NLS-1$
 
         panelStatusAndDros = new JPanel();
         panelStatusAndDros.setBorder(null);
@@ -637,7 +638,7 @@ public class MainFrame extends JFrame {
         
         
         // Placement Information
-        lblPlacements = new JLabel(" Placements: 0 / 0 Total | 0 / 0 Selected Board "); //$NON-NLS-1$
+        lblPlacements = new JLabel(I18n.gettext(" Placements: 0 / 0 Total | 0 / 0 Selected Board ")); //$NON-NLS-1$
         lblPlacements.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(lblPlacements, "4, 1"); //$NON-NLS-1$
         
@@ -660,7 +661,7 @@ public class MainFrame extends JFrame {
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(droLbl, "8, 1"); //$NON-NLS-1$
 
-        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING, //$NON-NLS-1$
+        cameraPanel.setBorder(new TitledBorder(null, I18n.gettext("Cameras"), TitledBorder.LEADING, //$NON-NLS-1$
                 TitledBorder.TOP, null, null));
         panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
@@ -687,7 +688,7 @@ public class MainFrame extends JFrame {
 	        }
 	        catch (Exception e) {
 	            e.printStackTrace();
-	            if (!MessageBoxes.errorBoxWithRetry(this, "Configuration Load Error", //$NON-NLS-1$
+	            if (!MessageBoxes.errorBoxWithRetry(this, I18n.gettext("Configuration Load Error"), //$NON-NLS-1$
 	                    "There was a problem loading the configuration. The reason was:<br/><br/>" //$NON-NLS-1$
 	                            + e.getMessage() + "<br/><br/>" //$NON-NLS-1$
 	                            + "Please check your configuration files and try again. They are located at: " //$NON-NLS-1$
@@ -890,7 +891,7 @@ public class MainFrame extends JFrame {
             Preferences.userRoot().flush();
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(MainFrame.this, "Save Preferences", e); //$NON-NLS-1$
+            MessageBoxes.errorBox(MainFrame.this, I18n.gettext("Save Preferences"), e); //$NON-NLS-1$
         }
         
         try {
@@ -965,7 +966,7 @@ public class MainFrame extends JFrame {
     
     public void setPlacementCompletionStatus(int totalPlacementsCompleted, int totalPlacements, int boardPlacementsCompleted, int boardPlacements) {
         SwingUtilities.invokeLater(() -> {
-            lblPlacements.setText(String.format(" Placements: %d / %d Total | %d / %d Selected Board ", totalPlacementsCompleted, totalPlacements, boardPlacementsCompleted, boardPlacements));
+            lblPlacements.setText(String.format(I18n.gettext(" Placements: %d / %d Total | %d / %d Selected Board "), totalPlacementsCompleted, totalPlacements, boardPlacementsCompleted, boardPlacements));
         	prgbrPlacements.setValue((int)(((float)totalPlacementsCompleted / (float)totalPlacements) * 100.0f));
         });
     }
@@ -1111,7 +1112,7 @@ public class MainFrame extends JFrame {
                 launchApplication.invoke(null, "125", null, false, null); //$NON-NLS-1$
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch update application.", e); //$NON-NLS-1$
+                MessageBoxes.errorBox(MainFrame.this, I18n.gettext("Unable to launch update application."), e); //$NON-NLS-1$
             }
         }
     };
@@ -1125,11 +1126,11 @@ public class MainFrame extends JFrame {
                     Desktop.getDesktop().browse(new URI(uri));
                 }
                 else {
-                    throw new Exception("Not supported."); //$NON-NLS-1$
+                    throw new Exception(I18n.gettext("Not supported.")); //$NON-NLS-1$
                 }
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", I18n.gettext("Unable to launch default browser. Please visit ") + uri); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
     };
@@ -1143,11 +1144,11 @@ public class MainFrame extends JFrame {
                     Desktop.getDesktop().browse(new URI(uri));
                 }
                 else {
-                    throw new Exception("Not supported."); //$NON-NLS-1$
+                    throw new Exception(I18n.gettext("Not supported.")); //$NON-NLS-1$
                 }
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", I18n.gettext("Unable to launch default browser. Please visit ") + uri); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
     };
@@ -1161,11 +1162,11 @@ public class MainFrame extends JFrame {
                     Desktop.getDesktop().browse(new URI(uri));
                 }
                 else {
-                    throw new Exception("Not supported."); //$NON-NLS-1$
+                    throw new Exception(I18n.gettext("Not supported.")); //$NON-NLS-1$
                 }
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", I18n.gettext("Unable to launch default browser. Please visit ") + uri); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
     };
@@ -1179,11 +1180,11 @@ public class MainFrame extends JFrame {
                     Desktop.getDesktop().browse(new URI(uri));
                 }
                 else {
-                    throw new Exception("Not supported."); //$NON-NLS-1$
+                    throw new Exception(I18n.gettext("Not supported.")); //$NON-NLS-1$
                 }
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", "Unable to launch default browser. Please visit " + uri); //$NON-NLS-1$ //$NON-NLS-2$
+                MessageBoxes.errorBox(MainFrame.this, "Unable to launch default browser.", I18n.gettext("Unable to launch default browser. Please visit ") + uri); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
     };

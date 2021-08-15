@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.wizards;
+import org.I18n.I18n;
 
 import java.awt.Font;
 import java.awt.HeadlessException;
@@ -75,7 +76,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
 
 
         panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Camera Settling", TitledBorder.LEADING,
+        panelVision.setBorder(new TitledBorder(null, I18n.gettext("Camera Settling"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelVision);
         panelVision.setLayout(new FormLayout(new ColumnSpec[] {
@@ -111,7 +112,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         RowSpec.decode("max(70dlu;default):grow"),}));
 
-        lblSettleMethod = new JLabel("Settle Method");
+        lblSettleMethod = new JLabel(I18n.gettext("Settle Method"));
         panelVision.add(lblSettleMethod, "2, 2, 1, 3, right, default");
 
         settleMethod = new JComboBox(AbstractCamera.SettleMethod.values());
@@ -122,36 +123,36 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         });
         panelVision.add(settleMethod, "4, 2, 1, 3, fill, default");
 
-        lblSettleTimeMs = new JLabel("Settle Time (ms)");
+        lblSettleTimeMs = new JLabel(I18n.gettext("Settle Time (ms)"));
         panelVision.add(lblSettleTimeMs, "8, 2, right, center");
 
         settleTimeMs = new JTextField();
         panelVision.add(settleTimeMs, "10, 2, fill, center");
         settleTimeMs.setColumns(10);
 
-        lblSettleTimeoutMs = new JLabel("Settle Timeout (ms)");
+        lblSettleTimeoutMs = new JLabel(I18n.gettext("Settle Timeout (ms)"));
         panelVision.add(lblSettleTimeoutMs, "8, 4, right, default");
 
         settleTimeoutMs = new JTextField();
         panelVision.add(settleTimeoutMs, "10, 4, fill, default");
         settleTimeoutMs.setColumns(10);
 
-        lblSettleThreshold = new JLabel("Settle Threshold");
+        lblSettleThreshold = new JLabel(I18n.gettext("Settle Threshold"));
         panelVision.add(lblSettleThreshold, "2, 6, right, default");
 
         settleThreshold = new JTextField();
         panelVision.add(settleThreshold, "4, 6, fill, default");
         settleThreshold.setColumns(10);
 
-        lblSettleDebounce = new JLabel("Debounce Frames");
+        lblSettleDebounce = new JLabel(I18n.gettext("Debounce Frames"));
         panelVision.add(lblSettleDebounce, "8, 6, right, default");
 
         settleDebounce = new JTextField();
         panelVision.add(settleDebounce, "10, 6, fill, default");
         settleDebounce.setColumns(10);
 
-        lblSettleFullColor = new JLabel("Color Sensitive?");
-        lblSettleFullColor.setToolTipText("Compare as full color image, i.e. difference in colors with same brightness will register.");
+        lblSettleFullColor = new JLabel(I18n.gettext("Color Sensitive?"));
+        lblSettleFullColor.setToolTipText(I18n.gettext("Compare as full color image, i.e. difference in colors with same brightness will register."));
         panelVision.add(lblSettleFullColor, "2, 8, right, default");
 
         settleFullColor = new JCheckBox("");
@@ -196,39 +197,39 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         btnTestRotate = new JButton(settleTestRotateAction);
         panelSettleTest.add(btnTestRotate, "6, 6");
 
-        lblSettleGradient = new JLabel("Edge Sensitive?");
-        lblSettleGradient.setToolTipText("Use the gradients of the images rather than brightness.");
+        lblSettleGradient = new JLabel(I18n.gettext("Edge Sensitive?"));
+        lblSettleGradient.setToolTipText(I18n.gettext("Use the gradients of the images rather than brightness."));
         panelVision.add(lblSettleGradient, "8, 8, right, default");
 
         settleGradients = new JCheckBox("");
         panelVision.add(settleGradients, "10, 8");
 
-        lblContrastEnhance = new JLabel("Enhance Contrast");
-        lblContrastEnhance.setToolTipText("How much it should enhance the contrast from 0.0 (original image) to 1.0 (full dynamic range).");
+        lblContrastEnhance = new JLabel(I18n.gettext("Enhance Contrast"));
+        lblContrastEnhance.setToolTipText(I18n.gettext("How much it should enhance the contrast from 0.0 (original image) to 1.0 (full dynamic range)."));
         panelVision.add(lblContrastEnhance, "2, 10, right, default");
 
         settleContrastEnhance = new JTextField();
         panelVision.add(settleContrastEnhance, "4, 10, default, top");
         settleContrastEnhance.setColumns(10);
 
-        lblSettleGaussianBlur = new JLabel("Denoise (Pixel)");
-        lblSettleGaussianBlur.setToolTipText("<html>\r\nDiameter in pixels of the Gaussian Blur used to denoise the images. <br/>\r\nFor large diameters the image will be scaled down for better speed.\r\n</html>");
+        lblSettleGaussianBlur = new JLabel(I18n.gettext("Denoise (Pixel)"));
+        lblSettleGaussianBlur.setToolTipText(I18n.gettext("<html>\r\nDiameter in pixels of the Gaussian Blur used to denoise the images. <br/>\r\nFor large diameters the image will be scaled down for better speed.\r\n</html>"));
         panelVision.add(lblSettleGaussianBlur, "8, 10, right, default");
 
         settleGaussianBlur = new JTextField();
         panelVision.add(settleGaussianBlur, "10, 10, fill, default");
         settleGaussianBlur.setColumns(10);
 
-        lblSettleMaskCircle = new JLabel("Center Mask");
-        lblSettleMaskCircle.setToolTipText("<html>\r\n<p>Size of the central circular mask, relative to the camera dimension <br/>\r\n(height or width, whichever is smaller).</p>\r\n<p>Examples:</p>\r\n<ul>\r\n<li>0.0 No mask</li>\r\n<li>0.5 Circular center area of half the camera view</li>\r\n<li>1.0 Circular center area to the edge of the camera view</li>\r\n<li>1.5 Circular area vignetting the camera view</li>\r\n</ul>\r\n</html>");
+        lblSettleMaskCircle = new JLabel(I18n.gettext("Center Mask"));
+        lblSettleMaskCircle.setToolTipText(I18n.gettext("<html>\r\n<p>Size of the central circular mask, relative to the camera dimension <br/>\r\n(height or width, whichever is smaller).</p>\r\n<p>Examples:</p>\r\n<ul>\r\n<li>0.0 No mask</li>\r\n<li>0.5 Circular center area of half the camera view</li>\r\n<li>1.0 Circular center area to the edge of the camera view</li>\r\n<li>1.5 Circular area vignetting the camera view</li>\r\n</ul>\r\n</html>"));
         panelVision.add(lblSettleMaskCircle, "2, 12, right, default");
 
         settleMaskCircle = new JTextField();
         panelVision.add(settleMaskCircle, "4, 12, fill, default");
         settleMaskCircle.setColumns(10);
 
-        lblSettleDiagnostics = new JLabel("Diagnostics?");
-        lblSettleDiagnostics.setToolTipText("Enable graphical diagnostics and replay of settle frames.");
+        lblSettleDiagnostics = new JLabel(I18n.gettext("Diagnostics?"));
+        lblSettleDiagnostics.setToolTipText(I18n.gettext("Enable graphical diagnostics and replay of settle frames."));
         panelVision.add(lblSettleDiagnostics, "8, 12, right, default");
 
         settleDiagnostics = new JCheckBox("");
@@ -422,7 +423,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
     private Action settleTestUpAction = new AbstractAction("", Icons.centerTool) {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Moves the nozzle to the camera at Safe Z (or just to Safe Z and back), then settles the camera.");
+                    I18n.gettext("Moves the nozzle to the camera at Safe Z (or just to Safe Z and back), then settles the camera."));
         }
         @Override 
         public void actionPerformed(ActionEvent e) {

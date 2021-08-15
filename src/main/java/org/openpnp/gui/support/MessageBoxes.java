@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.support;
+import org.I18n.I18n;
 
 import java.awt.Component;
 import java.io.PrintWriter;
@@ -88,6 +89,6 @@ public class MessageBoxes {
     }
 
     public static void notYetImplemented(Component parent) {
-        errorBox(parent, "Not Yet Implemented", "This function is not yet implemented.");
+        errorBox(parent, "Not Yet Implemented", I18n.gettext("This function is not yet implemented."));
     }
 }

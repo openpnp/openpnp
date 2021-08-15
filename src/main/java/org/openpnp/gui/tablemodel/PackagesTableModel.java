@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.tablemodel;
+import org.I18n.I18n;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;

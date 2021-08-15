@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.support;
+import org.I18n.I18n;
 
 import org.jdesktop.beansbinding.Converter;
 import org.openpnp.model.Configuration;
@@ -44,7 +45,7 @@ public class PartConverter extends Converter<Part, String> {
         }
         Part part = configuration.getPart(partId);
         if (part == null) {
-            throw new RuntimeException("Invalid part id");
+            throw new RuntimeException(I18n.gettext("Invalid part id"));
         }
         return part;
     }

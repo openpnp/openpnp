@@ -1,4 +1,5 @@
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -86,7 +87,7 @@ public class LogPanel extends JPanel {
         JPanel settingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         settingsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Global Logging Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Global Logging Settings"), TitledBorder.LEADING, TitledBorder.TOP, null));
 
         settingsPanel.add(createGlobalLogLevelPanel());
 
@@ -96,7 +97,7 @@ public class LogPanel extends JPanel {
         JPanel filterPanel = new JPanel(new BorderLayout(0, 0));
 
         filterPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "Filter Logging Panel", TitledBorder.LEADING, TitledBorder.TOP, null));
+                I18n.gettext("Filter Logging Panel"), TitledBorder.LEADING, TitledBorder.TOP, null));
 
         JPanel filterContentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
@@ -110,14 +111,14 @@ public class LogPanel extends JPanel {
         JPanel filterControlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         JButton btnClear = new JButton(Icons.delete);
-        btnClear.setToolTipText("Clear log");
+        btnClear.setToolTipText(I18n.gettext("Clear log"));
 
         btnClear.addActionListener(e -> logEntries.clear());
 
         filterControlPanel.add(btnClear);
 
         JButton btnCopyToClipboard = new JButton(Icons.copy);
-        btnCopyToClipboard.setToolTipText("Copy to clipboard");
+        btnCopyToClipboard.setToolTipText(I18n.gettext("Copy to clipboard"));
 
         btnCopyToClipboard.addActionListener(e -> {
             StringBuilder sb = new StringBuilder();
@@ -128,7 +129,7 @@ public class LogPanel extends JPanel {
         filterControlPanel.add(btnCopyToClipboard);
 
         JButton btnScroll = new JButton(Icons.scrollDown);
-        btnScroll.setToolTipText("Scroll down");
+        btnScroll.setToolTipText(I18n.gettext("Scroll down"));
 
         btnScroll.addActionListener(e -> {
             autoScroller.scrollDown();
@@ -170,7 +171,7 @@ public class LogPanel extends JPanel {
     }
 
     private JCheckBox createSystemOutputCheckbox() {
-        JCheckBox systemOutCheckbox = new JCheckBox("System Output");
+        JCheckBox systemOutCheckbox = new JCheckBox(I18n.gettext("System Output"));
         systemOutCheckbox.setSelected(systemOutEnabled);
         systemOutCheckbox.addActionListener(e -> {
             systemOutEnabled = systemOutCheckbox.isSelected();
@@ -212,7 +213,7 @@ public class LogPanel extends JPanel {
     private JPanel createSearchFieldPanel() {
         JPanel searchField = new JPanel();
 
-        JLabel lblSearch = new JLabel("Search");
+        JLabel lblSearch = new JLabel(I18n.gettext("Search"));
         searchField.add(lblSearch);
 
         JTextField searchTextField = new JTextField();
@@ -249,7 +250,7 @@ public class LogPanel extends JPanel {
 
     private JPanel createFilterLogLevelPanel() {
         JPanel filterLogLevelPanel = new JPanel();
-        filterLogLevelPanel.add(new JLabel("Log Level:"));
+        filterLogLevelPanel.add(new JLabel(I18n.gettext("Log Level:")));
         JComboBox logLevelFilterComboBox = new JComboBox(Level.values());
         logLevelFilterComboBox.setSelectedItem(filterLogLevel);
         logLevelFilterComboBox.addActionListener(e -> {
@@ -265,7 +266,7 @@ public class LogPanel extends JPanel {
 
     private JPanel createGlobalLogLevelPanel() {
         JPanel globalLogLevelPanel = new JPanel();
-        globalLogLevelPanel.add(new JLabel("Global Log Level:"));
+        globalLogLevelPanel.add(new JLabel(I18n.gettext("Global Log Level:")));
         JComboBox logLevelFilterComboBox = new JComboBox(Level.values());
         logLevelFilterComboBox.setSelectedItem((Level.valueOf(prefs.get(PREF_LOG_LEVEL, PREF_LOG_LEVEL_DEF))));
         logLevelFilterComboBox.addActionListener(e -> {

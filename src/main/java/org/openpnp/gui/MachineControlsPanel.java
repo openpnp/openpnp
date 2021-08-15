@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.Color;
 import java.awt.EventQueue;
@@ -299,7 +300,7 @@ public class MachineControlsPanel extends JPanel {
                     }
                 }
                 catch (Exception t1) {
-                    MessageBoxes.errorBox(MachineControlsPanel.this, "Enable Failure", //$NON-NLS-1$
+                    MessageBoxes.errorBox(MachineControlsPanel.this, I18n.gettext("Enable Failure"), //$NON-NLS-1$
                             t1.getMessage());
                     setEnabled(true);
                 }

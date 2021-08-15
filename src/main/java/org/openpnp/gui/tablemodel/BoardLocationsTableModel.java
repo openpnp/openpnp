@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.tablemodel;
+import org.I18n.I18n;
 
 import java.util.Locale;
 

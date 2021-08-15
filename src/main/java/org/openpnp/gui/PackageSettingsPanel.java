@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 
@@ -67,7 +68,7 @@ public class PackageSettingsPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
         vacuumBlowOffPanel = new JPanel();
-        vacuumBlowOffPanel.setBorder(new TitledBorder(null, "Vacuum & Blow Off", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        vacuumBlowOffPanel.setBorder(new TitledBorder(null, I18n.gettext("Vacuum & Blow Off"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         add(vacuumBlowOffPanel);
         vacuumBlowOffPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -80,14 +81,14 @@ public class PackageSettingsPanel extends JPanel {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblNewLabel = new JLabel("Vacuum Level");
+        lblNewLabel = new JLabel(I18n.gettext("Vacuum Level"));
         vacuumBlowOffPanel.add(lblNewLabel, "2, 2, right, default");
         
         vacuumLevel = new JTextField();
         vacuumBlowOffPanel.add(vacuumLevel, "4, 2, left, default");
         vacuumLevel.setColumns(10);
         
-        lblBlowOffLevel = new JLabel("Blow Off Level");
+        lblBlowOffLevel = new JLabel(I18n.gettext("Blow Off Level"));
         vacuumBlowOffPanel.add(lblBlowOffLevel, "2, 4, right, default");
         
         blowOffLevel = new JTextField();

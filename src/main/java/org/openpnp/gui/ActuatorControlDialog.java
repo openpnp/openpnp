@@ -1,4 +1,5 @@
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -73,7 +74,7 @@ public class ActuatorControlDialog extends JDialog {
 
         setModalityType(JDialog.ModalityType.MODELESS);
 
-        lblBoolean = new JLabel("Set Boolean Value");
+        lblBoolean = new JLabel(I18n.gettext("Set Boolean Value"));
         getContentPane().add(lblBoolean, "2, 2");
 
         onBtn = new JButton("On");
@@ -98,7 +99,7 @@ public class ActuatorControlDialog extends JDialog {
             }
         });
 
-        lblValue = new JLabel("Set Value");
+        lblValue = new JLabel(I18n.gettext("Set Value"));
         getContentPane().add(lblValue, "2, 4, right, default");
 
         valueTf = new JTextField();
@@ -116,7 +117,7 @@ public class ActuatorControlDialog extends JDialog {
         });
         getContentPane().add(setBtn, "8, 4");
 
-        lblSetProfile = new JLabel("Set Profile");
+        lblSetProfile = new JLabel(I18n.gettext("Set Profile"));
         getContentPane().add(lblSetProfile, "2, 5, right, default");
 
         profile = new JComboBox(new ActuatorProfilesComboBoxModel((AbstractActuator) actuator));
@@ -132,7 +133,7 @@ public class ActuatorControlDialog extends JDialog {
         });
         getContentPane().add(setProfileBtn, "8, 5");
 
-        lblRead = new JLabel("Read Value");
+        lblRead = new JLabel(I18n.gettext("Read Value"));
         getContentPane().add(lblRead, "2, 7, right, default");
 
         readTf = new JTextField();
@@ -160,7 +161,7 @@ public class ActuatorControlDialog extends JDialog {
             }
         });
 
-        lblWith = new JLabel("With");
+        lblWith = new JLabel(I18n.gettext("With"));
         getContentPane().add(lblWith, "2, 9, right, default");
 
         withDoubleTf = new JTextField();

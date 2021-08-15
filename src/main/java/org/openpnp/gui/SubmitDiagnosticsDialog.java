@@ -1,4 +1,5 @@
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -123,7 +124,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
         fl_contentPanel.setColumnGroups(new int[][]{new int[]{4, 2}});
         contentPanel.setLayout(fl_contentPanel);
         {
-            lblSubmitAHelp = new JLabel("Submit Diagnostics");
+            lblSubmitAHelp = new JLabel(I18n.gettext("Submit Diagnostics"));
             lblSubmitAHelp.setFont(new Font("Lucida Grande", Font.PLAIN, 24));
             contentPanel.add(lblSubmitAHelp, "2, 2, 3, 1");
         }
@@ -132,19 +133,19 @@ public class SubmitDiagnosticsDialog extends JDialog {
             txtpnToSubmitA.setBackground(UIManager.getColor("Label.background"));
             txtpnToSubmitA.setEditable(false);
             txtpnToSubmitA.setText(
-                    "Describe the problem you are experiencing below, select the checkboxes to include content that will help the developers resolve your issue, then click send.\n\nWhen the upload finishes your browser will open to Pastebin. You may be prompted to enter a captcha to complete the process - this is normal. You can then copy the URL to share it.\n\nBe aware that the information you send may be visible to the OpenPnP community, so you should not include private or proprietary information.");
+                    I18n.gettext("Describe the problem you are experiencing below, select the checkboxes to include content that will help the developers resolve your issue, then click send.\n\nWhen the upload finishes your browser will open to Pastebin. You may be prompted to enter a captcha to complete the process - this is normal. You can then copy the URL to share it.\n\nBe aware that the information you send may be visible to the OpenPnP community, so you should not include private or proprietary information."));
             contentPanel.add(txtpnToSubmitA, "2, 6, 3, 1, fill, fill");
         }
         {
             txtpnWarningIfYou = new JTextPane();
-            txtpnWarningIfYou.setText("Warning: If you include a screenshot or Vision Debug Images these images may include output from your machine's cameras. If these images contain content you don't want to share you should uncheck these options. You can review the images from the generated link before sharing it.");
+            txtpnWarningIfYou.setText(I18n.gettext("Warning: If you include a screenshot or Vision Debug Images these images may include output from your machine's cameras. If these images contain content you don't want to share you should uncheck these options. You can review the images from the generated link before sharing it."));
             txtpnWarningIfYou.setForeground(Color.RED);
             txtpnWarningIfYou.setBackground(UIManager.getColor("Label.background"));
             txtpnWarningIfYou.setEditable(false);
             contentPanel.add(txtpnWarningIfYou, "2, 8, 3, 1, fill, fill");
         }
         {
-            JLabel lblComments = new JLabel("Please Describe The Issue");
+            JLabel lblComments = new JLabel(I18n.gettext("Please Describe The Issue"));
             lblComments.setFont(new Font("Lucida Grande", Font.BOLD, 14));
             contentPanel.add(lblComments, "2, 12");
         }
@@ -156,7 +157,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
             contentPanel.add(descriptionTa, "2, 14, 3, 1, fill, fill");
         }
         {
-            JLabel lblInclude = new JLabel("Include");
+            JLabel lblInclude = new JLabel(I18n.gettext("Include"));
             lblInclude.setFont(new Font("Lucida Grande", Font.BOLD, 14));
             contentPanel.add(lblInclude, "2, 18");
         }
@@ -176,27 +177,27 @@ public class SubmitDiagnosticsDialog extends JDialog {
             contentPanel.add(includePackagesXmlChk, "2, 22");
         }
         {
-            includeLogChk = new JCheckBox("Latest Log File");
+            includeLogChk = new JCheckBox(I18n.gettext("Latest Log File"));
             includeLogChk.setSelected(true);
             contentPanel.add(includeLogChk, "4, 22");
         }
         {
-            includeSystemInfoChk = new JCheckBox("Anonymous System Information");
+            includeSystemInfoChk = new JCheckBox(I18n.gettext("Anonymous System Information"));
             includeSystemInfoChk.setSelected(true);
             contentPanel.add(includeSystemInfoChk, "2, 24");
         }
         {
-            includeJobChk = new JCheckBox("Current Job Data (Job Will Be Saved First)");
+            includeJobChk = new JCheckBox(I18n.gettext("Current Job Data (Job Will Be Saved First)"));
             includeJobChk.setSelected(true);
             contentPanel.add(includeJobChk, "4, 24");
         }
         {
-            includeScreenShotChk = new JCheckBox("OpenPnP Window Screen Shot");
+            includeScreenShotChk = new JCheckBox(I18n.gettext("OpenPnP Window Screen Shot"));
             includeScreenShotChk.setSelected(true);
             contentPanel.add(includeScreenShotChk, "2, 26");
         }
         {
-            includeVisionChk = new JCheckBox("Vision Debug Images (10 Newest)");
+            includeVisionChk = new JCheckBox(I18n.gettext("Vision Debug Images (10 Newest)"));
             includeVisionChk.setSelected(true);
             contentPanel.add(includeVisionChk, "4, 26");
         }
@@ -358,7 +359,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
                 }
                 catch (Exception e1) {
                     e1.printStackTrace();
-                    MessageBoxes.errorBox(MainFrame.get(), "Submit Failed", e1);
+                    MessageBoxes.errorBox(MainFrame.get(), I18n.gettext("Submit Failed"), e1);
                     okButton.setEnabled(true);
                 }
                 thread = null;

@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.support;
+import org.I18n.I18n;
 
 import java.util.Locale;
 
@@ -46,7 +47,7 @@ public class LengthConverter extends Converter<Length, String> {
     public Length convertReverse(String s) {
         Length length = Length.parse(s, false);
         if (length == null) {
-            throw new RuntimeException("Unable to parse " + s);
+            throw new RuntimeException(I18n.gettext("Unable to parse ") + s);
         }
         if (length.getUnits() == null) {
             length.setUnits(Configuration.get().getSystemUnits());

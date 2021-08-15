@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -140,7 +141,7 @@ public class JogControlsPanel extends JPanel {
             sliderIncrements.setLabelTable(incrementsLabels);
         }
         else {
-            throw new Error("setUnits() not implemented for " + units); //$NON-NLS-1$
+            throw new Error(I18n.gettext("setUnits() not implemented for ") + units); //$NON-NLS-1$
         }
         machineControlsPanel.updateDros();
     }
@@ -290,7 +291,7 @@ public class JogControlsPanel extends JPanel {
         add(tabbedPane_1);
 
         JPanel panelControls = new JPanel();
-        tabbedPane_1.addTab("Jog", null, panelControls, null); //$NON-NLS-1$
+        tabbedPane_1.addTab(I18n.gettext("Jog"), null, panelControls, null); //$NON-NLS-1$
         panelControls.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -646,7 +647,7 @@ public class JogControlsPanel extends JPanel {
 
                 // just make sure a part is there
                 if (part == null) {
-                    throw new Exception("No Part on the current nozzle!");
+                    throw new Exception(I18n.gettext("No Part on the current nozzle!"));
                 }
 
                 // go through the feeders

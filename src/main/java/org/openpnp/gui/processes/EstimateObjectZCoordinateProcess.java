@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.processes;
+import org.I18n.I18n;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -52,33 +53,33 @@ public class EstimateObjectZCoordinateProcess {
 
     private int step = -1;
     private String[] moveableCameraInstructions = new String[] {
-            "<html><body>Jog the camera so that an easily identifiable feature of the object " +
+            I18n.gettext("<html><body>Jog the camera so that an easily identifiable feature of the object ") +
                     "(such as a sharp corner) is in the camera's field-of-view (FOV). It is " +
                     "better for the feature to be towards the edge of the FOV rather than " +
                     "centered. When ready, click the mouse on the feature to capture its " +
                     "apparent position." +
                     "</body></html>",
-            "<html><body>Now jog the camera in X and/or Y so that the same feature is visible in " +
+            I18n.gettext("<html><body>Now jog the camera in X and/or Y so that the same feature is visible in ") +
                     "another part of the camera's FOV. The farther away from the original " +
                     "position, the better.  When ready, click the mouse on the feature to " +
                     "capture its new apparent position and estimate its Z coordinate." +
                     "</body></html>",
-            "<html><body>The estimated Z coordinate of the feature is <b>%s</b>. Click Cancel if " +
+            I18n.gettext("<html><body>The estimated Z coordinate of the feature is <b>%s</b>. Click Cancel if ") +
                     "finished or Again to perform another measurment." +
                     "</body></html>",};
     private String[] fixedCameraInstructions = new String[] {
-            "<html><body>Jog the nozzle so that an easily identifiable feature of the object " +
+            I18n.gettext("<html><body>Jog the nozzle so that an easily identifiable feature of the object ") +
                     "(such as a sharp corner) is in the camera's field-of-view (FOV). It is " +
                     "better for the feature to be towards the edge of the FOV rather than " +
                     "centered. When ready, click the mouse on the feature to capture its " +
                     "apparent position." +
                     "</body></html>",
-            "<html><body>Now jog the nozzle in X and/or Y so that the same feature is visible in " +
+            I18n.gettext("<html><body>Now jog the nozzle in X and/or Y so that the same feature is visible in ") +
                     "another part of the camera's FOV. The farther away from the original " +
                     "position, the better.  When ready, click the mouse on the feature to " +
                     "capture its new apparent position and estimate its Z coordinate." +
                     "</body></html>",
-            "<html><body>The estimated Z coordinate of the feature is <b>%s</b>. Click Cancel if " +
+            I18n.gettext("<html><body>The estimated Z coordinate of the feature is <b>%s</b>. Click Cancel if ") +
                     "finished or Again to perform another measurment." +
                     "</body></html>",};
 

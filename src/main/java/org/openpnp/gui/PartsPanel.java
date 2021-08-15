@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
@@ -123,7 +124,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel("Search");
+        JLabel lblSearch = new JLabel(I18n.gettext("Search"));
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -284,13 +285,13 @@ public class PartsPanel extends JPanel implements WizardContainer {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Part...");
-            putValue(SHORT_DESCRIPTION, "Create a new part, specifying it's ID.");
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Create a new part, specifying it's ID."));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (Configuration.get().getPackages().size() == 0) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Error"),
                         "There are currently no packages defined in the system. Please create at least one package before creating a part.");
                 return;
             }
@@ -299,7 +300,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
             while ((id = JOptionPane.showInputDialog(frame,
                     "Please enter an ID for the new part.")) != null) {
                 if (configuration.getPart(id) != null) {
-                    MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
+                    MessageBoxes.errorBox(frame, "Error", "Part ID " + id + I18n.gettext(" already exists."));
                     continue;
                 }
                 Part part = new Part(id);
@@ -317,8 +318,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action deletePartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Part");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected part.");
+            putValue(NAME, I18n.gettext("Delete Part"));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Delete the currently selected part."));
         }
 
         @Override
@@ -347,8 +348,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action pickPartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.pick);
-            putValue(NAME, "Pick Part");
-            putValue(SHORT_DESCRIPTION, "Pick the selected part from the first available feeder.");
+            putValue(NAME, I18n.gettext("Pick Part"));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Pick the selected part from the first available feeder."));
         }
 
         @Override
@@ -363,7 +364,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     }
                 }
                 if (feeder == null) {
-                    throw new Exception("No valid feeder found for " + part.getId());
+                    throw new Exception(I18n.gettext("No valid feeder found for ") + part.getId());
                 }
                 // Perform the whole Job like pick cycle as in the FeedersPanel. 
                 FeedersPanel.pickFeeder(feeder);
@@ -374,9 +375,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action copyPartToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Part to Clipboard");
+            putValue(NAME, I18n.gettext("Copy Part to Clipboard"));
             putValue(SHORT_DESCRIPTION,
-                    "Copy the currently selected part to the clipboard in text format.");
+                    I18n.gettext("Copy the currently selected part to the clipboard in text format."));
         }
 
         @Override
@@ -394,7 +395,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 clipboard.setContents(stringSelection, null);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Copy Failed"), e);
             }
         }
     };
@@ -402,8 +403,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action pastePartToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create Part from Clipboard");
-            putValue(SHORT_DESCRIPTION, "Create a new part from a definition on the clipboard.");
+            putValue(NAME, I18n.gettext("Create Part from Clipboard"));
+            putValue(SHORT_DESCRIPTION, I18n.gettext("Create a new part from a definition on the clipboard."));
         }
 
         @Override
@@ -425,7 +426,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 Helpers.selectLastTableRow(table);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), I18n.gettext("Paste Failed"), e);
             }
         }
     };
