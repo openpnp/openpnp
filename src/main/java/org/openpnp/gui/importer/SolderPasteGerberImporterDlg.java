@@ -1,4 +1,5 @@
 package org.openpnp.gui.importer;
+import org.I18n.I18n;
 
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
@@ -50,7 +51,7 @@ class SolderPasteGerberImporterDlg extends JDialog {
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, I18n.gettext("Files"), TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         getContentPane().add(panel);
         panel.setLayout(new FormLayout(
@@ -187,7 +188,7 @@ class SolderPasteGerberImporterDlg extends JDialog {
                 }
             }
             catch (Exception e1) {
-                MessageBoxes.errorBox(SolderPasteGerberImporterDlg.this, "Import Error", e1);
+                MessageBoxes.errorBox(SolderPasteGerberImporterDlg.this, I18n.gettext("Import Error"), e1);
                 return;
             }
             for (BoardPad pad : pads) {

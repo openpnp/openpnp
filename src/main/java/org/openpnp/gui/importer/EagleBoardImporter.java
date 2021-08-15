@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.importer;
+import org.I18n.I18n;
 
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
@@ -184,7 +185,7 @@ public class EagleBoardImporter implements BoardImporter {
                                 Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
                     }
                     else {
-                        throw new Exception("mlMinCream must either be in mil or mm"); // Force the
+                        throw new Exception(I18n.gettext("mlMinCream must either be in mil or mm")); // Force the
                                                                                        // importer
                                                                                        // to abort,
                                                                                        // something
@@ -210,7 +211,7 @@ public class EagleBoardImporter implements BoardImporter {
                         mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string);
                     }
                     else {
-                        throw new Exception("mlMaxCream must either be in mil or mm"); // Force the
+                        throw new Exception(I18n.gettext("mlMaxCream must either be in mil or mm")); // Force the
                                                                                        // importer
                                                                                        // to abort,
                                                                                        // something
@@ -692,7 +693,7 @@ public class EagleBoardImporter implements BoardImporter {
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
             JPanel panel = new JPanel();
-            panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+            panel.setBorder(new TitledBorder(null, I18n.gettext("Files"), TitledBorder.LEADING, TitledBorder.TOP,
                     null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(
@@ -714,7 +715,7 @@ public class EagleBoardImporter implements BoardImporter {
             panel.add(btnBrowse, "6, 2");
 
             JPanel panel_1 = new JPanel();
-            panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING,
+            panel_1.setBorder(new TitledBorder(null, I18n.gettext("Options"), TitledBorder.LEADING,
                     TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
@@ -723,15 +724,15 @@ public class EagleBoardImporter implements BoardImporter {
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+            chckbxCreateMissingParts = new JCheckBox(I18n.gettext("Create Missing Parts"));
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
 
-            chckbxImportTop = new JCheckBox("Import Parts on the Top of the board");
+            chckbxImportTop = new JCheckBox(I18n.gettext("Import Parts on the Top of the board"));
             chckbxImportTop.setSelected(true);
             panel_1.add(chckbxImportTop, "2, 4");
 
-            chckbxImportBottom = new JCheckBox("Import Parts on the Bottom of the board");
+            chckbxImportBottom = new JCheckBox(I18n.gettext("Import Parts on the Bottom of the board"));
             chckbxImportBottom.setSelected(true);
             panel_1.add(chckbxImportBottom, "2, 6");
 
@@ -814,7 +815,7 @@ public class EagleBoardImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", e1);
+                    MessageBoxes.errorBox(Dlg.this, I18n.gettext("Import Error"), e1);
                     return;
                 }
 

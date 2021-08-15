@@ -1,4 +1,5 @@
 package org.openpnp.gui.importer;
+import org.I18n.I18n;
 
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
@@ -55,7 +56,7 @@ class KicadPosImporterDialog extends JDialog {
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+        panel.setBorder(new TitledBorder(null, I18n.gettext("Files"), TitledBorder.LEADING, TitledBorder.TOP,
                 null, null));
         getContentPane().add(panel);
         panel.setLayout(new FormLayout(
@@ -88,7 +89,7 @@ class KicadPosImporterDialog extends JDialog {
         panel.add(btnBrowse_1, "6, 4");
 
         JPanel panel_1 = new JPanel();
-        panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING,
+        panel_1.setBorder(new TitledBorder(null, I18n.gettext("Options"), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         getContentPane().add(panel_1);
         panel_1.setLayout(new FormLayout(new ColumnSpec[] {
@@ -102,18 +103,18 @@ class KicadPosImporterDialog extends JDialog {
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        chckbxAssignParts = new JCheckBox("Assign Parts");
+        chckbxAssignParts = new JCheckBox(I18n.gettext("Assign Parts"));
         chckbxAssignParts.setSelected(true);
         panel_1.add(chckbxAssignParts, "2, 2");
 
-        chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+        chckbxCreateMissingParts = new JCheckBox(I18n.gettext("Create Missing Parts"));
         chckbxCreateMissingParts.setSelected(false);
         chckbxCreateMissingParts.setToolTipText("PartId = 'Package'-'Value'");
         panel_1.add(chckbxCreateMissingParts, "2, 4");
 
-        chckbxUseValueOnlyAsPartId = new JCheckBox("Use only Value as PartId");
+        chckbxUseValueOnlyAsPartId = new JCheckBox(I18n.gettext("Use only Value as PartId"));
         chckbxUseValueOnlyAsPartId.setSelected(false);
-        chckbxUseValueOnlyAsPartId.setToolTipText("Check this, if Value is unique (e.g. company internal part number)");
+        chckbxUseValueOnlyAsPartId.setToolTipText(I18n.gettext("Check this, if Value is unique (e.g. company internal part number)"));
         panel_1.add(chckbxUseValueOnlyAsPartId, "2, 6");
 
         JSeparator separator = new JSeparator();
@@ -214,7 +215,7 @@ class KicadPosImporterDialog extends JDialog {
                 }
             }
             catch (Exception e1) {
-                MessageBoxes.errorBox(KicadPosImporterDialog.this, "Import Error", e1);
+                MessageBoxes.errorBox(KicadPosImporterDialog.this, I18n.gettext("Import Error"), e1);
                 return;
             }
             for (Placement placement : placements) {

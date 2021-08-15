@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.importer;
+import org.I18n.I18n;
 
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -194,7 +195,7 @@ public class LabcenterProteusImporter implements BoardImporter {
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
             JPanel panel = new JPanel();
-            panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+            panel.setBorder(new TitledBorder(null, I18n.gettext("Files"), TitledBorder.LEADING, TitledBorder.TOP,
                     null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(
@@ -216,7 +217,7 @@ public class LabcenterProteusImporter implements BoardImporter {
             panel.add(btnBrowse, "6, 2");
 
             JPanel panel_1 = new JPanel();
-            panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING,
+            panel_1.setBorder(new TitledBorder(null, I18n.gettext("Options"), TitledBorder.LEADING,
                     TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
@@ -224,11 +225,11 @@ public class LabcenterProteusImporter implements BoardImporter {
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
 					RowSpec.decode("default:grow")}));
 
-            chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+            chckbxCreateMissingParts = new JCheckBox(I18n.gettext("Create Missing Parts"));
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
 			
-			chckbxStockCodesIncluded = new JCheckBox("Stock Codes Included");
+			chckbxStockCodesIncluded = new JCheckBox(I18n.gettext("Stock Codes Included"));
             chckbxStockCodesIncluded.setSelected(false);
             panel_1.add(chckbxStockCodesIncluded, "2, 3");
 
@@ -301,7 +302,7 @@ public class LabcenterProteusImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", "The expected file format is the default file export in Labcenter Proteus "
+                    MessageBoxes.errorBox(Dlg.this, "Import Error", I18n.gettext("The expected file format is the default file export in Labcenter Proteus ")
                     		+ "Data after header information should be :\n"
 							+ "Part ID, Value, Package,[Stock Code,] Layer, Rotation, X, Y\n"
                     		+ "Likely cause: the number of data fields does not match expected input\n"

@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.components;
+import org.I18n.I18n;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -72,7 +73,7 @@ public class ClassSelectionDialog<T> extends JDialog {
         panelActions.add(btnSelect);
 
         JLabel lblDescription =
-                new JLabel("Please select an implemention class from the list.");
+                new JLabel(I18n.gettext("Please select an implemention class from the list."));
         lblDescription.setBorder(new EmptyBorder(4, 4, 8, 4));
         panel.add(lblDescription, BorderLayout.NORTH);
         lblDescription.setHorizontalAlignment(SwingConstants.LEFT);

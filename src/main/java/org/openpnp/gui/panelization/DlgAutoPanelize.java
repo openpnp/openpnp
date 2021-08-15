@@ -1,4 +1,5 @@
 package org.openpnp.gui.panelization;
+import org.I18n.I18n;
 
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -69,7 +70,7 @@ public class DlgAutoPanelize extends JDialog {
         getRootPane().setLayout(new BoxLayout(getRootPane(), BoxLayout.Y_AXIS));
 
         JPanel jPanel = new JPanel();
-        jPanel.setBorder(new TitledBorder(null, "Panelize Parameters ", TitledBorder.LEADING,
+        jPanel.setBorder(new TitledBorder(null, I18n.gettext("Panelize Parameters "), TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         getRootPane().add(jPanel);
 

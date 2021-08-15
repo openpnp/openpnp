@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.importer;
+import org.I18n.I18n;
 
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
@@ -163,7 +164,7 @@ public class DipTraceImporter implements BoardImporter {
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
             JPanel panel = new JPanel();
-            panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+            panel.setBorder(new TitledBorder(null, I18n.gettext("Files"), TitledBorder.LEADING, TitledBorder.TOP,
                     null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(
@@ -185,14 +186,14 @@ public class DipTraceImporter implements BoardImporter {
             panel.add(btnBrowse, "6, 2");
 
             JPanel panel_1 = new JPanel();
-            panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING,
+            panel_1.setBorder(new TitledBorder(null, I18n.gettext("Options"), TitledBorder.LEADING,
                     TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+            chckbxCreateMissingParts = new JCheckBox(I18n.gettext("Create Missing Parts"));
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
 
@@ -262,7 +263,7 @@ public class DipTraceImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", "The expected file format is the default file export in DipTrace "
+                    MessageBoxes.errorBox(Dlg.this, "Import Error", I18n.gettext("The expected file format is the default file export in DipTrace ")
                     		+ "PCB: File -> Export -> Pick and Place. The first line indicates RefDes, Name, X (mm), Y (mm), Side, Rotate, Value."
                     		+ "The lines that follow are data.");
                     return;

@@ -1,4 +1,5 @@
 package org.openpnp.gui.panelization;
+import org.I18n.I18n;
 
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -41,7 +42,7 @@ public class DlgPanelXOut extends JDialog {
         JPanel headerPanel = new JPanel();
         // headerPanel.setLayout(new FlowLayout());
         headerPanel.add(new JLabel(
-                "<html>Select the PCB to be DISABLED in the panel.<p>Note that the lower left panel is designated 1,1</html>"));
+                I18n.gettext("<html>Select the PCB to be DISABLED in the panel.<p>Note that the lower left panel is designated 1,1</html>")));
         getRootPane().add(headerPanel);
 
         // Panel with Checkboxes
@@ -74,11 +75,11 @@ public class DlgPanelXOut extends JDialog {
         flowLayout.setAlignment(FlowLayout.RIGHT);
         getRootPane().add(footerPanel);
 
-        JButton btnCancel = new JButton("Cancel");
+        JButton btnCancel = new JButton(I18n.gettext("Cancel"));
         btnCancel.setAction(cancelAction);
         footerPanel.add(btnCancel);
 
-        JButton btnImport = new JButton("OK");
+        JButton btnImport = new JButton(I18n.gettext("OK"));
         btnImport.setAction(okAction);
         footerPanel.add(btnImport);
 

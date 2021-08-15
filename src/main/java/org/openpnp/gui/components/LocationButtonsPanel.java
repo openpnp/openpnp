@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.components;
+import org.I18n.I18n;
 
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -222,7 +223,7 @@ public class LocationButtonsPanel extends JPanel {
         Head head = tool.getHead();
         Actuator actuator = head.getActuatorByName(actuatorName);
         if (actuator == null) {
-            throw new Exception(String.format("No Actuator with name %s on Head %s", actuatorName,
+            throw new Exception(String.format(I18n.gettext("No Actuator with name %s on Head %s"), actuatorName,
                     head.getName()));
         }
         return actuator;
@@ -249,7 +250,7 @@ public class LocationButtonsPanel extends JPanel {
             new AbstractAction("Get Camera Coordinates", Icons.captureCamera) {
                 {
                     putValue(Action.SHORT_DESCRIPTION,
-                            "Capture the location that the camera is centered on.");
+                            I18n.gettext("Capture the location that the camera is centered on."));
                 }
 
                 @Override
@@ -280,7 +281,7 @@ public class LocationButtonsPanel extends JPanel {
             new AbstractAction("Get Tool Coordinates", Icons.captureTool) {
                 {
                     putValue(Action.SHORT_DESCRIPTION,
-                            "Capture the location that the tool is centered on.");
+                            I18n.gettext("Capture the location that the tool is centered on."));
                 }
 
                 @Override
@@ -304,7 +305,7 @@ public class LocationButtonsPanel extends JPanel {
             new AbstractAction("Get Actuator Coordinates", Icons.capturePin) {
                 {
                     putValue(Action.SHORT_DESCRIPTION,
-                            "Capture the location that the actuator is centered on.");
+                            I18n.gettext("Capture the location that the actuator is centered on."));
                 }
 
                 @Override

@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.importer;
+import org.I18n.I18n;
 
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
@@ -170,7 +171,7 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
             JPanel panel = new JPanel();
-            panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+            panel.setBorder(new TitledBorder(null, I18n.gettext("Files"), TitledBorder.LEADING, TitledBorder.TOP,
                     null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(
@@ -203,14 +204,14 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
             panel.add(btnBrowse_1, "6, 4");
 
             JPanel panel_1 = new JPanel();
-            panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING,
+            panel_1.setBorder(new TitledBorder(null, I18n.gettext("Options"), TitledBorder.LEADING,
                     TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+            chckbxCreateMissingParts = new JCheckBox(I18n.gettext("Create Missing Parts"));
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
 
@@ -308,7 +309,7 @@ public class EagleMountsmdUlpImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", e1);
+                    MessageBoxes.errorBox(Dlg.this, I18n.gettext("Import Error"), e1);
                     return;
                 }
                 for (Placement placement : placements) {

@@ -1,4 +1,5 @@
 package org.openpnp.gui.importer.rs274x;
+import org.I18n.I18n;
 
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;

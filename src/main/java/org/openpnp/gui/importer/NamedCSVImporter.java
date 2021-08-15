@@ -18,6 +18,7 @@
  */
 
 package org.openpnp.gui.importer;
+import org.I18n.I18n;
 
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
@@ -283,7 +284,7 @@ public class NamedCSVImporter implements BoardImporter {
 
         if (Len == 0) {
             reader.close();
-            throw new Exception("Unable to find relevant headers' names.\n See https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data for more.");
+            throw new Exception(I18n.gettext("Unable to find relevant headers' names.\n See https://github.com/openpnp/openpnp/wiki/Importing-Centroid-Data for more."));
         }
 
         // CSVParser csvParser = new CSVParser(new FileInputStream(file));
@@ -390,7 +391,7 @@ public class NamedCSVImporter implements BoardImporter {
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
             JPanel panel = new JPanel();
-            panel.setBorder(new TitledBorder(null, "Files", TitledBorder.LEADING, TitledBorder.TOP,
+            panel.setBorder(new TitledBorder(null, I18n.gettext("Files"), TitledBorder.LEADING, TitledBorder.TOP,
                     null, null));
             getContentPane().add(panel);
             panel.setLayout(new FormLayout(
@@ -412,7 +413,7 @@ public class NamedCSVImporter implements BoardImporter {
             panel.add(btnBrowse, "6, 2");
 
             JPanel panel_1 = new JPanel();
-            panel_1.setBorder(new TitledBorder(null, "Options", TitledBorder.LEADING,
+            panel_1.setBorder(new TitledBorder(null, I18n.gettext("Options"), TitledBorder.LEADING,
                     TitledBorder.TOP, null, null));
             getContentPane().add(panel_1);
             panel_1.setLayout(new FormLayout(
@@ -420,11 +421,11 @@ public class NamedCSVImporter implements BoardImporter {
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             RowSpec.decode("default:grow")}));
 
-            chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
+            chckbxCreateMissingParts = new JCheckBox(I18n.gettext("Create Missing Parts"));
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
 
-            chckbxUpdatePartHeight = new JCheckBox("Update Existing Part Heights");
+            chckbxUpdatePartHeight = new JCheckBox(I18n.gettext("Update Existing Part Heights"));
             chckbxUpdatePartHeight.setSelected(true);
             panel_1.add(chckbxUpdatePartHeight, "2, 3");
 
@@ -499,7 +500,7 @@ public class NamedCSVImporter implements BoardImporter {
                     }
                 }
                 catch (Exception e1) {
-                    MessageBoxes.errorBox(Dlg.this, "Import Error", e1);
+                    MessageBoxes.errorBox(Dlg.this, I18n.gettext("Import Error"), e1);
                     return;
                 }
                 for (Placement placement : placements) {
