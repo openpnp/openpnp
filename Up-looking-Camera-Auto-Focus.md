@@ -6,7 +6,7 @@ Unknown part heights can automatically be detected by autofocussing on its under
 
 ## Nozzle Tip Configuration
 
-As a pre-requisite, the **Part Dimensions** must be defined on each nozzle tip (Configuration tab). Both the **Max. Part Diameter** and **Max. Part Height** are used to determine the autofocus range and senstive area. 
+As a pre-requisite, the **Part Dimensions** must be defined on each nozzle tip (Configuration tab). Both the **Max. Part Diameter** and **Max. Part Height** are used to determine the autofocus range and sensitive area. 
 
 ![Part Dimensions](https://user-images.githubusercontent.com/9963310/113574803-1d9d5400-961d-11eb-860e-bd391d797f16.png)
 
