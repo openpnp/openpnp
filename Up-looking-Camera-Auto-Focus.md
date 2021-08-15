@@ -50,6 +50,6 @@ ___
 
 Whenever Alignment (a.k.a. Bottom Vision) encounters a part with unknown part height, it will employ the auto focus. The detected part height is then stored on the part. This will take some additional time (but hardly longer than manually measuring and entering the data). All subsequent vision and placement operations will reuse the height directly, with no further speed penalty incurred. 
 
-The job processor knows when a camera has auto focus capability and bottom vision is enabled for the part. It will then allow starting a Job with unknown part heights.  As an alternative, part heights can also be auto-learned using a ContactProbeNozzle.  
+The job processor knows when a camera has auto focus capability and bottom vision is enabled for the part. It will then allow starting a Job with unknown part heights.  As an alternative, part heights can also be auto-learned using a [ContactProbeNozzle](https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#part-height-auto-learning).  
 
 ![Part height unknown](https://user-images.githubusercontent.com/9963310/113597986-c313f000-963c-11eb-84e9-b0bedb797185.png)
