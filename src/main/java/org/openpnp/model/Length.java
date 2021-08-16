@@ -54,9 +54,9 @@ public class Length {
         return new Length(value - length.getValue(), units);
     }
 
-    public Length multiply(Length length) {
+    public Area multiply(Length length) {
         length = length.convertToUnits(units);
-        return new Length(value * length.getValue(), units);
+        return new Area(value * length.getValue(), AreaUnit.fromLengthUnit(units));
     }
 
     public Length add(double d) {
@@ -69,6 +69,10 @@ public class Length {
 
     public Length multiply(double d) {
         return new Length(value * d, units);
+    }
+
+    public Length divide(double d) {
+        return new Length(value / d, units);
     }
 
     public double divide(Length length) {
@@ -142,7 +146,7 @@ public class Length {
             return new Length(mm * (1 / 25.4), units);
         }
         else if (units == LengthUnit.Feet) {
-            return new Length(mm * (1 / 25.4) * 12, units);
+            return new Length(mm * (1 / (25.4 * 12)), units);
         }
         else if (units == LengthUnit.Mils) {
             return new Length(mm * (1 / 25.4 * 1000), units);
@@ -192,6 +196,7 @@ public class Length {
             valueString = s.substring(0, startOfUnits);
             String unitsString = s.substring(startOfUnits);
             unitsString = unitsString.trim();
+            unitsString = unitsString.replace('u', 'μ'); //convert u to μ
             for (LengthUnit lengthUnit : LengthUnit.values()) {
                 if (lengthUnit.getShortName().equalsIgnoreCase(unitsString)) {
                     length.setUnits(lengthUnit);
