@@ -353,10 +353,13 @@ public class DetectCircularSymmetry extends CvStage {
             else if (centerByProperty instanceof Point) {
                 center = (Point) centerByProperty;
             }
+            else if (centerByProperty instanceof org.opencv.core.Point) {
+                center = Point.fromOpencv((org.opencv.core.Point) centerByProperty);
+            }
             else if (centerByProperty != null){
                 throw new Exception("Invalid type \"" + centerByProperty.getClass() + "\" "
                         + "for pipeline property \"" + property + "\" - "
-                                + "Must be a Location or Point");
+                                + "Must be a Location, Point, or org.opencv.core.Point");
             }
         }
         

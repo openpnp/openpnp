@@ -68,28 +68,32 @@ public class MaskCircle extends CvStage {
                     + "or Integer");
         }
         
-        org.openpnp.model.Point center = new org.openpnp.model.Point(mat.cols()*0.5, mat.rows()*0.5);
+        Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
         property = "MaskCircle.center";
         Object centerByProperty = pipeline.getProperty(property);
         if (centerByProperty instanceof Location) {
             if (camera != null) {
-                center = VisionUtils.getLocationPixels(camera, (Location) centerByProperty);
+                center = VisionUtils.getLocationPixels(camera, (Location) centerByProperty).toOpencv();
             }
             else {
                 throw new Exception("Pipeline property \"camera\" not set");
             }
         }
+        else if (centerByProperty instanceof org.openpnp.model.Point) {
+            center = ((org.openpnp.model.Point) centerByProperty).toOpencv();
+        }
         else if (centerByProperty instanceof Point) {
-            center = (org.openpnp.model.Point) centerByProperty;
+            center = (Point) centerByProperty;
         }
         else if (centerByProperty != null){
             throw new Exception("Invalid type \"" + centerByProperty.getClass() + "\" "
-                    + "for pipeline property \"" + property + "\" - Must be a Location or Point");
+                    + "for pipeline property \"" + property + "\" - Must be a Location, Point, "
+                            + "or org.opencv.core.Point");
         }
         
-        Imgproc.circle(mask, new Point(center.x, center.y),  Math.abs(diameter) / 2, 
+        Imgproc.circle(mask, center,  Math.abs(diameter) / 2, 
                 new Scalar(255, 255, 255), -1);
-        if(diameter < 0) {
+        if (diameter < 0) {
             Core.bitwise_not(mask,mask);
         }
         mat.copyTo(masked, mask);

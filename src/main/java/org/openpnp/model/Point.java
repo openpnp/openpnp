@@ -58,6 +58,14 @@ public class Point {
         return new Point(x - p.x, y - p.y);
     }
 
+    public static Point fromOpencv(org.opencv.core.Point p) {
+        return new Point(p.x, p.y);
+    }
+    
+    public org.opencv.core.Point toOpencv() {
+        return new org.opencv.core.Point(x, y);
+    }
+    
     @Override
     public String toString() {
         return String.format(Locale.US, "(%f, %f)", x, y);
