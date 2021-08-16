@@ -1316,7 +1316,7 @@ public abstract class CalibrateCameraProcess {
     }
   
     private boolean requestOperatorToAdjustDiameterAction() {
-        setInstructionsAndProceedAction("Adjust the Fiducial Diameter slider until the orange circle snaps to the fiducial. Click Next when ready", 
+        setInstructionsAndProceedAction("Adjust the Fiducial Diameter slider until the orange circle snaps to the outer edge of the fiducial. Click Next when ready", 
                 ()->fiducialDiameterIsSetAction());
         
         Point2D expectedPoint = new Point2D.Double((pixelsX-1)/2.0, (pixelsY-1)/2.0);
@@ -1338,6 +1338,7 @@ public abstract class CalibrateCameraProcess {
             @Override
             protected Void doInBackground() throws Exception {
                 while (!isCancelled()) {
+                    pipeline.setProperty("MaskCircle.area", Math.PI*Math.pow(advCal.getFiducialDiameter()/2, 2));
                     pipeline.setProperty("DetectCircularSymmetry.diameter", 1.0*advCal.getFiducialDiameter());
                     List<KeyPoint> keyPoints = null;
 
