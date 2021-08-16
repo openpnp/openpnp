@@ -154,9 +154,9 @@ Assume you have moved your nozzle to the pick location of a feeder. The nozzle t
 
 But it's hard to judge the X/Y precisely from the side, and you have no idea of the rotation (C) of the part.
 
-![Move Camera to Nozzle](https://user-images.githubusercontent.com/9963310/95973733-513cb580-0e14-11eb-8233-5e660b863365.png) Use the **Move Camera to Nozzle** button to move the camera over the part. Doing so will go to Safe Z first, so the Z you carefully adjusted would be lost, if it weren't for the **Z virtual axis** of the camera that is then set to the former Z coordinate to safeguard. 
+![Move Camera to Nozzle](https://user-images.githubusercontent.com/9963310/95973733-513cb580-0e14-11eb-8233-5e660b863365.png) Use the **Move Camera to Nozzle** button to move the camera over the part. Doing so will move the nozzle to Safe Z first, so the Z you carefully adjusted, would be lost. But with the **Z virtual axis** on the camera, the camera can now not only move X,and Y to the former nozzle location, but also the Z. The Z coordinate will now be safeguarded by it. 
 
-In the Machine Controls, select the camera. Then make sure to have the pick location of the feeder in the crosshairs of the camera, so the X and Y are also precisely set. There is no real/physical C axis on a camera but it does still make sense to use the C machine controls to rotate the crosshairs until they align nicely with the part in the camera view. This is done using the **C virtual axis**. 
+In the Machine Controls, select the camera (if you don't have Auto-Tool enabled, which will have selected it automatically). Then jog to make sure to have the pick location of the feeder in the crosshairs of the camera, so the X and Y are also precisely set. There is no real/physical C axis on a camera but it does still make sense to use the C machine controls to rotate the crosshairs until they align nicely with the part in the camera view. This is done using the **C virtual axis**. 
 
 ![Move Nozzle to Camera](https://user-images.githubusercontent.com/9963310/95973794-6580b280-0e14-11eb-98b1-8be29a4a5673.png) Now you can use the **Move Nozzle to Camera** button to move the nozzle back to the to the former camera coordinates, so not only X and Y are now applied to the nozzle, but also the safeguarded Z from before and the adjusted C. 
 
