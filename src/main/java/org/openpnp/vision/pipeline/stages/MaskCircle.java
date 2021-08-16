@@ -7,6 +7,10 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.model.Length;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -30,22 +34,62 @@ public class MaskCircle extends CvStage {
     
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
+        Camera camera = (Camera) pipeline.getProperty("camera");
+        
         Mat mat = pipeline.getWorkingImage();
         Mat mask = mat.clone();
         Mat masked = mat.clone();
         Scalar color = FluentCv.colorToScalar(Color.black);
         mask.setTo(color);
         masked.setTo(color);
-        Point center = (Point) pipeline.getProperty("MaskCircle.center");
-        if (center == null) {
-            center = new Point(mat.cols() / 2, mat.rows() / 2);
+
+        //Check for overriding properties
+        int diameter = this.diameter;
+        String property = "MaskCircle.diameter";
+        Object diameterByProperty = pipeline.getProperty(property);
+        if (diameterByProperty instanceof Length) {
+            if (camera != null) {
+                diameter = (int) Math.round(VisionUtils.toPixels((Length) diameterByProperty, 
+                    camera));
+            }
+            else {
+                throw new Exception("Pipeline property \"camera\" not set");
+            }
         }
-        Integer maskDiameter = (Integer) pipeline.getProperty("MaskCircle.diameter");
-        if (maskDiameter == null) {
-            maskDiameter = diameter;
+        else if (diameterByProperty instanceof Double) {
+            diameter = (int) Math.round((Double) diameterByProperty);
         }
-        Imgproc.circle(mask, center,  Math.abs(maskDiameter) / 2, new Scalar(255, 255, 255), -1);
-        if(maskDiameter < 0) {
+        else if (diameterByProperty instanceof Integer) {
+            diameter = (Integer) diameterByProperty;
+        }
+        else if (diameterByProperty != null) {
+            throw new Exception("Invalid type \"" + diameterByProperty.getClass() + "\" "
+                    + "for pipeline property \"" + property + "\" - Must be a Length, Double, "
+                    + "or Integer");
+        }
+        
+        org.openpnp.model.Point center = new org.openpnp.model.Point(mat.cols()*0.5, mat.rows()*0.5);
+        property = "MaskCircle.center";
+        Object centerByProperty = pipeline.getProperty(property);
+        if (centerByProperty instanceof Location) {
+            if (camera != null) {
+                center = VisionUtils.getLocationPixels(camera, (Location) centerByProperty);
+            }
+            else {
+                throw new Exception("Pipeline property \"camera\" not set");
+            }
+        }
+        else if (centerByProperty instanceof Point) {
+            center = (org.openpnp.model.Point) centerByProperty;
+        }
+        else if (centerByProperty != null){
+            throw new Exception("Invalid type \"" + centerByProperty.getClass() + "\" "
+                    + "for pipeline property \"" + property + "\" - Must be a Location or Point");
+        }
+        
+        Imgproc.circle(mask, new Point(center.x, center.y),  Math.abs(diameter) / 2, 
+                new Scalar(255, 255, 255), -1);
+        if(diameter < 0) {
             Core.bitwise_not(mask,mask);
         }
         mat.copyTo(masked, mask);

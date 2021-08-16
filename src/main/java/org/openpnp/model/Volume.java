@@ -24,7 +24,9 @@ import java.util.Locale;
 import org.simpleframework.xml.Attribute;
 
 
-
+/**
+ * A class to represent a quantity of three dimensional space
+ */
 public class Volume {
     @Attribute
     private double value;
@@ -72,14 +74,14 @@ public class Volume {
     }
 
     public Area divide(Length length) {
-        LengthUnit lengthUnit = units.getLinearUnit();
+        LengthUnit lengthUnit = units.getLengthUnit();
         length = length.convertToUnits(lengthUnit);
-        return new Area(value / length.getValue(), AreaUnit.fromLinearUnit(lengthUnit));
+        return new Area(value / length.getValue(), AreaUnit.fromLengthUnit(lengthUnit));
     }
 
     public Length divide(Area area) {
-        LengthUnit lengthUnit = units.getLinearUnit();
-        area = area.convertToUnits(AreaUnit.fromLinearUnit(lengthUnit));
+        LengthUnit lengthUnit = units.getLengthUnit();
+        area = area.convertToUnits(AreaUnit.fromLengthUnit(lengthUnit));
         return new Length(value / area.getValue(), lengthUnit);
     }
 
@@ -109,8 +111,8 @@ public class Volume {
             return this;
         }
         
-        LengthUnit oldLengthUnit = this.units.getLinearUnit();
-        LengthUnit newLengthUnit = units.getLinearUnit();
+        LengthUnit oldLengthUnit = this.units.getLengthUnit();
+        LengthUnit newLengthUnit = units.getLengthUnit();
         
         double scaleFactor = Math.pow((new Length(1.0, oldLengthUnit)).
                 divide(new Length(1.0, newLengthUnit)), 3);
@@ -154,7 +156,8 @@ public class Volume {
             valueString = s.substring(0, startOfUnits);
             String unitsString = s.substring(startOfUnits);
             unitsString = unitsString.trim();
-            unitsString = unitsString.replace('3', '\u00B3'); //convert 3 to superscript 3
+            unitsString = unitsString.replace('3', '³'); //convert 3 to superscript 3
+            unitsString = unitsString.replace('u', 'μ'); //convert u to μ
             for (VolumeUnit volumeUnit : VolumeUnit.values()) {
                 if (volumeUnit.getShortName().equalsIgnoreCase(unitsString)) {
                     volume.setUnits(volumeUnit);

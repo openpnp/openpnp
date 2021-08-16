@@ -24,7 +24,9 @@ import java.util.Locale;
 import org.simpleframework.xml.Attribute;
 
 
-
+/**
+ * A class to represent a quantity of 2D space
+ */
 public class Area {
     @Attribute
     private double value;
@@ -63,9 +65,9 @@ public class Area {
     }
 
     public Volume multiply(Length length) {
-        LengthUnit lengthUnit = units.getLinearUnit();
+        LengthUnit lengthUnit = units.getLengthUnit();
         length = length.convertToUnits(lengthUnit);
-        return new Volume(value * length.getValue(), VolumeUnit.fromLinearUnit(lengthUnit));
+        return new Volume(value * length.getValue(), VolumeUnit.fromLengthUnit(lengthUnit));
     }
 
     public Area divide(double d) {
@@ -78,7 +80,7 @@ public class Area {
     }
 
     public Length divide(Length length) {
-        LengthUnit lengthUnit = units.getLinearUnit();
+        LengthUnit lengthUnit = units.getLengthUnit();
         length = length.convertToUnits(lengthUnit);
         return new Length(value / length.getValue(), lengthUnit);
     }
@@ -109,8 +111,8 @@ public class Area {
             return this;
         }
         
-        LengthUnit oldLengthUnit = this.units.getLinearUnit();
-        LengthUnit newLengthUnit = units.getLinearUnit();
+        LengthUnit oldLengthUnit = this.units.getLengthUnit();
+        LengthUnit newLengthUnit = units.getLengthUnit();
         
         double scaleFactor = Math.pow((new Length(1.0, oldLengthUnit)).
                 divide(new Length(1.0, newLengthUnit)), 2);
@@ -154,7 +156,8 @@ public class Area {
             valueString = s.substring(0, startOfUnits);
             String unitsString = s.substring(startOfUnits);
             unitsString = unitsString.trim();
-            unitsString = unitsString.replace('2', '\u00B2'); //convert 2 to superscript 2
+            unitsString = unitsString.replace('2', '²'); //convert 2 to superscript 2
+            unitsString = unitsString.replace('u', 'μ'); //convert u to μ
             for (AreaUnit areaUnit : AreaUnit.values()) {
                 if (areaUnit.getShortName().equalsIgnoreCase(unitsString)) {
                     area.setUnits(areaUnit);

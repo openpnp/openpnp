@@ -19,14 +19,17 @@
 
 package org.openpnp.model;
 
+/**
+ * Defined units of two dimensional space
+ */
 public enum AreaUnit {
-    SquareMeters("m\u00B2", "SquareMeter"),
-    SquareCentimeters("cm\u00B2", "SquareCentimeter"),
-    SquareMillimeters("mm\u00B2", "SquareMillimeter"),
-    SquareFeet("ft\u00B2", "SquareFoot"),
-    SquareInches("in\u00B2", "SquareInch"),
-    SquareMils("mil\u00B2", "SquareMil"),
-    SquareMicrons("μm\u00B2", "SquareMicron");
+    SquareMeters("m²", "SquareMeter"),
+    SquareCentimeters("cm²", "SquareCentimeter"),
+    SquareMillimeters("mm²", "SquareMillimeter"),
+    SquareFeet("ft²", "SquareFoot"),
+    SquareInches("in²", "SquareInch"),
+    SquareMils("mil²", "SquareMil"),
+    SquareMicrons("μm²", "SquareMicron");
 
     private final String shortName;
 
@@ -45,7 +48,11 @@ public enum AreaUnit {
         return singularName;
     }
     
-    public LengthUnit getLinearUnit() {
+    /**
+     * Gets a length unit, that when squared, is equivalent to this area unit
+     * @return the length unit
+     */
+    public LengthUnit getLengthUnit() {
         switch (this) {
             case SquareMeters :
                 return LengthUnit.Meters;
@@ -65,7 +72,12 @@ public enum AreaUnit {
         return null;
     }
     
-    public static AreaUnit fromLinearUnit(LengthUnit lengthUnit) {
+    /**
+     * Creates an area unit that is equivalent to the square of the given length unit
+     * @param lengthUnit - the given length unit
+     * @return the area unit
+     */
+    public static AreaUnit fromLengthUnit(LengthUnit lengthUnit) {
         switch (lengthUnit) {
             case Meters :
                 return AreaUnit.SquareMeters;

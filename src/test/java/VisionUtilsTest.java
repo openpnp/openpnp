@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.model.Area;
+import org.openpnp.model.AreaUnit;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -57,6 +59,15 @@ public class VisionUtilsTest {
         assertEquals(pixelLocation, new Location(LengthUnit.Millimeters, -220, 140, 0, 0));
     }
 
+    @Test
+    public void testConversions() {
+        Camera camera = new TestCamera();
+        Double pixels = VisionUtils.toPixels(new Length(1.776, LengthUnit.Centimeters), camera);
+        assertEquals(17.76, pixels);
+        Double pixelArea = VisionUtils.toPixels(new Area(13.2, AreaUnit.SquareCentimeters), camera);
+        assertEquals(1320.0, pixelArea);
+    }
+    
     static class TestCamera extends AbstractHeadMountable implements Camera {
         protected Head head;
 

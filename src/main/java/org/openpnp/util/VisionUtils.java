@@ -161,6 +161,15 @@ public class VisionUtils {
         return length.getValue() / avgUnitsPerPixel;
     }
     
+    public static double toPixels(Area area, Camera camera) {
+        // convert inputs to the same units
+        Location unitsPerPixel = camera.getUnitsPerPixel();
+        area = area.convertToUnits(AreaUnit.fromLengthUnit(unitsPerPixel.getUnits()));
+
+        // convert it all to pixels
+        return area.getValue() / (unitsPerPixel.getX() * unitsPerPixel.getY());
+    }
+    
     /**
      * Get a location in camera pixels. This is the reverse transformation of getPixelLocation().
      *  

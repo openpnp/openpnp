@@ -19,14 +19,20 @@
 
 package org.openpnp.model;
 
+/**
+ * Defined units of three dimensional space
+ */
 public enum VolumeUnit {
-    CubicMeters("m\u00B3", "CubicMeter"),
-    CubicCentimeters("cm\u00B3", "CubicCentimeter"),
-    CubicMillimeters("mm\u00B3", "CubicMillimeter"),
-    CubicFeet("ft\u00B3", "CubicFoot"),
-    CubicInches("in\u00B3", "CubicInch"),
-    CubicMils("mil\u00B3", "CubicMil"),
-    CubicMicrons("μm\u00B3", "CubicMicron");
+    CubicMeters("m³", "CubicMeter"),
+    CubicCentimeters("cm³", "CubicCentimeter"),
+    MilliLiters("ml", "MilliLiter"),       //preferred equivalent to CubicCentimeters
+    CubicMillimeters("mm³", "CubicMillimeter"),
+    MicroLiters("μl", "MicroLiter"),       //preferred equivalent to CubicMillimeters
+    CubicFeet("ft³", "CubicFoot"),
+    CubicInches("in³", "CubicInch"),
+    CubicMils("mil³", "CubicMil"),
+    CubicMicrons("μm³", "CubicMicron"),
+    FemtoLiters("fl", "FemtoLiter");       //preferred equivalent to CubicMicrons
 
     private final String shortName;
 
@@ -45,13 +51,21 @@ public enum VolumeUnit {
         return singularName;
     }
     
-    public LengthUnit getLinearUnit() {
+    /**
+     * Creates a length unit, that when cubed, is equivalent to this volume unit 
+     * @return the length unit
+     */
+    public LengthUnit getLengthUnit() {
         switch (this) {
             case CubicMeters :
                 return LengthUnit.Meters;
             case CubicCentimeters :
                 return LengthUnit.Centimeters;
+            case MilliLiters :
+                return LengthUnit.Centimeters;
             case CubicMillimeters :
+                return LengthUnit.Millimeters;
+            case MicroLiters :
                 return LengthUnit.Millimeters;
             case CubicFeet :
                 return LengthUnit.Feet;
@@ -59,28 +73,61 @@ public enum VolumeUnit {
                 return LengthUnit.Inches;
             case CubicMils :
                 return LengthUnit.Mils;
-           case CubicMicrons :
+            case CubicMicrons :
+                return LengthUnit.Microns;
+            case FemtoLiters :
                 return LengthUnit.Microns;
         }
         return null;
     }
     
-    public static VolumeUnit fromLinearUnit(LengthUnit lengthUnit) {
+    /**
+     * Creates a preferred volume unit equivalent to the cube of the given length unit 
+     * @param lengthUnit - the given length unit
+     * @return the volume unit
+     */
+    public static VolumeUnit fromLengthUnit(LengthUnit lengthUnit) {
+        return fromLengthUnit(lengthUnit, true);
+    }
+    
+    /**
+     * Creates a volume unit equivalent to the cube of the given length unit 
+     * @param lengthUnit - the given length unit
+     * @param preferredUnit - flag to indicate whether the preferred or non-preferred unit
+     * should be returned (preferred unit is returned when set to true)
+     * @return the volume unit
+     */
+    public static VolumeUnit fromLengthUnit(LengthUnit lengthUnit, boolean preferredUnit) {
         switch (lengthUnit) {
             case Meters :
                 return VolumeUnit.CubicMeters;
             case Centimeters :
-                return VolumeUnit.CubicCentimeters;
+                if (preferredUnit) {
+                    return VolumeUnit.MilliLiters;
+                }
+                else {
+                    return VolumeUnit.CubicCentimeters;
+                }
             case Millimeters :
-                return VolumeUnit.CubicMillimeters;
+                if (preferredUnit) {
+                    return VolumeUnit.MicroLiters;
+                }
+                else {
+                    return VolumeUnit.CubicMillimeters;
+                }
             case Feet :
                 return VolumeUnit.CubicFeet;
             case Inches :
                 return VolumeUnit.CubicInches;
             case Mils :
                 return VolumeUnit.CubicMils;
-           case Microns :
-                return VolumeUnit.CubicMicrons;
+            case Microns :
+                if (preferredUnit) {
+                    return VolumeUnit.FemtoLiters;
+                }
+                else {
+                    return VolumeUnit.CubicMicrons;
+                }
         }
         return null;
     }
