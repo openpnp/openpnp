@@ -132,26 +132,9 @@ public class VisionUtils {
         throw new Exception("No up-looking camera found on the machine to use for bottom vision.");
     }
     
-    public static double toPixels(Area area, Camera camera) {
-        return toPixels(area, camera, camera.getDefaultZ());
-    }
-
-    public static double toPixels(Area area, Camera camera, Length zPlane) {
-        // convert inputs to the same units
-        Location unitsPerPixel = camera.getUnitsPerPixel(zPlane);
-        area = area.convertToUnits(AreaUnit.fromLinearUnit(unitsPerPixel.getUnits()));
-
-        // convert it all to pixels
-        return area.getValue() / (unitsPerPixel.getX() * unitsPerPixel.getY());
-    }
-
     public static double toPixels(Length length, Camera camera) {
-        return toPixels(length, camera, camera.getDefaultZ());
-    }
-    
-    public static double toPixels(Length length, Camera camera, Length zPlane) {
         // convert inputs to the same units
-        Location unitsPerPixel = camera.getUnitsPerPixel(zPlane);
+        Location unitsPerPixel = camera.getUnitsPerPixel();
         length = length.convertToUnits(unitsPerPixel.getUnits());
 
         // we average the units per pixel because circles can't be ovals
