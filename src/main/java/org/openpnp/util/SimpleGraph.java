@@ -98,9 +98,11 @@ public class SimpleGraph {
         public boolean isSquareAspectRatio() {
             return squareAspectRatio;
         }
+        
         public void setSquareAspectRatio(boolean squareAspectRatio) {
             this.squareAspectRatio = squareAspectRatio;
         }
+        
         public Point2D.Double getMinimum() {
             Point2D.Double minimum = null;
             for (DataRow dataRow : dataRows) {
