@@ -1330,15 +1330,13 @@ public abstract class CalibrateCameraProcess {
                 Math.min(expectedPoint.getY(),
                 Math.min(pixelsY-expectedPoint.getY(), maskDiameter/2))));
         
-        pipeline.setProperty("MaskCircle.diameter", maskDiameter);
-        pipeline.setProperty("DetectCircularSymmetry.maxDistance", maskDiameter/2.0);
-        
         swingWorker = new SwingWorker<Void, String>() {
 
             @Override
             protected Void doInBackground() throws Exception {
                 while (!isCancelled()) {
-                    pipeline.setProperty("MaskCircle.area", Math.PI*Math.pow(advCal.getFiducialDiameter()/2, 2));
+                    pipeline.setProperty("MaskCircle.diameter", maskDiameter);
+                    pipeline.setProperty("SimpleBlobDetector.area", Math.PI*Math.pow(advCal.getFiducialDiameter()/2.0, 2));
                     pipeline.setProperty("DetectCircularSymmetry.diameter", 1.0*advCal.getFiducialDiameter());
                     List<KeyPoint> keyPoints = null;
 
@@ -1395,6 +1393,7 @@ public abstract class CalibrateCameraProcess {
         while (!swingWorker.isDone()) {
             //spin
         }
+        estimateUnitsPerPixelAction();
         
         return true;
     }
@@ -2134,6 +2133,9 @@ public abstract class CalibrateCameraProcess {
         
         pipeline.setProperty("MaskCircle.diameter", maskDiameter);
         pipeline.setProperty("DetectCircularSymmetry.maxDistance", maskDiameter/2.0);
+
+        pipeline.setProperty("SimpleBlobDetector.area", Math.PI*Math.pow(advCal.getFiducialDiameter()/2.0, 2));
+        pipeline.setProperty("DetectCircularSymmetry.diameter", 1.0*advCal.getFiducialDiameter());
         
         List<KeyPoint> keypoints = null;
         int attempts = 0;

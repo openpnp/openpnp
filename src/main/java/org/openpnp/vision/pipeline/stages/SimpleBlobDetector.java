@@ -38,6 +38,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 
