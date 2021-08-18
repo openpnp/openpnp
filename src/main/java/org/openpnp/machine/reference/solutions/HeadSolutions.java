@@ -88,7 +88,38 @@ public class HeadSolutions implements Solutions.Subject {
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup") {
 
                     {
-                        setChoice(head.getNozzleSolution());
+                        NozzleSolution nozzleSolution = head.getNozzleSolution();
+                        if (nozzleSolution == null) {
+                            // This is a first time evaluation. Determine the current machine configuration.
+                            // Note, this will fail, if this is a mixed or otherwise exotic solution machine, but the user is responsible to 
+                            // not accept the solution then.
+                            int multiplier = 0;
+                            nozzleSolution = NozzleSolution.Standalone;
+                            for (Nozzle nozzle : head.getNozzles()) {
+                                if (nozzle.getAxisZ() instanceof ReferenceCamCounterClockwiseAxis) {
+                                    multiplier++; // counts dual cam
+                                    nozzleSolution = NozzleSolution.DualCam;
+                                }
+                                else if (nozzle.getAxisZ() instanceof ReferenceMappedAxis) {
+                                    // not counted (will be counted by its ReferenceControllerAxis counterpart)
+                                    nozzleSolution = NozzleSolution.DualNegated;
+                                }
+                                else if (nozzle.getAxisZ() instanceof ReferenceControllerAxis) {
+                                    multiplier++; // counts standalone or dual negated 
+                                }
+                            }
+                            if (multiplier == 0) {
+                                multiplier++;
+                            }
+                            head.setNozzleSolution(nozzleSolution);
+                            head.setNozzleSolutionsMultiplier(multiplier);
+                            if (! solutions.isAtMostTargeting(Milestone.Welcome)) {
+                                // If this is not a fresh machine i.e. not starting with the Welcome Milestone, 
+                                // remember this as already solved (it can be revisited by re-opening it).
+                                solutions.setSolutionsIssueSolved(this, true);
+                            }
+                        }
+                        setChoice(nozzleSolution);
                         multiplier = head.getNozzleSolutionsMultiplier();
                     }
                     @Override

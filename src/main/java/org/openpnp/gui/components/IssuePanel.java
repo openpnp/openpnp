@@ -1,6 +1,8 @@
 package org.openpnp.gui.components;
 
 import java.awt.BorderLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
@@ -15,6 +17,7 @@ import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -163,19 +166,20 @@ public class IssuePanel extends JPanel {
 
     private void buildDynamicPart(int formRow) {
         if (issue.getExtendedDescription() != null) {
-            JPanel panelMultiChoice = new JPanel();
-            panelMultiChoice.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-            panel.add(panelMultiChoice, "4, "+(formRow*2)+", fill, fill");
-            panelMultiChoice.setLayout(new FormLayout(new ColumnSpec[] {
+            JPanel panelControl = new JPanel();
+            panelControl.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+            panel.add(panelControl, "4, "+(formRow*2)+", fill, fill");
+            panelControl.setLayout(new FormLayout(new ColumnSpec[] {
                     new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("70dlu", true), Sizes.constant("150dlu", true)), 1),},
                     new RowSpec[] {
                             FormSpecs.DEFAULT_ROWSPEC,}));
 
             JLabel lbl = new JLabel(issue.getExtendedDescription());
-            panelMultiChoice.add(lbl, "1, 1");
+            setClipboardHandler(lbl);
+            panelControl.add(lbl, "1, 1");
             lbl.setIcon(issue.getExtendedIcon());
             lbl.setIconTextGap(20);
-            
+
             // Consume the row
             formRow++;
         }
@@ -258,19 +262,23 @@ public class IssuePanel extends JPanel {
                 panelMultiChoice.add(lblMultiChoice, "1, 1");
                 lblMultiChoice.setIcon(choice.getIcon());
                 lblMultiChoice.setIconTextGap(20);
+                setClipboardHandler(lblMultiChoice);
                 lblMultiChoice.addMouseListener(new MouseListener() {
                     private boolean beginClick;
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        if (beginClick) {
+                        if (beginClick && SwingUtilities.isLeftMouseButton(e)) {
                             radioButton.setSelected(true);
                         }
+                        beginClick = false;
                     }
 
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        beginClick = true;
+                        if (SwingUtilities.isLeftMouseButton(e)) {
+                            beginClick = true;
+                        }
                     }
 
                     @Override
@@ -284,13 +292,62 @@ public class IssuePanel extends JPanel {
 
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        radioButton.setSelected(true);
+                        if (SwingUtilities.isLeftMouseButton(e)) {
+                            radioButton.setSelected(true);
+                        }
                     }
                 });
                 // Consume the row
                 formRow++;
             }
         }
+    }
+
+    public void setClipboardHandler(JLabel lbl) {
+        lbl.addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseExited(MouseEvent e) {}
+
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    // Crude
+                    String text = lbl.getText();
+                    String noHTMLString = text
+                            .replaceAll("\\<br.*?\\>", "\n")
+                            .replaceAll("\\</p\\>", "\n")
+                            .replaceAll("\\</h.*?\\>", "\n")
+                            .replaceAll("\\</li\\>", "\n")
+                            .replaceAll("\\</tr\\>", "\n")
+                            .replaceAll("\\<.*?\\>", " ")
+                            .replaceAll("  ", " ")
+                            .replaceAll("  ", " ")
+                            .replaceAll("\n ", "\n")
+                            .trim();
+                    Toolkit.getDefaultToolkit()
+                    .getSystemClipboard()
+                    .setContents(new StringSelection(noHTMLString), null);
+                    lbl.setEnabled(!lbl.isEnabled());
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            Thread.sleep(300);
+                        }
+                        catch (InterruptedException e1) {}
+                        lbl.setEnabled(!lbl.isEnabled());
+                    });
+                }
+            }
+        });
     }
 
     public int getSliderValue(DoubleProperty doubleProperty) {

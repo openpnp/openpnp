@@ -159,195 +159,219 @@ public class CalibrationSolutions implements Solutions.Subject {
             }
         }
     }
-    private void perHeadSolutions(Solutions solutions, ReferenceHead head, ReferenceCamera defaultCamera) {
-        // TODO Auto-generated method stub
 
+    private void perHeadSolutions(Solutions solutions, ReferenceHead head, ReferenceCamera defaultCamera) {
     }
+
     private void perDownLookingCameraSolutions(Solutions solutions, ReferenceHead head,
             ReferenceCamera defaultCamera, Nozzle defaultNozzle, ReferenceCamera camera) {
-        // TODO Auto-generated method stub
 
-        // Calibrate backlash.
-        if (camera == defaultCamera) {
-            CoordinateAxis rawAxisX = HeadSolutions.getRawAxis(machine, camera.getAxisX());
-            CoordinateAxis rawAxisY = HeadSolutions.getRawAxis(machine, camera.getAxisY());
-            for (CoordinateAxis rawAxis : new CoordinateAxis[] {rawAxisX, rawAxisY}) {
-                if (rawAxis instanceof ReferenceControllerAxis) {
-                    ReferenceControllerAxis axis = (ReferenceControllerAxis)rawAxis;
-                    BacklashCompensationMethod oldMethod = axis.getBacklashCompensationMethod();
-                    Length oldOffset = axis.getBacklashOffset();
-                    Length oldSneakUp = axis.getSneakUpOffset();
-                    double oldSpeed = axis.getBacklashSpeedFactor();
+        VisionSolutions visualSolutions = machine.getVisionSolutions();
+        if (visualSolutions.isSolvedPrimaryXY(head)) {
+            // Calibrate backlash.
+            if (camera == defaultCamera) {
+                CoordinateAxis rawAxisX = HeadSolutions.getRawAxis(machine, camera.getAxisX());
+                CoordinateAxis rawAxisY = HeadSolutions.getRawAxis(machine, camera.getAxisY());
+                for (CoordinateAxis rawAxis : new CoordinateAxis[] {rawAxisX, rawAxisY}) {
+                    if (rawAxis instanceof ReferenceControllerAxis) {
+                        ReferenceControllerAxis axis = (ReferenceControllerAxis)rawAxis;
+                        BacklashCompensationMethod oldMethod = axis.getBacklashCompensationMethod();
+                        Length oldOffset = axis.getBacklashOffset();
+                        Length oldSneakUp = axis.getSneakUpOffset();
+                        double oldSpeed = axis.getBacklashSpeedFactor();
 
-                    solutions.add(new Solutions.Issue(
-                            camera, 
-                            "Calibrate backlash compensation for axis "+axis.getName()+".", 
-                            "Automatically calibrates the backlash compensation for "+axis.getName()+" using the primary calibration fiducial.", 
-                            Solutions.Severity.Fundamental,
-                            "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation") {
+                        solutions.add(new Solutions.Issue(
+                                camera, 
+                                "Calibrate backlash compensation for axis "+axis.getName()+".", 
+                                "Automatically calibrates the backlash compensation for "+axis.getName()+" using the primary calibration fiducial.", 
+                                Solutions.Severity.Fundamental,
+                                "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation") {
 
-                        @Override 
-                        public void activate() throws Exception {
-                            MainFrame.get().getMachineControls().setSelectedTool(camera);
-                            camera.ensureCameraVisible();
-                        }
-
-                        @Override 
-                        public String getExtendedDescription() {
-                            return "<html>"
-                                    + "<p>Backlash compensation is used to avoid the effects of any looseness or play in the mechanical "
-                                    + "linkages of machine axes. More information can be found in the Wiki (press the blue Info button below).</p><br/>"
-                                    + "<p><span color=\"red\">CAUTION</span>: The camera "+camera.getName()+" will move over the fiducial "
-                                    + "and then perform a calibration motion pattern, moving the axis "
-                                    + axis.getName()+" on its full soft-limit range.</p><br/>"
-                                    + "<p>When ready, press Accept.</p>"
-                                    + (getState() == State.Solved ? 
-                                            "<br/><h4>Results:</h4>"
-                                            + "<table>"
-                                            + "<tr><td align=\"right\">Detected Backlash:</td>"
-                                            + "<td>"+axis.getBacklashOffset()+"</td></tr>"
-                                            + "<tr><td align=\"right\">Selected Method:</td>"
-                                            + "<td>"+axis.getBacklashCompensationMethod().toString()+"</td></tr>"
-                                            + "<tr><td align=\"right\">Sneak-up Distance:</td>"
-                                            + "<td>"+axis.getSneakUpOffset()+"</td></tr>"
-                                            + "<tr><td align=\"right\">Speed Factor:</td>"
-                                            + "<td>"+axis.getBacklashSpeedFactor()+"</td></tr>"
-                                            + "<tr><td align=\"right\">Applicable Tolerance:</td>"
-                                            + "<td>"+String.format("%.4f", getAxisCalibrationTolerance(camera, axis, true))+" mm</td></tr>"
-                                            + "</table>" 
-                                            : "")
-                                    + "</html>";
-                        }
-
-                        @Override
-                        public void setState(Solutions.State state) throws Exception {
-                            if (state == State.Solved) {
-                                final State oldState = getState();
-                                UiUtils.submitUiMachineTask(
-                                        () -> {
-                                            calibrateAxisBacklash(head, camera, camera, axis);
-                                            return true;
-                                        },
-                                        (result) -> {
-                                            UiUtils.messageBoxOnException(() -> super.setState(state));
-                                            // Persist this solved state.
-                                            solutions.setSolutionsIssueSolved(this, true);
-                                        },
-                                        (t) -> {
-                                            UiUtils.showError(t);
-                                            // restore old state
-                                            UiUtils.messageBoxOnException(() -> setState(oldState));
-                                        });
+                            @Override 
+                            public void activate() throws Exception {
+                                MainFrame.get().getMachineControls().setSelectedTool(camera);
+                                camera.ensureCameraVisible();
                             }
-                            else {
-                                axis.setBacklashCompensationMethod(oldMethod);
-                                axis.setBacklashOffset(oldOffset);
-                                axis.setSneakUpOffset(oldSneakUp);
-                                axis.setBacklashSpeedFactor(oldSpeed);
-                                // Persist this unsolved state.
-                                solutions.setSolutionsIssueSolved(this, false);
-                                super.setState(state);
+
+                            @Override 
+                            public String getExtendedDescription() {
+                                return "<html>"
+                                        + "<p>Backlash compensation is used to avoid the effects of any looseness or play in the mechanical "
+                                        + "linkages of machine axes. More information can be found in the Wiki (press the blue Info button below).</p><br/>"
+                                        + "<p><span color=\"red\">CAUTION</span>: The camera "+camera.getName()+" will move over the fiducial "
+                                        + "and then perform a calibration motion pattern, moving the axis "
+                                        + axis.getName()+" on its full soft-limit range.</p><br/>"
+                                        + "<p>When ready, press Accept.</p>"
+                                        + (getState() == State.Solved ? 
+                                                "<br/><h4>Results:</h4>"
+                                                + "<table>"
+                                                + "<tr><td align=\"right\">Detected Backlash:</td>"
+                                                + "<td>"+axis.getBacklashOffset()+"</td></tr>"
+                                                + "<tr><td align=\"right\">Selected Method:</td>"
+                                                + "<td>"+axis.getBacklashCompensationMethod().toString()+"</td></tr>"
+                                                + "<tr><td align=\"right\">Sneak-up Distance:</td>"
+                                                + "<td>"+axis.getSneakUpOffset()+"</td></tr>"
+                                                + "<tr><td align=\"right\">Speed Factor:</td>"
+                                                + "<td>"+axis.getBacklashSpeedFactor()+"</td></tr>"
+                                                + "<tr><td align=\"right\">Applicable Tolerance:</td>"
+                                                + "<td>"+String.format("%.4f", getAxisCalibrationTolerance(camera, axis, true))+" mm</td></tr>"
+                                                + "</table>" 
+                                                : "")
+                                        + "</html>";
                             }
-                        }
-                    });
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                if (state == State.Solved) {
+                                    if (! visualSolutions.isSolvedPrimaryXY(head)) {
+                                        throw new Exception("The head "+head.getName()+" primary fiducial location X and Y must be set first.");
+                                    }
+
+                                    final State oldState = getState();
+                                    UiUtils.submitUiMachineTask(
+                                            () -> {
+                                                calibrateAxisBacklash(head, camera, camera, axis);
+                                                return true;
+                                            },
+                                            (result) -> {
+                                                UiUtils.messageBoxOnException(() -> super.setState(state));
+                                                // Persist this solved state.
+                                                solutions.setSolutionsIssueSolved(this, true);
+                                            },
+                                            (t) -> {
+                                                UiUtils.showError(t);
+                                                // restore old state
+                                                UiUtils.messageBoxOnException(() -> setState(oldState));
+                                            });
+                                }
+                                else {
+                                    axis.setBacklashCompensationMethod(oldMethod);
+                                    axis.setBacklashOffset(oldOffset);
+                                    axis.setSneakUpOffset(oldSneakUp);
+                                    axis.setBacklashSpeedFactor(oldSpeed);
+                                    // Persist this unsolved state.
+                                    solutions.setSolutionsIssueSolved(this, false);
+                                    super.setState(state);
+                                }
+                            }
+                        });
+                    }
                 }
             }
-
         }
     }
 
     private void perNozzleSolutions(Solutions solutions, ReferenceHead head, ReferenceCamera defaultCamera,
             Nozzle defaultNozzle, ReferenceNozzle nozzle) {
-        final Location oldNozzleOffsets = nozzle.getHeadOffsets();
-        final Length oldTestObjectDiameter = head.getCalibrationTestObjectDiameter(); 
-        // Get the test subject diameter.
-        solutions.add(machine.getVisualSolutions().new VisionFeatureIssue(
-                nozzle, 
-                defaultCamera,
-                oldTestObjectDiameter,
-                "Calibrate precise camera ↔ nozzle "+nozzle.getName()+" offsets.", 
-                "Use a test object to perform the precision camera ↔ nozzle "+nozzle.getName()+" offsets calibration.", 
-                Solutions.Severity.Fundamental,
-                "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets") {
+        VisionSolutions visualSolutions = machine.getVisionSolutions();
+        if (visualSolutions.isSolvedPrimaryXY(head) && visualSolutions.isSolvedPrimaryZ(head) 
+                && (nozzle == defaultNozzle || nozzle.getHeadOffsets().isInitialized())) {
+            final Location oldNozzleOffsets = nozzle.getHeadOffsets();
+            final Length oldTestObjectDiameter = head.getCalibrationTestObjectDiameter(); 
+            // Get the test subject diameter.
+            solutions.add(visualSolutions.new VisionFeatureIssue(
+                    nozzle, 
+                    defaultCamera,
+                    oldTestObjectDiameter,
+                    "Calibrate precise camera ↔ nozzle "+nozzle.getName()+" offsets.", 
+                    "Use a test object to perform the precision camera ↔ nozzle "+nozzle.getName()+" offsets calibration.", 
+                    Solutions.Severity.Fundamental,
+                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets") {
 
-            @Override 
-            public String getExtendedDescription() {
-                return "<html>"
-                        + "<p>To calibrate precision camera ↔ nozzle offsets, we let the nozzle pick, rotate and place a small "
-                        + "test object and then measure the resulting offsets using the camera.</p><br/>"
-                        + "<p>Instructions about suitable test objects etc. must be obtained in the OpenPnP "
-                        + "Wiki. Press the blue Info button (below) to open the Wiki.</p><br/>"
-                        + "<p>Place the calibration test object onto the calibration primary fiducial.</p><br/>"
-                        + "<p>Jog camera " + defaultCamera.getName()
-                        + " over the test object. Target it with the cross-hairs.</p><br/>"
-                        + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
-                        + "camera view.</p><br/>"
-                        + "<p><strong color=\"red\">Caution:</strong> The nozzle "+nozzle.getName()+" will now move to the test object "
-                        + "and perform the calibration pick & place pattern. Make sure to load the right nozzle tip and "
-                        + "ready the vacuum system.</p><br/>"
-                        + "<p>When ready, press Accept.</p>"
-                        + (getState() == State.Solved && !nozzle.getHeadOffsets().equals(oldNozzleOffsets) ? 
-                                "<br/><h4>Results:</h4>"
-                                + "<table>"
-                                + "<tr><td align=\"right\">Detected Nozzle Head Offsets:</td>"
-                                + "<td>"+nozzle.getHeadOffsets()+"</td></tr>"
-                                + "<tr><td align=\"right\">Previous Nozzle Head Offsets:</td>"
-                                + "<td>"+oldNozzleOffsets+"</td></tr>"
-                                + "<tr><td align=\"right\">Difference:</td>"
-                                + "<td>"+nozzle.getHeadOffsets().subtract(oldNozzleOffsets)+"</td></tr>"
-                                + "</table>" 
-                                : "")
-                        + "</html>";
-            }
+                @Override 
+                public String getExtendedDescription() {
+                    return "<html>"
+                            + "<p>To calibrate precision camera ↔ nozzle offsets, we let the nozzle pick, rotate and place a small "
+                            + "test object and then measure the resulting offsets using the camera.</p><br/>"
+                            + "<p>Instructions about suitable test objects etc. must be obtained in the OpenPnP "
+                            + "Wiki. Press the blue Info button (below) to open the Wiki.</p><br/>"
+                            + "<p>Place the calibration test object onto the calibration primary fiducial.</p><br/>"
+                            + "<p>Jog camera " + defaultCamera.getName()
+                            + " over the test object. Target it with the cross-hairs.</p><br/>"
+                            + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
+                            + "camera view.</p><br/>"
+                            + "<p><strong color=\"red\">Caution:</strong> The nozzle "+nozzle.getName()+" will now move to the test object "
+                            + "and perform the calibration pick & place pattern. Make sure to load the right nozzle tip and "
+                            + "ready the vacuum system.</p><br/>"
+                            + "<p>When ready, press Accept.</p>"
+                            + (getState() == State.Solved && !nozzle.getHeadOffsets().equals(oldNozzleOffsets) ? 
+                                    "<br/><h4>Results:</h4>"
+                                    + "<table>"
+                                    + "<tr><td align=\"right\">Detected Nozzle Head Offsets:</td>"
+                                    + "<td>"+nozzle.getHeadOffsets()+"</td></tr>"
+                                    + "<tr><td align=\"right\">Previous Nozzle Head Offsets:</td>"
+                                    + "<td>"+oldNozzleOffsets+"</td></tr>"
+                                    + "<tr><td align=\"right\">Difference:</td>"
+                                    + "<td>"+nozzle.getHeadOffsets().subtract(oldNozzleOffsets)+"</td></tr>"
+                                    + "</table>" 
+                                    : "")
+                            + "</html>";
+                }
 
-            @Override
-            public void setState(Solutions.State state) throws Exception {
-                if (state == State.Solved) {
-                    final State oldState = getState();
-                    UiUtils.submitUiMachineTask(
-                            () -> {
-                                Circle testObject = machine.getVisualSolutions()
-                                        .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null);
-                                head.setCalibrationTestObjectDiameter(
-                                        new Length(testObject.getDiameter()*defaultCamera.getUnitsPerPixel().getX(), 
-                                                defaultCamera.getUnitsPerPixel().getUnits()));
-                                calibrateNozzleOffsets(head, defaultCamera, nozzle);
-                                return true;
-                            },
-                            (result) -> {
-                                UiUtils.messageBoxOnException(() -> super.setState(state));
-                                // Persist this solved state.
-                                solutions.setSolutionsIssueSolved(this, true);
-                            },
-                            (t) -> {
-                                UiUtils.showError(t);
-                                // restore old state
-                                UiUtils.messageBoxOnException(() -> setState(oldState));
-                            });
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (state == State.Solved) {
+                        if (! visualSolutions.isSolvedPrimaryXY(head)) {
+                            throw new Exception("The head "+head.getName()+" primary fiducial location X and Y must be set first.");
+                        }
+                        if (! visualSolutions.isSolvedPrimaryZ(head)) {
+                            throw new Exception("The head "+head.getName()+" primary fiducial location Z must be set first.");
+                        }
+                        if (! (nozzle == defaultNozzle || nozzle.getHeadOffsets().isInitialized())) {
+                            throw new Exception("The nozzle "+nozzle.getName()+" head offsets must be roughly set first. "
+                                    + "Use the \"Noozle "+nozzle.getName()+" offset for the primary fiducial\" calibration.");
+                        }
+                        final State oldState = getState();
+                        UiUtils.submitUiMachineTask(
+                                () -> {
+                                    Circle testObject = visualSolutions
+                                            .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null);
+                                    head.setCalibrationTestObjectDiameter(
+                                            new Length(testObject.getDiameter()*defaultCamera.getUnitsPerPixel().getX(), 
+                                                    defaultCamera.getUnitsPerPixel().getUnits()));
+                                    calibrateNozzleOffsets(head, defaultCamera, nozzle);
+                                    return true;
+                                },
+                                (result) -> {
+                                    UiUtils.messageBoxOnException(() -> super.setState(state));
+                                    // Persist this solved state.
+                                    solutions.setSolutionsIssueSolved(this, true);
+                                },
+                                (t) -> {
+                                    UiUtils.showError(t);
+                                    // restore old state
+                                    UiUtils.messageBoxOnException(() -> setState(oldState));
+                                });
+                    }
+                    else {
+                        // Restore the head offset
+                        nozzle.setHeadOffsets(oldNozzleOffsets);
+                        head.setCalibrationTestObjectDiameter(oldTestObjectDiameter);
+                        // Persist this unsolved state.
+                        solutions.setSolutionsIssueSolved(this, false);
+                        super.setState(state);
+                    }
                 }
-                else {
-                    // Restore the camera offset
-                    nozzle.setHeadOffsets(oldNozzleOffsets);
-                    head.setCalibrationTestObjectDiameter(oldTestObjectDiameter);
-                    // Persist this unsolved state.
-                    solutions.setSolutionsIssueSolved(this, false);
-                    super.setState(state);
-                }
-            }
-        });
+            });
+        }
     }
 
     private void perUpLookingCameraSolutions(Solutions solutions, Camera defaultCamera,
             Nozzle defaultNozzle, ReferenceCamera camera) {
-        // TODO Auto-generated method stub
 
     }
 
     public void calibrateAxisBacklash(ReferenceHead head, ReferenceCamera camera,
             HeadMountable movable, ReferenceControllerAxis axis) throws Exception {
-        // Check soft limits.
+        // Check pre-conditions (this method can be called from outside Issues & Solutioins).
         if (!(axis.isSoftLimitLowEnabled() && axis.isSoftLimitHighEnabled())) {
             throw new Exception("Axis "+axis.getName()+" must have soft limits enabled for backlash calibration.");
+        }
+        if (! head.getCalibrationPrimaryFiducialLocation().isInitialized()) {
+            throw new Exception("Head "+head.getName()+" primary fiducial location must be set for backlash calibration.");
+        }
+        if (! head.getCalibrationPrimaryFiducialDiameter().isInitialized()) {
+            throw new Exception("Head "+head.getName()+" primary fiducial diameter must be set for backlash calibration.");
         }
         // Make sure to disable any backlash compensation.
         axis.setBacklashCompensationMethod(BacklashCompensationMethod.None);
@@ -356,7 +380,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         Location location = head.getCalibrationPrimaryFiducialLocation();
         Length fiducialDiameter = head.getCalibrationPrimaryFiducialDiameter();
         MovableUtils.moveToLocationAtSafeZ(movable, location);
-        location = machine.getVisualSolutions()
+        location = machine.getVisionSolutions()
                 .centerInOnSubjectLocation(camera, movable,
                         fiducialDiameter, "Backlash Calibration Start Location", false);
 
@@ -432,7 +456,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             movable.moveTo(startMoveLocation);
             Location nominalStepLocation = displacedAxisLocation(movable, axis, location, stepPos*mmAxis, false);
             movable.moveTo(nominalStepLocation, minimumSpeed);
-            Location stepLocation1 = machine.getVisualSolutions().getDetectedLocation(camera, movable, 
+            Location stepLocation1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
                     location, fiducialDiameter, "Accuracy Test Step "+step, false);
             if (stepLocation0 != null) {
                 Length absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
@@ -506,7 +530,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                 }
                 String passTitle = pass == 0 ? "Backlash at Sneak-up Distance " : "Overshoot at Distance ";
                 String distanceOutput = distance > backlashTestMoveMm ? "∞" : lengthConverter.convertForward(new Length(distance, LengthUnit.Millimeters));
-                Location effective0 = machine.getVisualSolutions().getDetectedLocation(camera, movable, 
+                Location effective0 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
                         location, fiducialDiameter, passTitle+distanceOutput+" ►", false);
 
                 // Approach from plus.
@@ -524,7 +548,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                     Thread.sleep(500);
                     movable.moveTo(location);
                 }
-                Location effective1 = machine.getVisualSolutions().getDetectedLocation(camera, movable, 
+                Location effective1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
                         location, fiducialDiameter, passTitle+distanceOutput+" ◄", false);
 
                 double mmError = effective1.subtract(effective0).dotProduct(unit).getValue();
@@ -583,13 +607,13 @@ public class CalibrationSolutions implements Solutions.Subject {
                 // Approach from minus.
                 MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveLargeMm*mmAxis, false));
                 movable.moveTo(location);
-                Location effective0 = machine.getVisualSolutions().getDetectedLocation(camera, movable, 
+                Location effective0 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
                         location, fiducialDiameter, "Backlash at Speed "+speed+"× ►", false);
 
                 // Approach from plus.
                 MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveLargeMm*mmAxis, false));
                 movable.moveTo(location);
-                Location effective1 = machine.getVisualSolutions().getDetectedLocation(camera, movable, 
+                Location effective1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
                         location, fiducialDiameter, "Backlash at Speed "+speed+"× ◄", false);
 
                 double mmError = effective1.subtract(effective0).dotProduct(unit).getValue();
@@ -685,7 +709,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         Length subPixelUnit = (axis.getType() == Type.X  
                 ? camera.getUnitsPerPixel().getLengthX() 
                         : camera.getUnitsPerPixel().getLengthY())
-                .multiply(1.0/machine.getVisualSolutions().getSuperSampling());
+                .multiply(1.0/machine.getVisionSolutions().getSuperSampling());
         if (tolerance) {
             // Round up to the next full sub-pixel (Note, this also covers the case where the axis resolution is not yet set).
             resolution = subPixelUnit.multiply(Math.ceil(resolution.divide(subPixelUnit)))
@@ -704,6 +728,7 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     private Location displacedAxisLocation(HeadMountable movable, ReferenceControllerAxis axis,
             Location location, double displacement, boolean fullRange) throws Exception {
+        location = movable.toHeadLocation(location);
         AxesLocation axesLocation = movable.toRaw(location);
         if (fullRange) {
             axesLocation = axesLocation.put(displacement < 0 ? 
@@ -714,6 +739,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             axesLocation = axesLocation.add(new AxesLocation(axis, displacement));
         }
         Location newLocation = movable.toTransformed(axesLocation);
+        newLocation = movable.toHeadMountableLocation(newLocation);
         return newLocation;
     }
 
@@ -728,7 +754,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             ReferenceTubeFeeder feeder = new ReferenceTubeFeeder();
             feeder.setPart(testPart);
             // Get the initial precise test object location.
-            Location location = machine.getVisualSolutions()
+            Location location = machine.getVisionSolutions()
                     .centerInOnSubjectLocation(defaultCamera, defaultCamera,
                             head.getCalibrationTestObjectDiameter(), "Nozzle Offset Calibration", false);
             // We accumulate all the detected differences and only calculate the centroid in the end. 
@@ -757,7 +783,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                 Thread.sleep(extraVacuumDwellMs);
                 // Look where it is now.
                 MovableUtils.moveToLocationAtSafeZ(defaultCamera, location);
-                Location newlocation = machine.getVisualSolutions()
+                Location newlocation = machine.getVisionSolutions()
                         .centerInOnSubjectLocation(defaultCamera, defaultCamera,
                                 head.getCalibrationTestObjectDiameter(), "Nozzle Offset Calibration "+angle+"°", false);
                 // Add to accumulation.

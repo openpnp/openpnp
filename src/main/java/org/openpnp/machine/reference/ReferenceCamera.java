@@ -69,6 +69,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.Collect;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
 import org.openpnp.vision.LensCalibration.Pattern;
@@ -962,42 +963,54 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         // Disable the machine, so the driver isn't connected.
         Machine machine = Configuration.get().getMachine();
         // Find the old driver with the same Id.
-        List<Camera> list = (camera.getHead() == null ? machine.getCameras() : camera.getHead().getCameras());
+        Head cameraHead = camera.getHead();
+        List<Camera> list = (cameraHead == null ? machine.getCameras() : cameraHead.getCameras());
         Camera replaced = null;
         int index;
         for (index = 0; index < list.size(); index++) {
             if (list.get(index).getId().equals(camera.getId())) {
                 replaced = list.get(index);
-                if (camera instanceof AbstractBroadcastingCamera) {
-                    ((AbstractBroadcastingCamera) replaced).stop();
-                }
-                if (replaced.getHead() == null) {
+                if (cameraHead == null) {
                     machine.removeCamera(replaced);
                 }
                 else {
-                    replaced.getHead().removeCamera(replaced);
+                    cameraHead.removeCamera(replaced);
+                }
+                MainFrame.get().getCameraViews().removeCamera(replaced);
+                if (replaced instanceof AutoCloseable) {
+                    try {
+                        ((AutoCloseable) replaced).close();
+                    }
+                    catch (Exception e) {
+                        Logger.warn(e);
+                    }
                 }
                 break;
             }
         }
-        // Add the new one.
-        if (replaced.getHead() == null) {
-            machine.addCamera(camera);
-        }
-        else {
-            replaced.getHead().addCamera(camera);
-        }
-        // Permutate it back to the old list place (cumbersome but works).
-        for (int p = list.size()-index; p > 1; p--) {
-            if (replaced.getHead() == null) {
-                machine.permutateCamera(camera, -1);
+        final int formerIndex = index;
+
+        UiUtils.messageBoxOnExceptionLater(() -> {
+            // Add the new one.
+            if (cameraHead == null) {
+                machine.addCamera(camera);
             }
             else {
-                replaced.getHead().permutateCamera(camera, -1);
+                cameraHead.addCamera(camera);
             }
-        }
-        if (camera instanceof AbstractBroadcastingCamera) {
-            ((AbstractBroadcastingCamera) camera).reinitialize();
-        }
+            // Permutate it back to the old list place (cumbersome but works).
+            for (int p = list.size() - formerIndex; p > 1; p--) {
+                if (cameraHead == null) {
+                    machine.permutateCamera(camera, -1);
+                }
+                else {
+                    cameraHead.permutateCamera(camera, -1);
+                }
+            }
+            if (camera instanceof AbstractBroadcastingCamera) {
+                ((AbstractBroadcastingCamera) camera).reinitialize();
+            }
+            MainFrame.get().getCameraViews().addCamera(camera);
+        });
     }
 }

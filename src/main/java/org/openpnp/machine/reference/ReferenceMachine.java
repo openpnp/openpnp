@@ -506,7 +506,7 @@ public class ReferenceMachine extends AbstractMachine {
     @Element(required = false)
     private VisionSolutions visualSolutions = new VisionSolutions();
 
-    public VisionSolutions getVisualSolutions() {
+    public VisionSolutions getVisionSolutions() {
         return visualSolutions;
     }
 
@@ -553,7 +553,7 @@ public class ReferenceMachine extends AbstractMachine {
                         this, 
                         "Advanced motion planner set. Revert to a simpler, safer planner.", 
                         "Change to NullMotionPlanner", 
-                        Solutions.Severity.Fundamental,
+                        Solutions.Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
                     final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
 

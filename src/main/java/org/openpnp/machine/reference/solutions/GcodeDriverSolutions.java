@@ -104,7 +104,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         gcodeDriver, 
                         "Use the GcodeDriver for simpler setup. Accept or Dismiss to continue.", 
                         "Convert to GcodeDriver.", 
-                        Severity.Fundamental,
+                        Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
 
                     @Override
@@ -126,9 +126,6 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     }
                 };
                 solutions.add(issue);
-                if (!solutions.isSolutionsIssueDismissed(issue)) {
-                    return; // No further troubleshooting until this is decided.
-                }
             }
         }
         if (solutions.isTargeting(Milestone.Connect)) {
@@ -625,8 +622,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                                     +"G90 ; Set absolute positioning mode";
                                     if (isTinyG) {
                                         commandBuilt = 
-                                                "$ex=1\n" // XonXoff
-                                                +"$sv=0\n" // Non-verbose
+                                                // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
+                                                //"$ex=1\n" // XonXoff
+                                                "$sv=0\n" // Non-verbose
                                                 +commandBuilt;
                                     }
                                 }
@@ -638,10 +636,11 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     else if (command.contains("$ex=0")) {
                                         commandBuilt = command.replace("$ex=0", "$ex=1");
                                     }
-                                    else if (!command.contains("$ex=1")){
-                                        commandBuilt = "$ex=1\n"
-                                                +command;
-                                    }
+                                    // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
+//                                    else if (!command.contains("$ex=1")){
+//                                        commandBuilt = "$ex=1\n"
+//                                                +command;
+//                                    }
                                 }
                                 break;
                             case COMMAND_CONFIRM_REGEX:
