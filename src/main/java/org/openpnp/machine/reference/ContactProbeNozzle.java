@@ -858,7 +858,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                         nozzle, 
                         "Converting the ContactProbeNozzle back to a plain ReferenceNozzle may simplify the machine setup.", 
                         "Replace with ReferenceNozzle.", 
-                        Severity.Fundamental,
+                        Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle") {
 
                     @Override

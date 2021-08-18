@@ -91,7 +91,7 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
     @Override
     public void setHomeCoordinate(Length homeCoordinate) {
         Object oldValue = this.homeCoordinate;
-        this.homeCoordinate = convertFromSytem(homeCoordinate);
+        this.homeCoordinate = convertFromSystem(homeCoordinate);
         firePropertyChange("homeCoordinate", oldValue, homeCoordinate);
     }
 
@@ -141,7 +141,7 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
         }
     }
 
-    protected Length convertFromSytem(Length length) {
+    protected Length convertFromSystem(Length length) {
         if (type == Axis.Type.Rotation) {
             // This is actually an angle, not a length, just take it at it numerical value
             // and store as neutral mm.

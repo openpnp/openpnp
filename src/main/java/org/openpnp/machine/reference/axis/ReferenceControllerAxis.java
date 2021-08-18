@@ -198,7 +198,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public void setFeedratePerSecond(Length feedratePerSecond) {
-        this.feedratePerSecond = convertFromSytem(feedratePerSecond);
+        this.feedratePerSecond = convertFromSystem(feedratePerSecond);
     }
 
     public Length getAccelerationPerSecond2() {
@@ -206,7 +206,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public void setAccelerationPerSecond2(Length accelerationPerSecond2) {
-        this.accelerationPerSecond2 = convertFromSytem(accelerationPerSecond2);
+        this.accelerationPerSecond2 = convertFromSystem(accelerationPerSecond2);
     }
 
     public Length getJerkPerSecond3() {
@@ -214,7 +214,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public void setJerkPerSecond3(Length jerkPerSecond3) {
-        this.jerkPerSecond3 = convertFromSytem(jerkPerSecond3);
+        this.jerkPerSecond3 = convertFromSystem(jerkPerSecond3);
     }
 
     public String getPreMoveCommand() {
@@ -238,7 +238,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public void setBacklashOffset(Length backlashOffset) {
-        this.backlashOffset = convertFromSytem(backlashOffset);
+        this.backlashOffset = convertFromSystem(backlashOffset);
     }
 
     public Length getSneakUpOffset() {
