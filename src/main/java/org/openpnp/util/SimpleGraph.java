@@ -46,6 +46,7 @@ public class SimpleGraph {
         private double relativePaddingTop;
         private double relativePaddingBottom;
         private boolean symmetricIfSigned;
+        private boolean squareAspectRatio;
 
         public void addDataRow(DataRow dataRow) {
             dataRows.add(dataRow);
@@ -94,6 +95,14 @@ public class SimpleGraph {
             this.symmetricIfSigned = symmetricIfSigned;
         }
 
+        public boolean isSquareAspectRatio() {
+            return squareAspectRatio;
+        }
+        
+        public void setSquareAspectRatio(boolean squareAspectRatio) {
+            this.squareAspectRatio = squareAspectRatio;
+        }
+        
         public Point2D.Double getMinimum() {
             Point2D.Double minimum = null;
             for (DataRow dataRow : dataRows) {
@@ -196,6 +205,8 @@ public class SimpleGraph {
     public static class DataRow {
         private String label;
         private Color color;
+        private boolean markerShown = false;
+        private boolean lineShown = true;
         private int displayCycleMask = 1; // Displayed on mask 1
         private TreeMap<Double, Double> data = new TreeMap<>();
 
@@ -291,6 +302,22 @@ public class SimpleGraph {
         }
         public void setColor(Color color) {
             this.color = color;
+        }
+
+        public boolean isMarkerShown() {
+            return markerShown;
+        }
+
+        public void setMarkerShown(boolean markerShown) {
+            this.markerShown = markerShown;
+        }
+
+        public boolean isLineShown() {
+            return lineShown;
+        }
+
+        public void setLineShown(boolean lineShown) {
+            this.lineShown = lineShown;
         }
 
         public int getDisplayCycleMask() {
