@@ -248,30 +248,15 @@ public class SimpleBlobDetector extends CvStage {
         Camera camera = (Camera) pipeline.getProperty("camera");
 
         //Check for overriding properties on the pipeline
-        double distBetweenBlobs = checkForPipelinePropertyOverride(this.distBetweenBlobs, pipeline, 
-                "SimpleBlobDetector.distBetweenBlobs", Double.class, Integer.class, Length.class);
-//        double distBetweenBlobs = this.distBetweenBlobs;
-//        String property = "SimpleBlobDetector.distBetweenBlobs";
-//        Object distanceByProperty = pipeline.getProperty(property);
-//        if ((distanceByProperty instanceof Length) && 
-//                (((Length) distanceByProperty).getValue() > 0)) {
-//            distBetweenBlobs = VisionUtils.toPixels((Length) distanceByProperty, camera);
-//        }
-//        else if ((distanceByProperty instanceof Double) && ((Double) distanceByProperty > 0)) {
-//            distBetweenBlobs = (Double) distanceByProperty;
-//        }
-//        else if ((distanceByProperty instanceof Integer) && ((Integer) distanceByProperty > 0)) {
-//            distBetweenBlobs = (Integer) distanceByProperty;
-//        }
-//        else if (distanceByProperty != null) {
-//            throw new Exception("Invalid value or type \"" + distanceByProperty + "\" "
-//                    + "for pipeline property \"" + property + "\" - "
-//                            + "Must be a positive Length, Double, or Integer");
-//        }
-        
+        double distBetweenBlobs = this.distBetweenBlobs;
+        double overrideArea = Double.NaN; //Nan means no override for area
         double areaMax = this.areaMax;
         double areaMin = this.areaMin;
-        double overrideArea = checkForPipelinePropertyOverride(Double.NaN, pipeline, 
+
+        distBetweenBlobs = getPossiblePipelinePropertyOverride(distBetweenBlobs, pipeline, 
+                "SimpleBlobDetector.distBetweenBlobs", Double.class, Integer.class, Length.class);
+        
+        overrideArea = getPossiblePipelinePropertyOverride(overrideArea, pipeline, 
                 "SimpleBlobDetector.area", Double.class, Integer.class, Area.class);
         if (overrideArea != Double.NaN) {
             //If the area is specified on the pipeline, use the areaMax and areaMin fields as 
@@ -279,34 +264,6 @@ public class SimpleBlobDetector extends CvStage {
             areaMax = overrideArea * (1+Math.max(0, this.areaMax));
             areaMin = overrideArea * (1-Math.max(0, Math.min(1, this.areaMin)));
         }
-//        double overrideArea = 0;
-//        property = "SimpleBlobDetector.area";
-//        Object areaByProperty = pipeline.getProperty(property);
-//        if (areaByProperty instanceof Area) {
-//            if (camera != null) {
-//                overrideArea = (Double) VisionUtils.toPixels((Area) areaByProperty, camera);
-//            }
-//            else {
-//                throw new Exception("Pipeline property \"camera\" not set");
-//            }
-//        }
-//        else if (areaByProperty instanceof Double ) {
-//            overrideArea = (Double) areaByProperty;
-//        }
-//        else if (areaByProperty instanceof Integer ) {
-//            overrideArea = (Integer) areaByProperty;
-//        }
-//        else if (areaByProperty != null) {
-//            throw new Exception("Invalid type \"" + areaByProperty.getClass() + "\" "
-//                    + "for pipeline property \"" + property + "\" - "
-//                            + "Must be an Area, Double, or Integer");
-//        }
-//        if (areaByProperty != null) {
-//            //If the area is specified on the pipeline, use the areaMax and areaMin fields as 
-//            //fractional margins above and below the specified area
-//            areaMax = overrideArea * (1+Math.max(0, this.areaMax));
-//            areaMin = overrideArea * (1-Math.max(0, Math.min(1, this.areaMin)));
-//        }
         
         Mat mat = pipeline.getWorkingImage();
         
