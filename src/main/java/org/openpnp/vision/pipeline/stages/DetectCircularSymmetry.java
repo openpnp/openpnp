@@ -234,133 +234,152 @@ public class DetectCircularSymmetry extends CvStage {
         Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
         
         if (!propertyName.isEmpty()) {
-            double diameter = 0;
-            String property = propertyName + ".diameter";
-            Object diameterByProperty = pipeline.getProperty(property);
-            if ((diameterByProperty instanceof Length) && 
-                    (((Length) diameterByProperty).getValue() > 0)) {
-                if (camera != null) {
-                    diameter = VisionUtils.toPixels((Length) diameterByProperty, camera);
-                }
-                else {
-                    throw new Exception("Pipeline property \"camera\" not set");
-                }
-            }
-            else if ((diameterByProperty instanceof Double) && ((Double) diameterByProperty > 0)) {
-                diameter = (Double) diameterByProperty;
-            }
-            else if ((diameterByProperty instanceof Integer) && ((Integer) diameterByProperty > 0)) {
-                diameter = (Integer) diameterByProperty;
-            }
-            else if (diameterByProperty != null) {
-                throw new Exception("Invalid value or type \"" + diameterByProperty + "\" "
-                        + "for pipeline property \"" + property + "\" - "
-                                + "Must be a positive Length, Double, or Integer");
-            }
-            if (diameterByProperty != null) {
+            double diameter = checkForPipelinePropertyOverride(Double.NaN, pipeline, 
+                    propertyName + ".diameter", Double.class, Integer.class, Length.class);
+            if (diameter != Double.NaN) {
                 minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
                 maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
             }
+
+//            double diameter = 0;
+//            String property = propertyName + ".diameter";
+//            Object diameterByProperty = pipeline.getProperty(property);
+//            if ((diameterByProperty instanceof Length) && 
+//                    (((Length) diameterByProperty).getValue() > 0)) {
+//                if (camera != null) {
+//                    diameter = VisionUtils.toPixels((Length) diameterByProperty, camera);
+//                }
+//                else {
+//                    throw new Exception("Pipeline property \"camera\" not set");
+//                }
+//            }
+//            else if ((diameterByProperty instanceof Double) && ((Double) diameterByProperty > 0)) {
+//                diameter = (Double) diameterByProperty;
+//            }
+//            else if ((diameterByProperty instanceof Integer) && ((Integer) diameterByProperty > 0)) {
+//                diameter = (Integer) diameterByProperty;
+//            }
+//            else if (diameterByProperty != null) {
+//                throw new Exception("Invalid value or type \"" + diameterByProperty + "\" "
+//                        + "for pipeline property \"" + property + "\" - "
+//                                + "Must be a positive Length, Double, or Integer");
+//            }
+//            if (diameterByProperty != null) {
+//                minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
+//                maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
+//            }
             
-            property = propertyName + ".maxDistance";
-            Object maxDistanceByProperty = pipeline.getProperty(property);
-            if ((maxDistanceByProperty instanceof Length) && 
-                    (((Length) maxDistanceByProperty).getValue() > 0)) {
-                if (camera != null) {
-                    maxDistance = (int) Math.round(VisionUtils.toPixels((Length) maxDistanceByProperty, 
-                        camera));
-                }
-                else {
-                    throw new Exception("Pipeline property \"camera\" not set");
-                }
-            }
-            else if ((maxDistanceByProperty instanceof Double) && 
-                    ((Double) maxDistanceByProperty > 0)) {
-                maxDistance = (int) Math.round((Double) maxDistanceByProperty); 
-            }
-            else if ((maxDistanceByProperty instanceof Integer) && 
-                    ((Integer) maxDistanceByProperty > 0)) {
-                maxDistance = (Integer) maxDistanceByProperty; 
-            }
-            else if (maxDistanceByProperty != null){
-                throw new Exception("Invalid value or type \"" + maxDistanceByProperty + "\" "
-                        + "for pipeline property \"" + property + "\" - "
-                                + "Must be a positive Length, Double, or Integer");
-            }
+            maxDistance = checkForPipelinePropertyOverride(maxDistance, pipeline, 
+                    propertyName + ".maxDistance", Double.class, Integer.class, Length.class);
             
-            property = propertyName + ".searchWidth";
-            Object searchWidthByProperty = (Length) pipeline.getProperty(property);
-            if ((searchWidthByProperty instanceof Length)) {
-                if (camera != null) {
-                    searchWidth = (int) Math.round(VisionUtils.toPixels((Length) searchWidthByProperty, 
-                        camera));
-                }
-                else {
-                    throw new Exception("Pipeline property \"camera\" not set");
-                }
-            }
-            else if (searchWidthByProperty instanceof Double) {
-                searchWidth = (int) Math.round((Double) searchWidthByProperty);
-            }
-            else if (searchWidthByProperty instanceof Integer) {
-                searchWidth = (Integer) searchWidthByProperty;
-            }
-            else if (searchWidthByProperty != null){
-                throw new Exception("Invalid type \"" + searchWidthByProperty.getClass() + "\" "
-                        + "for pipeline property \"" + property + "\" - "
-                                + "Must be a Length, Double, or Integer");
-            }
-            if (searchWidth <= 0) {
-                searchWidth = maxDistance*2;
-            }
+//            property = propertyName + ".maxDistance";
+//            Object maxDistanceByProperty = pipeline.getProperty(property);
+//            if ((maxDistanceByProperty instanceof Length) && 
+//                    (((Length) maxDistanceByProperty).getValue() > 0)) {
+//                if (camera != null) {
+//                    maxDistance = (int) Math.round(VisionUtils.toPixels((Length) maxDistanceByProperty, 
+//                        camera));
+//                }
+//                else {
+//                    throw new Exception("Pipeline property \"camera\" not set");
+//                }
+//            }
+//            else if ((maxDistanceByProperty instanceof Double) && 
+//                    ((Double) maxDistanceByProperty > 0)) {
+//                maxDistance = (int) Math.round((Double) maxDistanceByProperty); 
+//            }
+//            else if ((maxDistanceByProperty instanceof Integer) && 
+//                    ((Integer) maxDistanceByProperty > 0)) {
+//                maxDistance = (Integer) maxDistanceByProperty; 
+//            }
+//            else if (maxDistanceByProperty != null){
+//                throw new Exception("Invalid value or type \"" + maxDistanceByProperty + "\" "
+//                        + "for pipeline property \"" + property + "\" - "
+//                                + "Must be a positive Length, Double, or Integer");
+//            }
             
-            property = propertyName + ".searchHeight";
-            Object searchHeightByProperty = (Length) pipeline.getProperty(property);
-            if (searchHeightByProperty instanceof Length) {
-                if (camera != null) {
-                    searchHeight = (int) Math.round(VisionUtils.toPixels(
-                            (Length) searchHeightByProperty, camera));
-                }
-                else {
-                    throw new Exception("Pipeline property \"camera\" not set");
-                }
-            }
-            else if (searchHeightByProperty instanceof Double) {
-                searchHeight = (int) Math.round((Double) searchHeightByProperty);
-            }
-            else if (searchHeightByProperty instanceof Integer) {
-                searchHeight = (Integer) searchHeightByProperty;
-            }
-            else if (searchHeightByProperty != null){
-                throw new Exception("Invalid type \"" + searchHeightByProperty.getClass() + "\" "
-                        + "for pipeline property \"" + property + "\" - "
-                                + "Must be a Length, Double, or Integer");
-            }
-            if (searchHeight <= 0) {
-                searchHeight = maxDistance*2;
-            }
+            searchWidth = checkForPipelinePropertyOverride(searchWidth, pipeline, 
+                    propertyName + ".searchWidth", Double.class, Integer.class, Length.class);
+            
+//            property = propertyName + ".searchWidth";
+//            Object searchWidthByProperty = (Length) pipeline.getProperty(property);
+//            if ((searchWidthByProperty instanceof Length)) {
+//                if (camera != null) {
+//                    searchWidth = (int) Math.round(VisionUtils.toPixels((Length) searchWidthByProperty, 
+//                        camera));
+//                }
+//                else {
+//                    throw new Exception("Pipeline property \"camera\" not set");
+//                }
+//            }
+//            else if (searchWidthByProperty instanceof Double) {
+//                searchWidth = (int) Math.round((Double) searchWidthByProperty);
+//            }
+//            else if (searchWidthByProperty instanceof Integer) {
+//                searchWidth = (Integer) searchWidthByProperty;
+//            }
+//            else if (searchWidthByProperty != null){
+//                throw new Exception("Invalid type \"" + searchWidthByProperty.getClass() + "\" "
+//                        + "for pipeline property \"" + property + "\" - "
+//                                + "Must be a Length, Double, or Integer");
+//            }
+            
+            searchHeight = checkForPipelinePropertyOverride(searchHeight, pipeline, 
+                    propertyName + ".searchHeight", Double.class, Integer.class, Length.class);
+
+//            property = propertyName + ".searchHeight";
+//            Object searchHeightByProperty = (Length) pipeline.getProperty(property);
+//            if (searchHeightByProperty instanceof Length) {
+//                if (camera != null) {
+//                    searchHeight = (int) Math.round(VisionUtils.toPixels(
+//                            (Length) searchHeightByProperty, camera));
+//                }
+//                else {
+//                    throw new Exception("Pipeline property \"camera\" not set");
+//                }
+//            }
+//            else if (searchHeightByProperty instanceof Double) {
+//                searchHeight = (int) Math.round((Double) searchHeightByProperty);
+//            }
+//            else if (searchHeightByProperty instanceof Integer) {
+//                searchHeight = (Integer) searchHeightByProperty;
+//            }
+//            else if (searchHeightByProperty != null){
+//                throw new Exception("Invalid type \"" + searchHeightByProperty.getClass() + "\" "
+//                        + "for pipeline property \"" + property + "\" - "
+//                                + "Must be a Length, Double, or Integer");
+//            }
     
-            property = propertyName + ".center";
-            Object centerByProperty = pipeline.getProperty(property);
-            if (centerByProperty instanceof Location) {
-                if (camera != null) {
-                    center = VisionUtils.getLocationPixels(camera, (Location) centerByProperty);
-                }
-                else {
-                    throw new Exception("Pipeline property \"camera\" not set");
-                }
-            }
-            else if (centerByProperty instanceof Point) {
-                center = (Point) centerByProperty;
-            }
-            else if (centerByProperty instanceof org.opencv.core.Point) {
-                center = Point.fromOpencv((org.opencv.core.Point) centerByProperty);
-            }
-            else if (centerByProperty != null){
-                throw new Exception("Invalid type \"" + centerByProperty.getClass() + "\" "
-                        + "for pipeline property \"" + property + "\" - "
-                                + "Must be a Location, Point, or org.opencv.core.Point");
-            }
+            center = checkForPipelinePropertyOverride(center, pipeline, 
+                    propertyName + ".searchHeight", Point.class, org.opencv.core.Point.class, Location.class);
+            
+//            property = propertyName + ".center";
+//            Object centerByProperty = pipeline.getProperty(property);
+//            if (centerByProperty instanceof Location) {
+//                if (camera != null) {
+//                    center = VisionUtils.getLocationPixels(camera, (Location) centerByProperty);
+//                }
+//                else {
+//                    throw new Exception("Pipeline property \"camera\" not set");
+//                }
+//            }
+//            else if (centerByProperty instanceof Point) {
+//                center = (Point) centerByProperty;
+//            }
+//            else if (centerByProperty instanceof org.opencv.core.Point) {
+//                center = Point.fromOpencv((org.opencv.core.Point) centerByProperty);
+//            }
+//            else if (centerByProperty != null){
+//                throw new Exception("Invalid type \"" + centerByProperty.getClass() + "\" "
+//                        + "for pipeline property \"" + property + "\" - "
+//                                + "Must be a Location, Point, or org.opencv.core.Point");
+//            }
+        }
+        if (searchWidth <= 0) {
+            searchWidth = maxDistance*2;
+        }
+        if (searchHeight <= 0) {
+            searchHeight = maxDistance*2;
         }
         
         List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 

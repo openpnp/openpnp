@@ -10,9 +10,13 @@ import java.beans.PropertyDescriptor;
 import java.util.List;
 
 import org.opencv.core.Mat;
+import org.openpnp.model.Area;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Camera;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
-import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.FluentCv.ColorSpace;
 import org.simpleframework.xml.Attribute;
 
@@ -365,4 +369,132 @@ public abstract class CvStage {
      */
     public void customizePropertySheet(PipelinePropertySheetTable table, CvPipeline pipeline) {
     }
+    
+    @SuppressWarnings("unchecked")
+    public static <T> T checkForPipelinePropertyOverride(T value, CvPipeline pipeline, String propertyName, Class<?>... acceptablePropertyClasses) throws Exception {
+        T returnValue = value;
+        Camera camera = (Camera) pipeline.getProperty("camera");
+        Object propertyObject = pipeline.getProperty(propertyName);
+        if (propertyObject != null) {
+            String typeList = "";
+            for (Class<?> acceptablePropertyClass : acceptablePropertyClasses) {
+                if (acceptablePropertyClass.isInstance(propertyObject)) {
+                    if (acceptablePropertyClass == Boolean.class) {
+                        if (value instanceof Boolean) {
+                            return (T) propertyObject;
+                        }
+                        else {
+                            throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + value.getClass() + "\"");
+                        }
+                    }
+                    else if (acceptablePropertyClass == Integer.class) {
+                        if (value instanceof Integer) {
+                            return (T) propertyObject;
+                        }
+                        else if (value instanceof Double) {
+                            return (T) (Double) ((Integer) propertyObject).doubleValue();
+                        }
+                        else {
+                            throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + value.getClass() + "\"");
+                        }
+                    }
+                    else if (acceptablePropertyClass == Double.class) {
+                        if (value instanceof Long) {
+                            return (T) (Long) Math.round((Double) propertyObject);
+                        }
+                        if (value instanceof Integer) {
+                            return (T) (Integer) ((Long) Math.round((Double) propertyObject)).intValue();
+                        }
+                        else if (value instanceof Double) {
+                            return (T) propertyObject;
+                        }
+                        else {
+                            throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + value.getClass() + "\"");
+                        }
+                    }
+                    else if (acceptablePropertyClass == org.openpnp.model.Point.class) {
+                        org.openpnp.model.Point p = (org.openpnp.model.Point) propertyObject;
+                        if (value instanceof org.openpnp.model.Point) {
+                            return (T) p;
+                        }
+                        else if (value instanceof org.opencv.core.Point) {
+                            return (T) new org.opencv.core.Point(p.x, p.y);
+                        }
+                        else {
+                            throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + value.getClass() + "\"");
+                        }
+                    }
+                    else if (acceptablePropertyClass == org.opencv.core.Point.class) {
+                        org.opencv.core.Point p = (org.opencv.core.Point) propertyObject;
+                        if (value instanceof org.opencv.core.Point) {
+                            return (T) p;
+                        }
+                        else if (value instanceof org.openpnp.model.Point) {
+                            return (T) new org.openpnp.model.Point(p.x, p.y);
+                        }
+                        else {
+                            throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + value.getClass() + "\"");
+                        }
+                    }
+                    else if (acceptablePropertyClass == Area.class) {
+                        if (camera == null) {
+                            throw new Exception("Unable to convert to pixels because pipeline property \"camera\" is not set");
+                        }
+                        if (value instanceof Double) {
+                            return (T) (Double) VisionUtils.toPixels((Area) propertyObject, camera);
+                        }
+                        else if (value instanceof Long) {
+                            return (T) (Long) Math.round(VisionUtils.toPixels((Area) propertyObject, camera));
+                        }
+                        else if (value instanceof Integer) {
+                            return (T) (Integer) ((Long) Math.round(VisionUtils.toPixels((Area) propertyObject, camera))).intValue();
+                        }
+                        else {
+                            throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + value.getClass() + "\"");
+                        }
+                    }
+                    else if (acceptablePropertyClass == Length.class) {
+                        if (camera == null) {
+                            throw new Exception("Unable to convert to pixels because pipeline property \"camera\" is not set");
+                        }
+                        if (value instanceof Double) {
+                            return (T) (Double) VisionUtils.toPixels((Length) propertyObject, camera);
+                        }
+                        else if (value instanceof Long) {
+                            return (T) (Long) Math.round(VisionUtils.toPixels((Length) propertyObject, camera));
+                        }
+                        else if (value instanceof Integer) {
+                            return (T) (Integer) ((Long) Math.round(VisionUtils.toPixels((Length) propertyObject, camera))).intValue();
+                        }
+                        else {
+                            throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + value.getClass() + "\"");
+                        }
+                    }
+                    else if (acceptablePropertyClass == Location.class) {
+                        if (camera == null) {
+                            throw new Exception("Unable to convert to pixels because pipeline property \"camera\" is not set");
+                        }
+                        org.openpnp.model.Point p = VisionUtils.getLocationPixels(camera, (Location) propertyObject);
+                        if (value instanceof org.opencv.core.Point) {
+                            return (T) new org.openpnp.model.Point(p.x, p.y);
+                        }
+                        else if (value instanceof org.openpnp.model.Point) {
+                            return (T) p;
+                        }
+                        else {
+                            throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + value.getClass() + "\"");
+                        }
+                    }
+                    else {
+                        throw new Exception("Conversion of type \"" + acceptablePropertyClass + "\" not available for pipeline properties");
+                    }
+                }
+                typeList += (typeList.length() != 0 ? " or \"" : "\"") + acceptablePropertyClass.getName() + "\"";
+            }
+            throw new Exception("Pipeline property \"" + propertyName + "\" must be of type " + typeList);
+        }
+        return returnValue;
+    }
+    
+
 }
