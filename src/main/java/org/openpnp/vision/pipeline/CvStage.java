@@ -385,16 +385,21 @@ public abstract class CvStage {
      * String                   <-  String
      * org.opencv.core.Point    <-  org.opencv.core.Point, org.openpnp.model.Point, Location 
      * org.openpnp.model.Point  <-  org.opencv.core.Point, org.openpnp.model.Point, Location
+     * Area                     <-  Area
+     * Length                   <-  Length
+     * Location                 <-  Location
      * </pre>
      * 
      * Note: Doubles are rounded before assignment to integer types; Java's standard narrowing 
-     * conversions are applied where necessary; and Area, Length, and Location are converted to 
-     * pixels per the camera's units per pixel scaling
+     * conversions are applied where necessary; Area, Length, and Location are converted to 
+     * pixels via the camera's units per pixel scaling; and Locations are taken as offsets from 
+     * the image center
      * 
      * @param parameter - the generic parameter value to be possibly overridden
      * @param pipeline - the pipeline with the overriding property
      * @param propertyName - the name of the overriding property
-     * @param acceptablePropertyTypes - One or more acceptable types for the overriding property
+     * @param acceptablePropertyTypes - Zero or more acceptable types for the overriding property, 
+     * if none are specified, the only acceptable type is the same type as the input parameter
      * @return the overridden parameter value if a pipeline property override was found, otherwise 
      * the original parameter value
      * @throws Exception If a property is defined on the pipeline with the expected name but it 
@@ -408,7 +413,7 @@ public abstract class CvStage {
             return parameter;
         }
         if (acceptablePropertyTypes.length == 0) {
-            throw new Exception("At least one acceptable property class must be specified");
+            acceptablePropertyTypes = new Class<?>[] {parameter.getClass()};
         }
         Camera camera = (Camera) pipeline.getProperty("camera");
         String acceptableTypeList = "";
@@ -480,42 +485,53 @@ public abstract class CvStage {
                     throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + parameter.getClass() + "\"");
                 }
                 if (acceptablePropertyClass == Area.class) {
+                    if (parameter instanceof Area) {
+                        return (T) propertyObject;
+                    }
                     if (camera == null) {
                         throw new Exception("Unable to convert to pixels because pipeline property \"camera\" is not set");
                     }
+                    double p = VisionUtils.toPixels((Area) propertyObject, camera);
                     if (parameter instanceof Double) {
-                        return (T) (Double) VisionUtils.toPixels((Area) propertyObject, camera);
+                        return (T) (Double) p;
                     }
                     if (parameter instanceof Integer) {
-                        return (T) (Integer) ((Long) Math.round(VisionUtils.toPixels((Area) propertyObject, camera))).intValue();
+                        return (T) (Integer) ((Long) Math.round(p)).intValue();
                     }
                     if (parameter instanceof Long) {
-                        return (T) (Long) Math.round(VisionUtils.toPixels((Area) propertyObject, camera));
+                        return (T) (Long) Math.round(p);
                     }
                     throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + parameter.getClass() + "\"");
                 }
                 if (acceptablePropertyClass == Length.class) {
+                    if (parameter instanceof Length) {
+                        return (T) propertyObject;
+                    }
                     if (camera == null) {
                         throw new Exception("Unable to convert to pixels because pipeline property \"camera\" is not set");
                     }
+                    double p = VisionUtils.toPixels((Length) propertyObject, camera);
                     if (parameter instanceof Double) {
-                        return (T) (Double) VisionUtils.toPixels((Length) propertyObject, camera);
+                        return (T) (Double) p;
                     }
                     if (parameter instanceof Integer) {
-                        return (T) (Integer) ((Long) Math.round(VisionUtils.toPixels((Length) propertyObject, camera))).intValue();
+                        return (T) (Integer) ((Long) Math.round(p)).intValue();
                     }
                     if (parameter instanceof Long) {
-                        return (T) (Long) Math.round(VisionUtils.toPixels((Length) propertyObject, camera));
+                        return (T) (Long) Math.round(p);
                     }
                     throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + parameter.getClass() + "\"");
                 }
                 if (acceptablePropertyClass == Location.class) {
+                    if (parameter instanceof Location) {
+                        return (T) propertyObject;
+                    }
                     if (camera == null) {
                         throw new Exception("Unable to convert to pixels because pipeline property \"camera\" is not set");
                     }
                     org.openpnp.model.Point p = VisionUtils.getLocationPixels(camera, (Location) propertyObject);
                     if (parameter instanceof org.opencv.core.Point) {
-                        return (T) new org.openpnp.model.Point(p.x, p.y);
+                        return (T) new org.opencv.core.Point(p.x, p.y);
                     }
                     if (parameter instanceof org.openpnp.model.Point) {
                         return (T) p;

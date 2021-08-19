@@ -221,8 +221,6 @@ public class DetectCircularSymmetry extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        Camera camera = (Camera) pipeline.getProperty("camera");
-        
         Mat mat = pipeline.getWorkingImage();
         
         // Get overriding properties, if any and convert to pixels if necessary.

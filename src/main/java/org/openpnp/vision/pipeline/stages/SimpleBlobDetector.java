@@ -245,8 +245,6 @@ public class SimpleBlobDetector extends CvStage {
     }
     
     public Result process(CvPipeline pipeline) throws Exception {
-        Camera camera = (Camera) pipeline.getProperty("camera");
-
         //Check for overriding properties on the pipeline
         double distBetweenBlobs = this.distBetweenBlobs;
         double overrideArea = Double.NaN; //Nan means no override for area
