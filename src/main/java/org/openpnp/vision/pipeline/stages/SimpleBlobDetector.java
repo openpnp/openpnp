@@ -257,7 +257,7 @@ public class SimpleBlobDetector extends CvStage {
         
         overrideArea = getPossiblePipelinePropertyOverride(overrideArea, pipeline, 
                 "SimpleBlobDetector.area", Double.class, Integer.class, Area.class);
-        if (overrideArea != Double.NaN) {
+        if (Double.isFinite(overrideArea)) {
             //If the area is specified on the pipeline, use the areaMax and areaMin fields as 
             //fractional margins above and below the specified area
             areaMax = overrideArea * (1+Math.max(0, this.areaMax));

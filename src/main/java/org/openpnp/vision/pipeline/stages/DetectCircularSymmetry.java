@@ -237,7 +237,7 @@ public class DetectCircularSymmetry extends CvStage {
         if (!propertyName.isEmpty()) {
             diameter = getPossiblePipelinePropertyOverride(diameter, pipeline, 
                     propertyName + ".diameter", Double.class, Integer.class, Length.class);
-            if (diameter != Double.NaN) {
+            if (Double.isFinite(diameter)) {
                 minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
                 maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
             }
@@ -252,7 +252,7 @@ public class DetectCircularSymmetry extends CvStage {
                     propertyName + ".searchHeight", Double.class, Integer.class, Length.class);
 
             center = getPossiblePipelinePropertyOverride(center, pipeline, 
-                    propertyName + ".searchHeight", Point.class, org.opencv.core.Point.class, 
+                    propertyName + ".center", Point.class, org.opencv.core.Point.class, 
                     Location.class);
             
         }
