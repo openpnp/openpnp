@@ -1113,8 +1113,6 @@ public abstract class CalibrateCameraProcess {
         showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
                 (int)(0.50*maskDiameter/2), Color.GREEN);
         
-//        setInstructionsAndProceedAction("Jog the camera so that the calibration fiducial is approximately centered in the green circle. When ready, click Next to begin the calibration collection sequence.", 
-//                ()->estimateUnitsPerPixelAction());
         setInstructionsAndProceedAction("Jog the camera so that the calibration fiducial is approximately centered in the green circle. When ready, click Next to begin the calibration collection sequence.", 
                 ()->requestOperatorToAdjustDiameterAction());
         return true;
@@ -1280,7 +1278,7 @@ public abstract class CalibrateCameraProcess {
                 (int)(0.50*maskDiameter/2), Color.GREEN);
         
         setInstructionsAndProceedAction("Rotate the nozzle through 360 degrees and verify the calibration rig's fiducial stays within the green circle. If necessary, jog it in X and/or Y and/or adjust the rig's position on the nozzle tip so that it remains within the circle when it is rotated. When ready, click Next to begin the automated calibration collection sequence.", 
-                ()->estimateUnitsPerPixelAction());
+                ()->requestOperatorToAdjustDiameterAction());
         return true;
     }
 
@@ -1316,7 +1314,7 @@ public abstract class CalibrateCameraProcess {
     }
   
     private boolean requestOperatorToAdjustDiameterAction() {
-        setInstructionsAndProceedAction("Adjust the Fiducial Diameter slider until the orange circle snaps to the outer edge of the fiducial. Click Next when ready", 
+        setInstructionsAndProceedAction("Adjust the Fiducial Diameter slider until the orange circle turns green and snaps to the outer edge of the fiducial. Click Next when ready", 
                 ()->fiducialDiameterIsSetAction());
         
         Point2D expectedPoint = new Point2D.Double((pixelsX-1)/2.0, (pixelsY-1)/2.0);
@@ -1350,26 +1348,31 @@ public abstract class CalibrateCameraProcess {
                         keyPoints = null;
                     }
                     
-                    if ((keyPoints != null) && !isCancelled()) {
-                        //Of all the points found, keep the one closest to the expected location
-                        double minDistance = Double.POSITIVE_INFINITY;
-                        KeyPoint bestKeyPoint = null;
-                        for (KeyPoint kpt : keyPoints) {
-                            double dx = kpt.pt.x - expectedPoint.getX();
-                            double dy = kpt.pt.y - expectedPoint.getY();
-                            double distance = Math.sqrt(dx*dx + dy*dy);
-                            if (distance < minDistance) {
-                                bestKeyPoint = kpt;
-                                minDistance = distance;
+                    if (!isCancelled()) {
+                        if (keyPoints != null) {
+                            //Of all the points found, keep the one closest to the expected location
+                            double minDistance = Double.POSITIVE_INFINITY;
+                            KeyPoint bestKeyPoint = null;
+                            for (KeyPoint kpt : keyPoints) {
+                                double dx = kpt.pt.x - expectedPoint.getX();
+                                double dy = kpt.pt.y - expectedPoint.getY();
+                                double distance = Math.hypot(dx, dy);
+                                if (distance < minDistance) {
+                                    bestKeyPoint = kpt;
+                                    minDistance = distance;
+                                }
                             }
+        
+                            //Show a green circle centered on where the fiducial was found
+                            Color circleColor = Color.GREEN;
+                            showCircle(bestKeyPoint.pt, (int)(bestKeyPoint.size/2), circleColor);
                         }
-    
-                        //Show a circle centered on where the fiducial was found
-                        Color circleColor = Color.ORANGE;
-                        showCircle(bestKeyPoint.pt, (int)(bestKeyPoint.size/2), circleColor);
-                    }
-                    else {
-                        cameraView.setCameraViewFilter(null);
+                        else {
+                            //Show an orange circle centered on where the fiducial was expected
+                            Color circleColor = Color.ORANGE;
+                            showCircle(new org.opencv.core.Point((pixelsX-1)/2.0, (pixelsY-1)/2.0), 
+                                    advCal.getFiducialDiameter()/2, circleColor);
+                        }
                     }
                 }
                 return null;
@@ -2006,7 +2009,8 @@ public abstract class CalibrateCameraProcess {
         double oldError2 = Double.POSITIVE_INFINITY;
         double newError2 = errorX*errorX + errorY*errorY;
         
-        double maxAppliedError2 = Math.pow(Math.min(pixelsX, pixelsY)/5.0, 2);
+        double maxAppliedError2 = Math.pow(Math.min(pixelsX, pixelsY)/10.0, 2);
+        double minAppliedError2 = Math.pow(Math.min(pixelsX, pixelsY)/50.0, 2);
         
         while (newError2 < oldError2) {
             if (swingWorker.isCancelled() || Thread.interrupted()) {
@@ -2021,8 +2025,11 @@ public abstract class CalibrateCameraProcess {
                 image2DCoordinates.add(new double[] {foundPoint.x, foundPoint.y});
             }
             
-            if (newError2 * loopGain > maxAppliedError2) {
-                double scaling = Math.sqrt(maxAppliedError2/(newError2 * loopGain));
+            if (newError2 * loopGain * loopGain < minAppliedError2) {
+                return oldLocation;
+            }
+            if (newError2 * loopGain * loopGain > maxAppliedError2) {
+                double scaling = Math.sqrt(maxAppliedError2/newError2) / loopGain;
                 errorX *= scaling;
                 errorY *= scaling;
             }
