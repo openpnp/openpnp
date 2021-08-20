@@ -1,25 +1,27 @@
 # Driver Setup
 
-In OpenPnP, the Driver is the part of the software that interfaces between OpenPnP and a particular type of machine. Typically this is just a small piece of code that translates OpenPnP commands into commands for a particular motion controller such as Smoothie, TinyG, Marlin, etc.
+In OpenPnP, Drivers are small programs that provide the interfaces between OpenPnP and a particular type of pick-and-place(PnP) machine or parts of such a machine. Typically a driver is a small piece of code that translates OpenPnP commands into instructions for particular controllers such as motion controllers or peripheral controllers.  Popular motion controller examples are [Smoothie](http://smoothieware.org/smoothieboard), [TinyG](https://synthetos.myshopify.com/products/tinyg), [the many boards supporting Marlin, or others](https://www.matterhackers.com/store/c/marlin-controller-boards). Peripheral controllers typically are used to control component feeders or integrate the PnP machine into a larger process flow. OpenPnP currently includes three drivers but it is extensible so more drivers can be added.  
+
+This section describes how to select one or more drivers and how to configure the included drivers. It starts with a description of the NullDriver that was used to familiarize you with the user interface in the "Getting Started" section.  
 
 ## Automatic Conversion of the NullDriver
 
-When OpenPnP is first installed, it comes with a simulated driver, the NullDriver. Together with the simulated cameras, you can try OpenPnP out with a virtual machine. Once you want to start connecting it to your real machine, the NullDriver must be replaced with the right driver. Very often this is the GcodeDriver or the GcodeAsyncDriver, letting you send textual commands to the controller, typically these textual commands are in the more or less standardized [machine controlling language named "G-code"](https://en.wikipedia.org/wiki/G-code). 
+When OpenPnP is first installed, it provides a simulated driver, the NullDriver. Together with the simulated cameras, you can try OpenPnP out with a virtual machine. Once you want to start connecting it to your real machine, the NullDriver must be replaced with the right driver to emit instructions for your PnP machine. Very often this is the GcodeDriver or the GcodeAsyncDriver, letting you send textual commands to the controller. Typically these textual commands are in the more or less standardized [machine control language named "G-code"](https://en.wikipedia.org/wiki/G-code). 
 
-If this is the case, OpenPnP can automatically do this conversion for you. More specifically, the [[Issues and Solutions]] system can be employed to do it. First press the `Find Issues & Solutions` button, then select the NullDriver line and press `Accept`:
+To assist you in converting from the NullDriver to either the GcodeDriver or the GcodeAsyncDriver, OpenPnP can automatically do this conversion for you. More specifically, you can employ the [[Issues and Solutions]] system to do it. To do this, first press the `Find Issues & Solutions` button, then select the NullDriver line and press `Accept`:
 
 ![NullDriver to GcodeAsyncDriver](https://user-images.githubusercontent.com/9963310/115991287-07553900-a5c8-11eb-9679-f4808a7dc505.png)
 
-If you use another driver type, or multiple drivers for multiple controllers, read the following.
+If you need to use another driver type, or multiple drivers for multiple controllers, read the following.
 
 ## Choosing a Driver
-For **newer Versions of OpenPnP 2.0** you can add as many drivers as you like. Go to the Machine Setup tab and select the Drivers node. Press the `[ + ]` button to create a new driver.
+For **newer Versions of OpenPnP 2.0** you can add as many drivers as you like. Go to the Machine Setup tab and select the Drivers node. Press the `[ + ]` button to construct a new driver.
 
 ![Add new Driver](https://user-images.githubusercontent.com/9963310/96038934-2f6d1e00-0e68-11eb-8736-12018f01a8fd.png)
 
-In the Select Driver panel, select the driver that most closely matches you motion controller or machine. Most machines should use the [[GcodeAsyncDriver]] or [[GcodeDriver]]. Click apply.
+In the Select Driver panel, select the driver that most closely matches your motion controller or machine. Most machines should use the [[GcodeAsyncDriver]] or [[GcodeDriver]]. Click apply.
     
-**Note**: GcodeAsyncDriver/GcodeDriver is a universal driver that works with many motion controllers. It can be used for [[TinyG, Smoothie, Marlin, Grbl, Duet etc.|Motion-Controller-Firmwares]] You should use GcodeAsyncDriver/GcodeDriver unless you have very specific driver requirements. The [[GcodeAsyncDriver]] is the more advanced version, using faster asynchronous/parallelized operation and providing more [[Advanced Motion Control]] features. If you want to keep it simple, you can start with the GcodeDriver and upgrade later, using the [[Issues and Solutions]] system.
+**Note**: GcodeAsyncDriver/GcodeDriver is a universal driver that works with many motion controllers. It can be used for [[TinyG, Smoothie, Marlin, Grbl, Duet etc.|Motion-Controller-Firmware]] You should use GcodeAsyncDriver/GcodeDriver unless you have very specific driver requirements. The [[GcodeAsyncDriver]] is the more advanced version, using faster asynchronous/parallelized operation and providing more [[Advanced Motion Control]] features. If you want to keep it simple, you can start with the GcodeDriver and upgrade later, using the [[Issues and Solutions]] system.
 
 For **older Versions of OpenPnP** follow these instructions.
 
