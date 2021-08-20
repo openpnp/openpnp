@@ -2,7 +2,7 @@
 
 In OpenPnP, Drivers are small programs that provide the interfaces between OpenPnP and a particular type of pick-and-place(PnP) machine or parts of such a machine. Typically a driver is a small piece of code that translates OpenPnP commands into instructions for particular controllers such as motion controllers or peripheral controllers.  Popular motion controller examples are [Smoothie](http://smoothieware.org/smoothieboard), [TinyG](https://synthetos.myshopify.com/products/tinyg), [the many boards supporting Marlin, or others](https://www.matterhackers.com/store/c/marlin-controller-boards). Peripheral controllers typically are used to control component feeders or integrate the PnP machine into a larger process flow. OpenPnP currently includes three drivers but it is extensible so more drivers can be added.  
 
-This section describes how to select one or more drivers and how to configure the included drivers. It starts with a description of the NullDriver that was used to familiarize you with the user interface in the "Getting Started" section.  
+This section describes how to select one or more drivers and how to configure the included drivers. It starts with a description of the NullDriver that was used to familiarize you with the user interface in the "[Quick Start](https://github.com/openpnp/openpnp/wiki/Quick-Start)" section.  
 
 ## Automatic Conversion of the NullDriver
 
