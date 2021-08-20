@@ -67,7 +67,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
-import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -629,29 +628,16 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (Configuration.get().getMachine().isEnabled()) {
-                UiUtils.submitUiMachineTask(() -> {
-                    MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
-                    MovableUtils.fireTargetedUserAction(feeder.getCamera());
-                    feeder.getCamera().waitForCompletion(CompletionType.WaitForStillstand);
-                    SwingUtilities.invokeLater(() -> {
-                        UiUtils.messageBoxOnException(() -> {
+            UiUtils.messageBoxOnException(() -> {
+                UiUtils.confirmMoveToLocationAndAct(
+                        getTopLevelAncestor(), 
+                        "move the camera to the proper feeder vision location before editing the pipeline", 
+                        feeder.getCamera(), 
+                        feeder.getNominalVisionLocation(), 
+                        true, () -> {
                             editPipeline();
                         });
-                    });
-                });
-            }
-            else {
-                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "Machine not enabled, unable to move the camera to the right location to edit the pipeline.\n"
-                                +"Do you want to proceed anyway?",
-                                null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                if (result == JOptionPane.YES_OPTION) {
-                    UiUtils.messageBoxOnException(() -> {
-                        editPipeline();
-                    });                    
-                }
-            }
+            });
         }
     };
 

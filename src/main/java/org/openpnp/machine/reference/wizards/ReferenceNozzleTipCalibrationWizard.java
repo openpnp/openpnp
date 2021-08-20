@@ -304,10 +304,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable nozzle = getUiCalibrationNozzle(nozzleTip);
                 Camera camera = VisionUtils.getBottomVisionCamera();
-                Location location = camera.getLocation(nozzle)
-                        .add(new Location(nozzleTip.getCalibration().getCalibrationZOffset().getUnits(), 0, 0, 
-                                nozzleTip.getCalibration().getCalibrationZOffset().getValue(), 0));
-
+                ReferenceNozzleTipCalibration calibration = nozzleTip.getCalibration();
+                Location location = calibration.getCalibrationLocation(camera, nozzle);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, location);
                 MovableUtils.fireTargetedUserAction(nozzle);
             });
@@ -389,14 +387,28 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         Camera camera = VisionUtils.getBottomVisionCamera();
         ReferenceNozzleTipCalibration calibration = nozzleTip.getCalibration();
         // Use the current Nozzle location as the nominal detection location, this allows testing off-center detection.
-        CvPipeline pipeline = calibration
-                .getPipeline(camera, getUiCalibrationNozzle(nozzleTip).getLocation());
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
-        dialog.setVisible(true);
+        ReferenceNozzle nozzle = getUiCalibrationNozzle(nozzleTip);
+        Location location = nozzle.getLocation();
+        Location distance = location.subtract(camera.getLocation());
+        if (Math.abs(distance.getLengthX().divide(camera.getUnitsPerPixel().getLengthX())) >= camera.getWidth()/2
+            || Math.abs(distance.getLengthY().divide(camera.getUnitsPerPixel().getLengthY())) >= camera.getHeight()/2) {
+            // Outside the camera view, need to move to the center.
+            location = calibration.getCalibrationLocation(camera, nozzle);
+        }
+
+        final Location moveToLocation = location;
+        UiUtils.confirmMoveToLocationAndAct(getTopLevelAncestor(), 
+                "move nozzle "+nozzle.getName()+" to the camera center location before editing the pipeline", 
+                nozzle, 
+                moveToLocation, true, () -> {
+                    CvPipeline pipeline = calibration
+                            .getPipeline(camera, moveToLocation);
+                    CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+                    JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Calibration Pipeline", editor);
+                    dialog.setVisible(true);
+                });
     }
 
-    
     private void calibrate() {
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
