@@ -40,7 +40,6 @@ import org.openpnp.spi.Axis;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
-import org.openpnp.spi.base.AbstractHeadMountable;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
@@ -132,16 +131,6 @@ public class ReferenceHead extends AbstractHead {
     public void moveToSafeZ(double speed) throws Exception {
         Logger.debug("{}.moveToSafeZ({})", getName(), speed);
         super.moveToSafeZ(speed);
-    }
-
-    @Override 
-    public boolean isInsideSoftLimits(HeadMountable hm, Location location)  throws Exception {
-        if (hm instanceof ReferenceHeadMountable) {
-            Location headLocation = ((AbstractHeadMountable) hm).toHeadLocation(location);
-            AxesLocation axesLocation = ((AbstractHeadMountable) hm).toRaw(headLocation);
-            return (getMachine().getMotionPlanner().isValidLocation(axesLocation));
-        }
-        return true;
     }
 
     @Override 

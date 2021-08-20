@@ -168,12 +168,4 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public Actuator getZProbe(); 
     
     public Actuator getPump(); 
-
-    /**
-     * Returns true if the given HeadMountable can go to the specified location within soft-limits.
-     * @param hm
-     * @param location
-     * @return
-     */
-    public boolean isInsideSoftLimits(HeadMountable hm, Location location) throws Exception;
 }
