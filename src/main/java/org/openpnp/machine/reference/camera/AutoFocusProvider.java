@@ -97,8 +97,15 @@ public class AutoFocusProvider implements FocusProvider {
         diameter &= ~1; // Must be an even number.
 
         double speed = Configuration.get().getMachine().getSpeed();
-        // Move the movable to the start location at safe Z.
-        MovableUtils.moveToLocationAtSafeZ(movable, location0);
+        // Try to start from a 1mm retract location to get rid of any backlash that may not be compensated (typical in Z axes).
+        Location retract = location1.convertToUnits(LengthUnit.Millimeters).unitVectorTo(location0).multiply(1.0);
+        Location retractedLocation = location0.add(retract);
+        if (! movable.isReachable(retractedLocation)) {
+            // OK, then not.
+            retractedLocation = location0;
+        }
+        // Move the movable to the retracted location at safe Z.
+        MovableUtils.moveToLocationAtSafeZ(movable, retractedLocation);
         // Switch on the light.
         camera.actuateLightBeforeCapture();
         CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
@@ -145,10 +152,16 @@ public class AutoFocusProvider implements FocusProvider {
                 }
 
                 // Find the next iteration sub-range. 
-                // Note, we swap location0/location1 so the search direction changes.
                 double nextFocus = Math.max(1.0, Math.min(curveSteps-1-1.0, bestFocus));
-                location1 = location0.add(focalStep.multiply(nextFocus-1.0));
-                location0 = location0.add(focalStep.multiply(nextFocus+1.0));
+                Location oldLocation0 = location0; 
+                location0 = oldLocation0.add(focalStep.multiply(nextFocus-1.0));
+                location1 = oldLocation0.add(focalStep.multiply(nextFocus+1.0));
+                // Retract, same as at the start.
+                retractedLocation = location0.add(retract);
+                if (! movable.isReachable(retractedLocation)) {
+                    retractedLocation = location0;
+                }
+                movable.moveTo(retractedLocation);
             }
         }
         finally {

@@ -1031,8 +1031,8 @@ public class VisionSolutions implements Solutions.Subject {
 
                 if (pass == 0 && movable != camera && zeroKnowledgeAutoFocusDepthMm != 0) {
                     // Auto-focus and set Z of camera.
-                    Location location0 = initialLocation.add(new Location(LengthUnit.Millimeters, 0, 0, 0.5*zeroKnowledgeAutoFocusDepthMm, 0));
-                    Location location1 = initialLocation.add(new Location(LengthUnit.Millimeters, 0, 0, -0.5*zeroKnowledgeAutoFocusDepthMm, 0));
+                    Location location0 = initialLocation.add(new Location(LengthUnit.Millimeters, 0, 0, zeroKnowledgeAutoFocusDepthMm, 0));
+                    Location location1 = initialLocation.add(new Location(LengthUnit.Millimeters, 0, 0, -zeroKnowledgeAutoFocusDepthMm, 0));
                     initialLocation = new AutoFocusProvider().autoFocus(camera, movable, featureDiameter.multiply(4), location0, location1);
                     Location cameraHeadOffsetsNew = camera.getHeadOffsets().derive(initialLocation, false, false, true, false);
                     Logger.info("Setting camera "+camera.getName()+" Z to "+cameraHeadOffsetsNew.getLengthZ()+" (previously "+camera.getHeadOffsets().getLengthZ());
