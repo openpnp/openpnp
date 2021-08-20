@@ -29,8 +29,6 @@ import org.opencv.core.Mat;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
-import org.openpnp.spi.Camera;
-import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;

@@ -18,19 +18,16 @@
  */
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 
 import javax.swing.Action;
 import javax.swing.Icon;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openpnp.CameraListener;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.Area;
 import org.openpnp.model.AreaUnit;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -42,41 +39,29 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
 import org.openpnp.spi.base.AbstractHeadMountable;
-import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
-
-import com.google.common.io.Files;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
 public class CvStageTest {
 	
-//	@BeforeEach
-//	public void before() throws Exception {
-//		/**
-//		 * Create a new config directory and load the default configuration.
-//		 */
-//		File workingDirectory = Files.createTempDir();
-//		workingDirectory = new File(workingDirectory, ".openpnp");
-//		System.out.println("Configuration directory: " + workingDirectory);
-//		Configuration.initialize(workingDirectory);
-//		Configuration.get().load();
-//
-//	}
-	 
 	/**
+	 * Tests the following pipeline overrides with conversion:
 	 * <pre>
-     * Parameter Type(s)            Acceptable Pipeline Property Type(s)
+     * Parameter Type(s)            Overriding Pipeline Property Type(s)
      * -----------------------      --------------------------------------------------------
-     * boolean, Boolean         <-  Boolean
-     * double, Double           <-  Double, Integer, Long, Area, Length
-     * int, Integer             <-  Double, Integer, Long, Area, Length
-     * long, Long               <-  Double, Integer, Long, Area, Length
+     * Boolean                  <-  Boolean
+     * Double                   <-  Double, Integer, Long, Area, Length
+     * Integer                  <-  Double, Integer, Long, Area, Length
+     * Long                     <-  Double, Integer, Long, Area, Length
      * String                   <-  String
      * org.opencv.core.Point    <-  org.opencv.core.Point, org.openpnp.model.Point, Location 
      * org.openpnp.model.Point  <-  org.opencv.core.Point, org.openpnp.model.Point, Location
+     * Area                     <-  Area
+     * Length                   <-  Length
+     * Location                 <-  Location
      * </pre>
 	 */
     @Test
@@ -87,6 +72,7 @@ public class CvStageTest {
         
         //To Boolean conversion
         {
+            //From Boolean
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             boolean originalParameter = true;
@@ -103,6 +89,7 @@ public class CvStageTest {
 
         //To String conversion
         {
+            //From String
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             String originalParameter = "true";
@@ -119,6 +106,7 @@ public class CvStageTest {
 
         //To Double conversions
         {
+            //From Double
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Double originalParameter = 39.5;
@@ -134,6 +122,7 @@ public class CvStageTest {
         }
 
         {
+            //From Integer
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Double originalParameter = 39.5;
@@ -149,6 +138,7 @@ public class CvStageTest {
         }
 
         {
+            //From Long
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Double originalParameter = 39.5;
@@ -164,6 +154,7 @@ public class CvStageTest {
         }
 
         {
+            //From Area
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Double originalParameter = 39.5;
@@ -179,6 +170,7 @@ public class CvStageTest {
         }
 
         {
+            //From Length
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Double originalParameter = 39.5;
@@ -195,6 +187,7 @@ public class CvStageTest {
 
         //To Integer conversions
         {
+            //From Double
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Integer originalParameter = 39;
@@ -210,6 +203,7 @@ public class CvStageTest {
         }
 
         {
+            //From Integer
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Integer originalParameter = 39;
@@ -225,6 +219,7 @@ public class CvStageTest {
         }
 
         {
+            //From Long
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Integer originalParameter = 39;
@@ -240,6 +235,7 @@ public class CvStageTest {
         }
 
         {
+            //From Area
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Integer originalParameter = 39;
@@ -255,6 +251,7 @@ public class CvStageTest {
         }
 
         {
+            //From Length
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Integer originalParameter = 39;
@@ -271,6 +268,7 @@ public class CvStageTest {
 
         //To Long conversions
         {
+            //From Double
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Long originalParameter = 39L;
@@ -286,6 +284,7 @@ public class CvStageTest {
         }
 
         {
+            //From Integer
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Long originalParameter = 39L;
@@ -301,6 +300,7 @@ public class CvStageTest {
         }
 
         {
+            //From Long
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Long originalParameter = 39L;
@@ -316,6 +316,7 @@ public class CvStageTest {
         }
 
         {
+            //From Area
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Long originalParameter = 39L;
@@ -331,6 +332,7 @@ public class CvStageTest {
         }
 
         {
+            //From Length
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Long originalParameter = 39L;
@@ -347,6 +349,7 @@ public class CvStageTest {
 
         //Conversions to org.opencv.core.Point
         {
+            //From org.opencv.core.Point
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             org.opencv.core.Point originalParameter = new org.opencv.core.Point(39.5, -87.4);
@@ -362,6 +365,7 @@ public class CvStageTest {
         }
         
         {
+            //From org.openpnp.model.Point
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             org.opencv.core.Point originalParameter = new org.opencv.core.Point(39.5, -87.4);
@@ -377,6 +381,7 @@ public class CvStageTest {
         }
         
         {
+            //From Location
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             org.opencv.core.Point originalParameter = new org.opencv.core.Point(39.5, -87.4);
@@ -394,6 +399,7 @@ public class CvStageTest {
         
         //Conversions to org.openpnp.model.Point
         {
+            //From org.opencv.core.Point
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             org.openpnp.model.Point originalParameter = new org.openpnp.model.Point(39.5, -87.4);
@@ -409,6 +415,7 @@ public class CvStageTest {
         }
         
         {
+            //From org.openpnp.model.Point
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             org.openpnp.model.Point originalParameter = new org.openpnp.model.Point(39.5, -87.4);
@@ -424,6 +431,7 @@ public class CvStageTest {
         }
         
         {
+            //From Location
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             org.openpnp.model.Point originalParameter = new org.openpnp.model.Point(39.5, -87.4);
@@ -441,6 +449,7 @@ public class CvStageTest {
         
         //To Area conversion
         {
+            //From Area
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Area originalParameter = new Area(39.5, AreaUnit.SquareMillimeters);
@@ -457,6 +466,7 @@ public class CvStageTest {
 
         //To Length conversion
         {
+            //From Length
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Length originalParameter = new Length(39.5, LengthUnit.Millimeters);
@@ -473,6 +483,7 @@ public class CvStageTest {
 
         //To Location conversion
         {
+            //From Location
             CvPipeline pipeline = new CvPipeline();
             pipeline.setProperty("camera", camera);
             Location originalParameter = new Location(LengthUnit.Millimeters, 39.5, 57.2, -34.5, 93.3);
