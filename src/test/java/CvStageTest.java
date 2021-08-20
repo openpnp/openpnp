@@ -53,30 +53,21 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class CvStageTest {
 	
-//	@BeforeEach
-//	public void before() throws Exception {
-//		/**
-//		 * Create a new config directory and load the default configuration.
-//		 */
-//		File workingDirectory = Files.createTempDir();
-//		workingDirectory = new File(workingDirectory, ".openpnp");
-//		System.out.println("Configuration directory: " + workingDirectory);
-//		Configuration.initialize(workingDirectory);
-//		Configuration.get().load();
-//
-//	}
-	 
 	/**
+	 * Tests the following overrides with conversion:
 	 * <pre>
      * Parameter Type(s)            Acceptable Pipeline Property Type(s)
      * -----------------------      --------------------------------------------------------
-     * boolean, Boolean         <-  Boolean
-     * double, Double           <-  Double, Integer, Long, Area, Length
-     * int, Integer             <-  Double, Integer, Long, Area, Length
-     * long, Long               <-  Double, Integer, Long, Area, Length
+     * Boolean                  <-  Boolean
+     * Double                   <-  Double, Integer, Long, Area, Length
+     * Integer                  <-  Double, Integer, Long, Area, Length
+     * Long                     <-  Double, Integer, Long, Area, Length
      * String                   <-  String
      * org.opencv.core.Point    <-  org.opencv.core.Point, org.openpnp.model.Point, Location 
      * org.openpnp.model.Point  <-  org.opencv.core.Point, org.openpnp.model.Point, Location
+     * Area                     <-  Area
+     * Length                   <-  Length
+     * Location                 <-  Location
      * </pre>
 	 */
     @Test
