@@ -707,7 +707,7 @@ public class CameraView extends JComponent implements CameraListener {
                 paintLightToggle(g2d);
             }
 
-            if (viewingPlaneZ != null) {
+            if (viewingPlaneZ != null && camera.getDefaultZ() != null) {
                 // Display the height of the reticle in the lower left corner if it is different than
                 // the default
                 Length viewingPlaneDiff = viewingPlaneZ.subtract(camera.getDefaultZ());
