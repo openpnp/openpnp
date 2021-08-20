@@ -34,8 +34,6 @@ import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.Feature2D;
 import org.openpnp.model.Area;
 import org.openpnp.model.Length;
-import org.openpnp.spi.Camera;
-import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
