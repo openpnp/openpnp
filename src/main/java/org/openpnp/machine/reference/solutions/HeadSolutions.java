@@ -412,6 +412,14 @@ public class HeadSolutions implements Solutions.Subject {
         for (AbstractNozzle unusedNozzle : nozzles) {
             head.removeNozzle(unusedNozzle);
         }
+        // Cleanup unused Actuators
+        ArrayList<Actuator> unusedActuators = new ArrayList<>();
+        unusedActuators.addAll(valveActuators);
+        unusedActuators.addAll(senseActuators);
+        for (Actuator unusedActuator : unusedActuators) {
+            head.removeActuator(unusedActuator);
+        }
+        // Store the solution.
         head.setNozzleSolution(nozzleSolution);
         head.setNozzleSolutionsMultiplier(nozzleSolutionsMultiplier);
     }

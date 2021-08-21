@@ -16,22 +16,28 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.model.Length;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Issue;
 import org.openpnp.model.Solutions.Issue.DoubleProperty;
 import org.openpnp.model.Solutions.Issue.IntegerProperty;
+import org.openpnp.model.Solutions.Issue.LengthProperty;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -227,6 +233,36 @@ public class IssuePanel extends JPanel {
                 slider.setToolTipText(property.getToolTip());
                 slider.setEnabled(issue.getState() == Solutions.State.Open);
                 panel.add(slider, "4, "+(formRow*2)+", left, default");
+            }
+            else if (property instanceof LengthProperty) {
+                LengthProperty lengthProperty = (LengthProperty) property;
+                JLabel lbl = new JLabel(lengthProperty.getLabel());
+                lbl.setToolTipText(lengthProperty.getToolTip());
+                panel.add(lbl, "2, "+(formRow*2)+", right, default");
+                JTextField textField = new JTextField();
+                textField.setToolTipText(lengthProperty.getToolTip());
+                textField.setEnabled(issue.getState() == Solutions.State.Open);
+                textField.setColumns(10);
+                LengthConverter lengthConverter = new LengthConverter();
+                textField.setText(lengthConverter.convertForward(lengthProperty.get()));
+                textField.getDocument().addDocumentListener(new DocumentListener() {
+                    public void changedUpdate(DocumentEvent e) {
+                        changedText();
+                    }
+                    public void removeUpdate(DocumentEvent e) {
+                        changedText();
+                    }
+                    public void insertUpdate(DocumentEvent e) {
+                        changedText();
+                    }
+
+                    public void changedText() {
+                        String text = textField.getText();
+                        Length length = lengthConverter.convertReverse(text);
+                        lengthProperty.set(length);
+                    }
+                });
+                panel.add(textField, "4, "+(formRow*2)+", left, default");
             }
             // Consume the row
             formRow++;

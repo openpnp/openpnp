@@ -48,6 +48,7 @@ public class SimpleGraph {
         private double relativePaddingTop;
         private double relativePaddingBottom;
         private boolean symmetricIfSigned;
+        private boolean squareAspectRatio;
 
         public void addDataRow(DataRow dataRow) {
             dataRows.add(dataRow);
@@ -96,6 +97,14 @@ public class SimpleGraph {
             this.symmetricIfSigned = symmetricIfSigned;
         }
 
+        public boolean isSquareAspectRatio() {
+            return squareAspectRatio;
+        }
+        
+        public void setSquareAspectRatio(boolean squareAspectRatio) {
+            this.squareAspectRatio = squareAspectRatio;
+        }
+        
         public Point2D.Double getMinimum() {
             Point2D.Double minimum = null;
             for (DataRow dataRow : dataRows) {
@@ -198,6 +207,8 @@ public class SimpleGraph {
     public static class DataRow {
         private String label;
         private Color color;
+        private boolean markerShown = false;
+        private boolean lineShown = true;
         private int displayCycleMask = 1; // Displayed on mask 1
         private TreeMap<Double, Double> data = new TreeMap<>();
 
@@ -229,7 +240,15 @@ public class SimpleGraph {
                 double x1 = entry1.getKey();
                 double y0 = data.get(x0);
                 double y1 = data.get(x1);
-                double r = (x-x0)/(x1-x0);
+                double r;
+                if (isLineShown()) {
+                    // interpolate
+                    r = (x-x0)/(x1-x0);
+                }
+                else {
+                    // step to nearest
+                    r = x - x0 < x1 - x ? 0 : 1;
+                }
                 return y0+r*(y1-y0);
             }
             return null;
@@ -298,6 +317,22 @@ public class SimpleGraph {
         }
         public void setColor(Color color) {
             this.color = color;
+        }
+
+        public boolean isMarkerShown() {
+            return markerShown;
+        }
+
+        public void setMarkerShown(boolean markerShown) {
+            this.markerShown = markerShown;
+        }
+
+        public boolean isLineShown() {
+            return lineShown;
+        }
+
+        public void setLineShown(boolean lineShown) {
+            this.lineShown = lineShown;
         }
 
         public int getDisplayCycleMask() {

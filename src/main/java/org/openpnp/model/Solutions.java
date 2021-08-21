@@ -304,6 +304,14 @@ public class Solutions extends AbstractTableModel {
             this.choice = choice;
         }
 
+        /**
+         * @return true if this solution is triggered by a machine condition that absolutely needs to be 
+         * addressed. This will force a solution to be unsolved, even is marked as "solved". Note, it will not
+         * force open a solution that is marked as "dismissed".
+         */
+        public boolean isForcedUnsolved() {
+            return false;
+        }
         void setInitialState(State state) {
             this.state = state;
         }
@@ -373,6 +381,13 @@ public class Solutions extends AbstractTableModel {
             }
             public abstract double get();
             public abstract void set(double value);
+        }
+        public abstract class LengthProperty extends CustomProperty {
+            public LengthProperty(String label, String toolTip) {
+                super(label, toolTip);
+            }
+            public abstract Length get();
+            public abstract void set(Length value);
         }
 
         public CustomProperty [] getProperties() {
@@ -588,7 +603,10 @@ public class Solutions extends AbstractTableModel {
                 }
             }
             else if (isSolutionsIssueSolved(issue)) {
-                if (isShowSolved()) {
+                if (issue.isForcedUnsolved()) {
+                    setSolutionsIssueSolved(issue, false);
+                }
+                else if (isShowSolved()) {
                     issue.setInitialState(State.Solved);
                 }
                 else {

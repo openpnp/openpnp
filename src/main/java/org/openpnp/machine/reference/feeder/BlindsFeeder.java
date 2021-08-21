@@ -1037,8 +1037,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                         .getDefaultCamera();
                 setFiducial1Location(locateFiducial(camera, getFiducial1Location()));
                 setFiducial3Location(locateFiducial(camera, getFiducial3Location()));
-                Head head = Configuration.get().getMachine().getDefaultHead();
-                if (head.isInsideSoftLimits(camera, getFiducial2Location())) {
+                if (camera.isReachable(getFiducial2Location())) {
                     setFiducial2Location(locateFiducial(camera, getFiducial2Location()));
                 }
                 else {

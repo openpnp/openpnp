@@ -71,16 +71,16 @@ public class CalibrationSolutions implements Solutions.Subject {
     private double errorDampening = 0.9;
 
     @Attribute(required = false)
-    private double backlashTestMoveMm = 20;
+    private double backlashTestMoveMm = 10;
 
     @Attribute(required = false)
-    private double backlashTestMoveLargeMm = 100;
+    private double backlashTestMoveLargeMm = 90;
 
     @Attribute(required = false)
     private double stepTestMm = 1;
 
     @Attribute(required = false)
-    private double maxSneakUpOffsetMm = 3;
+    private double maxSneakUpOffsetMm = 2.5;
 
     @Attribute(required = false)
     private double acceptableSneakUpOffsetMm = 0.8;
@@ -179,6 +179,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         Length oldOffset = axis.getBacklashOffset();
                         Length oldSneakUp = axis.getSneakUpOffset();
                         double oldSpeed = axis.getBacklashSpeedFactor();
+                        Length oldAcceptableTolerance = axis.getAcceptableTolerance();
 
                         solutions.add(new Solutions.Issue(
                                 camera, 
@@ -187,6 +188,12 @@ public class CalibrationSolutions implements Solutions.Subject {
                                 Solutions.Severity.Fundamental,
                                 "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation") {
 
+                            {
+                                tolerance = oldAcceptableTolerance;
+                            }
+                            
+                            private Length tolerance;
+                            
                             @Override 
                             public void activate() throws Exception {
                                 MainFrame.get().getMachineControls().setSelectedTool(camera);
@@ -198,6 +205,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                                 return "<html>"
                                         + "<p>Backlash compensation is used to avoid the effects of any looseness or play in the mechanical "
                                         + "linkages of machine axes. More information can be found in the Wiki (press the blue Info button below).</p><br/>"
+                                        + "<p>Set the acceptable <strong>Tolerance ±</strong> as high as possible to allow for a more efficient backlash "
+                                        + "compensation method, avoiding extra moves and direction changes.</p><br/>"
                                         + "<p><span color=\"red\">CAUTION</span>: The camera "+camera.getName()+" will move over the fiducial "
                                         + "and then perform a calibration motion pattern, moving the axis "
                                         + axis.getName()+" on its full soft-limit range.</p><br/>"
@@ -221,6 +230,24 @@ public class CalibrationSolutions implements Solutions.Subject {
                             }
 
                             @Override
+                            public Solutions.Issue.CustomProperty[] getProperties() {
+                                return new Solutions.Issue.CustomProperty[] {
+                                        new Solutions.Issue.LengthProperty(
+                                                "Tolerance ±",
+                                                "Set the targe tolerance. By granting a larger tolerance, a more efficient backlash compensation method may be eligible.") {
+                                            @Override
+                                            public Length get() {
+                                                return tolerance;
+                                            }
+                                            @Override
+                                            public void set(Length value) {
+                                                tolerance = value;
+                                            }
+                                        },
+                                };
+                            }
+
+                            @Override
                             public void setState(Solutions.State state) throws Exception {
                                 if (state == State.Solved) {
                                     if (! visualSolutions.isSolvedPrimaryXY(head)) {
@@ -230,7 +257,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                                     final State oldState = getState();
                                     UiUtils.submitUiMachineTask(
                                             () -> {
-                                                calibrateAxisBacklash(head, camera, camera, axis);
+                                                axis.setAcceptableTolerance(tolerance);
+                                                calibrateAxisBacklash(head, camera, camera, axis, tolerance);
                                                 return true;
                                             },
                                             (result) -> {
@@ -249,6 +277,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                     axis.setBacklashOffset(oldOffset);
                                     axis.setSneakUpOffset(oldSneakUp);
                                     axis.setBacklashSpeedFactor(oldSpeed);
+                                    axis.setAcceptableTolerance(oldAcceptableTolerance);
                                     // Persist this unsolved state.
                                     solutions.setSolutionsIssueSolved(this, false);
                                     super.setState(state);
@@ -362,7 +391,7 @@ public class CalibrationSolutions implements Solutions.Subject {
     }
 
     public void calibrateAxisBacklash(ReferenceHead head, ReferenceCamera camera,
-            HeadMountable movable, ReferenceControllerAxis axis) throws Exception {
+            HeadMountable movable, ReferenceControllerAxis axis, Length acceptableTolerance) throws Exception {
         // Check pre-conditions (this method can be called from outside Issues & Solutioins).
         if (!(axis.isSoftLimitLowEnabled() && axis.isSoftLimitHighEnabled())) {
             throw new Exception("Axis "+axis.getName()+" must have soft limits enabled for backlash calibration.");
@@ -397,11 +426,15 @@ public class CalibrationSolutions implements Solutions.Subject {
         double stepMm = getAxisCalibrationTolerance(camera, axis, false);
         Length stepLength = new Length(stepMm, LengthUnit.Millimeters);
         double toleranceMm = getAxisCalibrationTolerance(camera, axis, false);
+        if (acceptableTolerance != null) {
+            toleranceMm = Math.ceil(acceptableTolerance.convertToUnits(LengthUnit.Millimeters).getValue()/toleranceMm)*toleranceMm;
+        }
         double toleranceUnits = new Length(toleranceMm, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
 
         // Diagnostics graph.
         final String ERROR = "E";
         final String ABSOLUTE = "A";
+        final String ABSOLUTE_RANDOM = "AR";
         final String RELATIVE = "R";
         final String SCALE = "S";
         final String BACKLASH = "B";
@@ -419,6 +452,16 @@ public class CalibrationSolutions implements Solutions.Subject {
         .setColor(new Color(0xFF, 0, 0));
         stepTestGraph.getRow(ERROR, RELATIVE)
         .setColor(new Color(0, 0x5B, 0xD9)); // the OpenPNP blue
+        stepTestGraph.getRow(ERROR, RELATIVE)
+        .setMarkerShown(true);
+        stepTestGraph.getRow(ERROR, RELATIVE)
+        .setLineShown(false);
+        stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
+        .setColor(new Color(0xBB, 0x77, 0));
+        stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
+        .setMarkerShown(true);
+        stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
+        .setLineShown(false);
         stepTestGraph.getRow(ERROR, LIMIT0)
         .setColor(new Color(0, 0x80, 0)); 
         stepTestGraph.getRow(ERROR, LIMIT1)
@@ -429,10 +472,14 @@ public class CalibrationSolutions implements Solutions.Subject {
         SimpleGraph.DataScale stepScale =  distanceGraph.getScale(SCALE);
         stepScale.setRelativePaddingBottom(0.2);
         stepScale.setColor(SimpleGraph.getDefaultGridColor());
-        distanceGraph.getRow(SCALE, BACKLASH)
+        distanceGraph.getRow(SCALE, BACKLASH+0)
         .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP blue
-        distanceGraph.getRow(SCALE, OVERSHOOT)
+        distanceGraph.getRow(SCALE, OVERSHOOT+0)
         .setColor(new Color(0xFF, 0, 0)); 
+        distanceGraph.getRow(SCALE, BACKLASH+1)
+        .setColor(new Color(00, 0x5B, 0xD9, 128)); // the OpenPNP blue
+        distanceGraph.getRow(SCALE, OVERSHOOT+1)
+        .setColor(new Color(0xFF, 0, 0, 128)); 
 
         SimpleGraph speedGraph = new SimpleGraph();
         speedGraph.setRelativePaddingLeft(0.05);
@@ -448,8 +495,6 @@ public class CalibrationSolutions implements Solutions.Subject {
         int step = 0;
         Location referenceLocation = location;
         Location stepLocation0 = null;
-        Location measuringLocation = location;
-        double largestStep = Double.NEGATIVE_INFINITY;
         for (double stepPos = -stepTestMm/2; stepPos < stepTestMm/2; stepPos += stepMm) {
             step++;
             Location startMoveLocation = displacedAxisLocation(movable, axis, location, (stepPos - stepTestMm)*mmAxis, false);
@@ -461,21 +506,16 @@ public class CalibrationSolutions implements Solutions.Subject {
             if (stepLocation0 != null) {
                 Length absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
                 double absoluteErrUnits = absoluteErr.convertToUnits(axis.getUnits()).getValue();
-                stepTestGraph.getRow(ERROR, ABSOLUTE).recordDataPoint(step, 
-                        absoluteErrUnits);
+                stepTestGraph.getRow(ERROR, ABSOLUTE)
+                        .recordDataPoint(step, absoluteErrUnits);
                 Length relativeErr = stepLocation1.subtract(stepLocation0).dotProduct(unit);
                 double relativeErrorUnits = relativeErr.convertToUnits(axis.getUnits()).getValue();
-                stepTestGraph.getRow(ERROR, RELATIVE).recordDataPoint(step, 
-                        relativeErrorUnits);
-                stepTestGraph.getRow(ERROR, LIMIT0).recordDataPoint(step, 
-                        -toleranceUnits);
-                stepTestGraph.getRow(ERROR, LIMIT1).recordDataPoint(step, 
-                        toleranceUnits);
-                // Remember the largest step
-                if (relativeErrorUnits > largestStep && step > 2) {
-                    largestStep = relativeErrorUnits;
-                    measuringLocation = stepLocation0;
-                }
+                stepTestGraph.getRow(ERROR, RELATIVE)
+                    .recordDataPoint(step, relativeErrorUnits);
+                stepTestGraph.getRow(ERROR, LIMIT0)
+                    .recordDataPoint(step, -toleranceUnits);
+                stepTestGraph.getRow(ERROR, LIMIT1)
+                    .recordDataPoint(step, toleranceUnits);
             }
             else {
                 referenceLocation = location
@@ -512,82 +552,94 @@ public class CalibrationSolutions implements Solutions.Subject {
         for (int pass = 0; pass < 2; pass++) {
             for (double distance : backlashProbingDistances) {
                 // measure the backlash offset over distance.
-
-                // Approach from minus.
-                if (pass == 0) {
-                    // Sneak-up
-                    MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveLargeMm*mmAxis, distance > backlashTestMoveMm));
-                    MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm));
-                    movable.moveTo(location, minimumSpeed);
-                }
-                else {
-                    // Overshoot
-                    MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveMm*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
-                    MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
-                    movable.waitForCompletion(CompletionType.WaitForStillstand);
-                    Thread.sleep(500);
-                    movable.moveTo(location);
-                }
-                String passTitle = pass == 0 ? "Backlash at Sneak-up Distance " : "Overshoot at Distance ";
-                String distanceOutput = distance > backlashTestMoveMm ? "∞" : lengthConverter.convertForward(new Length(distance, LengthUnit.Millimeters));
-                Location effective0 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
-                        location, fiducialDiameter, passTitle+distanceOutput+" ►", false);
-
-                // Approach from plus.
-                if (pass == 0) {
-                    // Sneak-up
-                    MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveLargeMm*mmAxis, distance > backlashTestMoveMm));
-                    MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, distance*mmAxis, distance > backlashTestMoveMm));
-                    movable.moveTo(location, minimumSpeed);
-                }
-                else {
-                    // Overshoot
-                    MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveMm*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
-                    MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, distance*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
-                    movable.waitForCompletion(CompletionType.WaitForStillstand);
-                    Thread.sleep(500);
-                    movable.moveTo(location);
-                }
-                Location effective1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
-                        location, fiducialDiameter, passTitle+distanceOutput+" ◄", false);
-
-                double mmError = effective1.subtract(effective0).dotProduct(unit).getValue();
-                if (movable == camera) {
-                    // If the camera moves (and not the subject) then the subject's 
-                    // displacement is negative.
-                    mmError = -mmError;
-                }
-
-                // Record this for the distance. 
-                if (pass == 0) {
-                    backlashOffsetByDistance[iDistance++] = mmError;
-                }
-                double errorUnits = new Length(mmError, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
-                if (pass == 0) {
-                    distanceGraph.getRow(SCALE, BACKLASH).recordDataPoint(distance, 
-                            errorUnits);
-                }
-                else {
-                    distanceGraph.getRow(SCALE, OVERSHOOT).recordDataPoint(distance, 
-                            (maxBacklash-errorUnits)/2);
-                }
-
-                if (pass == 0 && distance > maxBacklash && distance <= maxSneakUpOffsetMm) {
-                    if (maxBacklashOpen && mmError >= maxBacklash - 2*toleranceMm) {
-                        if (mmError > maxBacklash) {
-                            maxBacklash = mmError;
+                for (int reverse = 0; reverse <= 1; reverse++) {
+                    if (reverse == 1 && distance > backlashTestMoveMm) {
+                        continue;
+                    }
+                    // Approach from minus.
+                    if (pass == 0) {
+                        // Sneak-up
+                        if (reverse == 0) {
+                            MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveLargeMm*mmAxis, distance > backlashTestMoveMm));
                         }
-                        // Take the last distance i.e the smallest (this is a descending loop) that has an 
-                        // error within 2 * tolerance of the maxBacklash (we're assuming a two-sided ± tolerance).
-                        maxBacklashDistance = distance;
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm));
+                        movable.moveTo(location, minimumSpeed);
                     }
                     else {
-                        // Once it dips under the maximum minus tolerance, its not eligible.
-                        maxBacklashOpen = false;
+                        // Overshoot
+                        if (reverse == 0) {
+                            MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveMm*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
+                        }
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
+                        movable.waitForCompletion(CompletionType.WaitForStillstand);
+                        Thread.sleep(500);
+                        movable.moveTo(location);
                     }
-                    if (mmError < minBacklash) {
-                        minBacklash = mmError;
-                        minBacklashDistance = distance;
+                    String passTitle = pass == 0 ? "Backlash at Sneak-up Distance " : "Overshoot at Distance ";
+                    String distanceOutput = distance > backlashTestMoveMm ? "∞" : lengthConverter.convertForward(new Length(distance, LengthUnit.Millimeters));
+                    Location effective0 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
+                            location, fiducialDiameter, passTitle+distanceOutput+" ►", false);
+
+                    // Approach from plus.
+                    if (pass == 0) {
+                        // Sneak-up
+                        if (reverse == 0) {
+                            MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveLargeMm*mmAxis, distance > backlashTestMoveMm));
+                        }
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, distance*mmAxis, distance > backlashTestMoveMm));
+                        movable.moveTo(location, minimumSpeed);
+                    }
+                    else {
+                        // Overshoot
+                        if (reverse == 0) {
+                            MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveMm*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
+                        }
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, distance*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
+                        movable.waitForCompletion(CompletionType.WaitForStillstand);
+                        Thread.sleep(500);
+                        movable.moveTo(location);
+                    }
+                    Location effective1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
+                            location, fiducialDiameter, passTitle+distanceOutput+" ◄", false);
+
+                    double mmError = effective1.subtract(effective0).dotProduct(unit).getValue();
+                    if (movable == camera) {
+                        // If the camera moves (and not the subject) then the subject's 
+                        // displacement is negative.
+                        mmError = -mmError;
+                    }
+
+                    // Record this for the distance. 
+                    if (pass == 0 && reverse == 0) {
+                        backlashOffsetByDistance[iDistance++] = mmError;
+                    }
+                    double errorUnits = new Length(mmError, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
+                    if (pass == 0) {
+                        distanceGraph.getRow(SCALE, BACKLASH+reverse).recordDataPoint(distance, 
+                                errorUnits);
+                    }
+                    else {
+                        distanceGraph.getRow(SCALE, OVERSHOOT+reverse).recordDataPoint(distance, 
+                                (maxBacklash-errorUnits)/2);
+                    }
+
+                    if (pass == 0 && distance > maxBacklash && distance <= maxSneakUpOffsetMm) {
+                        if (maxBacklashOpen && mmError >= maxBacklash - 2*toleranceMm) {
+                            if (mmError > maxBacklash) {
+                                maxBacklash = mmError;
+                            }
+                            // Take the last distance i.e the smallest (this is a descending loop) that has an 
+                            // error within 2 * tolerance of the maxBacklash (we're assuming a two-sided ± tolerance).
+                            maxBacklashDistance = distance;
+                        }
+                        else {
+                            // Once it dips under the maximum minus tolerance, its not eligible.
+                            maxBacklashOpen = false;
+                        }
+                        if (mmError < minBacklash) {
+                            minBacklash = mmError;
+                            minBacklashDistance = distance;
+                        }
                     }
                 }
             }
@@ -695,7 +747,26 @@ public class CalibrationSolutions implements Solutions.Subject {
                     + "Make sure OpenPnP has effective acceleration/jerk control. "
                     + "Automatic compensation not possible.");
         }
-
+        // Test the new settings with random moves.
+        referenceLocation = machine.getVisionSolutions()
+                .centerInOnSubjectLocation(camera, movable,
+                        fiducialDiameter, "Backlash Compensation Test Location", false);
+        step = 0;
+        final int fraction = 2;
+        for (double stepPos = -stepTestMm/2; stepPos < stepTestMm/2; stepPos += stepMm*fraction) {
+            step++;
+            Location startMoveLocation = displacedAxisLocation(movable, axis, location, Math.pow(Math.random()*2 - 1, 3)*backlashTestMoveLargeMm*mmAxis, false);
+            movable.moveTo(startMoveLocation);
+            Location nominalStepLocation = displacedAxisLocation(movable, axis, location, stepPos*mmAxis, false);
+            movable.moveTo(nominalStepLocation);
+            Location stepLocation1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
+                    location, fiducialDiameter, "Random Move Accuracy Test Step "+step, false);
+            Length absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
+            double absoluteErrUnits = absoluteErr.convertToUnits(axis.getUnits()).getValue();
+            stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
+            .recordDataPoint(1+(step-1)*fraction, absoluteErrUnits);
+        }
+        // Publish the graphs.
         axis.setStepTestGraph(stepTestGraph);
         axis.setBacklashSpeedTestGraph(speedGraph);
         axis.setBacklashDistanceTestGraph(distanceGraph);
@@ -705,6 +776,9 @@ public class CalibrationSolutions implements Solutions.Subject {
             ReferenceControllerAxis axis, boolean tolerance) {
         // Get the axis resolution (it might still be at the default 0.0001).
         Length resolution = new Length(axis.getResolution(), axis.getDriver().getUnits());
+        // Make sure it's >= 0.01mm
+        Length finestResolution = new Length(0.01, LengthUnit.Millimeters);
+        resolution = resolution.multiply(Math.ceil(finestResolution.divide(resolution)));
         // Get the sub-pixel resolution of the detection capability. 
         Length subPixelUnit = (axis.getType() == Type.X  
                 ? camera.getUnitsPerPixel().getLengthX() 

@@ -20,6 +20,12 @@ public interface Movable extends Locatable {
 
     void moveTo(Location location, MotionOption... options) throws Exception;
 
+    /**
+     * @param location
+     * @return true if the location can be moved to with this Movable (soft limits etc.)
+     * @throws Exception 
+     */
+    boolean isReachable(Location location) throws Exception;
 
     /**
      * @return The lower and upper limits of the Safe Zone as defined on the Z axis. The array elements may be null 

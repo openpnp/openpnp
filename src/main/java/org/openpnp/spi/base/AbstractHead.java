@@ -216,6 +216,18 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         }
     }
 
+    @Override 
+    public void permutateActuator(Actuator actuator, int direction) {
+        int index0 = actuators.indexOf(actuator);
+        int index1 = direction > 0 ? index0+1 : index0-1;
+        if (0 <= index1 && actuators.size() > index1) {
+            actuators.remove(actuator);
+            actuators.add(index1, actuator);
+            fireIndexedPropertyChange("actuators", index0, actuator, actuators.get(index0));
+            fireIndexedPropertyChange("actuators", index1, actuators.get(index0), actuator);
+        }
+    }
+
     @Override
     public void addNozzle(Nozzle nozzle) throws Exception {
         nozzle.setHead(this);
