@@ -90,7 +90,7 @@ public class VisionSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private int subSampling = 4;
     @Attribute(required = false)
-    private int superSampling = 12;
+    private int superSampling = 8;
 
     @Attribute(required = false)
     protected long diagnosticsMilliseconds = 2000;
@@ -245,7 +245,7 @@ public class VisionSolutions implements Solutions.Subject {
             return new Solutions.Issue.CustomProperty[] {
                     new Solutions.Issue.IntegerProperty(
                             "Detected feature diameter",
-                            "Adjust the nozzle tip feature diameter that should be detected.",
+                            "Adjust the feature diameter that should be detected.",
                             3, (int)(Math.min(camera.getWidth(), camera.getHeight())*maxCameraRelativeSubjectDiameter)) {
                         @Override
                         public int get() {

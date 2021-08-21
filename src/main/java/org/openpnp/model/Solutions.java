@@ -382,6 +382,13 @@ public class Solutions extends AbstractTableModel {
             public abstract double get();
             public abstract void set(double value);
         }
+        public abstract class LengthProperty extends CustomProperty {
+            public LengthProperty(String label, String toolTip) {
+                super(label, toolTip);
+            }
+            public abstract Length get();
+            public abstract void set(Length value);
+        }
 
         public CustomProperty [] getProperties() {
             return new CustomProperty[] {};

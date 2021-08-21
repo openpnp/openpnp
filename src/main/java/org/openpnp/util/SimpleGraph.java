@@ -240,7 +240,15 @@ public class SimpleGraph {
                 double x1 = entry1.getKey();
                 double y0 = data.get(x0);
                 double y1 = data.get(x1);
-                double r = (x-x0)/(x1-x0);
+                double r;
+                if (isLineShown()) {
+                    // interpolate
+                    r = (x-x0)/(x1-x0);
+                }
+                else {
+                    // step to nearest
+                    r = x - x0 < x1 - x ? 0 : 1;
+                }
                 return y0+r*(y1-y0);
             }
             return null;

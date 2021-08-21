@@ -96,6 +96,9 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     private BacklashCompensationMethod backlashCompensationMethod = BacklashCompensationMethod.None;
 
     @Element(required = false)
+    private Length acceptableTolerance = new Length(0.025, LengthUnit.Millimeters);
+
+    @Element(required = false)
     private Length backlashOffset = new Length(0.0, LengthUnit.Millimeters);
 
     @Element(required = false)
@@ -231,6 +234,14 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
     public void setBacklashCompensationMethod(BacklashCompensationMethod backlashCompensationMethod) {
         this.backlashCompensationMethod = backlashCompensationMethod;
+    }
+
+    public Length getAcceptableTolerance() {
+        return acceptableTolerance;
+    }
+
+    public void setAcceptableTolerance(Length acceptableTolerance) {
+        this.acceptableTolerance = acceptableTolerance;
     }
 
     public Length getBacklashOffset() {

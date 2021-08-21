@@ -399,7 +399,11 @@ public class SimulationModeMachine extends ReferenceMachine {
      */
     public static Location getSimulatedPhysicalLocation(HeadMountable hm, Looking looking) {
         // Use ideal location as a default, used in case this fails (not a place to throw).
-        Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits()); 
+        Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits());
+        if (Configuration.get().getMachine() == null) {
+            // Uninitialized (Unit Test). 
+            return location;
+        }
         // Try to get a simulated physical location.
         SimulationModeMachine machine = getSimulationModeMachine();
         if (machine == null || machine.getSimulationMode() == SimulationMode.Off) {
