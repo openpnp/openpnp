@@ -35,14 +35,16 @@ Backlash compensation is applied in the direction of travel. The offset is added
 
 * **DirectionalSneakUp:**
 Works like **DirectionalCompensation** except for the last bit of the motion, where the speed is reduced. The idea is to have the machine arrive at the target with similar deceleration, regardless of how long and how fast the move was. This should create similar tension in belts etc. and therefore create more repeatable positioning. 
-  There are no direction changes neededed, but the two-step move is less fluid than with **DirectionalCompensation**. 
-  However: the offsets need to precisely match the physical backlash.
+  There are no direction changes needed, but the two-step move is less fluid than with **DirectionalCompensation**. 
+  The offset need to precisely match the physical backlash.
 
 **Backlash Offset** sets the amount of backlash. 
 
 **Backlash Speed Factor** determines the speed factor of the final approach move in OneSided methods.
 
 ## Backlash Offset Calibration
+
+Note, newer versions of OpenPnP provide [automatic Backlash calibration using Issues & Solutions](https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation). The following is only left for those that prefer a manual recipe.
 
 To determine the **Backlash Offset** for your X or Y axis, proceed as follows:
 
