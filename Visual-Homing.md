@@ -13,6 +13,10 @@ Alternatively you can cut a fiducial out of a spare PCB. Other users have clever
 
 The fiducial needs to be mounted for "eternity". Choose a location where your machine is very unlikely to be modified in the future. A central location is ideal, as it halves any error in scale across the machine.
 
+**IMPORTANT**: The fiducial must be mounted on the same Z level as the PCB surface. This makes sure any slight tilt in your camera is irrelevant. 
+
+Ideally, every relevant location on your machine should be more or less flush with this same Z plane, e.g. feeders should be "sunken" so parts are picked near this Z coordinate. But don't bother if this principle is not perfectly adhered to. OpenPnP has a rich and growing system of calibrations that can compensate out errors.
+
 ## Creating the Fiducial Part
 
 If you started from a standard OpenPnP installation, there is already a fiducial package `FIDUCIAL-1X2` defined. Otherwise, create it with these settings:
