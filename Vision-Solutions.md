@@ -4,6 +4,8 @@ Vision Solutions are provided by [[Issues and Solutions]] when targeting the **V
 
 The Vision Solutions are part of an overall holistic (whole-machine) approach to calibrate both the cameras and various mechanics of the machine by playing the two against each other. On one hand, the known metrics of machine motion are used to calibrate the cameras. On the other hand, the camera is used to make the motion more precise. The inherent chicken and egg situation between the two is circumvented by exploiting various forms of symmetry and by approximation through iteration, things that would be hard or tedious to do by hand. 
 
+To get some impressions, [watch a video of these and other calibration solutions](https://youtu.be/md68n_J7uto). The video is not complete, so come back to this page.
+
 # Calibration Rig
 
 In order to perform Visual Calibration, a certain calibration rig is needed. The elements of which is described here. 
