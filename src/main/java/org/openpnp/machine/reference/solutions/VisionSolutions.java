@@ -31,6 +31,7 @@ import java.util.concurrent.ExecutionException;
 import javax.swing.Icon;
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.io.IOUtils;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.openpnp.gui.MainFrame;
@@ -41,16 +42,23 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
+import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
+import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.model.Solutions.Subject;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
@@ -60,6 +68,7 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
+import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry;
 import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry.ScoreRange;
@@ -294,7 +303,7 @@ public class VisionSolutions implements Solutions.Subject {
                             + "camera around in a certain pattern. This solution determines the X, Y position of the primary "
                             + "fiducial and it performs preliminary camera calibration.</p><br/>"
                             + "<p>Instructions for how to create and position the primary fiducial must be obtained in the OpenPnP "
-                            + "Wiki. There are very important rules that must be observed, so don't miss it! Press the "
+                            + "Wiki. <strong>There are very important rules that must be observed!</strong> Press the "
                             + "blue Info button (below) to open the Wiki.</p><br/>"
                             + "<p>Once you have prepared the calibration primary fiducial you can capture its position "
                             + "in X, Y.</p><br/>"
@@ -548,6 +557,8 @@ public class VisionSolutions implements Solutions.Subject {
                             + "(it may take some trial and error).</p><br/>"
                             + "<p>Jog nozzle " + defaultNozzle.getName()
                             + " over the camera "+camera.getName()+". Target it with the cross-hairs.</p><br/>"
+                            + "<p>Jog the nozzle tip point down in Z so it is in focus. This should be more or less on the same Z level "
+                            + "as the PCB surface. If not, consider adjusting the camera focus to make it so.</p><br/>"
                             + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
                             + "camera view. Make sure to target a circular edge that can be detected consistently even when seen from the side. "
                             + "This means it has to be a rather sharp-angled edge between faces. Typically, the air bore edge is targeted.</p><br/>"
@@ -780,13 +791,16 @@ public class VisionSolutions implements Solutions.Subject {
         }
     }
 
-    private void perHeadSolutions(Solutions solutions, ReferenceHead head, Camera defaultCamera) {
+    private void perHeadSolutions(Solutions solutions, ReferenceHead head, ReferenceCamera defaultCamera) {
         // Visual Homing
         if (defaultCamera.getUnitsPerPixel().isInitialized()
                 && head.getVisualHomingMethod() == VisualHomingMethod.None) {
             final Location oldFiducialLocation = head.getHomingFiducialLocation();
-            solutions.add(new Solutions.Issue(
+            final Length oldFiducialDiameter = getHomingFiducialDiameter();
+            solutions.add(new VisionFeatureIssue(
                     head, 
+                    defaultCamera,
+                    oldFiducialDiameter,
                     "Enable Visual Homing.", 
                     "Mount a permanent fiducial to your machine and use it for repeatable precision X/Y homing.", 
                     Solutions.Severity.Suggestion,
@@ -808,6 +822,8 @@ public class VisionSolutions implements Solutions.Subject {
                             + "<p>Home the machine by means of your controller/manually. The controller must presently work in the wanted "
                             + "coordinate system.</p><br/>"
                             + "<p>Jog camera "+defaultCamera.getName()+" over the fiducial. Target it roughly with the cross-hairs.</p><br/>"
+                            + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the " 
+                            + "camera view.</p><br/>"
                             + "<p>Then press Accept to detect the precise position of the fiducial and set it up for visual homing.</p><br/>"
                             + "<p>Note: This will not change your present machine coordinate system, but rather pin it down to the fiducial. "
                             + "If the mechanics were to change slightly in the future (e.g. a homing end-switch slightly moved), the "
@@ -830,15 +846,11 @@ public class VisionSolutions implements Solutions.Subject {
                         final State oldState = getState();
                         UiUtils.submitUiMachineTask(
                                 () -> {
-                                    // Set rough location as homing fiducial location.
-                                    Location homingFiducialLocation = defaultCamera.getLocation();
-                                    head.setHomingFiducialLocation(homingFiducialLocation);
-                                    head.setVisualHomingMethod(VisualHomingMethod.ResetToFiducialLocation);
-                                    // Perform homing to it, but don't reset machine position. 
-                                    head.visualHome(machine, false);
-                                    // With the precise location, set the homing fiducial again.
-                                    homingFiducialLocation = defaultCamera.getLocation();
-                                    head.setHomingFiducialLocation(homingFiducialLocation);
+                                    Circle fiducial = getSubjectPixelLocation(defaultCamera, null, 
+                                            new Circle(0, 0, featureDiameter), 0, null);
+                                    calibrateVisualHoming(head, defaultCamera, 
+                                            defaultCamera.getUnitsPerPixelPrimary()
+                                            .getLengthX().multiply(fiducial.getDiameter()));
                                     return true;
                                 },
                                 (result) -> {
@@ -853,6 +865,7 @@ public class VisionSolutions implements Solutions.Subject {
                     else {
                         head.setHomingFiducialLocation(oldFiducialLocation);
                         head.setVisualHomingMethod(VisualHomingMethod.None);
+                        setHomingFiducialDiameter(oldFiducialDiameter);
                         super.setState(state);
                     }
                 }
@@ -1304,4 +1317,74 @@ public class VisionSolutions implements Solutions.Subject {
         return fiducialLocation.getLengthZ().isInitialized();
     }
 
+    /**
+     * Calibrate the visual homing.
+     * 
+     * @param head
+     * @param defaultCamera
+     * @throws Exception
+     */
+    public void calibrateVisualHoming(ReferenceHead head, Camera defaultCamera, Length fiducialDiameter) throws Exception {
+        // Make sure we got the homing fiducial set up properly.
+        setHomingFiducialDiameter(fiducialDiameter);
+        // Set rough location as homing fiducial location.
+        Location homingFiducialLocation = defaultCamera.getLocation();
+        head.setHomingFiducialLocation(homingFiducialLocation);
+        head.setVisualHomingMethod(VisualHomingMethod.ResetToFiducialLocation);
+        // Perform homing to it, but don't reset machine position. 
+        head.visualHome(machine, false);
+        // With the precise location, set the homing fiducial again.
+        homingFiducialLocation = defaultCamera.getLocation();
+        head.setHomingFiducialLocation(homingFiducialLocation);
+    }
+
+    /**
+     * @param fiducialDiameter
+     * @throws IOException 
+     */
+    public void setHomingFiducialDiameter(Length fiducialDiameter) throws IOException {
+        Configuration configuration = Configuration.get();
+        org.openpnp.model.Package pkg = configuration.getPackage("FIDUCIAL-HOME");
+        if (pkg == null) {
+            pkg = new org.openpnp.model.Package("FIDUCIAL-HOME");
+            configuration.addPackage(pkg);
+        }
+        Footprint footprint = new Footprint();
+        footprint.setUnits(fiducialDiameter.getUnits());
+        Pad pad = new Pad();
+        pad.setName("FID");
+        pad.setWidth(fiducialDiameter.getValue());
+        pad.setHeight(fiducialDiameter.getValue());
+        pad.setRoundness(100.0);
+        footprint.addPad(pad);
+        pkg.setFootprint(footprint);
+        Part part = configuration.getPart("FIDUCIAL-HOME");
+        if (part == null) {
+            part = new Part("FIDUCIAL-HOME");
+            configuration.addPart(part);
+        }
+        part.setPackage(pkg);
+        FiducialLocator fiducialLocator =
+                Configuration.get().getMachine().getFiducialLocator();
+        PartSettings settings = ((ReferenceFiducialLocator) fiducialLocator).getPartSettings(part);
+        String xml = IOUtils.toString(ReferenceBottomVision.class
+                .getResource("ReferenceFiducialLocator-CircularSymmetryPipeline.xml"));
+        CvPipeline pipeline = new CvPipeline(xml);
+        settings.setPipeline(pipeline);
+    }
+
+    public Length getHomingFiducialDiameter() {
+        Configuration configuration = Configuration.get();
+        org.openpnp.model.Package pkg = configuration.getPackage("FIDUCIAL-HOME");
+        if (pkg != null) {
+            Footprint footprint = pkg.getFootprint();
+            if (footprint != null) {
+                for (Pad pad : footprint.getPads()) {
+                    return new Length(pad.getWidth(), footprint.getUnits());
+                }
+            }
+        }
+        // default to 1mm.
+        return new Length(1.0, LengthUnit.Millimeters);
+    }
 }

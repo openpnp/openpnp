@@ -1349,7 +1349,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     this, 
                     "Nozzle is missing a "+qualifier+" actuator.", 
                     "Create and assign a "+qualifier+" actuator as described in the Wiki.", 
-                    Severity.Suggestion,
+                    Severity.Warning,
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup"));
         }
         else if (actuator.getDriver() == null) {
@@ -1357,7 +1357,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     actuator, 
                     "The "+qualifier+" actuator "+actuator.getName()+" has no driver assigned.", 
                     "Assign a driver as described in the Wiki.", 
-                    Severity.Suggestion,
+                    Severity.Warning,
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#driver-assignment"));
             }
         }
@@ -1369,7 +1369,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                             driver, 
                             "The "+qualifier+" actuator "+actuator.getName()+" has no "+commandType+" assigned.", 
                             "Assign the command to driver "+driver.getName()+" as described in the Wiki.", 
-                            Severity.Suggestion,
+                            Severity.Warning,
                             "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands"));
                 }
             }
