@@ -31,9 +31,9 @@ Then check if there already is a part named `FIDUCIAL-HOME`. Otherwise, create o
 
 For the final step, go to the machine Head and set up Visual Homing. There are two methods implemented: 
 
-* A legacy method that aims to keep compatibility for existing machines **to preserve their coordinate system**.
-
 * A new method, recommended for new machines. 
+
+* A legacy method that aims to keep compatibility for existing machines **to preserve their coordinate system**.
 
 ___
 **CAUTION**: Do not be tempted to use the new method on an old machine unless you are absolutely sure to start from scratch with everything!
