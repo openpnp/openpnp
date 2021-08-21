@@ -120,6 +120,8 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
 
     public void removeActuator(Actuator actuator);
 
+    public void permutateActuator(Actuator actuator, int direction);
+
     public void moveToSafeZ(double speed) throws Exception;
 
     public void moveToSafeZ() throws Exception;
