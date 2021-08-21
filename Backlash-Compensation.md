@@ -40,6 +40,8 @@ Works like **DirectionalCompensation** except for the last bit of the motion, wh
 
 **Backlash Offset** sets the amount of backlash. 
 
+**Sneak-up Distance** sets the distance over which the **DirectionalSneakUp** method moves at reduced speed. If a move is smaller than that, the sneak-up distance is reduced (in other words, the whole move is then done at the reduced speed).
+
 **Backlash Speed Factor** determines the speed factor of the final approach move in OneSided methods.
 
 ## Backlash Offset Calibration
