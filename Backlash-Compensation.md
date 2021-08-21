@@ -32,11 +32,11 @@ Backlash compensation is configured on the ReferenceControllerAxis. Refer to the
 Backlash compensation is applied in the direction of travel. The offset is added to the actual target coordinate, if moving in the direction of the offset (which can be positive or negative), no offset is added if moving against the offset. 
   No extra moves are needed. The machine can also move more fluidly, as there is no direction change needed. 
   However: the offset needs to precisely match the physical backlash.
-
 * **DirectionalSneakUp:**
-Works like **DirectionalCompensation** except for the last bit of the motion, where the speed is reduced. The idea is to have the machine arrive at the target with similar deceleration, regardless of how long and how fast the move was. This should create similar tension in belts etc. and therefore create more repeatable positioning. 
+Works like **DirectionalCompensation** except for the last bit of the motion, where the speed is reduced. The idea is to have the machine arrive at the target in a similar state, regardless of how long and how fast the move was. This should create similar tensions in belts etc. and therefore create more repeatable positioning. 
   There are no direction changes needed, but the two-step move is less fluid than with **DirectionalCompensation**. 
-  The offset need to precisely match the physical backlash.
+  The offset needs to precisely match the physical backlash.
+  An additional **Sneak-up Distance** must be set.
 
 **Backlash Offset** sets the amount of backlash. 
 
@@ -46,7 +46,7 @@ Works like **DirectionalCompensation** except for the last bit of the motion, wh
 
 ## Backlash Offset Calibration
 
-Note, newer versions of OpenPnP provide [automatic Backlash calibration using Issues & Solutions](https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation). The following is only left for those that prefer a manual recipe.
+**Note**, newer versions of OpenPnP provide [automatic Backlash calibration using Issues & Solutions](https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation). The following is only left for those that prefer a manual recipe.
 
 To determine the **Backlash Offset** for your X or Y axis, proceed as follows:
 
