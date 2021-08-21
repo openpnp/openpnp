@@ -8,6 +8,8 @@ The Vision Solutions are part of an overall holistic (whole-machine) approach to
 
 In order to perform Visual Calibration, a certain calibration rig is needed. The elements of which is described here. 
 
+![Calibration rig](https://user-images.githubusercontent.com/9963310/129459527-52675532-f63c-458e-8dec-73659cffe3ab.png)
+
 ## Calibration Primary Fiducial
 
 Camera calibration can be performed automatically by looking at a [fiducial](https://en.wikipedia.org/wiki/Fiducial_marker#Printed_circuit_boards) while moving the camera around in a certain pattern. 
@@ -16,7 +18,7 @@ The fiducial must be round, high contrast, sharp and flat. The standard fiducial
 
 * [FiducialHome.pdf](https://github.com/openpnp/openpnp/files/5542424/FiducialHome.pdf)
 
-The camera must be free to move around the fiducial so that it can appear at the edge of the camera view all around i.e. do not place the fiducial at the very edge of the machine motion range. 
+The camera must be free to move in a wide area (250mm × 250mm) centered around the fiducial so that the camera can perform some fast moves for various calibration purposes. Do not place the fiducial at the edge of the machine motion range. 
 
 As both the camera and the camera light will move around and point at the fiducial from various angles, the fiducial must not have any depth or 3D structure, and it should have [diffuse reflection](https://en.wikipedia.org/wiki/Diffuse_reflection) so lighting it from the side should be fine. Don't use through holes, carrier tape sprocket holes, prints on glossy photo paper, HASL PCB fiducials or similar.
 
