@@ -48,6 +48,8 @@ Works like **DirectionalCompensation** except for the last bit of the motion, wh
 
 **Note**, newer versions of OpenPnP provide [automatic Backlash calibration using Issues & Solutions](https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation). The following is only left for those that prefer a manual recipe.
 
+![Backlash Calibration](https://user-images.githubusercontent.com/9963310/130323847-1a5ccfe6-072d-4f73-a64e-378749d936c7.png)
+
 To determine the **Backlash Offset** for your X or Y axis, proceed as follows:
 
 1. Move your down-looking camera to a location where you can precisely see even the tiniest moves (example: the homing fiducial). 
