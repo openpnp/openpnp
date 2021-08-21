@@ -182,7 +182,11 @@ As a preparation for the next step, we need to create an Actuator on the machine
 
 ### Actuator Axis Mapping
 
-If the Actuator moves in Z, make sure to map it to the Z axis. In current versions of OpenPnP this requires the following steps:
+If the Actuator moves in Z, make sure to map it to the Z axis. In current versions of OpenPnP map the axes by drop-down, right on the Actuator: 
+
+![Axis Mapping Preview](https://user-images.githubusercontent.com/9963310/94711842-f3ef3180-0348-11eb-8412-66a50f14ae33.png)
+
+In earlier versions of OpenPnP this requires the following steps:
 
 1. Exit OpenPnP
 2. Find and open the `machine.xml` (as [described here](https://github.com/openpnp/openpnp/wiki/FAQ#where-are-configuration-and-log-files-located))
@@ -201,9 +205,6 @@ If the Actuator moves in Z, make sure to map it to the Z axis. In current versio
 9. Select the Actuator in the Machine Controls.
 10. Test the mapping by jogging up and down in Z.
 
-**Preview**: In future Versions of OpenPnP this will be much simpler: Just map the axes by drop-down, right on the Actuator: 
-
-![Axis Mapping Preview](https://user-images.githubusercontent.com/9963310/94711842-f3ef3180-0348-11eb-8412-66a50f14ae33.png)
 
 ### Actuator Boolean Command
 
