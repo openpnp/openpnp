@@ -1,28 +1,28 @@
 ## What is it?
 
-In short, the ReferencePushPullFeeder can use an elaborate 5-point motion to advance the tape mechanically. Many feeder designs requiring mechanical actuation (lever, knob, push, drag, etc. pp.) are supported. The actuation can be independent of the pick motion and it can perform a "hook and pull" articulation, therefore it supports 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder features OCR part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR based feeders-in-a-row discovery and more.
+In short, the ReferencePushPullFeeder can use both electronic and/or elaborate 5-point mechanical motion to advance the tape. Many feeder designs requiring electronic or mechanical actuation (lever, knob, push, drag, etc. pp.) are supported. The actuation can be independent of the pick motion and aside from electronical actuation, it can perform a "hook and pull" articulation, therefore it supports 2mm pitch tapes (e.g. with 0402/0201 parts) where the tape is only advanced on every second feed. The feeder features OCR/QR-Code part label recognition, optimized vision calibration, elaborate auto-learning, one-click auto-setup, OCR/QR-Code based feeders-in-a-row discovery and more.
 
 ![Example Feeder in Action](https://user-images.githubusercontent.com/9963310/94424926-54387480-018b-11eb-96b1-963e69c14e50.gif)
 
-While this feeder software solution was developed side-by-side with the all-3D-printed feeder [featured here](https://makr.zone/new-all-3d-printed-tapereel-feeder/399/), it was an important design goal to create the software side as universal as possible, to be used for all kinds of mechanical feeders. Your design can be completely different!  
+While this feeder software solution was developed side-by-side with the all-3D-printed feeder [featured here](https://makr.zone/new-all-3d-printed-tapereel-feeder/399/), it was an important design goal to create the software side as universal as possible, to be used for all kinds of electronic and mechanical feeders. Your design can be completely different!  
 
 ## Features in more Detail
 
-* Generic implementation for a feeder that can feed parts by performing push and pull (and other) motions using a head-mounted Actuator.
+* Generic implementation for a feeder that can feed parts by performing electronic and/or push and pull (and other) motions using a head-mounted Actuator.
 * Uses a semantic vision concept based on sprocket holes and knowledge of the EIA 481 standards.
-* Employs a simple OCR vision stage that can identify the part from a label on the feeder.
-* OCR based automatic feeder slot swapping, part changing or even new feeder creation with auto-cloned settings.
+* Employs a simple OCR/QR-Code vision stage that can identify the part from a label on the feeder.
+* OCR/QR-Code based automatic feeder slot swapping, part changing or even new feeder creation with auto-cloned settings.
 * Automatic and learning "only when needed" calibration for feeders that are mounted with large tolerances (+/-2mm).
 * Any part pitch, any feed pitch, any tape width.
 * 2mm pitch (0402/0201) support i.e. the feeder will only advance the tape on every second feed. 
-* Multiplier: For speed, you can use a Multi-feed for any pitch, i.e. the feeder can quickly actuate multiple times.
+* Multiplier: For speed, you can use a Multi-feed for any pitch, i.e. a feeder can quickly actuate multiple times, then only pick on the next feeds.
 * Easy to clone & sync settings between feeders, by package or by (new) Tape&Reel Specification.
 * One click setup from the second feeder.
 * Handles geometric transformations for all the relevant settings (allows cloning settings from a “west” to a “south” feeder, for instance).
 
 ## Video
 
-There is a video documenting the most important setup steps. You can watch this to get going and get a first impression. However, some steps aren't covered so you should come back to this page to fill in the missing details. Also note that the 3D-printed feeder featured in the video is just one example standing in for a wide variety of possible feeder hardware designs. Any feeder requiring any type of motion actuation (lever, knob, push, drag, etc. pp.) is supported. 
+There is a video documenting the most important setup steps. You can watch this to get going and get a first impression. However, some steps aren't covered so you should come back to this page to fill in the missing details. Also note that the 3D-printed feeder featured in the video is just one example standing in for a wide variety of possible feeder hardware designs, including purely electronic ones. Any feeder requiring any type of electronic and/or mechanical motion actuation (lever, knob, push, drag, etc. pp.) is supported. 
 
 https://youtu.be/5QcJ2ziIJ14
 
