@@ -308,6 +308,12 @@ public class VisionSolutions implements Solutions.Subject {
                 }
 
                 @Override
+                public boolean isForcedUnsolved() {
+                    // When the camera is not at all calibrated. Always show this as unsolved.
+                    return camera.getUnitsPerPixelPrimary().getX() <= 0.0 || camera.getUnitsPerPixelPrimary().getY() <= 0.0;
+                }
+
+                @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
                         final State oldState = getState();
@@ -454,6 +460,12 @@ public class VisionSolutions implements Solutions.Subject {
                 }
 
                 @Override
+                public boolean isForcedUnsolved() {
+                    // When the camera is not at all calibrated. Always show this as unsolved.
+                    return camera.getUnitsPerPixelPrimary().getX() <= 0.0 || camera.getUnitsPerPixelPrimary().getY() <= 0.0;
+                }
+
+                @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
                         if (! isSolvedPrimaryXY(head)) {
@@ -541,6 +553,12 @@ public class VisionSolutions implements Solutions.Subject {
                             + "This means it has to be a rather sharp-angled edge between faces. Typically, the air bore edge is targeted.</p><br/>"
                             + "<p>Then press Accept to capture the camera position.</p>"
                             + "</html>";
+                }
+
+                @Override
+                public boolean isForcedUnsolved() {
+                    // When the camera is not at all calibrated. Always show this as unsolved.
+                    return camera.getUnitsPerPixelPrimary().getX() <= 0.0 || camera.getUnitsPerPixelPrimary().getY() <= 0.0;
                 }
 
                 @Override
