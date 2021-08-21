@@ -33,7 +33,7 @@ Backlash compensation is applied in the direction of travel. The offset is added
   No extra moves are needed. The machine can also move more fluidly, as there is no direction change needed. 
   However: the offset needs to precisely match the physical backlash.
 * **DirectionalSneakUp:**
-Works like **DirectionalCompensation** except for the last bit of the motion, where the speed is reduced. The idea is to have the machine arrive at the target in a similar state, regardless of how long and how fast the move was. This should create similar tensions in belts etc. and therefore create more repeatable positioning. 
+Works like **DirectionalCompensation** except for the last bit of the motion, where the speed is reduced. The idea is to have the machine arrive at the target in a similar state of agitation, regardless of how long and how fast the move was. This should create similar tensions in belts etc. and therefore create more repeatable positioning. 
   There are no direction changes needed, but the two-step move is less fluid than with **DirectionalCompensation**. 
   The offset needs to precisely match the physical backlash.
   An additional **Sneak-up Distance** must be set.
