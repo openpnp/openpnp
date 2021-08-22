@@ -23,7 +23,7 @@ In the Select Driver panel, select the driver that most closely matches your mot
     
 **Note**: GcodeAsyncDriver/GcodeDriver is a universal driver that works with many motion controllers. It can be used for [[TinyG, Smoothie, Marlin, Grbl, Duet etc.|Motion-Controller-Firmwares]] You should use GcodeAsyncDriver/GcodeDriver unless you have very specific driver requirements. The [[GcodeAsyncDriver]] is the more advanced version, using faster asynchronous/parallelized operation and providing more [[Advanced Motion Control]] features. If you want to keep it simple, you can start with the GcodeDriver and upgrade later, using the [[Issues and Solutions]] system.
 
-For **older Versions of OpenPnP** follow these instructions.
+Unless you have an **older Version of OpenPnP** skip the following instructions.
 
 ![screen shot 2016-06-18 at 10 48 23 am](https://cloud.githubusercontent.com/assets/1182323/16172727/d84709b8-3542-11e6-89a3-6890e2f0492e.png)
 
@@ -32,6 +32,8 @@ For **older Versions of OpenPnP** follow these instructions.
     
     **Note: GcodeDriver is a universal driver that works with many motion controllers. It can be used for TinyG, Smoothie, Marlin, Grbl, etc. You should use GcodeDriver unless you have very specific driver requirements. 
 3. OpenPnP will prompt you to restart the program, so do that.
+
+(end **older versions of OpenPnP** instructions)
 
 ## Set Serial Port and Baud rate
 
