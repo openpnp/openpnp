@@ -28,7 +28,7 @@ The fiducial must be mounted precisely on PCB surface Z Level, one way to make s
 
 On the solution, you can adjust the fiducial size using a spin control. On new machines/cameras, nothing is yet known about the camera viewing scale, therefore the adjustment is in pixels rather than real length units. Adjust the diameter up/down until a green circle and cross-hairs appear. The circle should hug the fiducial contour. Remember, you can zoom the camera view using the mouse scroll-wheel: 
 
-![feature diameter](https://user-images.githubusercontent.com/9963310/130348513-2209b051-6260-4673-9f46-5d0ccdded538.png)
+![set_feature_diameter](https://user-images.githubusercontent.com/9963310/130353558-786989d1-da7f-475e-98c8-e518d2c65ea1.gif)
 
 ## Calibration Secondary Fiducial
 
