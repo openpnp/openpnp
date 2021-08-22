@@ -12,7 +12,7 @@ To assist you in converting from the NullDriver to either the GcodeDriver or the
 
 ![NullDriver to GcodeAsyncDriver](https://user-images.githubusercontent.com/9963310/115991287-07553900-a5c8-11eb-9679-f4808a7dc505.png)
 
-If you need to use another driver type, or multiple drivers for multiple controllers, read the following.
+If you need to use another driver type, make additional configuration changes to your driver, or use multiple drivers for multiple controllers, read and follow the instructions below.
 
 ## Choosing a Driver
 For **newer Versions of OpenPnP 2.0** you can add as many drivers as you like. Go to the Machine Setup tab and select the Drivers node. Press the `[ + ]` button to construct a new driver.
@@ -46,7 +46,7 @@ Most of the drivers in OpenPnP communicate using the serial port. Before you can
 
 ## Driver Specific Setup
 
-See the pages below for additional information on setting up specific drivers within OpenPnP.
+See the pages below for additional information and instructions on setting up specific drivers within OpenPnP.
 
 * [[GcodeDriver]]: Recommended for all Gcode based controllers such as [[TinyG, Smoothie, Marlin, Grbl, Duet etc.|Motion-Controller-Firmwares]]
 The Smoothie controller should not be configured in CNC (GRBL), but in the 3D printer mode. 
