@@ -30,9 +30,6 @@ The ContactProbeNozzle can also auto-learn the pick Z location of feeders. On th
 
 Note: some feeders like the [[BlindsFeeder]] still need a precise Z location configured (e.g. for cover actuatuation). 
 
-### PCB Place Z Calibration
-
-The ContactProbeNozzle can also auto-learn the place Z location of parts on the PCB. No need to set PCB Z with much accuracy.
 
 ## What is it _not_?
 
