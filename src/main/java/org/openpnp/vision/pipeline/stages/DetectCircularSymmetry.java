@@ -104,8 +104,12 @@ public class DetectCircularSymmetry extends CvStage {
     private int superSampling = 1;
 
     @Attribute(required = false)
-    @Property(description = "Overlay match map.")
+    @Property(description = "Display matches with circle and cross-hairs.")
     private boolean diagnostics = false;
+
+    @Attribute(required = false)
+    @Property(description = "Overlay a heat map indicating the local circular symmetry.")
+    private boolean heatMap = false;
 
     public int getMinDiameter() {
         return minDiameter;
@@ -177,6 +181,14 @@ public class DetectCircularSymmetry extends CvStage {
 
     public void setDiagnostics(boolean diagnostics) {
         this.diagnostics = diagnostics;
+    }
+
+    public boolean isHeatMap() {
+        return heatMap;
+    }
+
+    public void setHeatMap(boolean heatMap) {
+        this.heatMap = heatMap;
     }
 
     public String getPropertyName() {
@@ -260,7 +272,8 @@ public class DetectCircularSymmetry extends CvStage {
         }
 
         List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 
-                maxDiameter, minDiameter, maxDistance*2, searchWidth, searchHeight, maxTargetCount, minSymmetry, corrSymmetry, subSampling, superSampling, diagnostics, new ScoreRange());
+                maxDiameter, minDiameter, maxDistance*2, searchWidth, searchHeight, maxTargetCount, minSymmetry, corrSymmetry, 
+                subSampling, superSampling, diagnostics, heatMap, new ScoreRange());
         return new Result(null, circles);
     }
 
@@ -333,7 +346,8 @@ public class DetectCircularSymmetry extends CvStage {
      * @param subSampling       Sub-sampling pixel distance, i.e. only one pixel out of a square of size subSampling will be 
      *                          examined on the first pass. 
      * @param superSampling     Super-sampling pixel fraction, i.e. the result will have 1/superSampling sub-pixel accuracy.   
-     * @param diagnostics       If true, draws a diagnostic heat map, circle and cross hairs into the image. 
+     * @param diagnostics       If true, draws diagnostic match circles and cross hairs into the image. 
+     * @param heatMap           If true, overlays a diagnostic heat map onto the image.
      * @param scoreRange        Outputs the score range of all the sampled center candidates.
      * @return                  A list of the the detected circles (currently only the best).
      * @throws Exception
@@ -341,7 +355,7 @@ public class DetectCircularSymmetry extends CvStage {
     public static  List<Result.Circle> findCircularSymmetry(Mat image, int xCenter, int yCenter,
             int maxDiameter, int minDiameter, int searchDiameter, int searchWidth, 
             int searchHeight, int maxTargetCount, double minSymmetry,
-            double corrSymmetry, int subSampling, int superSampling, boolean diagnostics, ScoreRange scoreRange) throws Exception {
+            double corrSymmetry, int subSampling, int superSampling, boolean diagnostics, boolean heatMap, ScoreRange scoreRange) throws Exception {
         boolean outermost = !Double.isFinite(scoreRange.finalScore);
         // Image properties.
         final int channels = image.channels();
@@ -403,7 +417,7 @@ public class DetectCircularSymmetry extends CvStage {
         int[] radiusMap = null;
         double [] xOffsetMap = null;
         double [] yOffsetMap = null;
-        boolean showDiagnostics = (diagnostics && superSamplingOffsets.length == 1); 
+        boolean showDiagnostics = ((diagnostics || heatMap) && superSamplingOffsets.length == 1); 
         int wSearchRangeMap = wSearchRange/subSamplingEff;
         int hSearchRangeMap = hSearchRange/subSamplingEff;
         if (showDiagnostics || maxTargetCount > 1) {
@@ -630,7 +644,7 @@ public class DetectCircularSymmetry extends CvStage {
                         // ... recursion into finer subSampling and local search.
                         List<CvStage.Result.Circle> localRet = findCircularSymmetry(image, (int)localBest.x, (int)localBest.y, maxDiameter, minDiameter, 
                                 subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1, 
-                                minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, scoreRange);
+                                minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
                         if (localRet.size() > 0) { 
                             samplingFiltered.add((SymmetryCircle) localRet.get(0));
                         }
@@ -679,7 +693,7 @@ public class DetectCircularSymmetry extends CvStage {
                 // Recursion into finer subSampling and local search.
                 ret = findCircularSymmetry(image, (int)(xBest), (int)(yBest), maxDiameter, minDiameter, 
                         subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1, 
-                        minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, scoreRange);
+                        minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
             }
         }
 
@@ -696,8 +710,8 @@ public class DetectCircularSymmetry extends CvStage {
                     double s = scoreMap[yis*wSearchRangeMap + xis];
                     if (s > 1.0) {
                         /// Pixel coordinates.
-                        int col = xi + x0SearchRange + r;
-                        int row = yi + y0SearchRange + r;
+                        final int col = xi + x0SearchRange + r;
+                        final int row = yi + y0SearchRange + r;
                         double dx2 = (col - xBest);
                         double  dy2 = (row - yBest);
                         int distance2 = (int)Math.round(Math.sqrt(dx2*dx2 + dy2*dy2));
@@ -712,17 +726,33 @@ public class DetectCircularSymmetry extends CvStage {
                             heat -= scoreHeat(scoreRange.minScore);
                             double score = heat*scale;
                             // Determine if this pixel coordinate is part of the indicator (cross-hairs and diameter).
-                            boolean indicate = false;
-                            if (outermost) {
-                                for (CvStage.Result.Circle circle : ret) {
-                                    double dx = xi + x0SearchRange - circle.x + r + 0.501;
-                                    double dy = yi + y0SearchRange - circle.y + r + 0.501;
-                                    int distance = (int)Math.round(Math.sqrt(dx*dx + dy*dy));
-                                    indicate = (distance == (int)(circle.diameter/2) 
-                                            || ((Math.round(dx) == 0 || Math.round(dy) == 0) 
-                                                    && distance < circle.diameter));
-                                    if (indicate) {
-                                        break;
+                            double indicate = 0.0;
+                            if (outermost && diagnostics) {
+                                if (ret.size() == 0) {
+                                    // No results. Show the nominal circle size in the center.
+                                    double dx = col - xCenter + 0.501;
+                                    double dy = row - yCenter + 0.501;
+                                    double distance = Math.sqrt(dx*dx + dy*dy);
+                                    double nominalDiameter = (maxDiameter + minDiameter)/4;
+                                    indicate = 1.0 - Math.abs(distance - nominalDiameter);
+                                    if (indicate > 0) {
+                                        // dashed circle
+                                        if (((int)(Math.atan2(dy, dx)/Math.PI*12 + 12)&0x1) == 0) {
+                                            indicate = 0.0; 
+                                        }
+                                    }
+                                }
+                                else {
+                                    for (CvStage.Result.Circle circle : ret) {
+                                        double dx = col - circle.x + 0.501;
+                                        double dy = row - circle.y + 0.501;
+                                        double distance = Math.sqrt(dx*dx + dy*dy);
+                                        if (distance < circle.diameter) {
+                                            indicate = 1.0 - Math.min(Math.min(Math.abs(distance - circle.diameter/2), Math.abs(dx)), Math.abs(dy));
+                                            if (indicate > 0) {
+                                                break;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -735,11 +765,18 @@ public class DetectCircularSymmetry extends CvStage {
                                 int red = 0;
                                 int green = 0;
                                 int blue = 0;
-                                if (indicate) {
-                                    red = 0;
-                                    green = 255;
-                                    blue = 0;
-                                    alpha = 0.5;
+                                if (indicate > 0) {
+                                    if (ret.size() == 0) {
+                                        red = 255;
+                                        green = 0;
+                                        blue = 0;
+                                    }
+                                    else {
+                                        red = 0;
+                                        green = 255;
+                                        blue = 0;
+                                    }
+                                    alpha = indicate;
                                     alphaCompl = 1 - alpha;
                                 }
                                 else if (score <= 255) {
@@ -753,12 +790,14 @@ public class DetectCircularSymmetry extends CvStage {
                                     red = (int) 255;
                                     green = (int) (score - 255-255);
                                 }
-                                pixelData[2] = (byte) (alpha*red + alphaCompl*Byte.toUnsignedInt(pixelData[2]));
-                                pixelData[1] = (byte) (alpha*green + alphaCompl*Byte.toUnsignedInt(pixelData[1]));
-                                pixelData[0] = (byte) (alpha*blue + alphaCompl*Byte.toUnsignedInt(pixelData[0]));
+                                if (indicate > 0 || heatMap) {
+                                    pixelData[2] = (byte) (alpha*red + alphaCompl*Byte.toUnsignedInt(pixelData[2]));
+                                    pixelData[1] = (byte) (alpha*green + alphaCompl*Byte.toUnsignedInt(pixelData[1]));
+                                    pixelData[0] = (byte) (alpha*blue + alphaCompl*Byte.toUnsignedInt(pixelData[0]));
+                                }
                             }
                             else {
-                                if (indicate) {
+                                if (indicate > 0) {
                                     pixelData[0] = (byte) 255; 
                                 }
                                 else {

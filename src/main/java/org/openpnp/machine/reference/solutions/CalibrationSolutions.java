@@ -318,8 +318,9 @@ public class CalibrationSolutions implements Solutions.Subject {
                             + "<p>Jog camera " + defaultCamera.getName()
                             + " over the test object. Target it with the cross-hairs.</p><br/>"
                             + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
-                            + "camera view.</p><br/>"
-                            + "<p><strong color=\"red\">Caution:</strong> The nozzle "+nozzle.getName()+" will now move to the test object "
+                            + "camera view. A green circle and cross-hairs should appear and hug the test object contour. "
+                            + "Zoom the camera using the scroll-wheel.</p><br/>"
+                            + "<p><strong color=\"red\">Caution:</strong> The nozzle "+nozzle.getName()+" will move to the test object "
                             + "and perform the calibration pick & place pattern. Make sure to load the right nozzle tip and "
                             + "ready the vacuum system.</p><br/>"
                             + "<p>When ready, press Accept.</p>"
