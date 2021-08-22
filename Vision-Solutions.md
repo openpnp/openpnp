@@ -26,6 +26,10 @@ As both the camera and the camera light will move around and point at the fiduci
 
 The fiducial must be mounted precisely on PCB surface Z Level, one way to make sure of this, is to glue the printed-out fiducial flat onto a surplus PCB that you can position reproducibly (±1 mm) on its holder.
 
+On the solution, you can adjust the fiducial size using a spin control. On new machines/cameras, nothing is yet known about the camera viewing scale, therefore the adjustment is in pixels rather than real length units. Adjust the diameter up/down until a green circle and cross-hairs appear. The circle should hug the fiducial contour. Remember, you can zoom the camera view using the mouse scroll-wheel: 
+
+![feature diameter](https://user-images.githubusercontent.com/9963310/130348513-2209b051-6260-4673-9f46-5d0ccdded538.png)
+
 ## Calibration Secondary Fiducial
 
 Camera calibration also requires looking at a secondary fiducial at different height (Z level). This will provide the calibration algorithm with the needed 3D/spacial information to determine the true focal length of the lens and the optical position of the camera in space. 
