@@ -1,6 +1,6 @@
-## Controllers and Firmwares for Advanced Motion Control
+## Controllers and associated Firmware for Advanced Motion Control
 
-This page list Controllers and Firmwares that are known to be compatible with [[GcodeAsyncDriver]] and [[Advanced Motion Control]] features. Other controllers may also support the needed features, if you think your controller can do it, please [contact us in the user group](https://groups.google.com/forum/#!forum/openpnp). 
+This page lists Controllers and associated Firmware that are known to be compatible with [[GcodeAsyncDriver]] and [[Advanced Motion Control]] features. Other controllers may also support the needed features, if you think your controller provides the needed features, please [contact us in the user group](https://groups.google.com/forum/#!forum/openpnp). 
 
 ### Key Features
 
