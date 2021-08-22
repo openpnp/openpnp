@@ -9,6 +9,7 @@ Please see the following pages for additional information when configuring Gcode
 * [[Grbl]]
 * [[TinyG]]
 * [[Marlin]]
+* [Smoothie](https://smoothieware.org/configuring-smoothie)
 
 # Examples
 Please see [[GcodeDriver: Example Configurations]] for some community contributed example configurations. If you find one that matches your controller you can use it as a starting point for your own system.
