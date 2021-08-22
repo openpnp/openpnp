@@ -50,7 +50,7 @@ See the pages below for additional information and instructions on setting up sp
 
 * [[GcodeDriver]]: Recommended for all Gcode based controllers such as TinyG, Smoothie, Marlin, Grbl, Duet and others. Be sure to review and implement the basic configuration in [[GcodeDriver]] knowing that "Issues and Solutions" will provide you with an easy upgrade path to take advantage of the GcodeAsyncDriver.
 The Smoothie controller should not be configured in CNC (GRBL), but in the 3D printer mode. 
-* [[GcodeAsyncDriver]]: An extension of GcodeDriver, using faster asynchronous/parallelized operation and providing more [[Advanced Motion Control]] features. For the requirements for [[TinyG, Smoothie, Marlin, Grbl, Duet etc. see|Motion-Controller-Firmwares]].
+* [[GcodeAsyncDriver]]: An extension of GcodeDriver, using faster asynchronous/parallelized operation and providing more [[Advanced Motion Control]] features. [[ Go here for the advanced motion control requirements for TinyG, Smoothie, Marlin, Grbl, Duet etc. |Motion-Controller-Firmwares]].
 
 
 ## Connect
