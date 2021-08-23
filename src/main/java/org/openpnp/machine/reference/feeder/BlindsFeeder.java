@@ -173,7 +173,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     public static final String defaultGroupName = "Default";
     private static final List<String> locationGroupNamesList = Arrays.asList(new String[]{defaultGroupName, defaultGroupName.toUpperCase(), "LOCATION", "NONE", ""});
-    
+
     private void checkHomedState(Machine machine) {
         if (!machine.isHomed()) {
             this.setCalibrated(false);
@@ -396,7 +396,7 @@ public class BlindsFeeder extends ReferenceFeeder {
         // change FeedCount
         setFeedCount(getFeedCount() - 1);
     }
-    
+
     public class FindFeatures {
         private Camera camera;
         private CvPipeline pipeline;
@@ -664,7 +664,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                         }
                         if (positionTolerant || Math.abs(cameraFeederY - center.getY()) < positionTolerance) {
                             if (positionTolerant || Math.abs(cameraFeederX - center.getX()) < pocketRange) {
-                                    if (angleTolerant || Math.abs(angleNorm(angle - 0)) < angleTolerance) {
+                                if (angleTolerant || Math.abs(angleNorm(angle - 0)) < angleTolerance) {
                                     if (mmSize.getX() > blindMin && mmSize.getX() < blindMax && mmSize.getY() > blindMin && mmSize.getY() < blindMax
                                             && mmSize.getX()/mmSize.getY() < blindAspect 
                                             && mmSize.getY()/mmSize.getX() < blindAspect) {
@@ -1253,11 +1253,24 @@ public class BlindsFeeder extends ReferenceFeeder {
                         // Nozzle is free
                         for (NozzleTip pushNozzleTip : nozzle.getCompatibleNozzleTips()) {
                             if (pushNozzleTip.isPushAndDragAllowed()) {
-                                NozzleTip nozzleTip = nozzle.getNozzleTip();
-                                // Alas, found one for pushing, load it
-                                nozzle.loadNozzleTip(pushNozzleTip);
-                                // And return the nozzle and nozzle tip.
-                                return new NozzleAndTipForPushing(nozzle, nozzleTip, true);
+                                boolean goodToGo = true;
+                                for (Head otherHead : machine.getHeads()) {
+                                    for (Nozzle otherNozzle :  otherHead.getNozzles()) {
+                                        if (otherNozzle.getNozzleTip() == pushNozzleTip) {
+                                            // Loaded on another nozzle, this means, it has a part on, otherwise 
+                                            // it would already have been taken above.
+                                            goodToGo = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (goodToGo) {
+                                    NozzleTip nozzleTip = nozzle.getNozzleTip();
+                                    // Alas, found one for pushing, load it
+                                    nozzle.loadNozzleTip(pushNozzleTip);
+                                    // And return the nozzle and nozzle tip.
+                                    return new NozzleAndTipForPushing(nozzle, nozzleTip, true);
+                                }
                             }
                         }
                     }
@@ -1296,7 +1309,7 @@ public class BlindsFeeder extends ReferenceFeeder {
 
             // Actuate the cover.
             actuateCover(true);
-            
+
             if (!nozzleAndTipForPushing.isChanged()) {
                 // no need to rememeber
                 nozzleAndTipForPushing = null;
@@ -1621,7 +1634,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     public static List<String> getBlindsFeederGroupNames() {
         List<String> list = new ArrayList<>();
         list.add(defaultGroupName);
-        
+
         for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
             if (feeder instanceof BlindsFeeder) {
                 BlindsFeeder blindsFeeder = (BlindsFeeder) feeder;
@@ -1703,7 +1716,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     public List<BlindsFeeder> getConnectedFeeders(Location location, boolean fiducial1MatchOnly) {
         List<BlindsFeeder> feeder_list = getConnectedFeedersByLocation(location, fiducial1MatchOnly);
         return filterFeedersByGroupName(feeder_list, this.feederGroupName);
-   }
+    }
 
     private boolean isUpdating = false;
 
@@ -2152,7 +2165,7 @@ public class BlindsFeeder extends ReferenceFeeder {
     public void setFeederGroupNameFromOther(String newFeederGroupName) {
         this.feederGroupName = newFeederGroupName;
     }
-    
+
     public int getFeedCount() {
         return feedCount;
     }
