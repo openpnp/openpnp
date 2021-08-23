@@ -85,13 +85,13 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
 
     @Override
     public Length getHomeCoordinate() {
-        return convertToSytem(homeCoordinate);
+        return convertToSystem(homeCoordinate);
     }
 
     @Override
     public void setHomeCoordinate(Length homeCoordinate) {
         Object oldValue = this.homeCoordinate;
-        this.homeCoordinate = convertFromSytem(homeCoordinate);
+        this.homeCoordinate = convertFromSystem(homeCoordinate);
         firePropertyChange("homeCoordinate", oldValue, homeCoordinate);
     }
 
@@ -130,7 +130,7 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
     
     protected abstract long getResolutionTicks(double coordinate);
 
-    protected Length convertToSytem(Length length) {
+    protected Length convertToSystem(Length length) {
         if (type == Axis.Type.Rotation) {
             // This is actually an angle, not a length, just take it at it numerical  value
             // and present in system units, so no conversion will take place.
@@ -141,7 +141,7 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
         }
     }
 
-    protected Length convertFromSytem(Length length) {
+    protected Length convertFromSystem(Length length) {
         if (type == Axis.Type.Rotation) {
             // This is actually an angle, not a length, just take it at it numerical value
             // and store as neutral mm.
@@ -174,10 +174,18 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
     }
 
     /**
-     * @return The first HeadMountable that has this axis assigned. Used to capture and safely position an axis.
+     * @return The first HeadMountable that has this axis assigned. Used to capture and safely position an axis. 
+     * Returns null is the axis is unused.
      */
     public HeadMountable getDefaultHeadMountable() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
+            // Try cameras with preference.
+            for (HeadMountable hm : head.getCameras()) {
+                if (hm.getMappedAxes(Configuration.get().getMachine()).contains(this)) {    
+                    return hm;
+                }
+            }
+            // Then the rest.
             for (HeadMountable hm : head.getHeadMountables()) {
                 if (hm.getMappedAxes(Configuration.get().getMachine()).contains(this)) {    
                     return hm;

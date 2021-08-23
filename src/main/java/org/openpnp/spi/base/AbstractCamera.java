@@ -13,7 +13,6 @@ import java.util.TreeMap;
 
 import javax.swing.Icon;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
@@ -33,9 +32,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Milestone;
-import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -641,19 +637,13 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     private SimpleGraph startDiagnostics() {
         if (settleDiagnostics) {
-            Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
-            if (gridColor == null) {
-                gridColor = new Color(0, 0, 0, 64);
-            } else {
-                gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
-            }
             // Diagnostics wanted, create the simple graph.
             SimpleGraph settleGraph = new SimpleGraph();
             settleGraph.setRelativePaddingLeft(0.05);
             // init difference scale
             SimpleGraph.DataScale settleScale =  settleGraph.getScale(DIFFERENCE);
             settleScale.setRelativePaddingBottom(0.3);
-            settleScale.setColor(gridColor);
+            settleScale.setColor(SimpleGraph.getDefaultGridColor());
             SimpleGraph.DataScale captureScale =  settleGraph.getScale(BOOLEAN);
             captureScale.setRelativePaddingTop(0.8);
             captureScale.setRelativePaddingBottom(0.1);
@@ -1316,31 +1306,6 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         @Override
         public boolean equals(Object obj) {
             return obj.equals(listener);
-        }
-    }
-
-    @Override
-    public void findIssues(Solutions solutions) {
-        super.findIssues(solutions);
-        if (solutions.isTargeting(Milestone.Vision)) {
-
-            if ((unitsPerPixel.getX() == 0) || (unitsPerPixel.getY() == 0)) {
-                solutions.add(new Solutions.PlainIssue(
-                        this, 
-                        "Camera units per pixel has not been calibrated.", 
-                        "Calibrate the camera's units per pixel.", 
-                        Severity.Warning,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
-            }
-            else if (solutions.isTargeting(Milestone.Advanced) 
-                    && !isSecondaryUnitsPerPixelCalibrated()) {
-                solutions.add(new Solutions.PlainIssue(
-                        this, 
-                        "Camera units per pixel can be calibrated for 3D scale estimation.", 
-                        "Calibrate the camera's units per pixel at two different heights.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
-            }
         }
     }
 }

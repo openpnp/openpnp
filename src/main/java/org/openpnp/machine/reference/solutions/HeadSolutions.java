@@ -19,27 +19,35 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference;
+package org.openpnp.machine.reference.solutions;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
 import org.openpnp.gui.support.Icons;
+import org.openpnp.machine.reference.ReferenceActuator;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceHead.NozzleSolution;
+import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
+import org.openpnp.machine.reference.driver.GcodeDriver;
+import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractControllerAxis;
@@ -51,10 +59,10 @@ import org.openpnp.spi.base.AbstractNozzle;
  * The idea is not to pollute the head implementation itself.
  *
  */
-class HeadSolutions implements Solutions.Subject {
+public class HeadSolutions implements Solutions.Subject {
     private final ReferenceHead head;
 
-    HeadSolutions(ReferenceHead head) {
+    public HeadSolutions(ReferenceHead head) {
         this.head = head;
     }
 
@@ -71,7 +79,7 @@ class HeadSolutions implements Solutions.Subject {
         if (camera != null) {
 
             final Camera theCamera = camera;
-            if (isDefaultHead && solutions.getTargetMilestone() == Milestone.Welcome) { 
+            if (isDefaultHead && solutions.isTargeting(Milestone.Welcome)) { 
                 solutions.add(new Solutions.Issue(
                         head, 
                         "Create nozzles for this head.", 
@@ -80,7 +88,38 @@ class HeadSolutions implements Solutions.Subject {
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup") {
 
                     {
-                        setChoice(head.getNozzleSolution());
+                        NozzleSolution nozzleSolution = head.getNozzleSolution();
+                        if (nozzleSolution == null) {
+                            // This is a first time evaluation. Determine the current machine configuration.
+                            // Note, this will fail, if this is a mixed or otherwise exotic solution machine, but the user is responsible to 
+                            // not accept the solution then.
+                            int multiplier = 0;
+                            nozzleSolution = NozzleSolution.Standalone;
+                            for (Nozzle nozzle : head.getNozzles()) {
+                                if (nozzle.getAxisZ() instanceof ReferenceCamCounterClockwiseAxis) {
+                                    multiplier++; // counts dual cam
+                                    nozzleSolution = NozzleSolution.DualCam;
+                                }
+                                else if (nozzle.getAxisZ() instanceof ReferenceMappedAxis) {
+                                    // not counted (will be counted by its ReferenceControllerAxis counterpart)
+                                    nozzleSolution = NozzleSolution.DualNegated;
+                                }
+                                else if (nozzle.getAxisZ() instanceof ReferenceControllerAxis) {
+                                    multiplier++; // counts standalone or dual negated 
+                                }
+                            }
+                            if (multiplier == 0) {
+                                multiplier++;
+                            }
+                            head.setNozzleSolution(nozzleSolution);
+                            head.setNozzleSolutionsMultiplier(multiplier);
+                            if (! solutions.isAtMostTargeting(Milestone.Welcome)) {
+                                // If this is not a fresh machine i.e. not starting with the Welcome Milestone, 
+                                // remember this as already solved (it can be revisited by re-opening it).
+                                solutions.setSolutionsIssueSolved(this, true);
+                            }
+                        }
+                        setChoice(nozzleSolution);
                         multiplier = head.getNozzleSolutionsMultiplier();
                     }
                     @Override
@@ -94,24 +133,21 @@ class HeadSolutions implements Solutions.Subject {
                                     + "<li>The new solution overwrites your existing nozzle and axis configuration.</li>"
                                     + "<li>As far as nozzles and axes remain the same type and count, their detail configuration is preserved.</li>"
                                     + "<li>A nozzle solution can be applied multiple times, you can revisit and expand it.</li>"
-                                    + "<li><span color=\"red\">Caution:</span> Undo will not restore the previous configuration, only enable a fresh choice.<br/>"
+                                    + "<li><span color=\"red\">Caution:</span> Reopen will not restore the previous configuration, only enable a fresh choice.<br/>"
                                     + "If you want to restore previous configuration you must restore the saved configuration manually.</li>"
                                     + "</ol>"
                                     + "<br/>"
                                     +"Are you sure?</html>", true)) {
                                 createNozzleSolution(theCamera, (NozzleSolution) getChoice(), multiplier);
-                                // We mark this as dismissed, not solved, as a reminder of the choice.
-                                super.setState(State.Dismissed);
+                                // Remember this is solved (it can be revisited).
+                                solutions.setSolutionsIssueSolved(this, true);
+                                super.setState(state);
                             }
                         }
                         else {
+                            solutions.setSolutionsIssueSolved(this, false);
                             super.setState(state);
                         }
-                    }
-
-                    @Override
-                    public boolean canBeUndone() {
-                        return false;
                     }
 
                     private int multiplier;
@@ -278,6 +314,8 @@ class HeadSolutions implements Solutions.Subject {
         LinkedHashSet<ReferenceMappedAxis> axesNegated = new LinkedHashSet<>();
         LinkedHashSet<ReferenceCamCounterClockwiseAxis> axesCam1 = new LinkedHashSet<>();
         LinkedHashSet<ReferenceCamClockwiseAxis> axesCam2 = new LinkedHashSet<>();
+        LinkedHashSet<Actuator> valveActuators = new LinkedHashSet<>();
+        LinkedHashSet<Actuator> senseActuators = new LinkedHashSet<>();
         for (Nozzle nozzle : head.getNozzles()) {
             if (nozzle instanceof AbstractNozzle) { 
                 Axis axisZ = nozzle.getAxisZ();
@@ -285,8 +323,8 @@ class HeadSolutions implements Solutions.Subject {
                 // Collect nozzle.
                 nozzles.add((AbstractNozzle) nozzle);
                 // Collect the underlying raw axes. 
-                axesZ.add((AbstractAxis) getRawAxis(axisZ));
-                axesC.add((AbstractAxis) getRawAxis(axisC));
+                axesZ.add((AbstractAxis) getRawAxis(head.getMachine(), axisZ));
+                axesC.add((AbstractAxis) getRawAxis(head.getMachine(), axisC));
                 // Collect the transformed axes.
                 if (axisZ instanceof ReferenceMappedAxis) {
                     axesNegated.add((ReferenceMappedAxis) axisZ);
@@ -296,6 +334,15 @@ class HeadSolutions implements Solutions.Subject {
                 }
                 if (axisZ instanceof ReferenceCamClockwiseAxis) {
                     axesCam2.add((ReferenceCamClockwiseAxis) axisZ);
+                }
+            }
+            if (nozzle instanceof ReferenceNozzle) {
+                ReferenceNozzle refNozzle = (ReferenceNozzle) nozzle;
+                senseActuators.add(refNozzle.getVacuumSenseActuator());
+                // Sensing and valve actuator were sometimes shared, but we want to regenerate these as separate Actuators,
+                // so only add the valve actuator, if not shared.
+                if (refNozzle.getVacuumSenseActuator() != refNozzle.getVacuumActuator()) {
+                    valveActuators.add(refNozzle.getVacuumActuator());
                 }
             }
         }
@@ -308,6 +355,7 @@ class HeadSolutions implements Solutions.Subject {
                     AbstractNozzle n1 = reuseOrCreateNozzle(camera, nozzles, suffix);
                     n1.setAxisZ(reuseOrCreateAxis(camera, axesZ, ReferenceControllerAxis.class, Axis.Type.Z, suffix));
                     n1.setAxisRotation(reuseOrCreateAxis(camera, axesC, ReferenceControllerAxis.class, Axis.Type.Rotation, suffix));
+                    assignVacuumActuators(n1, valveActuators, senseActuators, suffix);
                     break;
                 }
                 case DualNegated: { 
@@ -326,6 +374,8 @@ class HeadSolutions implements Solutions.Subject {
                     n1.setAxisRotation(c1);
                     n2.setAxisZ(z2);
                     n2.setAxisRotation(c2);
+                    assignVacuumActuators(n1, valveActuators, senseActuators, suffix1);
+                    assignVacuumActuators(n2, valveActuators, senseActuators, suffix2);
                     break;
                 }
                 case DualCam: {
@@ -342,6 +392,8 @@ class HeadSolutions implements Solutions.Subject {
                     n1.setAxisRotation(c1);
                     n2.setAxisZ(z2);
                     n2.setAxisRotation(c2);
+                    assignVacuumActuators(n1, valveActuators, senseActuators, suffix1);
+                    assignVacuumActuators(n2, valveActuators, senseActuators, suffix2);
                     break;
                 }
             }
@@ -360,15 +412,46 @@ class HeadSolutions implements Solutions.Subject {
         for (AbstractNozzle unusedNozzle : nozzles) {
             head.removeNozzle(unusedNozzle);
         }
+        // Cleanup unused Actuators
+        ArrayList<Actuator> unusedActuators = new ArrayList<>();
+        unusedActuators.addAll(valveActuators);
+        unusedActuators.addAll(senseActuators);
+        for (Actuator unusedActuator : unusedActuators) {
+            head.removeActuator(unusedActuator);
+        }
+        // Store the solution.
         head.setNozzleSolution(nozzleSolution);
         head.setNozzleSolutionsMultiplier(nozzleSolutionsMultiplier);
     }
 
-    private CoordinateAxis getRawAxis(Axis axis) { 
-        try {
-            return ((AbstractAxis) axis).getCoordinateAxes(head.getMachine()).getAxis(axis.getType());
+    public void assignVacuumActuators(AbstractNozzle n, 
+            LinkedHashSet<Actuator> valveActuators, LinkedHashSet<Actuator> senseActuators,
+            String suffix) throws Exception {
+        if (n instanceof ReferenceNozzle) {
+            ReferenceNozzle nozzle = (ReferenceNozzle) n;
+            nozzle.setVacuumActuator(reuseOrCreateActuator(valveActuators, "VAC"+suffix));
+            nozzle.setVacuumSenseActuator(reuseOrCreateActuator(senseActuators, "VACS"+suffix));
+            Actuator vacuumSenseActuator = nozzle.getVacuumSenseActuator();
+            Actuator vacuumValveActuator = nozzle.getVacuumActuator();
+            if (vacuumSenseActuator.getDriver() instanceof GcodeDriver) {
+                // Sensing and valve actuator were sometimes shared, so when regenerating these as separate Actuators,
+                // the command would be lost. Instead, reuse the valve ACTUATE_BOOLEAN_COMMAND command. 
+                GcodeDriver driver = (GcodeDriver) vacuumSenseActuator.getDriver();
+                if (driver.getCommand(vacuumSenseActuator, CommandType.ACTUATE_BOOLEAN_COMMAND) != null
+                        && driver.getCommand(vacuumValveActuator, CommandType.ACTUATE_BOOLEAN_COMMAND) == null) {
+                    driver.setCommand(vacuumValveActuator, CommandType.ACTUATE_BOOLEAN_COMMAND, driver.getCommand(vacuumSenseActuator, CommandType.ACTUATE_BOOLEAN_COMMAND));
+                }
+            }
         }
-        catch (Exception e) {
+    }
+
+    public static CoordinateAxis getRawAxis(Machine machine, Axis axis) { 
+        if (axis instanceof AbstractAxis) {
+            try {
+                return ((AbstractAxis) axis).getCoordinateAxes(machine).getAxis(axis.getType());
+            }
+            catch (Exception e) {
+            }
         }
         return null;
     }
@@ -423,4 +506,21 @@ class HeadSolutions implements Solutions.Subject {
         return axis;
     }
 
+    private Actuator reuseOrCreateActuator(LinkedHashSet<Actuator> actuators, String i)
+            throws Exception {
+        Actuator actuator = null;
+        for (Actuator a : actuators) {
+            actuator = a;
+            break;
+        }
+        if (actuator == null) {
+            actuator = new ReferenceActuator();
+            head.addActuator(actuator);
+        }
+        else {
+            actuators.remove(actuator);
+        }
+        actuator.setName("A"+i);
+        return actuator;
+    }
 }

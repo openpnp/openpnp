@@ -35,8 +35,10 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -244,11 +246,54 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Location oldValue = this.headOffsets;
         this.headOffsets = headOffsets;
         firePropertyChange("headOffsets", oldValue, headOffsets);
-        oldValue = oldValue.convertToUnits(LengthUnit.Millimeters);
-        if (Math.abs(oldValue.getLengthX().subtract(headOffsets.getLengthX()).getValue()) > 0.01
-                || Math.abs(oldValue.getLengthY().subtract(headOffsets.getLengthY()).getValue()) > 0.01) {
+        Location offsetsDiff = headOffsets.subtract(oldValue).convertToUnits(LengthUnit.Millimeters);
+        if (offsetsDiff.getLinearDistanceTo(Location.origin) > 0.01) {
             // Changing a X, Y head offset invalidates the nozzle tip calibration. Just changing Z leaves it intact. 
             ReferenceNozzleTipCalibration.resetAllNozzleTips();
+        }
+        if (oldValue.isInitialized() && head != null) {
+            // The old offsets were not zero, adjust some dependent head offsets.
+
+            // Where another HeadMountable, such as an Actuator, is fastened to the nozzle, it may have the same X, Y head offsets, i.e. these were very 
+            // likely copied over, like customary for the ReferencePushPullFeeder actuator. Adjust them likewise. 
+            for (HeadMountable hm : head.getHeadMountables()) {
+                if (this != hm 
+                        && hm instanceof ReferenceHeadMountable
+                        && !(hm instanceof ReferenceNozzle)) {
+                    ReferenceHeadMountable otherHeadMountable = (ReferenceHeadMountable) hm;
+                    Location otherHeadOffsets = otherHeadMountable.getHeadOffsets();
+                    if (otherHeadOffsets.isInitialized() 
+                            && oldValue.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(otherHeadOffsets) <= 0.01) {
+                        // Take X, Y (but not Z).
+                        Location hmOffsets = otherHeadOffsets.derive(headOffsets, true, true, false, false);
+                        Logger.info("Set "+otherHeadMountable.getClass().getSimpleName()+" " + otherHeadMountable.getName() + " head offsets to " + hmOffsets
+                                + " (previously " + otherHeadOffsets + ")");
+                        otherHeadMountable.setHeadOffsets(hmOffsets);
+                    }
+                }
+            }
+
+            // Also adjust up-looking camera offsets, as these were very likely calibrated using the default nozzle.
+            try {
+                if (this == head.getDefaultNozzle()) {
+                    for (Camera camera : getMachine().getCameras()) {
+                        if (camera instanceof ReferenceCamera 
+                                && camera.getLooking() == Looking.Up) {
+                            ReferenceHeadMountable upLookingCamera = (ReferenceHeadMountable) camera;
+                            Location cameraOffsets = upLookingCamera.getHeadOffsets();
+                            if (cameraOffsets.isInitialized()) {
+                                cameraOffsets = cameraOffsets.add(offsetsDiff);
+                                Logger.info("Set camera " + upLookingCamera.getName() + " head offsets to " + cameraOffsets
+                                        + " (previously " + upLookingCamera.getHeadOffsets() + ")");
+                                upLookingCamera.setHeadOffsets(cameraOffsets);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
         }
     }
 
@@ -435,7 +480,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
                 Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
                 location = location.subtract(correctionOffset);
-                Logger.trace("{}.transformToHeadLocation({}, ...) runout compensation {}", getName(), location, correctionOffset);
+                Logger.trace("{}.toHeadLocation({}, ...) runout compensation {}", getName(), location, correctionOffset);
             }
         }
         return super.toHeadLocation(location, currentLocation, options);
@@ -1304,7 +1349,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     this, 
                     "Nozzle is missing a "+qualifier+" actuator.", 
                     "Create and assign a "+qualifier+" actuator as described in the Wiki.", 
-                    Severity.Suggestion,
+                    Severity.Warning,
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup"));
         }
         else if (actuator.getDriver() == null) {
@@ -1312,7 +1357,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     actuator, 
                     "The "+qualifier+" actuator "+actuator.getName()+" has no driver assigned.", 
                     "Assign a driver as described in the Wiki.", 
-                    Severity.Suggestion,
+                    Severity.Warning,
                     "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#driver-assignment"));
             }
         }
@@ -1324,7 +1369,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                             driver, 
                             "The "+qualifier+" actuator "+actuator.getName()+" has no "+commandType+" assigned.", 
                             "Assign the command to driver "+driver.getName()+" as described in the Wiki.", 
-                            Severity.Suggestion,
+                            Severity.Warning,
                             "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands"));
                 }
             }

@@ -31,6 +31,7 @@ import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractControllerAxis;
+import org.openpnp.util.SimpleGraph;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
@@ -65,12 +66,29 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         OneSidedOptimizedPositioning,
         /**
          * Backlash compensation is applied in the direction of travel. 
-         * Half of the offset is added to the actual target location.    
+         * The offset is added to the actual target location, if its signum point into the direction of travel.
          */
-        DirectionalCompensation;
+        DirectionalCompensation,
+        
+        /**
+         * Same as DirectionalCompensation but this method sneaks up to the target at lower speed for the last part
+         * to prevent overshoot. 
+         * 
+         * The sneaking up length is taken to be the same length as the backlash offset. The justification is that
+         * overshoot can never be more than the backlash, i.e. it will at most take up the slack. 
+         */
+        DirectionalSneakUp;
 
         public boolean isOneSidedPositioningMethod() {
             return this == OneSidedPositioning || this == OneSidedOptimizedPositioning;
+        }
+
+        public boolean isDirectionalMethod() {
+            return this == DirectionalCompensation || this == DirectionalSneakUp;
+        }
+
+        public boolean isSpeedControlledMethod() {
+            return this == OneSidedPositioning || this == OneSidedOptimizedPositioning || this == DirectionalSneakUp;
         }
     }
 
@@ -78,10 +96,16 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     private BacklashCompensationMethod backlashCompensationMethod = BacklashCompensationMethod.None;
 
     @Element(required = false)
+    private Length acceptableTolerance = new Length(0.025, LengthUnit.Millimeters);
+
+    @Element(required = false)
     private Length backlashOffset = new Length(0.0, LengthUnit.Millimeters);
 
+    @Element(required = false)
+    private Length sneakUpOffset = new Length(0.0, LengthUnit.Millimeters);
+
     @Attribute(required = false) 
-    private double backlashSpeedFactor = 0.1; 
+    private double backlashSpeedFactor = 0.25; 
 
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
@@ -147,6 +171,9 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Element(required = false)
     private double resolution = 0.0001; // 
 
+    private SimpleGraph stepTestGraph;
+    private SimpleGraph backlashDistanceTestGraph;
+    private SimpleGraph backlashSpeedTestGraph;
 
     public double getResolution() {
         if (resolution <= 0.0) {
@@ -170,27 +197,27 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getFeedratePerSecond() {
-        return convertToSytem(feedratePerSecond);
+        return convertToSystem(feedratePerSecond);
     }
 
     public void setFeedratePerSecond(Length feedratePerSecond) {
-        this.feedratePerSecond = convertFromSytem(feedratePerSecond);
+        this.feedratePerSecond = convertFromSystem(feedratePerSecond);
     }
 
     public Length getAccelerationPerSecond2() {
-        return convertToSytem(accelerationPerSecond2);
+        return convertToSystem(accelerationPerSecond2);
     }
 
     public void setAccelerationPerSecond2(Length accelerationPerSecond2) {
-        this.accelerationPerSecond2 = convertFromSytem(accelerationPerSecond2);
+        this.accelerationPerSecond2 = convertFromSystem(accelerationPerSecond2);
     }
 
     public Length getJerkPerSecond3() {
-        return convertToSytem(jerkPerSecond3);
+        return convertToSystem(jerkPerSecond3);
     }
 
     public void setJerkPerSecond3(Length jerkPerSecond3) {
-        this.jerkPerSecond3 = convertFromSytem(jerkPerSecond3);
+        this.jerkPerSecond3 = convertFromSystem(jerkPerSecond3);
     }
 
     public String getPreMoveCommand() {
@@ -209,12 +236,28 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         this.backlashCompensationMethod = backlashCompensationMethod;
     }
 
+    public Length getAcceptableTolerance() {
+        return acceptableTolerance;
+    }
+
+    public void setAcceptableTolerance(Length acceptableTolerance) {
+        this.acceptableTolerance = acceptableTolerance;
+    }
+
     public Length getBacklashOffset() {
-        return convertToSytem(backlashOffset);
+        return convertToSystem(backlashOffset);
     }
 
     public void setBacklashOffset(Length backlashOffset) {
-        this.backlashOffset = convertFromSytem(backlashOffset);
+        this.backlashOffset = convertFromSystem(backlashOffset);
+    }
+
+    public Length getSneakUpOffset() {
+        return sneakUpOffset;
+    }
+
+    public void setSneakUpOffset(Length sneakUpOffset) {
+        this.sneakUpOffset = sneakUpOffset;
     }
 
     public double getBacklashSpeedFactor() {
@@ -313,6 +356,36 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         this.invertLinearRotational = invertLinearRotational;
     }
 
+    public SimpleGraph getStepTestGraph() {
+        return stepTestGraph;
+    }
+
+    public void setStepTestGraph(SimpleGraph stepTestGraph) {
+        Object oldValue = this.stepTestGraph;
+        this.stepTestGraph = stepTestGraph;
+        firePropertyChange("stepTestGraph", oldValue, stepTestGraph);
+    }
+
+    public SimpleGraph getBacklashSpeedTestGraph() {
+        return backlashSpeedTestGraph;
+    }
+
+    public void setBacklashSpeedTestGraph(SimpleGraph backlashSpeedTestGraph) {
+        Object oldValue = this.backlashSpeedTestGraph;
+        this.backlashSpeedTestGraph = backlashSpeedTestGraph;
+        firePropertyChange("backlashSpeedTestGraph", oldValue, backlashSpeedTestGraph);
+    }
+
+    public SimpleGraph getBacklashDistanceTestGraph() {
+        return backlashDistanceTestGraph;
+    }
+
+    public void setBacklashDistanceTestGraph(SimpleGraph backlashDistanceTestGraph) {
+        Object oldValue = this.backlashDistanceTestGraph;
+        this.backlashDistanceTestGraph = backlashDistanceTestGraph;
+        firePropertyChange("backlashDistanceTestGraph", oldValue, backlashDistanceTestGraph);
+    }
+
     @Override
     public double getMotionLimit(int order) {
         if (order == 1) {
@@ -406,6 +479,8 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                         Severity.Warning,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
             }
+        }
+        if (solutions.isTargeting(Milestone.Kinematics)) {
             if (Math.abs(getMotionLimit(1)*2 - getMotionLimit(2)) < 0.1) {
                 // HACK: migration sets the acceleration to twice the feed-rate, that's our "signal" that the user has not yet
                 // tuned them.
@@ -416,31 +491,6 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                         Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
             }
-        }
-        if (solutions.isTargeting(Milestone.Calibration)) {
-            final BacklashCompensationMethod oldBacklashCompensationMethod = 
-                    getBacklashCompensationMethod();
-            if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
-                    && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
-                solutions.add(new Solutions.Issue(
-                        this, 
-                        "New directonal backlash compensation method improves performance and allows fluid motion.", 
-                        "Set axis to DirectionalCompensation.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Backlash-Compensation") {
-
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        setBacklashCompensationMethod(
-                                (state == Solutions.State.Solved) ?  
-                                        BacklashCompensationMethod.DirectionalCompensation 
-                                        : oldBacklashCompensationMethod);
-                        super.setState(state);
-                    }
-                });
-            }
-        }
-        if (solutions.isTargeting(Milestone.Advanced)) {
             if (getType() == Type.Rotation) {
                 if (!isWrapAroundRotation()) {
                     solutions.add(new Solutions.Issue(

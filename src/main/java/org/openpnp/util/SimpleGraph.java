@@ -30,6 +30,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+import javax.swing.UIManager;
+
 public class SimpleGraph {
 
     private double relativePaddingLeft;
@@ -238,7 +240,15 @@ public class SimpleGraph {
                 double x1 = entry1.getKey();
                 double y0 = data.get(x0);
                 double y1 = data.get(x1);
-                double r = (x-x0)/(x1-x0);
+                double r;
+                if (isLineShown()) {
+                    // interpolate
+                    r = (x-x0)/(x1-x0);
+                }
+                else {
+                    // step to nearest
+                    r = x - x0 < x1 - x ? 0 : 1;
+                }
                 return y0+r*(y1-y0);
             }
             return null;
@@ -268,6 +278,11 @@ public class SimpleGraph {
                         maximum.x = Math.max(x, maximum.x);
                         maximum.y = Math.max(y, maximum.y);
                     }
+                }
+                if (minimum.x != maximum.x && minimum.y == maximum.y) {
+                    // Flatline detected, just add a pseudo min/max.
+                    minimum.y -= 0.0001;
+                    maximum.y += 0.0001;
                 }
                 dirty = false;
             }
@@ -365,5 +380,15 @@ public class SimpleGraph {
 
     public List<DataScale> getScales() {
         return Collections.unmodifiableList(dataScales);
+    }
+
+    public static Color getDefaultGridColor() {
+        Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
+        if (gridColor == null) {
+            gridColor = new Color(0, 0, 0, 64);
+        } else {
+            gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
+        }
+        return gridColor;
     }
 }

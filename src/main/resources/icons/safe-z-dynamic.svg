@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="48"
+   height="48"
+   viewBox="0 0 12.7 12.7"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="safe-z-dynamic.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="7.9195959"
+     inkscape:cx="48.766161"
+     inkscape:cy="61.770836"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1710"
+     inkscape:window-height="1271"
+     inkscape:window-x="1024"
+     inkscape:window-y="315"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-284.29997)">
+    <g
+       id="g4554"
+       transform="translate(0,0.34976649)">
+      <g
+         sketch:type="MSLayerGroup"
+         id="g4323-0"
+         style="fill:#005bdc;fill-opacity:0.99215686;fill-rule:evenodd;stroke:none;stroke-width:1"
+         transform="matrix(0.26709232,0,0,0.25630634,3.1448922,284.39733)">
+        <path
+           style="fill:#005bdc;fill-opacity:0.99215686"
+           sketch:type="MSShapeGroup"
+           id="path4325-6"
+           d="M 15.272727,9 18,4 H 6 L 8.7272727,9 Z M 11,10 h 2 v 9 h -2 z"
+           inkscape:connector-curvature="0" />
+      </g>
+      <rect
+         y="289.47928"
+         x="5.6751108"
+         height="1.2208924"
+         width="1.3497785"
+         id="rect4526"
+         style="fill:#bd0404;fill-opacity:1;stroke:none;stroke-width:0.25416335;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path4543"
+         d="M 1.4055136,291.08663 H 11.294486"
+         style="fill:#005bdd;fill-opacity:0.99215686;stroke:#005bdd;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:0.795, 0.265;stroke-dashoffset:0;stroke-opacity:0.99215686" />
+      <path
+         sodipodi:nodetypes="cccccc"
+         inkscape:connector-curvature="0"
+         id="path4547"
+         d="M 0.82086191,295.04556 H 4.5682033 v -3.29075 h 3.6137066 v 3.29075 h 3.6972281"
+         style="fill:none;stroke:#bd0404;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
+  </g>
+</svg>

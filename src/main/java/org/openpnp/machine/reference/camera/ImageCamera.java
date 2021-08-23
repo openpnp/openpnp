@@ -25,6 +25,8 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
@@ -38,7 +40,9 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Footprint;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -64,6 +68,30 @@ public class ImageCamera extends ReferenceCamera {
     @Attribute(required = false)
     private int height = 480;
 
+    @Element(required = false)
+    private Location imageUnitsPerPixel;
+
+    @Attribute(required = false)
+    private double simulatedRotation = 0;
+
+    @Attribute(required = false)
+    private double simulatedScale = 1.0;
+
+    @Attribute(required = false)
+    private boolean simulatedFlipped = false;
+
+    @Element(required = false)
+    private Length focalLength = new Length(6, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length sensorDiagonal = new Length(4.4, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Location primaryFiducial = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Location secondaryFiducial = new Location(LengthUnit.Millimeters);
+
     private BufferedImage source;
 
     /**
@@ -84,6 +112,7 @@ public class ImageCamera extends ReferenceCamera {
     @Attribute(required = false)
     boolean filterTestImageVision = true;
 
+    @Deprecated
     @Attribute(required = false)
     private boolean subPixelRendering = true;
 
@@ -91,20 +120,55 @@ public class ImageCamera extends ReferenceCamera {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
     }
 
-    public int getWidth() {
+    public int getViewWidth() {
         return width;
     }
 
-    public void setWidth(int width) {
+    public void setViewWidth(int width) {
         this.width = width;
     }
 
-    public int getHeight() {
+    public int getViewHeight() {
         return height;
     }
 
-    public void setHeight(int height) {
+    public void setViewHeight(int height) {
         this.height = height;
+    }
+
+    public double getSimulatedRotation() {
+        return simulatedRotation;
+    }
+
+    public void setSimulatedRotation(double simulatedRotation) {
+        this.simulatedRotation = simulatedRotation;
+    }
+
+    public double getSimulatedScale() {
+        return simulatedScale;
+    }
+
+    public void setSimulatedScale(double simulatedScale) {
+        this.simulatedScale = simulatedScale;
+    }
+
+    public boolean isSimulatedFlipped() {
+        return simulatedFlipped;
+    }
+
+    public void setSimulatedFlipped(boolean simulatedFlipped) {
+        this.simulatedFlipped = simulatedFlipped;
+    }
+
+    public Location getImageUnitsPerPixel() {
+        if (imageUnitsPerPixel == null) {
+            imageUnitsPerPixel = getUnitsPerPixel();
+        }
+        return imageUnitsPerPixel;
+    }
+
+    public void setImageUnitsPerPixel(Location imageUnitsPerPixel) {
+        this.imageUnitsPerPixel = imageUnitsPerPixel;
     }
 
     public String getSourceUri() {
@@ -115,6 +179,38 @@ public class ImageCamera extends ReferenceCamera {
         String oldValue = this.sourceUri;
         this.sourceUri = sourceUri;
         firePropertyChange("sourceUri", oldValue, sourceUri);
+    }
+
+    public Length getFocalLength() {
+        return focalLength;
+    }
+
+    public void setFocalLength(Length focalLength) {
+        this.focalLength = focalLength;
+    }
+
+    public Length getSensorDiagonal() {
+        return sensorDiagonal;
+    }
+
+    public void setSensorDiagonal(Length sensorDiagonal) {
+        this.sensorDiagonal = sensorDiagonal;
+    }
+
+    public Location getPrimaryFiducial() {
+        return primaryFiducial;
+    }
+
+    public void setPrimaryFiducial(Location primaryFiducial) {
+        this.primaryFiducial = primaryFiducial;
+    }
+
+    public Location getSecondaryFiducial() {
+        return secondaryFiducial;
+    }
+
+    public void setSecondaryFiducial(Location secondaryFiducial) {
+        this.secondaryFiducial = secondaryFiducial;
     }
 
     @Override 
@@ -151,44 +247,43 @@ public class ImageCamera extends ReferenceCamera {
         double locationX = location.getX();
         double locationY = location.getY();
 
-        double pixelX = locationX / getUnitsPerPixel().getX();
-        double pixelY = locationY / getUnitsPerPixel().getY();
+        Location upp = getImageUnitsPerPixel().convertToUnits(AxesLocation.getUnits());
+        double pixelX = locationX / upp.getX();
+        double pixelY = locationY / upp.getY();
 
-        
-        if (subPixelRendering ) {
-            // Sub-pixel rendering.
-            double dx = (pixelX - (width / 2.0));
-            double dy = (source.getHeight() - (pixelY + (height / 2.0)));
-            gFrame.clearRect(0, 0, width, height);
-            gFrame.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            gFrame.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            gFrame.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            AffineTransform t = new AffineTransform();
-            t.translate(-dx, -dy); // x/y set here
-            t.scale(1.0, 1.0);
-            gFrame.drawImage(source, t, null);
+        // Draw the image with sub-pixel rendering.
+        double dx = (pixelX - (width / 2.0));
+        double dy = (source.getHeight() - (pixelY + (height / 2.0)));
+        gFrame.clearRect(0, 0, width, height);
+        gFrame.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);//VALUE_INTERPOLATION_BILINEAR);
+        gFrame.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        gFrame.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        AffineTransform t = new AffineTransform();
+        t.translate(-dx, -dy); // x/y set here
+        if (simulation) {
+            t.translate(dx + width/2, dy + height/2);
+            t.scale(isSimulatedFlipped() ? -getSimulatedScale() : getSimulatedScale(), getSimulatedScale());
+            t.translate(-dx - width/2, -dy - height/2);
+            t.rotate(-Math.toRadians(getSimulatedRotation()), dx + width/2, dy + height/2);
         }
-        else {
-            int dx = (int) (pixelX - (width / 2));
-            int dy = (int) (source.getHeight() - (pixelY + (height / 2)));
-            int dx1 = dx;
-            int dy1 = dy;
-            int w1 = width;
-            int h1 = height;
-    
-            if (dx < 0 || dy < 0 || dx+w1 > source.getWidth() || dy+h1 > source.getHeight()) {
-                // crop to source area
-                w1 += Math.min(0, dx);
-                h1 += Math.min(0, dy);
-                dx1 = Math.max(0, dx);
-                dy1 = Math.max(0, dy);
-                w1 = Math.min(w1, source.getWidth() - dx1);
-                h1 = Math.min(h1, source.getHeight() - dy1);
-                // paint the rest black
-                gFrame.setColor(Color.black);
-                gFrame.fillRect(0, 0, width, height);
-            }
-            gFrame.drawImage(source, dx1-dx, dy1-dy, dx1-dx+w1 - 1, dy1-dy+h1 - 1, dx1, dy1, dx1 + w1 - 1, dy1 + h1 - 1, null);
+        gFrame.drawImage(source, t, null);
+
+        // Draw the calibration fiducials. 
+        Location fiducial1 = getPrimaryFiducial();
+        if (fiducial1.isInitialized()) {
+            fiducial1 = fiducial1.convertToUnits(AxesLocation.getUnits()).subtract(location);
+            drawFiducial(gFrame, width, height, upp, upp, fiducial1);
+        }
+        Location fiducial2 = getSecondaryFiducial();
+        if (fiducial2.isInitialized()) {
+            fiducial2 = fiducial2.convertToUnits(AxesLocation.getUnits()).subtract(location);
+            double cameraViewDiagonal = Math.sqrt(Math.pow(upp.getX()*width, 2) + Math.pow(upp.getY()*height, 2));
+            double sensorDiagonal = getSensorDiagonal().convertToUnits(AxesLocation.getUnits()).getValue();
+            double focalLength = getFocalLength().convertToUnits(AxesLocation.getUnits()).getValue();
+            double cameraDistance = focalLength*cameraViewDiagonal/sensorDiagonal;
+            double secondaryDistance = cameraDistance + fiducial1.getZ() - fiducial2.getZ(); 
+            Location upp2 = upp.multiply(secondaryDistance/cameraDistance);
+            drawFiducial(gFrame, width, height, upp, upp2, fiducial2);
         }
 
         if (simulation) {
@@ -197,6 +292,75 @@ public class ImageCamera extends ReferenceCamera {
 
         gFrame.dispose();
         return frame;
+    }
+
+    protected void blurObjectIntoView(Graphics2D gView, BufferedImage frame) {
+        AffineTransform tx = gView.getTransform();
+        gView.setTransform(new AffineTransform());
+        double radius = 0.2/getImageUnitsPerPixel().convertToUnits(LengthUnit.Millimeters).getX();
+        ConvolveOp op = null;
+        if (radius > 0.01) {
+            int size = (int)Math.ceil(radius) * 2 + 1;
+            float[] data = new float[size * size];
+            double sum = 0;
+            int num = 0;
+            for (int i = 0; i < data.length; i++) {
+                double x = i/size - size/2.0 + 0.5;
+                double y = i%size - size/2.0 + 0.5;
+                double r = Math.sqrt(x*x+y*y);
+                // rough approximation
+                float weight = (float) Math.max(0, Math.min(1, radius + 1 - r));
+                data[i] = weight;
+                sum += weight;
+                if (weight > 0) {
+                    num++;
+                }
+            }
+            if (num > 1) {
+                for (int i = 0; i < data.length; i++) {
+                    data[i] /= sum;
+                }
+
+                Kernel kernel = new Kernel(size, size, data);
+                op = new ConvolveOp(kernel, ConvolveOp.EDGE_NO_OP, null);
+            }
+        }
+        gView.drawImage(frame, op, 0, 0);
+        gView.setTransform(tx);
+    }
+
+    protected void drawFiducial(Graphics2D gFrame, int cameraWidth, int cameraHeight, Location uppDefault,
+            Location upp, Location fiducial) {
+        // Coordinates
+        double xc = (cameraWidth / 2.0) + fiducial.getX()/upp.getX();
+        double yc = (cameraHeight / 2.0) - fiducial.getY()/upp.getY();
+        double w = 1.0/upp.getX();
+        double h = 1.0/upp.getY();
+        if (xc + w < 0 || xc - w > cameraWidth || yc + h < 0 || yc - w > cameraHeight) { 
+            return;
+        }
+        AffineTransform oldTx = gFrame.getTransform();
+        AffineTransform tx = new AffineTransform();
+        tx.translate(xc - w/2, yc - h/2);
+
+        if (upp == uppDefault) {
+            gFrame.setTransform(tx);
+            gFrame.setColor(Color.WHITE);
+            gFrame.fillOval(0, 0, (int)w, (int)h);
+        }
+        else {
+            // Simulate focal blur
+            BufferedImage frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = frame.createGraphics();
+            g.setTransform(tx);
+            // Clear with transparent background
+            g.setBackground(new Color(0, 0, 0, 0));
+            g.clearRect(-width/2, -height/2, width, height);
+            g.fillOval(0, 0, (int)w, (int)h);
+            blurObjectIntoView(gFrame, frame); 
+        }
+
+        gFrame.setTransform(oldTx);
     }
 
     /**
@@ -281,7 +445,7 @@ public class ImageCamera extends ReferenceCamera {
             // Find the best match
             TemplateMatch bestMatch = null;
             double bestDistance = Double.MAX_VALUE;
-            Location unitsPerPixel = getUnitsPerPixel();
+            Location unitsPerPixel = getImageUnitsPerPixel();
             Location center = new Location(LengthUnit.Millimeters);
             // CV operations are always rounded to the nearest pixel, giving at most an error of 0.5 x pixel diameter. 
             // The same is true for CV operation that sets up and adjust the StripFeeder. Test have shown, that the test image has 
@@ -297,7 +461,7 @@ public class ImageCamera extends ReferenceCamera {
                 double offsetY = (dimension / 2.0) - (y + template.getHeight()/2.0);
                 offsetX *= unitsPerPixel.getX();
                 offsetY *= unitsPerPixel.getY();
-                Location offsets = new Location(getUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
+                Location offsets = new Location(getImageUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
                 double distance = center.getLinearDistanceTo(offsets);
                 double score = resultMat.get(y, x)[0];
                 if (bestMatch == null || (bestDistance > distance && bestMatch.score*0.85 < score)) {

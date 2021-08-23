@@ -122,12 +122,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
         FontMetrics dfm = g2d.getFontMetrics(font);
         int fontLineHeight = dfm.getAscent()+1; // numbers are all ascent
         int fontAscent = dfm.getAscent();
-        Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
-        if (gridColor == null) {
-            gridColor = new Color(0, 0, 0, 64);
-        } else {
-            gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
-        }
+        Color gridColor = SimpleGraph.getDefaultGridColor();
         g2d.setFont(font);
         int w = getWidth();
         int h = getHeight();

@@ -21,6 +21,11 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -44,10 +49,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JCheckBox;
-import javax.swing.JButton;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 public class SimulationModeMachineConfigurationWizard extends AbstractConfigurationWizard {
 
@@ -170,37 +171,37 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         
         pickAndPlaceChecking = new JCheckBox("");
         panelLocations.add(pickAndPlaceChecking, "4, 12");
+        
+        JLabel lblCameraLags = new JLabel("Camera Lag [s]");
+        panelLocations.add(lblCameraLags, "2, 16, right, default");
+        
+        simulatedCameraLag = new JTextField();
+        panelLocations.add(simulatedCameraLag, "4, 16, fill, default");
+        simulatedCameraLag.setColumns(10);
+        
+                JLabel lblCameraNoise = new JLabel("Camera Noise");
+                lblCameraNoise.setToolTipText("<html>\r\nCreates simulated noise in the camera image (number of sparks) <br/>\r\nto satisfy Camera Settling that the frame has changed. \r\n</html>");
+                panelLocations.add(lblCameraNoise, "2, 18, right, default");
+        
+                simulatedCameraNoise = new JTextField();
+                panelLocations.add(simulatedCameraNoise, "4, 18");
+                simulatedCameraNoise.setColumns(10);
 
         JLabel lblVibrationAmplitude = new JLabel("Vibration Amplitude");
         lblVibrationAmplitude.setToolTipText("Simulates Vibration, the amplitude is given in relation to the past acceleration at Eigenfrequency (try 0.1 for a strong vibration).");
-        panelLocations.add(lblVibrationAmplitude, "2, 16, right, default");
+        panelLocations.add(lblVibrationAmplitude, "2, 20, right, default");
 
         simulatedVibrationAmplitude = new JTextField();
-        panelLocations.add(simulatedVibrationAmplitude, "4, 16, fill, default");
+        panelLocations.add(simulatedVibrationAmplitude, "4, 20, fill, default");
         simulatedVibrationAmplitude.setColumns(10);
         
         JLabel lblDuration = new JLabel("Vibration Duration [s]");
         lblDuration.setToolTipText("Vibration duration in seconds (exponential decay to ~1%).");
-        panelLocations.add(lblDuration, "2, 18, right, default");
+        panelLocations.add(lblDuration, "2, 22, right, default");
         
         simulatedVibrationDuration = new JTextField();
-        panelLocations.add(simulatedVibrationDuration, "4, 18, left, default");
+        panelLocations.add(simulatedVibrationDuration, "4, 22, left, default");
         simulatedVibrationDuration.setColumns(10);
-
-        JLabel lblCameraNoise = new JLabel("Camera Noise");
-        lblCameraNoise.setToolTipText("<html>\r\nCreates simulated noise in the camera image (number of sparks) <br/>\r\nto satisfy Camera Settling that the frame has changed. \r\n</html>");
-        panelLocations.add(lblCameraNoise, "2, 20, right, default");
-
-        simulatedCameraNoise = new JTextField();
-        panelLocations.add(simulatedCameraNoise, "4, 20");
-        simulatedCameraNoise.setColumns(10);
-        
-        JLabel lblCameraLags = new JLabel("Camera Lag [s]");
-        panelLocations.add(lblCameraLags, "2, 22, right, default");
-        
-        simulatedCameraLag = new JTextField();
-        panelLocations.add(simulatedCameraLag, "4, 22, fill, default");
-        simulatedCameraLag.setColumns(10);
 
         JLabel lblX = new JLabel("X");
         panelLocations.add(lblX, "4, 26");
@@ -268,6 +269,7 @@ public class SimulationModeMachineConfigurationWizard extends AbstractConfigurat
         addWrappedBinding(machine, "simulatedRunout", simulatedRunout, "text", lengthConverter);
         addWrappedBinding(machine, "simulatedRunoutPhase", simulatedRunoutPhase, "text", degreeConverter);
         addWrappedBinding(machine, "pickAndPlaceChecking", pickAndPlaceChecking, "selected");
+
         addWrappedBinding(machine, "simulatedVibrationAmplitude", simulatedVibrationAmplitude, "text", doubleConverter);
         addWrappedBinding(machine, "simulatedVibrationDuration", simulatedVibrationDuration, "text", doubleConverter);
         addWrappedBinding(machine, "simulatedCameraNoise", simulatedCameraNoise, "text", integerConverter);
