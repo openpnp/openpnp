@@ -64,3 +64,5 @@ For machines with multiple down-looking camera on the same head, the additional 
 
 Up-looking cameras (also known as "bottom cameras") cannot look at the calibration fiducial, obviously, so they are calibrated against a nozzle tip. Load the smallest nozzle tip that you can reliably detect (it may take some trial and error). 
 
+![bottom camera calibration](https://user-images.githubusercontent.com/9963310/130501778-de6cd944-cbae-40d3-87a4-bd00dbfc6c15.png)
+
