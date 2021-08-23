@@ -412,6 +412,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     @Override 
     public boolean isReachable(Location location) throws Exception {
+            location = substituteUnchangedCoordinates(location, getLocation());
             Location headLocation = toHeadLocation(location);
             AxesLocation axesLocation = toRaw(headLocation);
             return (Configuration.get().getMachine().getMotionPlanner().isValidLocation(axesLocation));
