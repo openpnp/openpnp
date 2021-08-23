@@ -317,7 +317,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                             + "<p>Place the calibration test object onto the calibration primary fiducial.</p><br/>"
                             + "<p>Jog camera " + defaultCamera.getName()
                             + " over the test object. Target it with the cross-hairs.</p><br/>"
-                            + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
+                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
                             + "camera view. A green circle and cross-hairs should appear and hug the test object contour. "
                             + "Zoom the camera using the scroll-wheel.</p><br/>"
                             + "<p><strong color=\"red\">Caution:</strong> The nozzle "+nozzle.getName()+" will move to the test object "
@@ -355,7 +355,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     Circle testObject = visualSolutions
-                                            .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null);
+                                            .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null, null);
                                     head.setCalibrationTestObjectDiameter(
                                             new Length(testObject.getDiameter()*defaultCamera.getUnitsPerPixel().getX(), 
                                                     defaultCamera.getUnitsPerPixel().getUnits()));

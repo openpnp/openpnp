@@ -574,7 +574,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         if (! Arrays.asList(options).contains(LocationOption.SuppressDynamicCompensation)) {
             if (zCalibratedNozzleTip != null && calibrationOffsetZ != null) {
                 location = location.subtract(new Location(calibrationOffsetZ .getUnits(), 0, 0, calibrationOffsetZ.getValue(), 0));
-                Logger.trace("{}.transformToHeadLocation({}, ...) Z offset {}", getName(), location, calibrationOffsetZ);
+                Logger.trace("{}.toHeadLocation({}, ...) Z offset {}", getName(), location, calibrationOffsetZ);
             }
         }
         return super.toHeadLocation(location, currentLocation, options);

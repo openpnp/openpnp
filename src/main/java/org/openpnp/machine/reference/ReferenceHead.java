@@ -82,7 +82,6 @@ public class ReferenceHead extends AbstractHead {
                 AxesLocation axesHomingLocation;
                 if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
                     // Convert fiducial location to raw coordinates
-                    // TODO: are you sure the toHeadLocation() is needed?
                     axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
                 }
                 else {

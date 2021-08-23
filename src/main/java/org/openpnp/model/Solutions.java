@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.border.LineBorder;
@@ -388,6 +389,12 @@ public class Solutions extends AbstractTableModel {
             }
             public abstract Length get();
             public abstract void set(Length value);
+        }
+        public abstract class ActionProperty extends CustomProperty {
+            public ActionProperty(String label, String toolTip) {
+                super(label, toolTip);
+            }
+            public abstract Action get();
         }
 
         public CustomProperty [] getProperties() {
