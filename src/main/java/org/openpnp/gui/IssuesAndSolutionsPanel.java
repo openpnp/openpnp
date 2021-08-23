@@ -246,10 +246,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
                     @Override
                     public void tableChanged(TableModelEvent e) {
-                        SwingUtilities.invokeLater(() -> {
-                            dirty = true;
-                            notifySolutionsChanged();
-                        });
+                        solutionChanged();
                     }
                 });
 
@@ -405,7 +402,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         });
     }
 
-    public void notifySolutionsChanged() {
+    protected void notifySolutionsChanged() {
         if (dirty) {
             dirty = false;
             // Reselect the Machine Setup tree path to reload the wizard with potentially different settings and property sheets.
@@ -564,5 +561,16 @@ public class IssuesAndSolutionsPanel extends JPanel {
         BeanProperty<Solutions, Boolean> solutionsBeanProperty_3 = BeanProperty.create("showDismissed");
         AutoBinding<Solutions, Boolean, JCheckBox, Boolean> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, solutions, solutionsBeanProperty_3, showDismissed, jCheckBoxBeanProperty);
         autoBinding_3.bind();
+    }
+
+
+    /**
+     * 
+     */
+    public void solutionChanged() {
+        SwingUtilities.invokeLater(() -> {
+            dirty = true;
+            notifySolutionsChanged();
+        });
     }
 }

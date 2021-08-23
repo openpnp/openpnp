@@ -355,7 +355,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     Circle testObject = visualSolutions
-                                            .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null);
+                                            .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null, null);
                                     head.setCalibrationTestObjectDiameter(
                                             new Length(testObject.getDiameter()*defaultCamera.getUnitsPerPixel().getX(), 
                                                     defaultCamera.getUnitsPerPixel().getUnits()));

@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -35,6 +36,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Length;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Issue;
+import org.openpnp.model.Solutions.Issue.ActionProperty;
 import org.openpnp.model.Solutions.Issue.DoubleProperty;
 import org.openpnp.model.Solutions.Issue.IntegerProperty;
 import org.openpnp.model.Solutions.Issue.LengthProperty;
@@ -263,6 +265,16 @@ public class IssuePanel extends JPanel {
                     }
                 });
                 panel.add(textField, "4, "+(formRow*2)+", left, default");
+            }
+            else if (property instanceof ActionProperty) {
+                ActionProperty lengthProperty = (ActionProperty) property;
+                JLabel lbl = new JLabel(lengthProperty.getLabel());
+                lbl.setToolTipText(lengthProperty.getToolTip());
+                panel.add(lbl, "2, "+(formRow*2)+", right, default");
+                JButton button = new JButton(lengthProperty.get());
+                button.setToolTipText(lengthProperty.getToolTip());
+                button.setEnabled(issue.getState() == Solutions.State.Open);
+                panel.add(button, "4, "+(formRow*2)+", left, default");
             }
             // Consume the row
             formRow++;
