@@ -258,7 +258,7 @@ public class VisionSolutions implements Solutions.Subject {
                                 UiUtils.submitUiMachineTask(() -> {
                                     try {
                                         // This show a diagnostic detection image in the camera view.
-                                        getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.05, "Diameter "+(int)value+" px");
+                                        getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.05, "Diameter "+(int)value+" px - Score {score} ");
                                     }
                                     catch (Exception e) {
                                         Toolkit.getDefaultToolkit().beep();
@@ -309,7 +309,7 @@ public class VisionSolutions implements Solutions.Subject {
                             + "in X, Y.</p><br/>"
                             + "<p>Jog camera " + camera.getName()
                             + " over the privary fiducial. Target it roughly with the cross-hairs.</p><br/>"
-                            + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
+                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
                             + "camera view. A green circle and cross-hairs should appear and hug the fiducial contour. "
                             + "Zoom the camera using the scroll-wheel.</p><br/>"
                             + "<p>Then press Accept to capture the position. The camera will perform a small calibration movement "
@@ -392,7 +392,7 @@ public class VisionSolutions implements Solutions.Subject {
                             + "in X, Y.</p><br/>"
                             + "<p>Jog camera " + camera.getName()
                             + " over the secondary fiducial. Target it roughly with the cross-hairs.</p><br/>"
-                            + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
+                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
                             + "camera view. A green circle and cross-hairs should appear and hug the fiducial contour. "
                             + "Zoom the camera using the scroll-wheel.</p><br/>"
                             + "<p>Then press Accept to capture the position.</p>"
@@ -464,7 +464,7 @@ public class VisionSolutions implements Solutions.Subject {
                             + "offsets (first approximation).</p><br/>"
                             + "<p>Jog camera " + camera.getName()
                             + " over the primary fiducial. Target it with the cross-hairs.</p><br/>"
-                            + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
+                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
                             + "camera view. A green circle and cross-hairs should appear and hug the fiducial contour. "
                             + "Zoom the camera using the scroll-wheel.</p><br/>"
                             + "<p>Then press Accept to capture the offsets. The camera will perform a small calibration movement "
@@ -562,7 +562,7 @@ public class VisionSolutions implements Solutions.Subject {
                             + " over the camera "+camera.getName()+". Target it with the cross-hairs.</p><br/>"
                             + "<p>Jog the nozzle tip point down in Z so it is in focus. This should be more or less on the same Z level "
                             + "as the PCB surface. If not, consider adjusting the camera focus to make it so.</p><br/>"
-                            + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
+                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
                             + "camera view. A green circle and cross-hairs should appear and hug the wanted contour. "
                             + "Zoom the camera using the scroll-wheel.</p><br/>"
                             + "<p>Make sure to target a circular edge that can be detected consistently even when seen from the side. "
@@ -827,7 +827,7 @@ public class VisionSolutions implements Solutions.Subject {
                             + "<p>Home the machine by means of your controller/manually. The controller must presently work in the wanted "
                             + "coordinate system.</p><br/>"
                             + "<p>Jog camera "+defaultCamera.getName()+" over the fiducial. Target it roughly with the cross-hairs.</p><br/>"
-                            + "<p>Adjust the <strong>Detected feature diameter</strong> up and down and see if it is detected right in the "
+                            + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
                             + "camera view. A green circle and cross-hairs should appear and hug the fiducial contour. "
                             + "Zoom the camera using the scroll-wheel.</p><br/>"
                             + "<p>Then press Accept to detect the precise position of the fiducial and set it up for visual homing.</p><br/>"
@@ -1250,7 +1250,9 @@ public class VisionSolutions implements Solutions.Subject {
                 MainFrame.get()
                 .getCameraViews()
                 .getCameraView(camera)
-                .showFilteredImage(diagnosticImage, diagnostics, diagnosticsMilliseconds);
+                .showFilteredImage(diagnosticImage, 
+                        diagnostics.replace("{score}", String.format("%.2f", scoreRange.finalScore)), 
+                        diagnosticsMilliseconds);
             });
         }
         if (results.size() < 1) {
