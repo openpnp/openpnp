@@ -21,7 +21,6 @@ package org.openpnp.gui.processes;
 
 import java.awt.Color;
 import java.awt.Dialog.ModalityType;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
@@ -61,9 +60,11 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
+import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.util.CameraWalker;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
@@ -162,14 +163,14 @@ public abstract class CalibrateCameraProcess {
 
     private Location trialLocation1;
     private Location trialLocation2;
-    private org.opencv.core.Point trialPoint1;
-    private org.opencv.core.Point trialPoint2;
+    private Point trialPoint1;
+    private Point trialPoint2;
 
     private double xScaling;
 
     private double yScaling;
 
-    private ArrayList<Point2D> desiredCameraCorners;
+    private ArrayList<Point> desiredCameraCorners;
 
     private ArrayList<Location> cameraCornerLocations;
 
@@ -181,7 +182,7 @@ public abstract class CalibrateCameraProcess {
 
     private int actualPointsPerTestPattern;
 
-    protected ArrayList<Point2D> expectedImagePointsList;
+    protected ArrayList<Point> expectedImagePointsList;
 
     protected ArrayList<Location> testPatternLocationsList;
 
@@ -191,7 +192,7 @@ public abstract class CalibrateCameraProcess {
 
     private boolean savedAutoToolSelect;
     
-    private Point2D imageCenterPoint;
+    private Point imageCenterPoint;
     
     private int maskDiameter;
     
@@ -226,6 +227,8 @@ public abstract class CalibrateCameraProcess {
     
     protected boolean rigIsOnNozzle = false;
 
+    protected CameraWalker cameraWalker;
+
 
     public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, 
             Part calibrationRigPart, List<Length> calibrationHeights)
@@ -239,7 +242,7 @@ public abstract class CalibrateCameraProcess {
         camera = cameraView.getCamera();
         pixelsX = camera.getWidth();
         pixelsY = camera.getHeight();
-        imageCenterPoint = new Point2D.Double((pixelsX-1.0)/2, (pixelsY-1.0)/2);
+        imageCenterPoint = new Point((pixelsX-1.0)/2, (pixelsY-1.0)/2);
 
         advCal = ((ReferenceCamera)camera).getAdvancedCalibration();
         loopGain = advCal.getWalkingLoopGain();
@@ -266,7 +269,7 @@ public abstract class CalibrateCameraProcess {
         pkg = calibrationRigPart.getPackage();
         footprint = pkg.getFootprint();
         pipeline = ((ReferenceFiducialLocator) Configuration.get().getMachine().
-                getFiducialLocator()).getPartSettings(calibrationRigPart).getPipeline();
+                getFiducialLocator()).getPartSettings(calibrationRigPart).getPipeline(); //.clone();
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("part", calibrationRigPart);
         pipeline.setProperty("package", pkg);
@@ -282,7 +285,6 @@ public abstract class CalibrateCameraProcess {
             MainFrame.get().getCameraViews().ensureCameraVisible(camera);
         });
         
-//        advance();
         initialAction();
     }
 
@@ -308,52 +310,6 @@ public abstract class CalibrateCameraProcess {
      */
     protected abstract void processCanceled();
     
-//    /**
-//     * Advances through the steps and displays the appropriate instructions for each step
-//     */
-//    private void advance() {
-//        boolean stepResult = true;
-//        switch (step) {
-//            case 0:
-//                stepResult = step1();
-//                break;
-//            case 1:
-//                stepResult = step2();
-//                break;
-//            case 2:
-//                stepResult = step3();
-//                break;
-//            case 3:
-//                stepResult = step4();
-//                break;
-//            case 4:
-//                stepResult = step5();
-//                break;
-//            case 5:
-//                stepResult = step6();
-//                break;
-//            case 6:
-//                stepResult = step7();
-//                break;
-//            default :
-//                break;
-//        }
-//
-//        if (!stepResult) {
-//            return;
-//        }
-//        step++;
-//        if (step > 6) {
-//            cleanUpWhenDone();
-//        }
-//        else {
-//            mainFrame.showInstructions("Camera Calibration Instructions/Status",
-//                    isHeadMountedCamera ? moveableCameraInstructions[step] : 
-//                        fixedCameraInstructions[step],
-//                    true, true, "Next", cancelActionListener, proceedActionListener);
-//        }
-//    }
-
     /**
      * Initial action to start the calibration process
      * 
@@ -512,10 +468,16 @@ public abstract class CalibrateCameraProcess {
                 Logger.trace("xScaling = " + xScaling);
                 Logger.trace("yScaling = " + yScaling);
                 
+                cameraWalker = new CameraWalker(movable, 
+                        new Location(LengthUnit.Millimeters, xScaling, yScaling, 0, 0), 
+                        (Point p)->findAveragedFiducialPoint(p));
+                cameraWalker.setLoopGain(0.2);
+                
                 publish("Finding image center.");
                 Logger.trace("Finding image center.");
-                centralLocation = walkToPoint(imageCenterPoint, xScaling, yScaling);
-
+                centralLocation = cameraWalker.walkToPoint(imageCenterPoint);
+                
+                cameraWalker.setLoopGain(advCal.getWalkingLoopGain());
                 return null;
             } 
 
@@ -555,18 +517,18 @@ public abstract class CalibrateCameraProcess {
      * @return true when complete
      */
     private boolean findImageCornersAction() {
-        desiredCameraCorners = new ArrayList<Point2D>();
+        desiredCameraCorners = new ArrayList<Point>();
         
         double testPatternFillFraction = advCal.getTestPatternFillFraction();
         
         //In order: upper left, lower left, lower right, and upper right
-        desiredCameraCorners.add(new Point2D.Double((1-testPatternFillFraction)*pixelsX/2,
+        desiredCameraCorners.add(new Point((1-testPatternFillFraction)*pixelsX/2,
                 (1-testPatternFillFraction)*pixelsY/2));
-        desiredCameraCorners.add(new Point2D.Double((1-testPatternFillFraction)*pixelsX/2,
+        desiredCameraCorners.add(new Point((1-testPatternFillFraction)*pixelsX/2,
                 (1+testPatternFillFraction)*pixelsY/2));
-        desiredCameraCorners.add(new Point2D.Double((1+testPatternFillFraction)*pixelsX/2,
+        desiredCameraCorners.add(new Point((1+testPatternFillFraction)*pixelsX/2,
                 (1+testPatternFillFraction)*pixelsY/2));
-        desiredCameraCorners.add(new Point2D.Double((1+testPatternFillFraction)*pixelsX/2,
+        desiredCameraCorners.add(new Point((1+testPatternFillFraction)*pixelsX/2,
                 (1-testPatternFillFraction)*pixelsY/2));
         Logger.trace("desiredCameraCorners = " + desiredCameraCorners);
 
@@ -601,8 +563,8 @@ public abstract class CalibrateCameraProcess {
                     
                     maskDiameter = initialMaskDiameter;
                     
-                    Location corner = walkToPoint(desiredCameraCorners.get(cornerIdx), 
-                            xScaling, yScaling);
+                    Location corner = cameraWalker.walkToPoint(centralLocation, imageCenterPoint,
+                            desiredCameraCorners.get(cornerIdx));
                     
                     if (isCancelled()) {
                         return null;
@@ -663,7 +625,7 @@ public abstract class CalibrateCameraProcess {
                 org.opencv.core.Point srcCornerPoint[] = new org.opencv.core.Point[4];
                 org.opencv.core.Point dstCornerPoint[] = new org.opencv.core.Point[4];
                 for (int i=0; i<4; i++) {
-                    Point2D srcCorner = desiredCameraCorners.get(i);
+                    Point srcCorner = desiredCameraCorners.get(i);
                     srcCornerPoint[i] = new org.opencv.core.Point(srcCorner.getX(), 
                             srcCorner.getY());
                     Location dstCorner = cameraCornerLocations.get(i);
@@ -691,7 +653,7 @@ public abstract class CalibrateCameraProcess {
                 
                 double testPatternOffsetY = 0.5 * (1 - testPatternFillFraction) * (pixelsY - 1);
                 
-                expectedImagePointsList = new ArrayList<Point2D>();
+                expectedImagePointsList = new ArrayList<Point>();
                 Mat expectedImagePoints = Mat.zeros(3, actualPointsPerTestPattern, CvType.CV_64FC1);
                 int nPoints = 0;
                 for (int iRow = 0; iRow < numberOfPointsPerTestPatternY; iRow++) {
@@ -753,8 +715,11 @@ public abstract class CalibrateCameraProcess {
     private boolean collectCalibrationPointsAlongRadialLinesAction() {
         List<double[]> testPattern3dPoints = new ArrayList<>();
         List<double[]> testPatternImagePoints = new ArrayList<>();
+        cameraWalker.setSaveCoordinates(testPattern3dPoints, testPatternImagePoints);
+        cameraWalker.setMaxAllowedPixelStep(Math.min(pixelsX, pixelsY)/12.0);
+        cameraWalker.setMinAllowedPixelStep(10);
         
-        List<Point2D> desiredEndPoints = new ArrayList<>();
+        List<Point> desiredEndPoints = new ArrayList<>();
         
         int numberOfLines = 4 * (int)Math.ceil(desiredNumberOfRadials/4.0);
 
@@ -764,7 +729,7 @@ public abstract class CalibrateCameraProcess {
             double scaling = advCal.getTestPatternFillFraction()*
                     Math.min(pixelsX / (2*Math.abs(unitVector[0])),
                     pixelsY / (2*Math.abs(unitVector[1])));
-            desiredEndPoints.add(new Point2D.Double(scaling*unitVector[0] + pixelsX/2, 
+            desiredEndPoints.add(new Point(scaling*unitVector[0] + pixelsX/2, 
                     scaling*unitVector[1] + pixelsY/2));
         }
         Collections.shuffle(desiredEndPoints, new Random(calibrationHeightIndex+1));
@@ -778,8 +743,8 @@ public abstract class CalibrateCameraProcess {
                     publish(String.format("Collecting calibration points along radial line %d of %d at calibration Z coordinate %d of %d", 
                             iLine+1, numberOfLines, 
                             calibrationHeightIndex+1, numberOfCalibrationHeights));
-                    walkToPoint(desiredEndPoints.get(iLine), xScaling, yScaling, 
-                            testPattern3dPoints, testPatternImagePoints);
+                    cameraWalker.walkToPoint(centralLocation, imageCenterPoint, 
+                            desiredEndPoints.get(iLine));
                     if (isCancelled()) {
                         return null;
                     }
@@ -890,10 +855,10 @@ public abstract class CalibrateCameraProcess {
                     Location testLocation = testPatternLocationsList.
                             get(testPatternIndiciesList.get(iPoint));
                     
-                    Point2D expectedPoint = expectedImagePointsList.
+                    Point expectedPoint = expectedImagePointsList.
                             get(testPatternIndiciesList.get(iPoint));
                     
-                    org.opencv.core.Point measuredPoint = findAveragedFiducialPoint(testLocation, 
+                    Point measuredPoint = findAveragedFiducialPoint(testLocation, 
                             expectedPoint);
                     
                     //Save the test pattern location and the corresponding image point
@@ -1314,7 +1279,7 @@ public abstract class CalibrateCameraProcess {
     }
   
     private boolean requestOperatorToAdjustDiameterAction() {
-        setInstructionsAndProceedAction("Adjust the Fiducial Diameter slider until the orange circle turns green and snaps to the outer edge of the fiducial. Click Next when ready", 
+        setInstructionsAndProceedAction("Adjust the Detection Diameter spinner until the orange circle turns green and snaps to the outer edge of the fiducial. Click Next when ready", 
                 ()->fiducialDiameterIsSetAction());
         
         Point2D expectedPoint = new Point2D.Double((pixelsX-1)/2.0, (pixelsY-1)/2.0);
@@ -1334,8 +1299,10 @@ public abstract class CalibrateCameraProcess {
             protected Void doInBackground() throws Exception {
                 while (!isCancelled()) {
                     pipeline.setProperty("MaskCircle.diameter", maskDiameter);
-                    pipeline.setProperty("SimpleBlobDetector.area", Math.PI*Math.pow(advCal.getFiducialDiameter()/2.0, 2));
-                    pipeline.setProperty("DetectCircularSymmetry.diameter", 1.0*advCal.getFiducialDiameter());
+                    pipeline.setProperty("SimpleBlobDetector.area", 
+                            Math.PI*Math.pow(advCal.getFiducialDiameter()/2.0, 2));
+                    pipeline.setProperty("DetectCircularSymmetry.diameter", 
+                            1.0*advCal.getFiducialDiameter());
                     List<KeyPoint> keyPoints = null;
 
                     try {
@@ -1401,670 +1368,6 @@ public abstract class CalibrateCameraProcess {
         return true;
     }
   
-  
-  
-//    /**
-//    * Action to take after the operator has placed the calibration rig on the machine
-//    * 
-//    * @return true if the action was successful and the state machine should move to the next step
-//    */
-//    private boolean step1() {
-//        //Get the default nozzle
-//        try {
-//            nozzle = Configuration.get().getMachine().getDefaultHead().getDefaultNozzle();
-//        }
-//        catch (Exception e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//            cleanUpWhenCancelled();
-//        }
-//        
-//        MainFrame.get().getMachineControls().setSelectedTool(nozzle);
-//        MovableUtils.fireTargetedUserAction(nozzle);
-//        
-//        if (isHeadMountedCamera && Double.isFinite(calibrationHeights.get(calibrationHeightIndex).
-//                getValue())) {
-//            testPatternZ = calibrationHeights.get(calibrationHeightIndex).
-//                    convertToUnits(LengthUnit.Millimeters).getValue();
-//            movableZ = 0;
-//            movable = camera;
-//            step++; //skip the step where the operator measures the height with the nozzle tip
-//        }
-//        return true;
-//    }
-//
-//    /**
-//     * Action to take after the operator has placed the nozzle tip on the calibration rig
-//     * 
-//     * @return true if the action was successful and the state machine should move to the next step
-//     */
-//    private boolean step2() {
-//        nozzle = (Nozzle) MainFrame.get().getMachineControls().getSelectedTool();
-//
-//        if (isHeadMountedCamera) {
-//            //Capture the nozzle's Z coordinate as the test pattern's Z coordinate
-//            testPatternZ = nozzle.getLocation().convertToUnits(LengthUnit.Millimeters).getZ();
-//            movableZ = 0;
-//            movable = camera;
-//        }
-//        else {
-//            testPatternZ = camera.getDefaultZ().convertToUnits(LengthUnit.Millimeters).getValue();
-//            movableZ = testPatternZ + 
-//                    calibrationRig.getHeight().convertToUnits(LengthUnit.Millimeters).getValue();
-//            movable = nozzle;
-//            
-//            //Pick-up the calibration rig with the nozzle
-//            try {
-//                Future<Void> future = UiUtils.submitUiMachineTask(() -> {
-//                    nozzle.pick(calibrationRig);
-//                });
-//                future.get();
-//            }
-//            catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        
-//        maskDiameter = initialMaskDiameter;
-//        showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
-//                (int)(0.75*maskDiameter/2), Color.GREEN);
-//        
-//        Logger.trace("testPatternZ = " + testPatternZ);
-//        Logger.trace("movableZ = " + movableZ);
-//        
-//        //Return the nozzle to safe Z
-//        Future future = UiUtils.submitUiMachineTask(() -> {
-//            nozzle.moveToSafeZ();
-//        });
-//        try {
-//            future.get();
-//        }
-//        catch (InterruptedException | ExecutionException e) {
-//            e.printStackTrace();
-//        }
-//        
-//        
-//        return true;
-//    }
-//
-//    /**
-//     * Action to take after the operator has positioned the nozzle/camera so that the
-//     * calibration rig's fiducial is centered in the camera's FOV
-//     * 
-//     * @return true if the action was successful and the state machine should move to the next step
-//     */
-//    private boolean step3() {
-//        ((ReferenceCamera) camera).setAutoVisible(savedAutoVisible);
-//        
-//        //Capture the movable's coordinate as the approximate center of the camera's field-of-view
-//        centralLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters).
-//                derive(null, null, movableZ, 0.0);
-//        
-//        trialLocation1 = centralLocation.subtract(advCal.getTrialStep());
-//        trialLocation2 = centralLocation.add(advCal.getTrialStep());
-//        trialPoint1 = null;
-//        trialPoint2 = null;
-//        
-//        swingWorker = new SwingWorker<Void, String>() { 
-//            @Override
-//            protected Void doInBackground() throws Exception  
-//            {
-//                publish("Checking first test point.");
-//                Logger.trace("Checking first test point.");
-//                
-//                while ((trialPoint1 == null) && !isCancelled()) {
-//                    trialPoint1 = findAveragedFiducialPoint(trialLocation1, 
-//                            imageCenterPoint);
-//
-//                    if (trialPoint1 == null) {
-//                        if (MessageBoxes.errorBoxWithRetry(mainFrame, 
-//                                "ERROR - Failed to find calibration rig's fiducial.",
-//                                "Edit the pipeline and try again?")) {
-//                            CvPipelineEditor pipelineEditor = new CvPipelineEditor(pipeline);
-//                            JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), 
-//                                    "Camera Calibration Rig Fiducial Pipeline", pipelineEditor);
-//                            dialog.setModalityType(ModalityType.APPLICATION_MODAL);
-//                            
-//                            //Because the dialog is modal, this thread of execution will hang
-//                            //here until the dialog is closed, at which point it will resume
-//                            dialog.setVisible(true);
-//                        }
-//                        else {
-//                            return null;
-//                        }
-//                    }
-//                }
-//                
-//                publish("Checking second test point.");
-//                Logger.trace("Checking second test point.");
-//                
-//                while ((trialPoint2 == null) && !isCancelled()) {
-//                    trialPoint2 = findAveragedFiducialPoint(trialLocation2, 
-//                            imageCenterPoint);
-//                    
-//                    if (trialPoint2 == null) {
-//                        if (MessageBoxes.errorBoxWithRetry(mainFrame, 
-//                                "ERROR - Failed to find calibration rig's fiducial.",
-//                                "Edit the pipeline and try again?")) {
-//                            CvPipelineEditor pipelineEditor = new CvPipelineEditor(pipeline);
-//                            JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), 
-//                                    "Camera Calibration Rig Fiducial Pipeline", pipelineEditor);
-//                            dialog.setModalityType(ModalityType.APPLICATION_MODAL);
-//                            
-//                            //Because the dialog is modal, this thread of execution will hang
-//                            //here until the dialog is closed, at which point it will resume
-//                            dialog.setVisible(true);
-//                        }
-//                        else {
-//                            return null;
-//                        }
-//                    }
-//                }
-//                
-//                //Compute a rough estimate of unitsPerPixel (these may be negative but that's ok)
-//                Location trialLocationDifference = trialLocation2.
-//                        subtract(trialLocation1);
-//                xScaling = trialLocationDifference.getX() /
-//                        (trialPoint2.x - trialPoint1.x);
-//                yScaling = trialLocationDifference.getY() /
-//                        (trialPoint2.y - trialPoint1.y);
-//                Logger.trace("xScaling = " + xScaling);
-//                Logger.trace("yScaling = " + yScaling);
-//                
-//                publish("Finding image center.");
-//                Logger.trace("Finding image center.");
-//                centralLocation = walkToPoint(imageCenterPoint, xScaling, yScaling);
-//
-//                return null;
-//            }
-//            
-//            @Override
-//            protected void process(List<String> chunks) {
-//                for (String str : chunks) {
-//                    if (!this.isCancelled()) {
-//                        mainFrame.showInstructions("Camera Calibration Instructions", str,
-//                            true, false, "Next", cancelActionListener, proceedActionListener);
-//                    }
-//                }
-//            }
-//            
-//            @Override
-//            protected void done()  
-//            {
-//                if ((trialPoint1 == null) || (trialPoint2 == null)) {
-//                    cleanUpWhenCancelled();
-//                    return;
-//                }
-//                
-//                advance();
-//            }
-//        };
-//        
-//        swingWorker.execute();
-//        
-//        return true;
-//    }
-//
-//    /**
-//     * Action to locate the four corners of the camera's field-of-view
-//     * 
-//     * @return true if the action was successful and the state machine should move to the next step
-//     */
-//    private boolean step4() {
-//        desiredCameraCorners = new ArrayList<Point2D>();
-//        
-//        double testPatternFillFraction = advCal.getTestPatternFillFraction();
-//        
-//        //In order: upper left, lower left, lower right, and upper right
-//        desiredCameraCorners.add(new Point2D.Double((1-testPatternFillFraction)*pixelsX/2,
-//                (1-testPatternFillFraction)*pixelsY/2));
-//        desiredCameraCorners.add(new Point2D.Double((1-testPatternFillFraction)*pixelsX/2,
-//                (1+testPatternFillFraction)*pixelsY/2));
-//        desiredCameraCorners.add(new Point2D.Double((1+testPatternFillFraction)*pixelsX/2,
-//                (1+testPatternFillFraction)*pixelsY/2));
-//        desiredCameraCorners.add(new Point2D.Double((1+testPatternFillFraction)*pixelsX/2,
-//                (1-testPatternFillFraction)*pixelsY/2));
-//        Logger.trace("desiredCameraCorners = " + desiredCameraCorners);
-//
-//        cameraCornerLocations = new ArrayList<Location>();
-//
-//        //Find the four corners and then setup for the test pattern
-//        swingWorker = new SwingWorker<Void, String>() { 
-//            @Override
-//            protected Void doInBackground() throws Exception  
-//            {
-//                String str = "";
-//                int cornerIdx = 0;
-//                while ((cornerIdx < 4) && !isCancelled()) {
-//                    switch (cornerIdx) {
-//                        case 0:
-//                            str = "Finding Upper Left Image Corner";
-//                            break;
-//                        case 1:
-//                            str = "Finding Lower Left Image Corner";
-//                            break;
-//                        case 2:
-//                            str = "Finding Lower Right Image Corner";
-//                            break;
-//                        case 3:
-//                            str = "Finding Upper Right Image Corner";
-//                            break;
-//                    }
-//
-//                    publish(str);
-//                    
-//                    Logger.trace("Walking from " + centralLocation + " to " + 
-//                            desiredCameraCorners.get(cornerIdx) + " " + str);
-//                    
-//                    maskDiameter = initialMaskDiameter;
-//                    
-//                    Location corner = walkToPoint(desiredCameraCorners.get(cornerIdx), 
-//                            xScaling, yScaling);
-//                    
-//                    if (isCancelled()) {
-//                        return null;
-//                    }
-//                    
-//                    if (corner != null) {
-//                        cameraCornerLocations.add(corner);
-//                        cornerIdx++;
-//                    }
-//                    else {
-//                        if (MessageBoxes.errorBoxWithRetry(mainFrame, 
-//                                "ERROR - Failed to find calibration rig's fiducial.",
-//                                "Edit the pipeline and try again?")) {
-//                            CvPipelineEditor pipelineEditor = new CvPipelineEditor(pipeline);
-//                            JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), 
-//                                    "Camera Calibration Rig Fiducial Pipeline", pipelineEditor);
-//                            dialog.setModalityType(ModalityType.APPLICATION_MODAL);
-//                            
-//                            //Because the dialog is modal, this thread of execution will hang
-//                            //here until the dialog is closed, at which point it will resume
-//                            dialog.setVisible(true);
-//                        }
-//                        else {
-//                            return null;
-//                        }
-//                    }
-//                }
-//                return null;
-//            }
-//            
-//            @Override
-//            protected void process(List<String> chunks) {
-//                for (String str : chunks) {
-//                    if (!this.isCancelled()) {
-//                        mainFrame.showInstructions("Camera Calibration Instructions", str,
-//                            true, false, "Next", cancelActionListener, proceedActionListener);
-//                    }
-//                }
-//            }
-//            
-//            @Override
-//            protected void done()  
-//            {
-//                Logger.trace("cameraCornerLocations = " + cameraCornerLocations);
-//                
-//                if (cameraCornerLocations.size() != 4) {
-//                    cleanUpWhenCancelled();
-//                    return;
-//                }
-//                //Find a perspective transform that maps the four image corners to the 
-//                //corresponding machine X/Y coordinates
-//                org.opencv.core.Point srcCornerPoint[] = new org.opencv.core.Point[4];
-//                org.opencv.core.Point dstCornerPoint[] = new org.opencv.core.Point[4];
-//                for (int i=0; i<4; i++) {
-//                    Point2D srcCorner = desiredCameraCorners.get(i);
-//                    srcCornerPoint[i] = new org.opencv.core.Point(srcCorner.getX(), 
-//                            srcCorner.getY());
-//                    Location dstCorner = cameraCornerLocations.get(i);
-//                    dstCornerPoint[i] = new org.opencv.core.Point(dstCorner.getX(), 
-//                            dstCorner.getY());
-//                }
-//                MatOfPoint2f src = new MatOfPoint2f();
-//                src.fromArray(srcCornerPoint);
-//                MatOfPoint2f dst = new MatOfPoint2f();
-//                dst.fromArray(dstCornerPoint);
-//
-//                Logger.trace("src = " + src.dump());
-//                Logger.trace("dst = " + dst.dump());
-//                transformImageToMachine = Imgproc.getPerspectiveTransform(src, dst);
-//                src.release();
-//                dst.release();
-//                
-//                double testPatternStepX = testPatternFillFraction * (pixelsX - 1) / 
-//                        (numberOfPointsPerTestPatternX - 1);
-//              
-//                double testPatternStepY = testPatternFillFraction * (pixelsY - 1) / 
-//                        (numberOfPointsPerTestPatternY - 1);
-//                
-//                double testPatternOffsetX = 0.5 * (1 - testPatternFillFraction) * (pixelsX - 1);
-//                
-//                double testPatternOffsetY = 0.5 * (1 - testPatternFillFraction) * (pixelsY - 1);
-//                
-//                expectedImagePointsList = new ArrayList<Point2D>();
-//                Mat expectedImagePoints = Mat.zeros(3, actualPointsPerTestPattern, CvType.CV_64FC1);
-//                int nPoints = 0;
-//                for (int iRow = 0; iRow < numberOfPointsPerTestPatternY; iRow++) {
-//                    for (int iCol = 0; iCol < numberOfPointsPerTestPatternX; iCol++) {
-//                        expectedImagePointsList.add(new Point(
-//                                (int) (iCol*testPatternStepX + testPatternOffsetX), 
-//                                (int) (iRow*testPatternStepY + testPatternOffsetY)) );
-//                        expectedImagePoints.put(0, nPoints, 
-//                                iCol*testPatternStepX + testPatternOffsetX);
-//                        expectedImagePoints.put(1, nPoints, 
-//                                iRow*testPatternStepY + testPatternOffsetY);
-//                        expectedImagePoints.put(2, nPoints, 1);
-//                        nPoints++;
-//                    }
-//                }
-//                Logger.trace("expectedImagePointsList = " + expectedImagePointsList);
-//                
-//                Mat expectedMachinePoints = Mat.zeros(3, actualPointsPerTestPattern, 
-//                        CvType.CV_64FC1);
-//                Core.gemm(transformImageToMachine, expectedImagePoints, 1.0, expectedImagePoints, 
-//                        0, expectedMachinePoints);
-//                expectedImagePoints.release();
-//                        
-//                testPatternLocationsList = new ArrayList<Location>();
-//                testPatternIndiciesList = new ArrayList<Integer>();
-//                nPoints = 0;
-//                for (int iRow = 0; iRow < numberOfPointsPerTestPatternY; iRow++) {
-//                    for (int iCol = 0; iCol < numberOfPointsPerTestPatternX; iCol++) {
-//                        double scale = 1.0 / expectedMachinePoints.get(2, nPoints)[0];
-//                        testPatternLocationsList.add(new Location(LengthUnit.Millimeters, 
-//                                scale * expectedMachinePoints.get(0, nPoints)[0], 
-//                                scale * expectedMachinePoints.get(1, nPoints)[0], 
-//                                movableZ, 0));
-//                        testPatternIndiciesList.add(nPoints);
-//                        nPoints++;
-//                    }
-//                }
-//                expectedMachinePoints.release();
-//                
-//                //To help prevent any machine bias from creeping into the measurements, the test
-//                //pattern is shuffled so that the points are visited in a random but deterministic
-//                //order
-//                Collections.shuffle(testPatternIndiciesList, new Random(calibrationHeightIndex+1));
-//                
-//                Logger.trace("testPattern = " + testPatternLocationsList);
-//                
-//                advance();
-//            }
-//            
-//        };
-//        
-//        swingWorker.execute();
-//        
-//        return true;
-//    }
-//
-//    /**
-//     * Action to collect the calibration points for a test pattern (at a single Z height)
-//     * 
-//     * @return true if the action was successful and the state machine should move to the next step
-//     */
-//    private boolean step5() {
-//        List<double[]> testPattern3dPoints = new ArrayList<>();
-//        List<double[]> testPatternImagePoints = new ArrayList<>();
-//        
-//        swingWorker = new SwingWorker<Void, String>() { 
-//            @Override
-//            protected Void doInBackground() throws Exception  
-//            {
-//                maskDiameter = initialMaskDiameter;
-//                
-//                for (int iPoint = 0; (iPoint < actualPointsPerTestPattern) && !isCancelled(); 
-//                        iPoint++) {
-//                    publish(String.format("Collecting calibration point %d of %d for calibration "
-//                            + "pattern %d of %d", iPoint+1, actualPointsPerTestPattern, 
-//                            calibrationHeightIndex+1, numberOfCalibrationHeights));
-//
-//                    Location testLocation = testPatternLocationsList.
-//                            get(testPatternIndiciesList.get(iPoint));
-//                    
-//                    Point2D expectedPoint = expectedImagePointsList.
-//                            get(testPatternIndiciesList.get(iPoint));
-//                    
-//                    org.opencv.core.Point measuredPoint = findAveragedFiducialPoint(testLocation, 
-//                            expectedPoint);
-//                    
-//                    //Save the test pattern location and the corresponding image point
-//                    if (measuredPoint != null) {
-//                        testPattern3dPoints.add( 
-//                                new double[] {apparentMotionDirection*testLocation.getX(), 
-//                                              apparentMotionDirection*testLocation.getY(), 
-//                                              testPatternZ});
-//                        testPatternImagePoints.add(
-//                                new double[] {measuredPoint.x, measuredPoint.y});
-//                    }
-//                }
-//                testPattern3dPointsList.add(testPattern3dPoints);
-//                testPatternImagePointsList.add(testPatternImagePoints);
-//                return null;
-//            }
-//            
-//            @Override
-//            protected void process(List<String> chunks) {
-//                for (String str : chunks) {
-//                    if (!this.isCancelled()) {
-//                        mainFrame.showInstructions("Camera Calibration Instructions", str,
-//                            true, false, "Next", cancelActionListener, proceedActionListener);
-//                    }
-//                }
-//            }
-//            
-//            @Override
-//            protected void done()  
-//            {
-//                if (this.isCancelled()) {
-//                    cleanUpWhenCancelled();
-//                    return;
-//                }
-//                
-//                cameraView.setCameraViewFilter(null);
-//                
-//                calibrationHeightIndex++;
-//                if (calibrationHeightIndex == numberOfCalibrationHeights) {
-//                    double[][][] testPattern3dPointsArray = 
-//                            new double[testPattern3dPointsList.size()][][];
-//                    for (int tpIdx=0; tpIdx<testPattern3dPointsList.size(); tpIdx++) {
-//                        List<double[]> tp = testPattern3dPointsList.get(tpIdx);
-//                        testPattern3dPointsArray[tpIdx] = new double[tp.size()][];
-//                        for (int ptIdx=0; ptIdx<tp.size(); ptIdx++) {
-//                            double[] pt = tp.get(ptIdx);
-//                            testPattern3dPointsArray[tpIdx][ptIdx] = pt;
-//                        }
-//                    }
-//                        
-//                    double[][][] testPatternImagePointsArray = 
-//                            new double[testPatternImagePointsList.size()][][];
-//                    for (int tpIdx=0; tpIdx<testPatternImagePointsList.size(); tpIdx++) {
-//                        List<double[]> tp = testPatternImagePointsList.get(tpIdx);
-//                        testPatternImagePointsArray[tpIdx] = new double[tp.size()][];
-//                        for (int ptIdx=0; ptIdx<tp.size(); ptIdx++) {
-//                            double[] pt = tp.get(ptIdx);
-//                            testPatternImagePointsArray[tpIdx][ptIdx] = pt;
-//                        }
-//                    }
-//                    
-//                    try {
-//                        processRawCalibrationData(testPattern3dPointsArray, testPatternImagePointsArray, 
-//                            new Size(pixelsX, pixelsY));
-//                    }
-//                    catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//                    finally {
-//                        CalibrateCameraProcess.this.cleanUpWhenDone();
-//                    }
-//                }
-//                else {
-//                    advance();
-//                }
-//            }
-//            
-//        };
-//        
-//        swingWorker.execute();
-//        
-//        return true;
-//    }
-//
-//    /**
-//     * Action to take when transitioning from step 5 to step 6
-//     * 
-//     * @return true if the action was successful and the state machine should move to the next step
-//     */
-//    private boolean step6() {
-//        if (isHeadMountedCamera) {
-//            return true;
-//        }
-//        else {
-//            //Set the next calibration height
-//            testPatternZ = calibrationHeights.get(calibrationHeightIndex).
-//                    convertToUnits(LengthUnit.Millimeters).getValue();
-//            movableZ = testPatternZ + 
-//                    calibrationRig.getHeight().convertToUnits(LengthUnit.Millimeters).getValue();
-//            
-//            showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
-//                    (int)(0.75*maskDiameter/2), Color.GREEN);
-//        
-//            Logger.trace("testPatternZ = " + testPatternZ);
-//            Logger.trace("movableZ = " + movableZ);
-//            
-//            //Move back to the center and change the calibration rig to the next calibration height
-//            UiUtils.submitUiMachineTask(() -> {
-//                nozzle.moveTo(centralLocation.convertToUnits(LengthUnit.Millimeters).
-//                        derive(null, null, movableZ, (double)angle));
-//            });
-//            
-//            //Go back to allow the operator to center the pattern in the camera's view
-//            step = 1;
-//            
-//            return true;
-//        }
-//    }
-//    
-//    /**
-//     * Action to take after the operator has manually changed the calibration rig's height
-//     * 
-//     * @return true if the action was successful and the state machine should move to the next step
-//     */
-//    private boolean step7() {
-//        if (isHeadMountedCamera && 
-//                Double.isFinite(calibrationHeights.get(calibrationHeightIndex).getValue())) {
-//            testPatternZ = calibrationHeights.get(calibrationHeightIndex).
-//                    convertToUnits(LengthUnit.Millimeters).getValue();
-//            //Go back to have the operator center the fiducial in the camera view
-//            step = 1;
-//        }
-//        else {
-//            //Go back to have the operator touch the nozzle tip onto the rig to measure its height
-//            step = 0;
-//        }
-//        return true;
-//    }
-
-    private Location walkToPoint(Point2D desiredCameraPoint, double xScaling,
-            double yScaling ) throws InterruptedException, ExecutionException {
-        return walkToPoint(desiredCameraPoint, xScaling, yScaling, null, null);
-    }
-    
-    /**
-     * Gradually "walks" the movable in X and Y such that the calibration rig's fiducial appears at
-     * the desired image location.  The steps taken are deliberately small so that errors due to 
-     * camera distortion and/or scaling do not lead to erroneous machine motions. 
-     * @param desiredCameraPoint - desired image location in pixels
-     * @param xScaling - a rough signed estimate of the X axis units per pixel scaling
-     * @param yScaling - a rough signed estimate of the Y axis units per pixel scaling
-     * @return the machine location where the calibration rig's fiducial appears at the desired
-     * image location
-     * @throws InterruptedException
-     * @throws ExecutionException
-     */
-    private Location walkToPoint(Point2D desiredCameraPoint, double xScaling,
-            double yScaling, List<double[]> machine3DCoordinates, 
-            List<double[]> image2DCoordinates) throws InterruptedException, ExecutionException {
-        boolean savePoints = (machine3DCoordinates != null) && (image2DCoordinates != null);
-        
-        //Move the machine to the starting location and wait for it to finish
-        Future<?> future = UiUtils.submitUiMachineTask(() -> {
-            movable.moveTo(centralLocation.derive(null, null, null, (double)angle));
-        });
-        future.get();
-
-        Location oldLocation = null;
-        Location newLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters);
-        Point2D expectedPoint = (Point2D) imageCenterPoint.clone();
-        Logger.trace("expectedPoint = " + expectedPoint);
-        org.opencv.core.Point foundPoint = findAveragedFiducialPoint(newLocation, expectedPoint);
-        Logger.trace("newPoint = " + foundPoint);
-        if (foundPoint == null) {
-            return null;
-        }
-
-        double errorX = foundPoint.x - desiredCameraPoint.getX();
-        double errorY = foundPoint.y - desiredCameraPoint.getY();
-        double oldError2 = Double.POSITIVE_INFINITY;
-        double newError2 = errorX*errorX + errorY*errorY;
-        
-        double maxAppliedError2 = Math.pow(Math.min(pixelsX, pixelsY)/10.0, 2);
-        double minAppliedError2 = Math.pow(Math.min(pixelsX, pixelsY)/50.0, 2);
-        
-        while (newError2 < oldError2) {
-            if (swingWorker.isCancelled() || Thread.interrupted()) {
-                return null;
-            }
-            oldError2 = newError2;
-            oldLocation = newLocation;
-            
-            if (savePoints) {
-                machine3DCoordinates.add(new double[] {oldLocation.getX(), oldLocation.getY(), 
-                        oldLocation.getZ()});
-                image2DCoordinates.add(new double[] {foundPoint.x, foundPoint.y});
-            }
-            
-            if (newError2 * loopGain * loopGain < minAppliedError2) {
-                return oldLocation;
-            }
-            if (newError2 * loopGain * loopGain > maxAppliedError2) {
-                double scaling = Math.sqrt(maxAppliedError2/newError2) / loopGain;
-                errorX *= scaling;
-                errorY *= scaling;
-            }
-            expectedPoint.setLocation(foundPoint.x - errorX * loopGain, 
-                    foundPoint.y - errorY * loopGain);
-            Location correction = new Location(LengthUnit.Millimeters, 
-                    -errorX * xScaling * loopGain, 
-                    -errorY * yScaling * loopGain, 0, 0);
-            newLocation = oldLocation.add(correction).convertToUnits(LengthUnit.Millimeters).
-                    derive(null, null, null, (double)angle);
-            if (newLocation.getLinearDistanceTo(oldLocation) < 0.01) {
-                //Don't bother moving if the move will be very tiny
-                return oldLocation;
-            }
-            final Location moveLocation = newLocation;
-            //Move the machine and wait for it to finish
-            future = UiUtils.submitUiMachineTask(() -> {
-                movable.moveTo(moveLocation);
-            });
-            future.get();
-            
-            foundPoint = findAveragedFiducialPoint(newLocation, expectedPoint);
-            Logger.trace("expectedPoint = " + expectedPoint);
-            Logger.trace("newPoint = " + foundPoint);
-            if (foundPoint == null) {
-                return null;
-            }
-            
-            errorX = foundPoint.x - desiredCameraPoint.getX();
-            errorY = foundPoint.y - desiredCameraPoint.getY();
-            newError2 = errorX*errorX + errorY*errorY;
-        }
-        return oldLocation;
-    }
-
     /**
      * Finds the fiducial 2D point averaged over all angles
      * @param testLocation - the machine location where the movable should be positioned to find 
@@ -2075,11 +1378,11 @@ public abstract class CalibrateCameraProcess {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    private org.opencv.core.Point findAveragedFiducialPoint(Location testLocation, 
-            Point2D expectedPoint) throws InterruptedException, ExecutionException {
+    private Point findAveragedFiducialPoint(Location testLocation, 
+            Point expectedPoint) {
         int count = 0;
-        org.opencv.core.Point observedPoint = null;
-        org.opencv.core.Point measuredPoint = new org.opencv.core.Point(0, 0);
+        Point observedPoint = null;
+        Point measuredPoint = new Point(0, 0);
         
         do {
             final Location moveLocation = testLocation.convertToUnits(LengthUnit.Millimeters).
@@ -2091,7 +1394,12 @@ public abstract class CalibrateCameraProcess {
             });
 
             //Wait for the move to complete
-            future.get();
+            try {
+                future.get();
+            }
+            catch (Exception e) {
+                return null;
+            }
 
             //Find the calibration rig's fiducial
             observedPoint = findCalibrationRigFiducialPoint(expectedPoint);
@@ -2121,17 +1429,64 @@ public abstract class CalibrateCameraProcess {
         return measuredPoint;
     }
     
+    private Point findAveragedFiducialPoint(Point expectedPoint) {
+        int count = 0;
+        Point observedPoint = null;
+        Point measuredPoint = new Point(0, 0);
+        
+        do {
+            //Find the calibration rig's fiducial
+            observedPoint = findCalibrationRigFiducialPoint(expectedPoint);
+            
+            if (observedPoint == null) {
+                break;
+            }
+            
+            //Average the point
+            measuredPoint.x += observationWeight * observedPoint.x;
+            measuredPoint.y += observationWeight * observedPoint.y;
+            
+            //Change the angle after each measurement except the last so that the next time we'll 
+            //start with the last angle
+            count++;
+            if (count < numberOfAngles) {
+                angle += angleIncrement;
+                if (angle >= 360) {
+                    angle = 0;
+                }
+                
+                //Move the machine to the new angle
+                final Location moveLocation = movable.getLocation().
+                        derive(null, null, null, (double) angle);
+                Future<Void> future = UiUtils.submitUiMachineTask(() -> {
+                    movable.moveTo(moveLocation);
+                });
+
+                //Wait for the move to complete
+                try {
+                    future.get();
+                }
+                catch (Exception e) {
+                    return null;
+                }
+            }
+        } while (count < numberOfAngles && !swingWorker.isCancelled() && !Thread.interrupted());
+
+        if (observedPoint == null) {
+            return null;
+        }
+        return measuredPoint;
+    }
+    
     /**
      * Processes the pipeline to locate the calibration rig's fiducial center in the image
      * @param expectedPoint - the expected location of the fiducial center
      * @return the location in pixels of the fiducial center
      */
-    private org.opencv.core.Point findCalibrationRigFiducialPoint(Point2D expectedPoint) {
+    private Point findCalibrationRigFiducialPoint(Point expectedPoint) {
         //Mask off everything that is not near the expected location
-        pipeline.setProperty("MaskCircle.center", new org.opencv.core.Point(expectedPoint.getX(), 
-                expectedPoint.getY()));
-        pipeline.setProperty("DetectCircularSymmetry.center", new org.openpnp.model.Point(
-                expectedPoint.getX(), expectedPoint.getY()));
+        pipeline.setProperty("MaskCircle.center", expectedPoint.getX());
+        pipeline.setProperty("DetectCircularSymmetry.center", expectedPoint);
         
         maskDiameter = 2*(int)Math.min(expectedPoint.getX(), 
                 Math.min(pixelsX-expectedPoint.getX(),
@@ -2175,13 +1530,13 @@ public abstract class CalibrateCameraProcess {
                 for (KeyPoint kpt : keypoints) {
                     double dx = kpt.pt.x - expectedPoint.getX();
                     double dy = kpt.pt.y - expectedPoint.getY();
-                    double distance = Math.sqrt(dx*dx + dy*dy);
+                    double distance = Math.hypot(dx, dy);
                     if (distance < minDistance) {
                         bestKeyPoint = kpt;
                         minDistance = distance;
                     }
                 }
-                
+               
                 //Show a circle centered on where the fiducial is expected to be found
                 Color circleColor = Color.GREEN;
                 Color pointColor = Color.GREEN;
@@ -2221,7 +1576,7 @@ public abstract class CalibrateCameraProcess {
                     Logger.trace("Decreasing mask diameter to " + maskDiameter);
                     changeMaskSize++;
                 }
-                return bestKeyPoint.pt;
+                return Point.fromOpencv(bestKeyPoint.pt);
             }
             attempts++;
         }

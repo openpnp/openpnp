@@ -700,15 +700,12 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "code debugging");
         panelCameraCalibration.add(chckbxUseSavedData, "6, 28, 5, 1");
         
-        sliderDiameter = new JSlider();
-        sliderDiameter.setMaximum(Math.min(referenceCamera.getHeight(), 
-                referenceCamera.getWidth())/10);
-        sliderDiameter.setPaintTicks(true);
-        sliderDiameter.setPaintLabels(true);
-        sliderDiameter.setMinorTickSpacing(2);
-        sliderDiameter.setMajorTickSpacing(20);
-        sliderDiameter.addChangeListener(sliderDiameterChanged);
-        panelCameraCalibration.add(sliderDiameter, "4, 30, 5, 1");
+        lblNewLabel_34 = new JLabel("Detection Diameter");
+        lblNewLabel_34.setHorizontalAlignment(SwingConstants.TRAILING);
+        panelCameraCalibration.add(lblNewLabel_34, "2, 30");
+        
+        spinnerDiameter = new JSpinner();
+        panelCameraCalibration.add(spinnerDiameter, "4, 30");
         
         chckbxEnable = new JCheckBox("Apply Calibration");
         chckbxEnable.setToolTipText("Enable this to apply the new image transform and distortion "
@@ -1014,7 +1011,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         bind(UpdateStrategy.READ_WRITE, advancedCalibration, "alphaPercent",
                 sliderAlpha, "value");
         bind(UpdateStrategy.READ_WRITE, advancedCalibration, "fiducialDiameter",
-                sliderDiameter, "value");
+                spinnerDiameter, "value");
         bind(UpdateStrategy.READ_WRITE, advancedCalibration, "calibrationRig", 
                 comboBoxPart, "selectedItem");
         bind(UpdateStrategy.READ_WRITE, referenceCamera, "defaultZ", 
@@ -1279,18 +1276,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
     };
     
-    private ChangeListener sliderDiameterChanged = new ChangeListener() {
-
-        @Override
-        public void stateChanged(ChangeEvent e) {
-//            if (!sliderDiameter.getValueIsAdjusting()) {
-                int diameter = (int)sliderDiameter.getValue();
-                Logger.trace("diameter = " + diameter);
-//            }
-        }
-        
-    };
-    
     private void updateDiagnosticsDisplay() {
         if (advancedCalibration.isValid()) {
             Location headOffsets = referenceCamera.getHeadOffsets().convertToUnits(displayUnits);
@@ -1456,5 +1441,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private JLabel lblNewLabel_33;
     private JLabel lblDescription;
     private JSlider sliderDiameter;
+    private JSpinner spinnerDiameter;
+    private JLabel lblNewLabel_34;
 
 }
