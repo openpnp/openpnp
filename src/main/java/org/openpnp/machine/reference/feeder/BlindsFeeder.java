@@ -1222,7 +1222,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             if (preferredNozzle.getPart() == null) { 
                 // Nozzle is free
                 NozzleTip nozzleTip = preferredNozzle.getNozzleTip();
-                if (nozzleTip.isPushAndDragAllowed()) {
+                if (nozzleTip != null && nozzleTip.isPushAndDragAllowed()) {
                     // Return the nozzle and nozzle tip.
                     return new NozzleAndTipForPushing(preferredNozzle, nozzleTip, false);
                 }
@@ -1236,7 +1236,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 if (nozzle.getPart() == null) { 
                     // Nozzle is free
                     NozzleTip nozzleTip = nozzle.getNozzleTip();
-                    if (nozzleTip.isPushAndDragAllowed()) {
+                    if (nozzleTip != null && nozzleTip.isPushAndDragAllowed()) {
                         // Return the nozzle and nozzle tip.
                         return new NozzleAndTipForPushing(nozzle, nozzleTip, false);
                     }
