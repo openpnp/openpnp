@@ -435,7 +435,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
                 Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
                 location = location.subtract(correctionOffset);
-                Logger.trace("{}.transformToHeadLocation({}, ...) runout compensation {}", getName(), location, correctionOffset);
+                Logger.trace("{}.toHeadLocation({}, ...) runout compensation {}", getName(), location, correctionOffset);
             }
         }
         return super.toHeadLocation(location, currentLocation, options);
