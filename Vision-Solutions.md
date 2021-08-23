@@ -26,9 +26,15 @@ As both the camera and the camera light will move around and point at the fiduci
 
 The fiducial must be mounted precisely on PCB surface Z Level, one way to make sure of this, is to glue the printed-out fiducial flat onto a surplus PCB that you can position reproducibly (±1 mm) on its holder.
 
-On the solution, you can adjust the fiducial size using a spin control. On new machines/cameras, nothing is yet known about the camera viewing scale, therefore the adjustment is in pixels rather than real length units. Adjust the diameter up/down until a green circle and cross-hairs appear. The circle should hug the fiducial contour, just slightly outside. It will snap to it across a certain range of given diameters, make sure you are in that range. Remember, you can zoom the camera view using the mouse scroll-wheel: 
+On the solution, you can adjust the **Feature Diameter**. 
 
-![set_feature_diameter](https://user-images.githubusercontent.com/9963310/130353893-9daaf41a-a3ec-4286-9b53-5f0a5c75509c.gif)
+Press the **Auto-Adjust** button. A range of diameters will be scanned, the one with the best score will be selected: 
+
+![auto_feature_diameter](https://user-images.githubusercontent.com/9963310/130499531-925a64db-d948-4fdf-a664-c13054c799df.gif)
+
+Note, this will likely work reliably for fiducials, but for nozzle tips, manual adjustment might still be needed, to get the right feature, such as the air bore. See [Up-looking Camera Offsets](#up-looking-camera-offsets). 
+
+For manual settings, use the spin control. On new machines/cameras, nothing is yet known about the camera viewing scale, therefore the adjustment is in pixels rather than real length units. Adjust the diameter up/down until a green circle and cross-hairs appear. The circle should hug the fiducial contour, just slightly outside. It will snap to it across a certain range of given diameters, it is sufficient to be in that range. Remember, you can zoom the camera view using the mouse scroll-wheel. 
 
 ## Calibration Secondary Fiducial
 
