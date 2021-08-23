@@ -292,13 +292,13 @@ public class Location {
     }
 
     /**
-     * Returns the unit vector of the vector between this and l. 
+     * Returns the unit vector of the vector between this and location l in units of this. 
      * 
      * @param l
      * @return
      */
     public Location unitVectorTo(Location l) {
-        Location vector = l.subtract(this);
+        Location vector = l.convertToUnits(units).subtract(this);
         double norm = 1/this.getXyzDistanceTo(l);
         return vector.multiply(norm, norm, norm, 0.0);
     }
@@ -454,5 +454,12 @@ public class Location {
         temp = Double.doubleToLongBits(this.rotation);
         result = 31 * result + (int) (temp ^ temp >>> 32);
         return result;
+    }
+
+    /**
+     * @return true if at least one of the coordinates are non-zero, assuming the location is therefore initialized.
+     */
+    public boolean isInitialized() {
+        return !this.equals(origin);
     }
 }

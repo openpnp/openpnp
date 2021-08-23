@@ -31,7 +31,7 @@ import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
 import org.openpnp.machine.reference.ReferenceNozzleTip.ZCalibrationTrigger;
 import org.openpnp.machine.reference.driver.GcodeAsyncDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver;
-import org.openpnp.machine.reference.driver.GcodeDriverSolutions;
+import org.openpnp.machine.reference.solutions.GcodeDriverSolutions;
 import org.openpnp.machine.reference.wizards.ContactProbeNozzleWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -858,8 +858,14 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                         nozzle, 
                         "Converting the ContactProbeNozzle back to a plain ReferenceNozzle may simplify the machine setup.", 
                         "Replace with ReferenceNozzle.", 
-                        Severity.Fundamental,
+                        Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle") {
+
+                    @Override
+                    public boolean isUnhandled( ) {
+                        // Never handle a conservative solution as unhandled.
+                        return false;
+                    }
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {

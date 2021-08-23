@@ -652,4 +652,16 @@ public class Utils2D {
         results.add(maxB);
         return results;
     }
+
+    public static double angleNorm(double val, double lim) {
+        double clip = lim * 2;
+        while (Math.abs(val) > lim) {
+            val += (val < 0.) ? clip : -clip;
+        }
+        return val;
+    }
+
+    public static double angleNorm(double val) {
+        return angleNorm(val, 45.);
+    }
 }

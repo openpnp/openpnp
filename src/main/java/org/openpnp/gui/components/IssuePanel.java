@@ -1,6 +1,8 @@
 package org.openpnp.gui.components;
 
 import java.awt.BorderLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
@@ -11,22 +13,32 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.model.Length;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Issue;
+import org.openpnp.model.Solutions.Issue.DoubleProperty;
 import org.openpnp.model.Solutions.Issue.IntegerProperty;
+import org.openpnp.model.Solutions.Issue.LengthProperty;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -35,6 +47,7 @@ import com.jgoodies.forms.layout.RowSpec;
 import com.jgoodies.forms.layout.Sizes;
 
 public class IssuePanel extends JPanel {
+    private static final int SLIDER_MAX = 10000;
     private static final int MAX_MULTIPLE_CHOICE = 10;
     final Solutions.Issue issue;
     final ReferenceMachine machine;
@@ -53,15 +66,14 @@ public class IssuePanel extends JPanel {
 
     public IssuePanel(Issue issue, ReferenceMachine machine) {
         super();
-        // Calculate the needed rows from the issue properties
-        final int rowsFixed = 4;
-        int rowCount = rowsFixed;
-        rowCount += issue.getProperties().length;
-        rowCount += issue.getChoices().length;
-
-        setBorder(null);
         this.issue = issue;
         this.machine = machine;
+
+        // Calculate the needed rows from the issue properties
+        final int rowsFixed = 4;
+        int rowCount = getDynamicRows(rowsFixed);
+
+        setBorder(null);
         setLayout(new BorderLayout(0, 0));
 
         scrollPane = new JScrollPane();
@@ -151,13 +163,38 @@ public class IssuePanel extends JPanel {
         initDataBindings();
     }
 
+    public int getDynamicRows(int formRow) {
+        formRow += (issue.getExtendedDescription() == null) ? 0 : 1; 
+        formRow += issue.getProperties().length;
+        formRow += issue.getChoices().length;
+        return formRow;
+    }
+
     private void buildDynamicPart(int formRow) {
+        if (issue.getExtendedDescription() != null) {
+            JPanel panelControl = new JPanel();
+            panelControl.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+            panel.add(panelControl, "4, "+(formRow*2)+", fill, fill");
+            panelControl.setLayout(new FormLayout(new ColumnSpec[] {
+                    new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("70dlu", true), Sizes.constant("150dlu", true)), 1),},
+                    new RowSpec[] {
+                            FormSpecs.DEFAULT_ROWSPEC,}));
+
+            JLabel lbl = new JLabel(issue.getExtendedDescription());
+            setClipboardHandler(lbl);
+            panelControl.add(lbl, "1, 1");
+            lbl.setIcon(issue.getExtendedIcon());
+            lbl.setIconTextGap(20);
+
+            // Consume the row
+            formRow++;
+        }
         for (Solutions.Issue.CustomProperty property : issue.getProperties()) {
             if (property instanceof IntegerProperty) {
                 IntegerProperty intProperty = (IntegerProperty) property;
-                JLabel lblSpinner = new JLabel(property.getLabel());
-                lblSpinner.setToolTipText(property.getToolTip());
-                panel.add(lblSpinner, "2, "+(formRow*2)+", right, default");
+                JLabel lbl = new JLabel(property.getLabel());
+                lbl.setToolTipText(property.getToolTip());
+                panel.add(lbl, "2, "+(formRow*2)+", right, default");
                 JSpinner spinner = new JSpinner();
                 spinner.addChangeListener(new ChangeListener() {
                     public void stateChanged(ChangeEvent e) {
@@ -169,16 +206,73 @@ public class IssuePanel extends JPanel {
                         }
                     }
                 });
-                spinner.setModel(new SpinnerNumberModel(intProperty.get(), intProperty.getMin(), intProperty.getMax(), 1));
+                int val = intProperty.get();
+                spinner.setModel(new SpinnerNumberModel(val, (int)Math.min(val, intProperty.getMin()), (int)Math.max(val, intProperty.getMax()), 1));
                 spinner.setToolTipText(property.getToolTip());
                 spinner.setEnabled(issue.getState() == Solutions.State.Open);
                 panel.add(spinner, "4, "+(formRow*2)+", left, default");
+            }
+            else if (property instanceof DoubleProperty) {
+                DoubleProperty doubleProperty = (DoubleProperty) property;
+                JLabel lbl = new JLabel(property.getLabel());
+                lbl.setToolTipText(property.getToolTip());
+                panel.add(lbl, "2, "+(formRow*2)+", right, default");
+                JSlider slider = new JSlider(JSlider.HORIZONTAL,
+                        0, SLIDER_MAX, getSliderValue(doubleProperty));
+                slider.addChangeListener(new ChangeListener() {
+                    public void stateChanged(ChangeEvent e) {
+                        int value = (int) slider.getValue();
+                        doubleProperty.set(doubleProperty.getMin() + value*(doubleProperty.getMax() - doubleProperty.getMin())/SLIDER_MAX);
+                        int newValue = getSliderValue(doubleProperty);
+                        if (newValue != value) {
+                            slider.setValue(newValue);
+                        }
+                    }
+                });
+                double val = doubleProperty.get();
+                slider.setToolTipText(property.getToolTip());
+                slider.setEnabled(issue.getState() == Solutions.State.Open);
+                panel.add(slider, "4, "+(formRow*2)+", left, default");
+            }
+            else if (property instanceof LengthProperty) {
+                LengthProperty lengthProperty = (LengthProperty) property;
+                JLabel lbl = new JLabel(lengthProperty.getLabel());
+                lbl.setToolTipText(lengthProperty.getToolTip());
+                panel.add(lbl, "2, "+(formRow*2)+", right, default");
+                JTextField textField = new JTextField();
+                textField.setToolTipText(lengthProperty.getToolTip());
+                textField.setEnabled(issue.getState() == Solutions.State.Open);
+                textField.setColumns(10);
+                LengthConverter lengthConverter = new LengthConverter();
+                textField.setText(lengthConverter.convertForward(lengthProperty.get()));
+                textField.getDocument().addDocumentListener(new DocumentListener() {
+                    public void changedUpdate(DocumentEvent e) {
+                        changedText();
+                    }
+                    public void removeUpdate(DocumentEvent e) {
+                        changedText();
+                    }
+                    public void insertUpdate(DocumentEvent e) {
+                        changedText();
+                    }
+
+                    public void changedText() {
+                        String text = textField.getText();
+                        Length length = lengthConverter.convertReverse(text);
+                        lengthProperty.set(length);
+                    }
+                });
+                panel.add(textField, "4, "+(formRow*2)+", left, default");
             }
             // Consume the row
             formRow++;
         }
         for (Solutions.Issue.Choice choice : issue.getChoices()) {
             if (choice != null) {
+                if (issue.getChoice() == null) {
+                    // Set first choice as default.
+                    issue.setChoice(choice.getValue());
+                }
                 final JRadioButton radioButton = new JRadioButton("");
                 buttonGroup.add(radioButton);
                 panel.add(radioButton, "2, "+(formRow*2)+", right, default");
@@ -204,19 +298,23 @@ public class IssuePanel extends JPanel {
                 panelMultiChoice.add(lblMultiChoice, "1, 1");
                 lblMultiChoice.setIcon(choice.getIcon());
                 lblMultiChoice.setIconTextGap(20);
+                setClipboardHandler(lblMultiChoice);
                 lblMultiChoice.addMouseListener(new MouseListener() {
                     private boolean beginClick;
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        if (beginClick) {
+                        if (beginClick && SwingUtilities.isLeftMouseButton(e)) {
                             radioButton.setSelected(true);
                         }
+                        beginClick = false;
                     }
 
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        beginClick = true;
+                        if (SwingUtilities.isLeftMouseButton(e)) {
+                            beginClick = true;
+                        }
                     }
 
                     @Override
@@ -230,13 +328,66 @@ public class IssuePanel extends JPanel {
 
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        radioButton.setSelected(true);
+                        if (SwingUtilities.isLeftMouseButton(e)) {
+                            radioButton.setSelected(true);
+                        }
                     }
                 });
                 // Consume the row
                 formRow++;
             }
         }
+    }
+
+    public void setClipboardHandler(JLabel lbl) {
+        lbl.addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseExited(MouseEvent e) {}
+
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    // Crude
+                    String text = lbl.getText();
+                    String noHTMLString = text
+                            .replaceAll("\\<br.*?\\>", "\n")
+                            .replaceAll("\\</p\\>", "\n")
+                            .replaceAll("\\</h.*?\\>", "\n")
+                            .replaceAll("\\</li\\>", "\n")
+                            .replaceAll("\\</tr\\>", "\n")
+                            .replaceAll("\\<.*?\\>", " ")
+                            .replaceAll("  ", " ")
+                            .replaceAll("  ", " ")
+                            .replaceAll("\n ", "\n")
+                            .trim();
+                    Toolkit.getDefaultToolkit()
+                    .getSystemClipboard()
+                    .setContents(new StringSelection(noHTMLString), null);
+                    lbl.setEnabled(!lbl.isEnabled());
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            Thread.sleep(300);
+                        }
+                        catch (InterruptedException e1) {}
+                        lbl.setEnabled(!lbl.isEnabled());
+                    });
+                }
+            }
+        });
+    }
+
+    public int getSliderValue(DoubleProperty doubleProperty) {
+        return (int) Math.round((doubleProperty.get() - doubleProperty.getMin())*SLIDER_MAX/(doubleProperty.getMax() - doubleProperty.getMin()));
     }
 
     private RowSpec[] dynamicRowspec(int rows) {
@@ -266,5 +417,9 @@ public class IssuePanel extends JPanel {
         BeanProperty<Issue, String> issueBeanProperty_2 = BeanProperty.create("solution");
         AutoBinding<Issue, String, JTextArea, String> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ, issue, issueBeanProperty_2, solutionText, jLabelBeanProperty);
         autoBinding_2.bind();
+
+        UiUtils.messageBoxOnExceptionLater(() -> {
+            issue.activate();
+        });
     }
 }

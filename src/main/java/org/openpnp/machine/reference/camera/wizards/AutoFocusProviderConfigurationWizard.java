@@ -183,11 +183,15 @@ public class AutoFocusProviderConfigurationWizard extends AbstractConfigurationW
                 if (!(nozzle instanceof ReferenceNozzle)) {
                     throw new Exception("Expected "+nozzle.getName()+" to be a ReferenceNozzle");
                 }
-                ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzle.getNozzleTip(); 
+                ReferenceNozzleTip nt = ((ReferenceNozzle) nozzle).getCalibrationNozzleTip(); 
+                if (nt == null) {
+                    throw new Exception("A nozzle tip must be loaded, or the \"unloaded\" nozzle tip stand-in must be defined.");
+                }
                 Location location1 = camera.getLocation(nozzle)
                         .derive(nozzle.getLocation(), false, false, false, true); // Keep rotation
-                Location location0 = location1.add(new Location(nt.getMaxPartHeight().getUnits(), 
-                        0, 0, nt.getMaxPartHeight().getValue(), 0));
+                Length maxPartHeight = nt.getMaxPartHeight();
+                Location location0 = location1.add(new Location(maxPartHeight.getUnits(), 
+                        0, 0, maxPartHeight.getValue(), 0));
                 Location focus = focusProvider.autoFocus(camera, nozzle, nt.getMaxPartDiameter(), location0, location1);
                 setLastFocusDistance(focus.getXyzLengthTo(location1));
                 MovableUtils.fireTargetedUserAction(camera);

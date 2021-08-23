@@ -337,4 +337,11 @@ public class Length {
         }
         return Double.valueOf(getValue()).compareTo(Double.valueOf(other.convertToUnits(units).getValue()));
     }
+
+    /**
+     * @return true, if non-zero, assuming no initialized value can be zero.  
+     */
+    public boolean isInitialized() {
+        return getValue() != 0.0;
+    }
 }
