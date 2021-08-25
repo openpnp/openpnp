@@ -740,8 +740,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                     throw new Exception("This feeder is used as a template and cannot be overwritten.");
                 }
                 int result;
-                if (feeder.getLocation().equals(ReferencePushPullFeeder.nullLocation)) {
-                    // if the feeder.location is completely null, we assume this is a freshly created feeder 
+                if (!feeder.getLocation().isInitialized()) {
+                    // if the feeder.location is completely zero, we assume this is a freshly created feeder 
                     result = JOptionPane.YES_OPTION; 
                 }
                 else {

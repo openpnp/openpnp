@@ -357,8 +357,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                     Circle testObject = visualSolutions
                                             .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null, null);
                                     head.setCalibrationTestObjectDiameter(
-                                            new Length(testObject.getDiameter()*defaultCamera.getUnitsPerPixel().getX(), 
-                                                    defaultCamera.getUnitsPerPixel().getUnits()));
+                                            defaultCamera.getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
                                     calibrateNozzleOffsets(head, defaultCamera, nozzle);
                                     return true;
                                 },
@@ -393,7 +392,7 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     public void calibrateAxisBacklash(ReferenceHead head, ReferenceCamera camera,
             HeadMountable movable, ReferenceControllerAxis axis, Length acceptableTolerance) throws Exception {
-        // Check pre-conditions (this method can be called from outside Issues & Solutioins).
+        // Check pre-conditions (this method can be called from outside Issues & Solutions).
         if (!(axis.isSoftLimitLowEnabled() && axis.isSoftLimitHighEnabled())) {
             throw new Exception("Axis "+axis.getName()+" must have soft limits enabled for backlash calibration.");
         }
@@ -782,8 +781,8 @@ public class CalibrationSolutions implements Solutions.Subject {
         resolution = resolution.multiply(Math.ceil(finestResolution.divide(resolution)));
         // Get the sub-pixel resolution of the detection capability. 
         Length subPixelUnit = (axis.getType() == Type.X  
-                ? camera.getUnitsPerPixel().getLengthX() 
-                        : camera.getUnitsPerPixel().getLengthY())
+                ? camera.getUnitsPerPixelPrimary().getLengthX() 
+                        : camera.getUnitsPerPixelPrimary().getLengthY())
                 .multiply(1.0/machine.getVisionSolutions().getSuperSampling());
         if (tolerance) {
             // Round up to the next full sub-pixel (Note, this also covers the case where the axis resolution is not yet set).
@@ -829,7 +828,8 @@ public class CalibrationSolutions implements Solutions.Subject {
             testPart.setPackage(packag);
             ReferenceTubeFeeder feeder = new ReferenceTubeFeeder();
             feeder.setPart(testPart);
-            // Get the initial precise test object location.
+            // Get the initial precise test object location. It must lay on the primary fiducial. 
+            MovableUtils.moveToLocationAtSafeZ(defaultCamera, head.getCalibrationPrimaryFiducialLocation());
             Location location = machine.getVisionSolutions()
                     .centerInOnSubjectLocation(defaultCamera, defaultCamera,
                             head.getCalibrationTestObjectDiameter(), "Nozzle Offset Calibration", false);

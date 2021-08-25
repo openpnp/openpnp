@@ -334,6 +334,29 @@ public class Location {
     }
 
     /**
+     * Returns a new Location with the same units as this one but with values updated to the passed
+     * in Lengths. A caveat is that if a specified value is null, the new Location will contain the
+     * value from this object instead of the new value. The Lengths will automatically be converted 
+     * to this locations's units.
+     * 
+     * This is intended as a utility method, useful for creating new Locations based on existing
+     * ones with one or more values changed.
+     * 
+     * @param x
+     * @param y
+     * @param z
+     * @param rotation
+     * @return
+     */
+    public Location deriveLengths(Length x, Length y, Length z, Double rotation) {
+        return new Location(units, 
+                (x == null ? this.x : x.convertToUnits(units).getValue()), 
+                (y == null ? this.y : y.convertToUnits(units).getValue()),
+                (z == null ? this.z : z.convertToUnits(units).getValue()), 
+                (rotation == null ? this.rotation : rotation));
+    }
+
+    /**
      * Returns a new Location with the same units as this one but with values updated from 
      * a second Location. If a specified boolean is false, the new Location will contain the
      * value from this object instead of the second location.

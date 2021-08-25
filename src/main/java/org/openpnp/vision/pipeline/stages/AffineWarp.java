@@ -174,7 +174,7 @@ public class AffineWarp extends CvStage {
         if (camera == null) {
             throw new Exception("Property \"camera\" is required.");
         }
-        Location unitsPerPixel = camera.getUnitsPerPixel()
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ()
                 .convertToUnits(lengthUnit);
 
         double x0 = this.x0;

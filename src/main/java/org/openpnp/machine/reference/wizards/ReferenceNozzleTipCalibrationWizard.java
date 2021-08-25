@@ -390,8 +390,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         ReferenceNozzle nozzle = getUiCalibrationNozzle(nozzleTip);
         Location location = nozzle.getLocation();
         Location distance = location.subtract(camera.getLocation());
-        if (Math.abs(distance.getLengthX().divide(camera.getUnitsPerPixel().getLengthX())) >= camera.getWidth()/2
-            || Math.abs(distance.getLengthY().divide(camera.getUnitsPerPixel().getLengthY())) >= camera.getHeight()/2) {
+        if (Math.abs(distance.getLengthX().divide(camera.getUnitsPerPixelAtZ().getLengthX())) >= camera.getWidth()/2
+            || Math.abs(distance.getLengthY().divide(camera.getUnitsPerPixelAtZ().getLengthY())) >= camera.getHeight()/2) {
             // Outside the camera view, need to move to the center.
             location = calibration.getCalibrationLocation(camera, nozzle);
         }

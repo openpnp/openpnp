@@ -226,8 +226,6 @@ public class CameraView extends JComponent implements CameraListener {
     }
     RenderingQuality renderingQuality = RenderingQuality.Low;
 
-    private Length viewingPlaneZ; //the Z coordinate at which the reticle is correctly scaled
-
     public CameraView() {
         setBackground(Color.black);
         setOpaque(true);
@@ -314,8 +312,6 @@ public class CameraView extends JComponent implements CameraListener {
         // turn on capture for the new camera
         if (this.camera != null) {
             this.camera.startContinuousCapture(this);
-            // set the viewing plane to the default for the camera
-            viewingPlaneZ = camera.getDefaultZ();
         }
     }
 
@@ -397,45 +393,6 @@ public class CameraView extends JComponent implements CameraListener {
         prefs.put(getQualityRenderingPrefKey(), renderingQuality.toString());
         this.renderingQuality = renderingQuality;
         calculateScalingData();
-    }
-
-    /**
-     * Gets the current Z coordinate of the viewing plane at which the reticle is correctly scaled
-     * 
-     * @return the Z coordinate
-     */
-    public Length getViewingPlaneZ() {
-        return viewingPlaneZ;
-    }
-
-    /**
-     * Sets the Z coordinate at which the reticle is correctly scaled
-     * 
-     * @param viewingPlaneZ the Z coordinate
-     */
-    public void setViewingPlaneZ(Length viewingPlaneZ) {
-        try {
-            if (camera.getAxisZ() != null 
-                    && camera.isInSafeZZone(viewingPlaneZ)) {
-                this.viewingPlaneZ = camera.getDefaultZ();
-            }
-            else {
-                this.viewingPlaneZ = viewingPlaneZ;
-            }
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
-        calculateScalingData();
-        repaint();
-    }
-
-    /**
-     * Resets the Z coordinate at which the reticle is correctly scaled to the default for the
-     * camera
-     */
-    public void resetViewingPlaneZ() {
-        this.setViewingPlaneZ(camera.getDefaultZ());
     }
 
     /**
@@ -571,7 +528,7 @@ public class CameraView extends JComponent implements CameraListener {
         lastFrame = img;
         if (oldFrame == null
                 || (oldFrame.getWidth() != img.getWidth() || oldFrame.getHeight() != img.getHeight()
-                        || !camera.getUnitsPerPixel(viewingPlaneZ).equals(lastUnitsPerPixel))) {
+                        || !camera.getUnitsPerPixelAtZ().equals(lastUnitsPerPixel))) {
             calculateScalingData();
         }
         fps = 1000.0 / fpsAverage.next(System.currentTimeMillis() - lastFrameReceivedTime);
@@ -635,7 +592,7 @@ public class CameraView extends JComponent implements CameraListener {
         scaleRatioX = lastSourceWidth / (double) scaledWidth;
         scaleRatioY = lastSourceHeight / (double) scaledHeight;
         
-        lastUnitsPerPixel = camera.getUnitsPerPixel(viewingPlaneZ);
+        lastUnitsPerPixel = camera.getUnitsPerPixelAtZ();
         scaledUnitsPerPixelX = lastUnitsPerPixel.getX() * scaleRatioX;
         scaledUnitsPerPixelY = lastUnitsPerPixel.getY() * scaleRatioY;
 
@@ -680,7 +637,7 @@ public class CameraView extends JComponent implements CameraListener {
                     .getRotation();
 
             for (Reticle reticle : reticles.values()) {
-                reticle.draw(g2d, camera.getUnitsPerPixel(viewingPlaneZ).getUnits(), scaledUnitsPerPixelX,
+                reticle.draw(g2d, camera.getUnitsPerPixelAtZ().getUnits(), scaledUnitsPerPixelX,
                         scaledUnitsPerPixelY, ins.left + (width / 2), ins.top + (height / 2),
                         scaledWidth, scaledHeight, c);
             }
@@ -707,16 +664,13 @@ public class CameraView extends JComponent implements CameraListener {
                 paintLightToggle(g2d);
             }
 
-            if (viewingPlaneZ != null && camera.getDefaultZ() != null) {
-                // Display the height of the reticle in the lower left corner if it is different than
-                // the default
-                Length viewingPlaneDiff = viewingPlaneZ.subtract(camera.getDefaultZ());
-                if (Math.abs(viewingPlaneDiff.
-                        convertToUnits(LengthUnit.Millimeters)
-                        .getValue()) > 0.05) {
+            if (camera.isUnitsPerPixelAtZCalibrated()) {
+                // Display the height of the reticle in the lower left corner if it is lower than
+                // safe Z.
+                if (camera.getLocation().getLengthZ().compareTo(camera.getSafeZ()) < 0) {   
                     LengthConverter lengthConverter = new LengthConverter();
-                    String text = "Z: " + lengthConverter.convertForward(viewingPlaneZ) 
-                    + viewingPlaneDiff.getUnits().getShortName();
+                    String text = "Z: " + lengthConverter.convertForward(camera.getLocation().getLengthZ()) 
+                    + Configuration.get().getSystemUnits().getShortName();
                     Dimension dim = measureTextOverlay(g2d, text);
                     drawTextOverlay(g2d, width - dim.width - 10, height - dim.height - 10, text);
                 }
@@ -1481,7 +1435,7 @@ public class CameraView extends JComponent implements CameraListener {
 
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
-        Location offsets = camera.getUnitsPerPixel(viewingPlaneZ).
+        Location offsets = camera.getUnitsPerPixelAtZ().
                 derive(offsetX, offsetY, 0.0, 0.0);
         // Add the offsets to the Camera's position.
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
@@ -1535,7 +1489,7 @@ public class CameraView extends JComponent implements CameraListener {
 
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
-        Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
+        Location offsets = new Location(camera.getUnitsPerPixel().getUnits(), offsetX, offsetY, 0.0, 0.0);
         return offsets;
     }
 
@@ -1837,12 +1791,6 @@ public class CameraView extends JComponent implements CameraListener {
                 zoom = Math.max(zoom, 1.0d);
                 zoom = Math.min(zoom, 100d);
             }
-            else { // Scroll wheel with Ctrl or Ctrl-Alt changes the viewing plane
-                if (isViewingPlaneChangable()) {
-                    double factor = (modifiers & InputEvent.ALT_DOWN_MASK) == 0 ? 1.0 : 0.1;
-                    viewingPlaneZ = viewingPlaneZ.subtract(factor * e.getPreciseWheelRotation());
-                }
-            }
             calculateScalingData();
             repaint();
         }
@@ -1852,13 +1800,14 @@ public class CameraView extends JComponent implements CameraListener {
             new CameraViewSelectionTextDelegate() {
                 @Override
                 public String getSelectionText(CameraView cameraView) {
-                    double widthInUnits = selection.width * camera.getUnitsPerPixel(viewingPlaneZ).getX();
-                    double heightInUnits = selection.height * camera.getUnitsPerPixel(viewingPlaneZ).getY();
+                    Location upp = camera.getUnitsPerPixelAtZ();
+                    double widthInUnits = selection.width * upp.getX();
+                    double heightInUnits = selection.height * upp.getY();
 
                     String text = String.format(Locale.US, "%dpx, %dpx\n%2.3f%s, %2.3f%s",
                             (int) selection.getWidth(), (int) selection.getHeight(), widthInUnits,
-                            camera.getUnitsPerPixel(viewingPlaneZ).getUnits().getShortName(), heightInUnits,
-                            camera.getUnitsPerPixel(viewingPlaneZ).getUnits().getShortName());
+                            upp.getUnits().getShortName(), heightInUnits,
+                            upp.getUnits().getShortName());
                     return text;
                 }
             };

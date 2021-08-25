@@ -23,7 +23,6 @@
 package org.openpnp.machine.reference.feeder.wizards;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.PrintWriter;
@@ -950,6 +949,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
     private void editPipeline() throws Exception {
         Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+        feeder.ensureCameraZ(camera);
         CvPipeline pipeline = feeder.getCvPipeline(camera, false);
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");

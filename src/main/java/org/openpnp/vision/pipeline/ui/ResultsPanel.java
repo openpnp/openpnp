@@ -18,6 +18,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
 import javax.swing.JTextPane;
 import javax.swing.JToolBar;
@@ -38,8 +39,6 @@ import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 import org.pmw.tinylog.Logger;
-
-import javax.swing.JSeparator;
 
 public class ResultsPanel extends JPanel {
     private final CvPipelineEditor editor;
@@ -152,7 +151,7 @@ public class ResultsPanel extends JPanel {
                             Camera camera = (Camera) editor.getPipeline().getProperty("camera");
                             if (camera != null) {
                                 // convert camera (pixels) to stage units 
-                                Location unitsPerPixel = camera.getUnitsPerPixel()
+                                Location unitsPerPixel = camera.getUnitsPerPixelAtZ()
                                         .convertToUnits(lengthUnit);
                                 Location mouseLocation = unitsPerPixel.multiply(p.x-image.getWidth()/2, -p.y+image.getHeight()/2, 0, 0);
                                 auxCoords = String.format(" (%f, %f %s)", mouseLocation.getX(), mouseLocation.getY(), lengthUnit.getShortName()); 
