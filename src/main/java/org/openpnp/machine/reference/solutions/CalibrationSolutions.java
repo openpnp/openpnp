@@ -820,6 +820,7 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     private void calibrateNozzleOffsets(ReferenceHead head, ReferenceCamera defaultCamera, ReferenceNozzle nozzle)
             throws Exception {
+        Location restoreLocation = nozzle.getLocation();
         try {
             // Create a pseudo part, package and feeder to enable pick and place.
             Part testPart = new Part("TEST-OBJECT");
@@ -832,6 +833,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             Location location = machine.getVisionSolutions()
                     .centerInOnSubjectLocation(defaultCamera, defaultCamera,
                             head.getCalibrationTestObjectDiameter(), "Nozzle Offset Calibration", false);
+            restoreLocation = location;
             // We accumulate all the detected differences and only calculate the centroid in the end. 
             int accumulated = 0;
             Location offsetsDiff = new Location(LengthUnit.Millimeters);
@@ -882,6 +884,9 @@ public class CalibrationSolutions implements Solutions.Subject {
             if (nozzle.getPart() != null) {
                 nozzle.place();
             }
+            // Move nozzle over restore location at safe Z and with zero rotation.
+            MovableUtils.moveToLocationAtSafeZ(nozzle, restoreLocation
+                    .derive(null, null, nozzle.getSafeZ().convertToUnits(restoreLocation.getUnits()).getValue(), 0.0));
         }
     }
 }
