@@ -13,6 +13,8 @@ https://www.easyuefi.com/wintousb/
 
 5) Install the camera drivers in device manager. There are two camera versions (new and old)
 
+6) Install java (e.g. JRE 8 32-bit http://dl.msystems.ch/Java/jre-8u301-windows-i586.exe )
+
 ### Building Openpnp application
 
 In my experience was easier to build the openpnp (jar) on a second machine. 
