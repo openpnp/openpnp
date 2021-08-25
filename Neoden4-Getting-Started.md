@@ -11,7 +11,7 @@ https://www.easyuefi.com/wintousb/
 
 4) Windows boots up. Suggest using a USB-Ethernet adapter and enabling remote desktop access if useful.
 
-5) Install the camera drivers in device manager. There are two camera versions (new and old)
+5) Install the camera drivers (top and bottom camera) in device manager. There are two camera hardware versions (new and old), the new version VID:PID is 0x52CB:0x52CB.
 
 6) Install java (e.g. JRE 8 32-bit http://dl.msystems.ch/Java/jre-8u301-windows-i586.exe )
 
