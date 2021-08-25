@@ -27,7 +27,7 @@ https://firepickdelta.dozuki.com/Guide/Installing+Eclipse+IDE+and+Running+OpenPn
 
 To build the jar in eclipse, choose Run Configurations->Maven Build->Open PNP, type 'package' in the goals field, check 'skip tests' if needed, hit run to build it.
 
-Copy the 'target' folder onto the neoden machine.
+Copy the 'target' folder onto the neoden machine. Also need to copy NeodenCamera.dll into the folder with openpnp.bat.
 
 ### Configuring Openpnp
 - Starting .xml files
