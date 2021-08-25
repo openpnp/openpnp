@@ -5,7 +5,7 @@ Some notes to help get started with a Neoden4 machine and Openpnp
 e.g. https://tech-latest.com/download-windows-7-iso/
 
 2) Make a bootable USB drive (>16GB) with WinToUSB (free version is fine)
-https://www.easyuefi.com/wintousb/
+https://www.easyuefi.com/wintousb/ use a faster drive if you can (SDXC, etc.) for better performance
 
 3) Plug in USB drive to Neoden4, select boot order for USB drive in BIOS
 
