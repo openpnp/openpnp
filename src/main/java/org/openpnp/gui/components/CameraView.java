@@ -669,8 +669,7 @@ public class CameraView extends JComponent implements CameraListener {
                 // safe Z.
                 if (camera.getLocation().getLengthZ().compareTo(camera.getSafeZ()) < 0) {   
                     LengthConverter lengthConverter = new LengthConverter();
-                    String text = "Z: " + lengthConverter.convertForward(camera.getLocation().getLengthZ()) 
-                    + Configuration.get().getSystemUnits().getShortName();
+                    String text = "Z: " + lengthConverter.convertForward(camera.getLocation().getLengthZ());
                     Dimension dim = measureTextOverlay(g2d, text);
                     drawTextOverlay(g2d, width - dim.width - 10, height - dim.height - 10, text);
                 }
@@ -1519,7 +1518,7 @@ public class CameraView extends JComponent implements CameraListener {
                 // move the camera to the location
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
             }
-            MovableUtils.fireTargetedUserAction(camera);
+            MovableUtils.fireTargetedUserAction(camera, true);
         });
     }
     
@@ -1543,7 +1542,7 @@ public class CameraView extends JComponent implements CameraListener {
             Location location = selectedTool.getLocation();
             location = location.derive(null, null, null, targetAngle);
             MovableUtils.moveToLocationAtSafeZ(selectedTool, location);
-            MovableUtils.fireTargetedUserAction(selectedTool);
+            MovableUtils.fireTargetedUserAction(selectedTool, true);
         });
     }
 

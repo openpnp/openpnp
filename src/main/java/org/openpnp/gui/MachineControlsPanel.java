@@ -65,6 +65,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -75,7 +76,7 @@ public class MachineControlsPanel extends JPanel {
     private final Configuration configuration;
     private final JobPanel jobPanel;
 
-    private static final double VIRTUAL_Z_MAX_UNSAFE_ROAMING_MM = 5;
+    private static final double VIRTUAL_Z_MAX_UNSAFE_ROAMING_MM = 10;
     private static final String PREF_JOG_CONTROLS_EXPANDED =
             "MachineControlsPanel.jogControlsExpanded"; //$NON-NLS-1$
     private static final boolean PREF_JOG_CONTROLS_EXPANDED_DEF = true;
@@ -415,21 +416,27 @@ public class MachineControlsPanel extends JPanel {
         }
 
         @Override
-        public void machineTargetedUserAction(Machine machine, HeadMountable hm) {
+        public void machineTargetedUserAction(Machine machine, HeadMountable hm, boolean jogging) {
             if (hm != null 
                     && hm.getHead() != null) { // Do this only if this is a true HeadMountable 
                                                // i.e. not for bottom cameras or Machine actuators.
 
-                if (getSelectedTool() != hm || MovableUtils.isInSafeZZone(hm)) {
+                if (MovableUtils.isInSafeZZone(hm)) {
+                    lastUserActionLocation = null;
+                }
+                else if (lastUserActionLocation == null || getSelectedTool() != hm || !jogging) {
                     lastUserActionLocation = hm.getLocation().convertToUnits(LengthUnit.Millimeters);
                 }
                 else {
-                    // This is the same selected tool.
-                    if (hm.getAxisZ() instanceof ReferenceVirtualAxis 
-                            && lastUserActionLocation != null) {
-                        if (lastUserActionLocation.getLinearDistanceTo(hm.getLocation()) > VIRTUAL_Z_MAX_UNSAFE_ROAMING_MM) {
+                    // Jogging the same selected tool. Apply auto-Safe Z.
+                    if (hm.getAxisZ() instanceof ReferenceVirtualAxis) {
+                        double distance = lastUserActionLocation.getLinearDistanceTo(hm.getLocation());
+                        if (distance > VIRTUAL_Z_MAX_UNSAFE_ROAMING_MM) {
                             // Distance is too large to retain virtual Z. Make it safe.
+                            Logger.debug(hm.getName()+" exceeded roaming distance at non-safe Z, going to safe Z. "
+                                    + "Last user action at "+lastUserActionLocation+" roamed to "+hm.getLocation()+" distance "+distance+"mm.");
                             UiUtils.submitUiMachineTask(()-> hm.moveToSafeZ());
+                            lastUserActionLocation = null;
                         }
                     }
                 }

@@ -101,7 +101,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
                         }
 
                         @Override
-                        public void machineTargetedUserAction(Machine machine, HeadMountable hm) {
+                        public void machineTargetedUserAction(Machine machine, HeadMountable hm, boolean jogging) {
                             // Find the nearest camera.
                             Camera nearestCamera = null;
                             if (hm instanceof Camera) {

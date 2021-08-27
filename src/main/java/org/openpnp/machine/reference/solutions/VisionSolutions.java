@@ -726,6 +726,7 @@ public class VisionSolutions implements Solutions.Subject {
                             final State oldState = getState();
                             UiUtils.submitUiMachineTask(
                                     () -> {
+                                        Location headOffsetsBefore = nozzle.getHeadOffsets();
                                         if (primary) {
                                             // Reset any former head offset to zero.
                                             nozzle.setHeadOffsets(Location.origin);
@@ -761,16 +762,17 @@ public class VisionSolutions implements Solutions.Subject {
                                             // Note 2: The Z fiducial location Z was set to the default nozzle location Z (see above), so the Z offset will  
                                             // be 0 for the default nozzle, but equalize Z for any other nozzle. 
                                             Location headOffsets = head.getCalibrationPrimaryFiducialLocation().subtract(nozzleLocation);
-                                            if (nozzle.getHeadOffsets().getLinearLengthTo(headOffsets)
+                                            if (headOffsetsBefore.getLinearLengthTo(headOffsets)
                                                     .compareTo(head.getCalibrationPrimaryFiducialDiameter().multiply(0.5)) < 0) {
                                                 // Offsets that are too close (inside the fiducial) are not updated. They might already have been calibrated and we want 
                                                 // to keep them so i.e. these rough nozzle-aimed offsets are likely worse. 
-                                                Logger.info("Do not set nozzle "+nozzle.getName()+" head offsets to "+headOffsets+" as these are close to "
-                                                        + "existing offsets "+oldNozzleOffsets+" and existing offsets might already have been be calibrated.");
+                                                Logger.info("Not setting nozzle "+nozzle.getName()+" head offsets to rough "+headOffsets+" as these are close to "
+                                                        + "existing offsets "+headOffsetsBefore+" and existing offsets might already have been calibrated.");
                                             }
                                             else {
                                                 nozzle.setHeadOffsets(headOffsets);
-                                                Logger.info("Set nozzle "+nozzle.getName()+" head offsets to "+headOffsets+" (previously "+oldNozzleOffsets+")");
+                                                Logger.info("Set nozzle "+nozzle.getName()+" head offsets to "+headOffsets+" (previously "+headOffsetsBefore+")");
+                                                nozzle.adjustHeadOffsetsDependencies(headOffsetsBefore, headOffsets);
                                             }
                                         }
                                         return true;
@@ -1249,7 +1251,8 @@ public class VisionSolutions implements Solutions.Subject {
                     image.release();
                     image = OpenCvUtils.toMat(bufferedImage);
                     result = getPixelLocationShot(camera, diagnostics, image, maxDiameter,
-                            minDiameter, maxDistance, expectedX, expectedY, scoreRange);
+                            minDiameter, maxDistance, expectedX, expectedY, 
+                            n == 0 ? scoreRange : new ScoreRange());
                     // Accumulate
                     x += result.getX();
                     y += result.getY();

@@ -234,7 +234,7 @@ public class JogControlsPanel extends JPanel {
 
         tool.moveTo(targetLocation, MotionOption.JogMotion); 
 
-        MovableUtils.fireTargetedUserAction(tool);
+        MovableUtils.fireTargetedUserAction(tool, true);
     }
 
     private boolean nozzleLocationIsSafe(Location origin, Location dimension, Location nozzle,
@@ -607,7 +607,7 @@ public class JogControlsPanel extends JPanel {
                 Location location = hm.getLocation();
                 location = location.derive(null, null, null, 0.);
                 hm.moveTo(location);
-                MovableUtils.fireTargetedUserAction(hm);
+                MovableUtils.fireTargetedUserAction(hm, true);
             });
         }
     };
