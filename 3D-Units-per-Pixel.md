@@ -25,7 +25,7 @@ The viewing plane Z is now visible in the Camera View lower right corner, and if
 
 ![Camera View 3D Z](https://user-images.githubusercontent.com/9963310/131219680-fa0a4dc5-9800-49a8-ac0d-119e098e6c5c.png)
 
-Note: although this was not tested, it should theoretically work the same way for a camera that has its own _real/physical_ Z axis, that can move up and down to focus subjects. The Units per Pixel would not change in this scenario, but the camera viewing or focal plane would. Because the camera still has a distance from its focal plane, moving the camera down in Z is still safe. The 1:1 working principle shows that using the Z axis to "focus" on a subject is quite a natural way.
+Note: although this was not tested, it should theoretically work the same way for a camera that has its own _real/physical_ Z axis, that can move up and down to focus subjects. The Units per Pixel would not change in this scenario, but the camera viewing or focal plane would. Because the camera still has a distance from its focal plane, moving the camera down in Z is still safe. The 1:1 working principle shows that using the Z axis to "focus" on a subject is quite a natural thing to do.
 
 # Using with Feeders
 
