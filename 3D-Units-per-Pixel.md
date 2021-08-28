@@ -39,13 +39,13 @@ Note that for some feeder types, pipeline editing requires Z too (because the pi
 
 ## ReferenceStripFeeder
 
-The following shows an Auto-Setup of a [[ReferenceStripFeeder]] at higher than usual Z (it was deliberately proped up by ~10mm). Normal setup without 3D Units per Pixel failed. With the 3D calibration it works, observe how after the Auto-Setup the ruler ticks align with the 2mm part pockets: 
+The following shows an Auto-Setup of a [[ReferenceStripFeeder]] at higher than usual Z (it was deliberately proped up by ~7mm). Normal setup (without 3D Units per Pixel) failed. With the 3D Calibration it works! Observe how after the Auto-Setup the ruler ticks align with the 2mm part pockets quite nicely: 
 
 ![3d-calibration-stripfeeder](https://user-images.githubusercontent.com/9963310/131221108-0e535cd7-6ba7-4b18-af66-693391828aea.gif)
 
 ## BlindsFeeder
 
-Similar, a [[BlindsFeeder]] doing cover edge calibration (cover open close). This is now bang-on, it was always overcompensating before:
+Similar, a [[BlindsFeeder]] doing cover edge calibration (cover open close). This is now bang-on, the iteration always overcompensated before:
 
 ![3d-calibration-blindsfeeder](https://user-images.githubusercontent.com/9963310/131221121-3668174b-0b3b-4d75-bdf6-62e71c56d24e.gif)
 
@@ -57,7 +57,14 @@ Same for the [[ReferencePushPullFeeder]] doing sprocket hole and OCR recognition
 
 ## Other Feeder Types
 
-Other feeder types have also been reworked to support the 3D operation, albeit without testing. Please report any issues you might observe. 
+Other feeder types with vision have also been reworked to support the 3D operation, albeit without testing. Please report any issues you might observe. 
+
+# Nozzle Tip Changer
+
+The [[Nozzle Tip Changer]] vision will now also use 3D Calibration. Because the locations that are used to define the template shot have arbitrary Z coordinates (the nozzle tips are diving below the structure of the changer), there is a new **Adjust Z** field to offset the Z: 
+
+![Nozzle Tip Changer](https://user-images.githubusercontent.com/9963310/131222039-5385d94e-b10a-4bda-9716-5b84617996f2.png)
+
 
 # Other Uses 
 
