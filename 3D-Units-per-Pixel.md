@@ -55,5 +55,5 @@ Other feeder types have also been reworked to support the 3D operation, albeit w
 
 # Other Uses 
 
-* PCB fiducials will be correctly detected and closed in on, according to the PCB Z. 
+* PCB fiducials will be correctly detected and more efficiently closed in on, according to the PCB Z. Please note that having your PCB at a Z other than your **Default Z** is still **not recommended!** 
 * [[Visual Homing]] is assumed (by definition) to be at **Default Z**, as set on the Camera. You must make sure that the visual homing fiducial and your [primary calibration fiducial](https://github.com/openpnp/openpnp/wiki/Vision-Solutions) are at the same Z coordinate. These are the very foundations of your machine calibration, so there is deliberately no flexibility there!
