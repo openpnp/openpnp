@@ -35,19 +35,19 @@ You might have to change your routine when setting up new feeders, always probe 
 
 The following shows an Auto-Setup of a [[ReferenceStripFeeder]] at higher than usual Z (it was deliberately proped up by ~10mm). Normal setup without 3D Units per Pixel failed. With the 3D calibration it works, observe how after the Auto-Setup the ruler ticks align with the 2mm part pockets: 
 
-[Video](https://user-images.githubusercontent.com/9963310/131220303-a6765cdf-583f-4904-b143-e5560acc3634.mp4)
+![3d-calibration-stripfeeder](https://user-images.githubusercontent.com/9963310/131221108-0e535cd7-6ba7-4b18-af66-693391828aea.gif)
 
 ## BlindsFeeder
 
 Similar, a [[BlindsFeeder]] doing cover edge calibration (cover open close). This is now bang-on, it was always overcompensating before:
 
-[Video](https://user-images.githubusercontent.com/9963310/131220475-60e8391d-446f-499e-9f0a-e0b7bf0991e5.mp4)
+![3d-calibration-blindsfeeder](https://user-images.githubusercontent.com/9963310/131221121-3668174b-0b3b-4d75-bdf6-62e71c56d24e.gif)
 
 ## ReferencePushPullFeeder
 
 Same for the [[ReferencePushPullFeeder]] doing sprocket hole and OCR recognition, including scaling the OCR Region of interest:
 
-[Video](https://user-images.githubusercontent.com/9963310/131220577-e93271ab-93c1-451b-92f1-4f28c5e137da.mp4)
+![3d-calibration-pushpullfeeder](https://user-images.githubusercontent.com/9963310/131221124-95220bd8-6ac7-4f5a-8ab7-bf3c4e45fc03.gif)
 
 ## Other Feeder Types
 
