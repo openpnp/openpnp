@@ -30,4 +30,30 @@ All the OpenPnP feeders using Computer Vision should now work in 3D (if not, ple
 ![Z missing Error](https://user-images.githubusercontent.com/9963310/131219923-afa8f871-2773-4f16-9532-67028acb96b4.png)
 
 You might have to change your routine when setting up new feeders, always probe and enter the Z first. For simple feeders, you can probably just copy the Z coordinate over (and know it by heart, after a while). 
- 
+
+## ReferenceStripFeeder
+
+The following shows an Auto-Setup of a [[ReferenceStripFeeder]] at higher than usual Z (it was deliberately proped up by ~10mm). Normal setup without 3D Units per Pixel failed. With the 3D calibration it works, observe how after the Auto-Setup the ruler ticks align with the 2mm part pockets: 
+
+[Video](https://user-images.githubusercontent.com/9963310/131220303-a6765cdf-583f-4904-b143-e5560acc3634.mp4)
+
+## BlindsFeeder
+
+Similar, a [[BlindsFeeder]] doing cover edge calibration (cover open close). This is now bang-on, it was always overcompensating before:
+
+[Video](https://user-images.githubusercontent.com/9963310/131220475-60e8391d-446f-499e-9f0a-e0b7bf0991e5.mp4)
+
+## ReferencePushPullFeeder
+
+Same for the [[ReferencePushPullFeeder]] doing sprocket hole and OCR recognition, including scaling the OCR Region of interest:
+
+[Video](https://user-images.githubusercontent.com/9963310/131220577-e93271ab-93c1-451b-92f1-4f28c5e137da.mp4)
+
+## Other Feeder Types
+
+Other feeder types have also been reworked to support the 3D operation, albeit without testing. Please report any issues you might observe. 
+
+# Other Uses 
+
+* PCB fiducials will be correctly detected and closed in on, according to the PCB Z. 
+* [[Visual Homing]] is assumed (by definition) to be at **Default Z**, as set on the Camera. You must make sure that the visual homing fiducial and your [primary calibration fiducial](https://github.com/openpnp/openpnp/wiki/Vision-Solutions) are at the same Z coordinate. These are the very foundations of your machine calibration, so there is deliberately no flexibility there!
