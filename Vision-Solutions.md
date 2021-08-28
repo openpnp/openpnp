@@ -58,6 +58,8 @@ In the spirit of the holistic approach described above, this step goes both ways
 
 For multi-nozzle machines, the first nozzle (default nozzle) will serve as the head Z reference. All the other nozzles will be adjusted to the same Z reference. 
 
+As a side effect, the fiducial Z coordinates (primary and secondary together) will also complete the 3D Units per Pixel calibration. See the [[3D Units per Pixel]] page for more information.
+
 ## Down-looking Camera Offsets
 
 For machines with multiple down-looking camera on the same head, the additional cameras equally need to calibrate head offsets. Move the camera to the primary calibration fiducial and accept the solution. 
