@@ -5,7 +5,11 @@ However, this is not always possible, especially in a DIY environment. Some feed
 
 # Calibrating and Enabling 3D Units per Pixel
 
-Camera 3D Units per Pixel are automatically calibrated, when you use [[Issues and Solutions]] Milestones [Vision Solutions](https://github.com/openpnp/openpnp/wiki/Vision-Solutions). Once all the steps have been completed, the camera shows an enabled 3D configuration:
+Camera 3D Units per Pixel are automatically calibrated, when you use [Vision Solutions](https://github.com/openpnp/openpnp/wiki/Vision-Solutions) from [[Issues and Solutions]]. 
+
+Best [watch the video](https://youtu.be/md68n_J7uto).
+
+Once all the steps have been completed, the camera shows an enabled 3D configuration:
 
 ![3D Units per Pixel](https://user-images.githubusercontent.com/9963310/131219497-938464d2-697e-4ec2-90c0-dc706fbca421.png)
 
