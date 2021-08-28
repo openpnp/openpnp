@@ -8,9 +8,11 @@ To get some impressions, [watch a video of these and other calibration solutions
 
 # Calibration Rig
 
-In order to perform Visual Calibration, a certain calibration rig is needed. The elements of which is described here. 
+In order to perform Visual Calibration, a certain calibration rig is needed. The elements are described in the respective calibration steps. 
 
 ![Calibration rig](https://user-images.githubusercontent.com/9963310/129459527-52675532-f63c-458e-8dec-73659cffe3ab.png)
+
+# Calibration Steps
 
 ## Calibration Primary Fiducial
 
