@@ -9,7 +9,7 @@ Camera 3D Units per Pixel are automatically calibrated, when you use [Vision Sol
 
 Best [watch the video](https://youtu.be/md68n_J7uto).
 
-Once all the steps have been completed, the camera shows an enabled 3D configuration:
+Once all the steps have been completed, the camera shows an enabled **3D Calibration**:
 
 ![3D Units per Pixel](https://user-images.githubusercontent.com/9963310/131219497-938464d2-697e-4ec2-90c0-dc706fbca421.png)
 
