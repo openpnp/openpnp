@@ -35,7 +35,7 @@ Note: although this was not tested, it should theoretically work the same way fo
 
 # Using with Feeders
 
-All the OpenPnP feeders using Computer Vision should now work in 3D (if not, please report a bug :-)). When scale is important, e.g. to recognize carrier tape sprocket holes by their size and pitch, the relevant Z must be known, for the feeder vision to work. Therefore, you might see an error if this Z coordinate is not yet set:
+All the OpenPnP feeders using Computer Vision should now work in 3D (if not, please report a bug :-)). When scale is important, e.g. to recognize carrier tape sprocket holes by their size and pitch, the relevant Z must be known. Therefore, you might see an error if this Z coordinate is not yet set:
 
 ![Z missing Error](https://user-images.githubusercontent.com/9963310/131219923-afa8f871-2773-4f16-9532-67028acb96b4.png)
 
@@ -45,7 +45,7 @@ Note that for some feeder types, pipeline editing requires Z too (because the pi
 
 ## ReferenceStripFeeder
 
-The following shows an Auto-Setup of a [[ReferenceStripFeeder]] at higher than usual Z (it was deliberately proped up by ~7mm). Normal setup (without 3D Units per Pixel) failed. With the 3D Calibration it works! Observe how after the Auto-Setup the ruler ticks align with the 2mm part pockets quite nicely: 
+The following shows an Auto-Setup of a [[ReferenceStripFeeder]] at higher than usual Z (it was deliberately propped up by ~7mm). Normal setup (without 3D Units per Pixel) failed. With the 3D Calibration it works! Observe how after the Auto-Setup the ruler ticks align with the 2mm part pockets quite nicely: 
 
 ![3d-calibration-stripfeeder](https://user-images.githubusercontent.com/9963310/131221108-0e535cd7-6ba7-4b18-af66-693391828aea.gif)
 
