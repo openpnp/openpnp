@@ -17,6 +17,8 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.driver.GcodeDriver;
+import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCameraOffsetWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCompatibleNozzleTipsWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
@@ -28,11 +30,15 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
+import org.openpnp.model.Solutions.Milestone;
+import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Feeder;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -45,6 +51,7 @@ import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Persist;
 
 public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMountable {
     @Element
@@ -91,6 +98,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Attribute(required = false)
     private boolean limitRotation = true;
 
+    private Actuator vacuumSenseActuator;
+    private Actuator vacuumActuator;
+    private Actuator blowOffActuator;
+
     protected ReferenceNozzleTip nozzleTip;
 
     public ReferenceNozzle() {
@@ -133,13 +144,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                             vacuumActuatorName = vacuumSenseActuatorName;
                         }
                         if (blowOffActuator != null) {
-                            // Type both the vacuum and the blow off actuators as Double (typical use).
+                            // Type the vacuum and the blow off actuators (typical use).
                             AbstractActuator.suggestValueType(vacuumActuator, ActuatorValueType.Double);
                             AbstractActuator.suggestValueType(blowOffActuator, ActuatorValueType.Double);
                         }
                         // Migration is done.
                         version = 200;
                     }
+
+                    // Resolve the actuators.
+                    try { getVacuumSenseActuator(); } catch (Exception e) {}
+                    try { getVacuumActuator(); } catch (Exception e) {}
+                    try { getBlowOffActuator(); } catch (Exception e) {}
 
                     if (isManualNozzleTipChangeLocationUndefined()) {
                         // try to clone from other nozzle. 
@@ -170,7 +186,27 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this();
         this.id = id;
     }
-    
+
+    @Persist
+    private void persist() {
+        // Make sure the latest actuator names are persisted.
+        try {
+            setVacuumSenseActuator(getVacuumSenseActuator());
+        }
+        catch (Exception e) {
+        }
+        try {
+            setVacuumActuator(getVacuumActuator());
+        }
+        catch (Exception e) {
+        }
+        try {
+            setBlowOffActuator(getBlowOffActuator());
+        }
+        catch (Exception e) {
+        }
+    }
+
     @Deprecated
     public boolean isLimitRotation() {
         return limitRotation;
@@ -210,36 +246,67 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Location oldValue = this.headOffsets;
         this.headOffsets = headOffsets;
         firePropertyChange("headOffsets", oldValue, headOffsets);
-        oldValue = oldValue.convertToUnits(LengthUnit.Millimeters);
-        if (Math.abs(oldValue.getLengthX().subtract(headOffsets.getLengthX()).getValue()) > 0.01
-                || Math.abs(oldValue.getLengthY().subtract(headOffsets.getLengthY()).getValue()) > 0.01) {
+        Location offsetsDiff = headOffsets.subtract(oldValue).convertToUnits(LengthUnit.Millimeters);
+        adjustHeadOffsetsDependencies(oldValue, headOffsets);
+    }
+
+    /**
+     * Adjust any dependent head offsets, e.g. after calibration.
+     * 
+     * @param headOffsetsOld
+     * @param headOffsetsNew
+     * @param offsetsDiff
+     */
+    public void adjustHeadOffsetsDependencies(Location headOffsetsOld, Location headOffsetsNew) {
+        Location offsetsDiff = headOffsetsNew.subtract(headOffsetsOld).convertToUnits(LengthUnit.Millimeters);
+        if (offsetsDiff.getLinearDistanceTo(Location.origin) > 0.01) {
             // Changing a X, Y head offset invalidates the nozzle tip calibration. Just changing Z leaves it intact. 
             ReferenceNozzleTipCalibration.resetAllNozzleTips();
         }
-    }
+        if (headOffsetsOld.isInitialized() && headOffsetsNew.isInitialized() && head != null) {
+            // The old offsets were not zero, adjust some dependent head offsets.
+            
+            // Where another HeadMountable, such as an Actuator, is fastened to the nozzle, it may have the same X, Y head offsets, i.e. these were very 
+            // likely copied over, like customary for the ReferencePushPullFeeder actuator. Adjust them likewise. 
+            for (HeadMountable hm : head.getHeadMountables()) {
+                if (this != hm 
+                        && (hm instanceof ReferenceHeadMountable)
+                        && !(hm instanceof ReferenceNozzle)) {
+                    ReferenceHeadMountable otherHeadMountable = (ReferenceHeadMountable) hm;
+                    Location otherHeadOffsets = otherHeadMountable.getHeadOffsets();
+                    if (otherHeadOffsets.isInitialized() 
+                            && headOffsetsOld.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(otherHeadOffsets) <= 0.01) {
+                        // Take X, Y (but not Z).
+                        Location hmOffsets = otherHeadOffsets.derive(headOffsetsNew, true, true, false, false);
+                        Logger.info("Set "+otherHeadMountable.getClass().getSimpleName()+" " + otherHeadMountable.getName() + " head offsets to " + hmOffsets
+                                + " (previously " + otherHeadOffsets + ")");
+                        otherHeadMountable.setHeadOffsets(hmOffsets);
+                    }
+                }
+            }
 
-    public String getVacuumSenseActuatorName() {
-        return vacuumSenseActuatorName;
-    }
-
-    public void setVacuumSenseActuatorName(String vacuumSenseActuatorName) {
-        this.vacuumSenseActuatorName = vacuumSenseActuatorName;
-    }
-
-    public String getVacuumActuatorName() {
-        return vacuumActuatorName;
-    }
-
-    public void setVacuumActuatorName(String vacuumActuatorName) {
-        this.vacuumActuatorName = vacuumActuatorName;
-    }
-
-    public String getBlowOffActuatorName() {
-        return blowOffActuatorName;
-    }
-
-    public void setBlowOffActuatorName(String blowActuatorName) {
-        this.blowOffActuatorName = blowActuatorName;
+            // Also adjust up-looking camera offsets, as these were very likely calibrated using the default nozzle.
+            try {
+                if (this == head.getDefaultNozzle()) {
+                    for (Camera camera : getMachine().getCameras()) {
+                        if (camera instanceof ReferenceCamera 
+                                && camera.getLooking() == Looking.Up) {
+                            ReferenceHeadMountable upLookingCamera = (ReferenceHeadMountable) camera;
+                            Location cameraOffsets = upLookingCamera.getHeadOffsets();
+                            if (cameraOffsets.isInitialized()) {
+                                cameraOffsets = cameraOffsets.add(offsetsDiff);
+                                Logger.info("Set camera " + upLookingCamera.getName() + " head offsets to " + cameraOffsets
+                                        + " (previously " + upLookingCamera.getHeadOffsets() + ")");
+                                upLookingCamera.setHeadOffsets(cameraOffsets);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
+        }
     }
 
     @Override
@@ -425,7 +492,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
                 Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
                 location = location.subtract(correctionOffset);
-                Logger.trace("{}.transformToHeadLocation({}, ...) runout compensation {}", getName(), location, correctionOffset);
+                Logger.trace("{}.toHeadLocation({}, ...) runout compensation {}", getName(), location, correctionOffset);
             }
         }
         return super.toHeadLocation(location, currentLocation, options);
@@ -795,6 +862,10 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return (ReferenceMachine) Configuration.get().getMachine();
     }
 
+    protected boolean isVaccumSenseActuatorEnabled() {
+        return vacuumSenseActuatorName != null && !vacuumSenseActuatorName.isEmpty();
+    }
+
     protected boolean isVaccumActuatorEnabled() {
         return vacuumActuatorName != null && !vacuumActuatorName.isEmpty();
     }
@@ -804,7 +875,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if ((step == PartOnStep.AfterPick && getNozzleTip().isPartOnCheckAfterPick())
                 || (step == PartOnStep.Align && getNozzleTip().isPartOnCheckAlign())
                 || (step == PartOnStep.BeforePlace && getNozzleTip().isPartOnCheckBeforePlace())) {
-            return isVaccumActuatorEnabled() 
+            return isVaccumSenseActuatorEnabled() 
                     && (getNozzleTip().getMethodPartOn() != VacuumMeasurementMethod.None);
         }
         return false;
@@ -814,35 +885,115 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public boolean isPartOffEnabled(Nozzle.PartOffStep step) {
         if ((step == PartOffStep.AfterPlace && getNozzleTip().isPartOffCheckAfterPlace())
                 || (step == PartOffStep.BeforePick && getNozzleTip().isPartOffCheckBeforePick())) {
-            return isVaccumActuatorEnabled() 
+            return isVaccumSenseActuatorEnabled() 
                     && (getNozzleTip().getMethodPartOff() != VacuumMeasurementMethod.None);
         }
         return false;
     }
-   
 
-    protected Actuator getVacuumSenseActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+    /**
+     * @return The actuator used to sense the vacuum on the Nozzle.
+     * @throws Exception when the actuator name cannot be resolved (dangling reference).
+     */
+    public Actuator getVacuumSenseActuator() throws Exception {
+        if (vacuumSenseActuator == null && vacuumSenseActuatorName != null && !vacuumSenseActuatorName.isEmpty()) {
+            vacuumSenseActuator = getHead().getActuatorByName(vacuumSenseActuatorName);
+            if (vacuumSenseActuator == null) {
+                throw new Exception(String.format("Can't find vacuum sense actuator %s", vacuumSenseActuatorName));
+            }
+        }
+        return vacuumSenseActuator;
+    }
+
+    /**
+     * @return The actuator used to sense the vacuum on the Nozzle.
+     * @throws Exception when the actuator is not configured.
+     */
+    public Actuator getExpectedVacuumSenseActuator() throws Exception {
+        Actuator actuator = getVacuumSenseActuator();
         if (actuator == null) {
-            throw new Exception(String.format("Can't find vacuum sense actuator %s", vacuumSenseActuatorName));
+            throw new Exception("Nozzle "+getName()+" has no vacuum sense actuator assigned.");
         }
         return actuator;
     }
 
-    protected Actuator getVacuumActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(vacuumActuatorName);
+    /**
+     * Set the actuator used to sense the vacuum on the Nozzle.
+     * @param actuator
+     */
+    public void setVacuumSenseActuator(Actuator actuator) {
+        vacuumSenseActuator = actuator;
+        vacuumSenseActuatorName = (actuator != null ? actuator.getName() : null);
+    }
+
+    /**
+     * @return The actuator used to switch the vacuum valve on the Nozzle. 
+     * @throws Exception when the actuator name cannot be resolved (dangling reference).
+     */
+    public Actuator getVacuumActuator() throws Exception {
+        if (vacuumActuator == null && vacuumActuatorName != null && !vacuumActuatorName.isEmpty()) {
+            vacuumActuator = getHead().getActuatorByName(vacuumActuatorName);
+            if (vacuumActuator == null) {
+                throw new Exception(String.format("Can't find vacuum valve actuator %s", vacuumActuatorName));
+            }
+        }
+        return vacuumActuator;
+    }
+
+    /**
+     * @return The actuator used to switch the vacuum valve on the Nozzle. 
+     * @throws Exception when the actuator is not configured.
+     */
+    public Actuator getExpectedVacuumActuator() throws Exception {
+        Actuator actuator = getVacuumActuator();
         if (actuator == null) {
-            throw new Exception(String.format("Can't find vacuum actuator %s", vacuumActuatorName));
+            throw new Exception("Nozzle "+getName()+" has no vacuum actuator assigned.");
         }
         return actuator;
     }
 
-    protected Actuator getBlowOffActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(blowOffActuatorName);
+    /**
+     * Set the actuator used to switch the vacuum valve on the Nozzle. 
+     * @param actuator
+     */
+    public void setVacuumActuator(Actuator actuator) {
+        vacuumActuator = actuator;
+        vacuumActuatorName = (actuator != null ? actuator.getName() : null);
+    }
+
+    /**
+     * @return The actuator used to blow off parts on the Nozzle. 
+     * @throws Exception when the actuator name cannot be resolved (dangling reference).
+     */
+    public Actuator getBlowOffActuator() throws Exception {
+        if (blowOffActuator == null && blowOffActuatorName != null && !blowOffActuatorName.isEmpty()) {
+            blowOffActuator = getHead().getActuatorByName(blowOffActuatorName);
+            if (blowOffActuator == null) {
+                throw new Exception(String.format("Can't find blow off actuator %s", blowOffActuatorName));
+            }
+        }
+        return blowOffActuator;
+    }
+
+    /**
+     * @return The actuator used to blow off parts on the Nozzle. 
+     * @throws Exception when the actuator is not configured.
+     */
+    public Actuator getExpectedBlowOffActuator() throws Exception {
+        Actuator actuator = getBlowOffActuator();
         if (actuator == null) {
-            throw new Exception(String.format("Can't find blow actuator %s", blowOffActuatorName));
+            throw new Exception("Nozzle "+getName()+" has no blow off actuator assigned.");
         }
         return actuator;
+    }
+
+    /**
+     * Set the actuator used to blow off parts on the Nozzle. 
+     * @param actuator
+     */
+    public void setBlowOffActuator(Actuator actuator) {
+        blowOffActuator = actuator;
+        blowOffActuatorName = (actuator != null ? actuator.getName() : null);
     }
 
     protected boolean hasPartOnAnyOtherNozzle() {
@@ -868,7 +1019,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             actuatePump(true);
         }
 
-        getVacuumActuator().actuate(on);
+        getExpectedVacuumActuator().actuate(on);
 
         if (! on) {
             actuatePump(false);
@@ -878,17 +1029,17 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     protected void actuateVacuumValve(double value) throws Exception {
         actuatePump(true);
 
-        getVacuumActuator().actuate(value);
+        getExpectedVacuumActuator().actuate(value);
     }
 
     protected void actuateBlowValve(double value) throws Exception {
-        getBlowOffActuator().actuate(value);
+        getExpectedBlowOffActuator().actuate(value);
 
         actuatePump(false);
     }
 
-    protected double readVacuumLevel() throws Exception {
-        return Double.parseDouble(getVacuumSenseActuator().read());
+    public double readVacuumLevel() throws Exception {
+        return Double.parseDouble(getExpectedVacuumSenseActuator().read());
     }
 
     protected boolean isPartOnGraphEnabled() {
@@ -1189,7 +1340,52 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
+        try {
+            if (solutions.isTargeting(Milestone.Basics)) {
+                findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
+                        new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND });
+                findActuatorIssues(solutions, getVacuumSenseActuator(), "vacuum sensing", 
+                        new CommandType[] { CommandType.ACTUATOR_READ_COMMAND, CommandType.ACTUATOR_READ_REGEX });
+            }
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
         ContactProbeNozzle.addConversionIssue(solutions, this);
+    }
+
+    protected void findActuatorIssues(Solutions solutions, Actuator actuator, String qualifier,
+            CommandType[] commandTypes) {
+        if (actuator == null) {
+            solutions.add(new Solutions.PlainIssue(
+                    this, 
+                    "Nozzle is missing a "+qualifier+" actuator.", 
+                    "Create and assign a "+qualifier+" actuator as described in the Wiki.", 
+                    Severity.Warning,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup"));
+        }
+        else if (actuator.getDriver() == null) {
+            if (!actuator.isDriverless()) {solutions.add(new Solutions.PlainIssue(
+                    actuator, 
+                    "The "+qualifier+" actuator "+actuator.getName()+" has no driver assigned.", 
+                    "Assign a driver as described in the Wiki.", 
+                    Severity.Warning,
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#driver-assignment"));
+            }
+        }
+        else if (actuator.getDriver() instanceof GcodeDriver) {
+            GcodeDriver driver =  (GcodeDriver) actuator.getDriver();
+            for (CommandType commandType : commandTypes) {
+                if (driver.getCommand(actuator, commandType) == null) {
+                    solutions.add(new Solutions.PlainIssue(
+                            driver, 
+                            "The "+qualifier+" actuator "+actuator.getName()+" has no "+commandType+" assigned.", 
+                            "Assign the command to driver "+driver.getName()+" as described in the Wiki.", 
+                            Severity.Warning,
+                            "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands"));
+                }
+            }
+        }
     }
 
     @Deprecated

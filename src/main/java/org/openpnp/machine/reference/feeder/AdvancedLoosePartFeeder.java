@@ -60,7 +60,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
     @Override
     public void feed(Nozzle nozzle) throws Exception {
         // no part found => no pick location
-        pickLocation = location.derive(null, null, Double.NaN, 0.0);
+        pickLocation = location;
 
         // if there is a part, get a precise location
         for (int i = 0; i < 3 && pickLocation != null; i++) {
@@ -85,7 +85,7 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
      */
     private Location locateFeederPart(Nozzle nozzle, Location startPoint) throws Exception {
         Camera camera = nozzle.getHead().getDefaultCamera();
-        MovableUtils.moveToLocationAtSafeZ(camera, startPoint.derive(null, null, Double.NaN, 0d));
+        MovableUtils.moveToLocationAtSafeZ(camera, startPoint);
         camera.waitForCompletion(CompletionType.WaitForStillstand);
         try (CvPipeline pipeline = getPipeline()) {
             // Process the pipeline to extract RotatedRect results
@@ -139,8 +139,8 @@ public class AdvancedLoosePartFeeder extends ReferenceFeeder {
         double distanceY = Math.abs(this.location.convertToUnits(LengthUnit.Millimeters).getY() - testLocation.convertToUnits(LengthUnit.Millimeters).getY());
         
         // if moved more than the half of the camera picture size => something went wrong => return no result
-        if (distanceX > camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters).getX() * camera.getWidth() / 2
-                || distanceY > camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters).getY() * camera.getHeight() / 2) {
+        if (distanceX > camera.getUnitsPerPixelAtZ().convertToUnits(LengthUnit.Millimeters).getX() * camera.getWidth() / 2
+                || distanceY > camera.getUnitsPerPixelAtZ().convertToUnits(LengthUnit.Millimeters).getY() * camera.getHeight() / 2) {
             System.err.println("Vision outside of the initial area");
             return null;
         }        

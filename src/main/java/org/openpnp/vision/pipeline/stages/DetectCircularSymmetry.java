@@ -53,8 +53,16 @@ public class DetectCircularSymmetry extends CvStage {
     private int maxDiameter = 100;
 
     @Attribute(required = false)
-    @Property(description = "Maximum search distance from nominal center, in pixels.")
+    @Property(description = "Maximum search distance (radius) from nominal center, in pixels.")
     private int maxDistance = 100;
+
+    @Attribute(required = false)
+    @Property(description = "Maximum search width across nominal center, in pixels (0 = same as maximum search distance × 2).")
+    private int searchWidth = 0;
+
+    @Attribute(required = false)
+    @Property(description = "Maximum search height across nominal center, in pixels (0 = same as maximum search distance × 2).")
+    private int searchHeight = 0;
 
     @Attribute(required = false)
     @Property(description = "Maximum number of targets to be found.")
@@ -96,8 +104,12 @@ public class DetectCircularSymmetry extends CvStage {
     private int superSampling = 1;
 
     @Attribute(required = false)
-    @Property(description = "Overlay match map.")
+    @Property(description = "Display matches with circle and cross-hairs.")
     private boolean diagnostics = false;
+
+    @Attribute(required = false)
+    @Property(description = "Overlay a heat map indicating the local circular symmetry.")
+    private boolean heatMap = false;
 
     public int getMinDiameter() {
         return minDiameter;
@@ -121,6 +133,22 @@ public class DetectCircularSymmetry extends CvStage {
 
     public void setMaxDistance(int maxDistance) {
         this.maxDistance = maxDistance;
+    }
+
+    public int getSearchWidth() {
+        return searchWidth;
+    }
+
+    public void setSearchWidth(int searchWidth) {
+        this.searchWidth = searchWidth;
+    }
+
+    public int getSearchHeight() {
+        return searchHeight;
+    }
+
+    public void setSearchHeight(int searchHeight) {
+        this.searchHeight = searchHeight;
     }
 
     public double getMinSymmetry() {
@@ -153,6 +181,14 @@ public class DetectCircularSymmetry extends CvStage {
 
     public void setDiagnostics(boolean diagnostics) {
         this.diagnostics = diagnostics;
+    }
+
+    public boolean isHeatMap() {
+        return heatMap;
+    }
+
+    public void setHeatMap(boolean heatMap) {
+        this.heatMap = heatMap;
     }
 
     public String getPropertyName() {
@@ -213,6 +249,22 @@ public class DetectCircularSymmetry extends CvStage {
         if (maxDistanceByProperty != null && maxDistanceByProperty.getValue() > 0) {
             maxDistance = (int) Math.round(VisionUtils.toPixels(maxDistanceByProperty, camera));
         }
+        int searchWidth = this.searchWidth;
+        Length searchWidthByProperty = (Length) pipeline.getProperty(propertyName+".searchWidth");
+        if (searchWidthByProperty != null && searchWidthByProperty.getValue() > 0) {
+            searchWidth = (int) Math.round(VisionUtils.toPixels(searchWidthByProperty, camera));
+        }
+        if (searchWidth <= 0) {
+            searchWidth = maxDistance*2;
+        }
+        int searchHeight = this.searchHeight;
+        Length searchHeightByProperty = (Length) pipeline.getProperty(propertyName+".searchHeight");
+        if (searchHeightByProperty != null && searchHeightByProperty.getValue() > 0) {
+            searchHeight = (int) Math.round(VisionUtils.toPixels(searchHeightByProperty, camera));
+        }
+        if (searchHeight <= 0) {
+            searchHeight = maxDistance*2;
+        }
         Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
         Location centerByProperty = (Location) pipeline.getProperty(propertyName+".center");
         if (centerByProperty != null) {
@@ -220,7 +272,8 @@ public class DetectCircularSymmetry extends CvStage {
         }
 
         List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 
-                maxDiameter, minDiameter, maxDistance*2, maxTargetCount, minSymmetry, corrSymmetry, subSampling, superSampling, diagnostics, new ScoreRange());
+                maxDiameter, minDiameter, maxDistance*2, searchWidth, searchHeight, maxTargetCount, minSymmetry, corrSymmetry, 
+                subSampling, superSampling, diagnostics, heatMap, new ScoreRange());
         return new Result(null, circles);
     }
 
@@ -269,9 +322,9 @@ public class DetectCircularSymmetry extends CvStage {
      */
     static final private int iterationDivision = 4;
     /**
-     * Some extra debugging stuff used for development, that might be useful again in the future.  
+     * Some extra debugging stuff used for development, that might be useful again in the future. DEBUG has levels 1 and 2.  
      */
-    static final boolean DEBUG = false;
+    static final int DEBUG = 0;
 
     /**
      * Find the circle that has its center at the greatest circular symmetry in the given image,
@@ -282,7 +335,9 @@ public class DetectCircularSymmetry extends CvStage {
      * @param yCenter           Nominal Y center of the search area inside the given image, in pixels.
      * @param maxDiameter       Maximum diameter of the examined circular symmetry area (pixels outside it are ignored).
      * @param minDiameter       Minimum diameter of the examined circular symmetry area (pixels inside it are ignored).
-     * @param searchRange       Search range around the given center.
+     * @param searchDiameter    Search diameter across the given center. Limited by image margins and searchWidth, searchHeight.
+     * @param searchWidth       Search height across the given center. Limited by image margins.
+     * @param searchHeight      Search height across the given center. Limited by image margins.
      * @param maxTargetCount    Maximum number of wanted targets detected.
      * @param minSymmetry       The minimum circular symmetry required to detect a match. This is the ratio of overall pixel
      *                          variance divided by the circular pixel variance (sum of ring pixel variances). 
@@ -291,15 +346,17 @@ public class DetectCircularSymmetry extends CvStage {
      * @param subSampling       Sub-sampling pixel distance, i.e. only one pixel out of a square of size subSampling will be 
      *                          examined on the first pass. 
      * @param superSampling     Super-sampling pixel fraction, i.e. the result will have 1/superSampling sub-pixel accuracy.   
-     * @param diagnostics       If true, draws a diagnostic heat map, circle and cross hairs into the image. 
+     * @param diagnostics       If true, draws diagnostic match circles and cross hairs into the image. 
+     * @param heatMap           If true, overlays a diagnostic heat map onto the image.
      * @param scoreRange        Outputs the score range of all the sampled center candidates.
      * @return                  A list of the the detected circles (currently only the best).
      * @throws Exception
      */
     public static  List<Result.Circle> findCircularSymmetry(Mat image, int xCenter, int yCenter,
-            int maxDiameter, int minDiameter, int searchRange, int maxTargetCount, 
-            double minSymmetry, double corrSymmetry, int subSampling,
-            int superSampling, boolean diagnostics, ScoreRange scoreRange) throws Exception {
+            int maxDiameter, int minDiameter, int searchDiameter, int searchWidth, 
+            int searchHeight, int maxTargetCount, double minSymmetry,
+            double corrSymmetry, int subSampling, int superSampling, boolean diagnostics, boolean heatMap, ScoreRange scoreRange) throws Exception {
+        boolean outermost = !Double.isFinite(scoreRange.finalScore);
         // Image properties.
         final int channels = image.channels();
         final int width = image.cols();
@@ -312,27 +369,29 @@ public class DetectCircularSymmetry extends CvStage {
         final int subSamplingEff = Math.max(1, 
                 Math.min(subSampling, Math.min((maxDiameter-minDiameter)/4, minDiameter/2)));
         // Constrain the search range to the image.
-        final int searchRangeEff = (
-                Math.min((xCenter-maxDiameter/2)-2-subSamplingEff, 
-                        Math.min((width-xCenter-maxDiameter/2)-2-subSamplingEff,
-                                Math.min((yCenter-maxDiameter/2)-2-subSamplingEff, 
-                                        Math.min((height-yCenter-maxDiameter/2)-2-subSamplingEff, 
-                                                (searchRange+1)/2))))*2)
-                /subSamplingEff*subSamplingEff; // round to multiple of subSamplingEff
-        if (searchRangeEff < searchRange/5) {
-            throw new Exception("Image too small for given parameters.");
-        }
         // Derive some working variables. 
-        final int rSearch = searchRangeEff/2+1;
+        final int rSearch = searchDiameter/2+1;
         final int rSearchSq = rSearch*rSearch;
         int r = maxDiameter / 2;
         int r0 = minDiameter / 2 - 1;
-        final int diameter = maxDiameter + searchRangeEff + subSamplingEff/2 + 1;
-        final int xCrop = xCenter - diameter/2;
-        final int yCrop = yCenter - diameter/2;
+
+        // limit to margins
+        final int x0SearchRange = Math.max(0, (xCenter - r - searchWidth/2)/subSamplingEff)*subSamplingEff; 
+        final int y0SearchRange = Math.max(0, (yCenter - r - searchHeight/2)/subSamplingEff)*subSamplingEff;
+        final int x1SearchRange = Math.min((width - maxDiameter)/subSamplingEff, (xCenter - r + searchWidth/2 + subSamplingEff/2)/subSamplingEff)*subSamplingEff; 
+        final int y1SearchRange = Math.min((height - maxDiameter)/subSamplingEff, (yCenter - r + searchHeight/2 + subSamplingEff/2)/subSamplingEff)*subSamplingEff;
+        final int xSearch = xCenter - r - x0SearchRange;
+        final int ySearch = yCenter - r - y0SearchRange;
+        final int wSearchRange = x1SearchRange - x0SearchRange;
+        final int hSearchRange = y1SearchRange - y0SearchRange;
+        
+        if (wSearchRange < 1 || hSearchRange < 1) {
+            throw new Exception("Circular symmetry stage: search range is cropped to nothing.");
+        }
+
         // Create super sampling offsets if needed.
         double [] superSamplingOffsets;
-        final boolean finalSamplingPass = (subSamplingEff == 1 && (searchRange <= iterationRadius || superSampling <= 1));
+        final boolean finalSamplingPass = (subSamplingEff == 1 && (searchDiameter <= iterationRadius || superSampling <= 1));
         if (finalSamplingPass && superSampling > 1) {
             superSamplingOffsets = new double[superSampling];
             for (int s = 0; s < superSampling; s++) {
@@ -344,8 +403,10 @@ public class DetectCircularSymmetry extends CvStage {
         }
 
         // Get the pixels out of the Mat.
-        byte[] pixelSamples = new byte[diameter*width*channels]; 
-        image.get(yCrop, 0, pixelSamples);
+        final int wPixels = maxDiameter + wSearchRange;
+        final int hPixels = maxDiameter + hSearchRange;
+        byte[] pixelSamples = new byte[width*hPixels*channels]; 
+        image.get(y0SearchRange, 0, pixelSamples);
 
         // Running best results.
         double scoreBest = Double.NEGATIVE_INFINITY;
@@ -354,12 +415,18 @@ public class DetectCircularSymmetry extends CvStage {
         int rContrastBest = 0;
         double [] scoreMap = null;
         int[] radiusMap = null;
-        boolean showDiagnostics = (diagnostics && superSamplingOffsets.length == 1); 
-        int searchRangeMap = searchRangeEff/subSamplingEff;
+        double [] xOffsetMap = null;
+        double [] yOffsetMap = null;
+        boolean showDiagnostics = ((diagnostics || heatMap) && superSamplingOffsets.length == 1); 
+        int wSearchRangeMap = wSearchRange/subSamplingEff;
+        int hSearchRangeMap = hSearchRange/subSamplingEff;
         if (showDiagnostics || maxTargetCount > 1) {
-            scoreMap = new double[searchRangeMap*searchRangeMap];
-            radiusMap = new int[searchRangeMap*searchRangeMap];
-            // The final score is reset her so it will reflect the last pass' maximum score. 
+            scoreMap = new double[wSearchRangeMap*hSearchRangeMap];
+            Arrays.fill(scoreMap, Double.NEGATIVE_INFINITY);
+            radiusMap = new int[wSearchRangeMap*hSearchRangeMap];
+            xOffsetMap = new double[wSearchRangeMap*hSearchRangeMap];
+            yOffsetMap = new double[wSearchRangeMap*hSearchRangeMap];
+            // The final score is reset here so it will reflect the last pass' maximum score. 
             scoreRange.finalScore = 0;
         }
         // Outer super-sampling loop. 
@@ -400,11 +467,11 @@ public class DetectCircularSymmetry extends CvStage {
                 }
                 // Now iterate through all the offsets and find the maximum circular symmetry
                 // which is the one with the largest ratio between radial and circular variances.
-                for (int yi = 0, yis = 0; yi < searchRangeEff; yi += subSamplingEff, yis++) {
-                    for (int xi = 0, xis = 0, idxOffset = (yi*width + xCrop) * channels; 
-                            xi < searchRangeEff; 
+                for (int yi = 0, yis = 0; yi < hSearchRange; yi += subSamplingEff, yis++) {
+                    for (int xi = 0, xis = 0, idxOffset = (yi*width + x0SearchRange) * channels; 
+                            xi < wSearchRange; 
                             xi += subSamplingEff, xis++, idxOffset += channels*subSamplingEff) {
-                        int distSq = (xi - rSearch)*(xi - rSearch) + (yi - rSearch)*(yi - rSearch);
+                        int distSq = (xi - xSearch)*(xi - xSearch) + (yi - ySearch)*(yi - ySearch);
                         if (distSq <= rSearchSq) {
                             double varianceSum = 0.01; // Prevent div by zero.
                             double lastAvgChannels = 0;
@@ -425,23 +492,23 @@ public class DetectCircularSymmetry extends CvStage {
                                         long sumSq = 0;
                                         for (int idx : ring) {
 
-                                            if (DEBUG) {
+                                            if (DEBUG >= 2) {
                                                 int idxDebug = idxOffset + idx;
                                                 int yDebug = (idxDebug/channels)/width;
                                                 int xDebug = (idxDebug/channels)%width;
-                                                if (xDebug < xi || xDebug > xCrop + xi + r*2 + 1
+                                                if (xDebug < xi || xDebug > x0SearchRange + xi + r*2 + 1
                                                         || yDebug < yi || yDebug > yi + r*2 + 1) {
                                                     throw new Exception("unexpected idx offset calculation");
                                                 }
                                                 if (finalSamplingPass 
-                                                        && xi == searchRangeEff/2 && yi == searchRangeEff/2 
+                                                        && xi == xSearch && yi == ySearch 
                                                         && ri == rings.length-1
                                                         && yOffset == xOffset) {
                                                     byte [] pixelData = new byte[channels];
-                                                    image.get(yDebug+yCrop, xDebug, pixelData);
+                                                    image.get(yDebug+y0SearchRange, xDebug, pixelData);
                                                     int dc = Arrays.binarySearch(superSamplingOffsets, xOffset) % channels;
                                                     pixelData[2-dc] = (byte)255;
-                                                    image.put(yDebug+yCrop, xDebug, pixelData);
+                                                    image.put(yDebug+y0SearchRange, xDebug, pixelData);
                                                 }
                                             }
 
@@ -472,10 +539,11 @@ public class DetectCircularSymmetry extends CvStage {
                                 varianceOverall += (sumSqOverall[ch] - (sumOverall[ch] * sumOverall[ch]) / nOverall[ch]);
                             }
                             double score = varianceOverall/varianceSum; 
+                            scoreRange.add(score);
                             if (scoreBestSampling < score) {
                                 scoreBestSampling = score;
-                                xBestSampling = xi + xCrop + r + 0.5 + xOffset;
-                                yBestSampling = yi + yCrop + r + 0.5 + yOffset;
+                                xBestSampling = xi + x0SearchRange + r + 0.5 + xOffset;
+                                yBestSampling = yi + y0SearchRange + r + 0.5 + yOffset;
                                 if (scoreBest < score) {
                                     scoreBest = score;
                                     xBest = xBestSampling;
@@ -484,18 +552,22 @@ public class DetectCircularSymmetry extends CvStage {
                                 }
                             }
                             if (scoreMap != null) {
-                                scoreMap[yis*searchRangeMap + xis] = score;
-                                radiusMap[yis*searchRangeMap + xis] = riContrastBest;
-                                scoreRange.add(score);
+                                int idx = yis*wSearchRangeMap + xis;
+                                if (scoreMap[idx] < score) {
+                                    scoreMap[idx] = score;
+                                    radiusMap[idx] = riContrastBest;
+                                    xOffsetMap[idx] = xOffset;
+                                    yOffsetMap[idx] = yOffset;
+                                }
                             }
                         }
                     }
                 }
-                if (DEBUG) {
-                    Logger.trace("best circular symmetry at subSampling "+subSamplingEff+", range "+searchRangeEff
+                if (DEBUG >= 1) {
+                    Logger.trace("best circular symmetry at subSampling "+subSamplingEff+", range W"+wSearchRange+" H"+hSearchRange
                             +(finalSamplingPass ? ", superSampling "+superSampling+" offsets Y"+xOffset+" Y"+yOffset : "")
-                            +": "+scoreBestSampling+" X"+xBestSampling+" Y"+yBestSampling
-                            + " ring samples "+nRingSamples);
+                            +" X"+xBestSampling+" Y"+yBestSampling+" R"+rContrastBest
+                            + " ring samples "+nRingSamples+": "+scoreBestSampling);
                 }
             }
         }
@@ -507,9 +579,9 @@ public class DetectCircularSymmetry extends CvStage {
             List<SymmetryCircle> maxima = new ArrayList<SymmetryCircle>();
             if (scoreBest > minSymmetry) {
                 // Find the local maxima.
-                for (int yis = 1, yim0 = 0, yim1 = searchRangeMap, yim2 = searchRangeMap*2;  
-                        yis < searchRangeMap-1; yis++, yim0 += searchRangeMap, yim1 += searchRangeMap, yim2 += searchRangeMap) {
-                    for (int xis = 1; xis < searchRangeMap-1; xis++) {
+                for (int yis = 1, yim0 = 0, yim1 = wSearchRangeMap, yim2 = wSearchRangeMap*2;  
+                        yis < hSearchRangeMap-1; yis++, yim0 += wSearchRangeMap, yim1 += wSearchRangeMap, yim2 += wSearchRangeMap) {
+                    for (int xis = 1; xis < wSearchRangeMap-1; xis++) {
                         //      x0 x1 x2
                         //    -----------
                         // y0 ¦  0  1  2
@@ -527,13 +599,18 @@ public class DetectCircularSymmetry extends CvStage {
                                 && scoreMap[yim2 + xis] < score 
                                 && scoreMap[yim2 + xis + 1] < score) {
                             SymmetryCircle circle = new SymmetryCircle(
-                                    xis*subSamplingEff + xCrop + r + 0.5, 
-                                    yis*subSamplingEff + yCrop + r + 0.5, 
-                                    radiusMap[yim1 + xis],
+                                    xis*subSamplingEff + x0SearchRange + r + 0.5 + xOffsetMap[yim1 + xis], 
+                                    yis*subSamplingEff + y0SearchRange + r + 0.5 + yOffsetMap[yim1 + xis], 
+                                    radiusMap[yim1 + xis]*2,
                                     score);
                             maxima.add(circle);
                         }
                     }
+                }
+                if (maxima.isEmpty()) {
+                    // This can never happen with real cameras, but with the simulated cameras you get perfect symmetry.
+                    // Add the single best one.
+                    maxima.add(new SymmetryCircle(xBest, yBest, rContrastBest * 2, scoreBest));
                 }
                 // Take only those with no better-scoring overlaps.
                 List<SymmetryCircle> maximaFiltered = new ArrayList<SymmetryCircle>();
@@ -566,8 +643,8 @@ public class DetectCircularSymmetry extends CvStage {
                     for (SymmetryCircle localBest : maximaFiltered) {
                         // ... recursion into finer subSampling and local search.
                         List<CvStage.Result.Circle> localRet = findCircularSymmetry(image, (int)localBest.x, (int)localBest.y, maxDiameter, minDiameter, 
-                                subSamplingEff*iterationRadius, 1, minSymmetry, corrSymmetry, 
-                                subSamplingEff/iterationDivision, superSampling, diagnostics, scoreRange);
+                                subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1, 
+                                minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
                         if (localRet.size() > 0) { 
                             samplingFiltered.add((SymmetryCircle) localRet.get(0));
                         }
@@ -615,8 +692,8 @@ public class DetectCircularSymmetry extends CvStage {
             else {
                 // Recursion into finer subSampling and local search.
                 ret = findCircularSymmetry(image, (int)(xBest), (int)(yBest), maxDiameter, minDiameter, 
-                        subSamplingEff*iterationRadius, 1, minSymmetry, corrSymmetry, 
-                        subSamplingEff/iterationDivision, superSampling, diagnostics, scoreRange);
+                        subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1, 
+                        minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
             }
         }
 
@@ -624,17 +701,17 @@ public class DetectCircularSymmetry extends CvStage {
             // Paint diagnostics.
             double rscale = 1/(scoreHeat(scoreRange.maxScore) - scoreHeat(scoreRange.minScore));
             double scale = 255*channels*rscale;
-            for (int yi = 0; yi < searchRangeEff-subSamplingEff/2; yi++) {
-                for (int xi = 0; xi < searchRangeEff-subSamplingEff/2; xi++) {
+            for (int yi = -subSamplingEff/2; yi < hSearchRange-subSamplingEff/2; yi++) {
+                for (int xi = -subSamplingEff/2; xi < wSearchRange-subSamplingEff/2; xi++) {
                     // Coordinates into scoreMap (must be multiples of subSamplingEff). 
                     int xis = (xi+subSamplingEff/2)/subSamplingEff;
                     int yis = (yi+subSamplingEff/2)/subSamplingEff;
                     // Mask to search Radius.
-                    double s = scoreMap[yis*searchRangeMap + xis];
+                    double s = scoreMap[yis*wSearchRangeMap + xis];
                     if (s > 1.0) {
                         /// Pixel coordinates.
-                        int col = xi + xCrop + r;
-                        int row = yi + yCrop + r;
+                        final int col = xi + x0SearchRange + r;
+                        final int row = yi + y0SearchRange + r;
                         double dx2 = (col - xBest);
                         double  dy2 = (row - yBest);
                         int distance2 = (int)Math.round(Math.sqrt(dx2*dx2 + dy2*dy2));
@@ -649,16 +726,34 @@ public class DetectCircularSymmetry extends CvStage {
                             heat -= scoreHeat(scoreRange.minScore);
                             double score = heat*scale;
                             // Determine if this pixel coordinate is part of the indicator (cross-hairs and diameter).
-                            boolean indicate = false;
-                            for (CvStage.Result.Circle circle : ret) {
-                                double dx = xi + xCrop - circle.x + r + 0.01;
-                                double dy = yi + yCrop - circle.y + r + 0.01;
-                                int distance = (int)Math.round(Math.sqrt(dx*dx + dy*dy));
-                                indicate = (distance == (int)(circle.diameter/2) 
-                                        || ((Math.round(dx) == 0 || Math.round(dy) == 0) 
-                                                && distance < circle.diameter));
-                                if (indicate) {
-                                    break;
+                            double indicate = 0.0;
+                            if (outermost && diagnostics) {
+                                if (ret.size() == 0) {
+                                    // No results. Show the nominal circle size in the center.
+                                    double dx = col - xCenter + 0.501;
+                                    double dy = row - yCenter + 0.501;
+                                    double distance = Math.sqrt(dx*dx + dy*dy);
+                                    double nominalDiameter = (maxDiameter + minDiameter)/4;
+                                    indicate = 1.0 - Math.abs(distance - nominalDiameter);
+                                    if (indicate > 0) {
+                                        // dashed circle
+                                        if (((int)(Math.atan2(dy, dx)/Math.PI*12 + 12)&0x1) == 0) {
+                                            indicate = 0.0; 
+                                        }
+                                    }
+                                }
+                                else {
+                                    for (CvStage.Result.Circle circle : ret) {
+                                        double dx = col - circle.x + 0.501;
+                                        double dy = row - circle.y + 0.501;
+                                        double distance = Math.sqrt(dx*dx + dy*dy);
+                                        if (distance < circle.diameter) {
+                                            indicate = 1.0 - Math.min(Math.min(Math.abs(distance - circle.diameter/2), Math.abs(dx)), Math.abs(dy));
+                                            if (indicate > 0) {
+                                                break;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             // Overlay the score as a heat-map, alpha-blended with the image.
@@ -670,11 +765,18 @@ public class DetectCircularSymmetry extends CvStage {
                                 int red = 0;
                                 int green = 0;
                                 int blue = 0;
-                                if (indicate) {
-                                    red = 0;
-                                    green = 255;
-                                    blue = 0;
-                                    alpha = 0.5;
+                                if (indicate > 0) {
+                                    if (ret.size() == 0) {
+                                        red = 255;
+                                        green = 0;
+                                        blue = 0;
+                                    }
+                                    else {
+                                        red = 0;
+                                        green = 255;
+                                        blue = 0;
+                                    }
+                                    alpha = indicate;
                                     alphaCompl = 1 - alpha;
                                 }
                                 else if (score <= 255) {
@@ -688,12 +790,14 @@ public class DetectCircularSymmetry extends CvStage {
                                     red = (int) 255;
                                     green = (int) (score - 255-255);
                                 }
-                                pixelData[2] = (byte) (alpha*red + alphaCompl*Byte.toUnsignedInt(pixelData[2]));
-                                pixelData[1] = (byte) (alpha*green + alphaCompl*Byte.toUnsignedInt(pixelData[1]));
-                                pixelData[0] = (byte) (alpha*blue + alphaCompl*Byte.toUnsignedInt(pixelData[0]));
+                                if (indicate > 0 || heatMap) {
+                                    pixelData[2] = (byte) (alpha*red + alphaCompl*Byte.toUnsignedInt(pixelData[2]));
+                                    pixelData[1] = (byte) (alpha*green + alphaCompl*Byte.toUnsignedInt(pixelData[1]));
+                                    pixelData[0] = (byte) (alpha*blue + alphaCompl*Byte.toUnsignedInt(pixelData[0]));
+                                }
                             }
                             else {
-                                if (indicate) {
+                                if (indicate > 0) {
                                     pixelData[0] = (byte) 255; 
                                 }
                                 else {

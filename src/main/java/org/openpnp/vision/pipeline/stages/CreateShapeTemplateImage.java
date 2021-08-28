@@ -9,7 +9,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
-import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -65,7 +64,7 @@ public class CreateShapeTemplateImage extends CvStage {
             throw new Exception("Property named after templateShapeName is required.");
         }
 
-        Location unitsPerPixel = camera.getUnitsPerPixel();
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
 
         // Determine the scaling factor to go from Outline units to
         // Camera units.

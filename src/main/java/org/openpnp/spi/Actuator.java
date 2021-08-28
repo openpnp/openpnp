@@ -37,6 +37,13 @@ public interface Actuator
 
     public void setDriver(Driver driver);
 
+    /**
+     * @return true if a Driver is not required. Some actuator sub-classes use alternative means for actuation (http, scripting, etc).
+     */
+    public default boolean isDriverless() {
+        return false;
+    }
+
     public enum ActuatorValueType {
         Double,
         Boolean,

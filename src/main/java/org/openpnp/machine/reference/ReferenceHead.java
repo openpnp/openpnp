@@ -28,6 +28,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.psh.ActuatorsPropertySheetHolder;
 import org.openpnp.machine.reference.psh.CamerasPropertySheetHolder;
 import org.openpnp.machine.reference.psh.NozzlesPropertySheetHolder;
+import org.openpnp.machine.reference.solutions.HeadSolutions;
 import org.openpnp.machine.reference.wizards.ReferenceHeadConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
@@ -39,7 +40,6 @@ import org.openpnp.spi.Axis;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
-import org.openpnp.spi.base.AbstractHeadMountable;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
@@ -82,7 +82,6 @@ public class ReferenceHead extends AbstractHead {
                 AxesLocation axesHomingLocation;
                 if (getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
                     // Convert fiducial location to raw coordinates
-                    // TODO: are you sure the toHeadLocation() is needed?
                     axesHomingLocation = hm.toRaw(hm.toHeadLocation(getHomingFiducialLocation()));
                 }
                 else {
@@ -134,16 +133,6 @@ public class ReferenceHead extends AbstractHead {
     }
 
     @Override 
-    public boolean isInsideSoftLimits(HeadMountable hm, Location location)  throws Exception {
-        if (hm instanceof ReferenceHeadMountable) {
-            Location headLocation = ((AbstractHeadMountable) hm).toHeadLocation(location);
-            AxesLocation axesLocation = ((AbstractHeadMountable) hm).toRaw(headLocation);
-            return (getMachine().getMotionPlanner().isValidLocation(axesLocation));
-        }
-        return true;
-    }
-
-    @Override 
     public void moveTo(HeadMountable hm, Location location, double speed, MotionOption... options) throws Exception {
         ReferenceMachine machine = getMachine();
         AxesLocation mappedAxes = hm.getMappedAxes(machine);
@@ -162,7 +151,7 @@ public class ReferenceHead extends AbstractHead {
         return (ReferenceMachine) Configuration.get().getMachine();
     }
 
-    enum NozzleSolution {
+    public enum NozzleSolution {
         Standalone,
         DualNegated,
         DualCam
@@ -173,19 +162,19 @@ public class ReferenceHead extends AbstractHead {
     @Attribute(required=false) 
     int nozzleSolutionsMultiplier = 1;
 
-    NozzleSolution getNozzleSolution() {
+    public NozzleSolution getNozzleSolution() {
         return nozzleSolution;
     }
 
-    void setNozzleSolution(NozzleSolution nozzleSolution) {
+    public void setNozzleSolution(NozzleSolution nozzleSolution) {
         this.nozzleSolution = nozzleSolution;
     }
 
-    int getNozzleSolutionsMultiplier() {
+    public int getNozzleSolutionsMultiplier() {
         return nozzleSolutionsMultiplier;
     }
 
-    void setNozzleSolutionsMultiplier(int nozzleSolutionsMultiplier) {
+    public void setNozzleSolutionsMultiplier(int nozzleSolutionsMultiplier) {
         this.nozzleSolutionsMultiplier = nozzleSolutionsMultiplier;
     }
 

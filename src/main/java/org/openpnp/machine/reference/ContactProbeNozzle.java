@@ -31,7 +31,7 @@ import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
 import org.openpnp.machine.reference.ReferenceNozzleTip.ZCalibrationTrigger;
 import org.openpnp.machine.reference.driver.GcodeAsyncDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver;
-import org.openpnp.machine.reference.driver.GcodeDriverSolutions;
+import org.openpnp.machine.reference.solutions.GcodeDriverSolutions;
 import org.openpnp.machine.reference.wizards.ContactProbeNozzleWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -118,6 +118,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     @Attribute(required=false)
     private ContactProbeTrigger partHeightProbing = ContactProbeTrigger.EachTime;
 
+    @Attribute(required=false)
+    private boolean discardProbing = false; 
+
     @Element(required=false)
     private Length calibrationOffsetZ = null;
 
@@ -193,12 +196,16 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     }
 
     protected boolean isPartHeightProbingNeeded(Part part) {
-        if (isDisabled || part == null) {
+        if (isDisabled) {
             return false;
         }
         if (contactProbeMethod != ContactProbeMethod.ContactSenseActuator
                 || partHeightProbing == ContactProbeTrigger.Off) {
             return false;
+        }
+        if (part == null) {
+            // null part means discard, i.e. we probe each time. 
+            return isDiscardProbing();
         }
         if (feederHeightProbing == ContactProbeTrigger.EachTime) {
             return true;
@@ -278,11 +285,15 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     @Override
     public void moveToPlacementLocation(Location placementLocation, Part part) throws Exception {
-        Length partHeight = getSafePartHeight(part);
+        // Calculate the probe starting location.
+        Length partHeight = ((part == null && nozzleTip != null) ? 
+                nozzleTip.getMaxPartHeight() // for discard 
+                : getSafePartHeight(part));  // for normal part operation
         Location placementLocationPart = placementLocation.add(new Location(partHeight.getUnits(), 0, 0, partHeight.getValue(), 0));
+        // null part means discarding. 
+        String partId = (part != null ? part.getId() : "discard");
         if (isPartHeightProbingNeeded(part)) {
-            boolean partHeightProbing = part.isPartHeightUnknown();
-            // Calculate the probe starting location.
+            boolean partHeightProbing = (part != null && part.isPartHeightUnknown());
             moveAboveProbingLocation(placementLocationPart);
 
             Map<String, Object> globals = new HashMap<>();
@@ -291,9 +302,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             Configuration.get().getScripting().on("Nozzle.BeforePlaceProbe", globals);
 
             Length depthZ;
-            if (partHeightProbing) {
-                // We're probing for the part height.
-                depthZ = nozzleTip.getMaxPartHeight();
+            if (part == null || partHeightProbing) {
+                // We're probing for the part height, plus probe depth.
+                depthZ = nozzleTip.getMaxPartHeight().add(contactProbeDepthZ);
             }
             else {
                 depthZ = contactProbeDepthZ;
@@ -305,34 +316,37 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             if (partHeightProbing) { 
                 // Part height is difference to placement location (part is above it). 
                 partHeight = probedLocation.subtract(placementLocation).getLengthZ();
-                Logger.info("Nozzle "+getName()+" probed part "+part.getId()+" height at "+partHeight);
+                Logger.info("Nozzle "+getName()+" probed part "+partId+" height at "+partHeight);
                 if (partHeight.getValue() <= 0) {
-                    throw new Exception("Part height "+part.getId()+" probing by nozzle "+getName()+" failed (returned negative height). Check PCB Z and probing adjustment.");
+                    throw new Exception("Part height "+partId+" probing by nozzle "+getName()+" failed (returned negative height). Check PCB Z and probing adjustment.");
                 }
                 part.setHeight(partHeight);
                 offsetZ = new Length(0, LengthUnit.Millimeters);
             }
             else {
                 offsetZ = probedLocation.subtract(placementLocationPart).getLengthZ();
-                Logger.debug("Nozzle "+getName()+" probed part "+part.getId()+" height at offset "+offsetZ);
+                Logger.debug("Nozzle "+getName()+" probed part "+partId+" height at offset "+offsetZ);
             }
             // Store the probed location offset.
-            probedPartHeightOffsets.put(part.getId(), offsetZ);
+            if (part != null) {
+                probedPartHeightOffsets.put(partId, offsetZ);
+            }
 
+            // Retract.
             contactProbe(false, contactProbeDepthZ);
 
             Configuration.get().getScripting().on("Nozzle.AfterPlaceProbe", globals);
         }
         else {
-            Length offsetZ = probedPartHeightOffsets.get(part.getId());
+            Length offsetZ = probedPartHeightOffsets.get(partId);
             if (offsetZ != null) {
                 // Apply the probed offset.
-                Logger.trace("Nozzle "+getName()+" applies part "+part.getId()+" height offset "+offsetZ);
+                Logger.trace("Nozzle "+getName()+" applies part "+partId+" height offset "+offsetZ);
                 placementLocationPart = placementLocationPart.add(new Location(offsetZ .getUnits(), 0, 0, offsetZ.getValue(), 0));
                 MovableUtils.moveToLocationAtSafeZ(this, placementLocationPart);
             }
             else {
-                super.moveToPlacementLocation(placementLocationPart, part);
+                super.moveToPlacementLocation(placementLocation, part);
             }
         }
     }
@@ -425,6 +439,14 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         this.partHeightProbing = partHeightProbing;
     }
 
+    public boolean isDiscardProbing() {
+        return discardProbing;
+    }
+
+    public void setDiscardProbing(boolean discardProbing) {
+        this.discardProbing = discardProbing;
+    }
+
     /**
      * Move above the probing location at safe Z, apply the start offset as needed.
      *  
@@ -432,7 +454,8 @@ public class ContactProbeNozzle extends ReferenceNozzle {
      * @throws Exception
      */
     public void moveAboveProbingLocation(Location nominalLocation) throws Exception {
-        nominalLocation = nominalLocation.add(new Location(contactProbeStartOffsetZ .getUnits(), 0, 0, contactProbeStartOffsetZ.getValue(), 0));
+        nominalLocation = nominalLocation.add(
+                new Location(contactProbeStartOffsetZ.getUnits(), 0, 0, contactProbeStartOffsetZ.getValue(), 0));
         MovableUtils.moveToLocationAtSafeZ(this, nominalLocation);
     }
 
@@ -551,7 +574,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         if (! Arrays.asList(options).contains(LocationOption.SuppressDynamicCompensation)) {
             if (zCalibratedNozzleTip != null && calibrationOffsetZ != null) {
                 location = location.subtract(new Location(calibrationOffsetZ .getUnits(), 0, 0, calibrationOffsetZ.getValue(), 0));
-                Logger.trace("{}.transformToHeadLocation({}, ...) Z offset {}", getName(), location, calibrationOffsetZ);
+                Logger.trace("{}.toHeadLocation({}, ...) Z offset {}", getName(), location, calibrationOffsetZ);
             }
         }
         return super.toHeadLocation(location, currentLocation, options);
@@ -784,12 +807,15 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                                     GcodeDriver.CommandType.ACTUATE_BOOLEAN_COMMAND, suggestedCommand, false, false);
                         }
                         else {
-                            solutions.add(new Solutions.PlainIssue(
-                                    this, 
-                                    "Missing ACTUATE_BOOLEAN_COMMAND for actuator "+contactProbeActuator.getName()+" on driver "+gcodeDriver.getName()+" (no suggestion available for detected firmware).", 
-                                    "Please add the command manually.",
-                                    Severity.Error,
-                                    "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#setting-up-the-g-code"));
+                            String currentCommand = gcodeDriver.getCommand(contactProbeActuator, GcodeDriver.CommandType.ACTUATE_BOOLEAN_COMMAND);
+                            if (currentCommand == null || currentCommand.isEmpty()) {
+                                solutions.add(new Solutions.PlainIssue(
+                                        this, 
+                                        "Missing ACTUATE_BOOLEAN_COMMAND for actuator "+contactProbeActuator.getName()+" on driver "+gcodeDriver.getName()+" (no suggestion available for detected firmware).", 
+                                        "Please add the command manually.",
+                                        Severity.Error,
+                                        "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#setting-up-the-g-code"));
+                            }
                         }
                     }
                 }
@@ -832,8 +858,14 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                         nozzle, 
                         "Converting the ContactProbeNozzle back to a plain ReferenceNozzle may simplify the machine setup.", 
                         "Replace with ReferenceNozzle.", 
-                        Severity.Fundamental,
+                        Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle") {
+
+                    @Override
+                    public boolean isUnhandled( ) {
+                        // Never handle a conservative solution as unhandled.
+                        return false;
+                    }
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {

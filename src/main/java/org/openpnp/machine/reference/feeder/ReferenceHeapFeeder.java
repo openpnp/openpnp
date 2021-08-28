@@ -282,8 +282,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * @throws Exception Something went wrong.
      */
     double readVacuum(Nozzle nozzle) throws Exception {
-        Actuator vacuumActuator = nozzle.getHead().getActuatorByName(((ReferenceNozzle)nozzle).getVacuumActuatorName());
-        return Double.parseDouble(vacuumActuator.read());
+        return ((ReferenceNozzle)nozzle).readVacuumLevel();
     }
 
     /**
@@ -317,7 +316,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         }
         // prepare
         nozzle.moveToSafeZ();
-        nozzle.getHead().getActuatorByName(((ReferenceNozzle)nozzle).getVacuumActuatorName()).actuate(true);
+        ((ReferenceNozzle)nozzle).getExpectedVacuumActuator().actuate(true);
         long vacuumOn = System.currentTimeMillis();
         // move to heap
         nozzle.moveTo(location.derive(null, null, Double.NaN, null), Motion.MotionOption.SpeedOverPrecision);
@@ -976,7 +975,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             // discard the part
             nozzle.place();
             // blow off the part
-            Actuator blowOffValve = nozzle.getHead().getActuatorByName(((ReferenceNozzle) nozzle).getBlowOffActuatorName()); 
+            Actuator blowOffValve = ((ReferenceNozzle) nozzle).getBlowOffActuator(); 
             if (blowOffValve != null) {
                 blowOffValve.actuate(true);
             }

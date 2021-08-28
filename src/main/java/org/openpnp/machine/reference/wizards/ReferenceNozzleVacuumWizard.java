@@ -27,7 +27,9 @@ import javax.swing.JPanel;
 
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
+import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.spi.Actuator;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -96,9 +98,9 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
 
     @Override
     public void createBindings() {
-
-        addWrappedBinding(nozzle, "vacuumActuatorName", vacuumComboBoxActuator, "selectedItem");
-        addWrappedBinding(nozzle, "blowOffActuatorName", blowOffComboBoxActuator, "selectedItem");
-        addWrappedBinding(nozzle, "vacuumSenseActuatorName", vacuumSenseActuator, "selectedItem");
+        NamedConverter<Actuator> actuatorConverter = (new NamedConverter<>(nozzle.getHead().getActuators()));
+        addWrappedBinding(nozzle, "vacuumActuator", vacuumComboBoxActuator, "selectedItem", actuatorConverter);
+        addWrappedBinding(nozzle, "blowOffActuator", blowOffComboBoxActuator, "selectedItem", actuatorConverter);
+        addWrappedBinding(nozzle, "vacuumSenseActuator", vacuumSenseActuator, "selectedItem", actuatorConverter);
     }
 }

@@ -1,9 +1,13 @@
 package org.openpnp.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Nozzle;
 
 public class Cycles {
     /**
@@ -47,5 +51,30 @@ public class Cycles {
                 lz.getLengthZ().convertToUnits(l.getUnits()).getValue(), 
                 null);
         return l;
+    }
+
+    /**
+     * Discard the Part, if any, on the given Nozzle. The Nozzle is returned to Safe Z at the end of
+     * the operation.
+     * 
+     * @param nozzle
+     * @throws Exception
+     */
+    public static void discard(Nozzle nozzle) throws Exception {
+        if (nozzle.getPart() == null) {
+            return;
+        }
+
+        Map<String, Object> globals = new HashMap<>();
+        globals.put("nozzle", nozzle);
+        Configuration.get().getScripting().on("Job.BeforeDiscard", globals);
+
+        // move to the discard location
+        nozzle.moveToPlacementLocation(Configuration.get().getMachine().getDiscardLocation(), null);
+        // discard the part
+        nozzle.place();
+        nozzle.moveToSafeZ();
+
+        Configuration.get().getScripting().on("Job.AfterDiscard", globals);
     }
 }

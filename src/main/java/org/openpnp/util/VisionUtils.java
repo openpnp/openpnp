@@ -56,11 +56,11 @@ public class VisionUtils {
         double offsetY = (imageHeight / 2) - y;
 
         // And convert pixels to units
-        Location unitsPerPixel = camera.getUnitsPerPixel();
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         offsetX *= unitsPerPixel.getX();
         offsetY *= unitsPerPixel.getY();
 
-        return new Location(camera.getUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
+        return new Location(unitsPerPixel.getUnits(), offsetX, offsetY, 0, 0);
     }
 
     /**
@@ -132,7 +132,7 @@ public class VisionUtils {
     
     public static double toPixels(Length length, Camera camera) {
         // convert inputs to the same units
-        Location unitsPerPixel = camera.getUnitsPerPixel();
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         length = length.convertToUnits(unitsPerPixel.getUnits());
 
         // we average the units per pixel because circles can't be ovals
@@ -141,7 +141,7 @@ public class VisionUtils {
         // convert it all to pixels
         return length.getValue() / avgUnitsPerPixel;
     }
-    
+
     /**
      * Get a location in camera pixels. This is the reverse transformation of getPixelLocation().
      *  
@@ -152,7 +152,7 @@ public class VisionUtils {
     public static Point getLocationPixels(Camera camera, Location location) {
         return getLocationPixels(camera, null, location);
     }
-    
+
     /**
      * Get a location in camera pixels. This is the reverse transformation of getPixelLocation(tool).
      * This overload includes the tool specific calibration offset. 
@@ -163,16 +163,41 @@ public class VisionUtils {
      * @return
      */
     public static Point getLocationPixels(Camera camera, HeadMountable tool, Location location) {
+        Point center = getLocationPixelCenterOffsets(camera, tool, location);
+        return new Point(center.getX()+camera.getWidth()/2, center.getY()+camera.getHeight()/2);
+    }
+
+    /**
+     * Get a location camera center offsets in pixels. 
+     *  
+     * @param location
+     * @param camera
+     * @return
+     */
+    public static Point getLocationPixelCenterOffsets(Camera camera, Location location) {
+        return getLocationPixelCenterOffsets(camera, null, location);
+    }
+
+    /**
+     * Get a location camera center offsets in pixels. 
+     * This overload includes the tool specific calibration offset. 
+     * 
+     * @param camera
+     * @param tool
+     * @param location
+     * @return
+     */
+    public static Point getLocationPixelCenterOffsets(Camera camera, HeadMountable tool, Location location) {
         // get the units per pixel scale 
-        Location unitsPerPixel = camera.getUnitsPerPixel();
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         // convert inputs to the same units, center on camera and scale
         location = location.convertToUnits(unitsPerPixel.getUnits())
                 .subtract(camera.getLocation(tool))
                 .multiply(1./unitsPerPixel.getX(), -1./unitsPerPixel.getY(), 0., 0.);
-        // relative to upper left corner of camera in pixels
-        return new Point(location.getX()+camera.getWidth()/2, location.getY()+camera.getHeight()/2);
+        // relative center of camera in pixels
+        return new Point(location.getX(), location.getY());
     }
-    
+
     /**
      * Using the given camera, try to find a QR code and return it's text. This is just a wrapper
      * for the generic scanBarcode(Camera) function. This one was added before the other and I don't

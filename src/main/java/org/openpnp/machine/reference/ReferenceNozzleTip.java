@@ -9,7 +9,6 @@ import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
-import javax.swing.UIManager;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
@@ -78,6 +77,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     @Element(required = false)
     private Location touchLocation = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length visionCalibrationZAdjust = new Length(0, LengthUnit.Millimeters);
 
     public enum VisionCalibration {
         None, FirstLocation, SecondLocation, ThirdLocation, LastLocation, TouchLocation;
@@ -508,6 +510,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         Object oldValue = this.visionCalibration;
         this.visionCalibration = visionCalibration;
         firePropertyChange("visionCalibration", oldValue, visionCalibration);
+    }
+
+    public Length getVisionCalibrationZAdjust() {
+        return visionCalibrationZAdjust;
+    }
+
+    public void setVisionCalibrationZAdjust(Length visionCalibrationZAdjust) {
+        Object oldValue = this.visionCalibrationZAdjust;
+        this.visionCalibrationZAdjust = visionCalibrationZAdjust;
+        firePropertyChange("visionCalibrationZAdjust", oldValue, visionCalibrationZAdjust);
     }
 
     public Length getVisionTemplateDimensionX() {
@@ -951,12 +963,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public static final String VALVE_ON = "ON"; 
 
     protected final SimpleGraph startNewVacuumGraph(double vacuumLevel, boolean valveSwitchingOn) {
-        Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
-        if (gridColor == null) {
-            gridColor = new Color(0, 0, 0, 64);
-        } else {
-            gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
-        }
         // start a new graph 
         SimpleGraph vacuumGraph = new SimpleGraph();
         vacuumGraph.setRelativePaddingLeft(0.05);
@@ -964,7 +970,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         // init pressure scale
         SimpleGraph.DataScale vacuumScale =  vacuumGraph.getScale(PRESSURE);
         vacuumScale.setRelativePaddingBottom(0.3);
-        vacuumScale.setColor(gridColor);
+        vacuumScale.setColor(SimpleGraph.getDefaultGridColor());
         // init valve scale
         SimpleGraph.DataScale valveScale =  vacuumGraph.getScale(BOOLEAN);
         valveScale.setRelativePaddingTop(0.75);
@@ -1015,6 +1021,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
             if (visionCalibration) {
                 setVisionCalibration(templateNozzleTip.getVisionCalibration());
+                setVisionCalibrationZAdjust(templateNozzleTip.getVisionCalibrationZAdjust());
                 setVisionCalibrationTrigger(templateNozzleTip.getVisionCalibrationTrigger());
                 setVisionTemplateDimensionX(templateNozzleTip.getVisionTemplateDimensionX());
                 setVisionTemplateDimensionY(templateNozzleTip.getVisionTemplateDimensionY());
@@ -1112,6 +1119,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void ensureVisionCalibration(boolean nozzleTipChange) throws Exception {
         Location location = getVisionCalibration().getLocation(this);
         if (location != null) {
+            // Adjust Z for proper units per pixel scaling.
+            location = location.add(new Location(getVisionCalibrationZAdjust().getUnits(), 
+                    0, 0, getVisionCalibrationZAdjust().getValue(), 0));
             // When location is not null, the calibrations is enabled.
             if (visionCalibrationOffset == null 
                     || (getVisionCalibrationTrigger() == VisionCalibrationTrigger.NozzleTipChange && nozzleTipChange)) {
@@ -1129,7 +1139,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                                          .getHead()
                                          .getDefaultCamera();
 
-                Location upp = camera.getUnitsPerPixel();
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
+                Location upp = camera.getUnitsPerPixelAtZ();
                 int width =
                         ((int) Math.ceil(getVisionTemplateDimensionX().add(visionTemplateTolerance)
                                                                       .divide(upp.getLengthX())))
@@ -1138,7 +1149,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                         ((int) Math.ceil(getVisionTemplateDimensionY().add(visionTemplateTolerance)
                                                                       .divide(upp.getLengthY())))
                                 & ~1; // divisible by 2
-                
+
                 BufferedImage templateEmpty = getVisionTemplateImageEmpty().getImage();
                 BufferedImage templateOccupied = getVisionTemplateImageOccupied().getImage();
 
@@ -1148,7 +1159,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     Location originalLocation = location;
                     boolean shouldBeOccupied = (getNozzleAttachedTo() == null);
                     for (int pass = 0; pass < visionCalibrationMaxPasses; ++pass) {
-                        MovableUtils.moveToLocationAtSafeZ(camera, location);
                         BufferedImage cameraImage = camera.lightSettleAndCapture();
                         int x = (cameraImage.getWidth() - width) / 2;
                         int y = (cameraImage.getHeight() - height) / 2;
@@ -1156,7 +1166,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                         // is required by the matchTemplate call.
                         cameraImage =
                                 ImageUtils.convertBufferedImage(cameraImage, templateEmpty.getType());
-                        // Crop to a center area with the given tolerance arount the template.  
+                        // Crop to a center area with the given tolerance around the template.  
                         Mat cameraImageMat = OpenCvUtils.toMat(cameraImage);
                         Mat cameraCropMat = new Mat(cameraImageMat, new Rect(x, y, width, height));
                         cameraImageMat.release();
@@ -1224,6 +1234,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                             // Good enough, done.
                             break;
                         }
+                        // Move to the next iteration location.
+                        MovableUtils.moveToLocationAtSafeZ(camera, location);
                     } 
                     visionCalibrationOffset = location.subtract(originalLocation);
                     Logger.trace(String.format(

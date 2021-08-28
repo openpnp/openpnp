@@ -236,7 +236,9 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     @Override
     public void moveTo(Location location, double speed, MotionOption... options) throws Exception {
         Logger.debug("{}.moveTo({}, {})", getName(), location, speed);
-        Location headLocation = toHeadLocation(location, getLocation());
+        Location currentLocation = getLocation();
+        location = substituteUnchangedCoordinates(location, currentLocation);
+        Location headLocation = toHeadLocation(location, currentLocation);
         getHead().moveTo(this, headLocation, getHead().getMaxPartSpeed() * speed, options);
     }
 
@@ -292,6 +294,12 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
+        // Subtract the Head offset.
+        location = location.subtract(getHeadOffsets());
+        return location;
+    }
+
+    public static Location substituteUnchangedCoordinates(Location location, Location currentLocation) {
         if (currentLocation != null) {
             // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
             // longer be used. It will be removed eventually:
@@ -304,8 +312,6 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                     Double.isNaN(location.getZ()), 
                     Double.isNaN(location.getRotation())); 
         }
-        // Subtract the Head offset.
-        location = location.subtract(getHeadOffsets());
         return location;
     }
     @Override
@@ -314,18 +320,6 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     public Location toHeadMountableLocation(Location location, Location currentLocation, LocationOption... options) {
-        if (currentLocation != null) {
-            // Shortcut Double.NaN. Sending Double.NaN in a Location is an old API that should no
-            // longer be used. It will be removed eventually:
-            // https://github.com/openpnp/openpnp/issues/255
-            // In the mean time, since Double.NaN would cause a problem for transformations, we shortcut
-            // it here by replacing any NaN values with the current value from the axes.
-            location = location.derive(currentLocation, 
-                    Double.isNaN(location.getX()), 
-                    Double.isNaN(location.getY()), 
-                    Double.isNaN(location.getZ()), 
-                    Double.isNaN(location.getRotation()));
-        }
         // Add the Head offset.
         location = location.add(getHeadOffsets());
         return location;
@@ -385,6 +379,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
             throws Exception {
         // Inverse-transform the desired location to a raw location, applying the approximation options, which means some 
         // compensation effects are suppressed.
+        desiredLocation = substituteUnchangedCoordinates(desiredLocation, currentLocation);
         Location desiredHeadLocation = toHeadLocation(desiredLocation, options);
         Location currentHeadLocation = toHeadLocation(currentLocation);
         AxesLocation desiredRawLocation = toRaw(desiredHeadLocation);
@@ -414,4 +409,13 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         Location approximativeLocation = toHeadMountableLocation(headApproximativeLocation);
         return approximativeLocation;
     }
+
+    @Override 
+    public boolean isReachable(Location location) throws Exception {
+            location = substituteUnchangedCoordinates(location, getLocation());
+            Location headLocation = toHeadLocation(location);
+            AxesLocation axesLocation = toRaw(headLocation);
+            return (Configuration.get().getMachine().getMotionPlanner().isValidLocation(axesLocation));
+    }
+
 }
