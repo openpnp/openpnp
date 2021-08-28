@@ -9,7 +9,7 @@ However, this is not always possible, especially in a DIY environment. Some feed
 
 Camera 3D Units per Pixel are automatically calibrated, when you use [Vision Solutions](https://github.com/openpnp/openpnp/wiki/Vision-Solutions) from [[Issues and Solutions]]. 
 
-Best [watch the video](https://youtu.be/md68n_J7uto).
+Best [watch the video](https://youtu.be/md68n_J7uto), then come back here.
 
 Once all the steps have been completed, the camera shows an enabled **3D Calibration**:
 
