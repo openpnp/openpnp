@@ -266,21 +266,29 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                             AxesLocation effectiveBacklashAxisOffset = new AxesLocation(refAxis, effectiveBacklashOffset);
                             if (refAxis.getBacklashCompensationMethod() == BacklashCompensationMethod.DirectionalSneakUp) {
                                 // Sneak up, this needs an extra move for last segment at slower speed.
-                                Length sneakOffset = refAxis.getSneakUpOffset().multiply(Math.signum(axisSegment.getValue())).subtract(effectiveBacklashOffset);
+                                needsExtraBacklashMove = true;
+                                Length sneakOffset = refAxis.getSneakUpOffset()
+                                        .multiply(Math.signum(axisSegment.getValue())).subtract(effectiveBacklashOffset);
                                 backlashCompensatedNewLocation = backlashCompensatedNewLocation.subtract(
                                         new AxesLocation(refAxis, sneakOffset));
-                                AxesLocation displacement = backlashCompensatedCurrentLocation.motionSegmentTo(backlashCompensatedNewLocation);
-                                if (Math.signum(displacement.getCoordinate(refAxis)) != Math.signum(axisSegment.getValue())) {
-                                    // Sneak length larger than displacement - just stay put then.
-                                    backlashCompensatedNewLocation = backlashCompensatedNewLocation.put(
-                                            new AxesLocation(refAxis, backlashCompensatedCurrentLocation.getLengthCoordinate(refAxis)));
+                                if (Math.signum(lastDirectionalBacklashOffset.getCoordinate(refAxis)) 
+                                        == Math.signum(effectiveBacklashOffset.getValue())) {
+                                    // Going into the same direction as before, check if we need to shorten the sneak-up.
+                                    AxesLocation displacement = backlashCompensatedCurrentLocation.motionSegmentTo(backlashCompensatedNewLocation);
+                                    if (Math.signum(displacement.getCoordinate(refAxis)) != Math.signum(axisSegment.getValue())) {
+                                        // Sneak length larger than displacement - just stay put then.
+                                        backlashCompensatedNewLocation = backlashCompensatedNewLocation.put(
+                                                new AxesLocation(refAxis, backlashCompensatedCurrentLocation.getLengthCoordinate(refAxis)));
+                                    }
                                 }
-                                needsExtraBacklashMove = true;
+                                // else: not going in the same direction, this may involve backtracking a bit, so the full
+                                // sneak-up offset can be done at the lower speed.
+
                                 // Take the lowest speed factor of any backlash compensated axis. 
                                 // Note, unlike in previous versions of OpenPnP this does not multiply with speed, it just lowers
                                 // it to the minimum. So an already very low speed parameter will not be lowered further.
-                                // The idea of OneSidedPositioning is also that it happens at the same speed every time i.e. the
-                                // forces and tensions in the mechanical linkage will be similar.  
+                                // The idea of one-sided / sneak-up positioning is also that it happens at the same speed every time 
+                                // i.e. the forces and tensions in the mechanical linkage will be similar.  
                                 backlashCompensatedSpeed = Math.min(backlashCompensatedSpeed, refAxis.getBacklashSpeedFactor());
                             }
                             else {

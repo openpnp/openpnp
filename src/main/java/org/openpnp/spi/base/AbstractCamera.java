@@ -115,9 +115,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     @Attribute(required = false)
     boolean enableUnitsPerPixel3D = false;
 
-    /**
-     * Automatically set the CameraView viewing plane Z according to taregeted user action.  
-     */
+    @Deprecated
     @Attribute(required = false)
     boolean autoViewPlaneZ = false;
 
@@ -379,14 +377,6 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         this.enableUnitsPerPixel3D = enableUnitsPerPixel3D;
     }
 
-    public boolean isAutoViewPlaneZ() {
-        return autoViewPlaneZ;
-    }
-
-    public void setAutoViewPlaneZ(boolean autoViewPlaneZ) {
-        this.autoViewPlaneZ = autoViewPlaneZ;
-    }
-
     @Override
     public Location getUnitsPerPixel() {
         return getUnitsPerPixel(defaultZ);
@@ -394,7 +384,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     @Override
     public Location getUnitsPerPixel(Length viewingPlaneZ) {
-        if (!isSecondaryUnitsPerPixelCalibrated()) {
+        if (!isUnitsPerPixelAtZCalibrated()) {
             return unitsPerPixel;
         }
         if (viewingPlaneZ == null) {
@@ -419,7 +409,22 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                 k * (uppCal1.getY() - uppCal2.getY()) + uppCal2.getY(), cameraRelZ, 0.0);
     }
 
-    public boolean isSecondaryUnitsPerPixelCalibrated() {
+    @Override
+    public Location getUnitsPerPixelAtZ() {
+        if (getAxisZ() != null) {
+            // Camera has an axis (virtual or physical), so it may set the viewing plane. Note, this automatically 
+            // also excludes the bottom camera.
+            Length viewingPlaneZ = getLocation().getLengthZ();
+            if (viewingPlaneZ.compareTo(getSafeZ()) < 0 ) {
+                // Z is below Safe Z, so this is a purposefully set viewingPlaneZ.
+                return getUnitsPerPixel(viewingPlaneZ);
+            }
+        }
+        return Camera.super.getUnitsPerPixelAtZ();
+    }
+
+    @Override
+    public boolean isUnitsPerPixelAtZCalibrated() {
         return (enableUnitsPerPixel3D
                 && unitsPerPixelSecondary != null 
                 && unitsPerPixelSecondary.getX() != 0 
@@ -518,7 +523,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
      * @return - the estimated Z height of the object
      */
     public Length estimateZCoordinateOfObject(Location observedUnitsPerPixel) throws Exception {
-        if (!isSecondaryUnitsPerPixelCalibrated()) {
+        if (!isUnitsPerPixelAtZCalibrated()) {
             throw new Exception("Secondary Camera Units Per Pixel have not been calibrated.");
         }
         LengthUnit units = observedUnitsPerPixel.getUnits();

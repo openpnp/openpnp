@@ -355,13 +355,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             }
         });
         panelUpp.add(enableUnitsPerPixel3D, "4, 2");
-        
-        lblAutoViewPlaneZ = new JLabel("Auto-Scale?");
-        lblAutoViewPlaneZ.setToolTipText("<html>Automatically set the Units Per Pixel scale in the Camera View when a<br/>\r\nuser action is related to the camera and Z is known.\r\n</html>\r\n");
-        panelUpp.add(lblAutoViewPlaneZ, "6, 2, right, default");
-        
-        autoViewPlaneZ = new JCheckBox("");
-        panelUpp.add(autoViewPlaneZ, "8, 2");
 
         lblX = new JLabel("X");
         panelUpp.add(lblX, "4, 4, center, default");
@@ -527,8 +520,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         btnMeasure2.setVisible(enable3D);
         btnCancelMeasure2.setVisible(enable3D);
         lblZ.setVisible(enable3D);
-        lblAutoViewPlaneZ.setVisible(enable3D);
-        autoViewPlaneZ.setVisible(enable3D);
         
         boolean cameraZ = enable3D && lookingDown
                 && !(camera.getAxisZ() == null || camera.getAxisZ() instanceof ReferenceVirtualAxis);
@@ -567,7 +558,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         addWrappedBinding(camera, "antiGlareLightOff", antiGlareLightOff, "selected");
 
         addWrappedBinding(camera, "enableUnitsPerPixel3D", enableUnitsPerPixel3D, "selected");
-        addWrappedBinding(camera, "autoViewPlaneZ", autoViewPlaneZ, "selected");
 
         addWrappedBinding(camera, "defaultZ", textFieldDefaultZ, "text", lengthConverter);
 
@@ -910,8 +900,6 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JLabel lblCalibrationObject;
     private JLabel lbldCalibration;
     private JCheckBox enableUnitsPerPixel3D;
-    private JLabel lblAutoViewPlaneZ;
-    private JCheckBox autoViewPlaneZ;
     private JLabel lblShowMultiview;
     private JCheckBox shownInMultiCameraView;
     private JLabel lblFocusSensing;

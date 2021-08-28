@@ -227,7 +227,7 @@ public class VisionSolutions implements Solutions.Subject {
             super(subject, issue, solution, severity, uri);
             this.camera = camera;
             featureDiameter = 20;
-            if (camera.getUnitsPerPixel().getX() != 0
+            if (camera.getUnitsPerPixelPrimary().getX() != 0
                     && featureDiameterIfKnown != null
                     && featureDiameterIfKnown.getValue() != 0) {
                 // Existing diameter setting.
@@ -680,7 +680,6 @@ public class VisionSolutions implements Solutions.Subject {
             final Length oldPrimaryZ = defaultCamera.getCameraPrimaryZ();
             final Length oldSecondaryZ = defaultCamera.getCameraSecondaryZ();
             final boolean oldEnabled3D = defaultCamera.isEnableUnitsPerPixel3D();
-            final boolean oldAutoViewPlaneZ = defaultCamera.isAutoViewPlaneZ();
             for (boolean primary : (nozzle == defaultNozzle && isSolvedSecondaryXY(head)) ? new boolean [] {true, false} : new boolean [] {true} ) {
                 String qualifier = primary ? "primary" : "secondary";
                 solutions.add(new Solutions.Issue(
@@ -727,6 +726,7 @@ public class VisionSolutions implements Solutions.Subject {
                             final State oldState = getState();
                             UiUtils.submitUiMachineTask(
                                     () -> {
+                                        Location headOffsetsBefore = nozzle.getHeadOffsets();
                                         if (primary) {
                                             // Reset any former head offset to zero.
                                             nozzle.setHeadOffsets(Location.origin);
@@ -754,7 +754,6 @@ public class VisionSolutions implements Solutions.Subject {
                                                         .derive(nozzleLocation, false, false, true, false);
                                                 defaultCamera.setUnitsPerPixelSecondary(upp);
                                                 defaultCamera.setEnableUnitsPerPixel3D(true);
-                                                defaultCamera.setAutoViewPlaneZ(true);
                                             }
                                         }
                                         if (primary) {
@@ -763,16 +762,17 @@ public class VisionSolutions implements Solutions.Subject {
                                             // Note 2: The Z fiducial location Z was set to the default nozzle location Z (see above), so the Z offset will  
                                             // be 0 for the default nozzle, but equalize Z for any other nozzle. 
                                             Location headOffsets = head.getCalibrationPrimaryFiducialLocation().subtract(nozzleLocation);
-                                            if (nozzle.getHeadOffsets().getLinearLengthTo(headOffsets)
+                                            if (headOffsetsBefore.getLinearLengthTo(headOffsets)
                                                     .compareTo(head.getCalibrationPrimaryFiducialDiameter().multiply(0.5)) < 0) {
                                                 // Offsets that are too close (inside the fiducial) are not updated. They might already have been calibrated and we want 
                                                 // to keep them so i.e. these rough nozzle-aimed offsets are likely worse. 
-                                                Logger.info("Do not set nozzle "+nozzle.getName()+" head offsets to "+headOffsets+" as these are close to "
-                                                        + "existing offsets "+oldNozzleOffsets+" and existing offsets might already have been be calibrated.");
+                                                Logger.info("Not setting nozzle "+nozzle.getName()+" head offsets to rough "+headOffsets+" as these are close to "
+                                                        + "existing offsets "+headOffsetsBefore+" and existing offsets might already have been calibrated.");
                                             }
                                             else {
                                                 nozzle.setHeadOffsets(headOffsets);
-                                                Logger.info("Set nozzle "+nozzle.getName()+" head offsets to "+headOffsets+" (previously "+oldNozzleOffsets+")");
+                                                Logger.info("Set nozzle "+nozzle.getName()+" head offsets to "+headOffsets+" (previously "+headOffsetsBefore+")");
+                                                nozzle.adjustHeadOffsetsDependencies(headOffsetsBefore, headOffsets);
                                             }
                                         }
                                         return true;
@@ -825,7 +825,6 @@ public class VisionSolutions implements Solutions.Subject {
                                 defaultCamera.setUnitsPerPixelSecondary(upp);
                                 defaultCamera.setCameraSecondaryZ(oldSecondaryZ);
                                 defaultCamera.setEnableUnitsPerPixel3D(oldEnabled3D);
-                                defaultCamera.setAutoViewPlaneZ(oldAutoViewPlaneZ);
                             }
                         }
                     }
@@ -836,7 +835,7 @@ public class VisionSolutions implements Solutions.Subject {
 
     private void perHeadSolutions(Solutions solutions, ReferenceHead head, ReferenceCamera defaultCamera) {
         // Visual Homing
-        if (defaultCamera.getUnitsPerPixel().isInitialized()
+        if (defaultCamera.getUnitsPerPixelPrimary().isInitialized()
                 && head.getVisualHomingMethod() == VisualHomingMethod.None) {
             final Location oldFiducialLocation = head.getHomingFiducialLocation();
             final Length oldFiducialDiameter = getHomingFiducialDiameter();
@@ -883,7 +882,7 @@ public class VisionSolutions implements Solutions.Subject {
                 @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
-                        if (! defaultCamera.getUnitsPerPixel().isInitialized()) {
+                        if (! defaultCamera.getUnitsPerPixelPrimary().isInitialized()) {
                             throw new Exception("The camera "+defaultCamera.getName()+" has no initial calibration. "
                                     + "Use the \"Primary calibration fiducial position and initial camera calibration\".");
                         }
@@ -928,14 +927,14 @@ public class VisionSolutions implements Solutions.Subject {
             flipX = camera.isFlipX();
             flipY = camera.isFlipY();
             rotation = camera.getRotation();
-            unitsPerPixel = camera.getUnitsPerPixel();
+            unitsPerPixel = camera.getUnitsPerPixelPrimary();
         }
 
         void restoreTo(ReferenceCamera camera) {
             camera.setFlipX(flipX);
             camera.setFlipY(flipY);
             camera.setRotation(rotation);
-            camera.setUnitsPerPixel(camera.getUnitsPerPixel()
+            camera.setUnitsPerPixel(camera.getUnitsPerPixelPrimary()
                     .derive(unitsPerPixel, true, true, false, false));
         }
     }
@@ -1252,7 +1251,8 @@ public class VisionSolutions implements Solutions.Subject {
                     image.release();
                     image = OpenCvUtils.toMat(bufferedImage);
                     result = getPixelLocationShot(camera, diagnostics, image, maxDiameter,
-                            minDiameter, maxDistance, expectedX, expectedY, scoreRange);
+                            minDiameter, maxDistance, expectedX, expectedY, 
+                            n == 0 ? scoreRange : new ScoreRange());
                     // Accumulate
                     x += result.getX();
                     y += result.getY();

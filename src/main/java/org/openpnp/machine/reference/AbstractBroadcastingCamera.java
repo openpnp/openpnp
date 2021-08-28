@@ -30,11 +30,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.swing.SwingUtilities;
-
 import org.openpnp.CameraListener;
 import org.openpnp.ConfigurationListener;
-import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -104,7 +101,7 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
                         }
 
                         @Override
-                        public void machineTargetedUserAction(Machine machine, HeadMountable hm) {
+                        public void machineTargetedUserAction(Machine machine, HeadMountable hm, boolean jogging) {
                             // Find the nearest camera.
                             Camera nearestCamera = null;
                             if (hm instanceof Camera) {
@@ -195,15 +192,6 @@ public abstract class AbstractBroadcastingCamera extends AbstractCamera implemen
         if (isAutoVisible()) {
             ensureCameraVisible();
         }
-        if (isAutoViewPlaneZ()) {
-            setViewingPlaneZ(location);
-        }
-    }
-
-    public void setViewingPlaneZ(Location location) {
-        SwingUtilities.invokeLater(() -> {
-            MainFrame.get().getCameraViews().getCameraView(this).setViewingPlaneZ(location.getLengthZ());
-        });
     }
 
     public synchronized static BufferedImage getCaptureErrorImage() {

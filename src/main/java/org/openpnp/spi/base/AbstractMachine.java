@@ -465,9 +465,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
-    public void fireMachineTargetedUserAction(HeadMountable hm) {
+    public void fireMachineTargetedUserAction(HeadMountable hm, boolean jogging) {
         for (MachineListener listener : listeners) {
-            listener.machineTargetedUserAction(this, hm);
+            listener.machineTargetedUserAction(this, hm, jogging);
         }
     }
 

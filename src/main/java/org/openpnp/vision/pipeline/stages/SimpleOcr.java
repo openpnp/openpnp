@@ -326,7 +326,7 @@ public class SimpleOcr extends CvStage {
 
         // Determine the scaling factor to go from given LengthUnit/pt units to
         // Camera units and pixels.
-        Location unitsPerPixel = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ().convertToUnits(LengthUnit.Millimeters);
         Length l = new Length(1.0/72.0, LengthUnit.Inches);
         l = l.convertToUnits(unitsPerPixel.getUnits());
         double scalePt = l.getValue()/unitsPerPixel.getY();

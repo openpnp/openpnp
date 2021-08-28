@@ -1,22 +1,17 @@
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.Test;
-import org.opencv.core.RotatedRect;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.spi.Machine;
-import org.openpnp.vision.Ransac.Line;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Feeder;
-import org.openpnp.machine.reference.feeder.BlindsFeeder;
-import org.openpnp.machine.reference.feeder.BlindsFeeder.FindFeatures;
-import org.openpnp.model.Location;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.spi.Feeder;
+import org.openpnp.spi.Machine;
 
 import com.google.common.io.Files;
 
@@ -33,9 +28,9 @@ public class BlindsFeederTest {
         }
         
         BlindsFeederTestFiducials(){
-            fiducial1 = BlindsFeeder.nullLocation;
-            fiducial2 = BlindsFeeder.nullLocation;
-            fiducial3 = BlindsFeeder.nullLocation;
+            fiducial1 = Location.origin;
+            fiducial2 = Location.origin;
+            fiducial3 = Location.origin;
         }
     }
     

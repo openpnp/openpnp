@@ -88,7 +88,8 @@ public class AutoFocusProvider implements FocusProvider {
     public Location autoFocus(Camera camera, HeadMountable movable,
             Length subjectMaxSize,
             Location location0, Location location1) throws Exception {
-        // Compute the pixel diameter of the subject maximum size.
+        // Compute the pixel diameter of the subject maximum size. 
+        // As we don't know the focus [Z] plane, we take standard UnitsPerPixel.
         Location unitsPerPixel = camera.getUnitsPerPixel();
         int diameter = (int) Math.ceil(Math.max(
                 subjectMaxSize.divide(unitsPerPixel.getLengthX()),

@@ -247,25 +247,37 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this.headOffsets = headOffsets;
         firePropertyChange("headOffsets", oldValue, headOffsets);
         Location offsetsDiff = headOffsets.subtract(oldValue).convertToUnits(LengthUnit.Millimeters);
+        adjustHeadOffsetsDependencies(oldValue, headOffsets);
+    }
+
+    /**
+     * Adjust any dependent head offsets, e.g. after calibration.
+     * 
+     * @param headOffsetsOld
+     * @param headOffsetsNew
+     * @param offsetsDiff
+     */
+    public void adjustHeadOffsetsDependencies(Location headOffsetsOld, Location headOffsetsNew) {
+        Location offsetsDiff = headOffsetsNew.subtract(headOffsetsOld).convertToUnits(LengthUnit.Millimeters);
         if (offsetsDiff.getLinearDistanceTo(Location.origin) > 0.01) {
             // Changing a X, Y head offset invalidates the nozzle tip calibration. Just changing Z leaves it intact. 
             ReferenceNozzleTipCalibration.resetAllNozzleTips();
         }
-        if (oldValue.isInitialized() && head != null) {
+        if (headOffsetsOld.isInitialized() && headOffsetsNew.isInitialized() && head != null) {
             // The old offsets were not zero, adjust some dependent head offsets.
-
+            
             // Where another HeadMountable, such as an Actuator, is fastened to the nozzle, it may have the same X, Y head offsets, i.e. these were very 
             // likely copied over, like customary for the ReferencePushPullFeeder actuator. Adjust them likewise. 
             for (HeadMountable hm : head.getHeadMountables()) {
                 if (this != hm 
-                        && hm instanceof ReferenceHeadMountable
+                        && (hm instanceof ReferenceHeadMountable)
                         && !(hm instanceof ReferenceNozzle)) {
                     ReferenceHeadMountable otherHeadMountable = (ReferenceHeadMountable) hm;
                     Location otherHeadOffsets = otherHeadMountable.getHeadOffsets();
                     if (otherHeadOffsets.isInitialized() 
-                            && oldValue.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(otherHeadOffsets) <= 0.01) {
+                            && headOffsetsOld.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(otherHeadOffsets) <= 0.01) {
                         // Take X, Y (but not Z).
-                        Location hmOffsets = otherHeadOffsets.derive(headOffsets, true, true, false, false);
+                        Location hmOffsets = otherHeadOffsets.derive(headOffsetsNew, true, true, false, false);
                         Logger.info("Set "+otherHeadMountable.getClass().getSimpleName()+" " + otherHeadMountable.getName() + " head offsets to " + hmOffsets
                                 + " (previously " + otherHeadOffsets + ")");
                         otherHeadMountable.setHeadOffsets(hmOffsets);

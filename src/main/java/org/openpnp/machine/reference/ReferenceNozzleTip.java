@@ -78,6 +78,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Element(required = false)
     private Location touchLocation = new Location(LengthUnit.Millimeters);
 
+    @Element(required = false)
+    private Length visionCalibrationZAdjust = new Length(0, LengthUnit.Millimeters);
+
     public enum VisionCalibration {
         None, FirstLocation, SecondLocation, ThirdLocation, LastLocation, TouchLocation;
 
@@ -507,6 +510,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         Object oldValue = this.visionCalibration;
         this.visionCalibration = visionCalibration;
         firePropertyChange("visionCalibration", oldValue, visionCalibration);
+    }
+
+    public Length getVisionCalibrationZAdjust() {
+        return visionCalibrationZAdjust;
+    }
+
+    public void setVisionCalibrationZAdjust(Length visionCalibrationZAdjust) {
+        Object oldValue = this.visionCalibrationZAdjust;
+        this.visionCalibrationZAdjust = visionCalibrationZAdjust;
+        firePropertyChange("visionCalibrationZAdjust", oldValue, visionCalibrationZAdjust);
     }
 
     public Length getVisionTemplateDimensionX() {
@@ -1008,6 +1021,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
             }
             if (visionCalibration) {
                 setVisionCalibration(templateNozzleTip.getVisionCalibration());
+                setVisionCalibrationZAdjust(templateNozzleTip.getVisionCalibrationZAdjust());
                 setVisionCalibrationTrigger(templateNozzleTip.getVisionCalibrationTrigger());
                 setVisionTemplateDimensionX(templateNozzleTip.getVisionTemplateDimensionX());
                 setVisionTemplateDimensionY(templateNozzleTip.getVisionTemplateDimensionY());
@@ -1105,6 +1119,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public void ensureVisionCalibration(boolean nozzleTipChange) throws Exception {
         Location location = getVisionCalibration().getLocation(this);
         if (location != null) {
+            // Adjust Z for proper units per pixel scaling.
+            location = location.add(new Location(getVisionCalibrationZAdjust().getUnits(), 
+                    0, 0, getVisionCalibrationZAdjust().getValue(), 0));
             // When location is not null, the calibrations is enabled.
             if (visionCalibrationOffset == null 
                     || (getVisionCalibrationTrigger() == VisionCalibrationTrigger.NozzleTipChange && nozzleTipChange)) {
@@ -1122,7 +1139,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                                          .getHead()
                                          .getDefaultCamera();
 
-                Location upp = camera.getUnitsPerPixel();
+                MovableUtils.moveToLocationAtSafeZ(camera, location);
+                Location upp = camera.getUnitsPerPixelAtZ();
                 int width =
                         ((int) Math.ceil(getVisionTemplateDimensionX().add(visionTemplateTolerance)
                                                                       .divide(upp.getLengthX())))
@@ -1131,7 +1149,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                         ((int) Math.ceil(getVisionTemplateDimensionY().add(visionTemplateTolerance)
                                                                       .divide(upp.getLengthY())))
                                 & ~1; // divisible by 2
-                
+
                 BufferedImage templateEmpty = getVisionTemplateImageEmpty().getImage();
                 BufferedImage templateOccupied = getVisionTemplateImageOccupied().getImage();
 
@@ -1141,7 +1159,6 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                     Location originalLocation = location;
                     boolean shouldBeOccupied = (getNozzleAttachedTo() == null);
                     for (int pass = 0; pass < visionCalibrationMaxPasses; ++pass) {
-                        MovableUtils.moveToLocationAtSafeZ(camera, location);
                         BufferedImage cameraImage = camera.lightSettleAndCapture();
                         int x = (cameraImage.getWidth() - width) / 2;
                         int y = (cameraImage.getHeight() - height) / 2;
@@ -1149,7 +1166,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                         // is required by the matchTemplate call.
                         cameraImage =
                                 ImageUtils.convertBufferedImage(cameraImage, templateEmpty.getType());
-                        // Crop to a center area with the given tolerance arount the template.  
+                        // Crop to a center area with the given tolerance around the template.  
                         Mat cameraImageMat = OpenCvUtils.toMat(cameraImage);
                         Mat cameraCropMat = new Mat(cameraImageMat, new Rect(x, y, width, height));
                         cameraImageMat.release();
@@ -1217,6 +1234,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                             // Good enough, done.
                             break;
                         }
+                        // Move to the next iteration location.
+                        MovableUtils.moveToLocationAtSafeZ(camera, location);
                     } 
                     visionCalibrationOffset = location.subtract(originalLocation);
                     Logger.trace(String.format(

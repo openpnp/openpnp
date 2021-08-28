@@ -357,8 +357,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                     Circle testObject = visualSolutions
                                             .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null, null);
                                     head.setCalibrationTestObjectDiameter(
-                                            new Length(testObject.getDiameter()*defaultCamera.getUnitsPerPixel().getX(), 
-                                                    defaultCamera.getUnitsPerPixel().getUnits()));
+                                            defaultCamera.getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
                                     calibrateNozzleOffsets(head, defaultCamera, nozzle);
                                     return true;
                                 },
@@ -393,7 +392,7 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     public void calibrateAxisBacklash(ReferenceHead head, ReferenceCamera camera,
             HeadMountable movable, ReferenceControllerAxis axis, Length acceptableTolerance) throws Exception {
-        // Check pre-conditions (this method can be called from outside Issues & Solutioins).
+        // Check pre-conditions (this method can be called from outside Issues & Solutions).
         if (!(axis.isSoftLimitLowEnabled() && axis.isSoftLimitHighEnabled())) {
             throw new Exception("Axis "+axis.getName()+" must have soft limits enabled for backlash calibration.");
         }
@@ -524,9 +523,6 @@ public class CalibrationSolutions implements Solutions.Subject {
             }
             stepLocation0 = stepLocation1;
         }
-        // Set the measuring location as the one with a definitive step.
-        // NOTE: For now we don't do it, it has not improved results, at least not on my machine, but it looks not as good ;.)
-        //location = measuringLocation;
 
         // Perform a backlash test over distances. The distances are a geometric series.   
         MovableUtils.moveToLocationAtSafeZ(movable, location, minimumSpeed);
@@ -632,14 +628,15 @@ public class CalibrationSolutions implements Solutions.Subject {
                             // Take the last distance i.e the smallest (this is a descending loop) that has an 
                             // error within 2 * tolerance of the maxBacklash (we're assuming a two-sided ± tolerance).
                             maxBacklashDistance = distance;
+                            // Remember the minimum acceptable backlash.
+                            if (mmError < minBacklash) {
+                                minBacklash = mmError;
+                                minBacklashDistance = distance;
+                            }
                         }
                         else {
                             // Once it dips under the maximum minus tolerance, its not eligible.
                             maxBacklashOpen = false;
-                        }
-                        if (mmError < minBacklash) {
-                            minBacklash = mmError;
-                            minBacklashDistance = distance;
                         }
                     }
                 }
@@ -722,6 +719,13 @@ public class CalibrationSolutions implements Solutions.Subject {
             axis.setBacklashSpeedFactor(backlashProbingSpeeds[0]);
             Logger.debug("Axis "+axis.getName()+" backlash offsets analysis, sneakUpOffset: "+sneakUpOffset+" unacceptable (> "+acceptableSneakUpOffsetMm+")");
         }
+        else if (offsetMmAvg < sneakUpOffset - toleranceMm) {
+            // Even at lowest speed, we got a sneak-up distance larger than the backlash.
+            axis.setBacklashCompensationMethod(BacklashCompensationMethod.DirectionalSneakUp);
+            axis.setBacklashOffset(new Length((minBacklash + maxBacklash)/2, LengthUnit.Millimeters));
+            axis.setSneakUpOffset(new Length(sneakUpOffset, LengthUnit.Millimeters));
+            axis.setBacklashSpeedFactor(backlashProbingSpeeds[0]);
+        }
         else if (consistent == backlashProbingSpeeds.length) {
             // We got consistent backlash over all the speeds and distances.
             if (offsetMmAvg < toleranceMm) {
@@ -752,11 +756,15 @@ public class CalibrationSolutions implements Solutions.Subject {
         referenceLocation = machine.getVisionSolutions()
                 .centerInOnSubjectLocation(camera, movable,
                         fiducialDiameter, "Backlash Compensation Test Location", false);
-        step = 0;
         final int fraction = 2;
+        final double minLog = Math.log(stepMm);
+        final double maxLog = Math.log(backlashTestMoveLargeMm);
+        final double rangeLog = maxLog - minLog; 
+        step = 0;
         for (double stepPos = -stepTestMm/2; stepPos < stepTestMm/2; stepPos += stepMm*fraction) {
             step++;
-            Location startMoveLocation = displacedAxisLocation(movable, axis, location, Math.pow(Math.random()*2 - 1, 3)*backlashTestMoveLargeMm*mmAxis, false);
+            Location startMoveLocation = displacedAxisLocation(movable, axis, location, 
+                    Math.signum(Math.random()-0.5)*Math.exp(Math.random()*rangeLog + minLog)*mmAxis, false);
             movable.moveTo(startMoveLocation);
             Location nominalStepLocation = displacedAxisLocation(movable, axis, location, stepPos*mmAxis, false);
             movable.moveTo(nominalStepLocation);
@@ -765,7 +773,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             Length absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
             double absoluteErrUnits = absoluteErr.convertToUnits(axis.getUnits()).getValue();
             stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
-            .recordDataPoint(1+(step-1)*fraction, absoluteErrUnits);
+            .recordDataPoint(2+(step-1)*fraction, absoluteErrUnits);
         }
         // Publish the graphs.
         axis.setStepTestGraph(stepTestGraph);
@@ -782,8 +790,8 @@ public class CalibrationSolutions implements Solutions.Subject {
         resolution = resolution.multiply(Math.ceil(finestResolution.divide(resolution)));
         // Get the sub-pixel resolution of the detection capability. 
         Length subPixelUnit = (axis.getType() == Type.X  
-                ? camera.getUnitsPerPixel().getLengthX() 
-                        : camera.getUnitsPerPixel().getLengthY())
+                ? camera.getUnitsPerPixelPrimary().getLengthX() 
+                        : camera.getUnitsPerPixelPrimary().getLengthY())
                 .multiply(1.0/machine.getVisionSolutions().getSuperSampling());
         if (tolerance) {
             // Round up to the next full sub-pixel (Note, this also covers the case where the axis resolution is not yet set).
@@ -828,7 +836,8 @@ public class CalibrationSolutions implements Solutions.Subject {
             testPart.setPackage(packag);
             ReferenceTubeFeeder feeder = new ReferenceTubeFeeder();
             feeder.setPart(testPart);
-            // Get the initial precise test object location.
+            // Get the initial precise test object location. It must lay on the primary fiducial. 
+            MovableUtils.moveToLocationAtSafeZ(defaultCamera, head.getCalibrationPrimaryFiducialLocation());
             Location location = machine.getVisionSolutions()
                     .centerInOnSubjectLocation(defaultCamera, defaultCamera,
                             head.getCalibrationTestObjectDiameter(), "Nozzle Offset Calibration", false);
@@ -882,6 +891,9 @@ public class CalibrationSolutions implements Solutions.Subject {
             if (nozzle.getPart() != null) {
                 nozzle.place();
             }
+            // Move nozzle to safe Z and with zero rotation to avoid any confusion as to the calibrated offsets.
+            MovableUtils.moveToLocationAtSafeZ(nozzle, nozzle.getLocation()
+                    .deriveLengths(null, null, nozzle.getSafeZ(), 0.0));
         }
     }
 }
