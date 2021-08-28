@@ -33,7 +33,9 @@ All the OpenPnP feeders using Computer Vision should now work in 3D (if not, ple
 
 ![Z missing Error](https://user-images.githubusercontent.com/9963310/131219923-afa8f871-2773-4f16-9532-67028acb96b4.png)
 
-You might have to change your routine when setting up new feeders, always probe and enter the Z first. For simple feeders, you can probably just copy the Z coordinate over (and know it by heart, after a while). 
+You might have to change your routine when setting up new feeders, always probe and enter the Z first. For simple feeders, you can probably just copy the Z coordinate over (you'll know it by heart, after a while). BlindsFeeder and ReferencePushPullFeeder even automatically propose the Z from already present _array_ or _template_ feeders, respectively. 
+
+Note that for some feeder types, pipeline editing requires Z too (because the pipeline needs Units per Pixel to work correctly). The same error dialog will appear if Z is missing.
 
 ## ReferenceStripFeeder
 
