@@ -30,17 +30,17 @@ Backlash compensation is configured on the ReferenceControllerAxis. Refer to the
   Works like OneSidedPositioning except it will only perform an extra move when moving from the wrong side. Only half of the extra moves are needed.
 * **DirectionalCompensation:**
 Backlash compensation is applied in the direction of travel. The offset is added to the actual target coordinate, if moving in the direction of the offset (which can be positive or negative), no offset is added if moving against the offset. 
-  No extra moves are needed. The machine can also move more fluidly, as there is no direction change needed. 
-  However: the offset needs to precisely match the physical backlash.
+  No extra moves are needed. The machine can also move more fluidly, as there is no direction change needed. Seamless jogging is supported. 
+  However: the **Backlash Offset** needs to precisely match the physical backlash.
 * **DirectionalSneakUp:**
 Works like **DirectionalCompensation** except for the last bit of the motion, where the speed is reduced. The idea is to have the machine arrive at the target in a similar state of agitation, regardless of how long and how fast the move was. This should create similar tensions in belts etc. and therefore create more repeatable positioning. 
-  There are no direction changes needed, but the two-step move is less fluid than with **DirectionalCompensation**. 
-  The offset needs to precisely match the physical backlash.
+  There are (mostly) no direction changes needed, but the two-step move is less fluid than with **DirectionalCompensation**. Seamless jogging is therefore not supported. 
+  The **Backlash Offset** needs to precisely match the physical backlash.
   An additional **Sneak-up Distance** must be set.
 
 **Backlash Offset** sets the amount of backlash. 
 
-**Sneak-up Distance** sets the distance over which the **DirectionalSneakUp** method moves at reduced speed. If a move is smaller than that, the sneak-up distance is reduced (in other words, the whole move is then done at the reduced speed).
+**Sneak-up Distance** sets the distance over which the **DirectionalSneakUp** method moves at reduced speed. If a move is smaller than that, but still going into the same direction as before, the sneak-up distance is reduced (in other words, the whole move is then done at the reduced speed). If a move is smaller, _and_ going into the other direction, it first backtracks further to allow for the full sneak-up distance.  
 
 **Backlash Speed Factor** determines the speed factor of the final approach move in OneSided methods.
 
