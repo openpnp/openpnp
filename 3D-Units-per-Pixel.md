@@ -1,7 +1,7 @@
 # What is it?
 As you know, the closer an object is to a camera, the larger it appears in the camera view. When you need to measure or detect certain shapes, sizes or distances, you need to know at what distance the subject is. On a Pick and Place machine, the first and foremost method of ensuring this, is to make sure, all such subjects (the Homing Fidcuial, PCBs, feeders, nozzle tip changers etc.) are all at the same distance from the camera, i.e. all flush with one universal machine table surface level, i.e. all at the same Z coordinate. 
 
-**Note: For your machine, this should still be a very important design goal. **
+**Note: This should still be a very important design goal for any machine. Even with the calibration we are discussing here, the precision is still unparalleled. **
 
 However, this is not always possible, especially in a DIY environment. Some feeders may be mounted on top of the table etc. Enter **OpenPnP 3D Units per Pixel** (brought to OpenPnP by Tony Luken). These are used to determine the camera viewing scale at different distances, i.e. at different Z coordinates. Whenever the Z coordinate is known (such as the pick location Z of a feeder), we can now automatically adjust the viewing scale, called **Units per Pixel**, to the Z. 
 
@@ -17,9 +17,9 @@ Once all the steps have been completed, the camera shows an enabled **3D Calibra
 
 **Units per Pixel** is just a fancy name for "how large is one pixel in real world units". The numbers in the screen-shot (above) simply mean that one pixel covers approximately 0.03213mm x 0.03216mm in the real world.
 
-The **Default Working Plane** is a very, very important Z coordinate for your machine. It sets that "universal table surface Z" we were talking about in the intro.
+The **Default Working Plane** is a very, very important Z coordinate for your machine. It sets that "universal table surface Z" we were talking about in the intro. Your homing fiducial, your primary calibration fiducial **must absolutely** be on that same Z level. Your PCB surface level and the focal planes of both your cameras should really, really too. Other things as far as possible. 
 
-Manual calibration is also possible, follow the instructions on the camera Wizard:
+Manual 3D Calibration is also possible, follow the instructions on the camera Wizard:
 
 ![Manual Calibration](https://user-images.githubusercontent.com/9963310/131219525-911702a1-7275-432f-86c2-f5468a69bc1a.png)
 
