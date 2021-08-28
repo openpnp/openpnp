@@ -523,9 +523,6 @@ public class CalibrationSolutions implements Solutions.Subject {
             }
             stepLocation0 = stepLocation1;
         }
-        // Set the measuring location as the one with a definitive step.
-        // NOTE: For now we don't do it, it has not improved results, at least not on my machine, but it looks not as good ;.)
-        //location = measuringLocation;
 
         // Perform a backlash test over distances. The distances are a geometric series.   
         MovableUtils.moveToLocationAtSafeZ(movable, location, minimumSpeed);
@@ -631,14 +628,15 @@ public class CalibrationSolutions implements Solutions.Subject {
                             // Take the last distance i.e the smallest (this is a descending loop) that has an 
                             // error within 2 * tolerance of the maxBacklash (we're assuming a two-sided ± tolerance).
                             maxBacklashDistance = distance;
+                            // Remember the minimum acceptable backlash.
+                            if (mmError < minBacklash) {
+                                minBacklash = mmError;
+                                minBacklashDistance = distance;
+                            }
                         }
                         else {
                             // Once it dips under the maximum minus tolerance, its not eligible.
                             maxBacklashOpen = false;
-                        }
-                        if (mmError < minBacklash) {
-                            minBacklash = mmError;
-                            minBacklashDistance = distance;
                         }
                     }
                 }
@@ -721,6 +719,13 @@ public class CalibrationSolutions implements Solutions.Subject {
             axis.setBacklashSpeedFactor(backlashProbingSpeeds[0]);
             Logger.debug("Axis "+axis.getName()+" backlash offsets analysis, sneakUpOffset: "+sneakUpOffset+" unacceptable (> "+acceptableSneakUpOffsetMm+")");
         }
+        else if (offsetMmAvg < sneakUpOffset - toleranceMm) {
+            // Even at lowest speed, we got a sneak-up distance larger than the backlash.
+            axis.setBacklashCompensationMethod(BacklashCompensationMethod.DirectionalSneakUp);
+            axis.setBacklashOffset(new Length((minBacklash + maxBacklash)/2, LengthUnit.Millimeters));
+            axis.setSneakUpOffset(new Length(sneakUpOffset, LengthUnit.Millimeters));
+            axis.setBacklashSpeedFactor(backlashProbingSpeeds[0]);
+        }
         else if (consistent == backlashProbingSpeeds.length) {
             // We got consistent backlash over all the speeds and distances.
             if (offsetMmAvg < toleranceMm) {
@@ -751,11 +756,15 @@ public class CalibrationSolutions implements Solutions.Subject {
         referenceLocation = machine.getVisionSolutions()
                 .centerInOnSubjectLocation(camera, movable,
                         fiducialDiameter, "Backlash Compensation Test Location", false);
-        step = 0;
         final int fraction = 2;
+        final double minLog = Math.log(stepMm);
+        final double maxLog = Math.log(backlashTestMoveLargeMm);
+        final double rangeLog = maxLog - minLog; 
+        step = 0;
         for (double stepPos = -stepTestMm/2; stepPos < stepTestMm/2; stepPos += stepMm*fraction) {
             step++;
-            Location startMoveLocation = displacedAxisLocation(movable, axis, location, Math.pow(Math.random()*2 - 1, 3)*backlashTestMoveLargeMm*mmAxis, false);
+            Location startMoveLocation = displacedAxisLocation(movable, axis, location, 
+                    Math.signum(Math.random()-0.5)*Math.exp(Math.random()*rangeLog + minLog)*mmAxis, false);
             movable.moveTo(startMoveLocation);
             Location nominalStepLocation = displacedAxisLocation(movable, axis, location, stepPos*mmAxis, false);
             movable.moveTo(nominalStepLocation);
@@ -764,7 +773,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             Length absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
             double absoluteErrUnits = absoluteErr.convertToUnits(axis.getUnits()).getValue();
             stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
-            .recordDataPoint(1+(step-1)*fraction, absoluteErrUnits);
+            .recordDataPoint(2+(step-1)*fraction, absoluteErrUnits);
         }
         // Publish the graphs.
         axis.setStepTestGraph(stepTestGraph);
@@ -819,7 +828,6 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     private void calibrateNozzleOffsets(ReferenceHead head, ReferenceCamera defaultCamera, ReferenceNozzle nozzle)
             throws Exception {
-        Location restoreLocation = nozzle.getLocation();
         try {
             // Create a pseudo part, package and feeder to enable pick and place.
             Part testPart = new Part("TEST-OBJECT");
@@ -833,7 +841,6 @@ public class CalibrationSolutions implements Solutions.Subject {
             Location location = machine.getVisionSolutions()
                     .centerInOnSubjectLocation(defaultCamera, defaultCamera,
                             head.getCalibrationTestObjectDiameter(), "Nozzle Offset Calibration", false);
-            restoreLocation = location;
             // We accumulate all the detected differences and only calculate the centroid in the end. 
             int accumulated = 0;
             Location offsetsDiff = new Location(LengthUnit.Millimeters);
@@ -884,9 +891,9 @@ public class CalibrationSolutions implements Solutions.Subject {
             if (nozzle.getPart() != null) {
                 nozzle.place();
             }
-            // Move nozzle over restore location at safe Z and with zero rotation.
-            MovableUtils.moveToLocationAtSafeZ(nozzle, restoreLocation
-                    .derive(null, null, nozzle.getSafeZ().convertToUnits(restoreLocation.getUnits()).getValue(), 0.0));
+            // Move nozzle to safe Z and with zero rotation to avoid any confusion as to the calibrated offsets.
+            MovableUtils.moveToLocationAtSafeZ(nozzle, nozzle.getLocation()
+                    .deriveLengths(null, null, nozzle.getSafeZ(), 0.0));
         }
     }
 }
