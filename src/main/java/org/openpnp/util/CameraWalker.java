@@ -227,6 +227,7 @@ public class CameraWalker {
     }
 
     /**
+     * Gets the HeadMountable that will move during the walk
      * @return the movable
      */
     public HeadMountable getMovable() {
@@ -234,21 +235,23 @@ public class CameraWalker {
     }
 
     /**
-     * @param movable the movable to set
+     * Sets the HeadMountable that will do the moving
+     * @param movable - the nozzle or camera that will do the moving
      */
     public void setMovable(HeadMountable movable) {
         this.movable = movable;
     }
 
     /**
-     * @return the signedUnitsPerPixelX
+     * Gets the signed units per pixel for the X direction
+     * @return the signedUnitsPerPixelX in millimeters per pixel
      */
     public Double getSignedUnitsPerPixelX() {
         return xScaling;
     }
 
     /**
-     * @param signedUnitsPerPixelX the signedUnitsPerPixelX to set
+     * @param signedUnitsPerPixelX the signedUnitsPerPixelX in millimeters per pixel
      */
     public void setSignedUnitsPerPixelX(Double signedUnitsPerPixelX) {
         this.xScaling = signedUnitsPerPixelX;

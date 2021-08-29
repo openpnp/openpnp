@@ -812,6 +812,12 @@ public class CalibrationSolutions implements Solutions.Subject {
         }
         else {
             axesLocation = axesLocation.add(new AxesLocation(axis, displacement));
+            if (axesLocation.getLengthCoordinate(axis).compareTo(axis.getSoftLimitLow()) < 0) {
+                axesLocation = new AxesLocation(axis, axis.getSoftLimitLow());
+            }
+            if (axesLocation.getLengthCoordinate(axis).compareTo(axis.getSoftLimitHigh()) > 0) {
+                axesLocation = new AxesLocation(axis, axis.getSoftLimitHigh());
+            }
         }
         Location newLocation = movable.toTransformed(axesLocation);
         newLocation = movable.toHeadMountableLocation(newLocation);

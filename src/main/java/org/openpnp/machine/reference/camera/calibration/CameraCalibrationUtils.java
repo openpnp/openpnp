@@ -19,7 +19,6 @@
 
 package org.openpnp.machine.reference.camera.calibration;
 
-import java.awt.Component;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,8 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.math3.distribution.NormalDistribution;
-import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresFactory;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer.Optimum;
@@ -41,7 +38,6 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.optim.ConvergenceChecker;
 import org.apache.commons.math3.optim.SimpleVectorValueChecker;
-import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest;
 import org.apache.commons.math3.util.Pair;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
@@ -56,8 +52,6 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Subdiv2D;
-import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.support.MessageBoxes;
 import org.pmw.tinylog.Logger;
 
 /**
@@ -263,7 +257,7 @@ public class CameraCalibrationUtils {
             }
             catch (TooManyEvaluationsException e) {
                 throw(new Exception("Camera model failed to converge. Try increasing "
-                        + "the Points Per Cal Z."));
+                        + "the number of Radial Lines Per Cal Z."));
             }
             Logger.trace("rms error = " + optimum.getRMS());
             Logger.trace("number of evaluations = " + optimum.getEvaluations());
@@ -310,6 +304,9 @@ public class CameraCalibrationUtils {
             ans.setEntry(1, ans.getEntry(0));
         }
 
+        System.arraycopy(ans.toArray(), 0, parameters, 0, numberOfParameters);
+
+        //Evaluate the model at all points using the best set of camera parameters
         CalibrationModel model = new CalibrationModel(testPattern3dPoints, null, flags);
         RealVector vectModeledImagePoints = model.value(ans).getFirst();
         int iPoint = 0;
@@ -322,8 +319,6 @@ public class CameraCalibrationUtils {
                 iPoint++;
             }
         }
-
-        System.arraycopy(ans.toArray(), 0, parameters, 0, numberOfParameters);
 
         // return DRMS rather than RMS
         return Math.sqrt(2) * optimum.getRMS();
@@ -820,11 +815,10 @@ public class CameraCalibrationUtils {
                 vectorFromVirCamToPhyCamInMachRefFrame, 0,
                 vectorFromVirCamToPhyCamInVirCamRefFrame);
 
-        // A set of normalized physical camera points is chosen, the quantity and the specific
-        // points
-        // are not important although at least four of the points need to form a quadrilateral. Note
-        // that because these are normalized coordinates, the Z coordinate of all points is assumed
-        // to be 1
+        // A set of normalized physical camera points is chosen, the quantity and the specific 
+        // points are not important although at least four of the points need to form a 
+        // quadrilateral. Note that because these are normalized coordinates, the Z coordinate of 
+        // all points is assumed to be 1
         MatOfPoint2f cameraPoints = new MatOfPoint2f();
         cameraPoints.push_back(new MatOfPoint2f(new Point(0, 0)));
         cameraPoints.push_back(new MatOfPoint2f(new Point(-100, -100)));
@@ -836,8 +830,7 @@ public class CameraCalibrationUtils {
 
         // For each of the normalized physical camera points, compute its normalized coordinates in
         // the virtual camera's coordinate system by projecting the point onto the defaultZ plane
-        // and
-        // then normalizing the vector from the virtual camera to the point
+        // and then normalizing the vector from the virtual camera to the point
         for (int i = 0; i < cameraPoints.rows(); i++) {
             // The normalized physical camera point is designated as point PPrime
             Mat vectorFromPhyCamToPPrimeInPhyCamRefFrame = Mat.ones(3, 1, CvType.CV_64FC1); // Z = 1
@@ -952,7 +945,7 @@ public class CameraCalibrationUtils {
 
     /**
      * Computes the virtual camera matrix. This is similar to openCV's getOptimalNewCameraMatrix
-     * except that it also takes into account any image rectification.
+     * except that it also takes into account image rectification.
      * 
      * @param physicalCameraMatrix - the physical camera's intrinsic matrix
      * @param distortionCoefficients - the physical camera's lens distortion coefficients
@@ -1088,9 +1081,8 @@ public class CameraCalibrationUtils {
         // Now find the inscribed rectangle (of the correct aspect ratio) that just fits within the
         // undistorted image. This corresponds to the edge of the image for alpha = 0. If the
         // principal point was specified, the center of the rectangle is placed at that point and
-        // the
-        // rectangle is sized so that it just touches the edge of the undistorted image nearest to
-        // the center; otherwise, the center of the rectangle is placed such that the inscribed
+        // the rectangle is sized so that it just touches the edge of the undistorted image nearest 
+        // to the center; otherwise, the center of the rectangle is placed such that the inscribed
         // rectangle is as large as possible but is still within the bounds of the undistorted
         // image.
         double innerMinX = Double.NEGATIVE_INFINITY;
@@ -1278,33 +1270,48 @@ public class CameraCalibrationUtils {
 
     public static List<double[]> computeResidualErrors(double[][][] actual2DPoints,
             double[][][] modeled2DPoints) {
-        return computeResidualErrors(actual2DPoints, modeled2DPoints, null);
+        return computeResidualErrors(actual2DPoints, modeled2DPoints, null, null);
+    }
+
+    public static List<double[]> computeResidualErrors(double[][][] actual2DPoints,
+            double[][][] modeled2DPoints, ArrayList<Integer> outlierList) {
+        return computeResidualErrors(actual2DPoints, modeled2DPoints, null, outlierList);
     }
 
     public static List<double[]> computeResidualErrors(double[][][] actual2DPoints,
             double[][][] modeled2DPoints, Integer heightIndex) {
+        return computeResidualErrors(actual2DPoints, modeled2DPoints, heightIndex, null);
+    }
+
+    public static List<double[]> computeResidualErrors(double[][][] actual2DPoints,
+            double[][][] modeled2DPoints, Integer heightIndex, ArrayList<Integer> outlierList) {
+        if (outlierList == null) {
+            outlierList = new ArrayList<Integer>();
+        }
+        Logger.trace("outlierList = " + outlierList);
         List<double[]> retList = new ArrayList<>();
+        int iPoint = 0;
         for (int i = 0; i < actual2DPoints.length; i++) {
-            if (heightIndex == null || heightIndex == i) {
-                for (int j = 0; j < actual2DPoints[i].length; j++) {
+            for (int j = 0; j < actual2DPoints[i].length; j++) {
+                if ((heightIndex == null || heightIndex == i) && !outlierList.contains(iPoint)) {
                     double[] error = new double[2];
                     for (int k = 0; k < 2; k++) {
                         error[k] = actual2DPoints[i][j][k] - modeled2DPoints[i][j][k];
                     }
                     retList.add(error);
                 }
+                iPoint++;
             }
         }
         return retList;
     }
 
-    public static double computeRmsError(List<double[]> residuals) {
-        int n = 2 * residuals.size();
+    public static double computeDrmsError(List<double[]> residuals) {
         double sumOfSquares = 0;
         for (double[] residual : residuals) {
             sumOfSquares += residual[0] * residual[0] + residual[1] * residual[1];
         }
-        return Math.sqrt(sumOfSquares / n);
+        return Math.sqrt(sumOfSquares / residuals.size());
     }
 
     public static Mat generateErrorImage(Size size, int testPatternIndex,
@@ -1323,7 +1330,7 @@ public class CameraCalibrationUtils {
             for (int j = 0; j < actual2DPoints[i].length; j++) {
                 if ((i == testPatternIndex) && !outlierList.contains(iPoint)) {
                     double[] errXY = residualList.get(iPoint);
-                    double error = Math.sqrt(errXY[0] * errXY[0] + errXY[1] * errXY[1]);
+                    double error = Math.hypot(errXY[0], errXY[1]);
                     maxError = Math.max(maxError, error);
                     try {
                         int id = subdiv2D.insert(

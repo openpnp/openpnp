@@ -22,8 +22,6 @@ package org.openpnp.machine.reference.camera.calibration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.TreeSet;
-
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -34,11 +32,10 @@ import org.opencv.core.Point;
 import org.opencv.core.Point3;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Part;
+import org.openpnp.vision.pipeline.CvPipeline;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -53,9 +50,19 @@ public class AdvancedCalibration extends LensCalibrationParams {
     @Attribute(required = false)
     private Boolean valid = false;
     
-    @Element(required = false)
-    private String calibrationRigId = "";
+    @Attribute(required = false)
+    private Boolean dataAvailable = false;
     
+    @Element(required = false)
+    private CvPipeline pipeline = new CvPipeline(
+            "<cv-pipeline>" +
+                "<stages>" +
+                    "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"image\" enabled=\"true\" default-light=\"true\" settle-first=\"true\" count=\"3\"/>" +
+                    "<cv-stage class=\"org.openpnp.vision.pipeline.stages.DetectCircularSymmetry\" name=\"detect_circle\" enabled=\"true\" min-diameter=\"18\" max-diameter=\"25\" max-distance=\"100\" search-width=\"0\" search-height=\"0\" max-target-count=\"1\" min-symmetry=\"1.2\" corr-symmetry=\"0.0\" property-name=\"DetectCircularSymmetry\" outer-margin=\"0.1\" inner-margin=\"0.1\" sub-sampling=\"8\" super-sampling=\"8\" diagnostics=\"false\" heat-map=\"false\"/>" +
+                    "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertModelToKeyPoints\" name=\"results\" enabled=\"true\" model-stage-name=\"detect_circle\"/>" +
+                "</stages>" +
+             "</cv-pipeline>");
+
     @Element(name = "virtualCameraMatrix", required = false)
     private double[] virtualCameraMatrixArr = new double[9];
 
@@ -78,15 +85,12 @@ public class AdvancedCalibration extends LensCalibrationParams {
     
     @ElementArray(required = false)
     private double[][][] savedTestPattern3dPointsList = new double[0][0][0];
-//            {{{Double.NaN, Double.NaN, Double.NaN}},{{Double.NaN, Double.NaN, Double.NaN}}};
     
     @ElementArray(required = false)
     private double[][][] savedTestPatternImagePointsList = new double[0][0][0]; 
-//            {{{Double.NaN, Double.NaN}},{{Double.NaN, Double.NaN}}};
     
     @ElementArray(required = false)
     private double[][][] modeledTestPatternImagePointsList = new double[0][0][0]; 
-//            {{{Double.NaN, Double.NaN}},{{Double.NaN, Double.NaN}}};
     
     @ElementArray(required = false)
     private Integer[] outlierPoints = new Integer[0];
@@ -104,7 +108,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private double rmsError = 0;
     
     @Attribute(required = false)
-    private int desiredPointsPerTestPattern = 169;
+    private int desiredRadialLinesPerTestPattern = 32;
     
     @Attribute(required = false)
     private double testPatternFillFraction = 0.90;
@@ -112,19 +116,10 @@ public class AdvancedCalibration extends LensCalibrationParams {
     @Attribute(required = false)
     private double walkingLoopGain = 0.50;
     
-    @Attribute(required = false)
-    private int fiducialDiameter = 50;
-    
     @Element(required = false)
     private Location trialStep = new Location(LengthUnit.Millimeters, -0.5, 0.5, 0, 0);
 
-    @Attribute(required = false)
-    private boolean calibrationFiducialsFixed = false;
 
-    @Attribute(required = false)
-    private boolean usingCalibrationRig = true;
-    
-    private Part calibrationRig;
     private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
     private Mat rectificationMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
     private Mat vectorFromMachToPhyCamInMachRefFrame = 
@@ -138,14 +133,12 @@ public class AdvancedCalibration extends LensCalibrationParams {
 
     private ArrayList<Integer> outlierPointList = new ArrayList<Integer>();
 
-
-
-
+    private int fiducialDiameter;
+    
     
     @Commit 
     public void commit() {
         super.commit();
-        calibrationRig = Configuration.get().getPart(calibrationRigId);
         virtualCameraMatrix.put(0, 0, virtualCameraMatrixArr);
         rectificationMatrix.put(0, 0, rectificationMatrixArr);
         vectorFromMachToPhyCamInMachRefFrame.put(0, 0, vectorFromMachToPhyCamInMachRefFrameArr);
@@ -172,6 +165,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
                     }
                 }
                 savedTestPattern3dPointsList = temp;
+                dataAvailable = true;
             }
         }
 
@@ -276,6 +270,22 @@ public class AdvancedCalibration extends LensCalibrationParams {
     }
 
     /**
+     * @return the dataAvailable
+     */
+    public Boolean isDataAvailable() {
+        return dataAvailable;
+    }
+
+    /**
+     * @param dataAvailable the dataAvailable to set
+     */
+    public void setDataAvailable(Boolean dataAvailable) {
+        Boolean oldSetting = this.dataAvailable;
+        this.dataAvailable = dataAvailable;
+        firePropertyChange("dataAvailable", oldSetting, dataAvailable);
+    }
+
+    /**
      * @return the savedTestPatternImagePointsList
      */
     public double[][][] getSavedTestPatternImagePointsList() {
@@ -318,17 +328,17 @@ public class AdvancedCalibration extends LensCalibrationParams {
     }
 
     /**
-     * @return the outlierPoints
+     * @return the outlierPointList
      */
-    public ArrayList<Integer> getOutlierPoints() {
-        return new ArrayList<Integer>(Arrays.asList(outlierPoints));
+    public ArrayList<Integer> getOutlierPointList() {
+        return outlierPointList; //new ArrayList<Integer>(Arrays.asList(outlierPoints));
     }
 
     /**
-     * @param outlierPoints the outlierPoints to set
+     * @param outlierPointList the outlierPointList to set
      */
-    public void setOutlierPoints(ArrayList<Integer> outlierPoints) {
-        this.outlierPoints = outlierPoints.toArray(new Integer[0]);
+    public void setOutlierPoints(ArrayList<Integer> outlierPointList) {
+        this.outlierPointList = outlierPointList;
     }
 
     /**
@@ -346,33 +356,17 @@ public class AdvancedCalibration extends LensCalibrationParams {
     }
 
     /**
-     * @return the calibrationRig
+     * @return the pipeline
      */
-    public Part getCalibrationRig() {
-        return calibrationRig;
+    public CvPipeline getPipeline() {
+        return pipeline;
     }
 
     /**
-     * @param calibrationRig the calibrationRig to set
+     * @param pipeline the pipeline to set
      */
-    public void setCalibrationRig(Part calibrationRig) {
-        this.calibrationRig = calibrationRig;
-        calibrationRigId = calibrationRig.getId();
-    }
-
-    /**
-     * @return the calibrationRigId
-     */
-    public String getCalibrationRigId() {
-        return calibrationRigId;
-    }
-
-    /**
-     * @param calibrationRigId the calibrationRigId to set
-     */
-    public void setCalibrationRigId(String calibrationRigId) {
-        this.calibrationRigId = calibrationRigId;
-        calibrationRig = Configuration.get().getPart(calibrationRigId);
+    public void setPipeline(CvPipeline pipeline) {
+        this.pipeline = pipeline;
     }
 
     /**
@@ -540,17 +534,17 @@ public class AdvancedCalibration extends LensCalibrationParams {
     }
 
     /**
-     * @return the desiredPointsPerTestPattern
+     * @return the desiredRadialLinesPerTestPattern
      */
-    public int getDesiredPointsPerTestPattern() {
-        return desiredPointsPerTestPattern;
+    public int getDesiredRadialLinesPerTestPattern() {
+        return desiredRadialLinesPerTestPattern;
     }
 
     /**
-     * @param desiredPointsPerTestPattern the desiredPointsPerTestPattern to set
+     * @param desiredRadialLinesPerTestPattern the desiredRadialLinesPerTestPattern to set
      */
-    public void setDesiredPointsPerTestPattern(int desiredPointsPerTestPattern) {
-        this.desiredPointsPerTestPattern = desiredPointsPerTestPattern;
+    public void setDesiredRadialLinesPerTestPattern(int desiredRadialLinesPerTestPattern) {
+        this.desiredRadialLinesPerTestPattern = desiredRadialLinesPerTestPattern;
     }
 
     /**
@@ -592,7 +586,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
      * @param fiducialDiameter the fiducialDiameter to set
      */
     public void setFiducialDiameter(int fiducialDiameter) {
+        int oldSetting = this.fiducialDiameter;
         this.fiducialDiameter = fiducialDiameter;
+        firePropertyChange("fiducialDiameter", oldSetting, fiducialDiameter);
     }
 
     /**
@@ -1061,20 +1057,4 @@ public class AdvancedCalibration extends LensCalibrationParams {
         return new Length(distance, LengthUnit.Millimeters).convertToUnits(zHeight.getUnits());
     }
 
-    public boolean isCalibrationFiducialsFixed() {
-        return calibrationFiducialsFixed;
-    }
-    
-    public void setCalibrationFiducialsFixed(boolean calibrationFiducialsFixed) {
-        this.calibrationFiducialsFixed = calibrationFiducialsFixed;
-    }
-
-    public boolean isUsingCalibrationRig() {
-        return usingCalibrationRig;
-    }
-    
-    public void setUsingCalibrationRig(boolean usingCalibrationRig) {
-        this.usingCalibrationRig = usingCalibrationRig;
-    }
-    
 }

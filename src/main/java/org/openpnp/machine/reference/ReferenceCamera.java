@@ -295,15 +295,17 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Head head = getHead();
             if (head == null) {
                 //For fixed cameras, the head offset is the horizontal location of the 
-                //associated virtual camera and the vertical location of its default Z
+                //associated virtual camera and the vertical location set by auto focus
+                Location uncalibratedHeadOffsets = getUncalibratedHeadOffsets().convertToUnits(LengthUnit.Millimeters);
                 return new Location(LengthUnit.Millimeters, 
                         advancedCalibration.getVectorFromMachToVirCamInMachRefFrame().get(0, 0)[0],
                         advancedCalibration.getVectorFromMachToVirCamInMachRefFrame().get(1, 0)[0],
-                        defaultZ.convertToUnits(LengthUnit.Millimeters).getValue(), 0);
+                        uncalibratedHeadOffsets.getZ(), 0);
             }
             else {
                 //For movable cameras, the head offset is the location of the associated virtual
-                //camera relative to the default camera's associated virtual camera
+                //camera relative to the default camera's associated virtual camera plus the default
+                //camera's uncalibrated head offset (which is usually zero)
                 ReferenceCamera defaultCamera = null;
                 try {
                     defaultCamera = (ReferenceCamera)head.getDefaultCamera();
@@ -317,16 +319,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 }
                 if (defaultCamera != null && defaultCamera.getAdvancedCalibration().isValid()) {
                     AdvancedCalibration defCameraAdvCal = defaultCamera.getAdvancedCalibration();
-                    Mat VectorFromMachToDefaultVirCamInMachRefFrame = defCameraAdvCal.
-                            getVectorFromMachToVirCamInMachRefFrame();
+                    Location defCameraUncalibratedHeadOffsets = defaultCamera.
+                            getUncalibratedHeadOffsets().convertToUnits(LengthUnit.Millimeters);
                     Mat VectorFromDefaultVirCamToVirCamInMachRefFrame = new Mat();
                     Core.subtract(advancedCalibration.getVectorFromMachToVirCamInMachRefFrame(), 
-                            VectorFromMachToDefaultVirCamInMachRefFrame, 
+                            defCameraAdvCal.getVectorFromMachToVirCamInMachRefFrame(), 
                             VectorFromDefaultVirCamToVirCamInMachRefFrame);
                     Location offset = new Location(LengthUnit.Millimeters,
-                            VectorFromDefaultVirCamToVirCamInMachRefFrame.get(0, 0)[0], 
-                            VectorFromDefaultVirCamToVirCamInMachRefFrame.get(1, 0)[0], 
-                            VectorFromDefaultVirCamToVirCamInMachRefFrame.get(2, 0)[0],
+                            VectorFromDefaultVirCamToVirCamInMachRefFrame.get(0, 0)[0] + 
+                                defCameraUncalibratedHeadOffsets.getX(), 
+                            VectorFromDefaultVirCamToVirCamInMachRefFrame.get(1, 0)[0] + 
+                                defCameraUncalibratedHeadOffsets.getY(), 
+                            VectorFromDefaultVirCamToVirCamInMachRefFrame.get(2, 0)[0] + 
+                                defCameraUncalibratedHeadOffsets.getZ(),
                             0);
                     VectorFromDefaultVirCamToVirCamInMachRefFrame.release();
                     return offset;
@@ -342,6 +347,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         viewHasChanged();
     }
 
+    public Location getUncalibratedHeadOffsets() {
+        return headOffsets;
+    }
+    
     @Override
     public void home() throws Exception {
     }
@@ -550,14 +559,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Override
     public Location getUnitsPerPixel(Length viewingPlaneZ) {
-        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
-            double upp = 0;
-            if (advancedCalibration.isValid()) {
-                upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
+        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
+                advancedCalibration.isValid()) {
+            double upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
                         convertToUnits(LengthUnit.Millimeters).getValue() / 
                         advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
-                upp = Double.isFinite(upp) ? upp : 0;
-            }
+            upp = Double.isFinite(upp) ? upp : 0;
             return new Location(LengthUnit.Millimeters, upp, upp, 0, 0);
         }
         return super.getUnitsPerPixel(viewingPlaneZ);
