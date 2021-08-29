@@ -63,15 +63,6 @@ public class CameraViewPopupMenu extends JPopupMenu {
         // For cameras that have been calibrated at two different heights, add menu options to reset
         // the viewing plane and for estimating an object's height
         if (cameraView.isViewingPlaneChangable()) {
-            JMenuItem mntmResetReticleHeight = new JMenuItem("Reset Viewing Plane Z to Default");
-            mntmResetReticleHeight.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    cameraView.resetViewingPlaneZ();
-                }
-            });
-            add(mntmResetReticleHeight);
-
             JMenuItem mntmEstimateZCoordinate = new JMenuItem("Estimate Z Coordinate of Object");
             mntmEstimateZCoordinate.addActionListener(estimateZCoordinateAction);
             add(mntmEstimateZCoordinate);

@@ -295,6 +295,10 @@ public class ReferenceFiducialLocator implements FiducialLocator {
      * @throws Exception
      */
     public Location getHomeFiducialLocation(Location location, Part part) throws Exception {
+        // Because the homing fiducial must by definition be at default Z, we supply it here,
+        // so the 3D units per pixel scaling will be correct. 
+        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+        location = location.deriveLengths(null, null, camera.getDefaultZ(), null);
         return getFiducialLocation(location, part);
     }
 

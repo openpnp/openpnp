@@ -26,6 +26,7 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
@@ -107,6 +108,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     private JTabbedPane configurationPanel;
     private int priorRowIndex = -1;
     private String priorFeederId;
+    private HashMap<Class, Integer> lastSelectedTabIndex = new HashMap<>();
     
     public FeedersPanel(Configuration configuration, MainFrame mainFrame) {
         this.configuration = configuration;
@@ -246,7 +248,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 if (e.getValueIsAdjusting()) {
                     return;
                 }
-                
                 List<Feeder> selections = getSelections();
                 if (selections.size() == 0) {
                     singleSelectActionGroup.setEnabled(false);
@@ -262,14 +263,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 }
 
                 if (table.getSelectedRow() != priorRowIndex) {
-                	if (keepUnAppliedFeederConfigurationChanges()) {
+                    if (keepUnAppliedFeederConfigurationChanges()) {
                         table.setRowSelectionInterval(priorRowIndex, priorRowIndex);
                         return;
-					}
+                    }
                     priorRowIndex = table.getSelectedRow();
-                    
+
                     Feeder feeder = getSelection();
-                    
+
                     configurationPanel.removeAll();
                     if (feeder != null) {
                         priorFeederId = feeder.getId();
@@ -282,11 +283,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                             }
                             configurationPanel.addTab(ps.getPropertySheetTitle(), panel);
                         }
+                        // Re-select the last selected tab of that feeder class. 
+                        if (lastSelectedTabIndex.get(feeder.getClass()) != null) {
+                            configurationPanel.setSelectedIndex(Math.max(0, Math.min(configurationPanel.getTabCount()-1, 
+                                    lastSelectedTabIndex.get(feeder.getClass()))));
+                        }
                     }
-                    
+
                     revalidate();
                     repaint();
-                    
+
                     Configuration.get().getBus().post(new FeederSelectedEvent(feeder, FeedersPanel.this));
                 }
             }
@@ -303,9 +309,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         table.setComponentPopupMenu(popupMenu);
     }
-    
+
     private boolean keepUnAppliedFeederConfigurationChanges() {
         Feeder priorFeeder = configuration.getMachine().getFeeder(priorFeederId);
+        if (priorFeeder != null) {
+            // Btw., remember the tab that was selected for this feeder class.
+            lastSelectedTabIndex.put(priorFeeder.getClass(), configurationPanel.getSelectedIndex());
+        }
         boolean feederConfigurationIsDirty = false;
         for (Component component : configurationPanel.getComponents()) {
             if(component instanceof AbstractConfigurationWizard) {
@@ -324,7 +334,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     null
                     );
             switch (selection) {
-				case JOptionPane.YES_OPTION:
+                case JOptionPane.YES_OPTION:
                     for (Component component : configurationPanel.getComponents()) {
                         if(component instanceof AbstractConfigurationWizard) {
                             AbstractConfigurationWizard wizard = (AbstractConfigurationWizard) component;
@@ -333,18 +343,18 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                             }
                         }
                     }
-				    return false;
-				case JOptionPane.NO_OPTION:
-					return false;
-				case JOptionPane.CANCEL_OPTION:
-				default:
-					return true;
-			}
+                    return false;
+                case JOptionPane.NO_OPTION:
+                    return false;
+                case JOptionPane.CANCEL_OPTION:
+                default:
+                    return true;
+            }
         } else {
             return false;
         }
     }
-    
+
     @Subscribe
     public void feederSelected(FeederSelectedEvent event) {
         if (event.source == this) {

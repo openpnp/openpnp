@@ -53,11 +53,15 @@ public class MovableUtils {
         hm.moveTo(location);
     }
 
-    public static void fireTargetedUserAction(HeadMountable hm) {
+    public static void fireTargetedUserAction(HeadMountable hm, boolean jogging) {
         Machine machine = Configuration.get().getMachine();
         if (machine instanceof AbstractMachine) {
-            ((AbstractMachine)machine).fireMachineTargetedUserAction(hm);
+            ((AbstractMachine)machine).fireMachineTargetedUserAction(hm, jogging);
         }
+    }
+
+    public static void fireTargetedUserAction(HeadMountable hm) {
+        fireTargetedUserAction(hm, false);
     }
 
     public static boolean isInSafeZZone(HeadMountable hm) {

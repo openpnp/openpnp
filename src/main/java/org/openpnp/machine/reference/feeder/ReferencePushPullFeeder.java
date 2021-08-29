@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.swing.Action;
 
@@ -63,6 +64,7 @@ import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OcrUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.Utils2D;
@@ -217,7 +219,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     private double calibrationToleranceMm = 1.95;
     // vision and comparison sprocket hole tolerance (in size, position)
     @Attribute(required = false)
-    private double sprocketHoleToleranceMm = 0.4;
+    private double sprocketHoleToleranceMm = 0.6;
     // for rows of feeders, the tolerance in X, Y
     @Attribute(required = false)
     private double rowLocationToleranceMm = 4.0; 
@@ -242,6 +244,18 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
      * is. Subtracting these offsets from the pickLocation produces the correct pick location.
      */
     protected Location visionOffset;
+
+    public enum CalibrationTrigger {
+        None,
+        OnFirstUse,
+        UntilConfident,
+        OnEachTapeFeed
+    }
+
+    @Attribute(required = false)
+    protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.UntilConfident;
+
+    private boolean partsMayContainSpaces = false;
 
     public static final Location nullLocation = new Location(LengthUnit.Millimeters);
 
@@ -284,17 +298,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 .getDefaultHead()
                 .getDefaultCamera();
     }
-
-
-    public enum CalibrationTrigger {
-        None,
-        OnFirstUse,
-        UntilConfident,
-        OnEachTapeFeed
-    }
-
-    @Attribute(required = false)
-    protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.UntilConfident;
 
     public void assertCalibrated(boolean tapeFeed) throws Exception {
         if (getHole1Location().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(getHole2Location()) < 3) {
@@ -344,7 +347,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         if (actuatorName == null || actuatorName.isEmpty()) {
             throw new Exception(String.format("No actuator name set on feeder %s.", getName()));
         }
-
 
         Head head = nozzle.getHead();
         Actuator actuator = head.getActuatorByName(actuatorName);
@@ -447,6 +449,17 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         setFeedCount(getFeedCount()+1);
     }
 
+    public void ensureCameraZ(Camera camera) throws Exception {
+        if (camera.isUnitsPerPixelAtZCalibrated()
+                && !getLocation().getLengthZ().isInitialized()) {
+            throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first.");
+        }
+        if (getLocation().getLengthZ().isInitialized()) {
+            // If we already have the Feeder Z, move the camera there to get the right units per pixel.
+            camera.moveTo(camera.getLocation().deriveLengths(null, null, getLocation().getLengthZ(), null));
+        }
+    }
+
     private void obtainCalibratedVisionOffset() throws Exception {
         Camera camera = getCamera();
         try (CvPipeline pipeline = getCvPipeline(camera, true, false, false)) {
@@ -500,7 +513,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public void setSnapToAxis(boolean snapToAxis) {
-        Object oldValue = this.normalizePickLocation;
+        Object oldValue = this.snapToAxis;
         this.snapToAxis = snapToAxis;
         firePropertyChange("snapToAxis", oldValue, snapToAxis);
     }
@@ -1089,7 +1102,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             return visionOffset;
         }
         else {
-            return nullLocation;
+            return Location.origin;
         }
     }
 
@@ -1106,12 +1119,19 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public Location getNominalVisionLocation() throws Exception {
-        if (hole1Location.equals(nullLocation) || hole2Location.equals(nullLocation)) {
+        if (!(hole1Location.isInitialized() && hole2Location.isInitialized())) {
             // not yet initialized, just return the current camera location
             return getCamera().getLocation();
         }
         else {
-            return getHole1Location().add(getHole2Location()).multiply(0.5, 0.5, 0.0, 0.0);
+            if (getCamera().isUnitsPerPixelAtZCalibrated()) {
+                if (!getLocation().getLengthZ().isInitialized()) {
+                    throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first.");
+                }
+            }
+            return getHole1Location().add(getHole2Location()).multiply(0.5)
+                    .deriveLengths(null, null, getLocation().getLengthZ(), 
+                            getLocation().getRotation()+getRotationInFeeder());
         }
     }
 
@@ -1119,7 +1139,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         pipeline.setProperty("regionOfInterest", getOcrRegion());
         pipeline.setProperty("fontName", getOcrFontName());
         pipeline.setProperty("fontSizePt", getOcrFontSizePt());
-        pipeline.setProperty("alphabet", getConsolidatedOcrAlphabet(null));
+        pipeline.setProperty("alphabet", OcrUtils.getConsolidatedPartsAlphabet(null, "\\"));
     }
 
     protected void setupOcr(Camera camera, CvPipeline pipeline) {
@@ -1145,9 +1165,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             Length range;
             if (autoSetup) { 
                 // Auto-Setup: search Range is half camera. 
+                Location upp = camera.getUnitsPerPixelAtZ();
                 range = camera.getWidth() > camera.getHeight() ? 
-                        camera.getUnitsPerPixel().getLengthY().multiply(camera.getHeight()/2)
-                        : camera.getUnitsPerPixel().getLengthX().multiply(camera.getWidth()/2);
+                        upp.getLengthY().multiply(camera.getHeight()/2)
+                        : upp.getLengthX().multiply(camera.getWidth()/2);
             }
             else {
                 // Normal mode: search range is half the distance between the holes plus one pitch. 
@@ -1184,25 +1205,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public enum FindFeaturesMode {
         FromPickLocationGetHoles,
         CalibrateHoles
-    }
-
-    protected String getConsolidatedOcrAlphabet(Part compatiblePart) {
-        // from all the compatible parts in the system, create the alphabet for OCR operation
-        Set<Character> characterSet = new HashSet<>(); 
-        for (Part part : Configuration.get().getParts()) {
-            if (compatiblePart == null || compatiblePartPackages(part, compatiblePart)) {
-                for (char ch : part.getId().toCharArray()) {
-                    characterSet.add(ch);
-                }
-            }
-        }
-        StringBuilder alphabet = new StringBuilder();
-        for (char ch : characterSet) {
-            if (ch != ' ') {
-                alphabet.append(ch);
-            }
-        }
-        return alphabet.toString();
     }
 
     public class FindFeatures {
@@ -1282,7 +1284,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             double fontScale = 1.0;
             Size size = Imgproc.getTextSize(String.valueOf(getPartsPerFeedCycle()), 
                     Imgproc.FONT_HERSHEY_PLAIN, fontScale, 2, baseLine);
-            Location textSizeMm = camera.getUnitsPerPixel().multiply(size.width, size.height, 0., 0.)
+            Location textSizeMm = camera.getUnitsPerPixelAtZ().multiply(size.width, size.height, 0., 0.)
                     .convertToUnits(LengthUnit.Millimeters);
             if (textSizeMm.getY() < 0.0) {
                 textSizeMm = textSizeMm.multiply(1.0, -1.0, 0.0, 0.0);
@@ -1292,7 +1294,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 fontScale = minFontSizeMm / textSizeMm.getY();
                 textSizeMm = textSizeMm.multiply(fontScale, fontScale, 0.0, 0.0);
             }
-            double textSizePitchCount = textSizeMm.getLinearDistanceTo(nullLocation)/feederPocketPitchMm;
+            double textSizePitchCount = textSizeMm.getLinearDistanceTo(Location.origin)/feederPocketPitchMm;
             int step;
             if (textSizePitchCount < 0.75) {
                 step = 1;
@@ -1367,7 +1369,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             List resultsList = null; 
             try {
                 // in accordance with EIA-481 etc. we use all millimeters.
-                Location mmScale = camera.getUnitsPerPixel().convertToUnits(LengthUnit.Millimeters);
+                Location mmScale = camera.getUnitsPerPixelAtZ()
+                        .convertToUnits(LengthUnit.Millimeters);
                 // reset the features
                 holes = new ArrayList<>();
                 lines = new ArrayList<>();
@@ -1411,8 +1414,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             results.add(new Result.Circle(keyPoint.pt.x, keyPoint.pt.y, sprocketHoleDiameterPx));
                         }
                     }
-
-
 
                     // collect the circles into a list of points
                     List<Point> points = new ArrayList<>();
@@ -1572,7 +1573,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             calibratedVisionOffset = getLocation()
                                     .subtractWithRotation(calibratedPickLocation)
                                     .derive(null, null, 0.0, null);
-                            Logger.debug("[ReferencePushPullFeeder] calibrated vision offset is: " + calibratedVisionOffset + ", length is: "+calibratedVisionOffset.getLinearLengthTo(nullLocation));
+                            Logger.debug("calibrated vision offset is: " + calibratedVisionOffset 
+                                    + ", length is: "+calibratedVisionOffset.getLinearLengthTo(Location.origin));
 
                             // Add tick marks for show
                             if (calibratedPickLocation != null) {
@@ -1585,7 +1587,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                                 a = VisionUtils.getLocationPixels(camera, calibratedPickLocation.subtract(bestUnitVector));
                                 b = VisionUtils.getLocationPixels(camera, calibratedPickLocation.add(bestUnitVector));
                                 lines.add(new Ransac.Line(new Point(a.x, a.y), new Point(b.x, b.y)));
-                                Logger.debug("[ReferencePushPullFeeder] calibrated pick location is: " + calibratedPickLocation);
+                                Logger.debug("calibrated pick location is: " + calibratedPickLocation);
                             }
                         }
                     }
@@ -1623,6 +1625,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public void showFeatures() throws Exception {
         Camera camera = getCamera();
+        ensureCameraZ(camera);
         try (CvPipeline pipeline = getCvPipeline(camera, true, true, true)) {
 
             // Process vision and show feature without applying anything
@@ -1635,13 +1638,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Camera camera = getCamera();
         // First preliminary smart clone to get a pipeline from the most suitable template.
         if (getTemplateFeeder(null) != null) {
-            smartClone(null, false, false, false, true);
+            smartClone(null, true, false, false, true);
         }
         if (calibrationTrigger == CalibrationTrigger.None) {
             // Just assume the user wants it now 
             setCalibrationTrigger(CalibrationTrigger.UntilConfident);
         }
 
+        ensureCameraZ(camera);
         try (CvPipeline pipeline = getCvPipeline(camera, true, true, true)) {
             // Process vision and get some features 
             pipeline.process();
@@ -1968,7 +1972,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     protected static Location relocatedLocation(Location location, Location oldTransform, Location newTransform) {
-        if (location.equals(nullLocation)) {
+        if (!location.isInitialized()) {
             // a location with all zeroes is assumed as uninitialized 
             return location;
         }
@@ -2032,38 +2036,22 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             return; 
         }
 
-        // get first part of OCR Text as the part id
-        String ocrText = ocrModel.getText();
-        String partId = ocrText;
-        int pos = partId.indexOf('\n');
-        if (pos >= 0) {
-            partId = partId.substring(0, pos);
-        }                
-        pos = partId.indexOf(' ');
-        if (pos >= 0) {
-            partId = partId.substring(0, pos);
-        }
-        Configuration cfg = Configuration.get();
-        Part ocrPart = cfg.getPart(partId);
-        if (ocrPart == null) {
-            throw new Exception("OCR could not identify/find part id in feeder "+getName()
-            +", OCR detected part id "+partId+" (avg. score="+ocrModel.getAvgScore()+")");
-        }
+        Part ocrPart = OcrUtils.identifyDetectedPart(ocrModel, this);
         Part currentPart = getPart();
         if (currentPart == null) {
             // No part set yet 
-            Logger.trace("[ReferencePushPullFeeder] OCR detected part in feeder "+getId()+", OCR part "+ocrPart.getId());
+            Logger.trace("OCR detected part in feeder "+getId()+", OCR part "+ocrPart.getId());
             setOcrDetectedPart(ocrPart, true);
         }
         else if (ocrPart != null && ocrPart != currentPart) {
             // Wrong part selected in feeder
-            Logger.trace("[ReferencePushPullFeeder] OCR detected wrong part in slot of feeder "+getName()
+            Logger.trace("OCR detected wrong part in slot of feeder "+getName()
             +", current part "+currentPart.getId()+" != OCR part "+ocrPart.getId());
             ReferencePushPullFeeder otherFeeder = null;
             for (ReferencePushPullFeeder feeder : getAllPushPullFeeders()) {
                 if (feeder.getPart() == ocrPart) {
                     otherFeeder = feeder;
-                    Logger.trace("[ReferencePushPullFeeder] other feeder "+feeder.getName()
+                    Logger.trace("other feeder "+feeder.getName()
                     +" has OCR detected part "+ocrPart.getId());
                     break;
                 }
@@ -2074,6 +2062,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     +" is not present in any other feeder. Cannot swap out feeders.");
                 }
                 swapOutFeeders(otherFeeder);
+                otherFeeder.setEnabled(true);
             }
             if (ocrAction == OcrWrongPartAction.SwapOrCreate) {
                 if (otherFeeder == null) {
@@ -2282,6 +2271,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Location runningHole2Location = getHole2Location();
         Location runningPickLocation = getLocation();
         Location runningVisionOffset = getVisionOffset();
+        ensureCameraZ(camera);
         // Calibrate the exact hole locations by obtaining a mid-point lock on them,
         // assuming that any camera lens and Z parallax distortion is symmetric.
         for (int i = 0; i < calibrateMaxPasses; i++) {
@@ -2289,7 +2279,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             Location midPoint = runningHole1Location.add(runningHole2Location).multiply(0.5, 0.5, 0, 0)
                     .derive(camera.getLocation(), false, false, true, false)
                     .derive(null, null, null, runningPickLocation.getRotation()+getRotationInFeeder());
-            Logger.debug("[ReferencePushPullFeeder] calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
+            Logger.debug("calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
             MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
             // setup OCR if wanted
             boolean ocrPass = (i == 0 && ocrAction != OcrWrongPartAction.None && getOcrRegion() != null);
@@ -2310,7 +2300,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             Location uncalibratedPick1Location = getPickLocation(1, runningVisionOffset);
             Location calibratedPick1Location = getPickLocation(1, feature.calibratedVisionOffset);
             Length error = calibratedPick1Location.getLinearLengthTo(uncalibratedPick1Location);
-            Logger.trace("[ReferencePushPullFeeder] new vision offset "+feature.calibratedVisionOffset
+            Logger.trace("new vision offset "+feature.calibratedVisionOffset
                     +" vs. previous vision offset "+runningVisionOffset+" results in error "+error+" at the (farthest) pick location");
             // store data if requested
             if (storeHoles) {
@@ -2331,7 +2321,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 setVisionOffset(feature.calibratedVisionOffset);
             }
             if (ocrPass) {
-                Logger.trace("[ReferencePushPullFeeder] got OCR text "+feature.detectedOcrModel.getText());
+                Logger.trace("got OCR text "+feature.detectedOcrModel.getText());
                 triggerOcrAction(feature.detectedOcrModel, ocrAction, ocrStop, report);
             }
             // is it good enough? Compare with running offset.

@@ -277,7 +277,7 @@ public class FluentCv {
     public FluentCv convertCirclesToLocations(List<Location> locations) {
         checkCamera();
         Location unitsPerPixel =
-                camera.getUnitsPerPixel().convertToUnits(camera.getLocation().getUnits());
+                camera.getUnitsPerPixelAtZ().convertToUnits(camera.getLocation().getUnits());
         double avgUnitsPerPixel = (unitsPerPixel.getX() + unitsPerPixel.getY()) / 2;
 
         for (int i = 0; i < mat.cols(); i++) {

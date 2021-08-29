@@ -29,6 +29,8 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
+import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
@@ -180,13 +182,12 @@ public class ReadPartTemplateImage extends CvStage {
                     // TODO: it would be best if we could define a package outline, e.g. as a
                     // polygon
                     // and use that to draw the part and match templates
-                    if (part.getPackage()
-                              .getFootprint() != null) {
-                        width = part.getPackage()
-                                      .getFootprint()
+                    Footprint footprint = part.getPackage()
+                                  .getFootprint();
+                    if (footprint != null) {
+                        width = footprint
                                       .getBodyWidth();
-                        height = part.getPackage()
-                                       .getFootprint()
+                        height = footprint
                                        .getBodyHeight();
                         if (width == 0 || height == 0) {
                             if (log) {
@@ -203,10 +204,9 @@ public class ReadPartTemplateImage extends CvStage {
                         }
                         // get length conversion value from camera
                         Camera camera = (Camera) pipeline.getProperty("camera");
-                        width /= camera.getUnitsPerPixel()
-                                       .getX();
-                        height /= camera.getUnitsPerPixel()
-                                        .getY();
+                        Location upp = camera.getUnitsPerPixelAtZ().convertToUnits(footprint.getUnits());
+                        width /= upp.getX();
+                        height /= upp.getY();
                         // create a white rect image as the template
                         Mat templateImage = new Mat((int) height, (int) width, CvType.CV_8UC3);
                         templateImage.setTo(new Scalar(255, 255, 255));

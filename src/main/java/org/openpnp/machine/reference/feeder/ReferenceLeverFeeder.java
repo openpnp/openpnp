@@ -44,7 +44,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider;
-import org.openpnp.util.Utils2D;
+import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -225,11 +225,9 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
             throw new Exception("Area of Interest is required when vision is enabled.");
         }
 
-        head.moveToSafeZ();
-
         // Position the camera over the pick location.
         Logger.debug("Move camera to pick location.");
-        camera.moveTo(pickLocation);
+        MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
 
         // Move the camera to be in focus over the pick location.
         // head.moveTo(head.getX(), head.getY(), z, head.getC());
@@ -279,7 +277,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
         Logger.debug("negated offsetX {}, offsetY {}", offsetX, offsetY);
 
         // And convert pixels to units
-        Location unitsPerPixel = camera.getUnitsPerPixel();
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         offsetX *= unitsPerPixel.getX();
         offsetY *= unitsPerPixel.getY();
 

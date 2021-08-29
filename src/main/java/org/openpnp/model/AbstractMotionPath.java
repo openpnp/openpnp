@@ -103,7 +103,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
         double [] junctionCosineFromPrev = new double[size];
         int [] colinearWithPrev = new int[size];
         boolean[] simplified = new boolean[size];
-
+        MotionProfile [] prevProfiles0 = null;
         for (int i = 0; i <= last; i++) {
             MotionProfile [] profiles = get(i);
             if (profiles.length == 0) {
@@ -121,8 +121,12 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
             if (i > 0) {
                 junctionCosineFromPrev[i] = MotionProfile.dotProduct(unitVector[i-1], unitVector[i]);
                 colinearWithPrev[i] = 0;
-                if (leadAxis[i] == leadAxis[i-1]
-                        && simplified[i] == simplified[i-1]) {
+                int lead = leadAxis[i];
+                if (lead == leadAxis[i-1]
+                        && simplified[i] == simplified[i-1]
+                                && (Math.abs(profiles[lead].getVelocityMax() - prevProfiles0[lead].getVelocityMax()) < MotionProfile.vtol) 
+                                && (Math.abs(profiles[lead].getEntryAccelerationMax() - prevProfiles0[lead].getEntryAccelerationMax()) < MotionProfile.atol) 
+                                && (Math.abs(profiles[lead].getExitAccelerationMax() - prevProfiles0[lead].getExitAccelerationMax()) < MotionProfile.atol) ) {
                     colinearWithPrev[i] = ((junctionCosineFromPrev[i] >= 1.0 - MotionProfile.eps) ? 1 
                             : (junctionCosineFromPrev[i] <= -1.0 + MotionProfile.eps) ? -1 
                                     : 0);
@@ -148,6 +152,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
             for (int axis = 0; axis < profiles.length; axis++) {
                 profiles[axis].initialTime = profiles[axis].time; 
             }
+            prevProfiles0 = profiles;
         }
         int dimensions = unitVector[0].length;
 
@@ -174,19 +179,6 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
                         MotionProfile [] seqProfiles = get(j);
                         if (!(MotionProfile.isCoordinated(seqProfiles) && colinearWithPrev[j] == 1)) {
                             // Sequence ended.
-                            break;
-                        }
-                        // Check that constraints are the same (lame).
-                        if (Math.abs(solverProfile.getVelocityMax() - seqProfiles[lead].getVelocityMax()) > MotionProfile.vtol) {
-                            // Can only combine when the same limit.
-                            break;
-                        }
-                        if (Math.abs(solverProfile.getEntryAccelerationMax() - seqProfiles[lead].getEntryAccelerationMax()) > MotionProfile.atol) {
-                            // Can only combine when the same limit.
-                            break;
-                        }
-                        if (Math.abs(solverProfile.getExitAccelerationMax() - seqProfiles[lead].getExitAccelerationMax()) > MotionProfile.atol) {
-                            // Can only combine when the same limit.
                             break;
                         }
                         // Extend to include this move.

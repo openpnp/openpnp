@@ -110,7 +110,7 @@ public class OpenCvUtils {
                 new Object[] {camera.getName(), minDiameter, maxDiameter, minDistance});
 
         // convert inputs to the same units
-        Location unitsPerPixel = camera.getUnitsPerPixel();
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         minDiameter = minDiameter.convertToUnits(unitsPerPixel.getUnits());
         maxDiameter = maxDiameter.convertToUnits(unitsPerPixel.getUnits());
         minDistance = minDistance.convertToUnits(unitsPerPixel.getUnits());
@@ -278,7 +278,7 @@ public class OpenCvUtils {
     public static BufferedImage createFootprintTemplate(Camera camera, Footprint footprint, double rotation,
             boolean topView, Color padsColor, Color bodyColor, Color backgroundColor, double marginFactor, int minimumMarginSize)
                     throws Exception {
-        Location unitsPerPixel = camera.getUnitsPerPixel();
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
 
         Shape shape = footprint.getShape();
         Shape bodyShape = footprint.getBodyShape();

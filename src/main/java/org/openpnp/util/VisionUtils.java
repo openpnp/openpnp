@@ -58,11 +58,11 @@ public class VisionUtils {
         double offsetY = (imageHeight / 2) - y;
 
         // And convert pixels to units
-        Location unitsPerPixel = camera.getUnitsPerPixel();
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         offsetX *= unitsPerPixel.getX();
         offsetY *= unitsPerPixel.getY();
 
-        return new Location(camera.getUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
+        return new Location(unitsPerPixel.getUnits(), offsetX, offsetY, 0, 0);
     }
 
     /**
@@ -134,7 +134,7 @@ public class VisionUtils {
     
     public static double toPixels(Length length, Camera camera) {
         // convert inputs to the same units
-        Location unitsPerPixel = camera.getUnitsPerPixel();
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         length = length.convertToUnits(unitsPerPixel.getUnits());
 
         // we average the units per pixel because circles can't be ovals
@@ -200,7 +200,7 @@ public class VisionUtils {
      */
     public static Point getLocationPixelCenterOffsets(Camera camera, HeadMountable tool, Location location) {
         // get the units per pixel scale 
-        Location unitsPerPixel = camera.getUnitsPerPixel();
+        Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         // convert inputs to the same units, center on camera and scale
         location = location.convertToUnits(unitsPerPixel.getUnits())
                 .subtract(camera.getLocation(tool))
