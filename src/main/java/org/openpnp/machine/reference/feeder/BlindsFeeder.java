@@ -1117,6 +1117,9 @@ public class BlindsFeeder extends ReferenceFeeder {
             BlindsFeeder.FindFeatures findFeaturesResults = new FindFeatures(camera, pipeline, 1000).invoke();
 
             OcrModel detectedOcrModel = findFeaturesResults.detectedOcrModel;
+            if (detectedOcrModel == null) {
+                throw new Exception("Feeder "+getName()+" is missing an \"OCR\" stage in the pipeline.");
+            }
             Logger.trace("OCR text "+detectedOcrModel.getText());
             triggerOcrAction(detectedOcrModel, ocrAction);
         }
@@ -1493,7 +1496,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 }
             }
             // None could be loaded.
-            throw new Exception("BlindsFeeder: No empty Nozzle/NozzleTip found that allows pushing.");
+            throw new Exception("BlindsFeeder: No Nozzle/NozzleTip found that allows pushing and has no part loaded.");
         }
         // None compatible.
         return new NozzleAndTipForPushing(null, null, false);
@@ -1502,9 +1505,9 @@ public class BlindsFeeder extends ReferenceFeeder {
 
     @Override
     public Location getJobPreparationLocation() {
-        if (getOcrAction() != OcrAction.None
-                || (getCoverActuation() == CoverActuation.OpenOnJobStart
-                && ! isCoverOpen())) {
+        if ((getOcrAction() != OcrAction.None
+                || getCoverActuation() == CoverActuation.OpenOnJobStart)
+                && ! isCoverOpen()) {
             return getUncalibratedPickLocation(0);
         }
         else {
@@ -1550,10 +1553,9 @@ public class BlindsFeeder extends ReferenceFeeder {
                 // the pre-flight check might now have become invalid.
                 // Report all the changed parts.
                 StringBuilder msg = new StringBuilder();
-                msg.append("OCR changed parts:");
+                msg.append("OCR changed parts: ");
                 for (BlindsFeeder feeder : getAllBlindsFeeders()) {
                     if (feeder.ocrChangedPartId != null) {
-                        msg.append("\n");
                         msg.append(feeder.getClass().getSimpleName());
                         msg.append(" ");
                         msg.append(feeder.getName());
@@ -1561,10 +1563,11 @@ public class BlindsFeeder extends ReferenceFeeder {
                         msg.append(ocrChangedPartId);
                         msg.append(" changed to ");
                         msg.append(feeder.getPart().getId());
+                        msg.append(". ");
                         feeder.ocrChangedPartId = null;
                     }
                 }
-                msg.append("\nPlease review.");
+                msg.append("Please review.");
                 throw new Exception(msg.toString());
             }
         }
