@@ -61,6 +61,8 @@ The two images are both compared, and the better match tells OpenPnP if the slot
 
 ![Found occupied](https://user-images.githubusercontent.com/9963310/113589665-f00ed580-9631-11eb-9522-272dbf86ee64.png)
 
+Note: with the CP40 black nozzle tips, the difference between empty and occupied is slight. I had mis-detects on one nozzle tip that was still pristine and black i.e. it was mistaken as empty. Slightly scraping off the blackening on the top rim helped. 
+
 ## Cloning Settings
 
 ![Cloning Settings](https://user-images.githubusercontent.com/9963310/113582934-49bed200-9629-11eb-9340-fa6b391f77dd.png)
