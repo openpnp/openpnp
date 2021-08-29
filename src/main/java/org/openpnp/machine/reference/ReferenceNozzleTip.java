@@ -1174,13 +1174,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                         Imgproc.matchTemplate(cameraCropMat, templateMatEmpty, resultEmptyMat,
                                 Imgproc.TM_CCOEFF_NORMED);
                         MinMaxLocResult emptyMatch = Core.minMaxLoc(resultEmptyMat);
-                        emptyMatch.maxLoc.x -= resultEmptyMat.cols()/2;
-                        emptyMatch.maxLoc.y -= resultEmptyMat.rows()/2;
+                        emptyMatch.maxLoc.x = emptyMatch.maxLoc.x - resultEmptyMat.cols()/2;
+                        emptyMatch.maxLoc.y = resultEmptyMat.rows()/2 - emptyMatch.maxLoc.y;
                         Imgproc.matchTemplate(cameraCropMat, templateMatOccupied, resultOccupiedMat,
                                 Imgproc.TM_CCOEFF_NORMED);
                         MinMaxLocResult occupiedMatch = Core.minMaxLoc(resultOccupiedMat);
-                        occupiedMatch.maxLoc.x -= resultOccupiedMat.cols()/2.;
-                        occupiedMatch.maxLoc.y -= resultOccupiedMat.rows()/2.;
+                        occupiedMatch.maxLoc.x = occupiedMatch.maxLoc.x - resultOccupiedMat.cols()/2.;
+                        occupiedMatch.maxLoc.y = resultOccupiedMat.rows()/2. - occupiedMatch.maxLoc.y;
                         if (LogUtils.isDebugEnabled()) {
                             File file;
                             file = Configuration.get().createResourceFile(getClass(), "match-empty", ".png");
