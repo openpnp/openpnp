@@ -48,6 +48,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.OcrUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -57,7 +58,15 @@ import org.openpnp.vision.pipeline.Stage;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
-@Stage(description="A very simple OCR stage that returns a (multi-line) text string. <br/>"
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.NotFoundException;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.common.HybridBinarizer;
+
+@Stage(description="A very simple OCR/Barcode stage that returns a (multi-line) text string. <br/>"
         + "Use an AffineWarp stage to extract the region of interest first (for cropping, rotation and acceptable speed).<br/>"
         + "It is also recommended to convert the image to grayscale first. Do not apply a threshold stage.")
 public class SimpleOcr extends CvStage {
@@ -67,7 +76,8 @@ public class SimpleOcr extends CvStage {
     private String alphabet = "0123456789.-+_RCLDQYXJIVAFH%GMKkmuµnp";
 
     @Attribute
-    @Property(description = "Name of the font to be recognized. Monospace fonts work much better and allow lower resolution. "
+    @Property(description = "Name of the font to be recognized or "+OcrUtils.BARCODE_PSEUDO_FONT+".<br/>"
+            + "Monospace fonts work much better and allow lower resolution. "
             + "Use a font where all the used characters are easily distinguishable. Fonts with clear separation between characters "
             + "are preferred.")
     private String fontName = "Liberation Mono";
@@ -247,6 +257,8 @@ public class SimpleOcr extends CvStage {
             alphabet = getAlphabet();
         }
         if (alphabet == null || alphabet.isEmpty()) {
+            // Note: a given empty alphabet is also the signal to conditionally disable the stage
+            // from the calling OpenPnP vision code.
             return null;
         }
         String fontName = (String)pipeline.getProperty("fontName");
@@ -256,6 +268,11 @@ public class SimpleOcr extends CvStage {
         if (fontName == null || fontName.isEmpty()) {
             return null;
         }
+
+        if (fontName.equals(OcrUtils.BARCODE_PSEUDO_FONT)) {
+            return decodeBarcode(pipeline);
+        }
+
         Double fontSizePt = (Double)pipeline.getProperty("fontSizePt");
         if (fontSizePt == null) {
             fontSizePt = getFontSizePt();
@@ -636,5 +653,28 @@ public class SimpleOcr extends CvStage {
 
         // deliver the goods 
         return new Result(textImage, new OcrModel(text.toString(), numChars, overallScore));
+    }
+
+    private Result decodeBarcode(CvPipeline pipeline) {
+        Mat workingImage = pipeline.getWorkingImage();
+        BufferedImage image = OpenCvUtils.toBufferedImage(workingImage);
+        BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(
+                new BufferedImageLuminanceSource(image)));
+        Mat resultImage = workingImage;
+        try {
+            BitMatrix blackMatrix = binaryBitmap.getBlackMatrix();
+            BufferedImage binaryImage = MatrixToImageWriter.toBufferedImage(blackMatrix);
+            resultImage = OpenCvUtils.toMat(binaryImage);
+            com.google.zxing.Result qrCodeResult = new MultiFormatReader().decode(binaryBitmap);
+            String text = qrCodeResult.getText();
+            OcrModel model = new OcrModel(text, text.length(), text.length());
+            return new Result(resultImage, model);    
+        }
+        catch (NotFoundException e) {
+            return new Result(resultImage, new OcrModel("", 0, 0.0));
+        }
+        catch (Exception e) {
+            return new Result(resultImage, e);
+        }
     }
 }

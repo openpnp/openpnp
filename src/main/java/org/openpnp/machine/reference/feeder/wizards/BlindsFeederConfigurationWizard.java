@@ -22,31 +22,21 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.PrintWriter;
-import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
-import org.apache.commons.io.IOUtils;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
-import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Helpers;
@@ -57,6 +47,7 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
+import org.openpnp.machine.reference.feeder.BlindsFeeder.OcrAction;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -65,9 +56,6 @@ import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.UiUtils;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -78,90 +66,42 @@ import com.jgoodies.forms.layout.RowSpec;
 public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard {
     private final BlindsFeeder feeder;
 
-    private JPanel panelPart;
-    private JTextField textFieldPartZ;
-
-    private JComboBox comboBoxPart;
-    private JTextField textFieldFiducial1X;
-    private JTextField textFieldFiducial1Y;
-    private JTextField textFieldFiducial2X;
-    private JTextField textFieldFiducial2Y;
-    private JTextField textFieldFiducial3X;
-    private JTextField textFieldFiducial3Y;
-    private JLabel lblFeederNo;
-    private JTextField textFieldFeederNo;
-    private JLabel lblFeedersTotal;
-    private JTextField textFieldFeedersTotal;
-    private JLabel lblNormalize;
-    private JCheckBox chckbxNormalize;
-    private JLabel lblPocketPitch;
-    private JTextField textFieldPocketPitch;
-    private JPanel panelTapeSettings;
-    private JPanel panelLocations;
-    private LocationButtonsPanel locationButtonsPanelFiducial1;
-    private LocationButtonsPanel locationButtonsPanelFiducial2;
-    private LocationButtonsPanel locationButtonsPanelFiducial3;
-    private JLabel lblFeedCount;
-    private JTextField textFieldFeedCount;
-    private JButton btnResetFeedCount;
-    private JLabel lblRotationInTape;
-    private JTextField textFieldLocationRotation;
-    private JButton btnAutoSetup;
-    private JCheckBox chckbxUseVision;
-    private JLabel lblUseVision;
-    private JLabel lblPart;
-    private JLabel lblRetryCount;
-    private JTextField retryCountTf;
-    private JLabel lblFiducial3Location;
-    private JLabel lblTapeLength;
-    private JTextField textFieldTapeLength;
-    private JLabel lblPartSize;
-    private JTextField textFieldPocketSize;
-    private JLabel lblPocketCenterline;
-    private JTextField textFieldPocketCenterline;
-    private JLabel lblBlindsFeederGroupName;
-    private JComboBox comboBoxBlindsFeederName;
-
-
     public BlindsFeederConfigurationWizard(BlindsFeeder feeder) {
         this.feeder = feeder;
 
         panelPart = new JPanel();
-        panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
-                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelPart.setBorder(new TitledBorder(null,
+                "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null,
+                new Color(0, 0, 0)));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
-        try {
-        }
-        catch (Throwable t) {
-            // Swallow this error. This happens during parsing in
-            // in WindowBuilder but doesn't happen during normal run.
-        }
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblPart = new JLabel("Part");
         panelPart.add(lblPart, "2, 2, right, default");
@@ -169,9 +109,12 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         comboBoxPart = new JComboBox();
         comboBoxPart.setModel(new PartsComboBoxModel());
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        panelPart.add(comboBoxPart, "4, 2, 13, 1, left, default");
+        panelPart.add(comboBoxPart, "4, 2, 7, 1, left, default");
+        
+        btnOcrDetect = new JButton(performOcrAction);
+        panelPart.add(btnOcrDetect, "14, 2");
 
-        lblRotationInTape = new JLabel("Rotation In Tape");
+        lblRotationInTape = new JLabel("Rotation in Tape");
         lblRotationInTape.setToolTipText("<html><p>The part rotation in relation to the tape orientation. </p>\r\n<ul><li>What is 0° <strong>for the rotation of the part</strong> is determined by how the part footprint<br />\r\nis drawn in your ECAD. However look up \"Zero Component Orientation\" for the <br />\r\nstandardized way to do this. </li>\r\n<li>What is 0° <strong>for the rotation of the tape</strong> is defined in accordance to the <br />\r\nEIA-481-C \"Quadrant designations\".</li>\r\n<li>Consequently a <strong>Rotation In Tape</strong> of 0° means that the part is oriented upwards as <br />\r\ndrawn in the ECAD, when holding the tape horizontal with the sprocket holes <br/>\r\nat the top. If the tape has sprocket holes on both sides, look at the round, not <br/>\r\nthe elongated holes.</li>\r\n<li>Also consult \"EIA-481-C\" to see how parts should be oriented in the tape.</li></html>\r\n");
         panelPart.add(lblRotationInTape, "2, 4, right, default");
 
@@ -189,10 +132,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         btnCaptureToolZ = new JButton(captureToolCoordinatesAction);
         btnCaptureToolZ.setHideActionText(true);
-        panelPart.add(btnCaptureToolZ, "12, 4, left, default");
-
-        btnExtractOpenscadModel = new JButton(extract3DPrintingAction);
-        panelPart.add(btnExtractOpenscadModel, "16, 4");
+        panelPart.add(btnCaptureToolZ, "14, 4, left, default");
 
         lblRetryCount = new JLabel("Retry Count");
         panelPart.add(lblRetryCount, "2, 6, right, default");
@@ -204,23 +144,23 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
         panelTapeSettings.setBorder(new TitledBorder(
-                new EtchedBorder(EtchedBorder.LOWERED, null, null), "Tape Settings",
-                TitledBorder.LEADING, TitledBorder.TOP, null));
+                null, "Tape Settings",
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelTapeSettings.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -335,14 +275,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelTapeSettings.add(textFieldFeedCount, "4, 12");
         textFieldFeedCount.setColumns(5);
 
-        lblBlindsFeederGroupName = new JLabel("Feeder Group Name");
-        panelTapeSettings.add(lblBlindsFeederGroupName, "8, 12, right, default");
-        
-        List<String> blindsFeederGroupNames = feeder.getBlindsFeederGroupNames();
-        comboBoxBlindsFeederName = new JComboBox(blindsFeederGroupNames.toArray());
-        comboBoxBlindsFeederName.setEditable(true);
-        panelTapeSettings.add(comboBoxBlindsFeederName, "10, 12, fill, default");
-        
         btnResetFeedCount = new JButton(resetFeedCountAction);
         panelTapeSettings.add(btnResetFeedCount, "14, 12");
 
@@ -352,19 +284,19 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         contentPanel.add(panelCover);
         panelCover.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
@@ -413,14 +345,16 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         panelCover.add(btnCloseThis, "14, 4");
 
         btnOpenAll = new JButton(openAllCovers);
+        btnOpenAll.setText("Open all Covers");
         panelCover.add(btnOpenAll, "14, 6");
 
         btnCloseAll = new JButton(closeAllCovers);
+        btnCloseAll.setText("Close all Covers");
         btnCloseAll.setToolTipText("Close the opened covers of all the feeders of the machine (including those of enabled feeders where the cover state is unknown).");
         panelCover.add(btnCloseAll, "14, 8");
 
         lblEdgeBeginDistance = new JLabel("Edge Distance Open");
-        lblEdgeBeginDistance.setToolTipText("Distance from first sprocket to the edge used for opening the cover (fiducial 1 side).");
+        lblEdgeBeginDistance.setToolTipText("Distance from sprocket to the edge used for opening the cover (default: 2mm).");
         panelCover.add(lblEdgeBeginDistance, "2, 10, right, default");
 
         textFieldEdgeOpeningDistance = new JTextField();
@@ -428,7 +362,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         textFieldEdgeOpeningDistance.setColumns(10);
 
         lblEdgeEnd = new JLabel("Edge Distance Closed");
-        lblEdgeEnd.setToolTipText("Distance from last sprocket to the edge used for closing the cover (fiducial 2 side).");
+        lblEdgeEnd.setToolTipText("Distance from sprocket to the edge used for closing the cover (default: 2mm).");
         panelCover.add(lblEdgeEnd, "8, 10, right, default");
 
         textFieldEdgeClosingDistance = new JTextField();
@@ -437,140 +371,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         btnCalibrateEdges = new JButton(calibrateEdgesAction);
         panelCover.add(btnCalibrateEdges, "14, 10");
-
-        panelLocations = new JPanel();
-        contentPanel.add(panelLocations);
-        panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
-        panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("left:default:grow"),},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
-
-        JLabel lblX = new JLabel("X");
-        panelLocations.add(lblX, "4, 2");
-
-        JLabel lblY = new JLabel("Y");
-        panelLocations.add(lblY, "8, 2");
-
-        JLabel lblFiducial1Location = new JLabel("Fiducial 1");
-        lblFiducial1Location.setToolTipText(
-                "The location of the first diamond shaped fiducial (marked by a square besides it).");
-        panelLocations.add(lblFiducial1Location, "2, 4, right, default");
-
-        textFieldFiducial1X = new JTextField();
-        panelLocations.add(textFieldFiducial1X, "4, 4");
-        textFieldFiducial1X.setColumns(8);
-
-        textFieldFiducial1Y = new JTextField();
-        panelLocations.add(textFieldFiducial1Y, "8, 4");
-        textFieldFiducial1Y.setColumns(8);
-
-
-        locationButtonsPanelFiducial1 = new LocationButtonsPanel(textFieldFiducial1X,
-                textFieldFiducial1Y, null, null);
-        panelLocations.add(locationButtonsPanelFiducial1, "12, 4");
-
-        JLabel lblFiducial2Location = new JLabel("Fiducial 2");
-        lblFiducial2Location.setToolTipText(
-                "The location of the second diamond shaped fiducial counter-clockwise from the first.");
-        panelLocations.add(lblFiducial2Location, "2, 6, right, default");
-
-        textFieldFiducial2X = new JTextField();
-        panelLocations.add(textFieldFiducial2X, "4, 6");
-        textFieldFiducial2X.setColumns(8);
-
-        textFieldFiducial2Y = new JTextField();
-        panelLocations.add(textFieldFiducial2Y, "8, 6");
-        textFieldFiducial2Y.setColumns(8);
-
-
-        locationButtonsPanelFiducial2 = new LocationButtonsPanel(textFieldFiducial2X, 
-                textFieldFiducial2Y, null, null);
-        panelLocations.add(locationButtonsPanelFiducial2, "12, 6");
-
-        lblFiducial3Location = new JLabel("Fiducial 3");
-        lblFiducial3Location.setToolTipText("The location of the third diamond shaped fiducial counter-clockwise from the first.");
-        panelLocations.add(lblFiducial3Location, "2, 8, right, default");
-
-        textFieldFiducial3X = new JTextField();
-        textFieldFiducial3X.setColumns(8);
-        panelLocations.add(textFieldFiducial3X, "4, 8");
-
-        textFieldFiducial3Y = new JTextField();
-        textFieldFiducial3Y.setColumns(8);
-        panelLocations.add(textFieldFiducial3Y, "8, 8");
-
-        locationButtonsPanelFiducial3 = new LocationButtonsPanel(textFieldFiducial3X, 
-                textFieldFiducial3Y, null, null);
-        panelLocations.add(locationButtonsPanelFiducial3, "12, 8");
-
-        lblNormalize = new JLabel("Normalize");
-        lblNormalize.setToolTipText("<html>\r\nNormalize the fiducial distances and shear to the theoretically correct <br />\r\nvalues (whole millimeter square grid). This means you trust the mechanics  <br />\r\nof your machine and of your 3D printer over the computer vision fiducial fixes.  <br />\r\nOverall absolute position and angle are still determined by vision. \r\n</html>");
-        panelLocations.add(lblNormalize, "2, 10, right, default");
-
-        chckbxNormalize = new JCheckBox("");
-        chckbxNormalize.setToolTipText("");
-        panelLocations.add(chckbxNormalize, "4, 10");
-
-        btnCalibrateFiducials = new JButton(calibrateFiducialsAction);
-        panelLocations.add(btnCalibrateFiducials, "12, 10");
-
-        JPanel panelVision = new JPanel();
-        panelVision.setBorder(new TitledBorder(null, "Vision Settings", TitledBorder.LEADING, TitledBorder.TOP,
-                null, null));
-        contentPanel.add(panelVision);
-        panelVision.setLayout(new FormLayout(new ColumnSpec[] {
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
-
-        lblUseVision = new JLabel("Use Fiducial Vision?");
-        lblUseVision.setToolTipText("<html><p>Use vision for fiducial calibration when the feeder is first used. </p>\r\n<p>Even if fiducial vision is disabled, vision will still be used for setup and <br />\r\ncover open checking</p><html>");
-        panelVision.add(lblUseVision, "2, 2");
-
-        JButton btnEditPipeline = new JButton(editPipelineAction);
-
-        chckbxUseVision = new JCheckBox("");
-        panelVision.add(chckbxUseVision, "4, 2");
-        panelVision.add(btnEditPipeline, "2, 4");
-
-        JButton btnResetPipeline = new JButton(resetPipelineAction);
-
-        btnPipelineToAllFeeders = new JButton(setPipelineToAllAction);
-        panelVision.add(btnPipelineToAllFeeders, "4, 4");
-        panelVision.add(btnResetPipeline, "6, 4");
-        initDataBindings();
     }
 
     @Override
@@ -582,6 +382,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
 
         MutableLocationProxy location = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, feeder, "location", location, "location");
+
         addWrappedBinding(location, "rotation", textFieldLocationRotation, "text", doubleConverter);
         addWrappedBinding(location, "lengthZ", textFieldPartZ, "text", lengthConverter);
 
@@ -597,7 +398,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(feeder, "firstPocket", textFieldFirstPocket, "text", intConverter);
         addWrappedBinding(feeder, "lastPocket", textFieldLastPocket, "text", intConverter);
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
-        addWrappedBinding(feeder, "feederGroupName", comboBoxBlindsFeederName, "selectedItem");
 
         addWrappedBinding(feeder, "coverType", comboBoxCoverType, "selectedItem");
         addWrappedBinding(feeder, "coverActuation", comboBoxCoverActuation, "selectedItem");
@@ -606,30 +406,13 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         addWrappedBinding(feeder, "pushSpeed", textFieldPushSpeed, "text", doubleConverter);
         addWrappedBinding(feeder, "pushZOffset", textFieldPushZOffset, "text", lengthConverter);
 
-        MutableLocationProxy fiducial1Location = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, feeder, "fiducial1Location", fiducial1Location, "location");
-        addWrappedBinding(fiducial1Location, "lengthX", textFieldFiducial1X, "text", lengthConverter);
-        addWrappedBinding(fiducial1Location, "lengthY", textFieldFiducial1Y, "text", lengthConverter);
-
-        MutableLocationProxy fiducial2Location = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, feeder, "fiducial2Location", fiducial2Location, "location");
-        addWrappedBinding(fiducial2Location, "lengthX", textFieldFiducial2X, "text", lengthConverter);
-        addWrappedBinding(fiducial2Location, "lengthY", textFieldFiducial2Y, "text", lengthConverter);
-
-        MutableLocationProxy fiducial3Location = new MutableLocationProxy();
-        bind(UpdateStrategy.READ_WRITE, feeder, "fiducial3Location", fiducial3Location, "location");
-        addWrappedBinding(fiducial3Location, "lengthX", textFieldFiducial3X, "text", lengthConverter);
-        addWrappedBinding(fiducial3Location, "lengthY", textFieldFiducial3Y, "text", lengthConverter);
-
-        addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
-        addWrappedBinding(feeder, "normalize", chckbxNormalize, "selected");
-
         addWrappedBinding(feeder, "feederNo", textFieldFeederNo, "text", intConverter);
         addWrappedBinding(feeder, "feedersTotal", textFieldFeedersTotal, "text", intConverter);
 
         ComponentDecorators.decorateWithAutoSelect(textFieldLocationRotation);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartZ);
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldTapeLength);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeederExtent);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPocketCenterline);
@@ -642,57 +425,40 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         //ComponentDecorators.decorateWithAutoSelect(textFieldFirstPocket);
         //ComponentDecorators.decorateWithAutoSelect(textFieldLastPocket);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1X);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial1Y);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial2X);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial2Y);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial3X);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFiducial3Y);
     }
 
     public HeadMountable getTool() throws Exception {
         return MainFrame.get().getMachineControls().getSelectedNozzle();
     }
 
-    private Action extract3DPrintingAction =
-            new AbstractAction("Extract 3D-Printing Files", Icons.openSCadIcon) {
+    private Action performOcrAction =
+            new AbstractAction("OCR Detect") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Extract OpenSCAD files to generate models for 3D-printing the BlindsFeeders.");
+                    "Try to detect and set the part by OCR.");
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(null);
+            UiUtils.submitUiMachineTask(() -> {
+                feeder.performOcr(feeder.getCamera(), OcrAction.ChangePart);
+            });
+        }
+    };
+
+    private Action captureToolCoordinatesAction =
+            new AbstractAction("Get Tool Z", Icons.captureTool) {
+        {
+            putValue(Action.SHORT_DESCRIPTION,
+                    "Capture the Z height that the tool is at.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
             UiUtils.messageBoxOnException(() -> {
-                JFileChooser j = new JFileChooser();
-                //j.setSelectedFile(directory);
-                j.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                j.setMultiSelectionEnabled(false);
-                if (j.showOpenDialog(getTopLevelAncestor()) == JFileChooser.APPROVE_OPTION) {
-                    File directory = j.getSelectedFile();
-                    boolean opended = true;
-                    for (String fileName : new String[] { "BlindsFeeder-Library.scad", "BlindsFeeder-3DPrinting.scad" }) {
-                        String fileContent = IOUtils.toString(BlindsFeeder.class
-                                .getResource(fileName));
-                        File file = new File(directory,  fileName);
-                        if (file.exists()) {
-                            throw new Exception("File "+file.getAbsolutePath()+" already esists.");
-                        }
-                        try (PrintWriter out = new PrintWriter(file.getAbsolutePath())) {
-                            out.print(fileContent);
-                        }
-                        try {
-                            java.awt.Desktop.getDesktop().edit(file);
-                        }
-                        catch (Exception e1) {
-                            Logger.error(e1);
-                            opended = false;
-                        }
-                    }
-                    if (! opended) {
-                        JOptionPane.showMessageDialog(getTopLevelAncestor(), "<html><p>Files extracted to:</p><p>"+directory.getAbsolutePath()+"</p><p>Cannot open with OpenSCAD automatically (Desktop command failed)</p>");
-                    }
-                }
+                Location l = getTool().getLocation();
+                Helpers.copyLocationIntoTextFields(l, null, null, textFieldPartZ, null);
             });
         }
     };
@@ -708,72 +474,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         public void actionPerformed(ActionEvent e) {
             UiUtils.submitUiMachineTask(() -> {
                 feeder.showFeatures();
-            });
-        }
-    };
-
-    private Action calibrateFiducialsAction =
-            new AbstractAction("Calibrate Fiducials") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Calibrate the fiducials to redetermine their precise locations.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            applyAction.actionPerformed(e);
-            calibrateFiducials();
-        }
-    };
-
-    private Action editPipelineAction =
-            new AbstractAction("Edit Pipeline") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Edit the Pipeline to be used for all vision operations of this feeder.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                editPipeline();
-            });
-        }
-    };
-
-    private Action resetPipelineAction =
-            new AbstractAction("Reset Pipeline") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Reset the Pipeline for this feeder to the OpenPNP standard.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                resetPipeline();
-            });
-        }
-    };
-
-    private Action setPipelineToAllAction =
-            new AbstractAction("Set Pipeline To All") {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Set this pipeline to all the BlindsFeeders on the machine.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will replace the pipeline of all the other BlindsFeeders on the machine with the pipeline of this BlindsFeeder. Are you sure?",
-                        null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                if (result == JOptionPane.YES_OPTION) {
-                    UiUtils.messageBoxOnException(() -> {
-                        setPipelineToAllFeeders();
-                    });
-                }
             });
         }
     };
@@ -811,23 +511,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         }
     };
 
-    private Action captureToolCoordinatesAction =
-            new AbstractAction("Get Tool Z", Icons.captureTool) {
-        {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "Capture the Z height that the tool is at.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
-                Location l = getTool().getLocation();
-                Helpers.copyLocationIntoTextFields(l, null, null, textFieldPartZ, null);
-            });
-        }
-    };
-
-
     private Action autoSetup = new AbstractAction("Auto Setup", Icons.captureCamera) {
         {
             putValue(Action.SHORT_DESCRIPTION,
@@ -862,6 +545,7 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
             });
         }
     };
+
     private Action closeCover = new AbstractAction("Close Cover", Icons.lockOutline) {
         {
             putValue(Action.SHORT_DESCRIPTION,
@@ -907,17 +591,39 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
         }
     };
 
-
-    private JLabel lblFeederExtent;
-    private JTextField textFieldFeederExtent;
+    private JLabel lblPart;
+    private JPanel panelPart;
+    private JTextField textFieldPartZ;
+    private JComboBox comboBoxPart;
+    private JLabel lblRotationInTape;
+    private JTextField textFieldLocationRotation;
+    private JLabel lblRetryCount;
+    private JTextField retryCountTf;
     private JLabel lblPartTopZ;
     private JButton btnCaptureToolZ;
-    private JButton btnCalibrateFiducials;
+    private JLabel lblFeederNo;
+    private JTextField textFieldFeederNo;
+    private JLabel lblFeedersTotal;
+    private JTextField textFieldFeedersTotal;
+    private JLabel lblPocketPitch;
+    private JTextField textFieldPocketPitch;
+    private JPanel panelTapeSettings;
+    private JLabel lblFeedCount;
+    private JTextField textFieldFeedCount;
+    private JButton btnResetFeedCount;
+    private JButton btnAutoSetup;
+    private JLabel lblTapeLength;
+    private JTextField textFieldTapeLength;
+    private JLabel lblPartSize;
+    private JTextField textFieldPocketSize;
+    private JLabel lblPocketCenterline;
+    private JTextField textFieldPocketCenterline;
+    private JLabel lblFeederExtent;
+    private JTextField textFieldFeederExtent;
     private JLabel lblPocketCount;
     private JTextField textFieldPocketCount;
     private JTextField textFieldLastPocket;
     private JLabel lblLastPocket;
-    private JButton btnPipelineToAllFeeders;
     private JButton btnOpenCover;
     private JLabel lblEdgeBeginDistance;
     private JTextField textFieldEdgeOpeningDistance;
@@ -939,34 +645,6 @@ public class BlindsFeederConfigurationWizard extends AbstractConfigurationWizard
     private JButton btnShowInfo;
     private JTextField textFieldFirstPocket;
     private JLabel lblFirstPocket;
-    private JButton btnExtractOpenscadModel;
-
-    private void calibrateFiducials() {
-        UiUtils.submitUiMachineTask(() -> {
-            feeder.calibrateFeederLocations();
-        });
-    }
-
-    private void editPipeline() throws Exception {
-        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-        feeder.ensureCameraZ(camera);
-        CvPipeline pipeline = feeder.getCvPipeline(camera, false);
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
-        dialog.setSize(1024, 768);
-        dialog.setVisible(true);
-    }
-
-    private void resetPipeline() {
-        feeder.resetPipeline();
-    }
-
-    private void setPipelineToAllFeeders() throws CloneNotSupportedException {
-        feeder.setPipelineToAllFeeders();
-    }
-    protected void initDataBindings() {
-    }
+    private JButton btnOcrDetect;
 }
 

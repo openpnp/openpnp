@@ -1117,7 +1117,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     }
 
     public void ensureVisionCalibration(boolean nozzleTipChange) throws Exception {
-        Location location = getVisionCalibration().getLocation(this);
+        Location nominalLocation = getVisionCalibration().getLocation(this);
+        Location location = nominalLocation;
         if (location != null) {
             // Adjust Z for proper units per pixel scaling.
             location = location.add(new Location(getVisionCalibrationZAdjust().getUnits(), 
@@ -1184,13 +1185,13 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                         Imgproc.matchTemplate(cameraCropMat, templateMatEmpty, resultEmptyMat,
                                 Imgproc.TM_CCOEFF_NORMED);
                         MinMaxLocResult emptyMatch = Core.minMaxLoc(resultEmptyMat);
-                        emptyMatch.maxLoc.x -= resultEmptyMat.cols()/2;
-                        emptyMatch.maxLoc.y -= resultEmptyMat.rows()/2;
+                        emptyMatch.maxLoc.x = emptyMatch.maxLoc.x - resultEmptyMat.cols()/2;
+                        emptyMatch.maxLoc.y = resultEmptyMat.rows()/2 - emptyMatch.maxLoc.y;
                         Imgproc.matchTemplate(cameraCropMat, templateMatOccupied, resultOccupiedMat,
                                 Imgproc.TM_CCOEFF_NORMED);
                         MinMaxLocResult occupiedMatch = Core.minMaxLoc(resultOccupiedMat);
-                        occupiedMatch.maxLoc.x -= resultOccupiedMat.cols()/2.;
-                        occupiedMatch.maxLoc.y -= resultOccupiedMat.rows()/2.;
+                        occupiedMatch.maxLoc.x = occupiedMatch.maxLoc.x - resultOccupiedMat.cols()/2.;
+                        occupiedMatch.maxLoc.y = resultOccupiedMat.rows()/2. - occupiedMatch.maxLoc.y;
                         if (LogUtils.isDebugEnabled()) {
                             File file;
                             file = Configuration.get().createResourceFile(getClass(), "match-empty", ".png");
@@ -1233,6 +1234,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                                                    .compareTo(visionCalibrationTolerance) < 0) {
                             // Good enough, done.
                             break;
+                        }
+                        if (location.getLinearLengthTo(nominalLocation)
+                                .compareTo(visionTemplateTolerance) > 0) {
+                            // Runaway? 
+                            throw new Exception("Nozzle tip "+getName()+" slot was found too far away.");
                         }
                         // Move to the next iteration location.
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
