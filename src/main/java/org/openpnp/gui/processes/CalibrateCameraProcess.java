@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken@att.net>
+ * Copyright (C) Tony Luken <tonyluken@att.net>
  * 
  * This file is part of OpenPnP.
  * 
@@ -20,7 +20,6 @@
 package org.openpnp.gui.processes;
 
 import java.awt.Color;
-import java.awt.Dialog.ModalityType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
@@ -30,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Future;
-import javax.swing.JDialog;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
@@ -61,8 +59,6 @@ import org.openpnp.util.UiUtils.Thrunnable;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 import org.pmw.tinylog.Logger;
 
 /**
@@ -225,7 +221,7 @@ public abstract class CalibrateCameraProcess {
             showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
                     (int)(centeringDiameterFraction*maskDiameter/2), Color.GREEN);
             
-            setInstructionsAndProceedAction("Jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next to begin the automated calibration sequence.", 
+            setInstructionsAndProceedAction("Jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next when ready to proceed.", 
                     ()->requestOperatorToAdjustDiameterAction(),
                     calibrationHeights.get(calibrationHeightIndex).toString());
         }
@@ -576,7 +572,7 @@ public abstract class CalibrateCameraProcess {
             testPatternZ = calibrationHeights.get(calibrationHeightIndex).
                     convertToUnits(LengthUnit.Millimeters).getValue();
             
-            setInstructionsAndProceedAction("Jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next to begin the automated calibration sequence.", 
+            setInstructionsAndProceedAction("Jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next when ready to proceed.", 
                     ()->requestOperatorToAdjustDiameterAction(),
                     calibrationHeights.get(calibrationHeightIndex).toString()); 
         }
@@ -616,7 +612,7 @@ public abstract class CalibrateCameraProcess {
         showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
                 (int)(centeringDiameterFraction*maskDiameter/2), Color.GREEN);
         
-        setInstructionsAndProceedAction("Jog the nozzle tip so that it is approximately in the center of the green circle. When ready, click Next to lower/raise the nozzle tip to the calibration height.", 
+        setInstructionsAndProceedAction("Using the machine control panel, jog the nozzle tip so that it is approximately in the center of the green circle. When ready, click Next to lower/raise the nozzle tip to the calibration height.", 
                 ()->captureCentralLocationAction());
         return true;
     }
@@ -966,10 +962,6 @@ public abstract class CalibrateCameraProcess {
         this.proceedAction = proceedAction;
     }
     
-    private void setProceedClickAction(Thrunnable proceedFunction) {
-        this.proceedAction = proceedFunction;
-    }
-    
     /**
      * Process Proceed button clicks
      */
@@ -1048,16 +1040,16 @@ public abstract class CalibrateCameraProcess {
                 public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
                     Mat mat = OpenCvUtils.toMat(image);
                     if (point != null) {
-                        double crossSize = Math.min(pixelsX, pixelsY) * 0.05;
-                        org.opencv.core.Point p1 = new org.opencv.core.Point(point.x-crossSize, point.y);
-                        org.opencv.core.Point p2 = new org.opencv.core.Point(point.x+crossSize, point.y);
+                        double pointSize = Math.min(pixelsX, pixelsY) * 0.05;
+                        org.opencv.core.Point p1 = new org.opencv.core.Point(point.x-pointSize, point.y);
+                        org.opencv.core.Point p2 = new org.opencv.core.Point(point.x+pointSize, point.y);
                         Imgproc.line(mat, p1, p2, FluentCv.colorToScalar(pointColor), 1);
-                        p1 = new org.opencv.core.Point(point.x, point.y-crossSize);
-                        p2 = new org.opencv.core.Point(point.x, point.y+crossSize);
+                        p1 = new org.opencv.core.Point(point.x, point.y-pointSize);
+                        p2 = new org.opencv.core.Point(point.x, point.y+pointSize);
                         Imgproc.line(mat, p1, p2, FluentCv.colorToScalar(pointColor), 1);
                     }
                     if (center != null) {
-                        Imgproc.circle(mat, center, radius, FluentCv.colorToScalar(circleColor), 2);
+                        Imgproc.circle(mat, center, radius, FluentCv.colorToScalar(circleColor), 1);
                     }
                     BufferedImage result = OpenCvUtils.toBufferedImage(mat);
                     mat.release();

@@ -792,15 +792,15 @@ public class CameraCalibrationUtils {
      *        components from the machine coordinate system to the virtual camera coordinate system
      * @param vectorFromMachToVirCamInMachRefFrame - the 3x1 vector from the machine origin to the
      *        virtual camera origin with components represented in the machine coordinate system
-     * @param defaultZ - the machine Z coordinate, in millimeters, that is used as the default
+     * @param primaryZ - the machine Z coordinate, in millimeters, that is used as the default
      *        imaging height
      * @return
      */
     public static Mat computeRectificationMatrix(Mat transformFromMachToPhyCamRefFrame,
             Mat vectorFromMachToPhyCamInMachRefFrame, Mat transformFromMachToVirCamRefFrame,
-            Mat vectorFromMachToVirCamInMachRefFrame, double defaultZ) {
+            Mat vectorFromMachToVirCamInMachRefFrame, double primaryZ) {
 
-        double defaultZToPhyCamZ = vectorFromMachToPhyCamInMachRefFrame.get(2, 0)[0] - defaultZ;
+        double primaryZToPhyCamZ = vectorFromMachToPhyCamInMachRefFrame.get(2, 0)[0] - primaryZ;
 
         Mat transformFromPhyCamToVirCamRefFrame = Mat.eye(3, 3, CvType.CV_64FC1);
         Core.gemm(transformFromMachToVirCamRefFrame, transformFromMachToPhyCamRefFrame.t(), 1,
@@ -847,11 +847,11 @@ public class CameraCalibrationUtils {
                     + vectorFromPhyCamToPPrimeInVirCamRefFrame.dump());
 
             // Scale the vector so that its Z component is the height of the physical camera above
-            // defaultZ. This will place the tip of the vector on the defaultZ plane. This point on
-            // the default Z plane is designated as point P.
+            // primary Z. This will place the tip of the vector on the primary Z plane. This point
+            // on the primary Z plane is designated as point P.
             Mat vectorFromPhyCamToPInVirCamRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
             Core.multiply(vectorFromPhyCamToPPrimeInVirCamRefFrame,
-                    new Scalar(defaultZToPhyCamZ
+                    new Scalar(primaryZToPhyCamZ
                             / vectorFromPhyCamToPPrimeInVirCamRefFrame.get(2, 0)[0]),
                     vectorFromPhyCamToPInVirCamRefFrame);
             vectorFromPhyCamToPPrimeInVirCamRefFrame.release();
@@ -965,7 +965,6 @@ public class CameraCalibrationUtils {
     public static Mat computeVirtualCameraMatrix(Mat physicalCameraMatrix,
             Mat distortionCoefficients, Mat rectification, Size size, double alpha,
             Mat principalPoint) {
-        Logger.trace("alpha = " + alpha);
         // Generate a set of points around the outer perimeter of the distorted unrectifed image
         int numberOfPointsPerSide = 250;
         MatOfPoint2f distortedPoints = new MatOfPoint2f();
@@ -1268,27 +1267,62 @@ public class CameraCalibrationUtils {
         return ret;
     }
 
+    /**
+     * Computes the 2D error between the actual image points and the modeled image points
+     * 
+     * @param actual2DPoints - the actual image points
+     * @param modeled2DPoints - the modeled image points
+     * @return the 2D residual errors
+     */
     public static List<double[]> computeResidualErrors(double[][][] actual2DPoints,
             double[][][] modeled2DPoints) {
         return computeResidualErrors(actual2DPoints, modeled2DPoints, null, null);
     }
 
+    /**
+     * Computes the 2D error between the actual image points and the modeled image points
+     * 
+     * @param actual2DPoints - the actual image points
+     * @param modeled2DPoints - the modeled image points
+     * @param outlierList - a list of outlier points to exclude, set to null to not exclude any 
+     * points
+     * @return the 2D residual errors
+     */
     public static List<double[]> computeResidualErrors(double[][][] actual2DPoints,
             double[][][] modeled2DPoints, ArrayList<Integer> outlierList) {
         return computeResidualErrors(actual2DPoints, modeled2DPoints, null, outlierList);
     }
 
+    /**
+     * Computes the 2D error between the actual image points and the modeled image points
+     * 
+     * @param actual2DPoints - the actual image points
+     * @param modeled2DPoints - the modeled image points
+     * @param heightIndex - index to select which calibration height to compute the residual 
+     * errors, set to null to compute over all heights
+     * @return the 2D residual errors
+     */
     public static List<double[]> computeResidualErrors(double[][][] actual2DPoints,
             double[][][] modeled2DPoints, Integer heightIndex) {
         return computeResidualErrors(actual2DPoints, modeled2DPoints, heightIndex, null);
     }
 
+    /**
+     * Computes the 2D error between the actual image points and the modeled image points
+     * 
+     * @param actual2DPoints - the actual image points
+     * @param modeled2DPoints - the modeled image points
+     * @param heightIndex - index to select which calibration height to compute the residual 
+     * errors, set to null to compute over all heights
+     * @param outlierList - a list of outlier points to exclude, set to null to not exclude any 
+     * points
+     * @return the 2D residual errors
+     */
     public static List<double[]> computeResidualErrors(double[][][] actual2DPoints,
             double[][][] modeled2DPoints, Integer heightIndex, ArrayList<Integer> outlierList) {
         if (outlierList == null) {
             outlierList = new ArrayList<Integer>();
         }
-        Logger.trace("outlierList = " + outlierList);
         List<double[]> retList = new ArrayList<>();
         int iPoint = 0;
         for (int i = 0; i < actual2DPoints.length; i++) {
@@ -1306,6 +1340,12 @@ public class CameraCalibrationUtils {
         return retList;
     }
 
+    /**
+     * Computes the Distance Root-Mean-Squared (DRMS) error for a given set of 2D errors
+     *  
+     * @param residuals - the errors
+     * @return the DRMS value of the errors
+     */
     public static double computeDrmsError(List<double[]> residuals) {
         double sumOfSquares = 0;
         for (double[] residual : residuals) {
@@ -1314,12 +1354,28 @@ public class CameraCalibrationUtils {
         return Math.sqrt(sumOfSquares / residuals.size());
     }
 
+    /**
+     * Generates a heat map of the residual errors between the actual image points and the modeled 
+     * image points. The image is scaled so that darkest red indicates the areas of highest error 
+     * and darkest blue zero error.
+     * 
+     * @param size - the image size
+     * @param testPatternIndex - selects which calibration height for which the image is generated
+     * @param actual2DPoints - the actual 2D image points
+     * @param modeled2DPoints - the modeled 2D image points
+     * @param outlierList - a list of outlier points to exclude from the image, set to null to not
+     * exclude any points
+     * @return the heat map of errors
+     */
     public static Mat generateErrorImage(Size size, int testPatternIndex,
             double[][][] actual2DPoints, double[][][] modeled2DPoints,
             ArrayList<Integer> outlierList) {
         if (outlierList == null) {
             outlierList = new ArrayList<Integer>();
         }
+        
+        //Subdivide a rectangular area based on the actual 2D image points and keep track of the 
+        //magnitude of the residual error associated with each point
         Rect rect = new Rect(new Point(0, 0), size);
         Subdiv2D subdiv2D = new Subdiv2D(rect);
         int iPoint = 0;
@@ -1344,8 +1400,9 @@ public class CameraCalibrationUtils {
                 iPoint++;
             }
         }
-        Logger.trace("maxError = " + maxError);
 
+        //Find the Voronoi facet associated with each point and shade it based on the magnitude of 
+        //the residual error for that point 
         Set<Integer> keys = idToErrorMap.keySet();
         Mat grayImage = new Mat((int) size.height, (int) size.width, CvType.CV_8UC1);
         for (int key : keys) {
@@ -1369,12 +1426,16 @@ public class CameraCalibrationUtils {
             facetVertices.release();
         }
 
+        //Smooth the image 
         double kernelSize =
                 1.3 * Math.sqrt(size.height * size.width / actual2DPoints[testPatternIndex].length);
         Imgproc.blur(grayImage, grayImage, new Size(kernelSize, kernelSize));
+        
+        //Apply the TURBO color mapping - 0 : Dark Blue ... 255 : Dark Red
         Mat colorImage = new Mat();
         Imgproc.applyColorMap(grayImage, colorImage, Imgproc.COLORMAP_TURBO);
         grayImage.release();
+        
         return colorImage;
     }
 }

@@ -605,58 +605,32 @@ public class AdvancedCalibration extends LensCalibrationParams {
         this.trialStep = trialStep;
     }
 
-    public void processRawCalibrationData(Size size, Length defaultZ) throws Exception {
+    public void processRawCalibrationData(Size size) throws Exception {
         processRawCalibrationData(savedTestPattern3dPointsList, 
-                savedTestPatternImagePointsList, size, defaultZ);
+                savedTestPatternImagePointsList, size);
     }
     
+    /**
+     * Processes the raw calibration data to set the advanced calibration parameters
+     * 
+     * @param testPattern3dPoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 3 array
+     * containing the 3D machine coordinates at which the corresponding point in 
+     * testPatternImagePoints were collected
+     * @param testPatternImagePoints - a numberOfTestPatterns x numberOfPointsPerTestPattern x 2 
+     * array containing the 2D image coordinates corresponding to the points in testPattern3dPoints
+     * @param size - the size of the image
+     * @throws Exception
+     */
     public void processRawCalibrationData(double[][][] testPattern3dPoints, 
-            double[][][] testPatternImagePoints, Size size, Length defaultZ) throws Exception {
+            double[][][] testPatternImagePoints, Size size) throws Exception {
+        
+        double primaryZ = testPattern3dPoints[0][0][2];
         
         savedTestPattern3dPointsList = testPattern3dPoints;
         savedTestPatternImagePointsList = testPatternImagePoints;
 
         int numberOfTestPatterns = Math.min(testPattern3dPoints.length, 
                 testPatternImagePoints.length);
-        
-        //Setting one or more bits in this bit mapped field will cause the corresponding test
-        //pattern to be skipped.  This is purely for debugging purposes as normally all
-        //collected test patterns should be processed.
-        int testPatternsToSkip = 0; 
-        
-        //Count the number of test patterns to actually use
-        int numberOfTestPatternsToUse = 0;
-        int testBit = 1;
-        for (int i=0; i<numberOfTestPatterns; i++) {
-            if ((testPatternsToSkip & testBit) == 0) {
-                numberOfTestPatternsToUse++;
-            }
-            testBit <<= 1; //shift left
-        }
-        
-        //Copy only those test patterns to use
-        double[][][] testPattern3dPointsToUse = new double[numberOfTestPatternsToUse][][];
-        double[][][] testPatternImagePointsToUse = new double[numberOfTestPatternsToUse][][];
-        double[] testPatternZ = new double[numberOfTestPatternsToUse];
-        testBit = 1;
-        int iTP = 0;
-        for (int i=0; i<numberOfTestPatterns; i++) {
-            if ((testPatternsToSkip & testBit) == 0) {
-                testPattern3dPointsToUse[iTP] = new double[testPattern3dPoints[i].length][];
-                System.arraycopy((Object)testPattern3dPoints[i], 0,
-                        (Object)testPattern3dPointsToUse[iTP], 0, testPattern3dPoints[i].length);
-                testPatternImagePointsToUse[iTP] = new double[testPatternImagePoints[i].length][];
-                System.arraycopy((Object)testPatternImagePoints[i], 0, 
-                        (Object)testPatternImagePointsToUse[iTP], 0, 
-                        testPatternImagePoints[i].length);
-                testPatternZ[iTP] = testPattern3dPoints[i][0][2];
-                iTP++;
-            }
-            testBit <<= 1; //shift left
-        }
-        testPattern3dPoints = testPattern3dPointsToUse;
-        testPatternImagePoints = testPatternImagePointsToUse;
-        numberOfTestPatterns = numberOfTestPatternsToUse;
         
         //Create lists of Mats to pass to Calib3d.calibrateCamera
         //Note that the Z component of all the test patterns is set to zero so the camera
@@ -749,7 +723,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
             Mat vectorFromMachToTestPattInMachRefFrame = Mat.zeros(3, 1,
                     CvType.CV_64FC1);
             vectorFromMachToTestPattInMachRefFrame.put(2, 0, 
-                    testPatternZ[iTestPattern]);
+                    testPattern3dPoints[iTestPattern][0][2]);
             Logger.trace("vectorFromMachToTestPattInMachRefFrame = " + 
                     vectorFromMachToTestPattInMachRefFrame.dump());
             
@@ -799,7 +773,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         //of the rotation vectors should be exactly the same.  But due to the extra degrees of 
         //freedom discussed above, they may not be exactly the same so we need to average them to 
         //get an estimate of the one rotation vector.  However, we can't just average the rotation
-        //vectors (similar problems arise when averaging angles close to +/-180 degrees) so we 
+        //vectors (has similar problems akin to averaging angles close to +/-180 degrees) so we 
         //convert to rotation matrices, sum them, and then use the Kabsch algorithm to find the 
         //average rotation matrix and then convert back to a rotation vector.
         Mat sDiag = new Mat();
@@ -899,13 +873,13 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Logger.trace("X axis rotational error = {} degrees", rotationErrorX);
         
         //Fit a least-squared-error line to the camera positions as a function of Z and use it
-        //to linearly interpolate the camera X/Y position to that at defaultZ.  Note that for
+        //to linearly interpolate the camera X/Y position to that at primary Z.  Note that for
         //bottom cameras, the top row of matrix linearFit is a measure of the non-orthogonality
         //of the nozzle Z axis WRT to the X-Y plane.
         Mat x = Mat.ones(numberOfTestPatterns, 2, CvType.CV_64FC1); //need ones in the second column
         Mat b = Mat.zeros(numberOfTestPatterns, 2, CvType.CV_64FC1);
         for (int i=0; i<numberOfTestPatterns; i++) {
-            x.put(i, 0, testPatternZ[i]);
+            x.put(i, 0, testPattern3dPoints[i][0][2]);
             b.put(i, 0, cameraParams[13+2*i]);
             b.put(i, 1, cameraParams[14+2*i]);
         }
@@ -917,9 +891,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Logger.trace("linearFit = " + linearFit.dump());
         x.release();
         b.release();
-        //Use the linear fit to interpolate/extrapolate to defaultZ
+        //Use the linear fit to interpolate/extrapolate to primary Z
         Mat z = Mat.ones(1, 2, CvType.CV_64FC1); //need ones in the second column
-        z.put(0, 0, defaultZ.convertToUnits(LengthUnit.Millimeters).getValue());
+        z.put(0, 0, primaryZ);
         Mat xy = Mat.zeros(1, 2, CvType.CV_64FC1);
         Core.gemm(z, linearFit, 1, z, 0, xy);
         linearFit.release();
@@ -950,23 +924,22 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Logger.trace("unitVectorMachZInPhyCamRefFrame = " + 
                 unitVectorMachZInPhyCamRefFrame.dump());
         
-        //Compute the Z offset from the camera to the default Z plane
-        double cameraToZPlane = defaultZ.convertToUnits(LengthUnit.Millimeters).getValue() - 
-                vectorFromMachToPhyCamInMachRefFrame.get(2, 0)[0];
+        //Compute the Z offset from the camera to the primary Z plane
+        double cameraToZPlane = primaryZ - vectorFromMachToPhyCamInMachRefFrame.get(2, 0)[0];
         Logger.trace("cameraToZPlane = " + cameraToZPlane);
         
-        Mat vectorFromPhyCamToDefaultZPlaneInPhyCamRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
+        Mat vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
         Core.multiply(unitVectorMachZInPhyCamRefFrame, 
                 new Scalar(cameraToZPlane/unitVectorMachZInPhyCamRefFrame.get(2, 0)[0]), 
-                vectorFromPhyCamToDefaultZPlaneInPhyCamRefFrame);
-        Logger.trace("vectorFromPhyCamToDefaultZPlaneInPhyCamRefFrame = " + 
-                vectorFromPhyCamToDefaultZPlaneInPhyCamRefFrame.dump());
+                vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame);
+        Logger.trace("vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame = " + 
+                vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame.dump());
         
         //Normalize the vector to find the desired principal point
-        Core.multiply(vectorFromPhyCamToDefaultZPlaneInPhyCamRefFrame, 
-                new Scalar(1.0/vectorFromPhyCamToDefaultZPlaneInPhyCamRefFrame.get(2, 0)[0]), 
+        Core.multiply(vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame, 
+                new Scalar(1.0/vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame.get(2, 0)[0]), 
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame);
-        vectorFromPhyCamToDefaultZPlaneInPhyCamRefFrame.release();
+        vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame.release();
         Logger.trace("vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame = " + 
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.dump());
 
@@ -979,30 +952,29 @@ public class AdvancedCalibration extends LensCalibrationParams {
                 vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame.dump());
         vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame.release();
 
-        Mat vectorFromPhyCamToDefaultZPrincipalPointInMachRefFrame = Mat.zeros(3, 1, 
+        Mat vectorFromPhyCamToPrimaryZPrincipalPointInMachRefFrame = Mat.zeros(3, 1, 
                 CvType.CV_64FC1);
         Core.multiply(unitVectorPhyCamZInMachRefFrame, 
                 new Scalar(cameraToZPlane/unitVectorPhyCamZInMachRefFrame.get(2, 0)[0]), 
-                vectorFromPhyCamToDefaultZPrincipalPointInMachRefFrame);
-        Logger.trace("vectorFromPhyCamToDefaultZPrincipalPointInMachRefFrame = " + 
-                vectorFromPhyCamToDefaultZPrincipalPointInMachRefFrame.dump());
+                vectorFromPhyCamToPrimaryZPrincipalPointInMachRefFrame);
+        Logger.trace("vectorFromPhyCamToPrimaryZPrincipalPointInMachRefFrame = " + 
+                vectorFromPhyCamToPrimaryZPrincipalPointInMachRefFrame.dump());
 
-        double absoluteCameraToDefaultZPrincipalPointDistance = 
-                Core.norm(vectorFromPhyCamToDefaultZPrincipalPointInMachRefFrame, Core.NORM_L2);
-        vectorFromPhyCamToDefaultZPrincipalPointInMachRefFrame.release();
-        Logger.trace("absoluteCameraToDefaultZPrincipalPointDistance = " +
-                absoluteCameraToDefaultZPrincipalPointDistance);
+        double absoluteCameraToPrimaryZPrincipalPointDistance = 
+                Core.norm(vectorFromPhyCamToPrimaryZPrincipalPointInMachRefFrame, Core.NORM_L2);
+        vectorFromPhyCamToPrimaryZPrincipalPointInMachRefFrame.release();
+        Logger.trace("absoluteCameraToPrimaryZPrincipalPointDistance = " +
+                absoluteCameraToPrimaryZPrincipalPointDistance);
         
         //The virtual camera is centered directly above the physical camera and looks straight 
         //down orthogonal to the machine's X-Y plane. This may be intuitive for top cameras, but
         //this is also desired for bottom cameras as this will make the image of the bottom of a
-        //part held by the nozzle as if it were taken from above through the top of the part by 
-        //an x-ray camera (which is exactly what is desired).
+        //part held by the nozzle look as if it were taken from above through the top of the part
+        //by an x-ray camera (which is exactly what is desired).
         vectorFromMachToVirCamInMachRefFrame.release();
         vectorFromMachToVirCamInMachRefFrame = vectorFromMachToPhyCamInMachRefFrame.clone();
         vectorFromMachToVirCamInMachRefFrame.put(2, 0, 
-                defaultZ.convertToUnits(LengthUnit.Millimeters).getValue() + 
-                absoluteCameraToDefaultZPrincipalPointDistance);
+                primaryZ + absoluteCameraToPrimaryZPrincipalPointDistance);
         Logger.trace("vectorFromMachToVirCamInMachRefFrame = " + 
                 vectorFromMachToVirCamInMachRefFrame.dump());
         
@@ -1018,7 +990,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         rectificationMatrix = CameraCalibrationUtils.computeRectificationMatrix(
                 transformFromMachToPhyCamRefFrame, vectorFromMachToPhyCamInMachRefFrame, 
                 transformFromMachToVirCamRefFrame, vectorFromMachToVirCamInMachRefFrame, 
-                defaultZ.convertToUnits(LengthUnit.Millimeters).getValue());
+                primaryZ);
         transformFromMachToPhyCamRefFrame.release();
         transformFromMachToVirCamRefFrame.release();
         Logger.trace("rectification = " + rectificationMatrix.dump());

@@ -56,7 +56,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Head;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.SimpleGraph.DataRow;
@@ -301,7 +300,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "mechanical non-repeatability (missed steps, loose pulleys/cogs, slipping belts "
                 + "etcetra) must be resolved before attempting camera calibration. In addition; "
                 + "for bottom cameras, the rotation axis and nozzle offsets must be properly "
-                + "calibrated. And, visual homing, if it is going to be used, must be setup and "
+                + "calibrated; and, visual homing, if it is going to be used, must be setup and "
                 + "working properly."
                 + "</p></html>");
         panelCameraCalibration.add(lblDescription, "4, 4, 7, 1");
@@ -353,7 +352,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         lblNewLabel_32.setHorizontalAlignment(SwingConstants.CENTER);
         panelCameraCalibration.add(lblNewLabel_32, "2, 20, 7, 1");
         
-        if (referenceCamera.getLooking() == Looking.Down) {
+        if (isMovable) {
             textFieldDefaultZ.setToolTipText("<html><p width=\"500\">"
                 + "This is the assumed Z coordinate of objects viewed by the "
                 + "camera if their true Z coordinate is unknown. Typically this "
@@ -372,6 +371,16 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         panelCameraCalibration.add(lblNewLabel_35, "2, 22, right, default");
         
         textFieldPrimaryCalZ = new JTextField();
+        if (isMovable) {
+            textFieldPrimaryCalZ.setToolTipText("<html><p width=\"500\">"
+                + "This is the Z coordinate of the Primary Calibration Fiducial."
+                + "</p></html>");
+        }
+        else {
+            textFieldPrimaryCalZ.setToolTipText("<html><p width=\"500\">"
+                    + "This is the Z coordinate where objects are in best focus for this camera."
+                    + "</p></html>");
+        }
         textFieldPrimaryCalZ.setEnabled(false);
         panelCameraCalibration.add(textFieldPrimaryCalZ, "4, 22, fill, default");
         textFieldPrimaryCalZ.setColumns(10);
@@ -392,6 +401,17 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         panelCameraCalibration.add(lblNewLabel_36, "2, 24, right, default");
         
         textFieldSecondaryCalZ = new JTextField();
+        if (isMovable) {
+            textFieldSecondaryCalZ.setToolTipText("<html><p width=\"500\">"
+                + "This is the Z coordinate of the Secondary Calibration Fiducial."
+                + "</p></html>");
+        }
+        else {
+            textFieldSecondaryCalZ.setToolTipText("<html><p width=\"500\">"
+                    + "Set this larger (higher) than the Primary Cal Z as much as possible but "
+                    + "such that the nozzle tip is still within reasonable focus."
+                    + "</p></html>");
+        }
         panelCameraCalibration.add(textFieldSecondaryCalZ, "4, 24, fill, default");
         textFieldSecondaryCalZ.setColumns(10);
         
@@ -427,6 +447,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         panelCameraCalibration.add(lblNewLabel_34, "2, 30");
         
         spinnerDiameter = new JSpinner();
+        spinnerDiameter.setToolTipText("When instructed, adjust this value to obtain the best "
+                + "detection of the fiducial/nozzle tip.");
         spinnerDiameter.setEnabled(false);
         panelCameraCalibration.add(spinnerDiameter, "4, 30");
         referenceCamera.getAdvancedCalibration().setFiducialDiameter(
@@ -577,8 +599,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "This is an estimate of the accuracy of object locations measured at "
                 + "default Z that can be obtained with this camera. For a large number of "
                 + "measurements performed at random locations throughout the image, one should "
-                + "expect 63.2% of the measured locations to be within this distance of their true "
-                + "location and 98.2% within double this distance. See the plots below for more "
+                + "expect 63% of the measured locations to be within this distance of their true "
+                + "location and 98% within double this distance. See the plots below for more "
                 + "details."
                 + "</p></html>");
         textFieldRmsError.setEditable(false);
@@ -594,15 +616,13 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         spinnerModel = new SpinnerListModel(calibrationHeightSelections);
         spinnerIndex = new JSpinner(spinnerModel);
-        spinnerIndex.setToolTipText("This selects the data to display in the plots below.");
+        spinnerIndex.setToolTipText("Used to select the data to display in the plots below.");
         spinnerIndex.addChangeListener(new ChangeListener() {
 
             @Override
             public void stateChanged(ChangeEvent e) {
                 LengthCellValue selectedHeight = (LengthCellValue) spinnerIndex.getValue();
-                Logger.trace("selectedHeight = " + selectedHeight.getLength());
                 heightIndex  = calibrationHeightSelections.indexOf(selectedHeight);
-                Logger.trace("heightIndex = " + heightIndex);
                 updateDiagnosticsDisplay();
             }
             
@@ -869,21 +889,9 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                             advancedCalibration.setDataAvailable(true);
                             
                             try {
-                                Head head = referenceCamera.getHead();
-                                Length defaultZ = null;
-                                if (head == null) {
-                                    //For fixed cameras, just use its defaultZ
-                                    defaultZ = referenceCamera.getDefaultZ();
-                                }
-                                else {
-                                    //For head mounted cameras, we need to use the defaultZ of the 
-                                    //default camera since the head offsets need to be computed at 
-                                    //a common Z level
-                                    defaultZ = head.getDefaultCamera().getDefaultZ();
-                                }
                                 advancedCalibration.processRawCalibrationData(
                                         testPattern3dPointsList, testPatternImagePointsList, 
-                                        size, defaultZ);
+                                        size);
                                 
                                 //Reload the calibration heights and refresh the table
                                 calibrationHeights.clear();
@@ -909,6 +917,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                                 chckbxEnable.setEnabled(true);
                                 chckbxUseSavedData.setEnabled(true);
                                 spinnerIndex.setEnabled(true);
+                                chckbxShowOutliers.setEnabled(true);
                                 
                                 updateDiagnosticsDisplay();
                             }
@@ -920,6 +929,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                                 chckbxEnable.setEnabled(false);
                                 chckbxUseSavedData.setEnabled(false);
                                 spinnerIndex.setEnabled(false);
+                                chckbxShowOutliers.setEnabled(false);
                             }
                             
                             startCameraCalibrationBtn.setEnabled(true);
@@ -943,26 +953,17 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             }
             else {
                 try {
-                    Head head = referenceCamera.getHead();
-                    Length defaultZ = null;
-                    if (head == null) {
-                        //For fixed cameras, just use its defaultZ
-                        defaultZ = referenceCamera.getDefaultZ();
-                    }
-                    else {
-                        //For head mounted cameras, we need to use the defaultZ of the 
-                        //default camera since the head offsets need to be computed at 
-                        //a common Z level
-                        defaultZ = head.getDefaultCamera().getDefaultZ();
-                    }
-                    
                     referenceCamera.getAdvancedCalibration().processRawCalibrationData(
-                            new Size(referenceCamera.getWidth(), referenceCamera.getHeight()), 
-                            defaultZ);
+                            new Size(referenceCamera.getWidth(), referenceCamera.getHeight()));
                 
                     advancedCalibration.setValid(true);
                     advancedCalibration.setEnabled(true);
                     chckbxEnable.setSelected(true);
+                    chckbxEnable.setEnabled(true);
+                    chckbxUseSavedData.setEnabled(true);
+                    spinnerIndex.setEnabled(true);
+                    chckbxShowOutliers.setEnabled(true);
+                    
                     updateDiagnosticsDisplay();
                 }
                 catch (Exception ex) {
@@ -973,6 +974,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                     chckbxEnable.setEnabled(false);
                     chckbxUseSavedData.setEnabled(false);
                     spinnerIndex.setEnabled(false);
+                    chckbxShowOutliers.setEnabled(false);
                 }
                 
                 startCameraCalibrationBtn.setEnabled(true);
@@ -981,23 +983,12 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         }
     };
 
-    private Action enableCalibration = new AbstractAction("Enable Camera Calibration") {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (chckbxEnable.isSelected()) {
-                referenceCamera.clearCalibrationCache();
-            }
-
-        }
-    };
-    
     private ChangeListener sliderAlphaChanged = new ChangeListener() {
 
         @Override
         public void stateChanged(ChangeEvent e) {
             if (!sliderAlpha.getValueIsAdjusting()) {
                 int alphaPercent = (int)sliderAlpha.getValue();
-                Logger.trace("alphaPercent = " + alphaPercent);
                 advancedCalibration.setAlphaPercent(alphaPercent);
                 advancedCalibration.setVirtualCameraMatrix(
                     CameraCalibrationUtils.computeVirtualCameraMatrix(
