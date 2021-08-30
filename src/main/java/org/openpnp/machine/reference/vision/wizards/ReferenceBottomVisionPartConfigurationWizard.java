@@ -186,7 +186,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         panel.add(lblBottomVisionY, "6, 16");
         
         JLabel lblVisionCenterOffset = new JLabel("Vision center offset");
-        lblVisionCenterOffset.setToolTipText("Offset relative to the pick location/center of the part to the center of the rectangel detected by the bottom vision");
+        lblVisionCenterOffset.setToolTipText("Offset relative to the pick location/center of the part to the center of the rectangle detected by the bottom vision");
         panel.add(lblVisionCenterOffset, "2, 18");
         
         tfBottomVisionOffsetX = new JTextField();
@@ -198,7 +198,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         tfBottomVisionOffsetY.setColumns(10);
         
         JButton btnAutoVisionCenterOffset = new JButton("Detect");
-        btnAutoVisionCenterOffset.setToolTipText("Center part over bottom vision camera. Button will runn bottom vision an calculates the offset.");
+        btnAutoVisionCenterOffset.setToolTipText("Center part over bottom vision camera. Button will run bottom vision and calculates the offset.");
         panel.add(btnAutoVisionCenterOffset, "8, 18");
         btnAutoVisionCenterOffset.addActionListener((e) -> {
             UiUtils.submitUiMachineTask(() -> {
