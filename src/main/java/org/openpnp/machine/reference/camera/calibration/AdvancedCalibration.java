@@ -807,7 +807,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         //Compute a new set of camera parameters based on openpnp's more restrictive camera
         //model that avoids the excess degree of freedom problem discussed above
         modeledTestPatternImagePointsList = new double[numberOfTestPatterns][][];
-        rms = CameraCalibrationUtils.ComputeBestCameraParameters(
+        rms = CameraCalibrationUtils.computeBestCameraParameters(
                 testPattern3dPoints, testPatternImagePoints, modeledTestPatternImagePointsList, 
                 outlierPointList, cameraParams, CameraCalibrationUtils.FIX_PRINCIPAL_POINT);
         setRmsError(rms);

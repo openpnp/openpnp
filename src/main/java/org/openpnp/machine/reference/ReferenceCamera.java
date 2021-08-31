@@ -321,19 +321,19 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     AdvancedCalibration defCameraAdvCal = defaultCamera.getAdvancedCalibration();
                     Location defCameraUncalibratedHeadOffsets = defaultCamera.
                             getUncalibratedHeadOffsets().convertToUnits(LengthUnit.Millimeters);
-                    Mat VectorFromDefaultVirCamToVirCamInMachRefFrame = new Mat();
+                    Mat vectorFromDefaultVirCamToVirCamInMachRefFrame = new Mat();
                     Core.subtract(advancedCalibration.getVectorFromMachToVirCamInMachRefFrame(), 
                             defCameraAdvCal.getVectorFromMachToVirCamInMachRefFrame(), 
-                            VectorFromDefaultVirCamToVirCamInMachRefFrame);
+                            vectorFromDefaultVirCamToVirCamInMachRefFrame);
                     Location offset = new Location(LengthUnit.Millimeters,
-                            VectorFromDefaultVirCamToVirCamInMachRefFrame.get(0, 0)[0] + 
+                            vectorFromDefaultVirCamToVirCamInMachRefFrame.get(0, 0)[0] + 
                                 defCameraUncalibratedHeadOffsets.getX(), 
-                            VectorFromDefaultVirCamToVirCamInMachRefFrame.get(1, 0)[0] + 
+                            vectorFromDefaultVirCamToVirCamInMachRefFrame.get(1, 0)[0] + 
                                 defCameraUncalibratedHeadOffsets.getY(), 
-                            VectorFromDefaultVirCamToVirCamInMachRefFrame.get(2, 0)[0] + 
+                            vectorFromDefaultVirCamToVirCamInMachRefFrame.get(2, 0)[0] + 
                                 defCameraUncalibratedHeadOffsets.getZ(),
                             0);
-                    VectorFromDefaultVirCamToVirCamInMachRefFrame.release();
+                    vectorFromDefaultVirCamToVirCamInMachRefFrame.release();
                     return offset;
                 }
             }

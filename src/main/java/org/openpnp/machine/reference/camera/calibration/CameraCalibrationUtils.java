@@ -137,10 +137,10 @@ public class CameraCalibrationUtils {
      * @return the DRMS error in pixels of the model's fit to the data points.
      * @throws Exception 
      */
-    public static double ComputeBestCameraParameters(double[][][] testPattern3dPoints,
+    public static double computeBestCameraParameters(double[][][] testPattern3dPoints,
             double[][][] testPatternImagePoints, double[][][] modeledImagePoints,
             List<Integer> outlierPointList, double[] parameters) throws Exception {
-        return ComputeBestCameraParameters(testPattern3dPoints, testPatternImagePoints,
+        return computeBestCameraParameters(testPattern3dPoints, testPatternImagePoints,
                 modeledImagePoints, outlierPointList, parameters, 0);
     }
 
@@ -203,7 +203,7 @@ public class CameraCalibrationUtils {
      * @return the DRMS error in pixels of the model's fit to the data points.
      * @throws Exception 
      */
-    public static double ComputeBestCameraParameters(double[][][] testPattern3dPoints,
+    public static double computeBestCameraParameters(double[][][] testPattern3dPoints,
             double[][][] testPatternImagePoints, double[][][] modeledImagePoints,
             List<Integer> outlierPointList, double[] parameters, int flags) throws Exception {
         numberOfTestPatterns = testPattern3dPoints.length;
@@ -421,74 +421,74 @@ public class CameraCalibrationUtils {
             double p1 = cameraParameters.getEntry(6);
             double p2 = cameraParameters.getEntry(7);
             double k3 = cameraParameters.getEntry(8);
-            double Rx = cameraParameters.getEntry(9);
-            double Ry = cameraParameters.getEntry(10);
-            double Rz = cameraParameters.getEntry(11);
-            if (Rx == 0 && Ry == 0 && Rz == 0) {
-                Rz = 1e-6;
+            double rx = cameraParameters.getEntry(9);
+            double ry = cameraParameters.getEntry(10);
+            double rz = cameraParameters.getEntry(11);
+            if (rx == 0 && ry == 0 && rz == 0) {
+                rz = 1e-6;
             }
-            double cam_z = cameraParameters.getEntry(12);
+            double camZ = cameraParameters.getEntry(12);
 
             // Note: all variables of the form tempnnn are the result of common subexpression
             // optimization performed in SageMath
-            double temp010 = Rz * Rz;
-            double temp009 = Ry * Ry;
-            double temp008 = Rx * Rx;
-            double temp105 = temp010 * Rz;
-            double temp090 = temp009 * Ry;
-            double temp062 = temp008 * Rx;
+            double temp010 = rz * rz;
+            double temp009 = ry * ry;
+            double temp008 = rx * rx;
+            double temp105 = temp010 * rz;
+            double temp090 = temp009 * ry;
+            double temp062 = temp008 * rx;
             double temp007 = temp008 + temp009 + temp010;
             double temp013 = Math.sqrt(temp007);
             double temp017 = 1.0 / temp013;
             double temp050 = temp017 / temp007;
             double temp018 = Math.sin(temp013);
-            double temp051 = Ry * temp008 * temp018 * temp050;
-            double temp064 = Rx * Ry * temp018 * temp050;
-            double temp084 = Ry * temp010 * temp018 * temp050;
-            double temp016 = Rz * temp017 * temp018;
+            double temp051 = ry * temp008 * temp018 * temp050;
+            double temp064 = rx * ry * temp018 * temp050;
+            double temp084 = ry * temp010 * temp018 * temp050;
+            double temp016 = rz * temp017 * temp018;
             double temp108 = temp010 * temp018 * temp050;
-            double temp092 = Rx * temp010 * temp018 * temp050;
+            double temp092 = rx * temp010 * temp018 * temp050;
             double temp059 = temp008 * temp018 * temp050;
-            double temp028 = Ry * temp017 * temp018;
-            double temp056 = Rx * Ry * Rz * temp018 * temp050;
-            double temp088 = Ry * Rz * temp018 * temp050;
-            double temp095 = Rx * temp009 * temp018 * temp050;
-            double temp065 = Rz * temp008 * temp018 * temp050;
-            double temp049 = Rx * Rz * temp018 * temp050;
+            double temp028 = ry * temp017 * temp018;
+            double temp056 = rx * ry * rz * temp018 * temp050;
+            double temp088 = ry * rz * temp018 * temp050;
+            double temp095 = rx * temp009 * temp018 * temp050;
+            double temp065 = rz * temp008 * temp018 * temp050;
+            double temp049 = rx * rz * temp018 * temp050;
             double temp080 = temp009 * temp018 * temp050;
-            double temp081 = Rz * temp009 * temp018 * temp050;
+            double temp081 = rz * temp009 * temp018 * temp050;
             double temp060 = temp017 * temp018;
-            double temp037 = Rx * temp017 * temp018;
+            double temp037 = rx * temp017 * temp018;
             double temp012 = Math.cos(temp013);
             double temp011 = temp012 - 1;
             double temp006 = 1.0 / temp007;
             double temp053 = temp006 * temp006;
-            double temp052 = 2 * Ry * temp008 * temp011 * temp053;
-            double temp066 = 2 * Rz * temp008 * temp011 * temp053;
-            double temp085 = 2 * Ry * temp010 * temp011 * temp053;
-            double temp094 = 2 * Rx * temp009 * temp011 * temp053;
-            double temp082 = 2 * Rz * temp009 * temp011 * temp053;
-            double temp091 = 2 * Rx * temp010 * temp011 * temp053;
-            double temp057 = 2 * Rx * Ry * Rz * temp011 * temp053;
+            double temp052 = 2 * ry * temp008 * temp011 * temp053;
+            double temp066 = 2 * rz * temp008 * temp011 * temp053;
+            double temp085 = 2 * ry * temp010 * temp011 * temp053;
+            double temp094 = 2 * rx * temp009 * temp011 * temp053;
+            double temp082 = 2 * rz * temp009 * temp011 * temp053;
+            double temp091 = 2 * rx * temp010 * temp011 * temp053;
+            double temp057 = 2 * rx * ry * rz * temp011 * temp053;
             double temp031 = temp006 * temp010 * temp011 - temp012;
-            double temp015 = Rx * Ry * temp006 * temp011;
+            double temp015 = rx * ry * temp006 * temp011;
             double temp014 = temp015 + temp016;
             double temp034 = temp015 - temp016;
-            double temp048 = Ry * temp006 * temp011;
+            double temp048 = ry * temp006 * temp011;
             double temp058 = temp006 * temp008 * temp012;
-            double temp030 = Ry * Rz * temp006 * temp011;
-            double temp029 = -Rx * temp017 * temp018 + temp030;
+            double temp030 = ry * rz * temp006 * temp011;
+            double temp029 = -rx * temp017 * temp018 + temp030;
             double temp036 = temp030 + temp037;
             double temp079 = temp006 * temp009 * temp012;
-            double temp083 = Rz * temp006 * temp011;
-            double temp087 = Ry * Rz * temp006 * temp012;
-            double temp020 = Rx * Rz * temp006 * temp011;
-            double temp019 = -Ry * temp017 * temp018 + temp020;
+            double temp083 = rz * temp006 * temp011;
+            double temp087 = ry * rz * temp006 * temp012;
+            double temp020 = rx * rz * temp006 * temp011;
+            double temp019 = -ry * temp017 * temp018 + temp020;
             double temp027 = temp020 + temp028;
             double temp035 = temp006 * temp009 * temp011 - temp012;
-            double temp047 = Rx * Rz * temp006 * temp012;
-            double temp063 = Rx * Ry * temp006 * temp012;
-            double temp096 = Rx * temp006 * temp011;
+            double temp047 = rx * rz * temp006 * temp012;
+            double temp063 = rx * ry * temp006 * temp012;
+            double temp096 = rx * temp006 * temp011;
             double temp107 = temp006 * temp010 * temp012;
 
             int rowIdx = 0;
@@ -496,7 +496,7 @@ public class CameraCalibrationUtils {
             for (int iTP = 0; iTP < numberOfTestPatterns; iTP++) {
                 for (int iPt = 0; iPt < testPattern3dPoints[iTP].length; iPt++) {
                     if (!outlierPoints.contains(iPoint)) {
-                        double temp023 = cam_z - testPattern3dPoints[iTP][iPt][2];
+                        double temp023 = camZ - testPattern3dPoints[iTP][iPt][2];
                         double temp022 = cameraParameters.getEntry(14 + 2 * iTP)
                                 - testPattern3dPoints[iTP][iPt][1];
                         double temp021 = cameraParameters.getEntry(13 + 2 * iTP)
@@ -526,19 +526,19 @@ public class CameraCalibrationUtils {
                                 + temp022 * (temp056 + temp057 + temp058 - temp059 + temp060)
                                 - temp021 * (temp063 - temp064 - temp065 - temp066 + temp083);
                         double temp077 = -temp032 * temp068 * temp076;
-                        double temp061 = -(2 * Rx * temp006 * temp011 - temp018 * temp050 * temp062
+                        double temp061 = -(2 * rx * temp006 * temp011 - temp018 * temp050 * temp062
                                 - 2 * temp011 * temp053 * temp062 + temp037) * temp021
                                 - temp022 * (temp047 + temp048 - temp049 - temp051 - temp052)
                                 + temp023 * (temp063 - temp064 + temp065 + temp066 - temp083);
                         double temp097 = temp021 * (temp028 - temp051 - temp052)
                                 - temp023 * (temp056 + temp057 + temp060 + temp079 - temp080)
                                 + temp022 * (temp087 - temp088 - temp094 - temp095 + temp096);
-                        double temp086 = -(2 * Ry * temp006 * temp011 - temp018 * temp050 * temp090
+                        double temp086 = -(2 * ry * temp006 * temp011 - temp018 * temp050 * temp090
                                 - 2 * temp011 * temp053 * temp090 + temp028) * temp022
                                 - temp023 * (temp063 - temp064 - temp081 - temp082 + temp083)
                                 + temp021 * (temp087 - temp088 + temp094 + temp095 - temp096);
                         double temp102 = temp025 * temp033 * temp086;
-                        double temp104 = -(2 * Rz * temp006 * temp011 - temp018 * temp050 * temp105
+                        double temp104 = -(2 * rz * temp006 * temp011 - temp018 * temp050 * temp105
                                 - 2 * temp011 * temp053 * temp105 + temp016) * temp023
                                 + temp022 * (temp047 - temp048 - temp049 + temp084 + temp085)
                                 - temp021 * (temp087 - temp088 - temp091 - temp092 + temp096);
