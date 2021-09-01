@@ -37,6 +37,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
@@ -116,13 +117,22 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Attribute(required = false)
     protected int cropHeight = 0;
-    
+
     @Attribute(required = false)
     protected int scaleWidth = 0;
-    
+
     @Attribute(required = false)
     protected int scaleHeight = 0;
-    
+
+    @Attribute(required = false)
+    protected double redBalance = 1.0; 
+
+    @Attribute(required = false)
+    protected double greenBalance = 1.0; 
+
+    @Attribute(required = false)
+    protected double blueBalance = 1.0; 
+
     @Attribute(required = false)
     protected boolean deinterlace;
 
@@ -140,6 +150,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Element(required = false)
     protected FocusProvider focusProvider = new AutoFocusProvider();
 
+    @Attribute(required = false)
+    private double whiteBalanceLeadFractile = 0.8;
+
+    @Attribute(required = false)
+    private double whiteBalanceClipFractile = 0.99;
+    
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
     private int calibrationCountGoal = 25;
@@ -386,12 +402,76 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         viewHasChanged();
     }
     
+    public double getRedBalance() {
+        return redBalance;
+    }
+
+    public void setRedBalance(double redBalance) {
+        Object oldValue = this.redBalance;
+        this.redBalance = redBalance;
+        firePropertyChange("redBalance", oldValue, redBalance);
+        firePropertyChange("redBalancePercent", null, getRedBalancePercent());
+        cameraViewHasChanged(null);
+    }
+
+    public double getGreenBalance() {
+        return greenBalance;
+    }
+
+    public void setGreenBalance(double greenBalance) {
+        Object oldValue = this.greenBalance;
+        this.greenBalance = greenBalance;
+        firePropertyChange("greenBalance", oldValue, greenBalance);
+        firePropertyChange("greenBalancePercent", null, getGreenBalancePercent());
+        cameraViewHasChanged(null);
+    }
+
+    public double getBlueBalance() {
+        return blueBalance;
+    }
+
+    public void setBlueBalance(double blueBalance) {
+        Object oldValue = this.blueBalance;
+        this.blueBalance = blueBalance;
+        firePropertyChange("blueBalance", oldValue, blueBalance);
+        firePropertyChange("blueBalancePercent", null, getBlueBalancePercent());
+        cameraViewHasChanged(null);
+    }
+
+    public int getRedBalancePercent() {
+        return (int)Math.round(redBalance*100.0);
+    }
+
+    public void setRedBalancePercent(int redBalancePercent) {
+        setRedBalance(redBalancePercent*0.01);
+    }
+
+    public int getGreenBalancePercent() {
+        return (int)Math.round(greenBalance*100.0);
+    }
+
+    public void setGreenBalancePercent(int greenBalancePercent) {
+        setGreenBalance(greenBalancePercent*0.01);
+    }
+
+    public int getBlueBalancePercent() {
+        return (int)Math.round(blueBalance*100.0);
+    }
+
+    public void setBlueBalancePercent(int blueBalancePercent) {
+        setBlueBalance(blueBalancePercent*0.01);
+    }
+
     public boolean isDeinterlace() {
         return isDeinterlaced();
     }
 
     public void setDeinterlace(boolean deinterlace) {
         this.deinterlace = deinterlace;
+    }
+
+    public boolean isWhiteBalanced() {
+        return redBalance != 1.0 || greenBalance != 1.0 || blueBalance != 1.0; 
     }
 
     @Override
@@ -447,7 +527,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 || isScaled()
                 || isRotated()
                 || isOffset()
-                || isFlipped()) {
+                || isFlipped()
+                || isWhiteBalanced()) {
 
                 Mat mat = OpenCvUtils.toMat(image);
 
@@ -468,6 +549,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
                 mat = flip(mat);
 
+                mat = whiteBalance(mat);
+
                 image = OpenCvUtils.toBufferedImage(mat);
                 mat.release();
             }
@@ -482,6 +565,90 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Logger.error(e);
         }
         return image;
+    }
+
+    private Mat whiteBalance(Mat mat) {
+        if (isWhiteBalanced()) {
+            Mat whiteBalanced = new Mat();
+            Core.multiply(mat, new Scalar(blueBalance, greenBalance, redBalance), whiteBalanced);
+            mat.release();
+            mat = whiteBalanced;
+        }
+        return mat;
+    }
+
+    public void autoAdjustWhiteBalance(boolean averaged) throws Exception {
+        // Switch it off to get a neutral image.
+        setRedBalance(1.0);
+        setGreenBalance(1.0);
+        setBlueBalance(1.0);
+        // Capture.
+        BufferedImage image = lightSettleAndCapture();
+        // Calculate the histogram.
+        long[][] histogram = new long[3][256];
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int rgb = image.getRGB(x, y);
+                int r = (rgb >> 16) & 0xff;
+                int g = (rgb >> 8) & 0xff;
+                int b = (rgb >> 0) & 0xff;
+                histogram[0][r]++;
+                histogram[1][g]++;
+                histogram[2][b]++;
+            }
+        }
+        // Analyze the percentiles.
+        long pixels = image.getHeight()*image.getWidth();
+        double percentileLead[] = new double[3];
+        double percentileClip[] = new double[3];
+        double sum[] = new double[3];
+        double n[] = new double[3];
+        for (int ch = 0; ch < 3; ch++) {
+            long accumulated = 0;
+            for (int bin = 0; bin < 256; bin++) {
+                long value = histogram[ch][bin];
+                accumulated += value;
+                if (accumulated < pixels*whiteBalanceLeadFractile) {
+                    percentileLead[ch] = bin;
+                }
+                else {
+                    sum[ch] += bin*value;
+                    n[ch] += value;
+                }
+                if (accumulated < pixels*whiteBalanceClipFractile) {
+                    percentileClip[ch] = bin;
+                }
+            }
+            sum[ch] /= n[ch];
+        }
+        // Adapt the other channels to the one with the highest signal in the result.
+        double resultLead[] = averaged ? sum : percentileLead;
+        double lead = Math.max(Math.max(resultLead[0], resultLead[1]), resultLead[2]);
+        if (lead < 32) {
+            throw new Exception("The camera "+getName()+" exposure is too low!");
+        }
+
+        double r = lead/resultLead[0];
+        double g = lead/resultLead[1];
+        double b = lead/resultLead[2];
+
+        // Norm to the maximum clip percentile, but never amplify.
+        double clip = Math.max(1.0, Math.max(Math.max(r*percentileClip[0], g*percentileClip[1]), b*percentileClip[2])/255.0);
+
+        // Set the new balance.
+        setRedBalance(r/clip);
+        setGreenBalance(g/clip);
+        setBlueBalance(b/clip);
+        // Capture a new image for 0fps cameras to see the result.
+        lightSettleAndCapture();
+    }
+
+    public void resetWhiteBalance() throws Exception {
+        setRedBalance(1.0);
+        setGreenBalance(1.0);
+        setBlueBalance(1.0);
+        // Capture a new image for 0fps cameras to see the result.
+        lightSettleAndCapture();
     }
 
     private Mat crop(Mat mat) {
@@ -767,7 +934,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
         }
     };
-    
+
     ReferenceMachine getMachine() {
         return (ReferenceMachine) Configuration.get().getMachine();
     }
