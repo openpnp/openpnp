@@ -364,7 +364,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             if (i % 25 == 0 || i % 25 == 1) {
                 currentDepth -= Math.max(0.05, (part.getHeight().getValue() / 4.0));                                    // move a bit down, larger steps compared to stir, since we can utilize the spring
             }                                                                                                           // (but only if not after reset = 0. First time let it find the start of the heap)
-            moveToPokeLocation(nozzle, currentDepth, part.getHeight().getValue(), i % 15);
+            moveToPokeLocation(nozzle, currentDepth, part.getHeight().getValue(), i % 25);
             // wait a bit for the vacuum-levels to stabilize
             Thread.sleep(((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds() / 3);                                    // divided by three a rough guess
         }
