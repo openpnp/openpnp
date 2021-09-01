@@ -155,17 +155,17 @@ After capturing the X, Y coordinates with the camera, you must initially probe t
 
 ![Probe](https://user-images.githubusercontent.com/9963310/113576642-3824fc80-9620-11eb-8fae-ad1f35913c60.png) 
 
-___
-**CAUTION**: do not do this again later. You will lose your "eternal" Z reference! 
-___
+**CAUTION**: do not use the probe button later. You will lose your "eternal" Z reference! 
+
+#### Auto Z Calibration Settings
 
 **Auto Z Calibration** determines when the Z calibration happens. 
 
 ![Auto Z Calibration](https://user-images.githubusercontent.com/9963310/113577217-3576d700-9621-11eb-9971-94a9fd2eca94.png)
 
-* **Manual** switches automatic Z calibration off. You can manually calibrate and the obtained Z offset will be stored in the configuration (machine.xml).
-* **MachineHome** performs automatic Z calibration if this nozzle tip is loaded when the machine is homed. When other nozzles are later loaded to the same nozzle, no additional Z calibration is triggered. **Z calibration is per nozzle**. This can handle uneven nozzles in multi-nozzle machines. 
-* **NozzleTipChange** performs automatic Z calibration whenever this nozzle tip is loaded to a nozzle. In addition, Z calibration also happens if this nozzle tip is loaded when the machine is homed. **Z calibration is per nozzle tip**.  This can handle uneven nozzle tips with different heights or inconsistent coupling. 
+* **Manual** switches automatic Z calibration off. You can manually calibrate and the obtained Z offset will be stored in the configuration (machine.xml). Note: **Z calibration is per nozzle**, i.e. **Manual** calibration assumes all nozzle tips have equal length and will be loaded consistently. This calibration can handle uneven nozzles in a multi-nozzle machine.
+* **MachineHome** performs automatic Z calibration if this nozzle tip is loaded when the machine is homed. Note: **Z calibration is per nozzle**, when other nozzle tips are later loaded to the same nozzle, no additional Z calibration is triggered, i.e. **MachineHome** calibration assumes all nozzle tips have equal length and will be loaded consistently. This calibration can handle uneven nozzles in a multi-nozzle machine, as well as inconsistent Z homing. 
+* **NozzleTipChange** performs automatic Z calibration whenever this nozzle tip is loaded to a nozzle. In addition, Z calibration also happens if this nozzle tip is loaded when the machine is homed. Note: **Z calibration is now per nozzle tip**. This can handle everything, from uneven nozzles to inconsistent homing to uneven nozzle tips with different heights or inconsistent loading. 
 
 **Fail Homing?** If enabled, aborts the homing cycle when Z Calibration fails as part of it. If disabled, continues the homing cycle and only displays an error message. 
 
@@ -175,7 +175,7 @@ ___
 
 **Calibrate now** performs manual Z calibration. 
 
-**Note:** the Z calibration affects all the nozzle Z motion as well as the capturing of coordinates from the current nozzle position. But it does not affect Safe Z, as Safe Z is relative to the raw axis coordinate system, not the calibrated nozzle Z coordinate system. To balance a multi-nozzle machine's nozzles, use the [Axis capture buttons](https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits) instead.  
+**Note:** the Z calibration affects all the nozzle Z motion as well as the capturing of coordinates from the current nozzle position. But it does not affect Safe Z, as Safe Z is relative to the raw axis coordinate system, not the calibrated nozzle Z coordinate system. To balance a multi-nozzle machine's nozzles in Safe Z, use the [Axis capture buttons](https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits) instead.  
 
 ### Cloning Settings
 
