@@ -42,7 +42,7 @@ Here is a short description of the feeder types supported by OpenPnP:
 
   See [[ReferenceSlotAutoFeeder]]'s page for more information and help.
 
-* **ReferenceHeapFeeder**: is a high density feeder (around 3cm² for each part), that stores the parts loose in bins. Heavily used vision and reuires many moves, so it is very slow.
+* **ReferenceHeapFeeder**: is a high density feeder (around 3cm² for each part), that stores the parts loose in bins. Heavily uses vision and requires many moves, so it is very slow.
 
   See [[ReferenceHeapFeeder]]'s page for more information and help.
 
