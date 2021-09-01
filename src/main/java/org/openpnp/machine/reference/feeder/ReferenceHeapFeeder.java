@@ -272,9 +272,10 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      */
     public void moveToHeap(Nozzle nozzle) throws Exception {
         nozzle.moveToSafeZ();
-        nozzle.moveTo(way3.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
-        nozzle.moveTo(way2.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
-        nozzle.moveTo(way1.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
+        Location nozzleLocation = nozzle.getLocation();
+        nozzle.moveTo(nozzleLocation.derive(way3, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(nozzleLocation.derive(way2, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(nozzleLocation.derive(way1, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
         nozzle.moveTo(location);
     }
 
@@ -286,9 +287,10 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      */
     public void moveFromHeap(Nozzle nozzle) throws Exception {
         nozzle.moveToSafeZ();
-        nozzle.moveTo(way1.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
-        nozzle.moveTo(way2.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
-        nozzle.moveTo(way3.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
+        Location nozzleLocation = nozzle.getLocation();
+        nozzle.moveTo(nozzleLocation.derive(way1, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(nozzleLocation.derive(way2, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(nozzleLocation.derive(way3, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
     }
 
     /**
@@ -335,7 +337,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         ((ReferenceNozzle)nozzle).getExpectedVacuumActuator().actuate(true);
         long vacuumOn = System.currentTimeMillis();
         // move to heap
-        nozzle.moveTo(location.derive(null, null, Double.NaN, null), Motion.MotionOption.SpeedOverPrecision);
+        Location nozzleLocation = nozzle.getLocation();
+        nozzle.moveTo(nozzleLocation.derive(location, true, true, false, true), Motion.MotionOption.SpeedOverPrecision);
+
         // if that didn't take long enough, wait
         ((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds();
         vacuumOn = vacuumOn - (System.currentTimeMillis() + 
@@ -493,7 +497,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * @throws Exception something went wrong.
      */
     private Location getFeederPart(Nozzle nozzle) throws Exception {
-        Location location = dropBox.centerBottomLocation.derive(null, null, Double.NaN, 0.0);
+        Location location = dropBox.centerBottomLocation.derive(new Location(LengthUnit.Millimeters, 0, 0, 0, 0), false, false, false, true);
         CvPipeline pipeline = getFeederPipeline();
         Camera camera = nozzle.getHead().getDefaultCamera();
         // if there is a part, get a precise location
@@ -502,8 +506,8 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             location = HeapFeederHelper.getNearestPart(pipeline, camera, nozzle, this, getDropBox());
             if (location != null) {
                 // adjust Z
-                location = location.derive(null, null, dropBox.centerBottomLocation.convertToUnits(location.getUnits()).getZ()
-                        + part.getHeight().convertToUnits(location.getUnits()).getValue(), null);
+                location = location.derive(new Location(LengthUnit.Millimeters, 0, 0, dropBox.centerBottomLocation.convertToUnits(location.getUnits()).getZ()
+                        + part.getHeight().convertToUnits(location.getUnits()).getValue(), 0), false, false, true, false);
             }
         }
         MainFrame.get()
