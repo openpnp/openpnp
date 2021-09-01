@@ -32,6 +32,7 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage.Result;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -975,9 +976,12 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             pipeline.setProperty("nozzle", nozzle);
             pipeline.setProperty("feeder", feeder);
             pipeline.process();
-            // Grab the results
-            List<RotatedRect> results =
-                    (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+            // make sure we have a result
+            Result visionResult = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
+            if ( visionResult == null) {
+                return null;
+            }
+            List<RotatedRect> results = (List<RotatedRect>) visionResult.model;
             if (results == null || results.isEmpty()) {
                 return null;
             }
