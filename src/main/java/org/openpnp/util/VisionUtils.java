@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openpnp.model.Area;
+import org.openpnp.model.AreaUnit;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -140,6 +142,15 @@ public class VisionUtils {
 
         // convert it all to pixels
         return length.getValue() / avgUnitsPerPixel;
+    }
+    
+    public static double toPixels(Area area, Camera camera) {
+        // convert inputs to the same units
+        Location unitsPerPixel = camera.getUnitsPerPixel();
+        area = area.convertToUnits(AreaUnit.fromLengthUnit(unitsPerPixel.getUnits()));
+
+        // convert it all to pixels
+        return area.getValue() / (unitsPerPixel.getX() * unitsPerPixel.getY());
     }
 
     /**

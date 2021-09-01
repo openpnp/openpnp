@@ -29,8 +29,6 @@ import org.opencv.core.Mat;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
-import org.openpnp.spi.Camera;
-import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
@@ -233,42 +231,43 @@ public class DetectCircularSymmetry extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        Camera camera = (Camera) pipeline.getProperty("camera");
         Mat mat = pipeline.getWorkingImage();
-        // Get overriding properties, if any and convert to pixels.
-        Length diameterByProperty = (Length) pipeline.getProperty(propertyName+".diameter");
+        
+        // Get overriding properties, if any and convert to pixels if necessary.
+        double diameter = Double.NaN; //Nan means no override for diameter
         int minDiameter = this.minDiameter;
         int maxDiameter = this.maxDiameter;
-        if (diameterByProperty != null && diameterByProperty.getValue() > 0) {
-            double diameter = VisionUtils.toPixels(diameterByProperty, camera);
-            minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
-            maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
-        }
         int maxDistance = this.maxDistance;
-        Length maxDistanceByProperty = (Length) pipeline.getProperty(propertyName+".maxDistance");
-        if (maxDistanceByProperty != null && maxDistanceByProperty.getValue() > 0) {
-            maxDistance = (int) Math.round(VisionUtils.toPixels(maxDistanceByProperty, camera));
-        }
         int searchWidth = this.searchWidth;
-        Length searchWidthByProperty = (Length) pipeline.getProperty(propertyName+".searchWidth");
-        if (searchWidthByProperty != null && searchWidthByProperty.getValue() > 0) {
-            searchWidth = (int) Math.round(VisionUtils.toPixels(searchWidthByProperty, camera));
+        int searchHeight = this.searchHeight;
+        Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
+        
+        if (!propertyName.isEmpty()) {
+            diameter = getPossiblePipelinePropertyOverride(diameter, pipeline, 
+                    propertyName + ".diameter", Double.class, Integer.class, Length.class);
+            if (Double.isFinite(diameter)) {
+                minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
+                maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
+            }
+
+            maxDistance = getPossiblePipelinePropertyOverride(maxDistance, pipeline, 
+                    propertyName + ".maxDistance", Double.class, Integer.class, Length.class);
+            
+            searchWidth = getPossiblePipelinePropertyOverride(searchWidth, pipeline, 
+                    propertyName + ".searchWidth", Double.class, Integer.class, Length.class);
+            
+            searchHeight = getPossiblePipelinePropertyOverride(searchHeight, pipeline, 
+                    propertyName + ".searchHeight", Double.class, Integer.class, Length.class);
+
+            center = getPossiblePipelinePropertyOverride(center, pipeline, 
+                    propertyName + ".center", Point.class, org.opencv.core.Point.class, 
+                    Location.class);
         }
         if (searchWidth <= 0) {
             searchWidth = maxDistance*2;
         }
-        int searchHeight = this.searchHeight;
-        Length searchHeightByProperty = (Length) pipeline.getProperty(propertyName+".searchHeight");
-        if (searchHeightByProperty != null && searchHeightByProperty.getValue() > 0) {
-            searchHeight = (int) Math.round(VisionUtils.toPixels(searchHeightByProperty, camera));
-        }
         if (searchHeight <= 0) {
             searchHeight = maxDistance*2;
-        }
-        Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
-        Location centerByProperty = (Location) pipeline.getProperty(propertyName+".center");
-        if (centerByProperty != null) {
-            center = VisionUtils.getLocationPixels(camera, centerByProperty);
         }
 
         List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 
@@ -345,7 +344,7 @@ public class DetectCircularSymmetry extends CvStage {
      *                          at least this relative symmetry. Must be in the interval [0,1].
      * @param subSampling       Sub-sampling pixel distance, i.e. only one pixel out of a square of size subSampling will be 
      *                          examined on the first pass. 
-     * @param superSampling     Super-sampling pixel fraction, i.e. the result will have 1/superSampling sub-pixel accuracy.   
+     * @param superSampling     Super-sampling pixel fraction, i.e. the result will have 1/superSampling sub-pixel accuracy.
      * @param diagnostics       If true, draws diagnostic match circles and cross hairs into the image. 
      * @param heatMap           If true, overlays a diagnostic heat map onto the image.
      * @param scoreRange        Outputs the score range of all the sampled center candidates.
@@ -417,7 +416,7 @@ public class DetectCircularSymmetry extends CvStage {
         int[] radiusMap = null;
         double [] xOffsetMap = null;
         double [] yOffsetMap = null;
-        boolean showDiagnostics = ((diagnostics || heatMap) && superSamplingOffsets.length == 1); 
+        boolean showDiagnostics = ((diagnostics || heatMap) && superSamplingOffsets.length == 1);
         int wSearchRangeMap = wSearchRange/subSamplingEff;
         int hSearchRangeMap = hSearchRange/subSamplingEff;
         if (showDiagnostics || maxTargetCount > 1) {
@@ -643,7 +642,7 @@ public class DetectCircularSymmetry extends CvStage {
                     for (SymmetryCircle localBest : maximaFiltered) {
                         // ... recursion into finer subSampling and local search.
                         List<CvStage.Result.Circle> localRet = findCircularSymmetry(image, (int)localBest.x, (int)localBest.y, maxDiameter, minDiameter, 
-                                subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1, 
+                                subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1,
                                 minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
                         if (localRet.size() > 0) { 
                             samplingFiltered.add((SymmetryCircle) localRet.get(0));
@@ -692,7 +691,7 @@ public class DetectCircularSymmetry extends CvStage {
             else {
                 // Recursion into finer subSampling and local search.
                 ret = findCircularSymmetry(image, (int)(xBest), (int)(yBest), maxDiameter, minDiameter, 
-                        subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1, 
+                        subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1,
                         minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
             }
         }
