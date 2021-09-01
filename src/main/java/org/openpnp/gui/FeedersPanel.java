@@ -573,12 +573,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Feeder feeder = getSelection();
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                // Do the feed and get the nozzle that would be used for the subsequent pick. 
+                Nozzle nozzle = feedFeeder(feeder);
 
-                nozzle.moveToSafeZ();
-                feeder.feed(nozzle);
                 // Note, we do not use nozzle.moveToPickLocation(feeder) as this might involve 
-                // probing, which we don't want to happen here. Instead we need to use a preliminary 
+                // probing, which we don't want to happen here. Instead we need to simulate a preliminary 
                 // pick location. 
                 Location pickLocation = preliminaryPickLocation(feeder, nozzle);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
@@ -604,7 +603,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
     };
 
-    public static void pickFeeder(Feeder feeder) throws Exception, JobProcessorException {
+    /**
+     * Perform a job-like feed operations sequence. 
+     * 
+     * @param feeder
+     * @return the nozzle to be used for a subsequent pick.
+     * @throws Exception
+     */
+    public static Nozzle feedFeeder(Feeder feeder) throws Exception {
         if (feeder.getPart() == null) {
             throw new Exception("Feeder "+feeder.getName()+" has no part.");
         }
@@ -624,6 +630,19 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         // Perform the feed.
         nozzle.moveToSafeZ();
         feeder.feed(nozzle);
+        return nozzle;
+    }
+
+    /**
+     * Perform a job-like feed and pick operations sequence. 
+     * 
+     * @param feeder
+     * @throws Exception
+     * @throws JobProcessorException
+     */
+    public static void pickFeeder(Feeder feeder) throws Exception, JobProcessorException {
+        // Do the feed an get the nozzle for the pick.
+        Nozzle nozzle = feedFeeder(feeder);
 
         // Go to the pick location and pick.
         nozzle.moveToPickLocation(feeder);
