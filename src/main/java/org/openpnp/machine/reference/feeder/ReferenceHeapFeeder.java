@@ -107,7 +107,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * partOn() not used, since the chance is high, that there are larger leakages.
      */
     @Attribute(required = false)
-    private int requiredVacuumDifference = 300;
+    private int requiredVacuumDifference = 150;
 
     /**
      * Pipeline to detect parts (correct laying).
