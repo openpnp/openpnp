@@ -124,6 +124,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     @Element(required=false)
     private Length calibrationOffsetZ = null;
 
+    @Element(required=false)
+    private Length unloadedCalibrationOffsetZ = null;
+
     @Attribute(required=false)
     private double maxZOffsetMm = 2.0;
 
@@ -160,7 +163,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
             // After homing, recalibrate.
             try {
                 zCalibratedNozzleTip = null;
-                ensureZCalibrated();
+                ensureZCalibrated(true);
             }
             catch (Exception e) {
                 if (nt != null && nt.iszCalibrationFailHoming()) {
@@ -548,8 +551,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     }
 
     @Override
-    public void ensureZCalibrated() throws Exception {
+    public void ensureZCalibrated(boolean assumeNozzleTipLoaded) throws Exception {
         if (contactProbeMethod == ContactProbeMethod.None) {
+            zCalibratedNozzleTip = null;
             return;
         }
         ReferenceNozzleTip nt = getCalibrationNozzleTip();
@@ -559,12 +563,34 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         if (nt.getzCalibrationTrigger() == ZCalibrationTrigger.Manual) {
             return;
         }
-        if (zCalibratedNozzleTip == nt 
-                || (zCalibratedNozzleTip != null && nt.getzCalibrationTrigger() == ZCalibrationTrigger.MachineHome)) {
-            // Already calibrated.
+        if (assumeNozzleTipLoaded 
+                || !nt.getzCalibrationTrigger().isPerNozzleTip()) {
+            // We assume the nozzle tip is (in the course of being) loaded or we don't have per nozzle tip calibration.
+            if (zCalibratedNozzleTip == nt 
+                    || (zCalibratedNozzleTip != null && nt.getzCalibrationTrigger() == ZCalibrationTrigger.MachineHome)) {
+                // Already calibrated.
+                return;
+            }
+            calibrateZ(nt);
+        }
+        else {
+            // We assume the nozzle tip is (in the course of being) unloaded and this is per nozzle tip calibration.
+            // Take the "naked" nozzle Z offset for the unloading process.
+            ReferenceNozzleTip unloadedNozzleTipStandin = getUnloadedNozzleTipStandin();
+            if (unloadedNozzleTipStandin != null) {
+                if (unloadedNozzleTipStandin != getNozzleTip()) {
+                    // There is a "unloaded" nozzle, take its Z offset.
+                    zCalibratedNozzleTip = unloadedNozzleTipStandin;
+                    setCalibrationOffsetZ(unloadedCalibrationOffsetZ);
+                }
+            }
+            else {
+                // Just reset to raw nozzle Z.
+                zCalibratedNozzleTip = null;
+                setCalibrationOffsetZ(null);
+            }
             return;
         }
-        calibrateZ(nt);
     }
 
     @Override
@@ -614,6 +640,14 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         }
     }
 
+    public Length getUnloadedCalibrationOffsetZ() {
+        return unloadedCalibrationOffsetZ;
+    }
+
+    public void setUnloadedCalibrationOffsetZ(Length unloadedCalibrationOffsetZ) {
+        this.unloadedCalibrationOffsetZ = unloadedCalibrationOffsetZ;
+    }
+
     public void calibrateZ(ReferenceNozzleTip nt) throws Exception {
         if (nt != getCalibrationNozzleTip()) {
             throw new Exception("Nozzle "+getName()+" has not nozzle tip "+nt.getName()+" loaded.");
@@ -633,11 +667,18 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         zCalibratedNozzleTip = nt;
         // Establish the new Z calibration.
         setCalibrationOffsetZ(offsetZ);
+        if (getNozzleTip() == null) {
+            // Store the special "naked" nozzle Z offset. 
+            setUnloadedCalibrationOffsetZ(calibrationOffsetZ);
+        }
     }
 
     public void resetZCalibration() {
         setCalibrationOffsetZ(null);
         zCalibratedNozzleTip = null;
+        if (getNozzleTip() == null) {
+            setUnloadedCalibrationOffsetZ(null);
+        }
     }
 
     public static void referenceAllTouchLocationsZ() throws Exception {
