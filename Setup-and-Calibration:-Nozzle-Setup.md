@@ -30,7 +30,12 @@ If you have more than one nozzle tip on your machine:
 5. To use the machine with the nozzle tip you just created you need to load it onto the nozzle. Press the load button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to do this.
 
 ## Head Offsets
-Nozzle head offsets tell OpenPnP where the nozzles are in relation to the other objects on your head. In an earlier step we set the Camera Head Offsets to zero, making the top camera the origin of the head. Now we'll tell OpenPnP how far the nozzles are from the camera in real world units. The following steps have to be repeated for each nozzle attached to the head.
+Nozzle head offsets tell OpenPnP where the nozzles are in relation to the other objects on your head. In an earlier step we set the Camera Head Offsets to zero, making the top camera the origin of the head. Now we'll tell OpenPnP how far the nozzles are from the camera in real world units. 
+___
+In newer versions of OpenPnP this can be done automatically, using [Issues & Solutions Calibrations](https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets) in the right order. 
+___
+
+The following steps are for a manual setup (with an old OpenPnP version) only. They have to be repeated for each nozzle attached to the head.
 
 ![nozzle offset in machine configuration](https://user-images.githubusercontent.com/3868450/50729987-9910b200-1143-11e9-9d13-dd234b91d97e.PNG)
 
