@@ -356,12 +356,13 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
     private double pokeForParts(Nozzle nozzle, double vacuumLevel) throws Exception {
         // while vacuum difference is not reached, slowly stir in the heap
         double currentDepth = lastFeedDepth ; // start at the same height, finish that "level"
-        for (int i = 1; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference)                // part found
-                && currentDepth > (boxDepth + part.getHeight().getValue()/2)                                          // on the bottom
-                && !(currentDepth <= (lastFeedDepth - 2 * part.getHeight().getValue()) && lastFeedDepth != 0); i++) { // avoid going to deep into parts. Risk of damaging parts and low chance of picking something up. 
-            // searched a whole layer, go down a bit
-            if (i % 15 == 0 || i % 15 == 10) {
-                currentDepth -= Math.max(0.05, (part.getHeight().getValue() / 4.0));                                     // move a bit down, larger steps compared to stir, since we can utilize the spring
+        currentDepth += Math.max(0.05, (part.getHeight().getValue() / 4.0));                                            // add what will be subtracted in the loop
+        for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference)                  // part found
+                && currentDepth > (boxDepth + part.getHeight().getValue()/2)                                            // on the bottom
+                && !(currentDepth <= (lastFeedDepth - 2 * part.getHeight().getValue()) && lastFeedDepth != 0); i=i+2) { // avoid going to deep into parts. Risk of damaging parts and low chance of picking something up. 
+            // searched half a  layer, go down a bit
+            if (i % 25 == 0 || i % 25 == 1) {
+                currentDepth -= Math.max(0.05, (part.getHeight().getValue() / 4.0));                                    // move a bit down, larger steps compared to stir, since we can utilize the spring
             }                                                                                                           // (but only if not after reset = 0. First time let it find the start of the heap)
             moveToPokeLocation(nozzle, currentDepth, part.getHeight().getValue(), i % 15);
             // wait a bit for the vacuum-levels to stabilize
@@ -380,63 +381,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
 
     
     private void moveToPokeLocation(Nozzle nozzle, double currentDepth, double partHeight, int step) throws Exception {
-        Location destination = location.add(new Location(LengthUnit.Millimeters, 0, 0, currentDepth, 0));
-        switch (step) {
-            case 1: {
-                destination = destination.add(new Location(LengthUnit.Millimeters,  0.00,  0.00, 0, 0));    // center
-                break;
-            }
-            case 2: {
-                destination = destination.add(new Location(LengthUnit.Millimeters,  1.25,  0, 0, 0));    // right middle
-                break;
-            }
-            case 3: {
-                destination = destination.add(new Location(LengthUnit.Millimeters,  1.25,  1.25, 0, 0));  // and now counter clockwise
-                break;
-            }
-            case 4: {
-                destination = destination.add(new Location(LengthUnit.Millimeters,  0.00,  1.25, 0, 0)); 
-                break;
-            }
-            case 5: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, -1.25,  1.25, 0, 0)); 
-                break;
-            }
-            case 6: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, -1.25,  0.00, 0, 0)); 
-                break;
-            }
-            case 7: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, -1.25, -1.25, 0, 0)); 
-                break;
-            }
-            case 8: {
-                destination = destination.add(new Location(LengthUnit.Millimeters,  0.00, -1.25, 0, 0)); 
-                break;
-            }
-            case 9: {
-                destination = destination.add(new Location(LengthUnit.Millimeters,  1.25, -1.25, 0, 0)); 
-                break;
-            }
-            case 11: {
-                destination = destination.add(new Location(LengthUnit.Millimeters,  0.65, -0.65, 0, 0));    // middle between center and corner
-                break;
-            }
-            case 12: {
-                destination = destination.add(new Location(LengthUnit.Millimeters,  0.65,  0.65, 0, 0)); 
-                break;
-            }
-            case 13: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, -0.65,  0.65, 0, 0)); 
-                break;
-            }
-            case 14: {
-                destination = destination.add(new Location(LengthUnit.Millimeters, -0.65, -0.65, 0, 0)); 
-                break;
-            }
-
-
-        }
+        int row = step / 5;
+        int coloum = step % 5;
+        Location destination = location.add(new Location(LengthUnit.Millimeters, -1.25 + coloum * 0.625, -1.25 + row * 0.625, currentDepth, 0));
         nozzle.moveTo(destination.add(new Location(LengthUnit.Millimeters, 0,0, 2.25 * partHeight, 0)), 1, Motion.MotionOption.SpeedOverPrecision);        
         nozzle.waitForCompletion(CompletionType.WaitForStillstand);
         nozzle.moveTo(destination, 0.33, Motion.MotionOption.SpeedOverPrecision);        
