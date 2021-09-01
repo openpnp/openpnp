@@ -1,21 +1,32 @@
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.Color;
+import java.awt.event.ActionEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding;
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.jdesktop.beansbinding.BeanProperty;
+import org.jdesktop.beansbinding.Bindings;
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -48,11 +59,23 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         contentPanel.add(panelTransforms);
         panelTransforms.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -155,6 +178,46 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         
         lblremovesInterlacingFrom = new JLabel("(Removes interlacing from stacked frames)");
         panelTransforms.add(lblremovesInterlacingFrom, "5, 20");
+        
+        lblRedBalance = new JLabel("Red Balance");
+        panelTransforms.add(lblRedBalance, "2, 24, right, default");
+        
+        redBalance = new JSlider();
+        redBalance.setMajorTickSpacing(100);
+        redBalance.setMaximum(200);
+        redBalance.setPaintTicks(true);
+        redBalance.setValue(100);
+        panelTransforms.add(redBalance, "4, 24, 2, 1");
+        
+        btnAutowhitebalance = new JButton(autoWhiteBalanceAction);
+        panelTransforms.add(btnAutowhitebalance, "7, 24, fill, fill");
+        
+        lblGreenBalance = new JLabel("Green Balance");
+        panelTransforms.add(lblGreenBalance, "2, 26, right, default");
+        
+        greenBalance = new JSlider();
+        greenBalance.setPaintTicks(true);
+        greenBalance.setValue(100);
+        greenBalance.setMaximum(200);
+        greenBalance.setMajorTickSpacing(100);
+        panelTransforms.add(greenBalance, "4, 26, 2, 1");
+        
+        btnAutowhitebalance_1 = new JButton(autoWhiteBalanceBrightAction);
+        panelTransforms.add(btnAutowhitebalance_1, "7, 26, default, fill");
+        
+        lblBlueBalance = new JLabel("Blue Balance");
+        panelTransforms.add(lblBlueBalance, "2, 28, right, default");
+        
+        blueBalance = new JSlider();
+        blueBalance.setValue(100);
+        blueBalance.setMajorTickSpacing(100);
+        blueBalance.setMaximum(200);
+        blueBalance.setPaintTicks(true);
+        panelTransforms.add(blueBalance, "4, 28, 2, 1");
+        
+        btnReset = new JButton(resetAction);
+        panelTransforms.add(btnReset, "7, 28");
+        initDataBindings();
     }
 
     @Override
@@ -162,7 +225,6 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-        LengthConverter lengthConverter = new LengthConverter();
 
         addWrappedBinding(referenceCamera, "rotation", textFieldRotation, "text", doubleConverter);
         addWrappedBinding(referenceCamera, "offsetX", textFieldOffsetX, "text", intConverter);
@@ -186,6 +248,79 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         ComponentDecorators.decorateWithAutoSelect(scaleHeightTf);
     }
 
+    protected void initDataBindings() {
+        // These are directly bound to the camera, to see results immediately.
+        BeanProperty<ReferenceCamera, Integer> referenceCameraBeanProperty = BeanProperty.create("redBalancePercent");
+        BeanProperty<JSlider, Integer> jSliderBeanProperty = BeanProperty.create("value");
+        AutoBinding<ReferenceCamera, Integer, JSlider, Integer> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty, redBalance, jSliderBeanProperty);
+        autoBinding.bind();
+        //
+        BeanProperty<ReferenceCamera, Integer> referenceCameraBeanProperty_1 = BeanProperty.create("greenBalancePercent");
+        BeanProperty<JSlider, Integer> jSliderBeanProperty_1 = BeanProperty.create("value");
+        AutoBinding<ReferenceCamera, Integer, JSlider, Integer> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_1, greenBalance, jSliderBeanProperty_1);
+        autoBinding_1.bind();
+        //
+        BeanProperty<ReferenceCamera, Integer> referenceCameraBeanProperty_2 = BeanProperty.create("blueBalancePercent");
+        BeanProperty<JSlider, Integer> jSliderBeanProperty_2 = BeanProperty.create("value");
+        AutoBinding<ReferenceCamera, Integer, JSlider, Integer> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_2, blueBalance, jSliderBeanProperty_2);
+        autoBinding_2.bind();
+    }
+
+    private final Action autoWhiteBalanceAction = new AbstractAction() {
+        {
+            putValue(NAME, "Auto White-Balance, Overall");
+            putValue(SHORT_DESCRIPTION, 
+                    "<html>Hold a neutral bright object in front of the camera and<br/>"
+                    + "press this button to automatically calibrate the white-balance.<br/><br/>"
+                    + "This method looks at where the bulk of the color is distributed,<br/>"
+                    + "overall.</html>");
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                referenceCamera.autoAdjustWhiteBalance(false);
+                CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(referenceCamera);
+                cameraView.setShowImageInfo(true);
+                MovableUtils.fireTargetedUserAction(referenceCamera);
+            });
+        }
+    };
+
+    private final Action autoWhiteBalanceBrightAction = new AbstractAction() {
+        {
+            putValue(NAME, "Auto White-Balance, Brightest");
+            putValue(SHORT_DESCRIPTION, 
+                    "<html>Hold a neutral bright object in front of the camera and<br/>"
+                    + "press this button to automatically calibrate the white-balance.<br/><br/>"
+                    + "This method looks at the brightest parts and averages the color<br/>"
+                    + "in those parts.</html>");
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                referenceCamera.autoAdjustWhiteBalance(true);
+                CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(referenceCamera);
+                cameraView.setShowImageInfo(true);
+                MovableUtils.fireTargetedUserAction(referenceCamera);
+            });
+        }
+    };
+
+    private final Action resetAction = new AbstractAction() {
+        {
+            putValue(NAME, "Reset");
+            putValue(SHORT_DESCRIPTION, "Switch off the white-balance / Reset to neutral.");
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            UiUtils.messageBoxOnException(() -> {
+                referenceCamera.resetWhiteBalance();
+                CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(referenceCamera);
+                cameraView.setShowImageInfo(true);
+            });
+        }
+    };
+
     private JLabel lblCropX;
     private JLabel lblCropHeight;
     private JTextField cropWidthTextField;
@@ -201,4 +336,13 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
     private JCheckBox deinterlaceChk;
     private JLabel lblDeinterlace;
     private JLabel lblremovesInterlacingFrom;
+    private JLabel lblRedBalance;
+    private JLabel lblGreenBalance;
+    private JLabel lblBlueBalance;
+    private JSlider redBalance;
+    private JSlider greenBalance;
+    private JSlider blueBalance;
+    private JButton btnAutowhitebalance;
+    private JButton btnReset;
+    private JButton btnAutowhitebalance_1;
 }

@@ -47,10 +47,13 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -1180,19 +1183,43 @@ public class CameraView extends JComponent implements CameraListener {
         // find the highest value in the histogram
         long maxVal = 0;
         for (int channel = 0; channel < 3; channel++) {
-            for (int bucket = 0; bucket < 256; bucket++) {
-                maxVal = Math.max(maxVal, histogram[channel][bucket]);
+            // Smooth it 
+            for (int bucket = 254; bucket > 0; bucket--) {
+                histogram[channel][bucket] = 
+                        histogram[channel][bucket] 
+                                + histogram[channel][bucket-1]/2
+                                        + histogram[channel][bucket+1]/2;
             }
+            long [] sorted = histogram[channel].clone();
+            Arrays.sort(sorted);
+            // Exclude the largest extremes, typically saturation values. 
+            maxVal = Math.max(maxVal, sorted[sorted.length-3]);
         }
         // and scale it to 50 pixels tall
         double scale = 50.0 / maxVal;
-        Color[] colors = new Color[] {Color.red, Color.green, Color.blue};
-        for (int channel = 0; channel < 3; channel++) {
-            g2d.setColor(colors[channel]);
-            for (int bucket = 0; bucket < 256; bucket++) {
-                int value = (int) (histogram[channel][bucket] * scale);
-                g2d.drawLine(topLeftX + insets.left + 1 + bucket, yPen + 1 + 50 - value,
-                        topLeftX + insets.left + 1 + bucket, yPen + 1 + 50 - value);
+        Color[] colors = new Color[] {new Color(255, 0, 0), new Color(0, 255, 0), new Color(0, 0, 255)};
+        for (int bucket = 0; bucket < 256; bucket++) {
+            // Rank the three colors, we want to draw overlapping histogram bars with mixed colors.
+            TreeMap<Double, Integer> map = new TreeMap<>();
+            map.put(histogram[0][bucket]+0.1, 0);
+            map.put(histogram[1][bucket]+0.2, 1);
+            map.put(histogram[2][bucket]+0.3, 2);
+            // Start with white, where all three colors overlap.
+            Color color = new Color(255, 255, 255);
+            int value0 = 0;
+            for (Entry<Double, Integer> entry : map.entrySet()) {
+                g2d.setColor(color);
+                int value1 = (int) Math.min(50, (entry.getKey() * scale) + 0.5);
+                if (value1 > value0) {
+                    g2d.drawLine(topLeftX + insets.left + 1 + bucket, yPen + 1 + 50 - value0 - 1,
+                        topLeftX + insets.left + 1 + bucket, yPen + 1 + 50 - value1);
+                }
+                value0 = value1;
+                // Subtract the color that is out.
+                color = new Color(
+                        color.getRed() - colors[entry.getValue()].getRed(), 
+                        color.getGreen() - colors[entry.getValue()].getGreen(),
+                        color.getBlue() - colors[entry.getValue()].getBlue());
             }
         }
     }
