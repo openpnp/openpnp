@@ -397,7 +397,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         int row = step / 5;
         int coloum = step % 5;
         Location destination = location.add(new Location(LengthUnit.Millimeters, -1.25 + coloum * 0.625, -1.25 + row * 0.625, currentDepth, 0));
-        nozzle.moveTo(destination.add(new Location(LengthUnit.Millimeters, 0,0, 2.25 * partHeight, 0)), 1, Motion.MotionOption.SpeedOverPrecision);        
+        nozzle.moveTo(destination.add(new Location(LengthUnit.Millimeters, 0,0, Math.max(1, 2.25 * partHeight), 0)), 1, Motion.MotionOption.SpeedOverPrecision);        
         nozzle.waitForCompletion(CompletionType.WaitForStillstand);
         nozzle.moveTo(destination, 0.33, Motion.MotionOption.SpeedOverPrecision);        
     }
