@@ -344,7 +344,7 @@ public class BlindsFeeder extends ReferenceFeeder {
             }
         }
         else if (coverType == CoverType.PushCover) {
-            actuateCover(nozzle, true);
+            actuateCover(nozzle, true, true, true);
         }
         // increase the feed count 
         setFeedCount(getFeedCount() + 1);
