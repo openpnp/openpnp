@@ -439,6 +439,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                     break;
                 }
             }
+            Thread.sleep(((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds() / 3);
         }
         // if at the bottom => failed
         if (currentDepth <= (boxDepth + part.getHeight().getValue())) {
@@ -479,7 +480,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 break;
             }
         }
-        nozzle.moveTo(destination, 0.33, Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(destination, 0.25, Motion.MotionOption.SpeedOverPrecision);
     }
 
     /**
