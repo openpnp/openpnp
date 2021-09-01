@@ -216,7 +216,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             // no part found, try to flip a part by throwing it in the dropBox again
             if (!dropBox.tryToFlipSomePart(nozzle)) {
                 if (lastRoundPartsFetched == true) {
-                    throw new Exception("Feeder " + getName() + ": Fetching parts failedd => feed failed.");
+                    throw new Exception("Feeder " + getName() + ": Fetching parts failed => feed failed.");
                 } else {
                     // nothing there, get new parts
                     fetchParts(nozzle);
