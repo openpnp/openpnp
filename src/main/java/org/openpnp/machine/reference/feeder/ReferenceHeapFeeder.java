@@ -374,7 +374,8 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             }                                                                                                           // (but only if not after reset = 0. First time let it find the start of the heap)
             moveToPokeLocation(nozzle, currentDepth, part.getHeight().getValue(), i % 25);
             // wait a bit for the vacuum-levels to stabilize
-            Thread.sleep(((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds());                                 
+            Thread.sleep(((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds());
+        }
         // if at the bottom => failed
         if (currentDepth <= (boxDepth + part.getHeight().getValue())) {
             throw new Exception("HeapFeeder " + getName() + ": Can not grab parts. Heap Empty or VacuumDifference wrong.");
