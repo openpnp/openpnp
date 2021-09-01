@@ -157,7 +157,7 @@ After capturing the X, Y coordinates with the camera, you must initially probe t
 
 **CAUTION**: do not use the probe button later. You will lose your "eternal" Z reference! 
 
-#### Auto Z Calibration Settings
+### Tool Changer Z Calibration
 
 **Auto Z Calibration** determines when the Z calibration happens. 
 
@@ -175,7 +175,25 @@ After capturing the X, Y coordinates with the camera, you must initially probe t
 
 **Calibrate now** performs manual Z calibration. 
 
-**Note:** the Z calibration affects all the nozzle Z motion as well as the capturing of coordinates from the current nozzle position. But it does not affect Safe Z, as Safe Z is relative to the raw axis coordinate system, not the calibrated nozzle Z coordinate system. To balance a multi-nozzle machine's nozzles in Safe Z, use the [Axis capture buttons](https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits) instead.  
+### Z Calibration and Safe Z
+
+Z Calibration affects all the nozzle Z motion as well as the capturing of Z coordinates from the current nozzle position. But it does not affect Safe Z, as Safe Z is relative to the raw axis coordinate system, _not_ the calibrated nozzle Z coordinate system. To balance a multi-nozzle machine's nozzles in Safe Z, use the [Axis capture buttons](https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits) instead. 
+
+### Z Calibration inside the Tool Changer
+
+The following does only apply, if **Auto Z Calibration** is set to **NozzleTipChange**, i.e. when Z calibration happens **per nozzle tip** and not per nozzle. For machines with uneven nozzle tips.
+
+Z Calibration is referencing the coordinate system Z to the point of the nozzle tip (the red dashed line in the illustration below). This is obviously the most important Z reference point for a pick & place machine. However, when loading and unloading a nozzle tip, the point of the tip is not actually relevant, other features of the nozzle tip are: There are flanges etc. on the tip that come into contact with the changer slot and allow it to pressed on, or pulled off, these might be at different Z, as measured from the nozzle tip point (case B in the illustration below). And there is the coupling of the nozzle with the nozzle tip, these might be at different Z, as measured from the flange (case C in the illustration below). 
+
+![nozzle_tip_different_Z_calibration](https://user-images.githubusercontent.com/9963310/131672327-9b7e377f-2326-4a8f-9a45-e9e0d2312d96.png)
+
+Case A and B may actually use the same changer slot Z coordinates, because the flange is at the same (uncalibrated) nozzle Z. Case B's nozzle tip is longer, so after Z calibration, B is lifted up a bit. 
+
+Case C however, because the nozzle is inserted less when coupling, needs a special slot configuration with higher-up (uncalibrated) Z coordinates, otherwise it would likely collide with the slot when pushed down as much as case A. After Z calibration, case C is lifted up to compensate for the lesser coupling depth.
+
+When you initially capture the changer slot locations, the nozzle is not yet Z calibrated (or it is neutrally calibrated for the "unloaded" state i.e. the bare nozzle). These captured Z coordinates must **not** be made subject to Z calibration, as you can easily see, when you mentally try to load or unload case B or C with _calibrated_ instead of _uncalibrated_ Z. Therefore, OpenPnP voids the Z calibration immediately before unloading a nozzle tip. 
+
+When you have configured a "unloaded" pseudo nozzle tip, standing in for the bare nozzle, the Z calibration of that "unloaded" state will be used instead. So it is even possible to use this system with very inconsistent Z homing or very uneven nozzles on a multi nozzle machine. On a machine with very inconsistent Z homing, you must unload all the nozzle tips before unpowering the machine, so on the next startup the naked nozzle can be measured as the first thing. The "unloaded" stand-in is explained in the context of [nozzle tip calibration](https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Calibration-Setup#calibrating-the-bare-nozzle).
 
 ### Cloning Settings
 
