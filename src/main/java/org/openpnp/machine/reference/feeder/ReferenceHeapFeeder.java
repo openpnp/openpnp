@@ -207,6 +207,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         pickLocation = null;
 
         // now try to get a good part
+        boolean lastRoundPartsFetched = false;
         for (int attempt = 0; attempt <= maxThrowRetries; attempt++) {
             pickLocation = getFeederPart(nozzle);
             if (pickLocation != null) {
@@ -214,8 +215,15 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             }
             // no part found, try to flip a part by throwing it in the dropBox again
             if (!dropBox.tryToFlipSomePart(nozzle)) {
-                // nothing there, get new parts
-                fetchParts(nozzle);
+                if (lastRoundPartsFetched == true) {
+                    throw new Exception("Feeder " + getName() + ": Fetching parts failedd => feed failed.");
+                } else {
+                    // nothing there, get new parts
+                    fetchParts(nozzle);
+                    lastRoundPartsFetched = true;
+                }
+            } else {
+                lastRoundPartsFetched = false;
             }
             // to many failed attempts, discard parts in the dropBox (maybe damaged/wrong parts)
             if (attempt > 0 && attempt % throwAwayDropBoxContentAfterFailedFeeds == 0) {
@@ -366,8 +374,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             }                                                                                                           // (but only if not after reset = 0. First time let it find the start of the heap)
             moveToPokeLocation(nozzle, currentDepth, part.getHeight().getValue(), i % 25);
             // wait a bit for the vacuum-levels to stabilize
-            Thread.sleep(((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds() / 3);                                    // divided by three a rough guess
-        }
+            Thread.sleep(((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds());                                 
         // if at the bottom => failed
         if (currentDepth <= (boxDepth + part.getHeight().getValue())) {
             throw new Exception("HeapFeeder " + getName() + ": Can not grab parts. Heap Empty or VacuumDifference wrong.");
