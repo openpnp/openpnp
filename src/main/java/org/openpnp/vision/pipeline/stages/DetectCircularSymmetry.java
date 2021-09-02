@@ -262,7 +262,6 @@ public class DetectCircularSymmetry extends CvStage {
             center = getPossiblePipelinePropertyOverride(center, pipeline, 
                     propertyName + ".center", Point.class, org.opencv.core.Point.class, 
                     Location.class);
-            
         }
         if (searchWidth <= 0) {
             searchWidth = maxDistance*2;
@@ -270,7 +269,7 @@ public class DetectCircularSymmetry extends CvStage {
         if (searchHeight <= 0) {
             searchHeight = maxDistance*2;
         }
-        
+
         List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 
                 maxDiameter, minDiameter, maxDistance*2, searchWidth, searchHeight, maxTargetCount, minSymmetry, corrSymmetry, 
                 subSampling, superSampling, diagnostics, heatMap, new ScoreRange());
@@ -345,7 +344,7 @@ public class DetectCircularSymmetry extends CvStage {
      *                          at least this relative symmetry. Must be in the interval [0,1].
      * @param subSampling       Sub-sampling pixel distance, i.e. only one pixel out of a square of size subSampling will be 
      *                          examined on the first pass. 
-     * @param superSampling     Super-sampling pixel fraction, i.e. the result will have 1/superSampling sub-pixel accuracy.   
+     * @param superSampling     Super-sampling pixel fraction, i.e. the result will have 1/superSampling sub-pixel accuracy.
      * @param diagnostics       If true, draws diagnostic match circles and cross hairs into the image. 
      * @param heatMap           If true, overlays a diagnostic heat map onto the image.
      * @param scoreRange        Outputs the score range of all the sampled center candidates.
@@ -417,7 +416,7 @@ public class DetectCircularSymmetry extends CvStage {
         int[] radiusMap = null;
         double [] xOffsetMap = null;
         double [] yOffsetMap = null;
-        boolean showDiagnostics = ((diagnostics || heatMap) && superSamplingOffsets.length == 1); 
+        boolean showDiagnostics = ((diagnostics || heatMap) && superSamplingOffsets.length == 1);
         int wSearchRangeMap = wSearchRange/subSamplingEff;
         int hSearchRangeMap = hSearchRange/subSamplingEff;
         if (showDiagnostics || maxTargetCount > 1) {
@@ -643,7 +642,7 @@ public class DetectCircularSymmetry extends CvStage {
                     for (SymmetryCircle localBest : maximaFiltered) {
                         // ... recursion into finer subSampling and local search.
                         List<CvStage.Result.Circle> localRet = findCircularSymmetry(image, (int)localBest.x, (int)localBest.y, maxDiameter, minDiameter, 
-                                subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1, 
+                                subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1,
                                 minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
                         if (localRet.size() > 0) { 
                             samplingFiltered.add((SymmetryCircle) localRet.get(0));
@@ -692,7 +691,7 @@ public class DetectCircularSymmetry extends CvStage {
             else {
                 // Recursion into finer subSampling and local search.
                 ret = findCircularSymmetry(image, (int)(xBest), (int)(yBest), maxDiameter, minDiameter, 
-                        subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1, 
+                        subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1,
                         minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
             }
         }

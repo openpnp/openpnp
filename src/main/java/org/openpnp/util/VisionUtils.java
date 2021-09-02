@@ -152,7 +152,7 @@ public class VisionUtils {
         // convert it all to pixels
         return area.getValue() / (unitsPerPixel.getX() * unitsPerPixel.getY());
     }
-    
+
     /**
      * Get a location in camera pixels. This is the reverse transformation of getPixelLocation().
      *  
