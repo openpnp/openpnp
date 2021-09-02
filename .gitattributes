@@ -1,0 +1,10 @@
+# .gitatributes file for the OpenPnP repository
+
+# Perform no line ending conversions
+*               -text
+
+# Binary files should never be converted nor diff'ed
+*.icns          binary
+*.png           binary
+*.pxm           binary
+*.wav           binary

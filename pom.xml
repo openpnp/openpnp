@@ -338,39 +338,44 @@
 						<version>8.29</version>
 					</dependency>
 				</dependencies>
+				<configuration>
+					<checkstyleRules>
+						<module name="Checker">
+							<module name="TreeWalker">
+								<module name="NeedBraces">
+								</module>
+								<module name="OneStatementPerLine">
+								</module>
+								<module name="MemberName">
+									<property name="format" value="^[a-z][a-zA-Z0-9_]*$" />
+								</module>
+								<module name="TypeName">
+									<property name="format" value="^[A-Z][a-zA-Z0-9_]*$" />
+								</module>
+								<module name="MethodName">
+								</module>
+								<module name="LocalVariableName">
+									<property name="format" value="^[a-z][a-zA-Z0-9_]*$" />
+								</module>
+							</module>
+							<module name="RegexpMultiline">
+							    <property name="format" value="(?s:\r\n.*)"/>
+							    <property name="maximum" value="0"/>
+							    <property name="message" value="Has CRLF (Windows) line endings but should have LF (Unix) line endings"/>
+							</module>
+						</module>
+					</checkstyleRules>
+					<encoding>UTF-8</encoding>
+					<consoleOutput>true</consoleOutput>
+					<failsOnError>true</failsOnError>
+					<linkXRef>false</linkXRef>
+					<!-- Exclude Eagle importer code, which is auto generated -->
+					<excludes>org/openpnp/model/eagle/xml/*</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<id>validate</id>
 						<phase>validate</phase>
-						<configuration>
-							<checkstyleRules>
-								<module name="Checker">
-									<module name="TreeWalker">
-										<module name="NeedBraces">
-										</module>
-										<module name="OneStatementPerLine">
-										</module>
-										<module name="MemberName">
-											<property name="format" value="^[a-z][a-zA-Z0-9_]*$" />
-										</module>
-										<module name="TypeName">
-											<property name="format" value="^[A-Z][a-zA-Z0-9_]*$" />
-										</module>
-										<module name="MethodName">
-										</module>
-										<module name="LocalVariableName">
-											<property name="format" value="^[a-z][a-zA-Z0-9_]*$" />
-										</module>
-									</module>
-								</module>
-							</checkstyleRules>
-							<encoding>UTF-8</encoding>
-							<consoleOutput>true</consoleOutput>
-							<failsOnError>true</failsOnError>
-							<linkXRef>false</linkXRef>
-							<!-- Exclude Eagle importer code, which is auto generated -->
-							<excludes>org/openpnp/model/eagle/xml/*</excludes>
-						</configuration>
 						<goals>
 							<goal>check</goal>
 						</goals>
