@@ -206,7 +206,9 @@ public class ReferenceJobProcessorRetryTests {
         jobProcessor.initialize(job);
         
         try {
-            while (jobProcessor.next());
+            while (jobProcessor.next()) {
+                //spin
+            };
         }
         catch (Exception e) {
         }
