@@ -589,6 +589,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                         //Use the new advanced image transformation and distortion correction
                         mat = advancedUndistort(mat);
                     }
+                    mat = whiteBalance(mat);
                     image = OpenCvUtils.toBufferedImage(mat);
                     mat.release();
                 }
@@ -645,12 +646,17 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Override
     public Location getUnitsPerPixel(Length viewingPlaneZ) {
-        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
-                advancedCalibration.isValid()) {
-            double upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
-                        convertToUnits(LengthUnit.Millimeters).getValue() / 
-                        advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
-            upp = Double.isFinite(upp) ? upp : 0;
+        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+            //If using advance calibration but it is not valid, we could just return the upp set 
+            //by the super but it is safer to just return zero as this will keep the operator from
+            //doing a camera drag jog with potentially unexpected results
+            double upp = 0;
+            if (advancedCalibration.isValid()) {
+                upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
+                            convertToUnits(LengthUnit.Millimeters).getValue() / 
+                            advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
+                upp = Double.isFinite(upp) ? upp : 0;
+            }
             return new Location(LengthUnit.Millimeters, upp, upp, 0, 0);
         }
         return super.getUnitsPerPixel(viewingPlaneZ);
