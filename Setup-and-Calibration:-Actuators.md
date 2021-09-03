@@ -111,6 +111,10 @@ To set the Gcode for a Boolean Actuator:
 3. Select the [ACTUATE_BOOLEAN](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_boolean_command)  command.
 4. Enter the Gcode fragment. An example would be `{True:M801}{False:M800}`. This will send M801 when the Actuator is turned on, and M800 when it is turned off. The text after `True:` or `False:` is what will actually be sent.
 
+Here is an example for the vacuum valve:
+
+![Example for cmd assignment](https://user-images.githubusercontent.com/14028021/132058636-7f2a5e4d-8481-466c-8bac-e49522da4bc7.png)
+
 To set the Gcode for a Double Actuator:
 1. Go to Machine Setup -> Driver -> GcodeDriver/GcodeAsyncDriver -> Gcode. 
 2. Select the Actuator from the dropdown menu.
