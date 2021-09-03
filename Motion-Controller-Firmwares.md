@@ -72,6 +72,8 @@ Like the others, Marlin must be configured for modern 6- or 9-axis support i.e. 
 * 9-axis support was reported to be supported by the [DerAndere1 9axis_pull](https://github.com/DerAndere1/Marlin/tree/9axis_pull).
 * See also the [Teensy 4.1 controller base PCB](https://github.com/bilsef/teensy4_pnp_controller) by OpenPnP user Bill.
 
+HELP WANTED: Configuration was discussed [here](https://github.com/openpnp/openpnp/issues/1240#issuecomment-893778594), but more concise instructions should be contributed as a separate [[Marlin Configuration]] page by Marlin users.
+
 ## TinyG 
 
 [TinyG](https://synthetos.com/project/tinyg) is often used for Pick & Place because it comes with the Liteplacer kit. Some features have been added to TinyG to make it more like other controllers and to optimize its use with OpenPnP. The firmware and more details are available here:
