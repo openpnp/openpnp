@@ -369,8 +369,11 @@
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
 					<linkXRef>false</linkXRef>
+					<includeTestSourceDirectory>true</includeTestSourceDirectory>
 					<!-- Exclude Eagle importer code, which is auto generated -->
 					<excludes>org/openpnp/model/eagle/xml/*</excludes>
+					<!-- Add any resource files to exclude here -->
+					<resourceExcludes></resourceExcludes>
 				</configuration>
 				<executions>
 					<execution>

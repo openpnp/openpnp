@@ -11,7 +11,7 @@ import org.openpnp.util.Utils2D;
 
 public class CalculateBoardLocationTests {
     @Test
-    public void calculateBoardLocation_Top_NoAffine_NoWidth() throws Exception {
+    public void calculateBoardLocationTopNoAffineNoWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
@@ -21,7 +21,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocation_Top_WithAffine_NoWidth() throws Exception {
+    public void calculateBoardLocationTopWithAffineNoWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
 
@@ -35,7 +35,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocation_Top_NoAffine_WithWidth() throws Exception {
+    public void calculateBoardLocationTopNoAffineWithWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
 
@@ -45,7 +45,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocation_Top_WithAffine_WithWidth() throws Exception {
+    public void calculateBoardLocationTopWithAffineWithWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
 
@@ -59,7 +59,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocation_Bottom_NoAffine_NoWidth() throws Exception {
+    public void calculateBoardLocationBottomNoAffineNoWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
 
@@ -69,7 +69,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocation_Bottom_WithAffine_NoWidth() throws Exception {
+    public void calculateBoardLocationBottomWithAffineNoWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
 
@@ -83,7 +83,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocation_Bottom_NoAffine_WithWidth() throws Exception {
+    public void calculateBoardLocationBottomNoAffineWithWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
@@ -93,7 +93,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocation_Bottom_WithAffine_WithWidth() throws Exception {
+    public void calculateBoardLocationBottomWithAffineWithWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
 
@@ -107,7 +107,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocationInverse_Top_NoAffine_NoWidth() throws Exception {
+    public void calculateBoardLocationInverseTopNoAffineNoWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
@@ -119,7 +119,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocationInverse_Top_WithAffine_NoWidth() throws Exception {
+    public void calculateBoardLocationInverseTopWithAffineNoWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
@@ -135,7 +135,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocationInverse_Top_NoAffine_WithWidth() throws Exception {
+    public void calculateBoardLocationInverseTopNoAffineWithWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
@@ -147,7 +147,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocationInverse_Top_WithAffine_WithWidth() throws Exception {
+    public void calculateBoardLocationInverseTopWithAffineWithWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
@@ -163,7 +163,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocationInverse_Bottom_NoAffine_NoWidth() throws Exception {
+    public void calculateBoardLocationInverseBottomNoAffineNoWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
@@ -175,7 +175,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocationInverse_Bottom_WithAffine_NoWidth() throws Exception {
+    public void calculateBoardLocationInverseBottomWithAffineNoWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
@@ -191,7 +191,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocationInverse_Bottom_NoAffine_WithWidth() throws Exception {
+    public void calculateBoardLocationInverseBottomNoAffineWithWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
@@ -203,7 +203,7 @@ public class CalculateBoardLocationTests {
     }
     
     @Test
-    public void calculateBoardLocationInverse_Bottom_WithAffine_WithWidth() throws Exception {
+    public void calculateBoardLocationInverseBottomWithAffineWithWidth() throws Exception {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
