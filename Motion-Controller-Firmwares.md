@@ -66,10 +66,11 @@ If you skip this, you will get a complaint by [[Issues and Solutions]] saying "T
 
 ## Marlin 2.0
 
-OpenPnP user Bill made a Marlin 2.0 port to Teensy 4.1 with advanced axis support. More information there:
+Like the others, Marlin must be configured for modern 6- or 9-axis support i.e. using axes `A` `B` `C` etc. OpenPnP does not work reasonably with the old multiplexed extruder `E0` `E1` etc. modes. 
 
-* [Bill's Marlin 2.0 fork](https://github.com/bilsef/Marlin/tree/Teensy4.1_PnP_6axis)
-* [Teensy 4.1 controller base PCB](https://github.com/bilsef/teensy4_pnp_controller)
+* 6-axis support seems to be included in the official [Marlin bugfix-2.0.x](https://github.com/MarlinFirmware/Marlin/tree/bugfix-2.0.x) branch.
+* 9-axis support was reported to be supported by the [DerAndere1 9axis_pull](https://github.com/DerAndere1/Marlin/tree/9axis_pull).
+* See also the [Teensy 4.1 controller base PCB](https://github.com/bilsef/teensy4_pnp_controller) by OpenPnP user Bill.
 
 ## TinyG 
 
