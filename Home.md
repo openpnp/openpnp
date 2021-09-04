@@ -18,4 +18,5 @@
 * [[Developers Guide]]
 * [[Your First Pull Request]]
 * [API Documentation](http://openpnp.org/api)
+* [Language Translations](https://github.com/openpnp/openpnp/blob/develop/TRANSLATIONS.md)
 * [[FAQ]]
