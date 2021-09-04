@@ -37,7 +37,6 @@ import org.pmw.tinylog.Logger;
  * require the camera to be completely setup or calibrated.  All that is required is a rough signed
  * estimate of the units per pixel for the camera and a function that can detect the feature and 
  * returns its coordinates in the camera's image.
- * 
  * <pre>
  * The image coordinate system has its origin at the upper left pixel with the positive 
  * X-axis to the right and the positive Y-axis down (as viewed on a computer monitor):
@@ -53,18 +52,34 @@ import org.pmw.tinylog.Logger;
  * The signed units per pixel for the camera is calculated by observing how far a 
  * feature moves in the image when the machine is jogged. For example, suppose the
  * "o" shown above is such a feature and that it moves 25 pixels right (+X direction) 
- * and 20 pixels up (-Y direction) when the machine is jogged 1 millimeter in both the 
+ * and 20 pixels up (-Y direction) when the machine is jogged 1.5 millimeter in both the 
  * positive X and Y directions.  The signed X units per pixel is then 
- * (+1)/(+25) = 0.04 mm/pixel, and the signed Y units per pixel is 
- * (+1)/(-20) = -0.05 mm/pixel.
+ * (+1.5)/(+25) = 0.060 mm/pixel, and the signed Y units per pixel is 
+ * (+1.5)/(-20) = -0.075 mm/pixel.
  * </pre>
- * 
  * The feature detection function will typically process a CvPipeline to detect the feature. To aid
  * in the detection, the function is passed a point in image coordinates where the feature is 
  * expected to be found and can be used to select the search area and/or mask-off regions of the 
  * image that may cause false detections.  The function should return either the image coordinates
  * of the feature or null if the feature could not be found.
- * 
+ * <p>
+ * The size of each step a CameraWalker takes is normally determined by the distance between the 
+ * detected feature image coordinates and its desired image coordinates. That distance is scaled by 
+ * the loopGain (defaults to 0.7 but can be changed using the {@link #setLoopGain setLoopGain} 
+ * method) to determine the step size. The maximum size of the steps a CameraWalker takes can be 
+ * further limited by using the {@link #setMaxAllowedPixelStep setMaxAllowedPixelStep} and/or 
+ * {@link #setMaxAllowedMachineStep setMaxAllowedMachineStep} methods.
+ * <p>
+ * The walk is considered done when the distance between the detected feature image coordinates and 
+ * its desired image coordinates no longer decreases. The walk can also be completed if the detected 
+ * feature is within a set distance (in pixels) of the desired image coordinates or if the machine 
+ * step is below a set distance (in machine units). These can be set with the 
+ * {@link #setMinAllowedPixelStep setMinAllowedPixelStep} (defaults to 0) and {@link 
+ * #setMinAllowedMachineStep setMinAllowedMachineStep} (defaults to 0.005 mm) 
+ * methods respectively.
+ * <p>
+ * By default, a CameraWalker will only make safe Z moves; however, that behavior can be changed
+ * by using the {@link #setOnlySafeZMovesAllowed setOnlySafeZMovesAllowed} method.
  */
 public class CameraWalker {
     private HeadMountable movable;
@@ -296,6 +311,14 @@ public class CameraWalker {
      * @param loopGain the loopGain to set
      */
     public void setLoopGain(Double loopGain) {
+        if (loopGain <= 0) {
+            Logger.error("Loop gain must be a positive number");
+            return;
+        }
+        if (loopGain > 1.0) {
+            Logger.trace("Loop gain too large, limiting to prevent possible unbounded oscillations.");
+            loopGain = 1.0;
+        }
         this.loopGain = loopGain;
     }
 

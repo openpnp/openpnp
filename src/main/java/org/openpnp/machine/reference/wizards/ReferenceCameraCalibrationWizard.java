@@ -783,6 +783,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 textFieldXRotationError, "text", doubleConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldDefaultZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPrimaryCalZ);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSecondaryCalZ);
         ComponentDecorators.decorateWithAutoSelect(textFieldDesiredNumberOfRadialLines);
         
         enableControls(advancedCalibration.

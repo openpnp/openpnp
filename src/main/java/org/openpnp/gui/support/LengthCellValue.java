@@ -27,7 +27,7 @@ import org.openpnp.model.Length;
 public class LengthCellValue implements Comparable<LengthCellValue> {
     private static Configuration configuration;
 
-    protected Length length;
+    private Length length;
 
     /**
      * When set, the toString() method will show the units contained within the Length instead of

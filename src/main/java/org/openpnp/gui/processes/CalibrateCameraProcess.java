@@ -221,7 +221,7 @@ public abstract class CalibrateCameraProcess {
             showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
                     (int)(centeringDiameterFraction*maskDiameter/2), Color.GREEN);
             
-            setInstructionsAndProceedAction("Jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next when ready to proceed.", 
+            setInstructionsAndProceedAction("Using the jog controls on the Machine Controls panel, jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next when ready to proceed.", 
                     ()->requestOperatorToAdjustDiameterAction(),
                     calibrationHeights.get(calibrationHeightIndex).toString());
         }
@@ -245,7 +245,7 @@ public abstract class CalibrateCameraProcess {
      * @return true when complete
      */
     private boolean requestOperatorToAdjustDiameterAction() {
-        setInstructionsAndProceedAction("Use the mouse scroll wheel to zoom in on the fiducial/nozzle tip and then adjust the Detection Diameter spinner until the red circle turns green with a + at its center and is sized to just fit the fiducial/nozzle tip with the + centered. Click Next to begin the automated calibration collection sequence.", 
+        setInstructionsAndProceedAction("Use the mouse scroll wheel to zoom in on the fiducial/nozzle tip and then adjust the Detection Diameter spinner until the red circle turns green with a + at its center and is sized to just fit the fiducial/nozzle tip with the + centered on the fiducial/nozzle tip. When ready, click Next to begin the automated calibration collection sequence.", 
                 ()->fiducialDiameterIsSetAction());
         
         Point2D expectedPoint = new Point2D.Double((pixelsX-1)/2.0, (pixelsY-1)/2.0);
@@ -572,7 +572,7 @@ public abstract class CalibrateCameraProcess {
             testPatternZ = calibrationHeights.get(calibrationHeightIndex).
                     convertToUnits(LengthUnit.Millimeters).getValue();
             
-            setInstructionsAndProceedAction("Jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next when ready to proceed.", 
+            setInstructionsAndProceedAction("Using the jog controls on the Machine Controls panel, jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next when ready to proceed.", 
                     ()->requestOperatorToAdjustDiameterAction(),
                     calibrationHeights.get(calibrationHeightIndex).toString()); 
         }
@@ -612,7 +612,7 @@ public abstract class CalibrateCameraProcess {
         showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
                 (int)(centeringDiameterFraction*maskDiameter/2), Color.GREEN);
         
-        setInstructionsAndProceedAction("Using the machine control panel, jog the nozzle tip so that it is approximately in the center of the green circle. When ready, click Next to lower/raise the nozzle tip to the calibration height.", 
+        setInstructionsAndProceedAction("Using the jog controls on the Machine Controls panel, jog the nozzle tip so that it is approximately in the center of the green circle. When ready, click Next to lower/raise the nozzle tip to the calibration height.", 
                 ()->captureCentralLocationAction());
         return true;
     }
@@ -665,7 +665,7 @@ public abstract class CalibrateCameraProcess {
      * @return true when complete
      */
     private boolean requestOperatorToVerifyNozzleTipIsCenteredAction() {
-        setInstructionsAndProceedAction("Rotate the nozzle tip through 360 degrees and verify it stays within the green circle. If necessary, jog it in X and/or Y so that it remains within the circle when it is rotated. Click Next when ready.", 
+        setInstructionsAndProceedAction("Using the jog controls on the Machine Controls panel, rotate the nozzle tip through 360 degrees and verify it stays within the green circle. If necessary, jog it in X and/or Y so that it remains within the circle when it is rotated. Click Next when ready.", 
                 ()->captureVerifiedCentralLocation());
         return true;
     }
