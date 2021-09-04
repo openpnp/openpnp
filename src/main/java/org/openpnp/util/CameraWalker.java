@@ -20,7 +20,6 @@
 package org.openpnp.util;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
@@ -89,7 +88,8 @@ public class CameraWalker {
     private Double loopGain = 0.7;
     private double maxAllowedPixelStep = Double.POSITIVE_INFINITY;
     private double minAllowedPixelStep = 0;
-    private Length maxAllowedMachineStep = new Length(Double.POSITIVE_INFINITY, LengthUnit.Millimeters);
+    private Length maxAllowedMachineStep = new Length(Double.POSITIVE_INFINITY, 
+            LengthUnit.Millimeters);
     private Length minAllowedMachineStep = new Length(0.005, LengthUnit.Millimeters);
     private boolean onlySafeZMovesAllowed = true;
     private Point lastFoundPoint = null;
@@ -97,23 +97,28 @@ public class CameraWalker {
     private List<double[]> image2DCoordinates;
     
     /**
+     * Constructs a new CameraWalker with the given parameters
      * 
-     * @param movable
-     * @param signedUnitsPerPixel
-     * @param findFeatureInImage
+     * @param movable - the Camera or Nozzle that will be moved during the walk
+     * @param signedUnitsPerPixel - the signed units per pixel
+     * @param findFeatureInImage - the feature detection function
      */
-    public CameraWalker(HeadMountable movable, Location signedUnitsPerPixel, Function<Point, Point> findFeatureInImage) {
-        this(movable, signedUnitsPerPixel.getLengthX(), signedUnitsPerPixel.getLengthY(), findFeatureInImage);
+    public CameraWalker(HeadMountable movable, Location signedUnitsPerPixel, 
+            Function<Point, Point> findFeatureInImage) {
+        this(movable, signedUnitsPerPixel.getLengthX(), signedUnitsPerPixel.getLengthY(), 
+                findFeatureInImage);
     }
     
     /**
+     * Constructs a new CameraWalker with the given parameters
      * 
-     * @param movable
-     * @param signedUnitsPerPixelX
-     * @param signedUnitsPerPixelY
-     * @param findFeatureInImage
+     * @param movable - the Camera or Nozzle that will be moved during the walk
+     * @param signedUnitsPerPixelX - the signed units per pixel in the X direction
+     * @param signedUnitsPerPixelY - the signed units per pixel in the Y direction
+     * @param findFeatureInImage - the feature detection function
      */
-    public CameraWalker(HeadMountable movable, Length signedUnitsPerPixelX, Length signedUnitsPerPixelY, Function<Point, Point> findFeatureInImage) {
+    public CameraWalker(HeadMountable movable, Length signedUnitsPerPixelX, 
+            Length signedUnitsPerPixelY, Function<Point, Point> findFeatureInImage) {
         this.movable = movable;
         this.xScaling = signedUnitsPerPixelX.convertToUnits(LengthUnit.Millimeters).getValue();
         this.yScaling = signedUnitsPerPixelY.convertToUnits(LengthUnit.Millimeters).getValue();
@@ -121,38 +126,77 @@ public class CameraWalker {
     }
     
     /**
+     * Iteratively moves the machine in X and Y until the detected feature appears at the desired 
+     * image coordinates (or until it is close enough depending on the settings of 
+     * minAllowedPixelStep and minAllowedMachineStep).
      * 
-     * @param startingMachineLocation
-     * @param desiredCameraPoint
-     * @return
-     * @throws InterruptedException
-     * @throws ExecutionException
+     * @param startingMachineLocation - the machine is moved to this location before beginning the 
+     * walk
+     * @param desiredImagePoint - the desired image coordinates of the feature when the walk is 
+     * completed and is also the expected coordinates of the feature when the machine is at 
+     * the starting location
+     * @return the location of the machine at the completion of the walk or null if the walk failed 
+     * due to the feature not being found or the task being interrupted. The image coordinates of 
+     * the feature corresponding to this location can be found with {@link #getLastFoundPoint 
+     * getLastFoundPoint}
      */
-    public Location walkToPoint(Location startingMachineLocation, Point desiredCameraPoint) throws InterruptedException, ExecutionException {
-        return walkToPoint(startingMachineLocation, desiredCameraPoint, desiredCameraPoint);
-    }
-    
-    public Location walkToPoint(Point desiredCameraPoint) throws InterruptedException, ExecutionException {
-        return walkToPoint(movable.getLocation(), desiredCameraPoint, desiredCameraPoint);
-    }
-    
-    public Location walkToPoint(Point startingImagePoint, Point desiredCameraPoint) throws InterruptedException, ExecutionException {
-        return walkToPoint(movable.getLocation(), startingImagePoint, desiredCameraPoint);
+    public Location walkToPoint(Location startingMachineLocation, Point desiredImagePoint) {
+        return walkToPoint(startingMachineLocation, desiredImagePoint, desiredImagePoint);
     }
     
     /**
-     * Gradually "walks" the movable in X and Y such that the calibration rig's fiducial appears at
-     * the desired image location.  The steps taken are deliberately small so that errors due to 
-     * camera distortion and/or scaling do not lead to erroneous machine motions. 
-     * @param desiredCameraPoint - desired image location in pixels
-     * @param xScaling - a rough signed estimate of the X axis units per pixel scaling
-     * @param yScaling - a rough signed estimate of the Y axis units per pixel scaling
-     * @return the machine location where the calibration rig's fiducial appears at the desired
-     * image location
-     * @throws InterruptedException
-     * @throws ExecutionException
+     * Iteratively moves the machine in X and Y from its current location until the detected feature 
+     * appears at the desired image coordinates (or until it is close enough depending on the 
+     * settings of minAllowedPixelStep and minAllowedMachineStep).
+     * 
+     * @param desiredImagePoint - the desired image coordinates of the feature when the walk is 
+     * completed and is also the expected coordinates of the feature with the machine at its
+     * current location
+     * @return the location of the machine at the completion of the walk or null if the walk failed 
+     * due to the feature not being found or the task being interrupted. The image coordinates of 
+     * the feature corresponding to this location can be found with {@link #getLastFoundPoint 
+     * getLastFoundPoint}
      */
-    public Location walkToPoint(Location startingMachineLocation, Point startingImagePoint, Point desiredCameraPoint) throws InterruptedException, ExecutionException {
+    public Location walkToPoint(Point desiredImagePoint) {
+        return walkToPoint(movable.getLocation(), desiredImagePoint, desiredImagePoint);
+    }
+    
+    /**
+     * Iteratively moves the machine in X and Y from its current location until the detected feature 
+     * appears at the desired image coordinates (or until it is close enough depending on the 
+     * settings of minAllowedPixelStep and minAllowedMachineStep).
+     * 
+     * @param startingImagePoint - the expected image coordinates of the feature with the 
+     * machine at its current location
+     * @param desiredImagePoint - the desired image coordinates of the feature when the walk is 
+     * completed
+     * @return the location of the machine at the completion of the walk or null if the walk failed 
+     * due to the feature not being found or the task being interrupted. The image coordinates of 
+     * the feature corresponding to this location can be found with {@link #getLastFoundPoint 
+     * getLastFoundPoint}
+     */
+    public Location walkToPoint(Point startingImagePoint, Point desiredImagePoint) {
+        return walkToPoint(movable.getLocation(), startingImagePoint, desiredImagePoint);
+    }
+    
+    /**
+     * Iteratively moves the machine in X and Y until the detected feature appears at the desired 
+     * image coordinates (or until it is close enough depending on the settings of 
+     * minAllowedPixelStep and minAllowedMachineStep).
+     * 
+     * @param startingMachineLocation - the machine is moved to this location before beginning the 
+     * walk
+     * @param startingImagePoint - the expected image coordinates of the feature when the 
+     * machine is at the starting location
+     * @param desiredCameraPoint - the desired image coordinates of the feature when the walk is 
+     * completed
+     * @return the location of the machine at the completion of the walk or null if the walk failed 
+     * due to the feature not being found or the task being interrupted. The image coordinates of 
+     * the feature corresponding to this location can be found with {@link #getLastFoundPoint 
+     * getLastFoundPoint}
+     */
+    public Location walkToPoint(Location startingMachineLocation, Point startingImagePoint, 
+            Point desiredCameraPoint) {
         lastFoundPoint = null;
         boolean savePoints = (machine3DCoordinates != null) && (image2DCoordinates != null);
         
@@ -160,11 +204,17 @@ public class CameraWalker {
         Future<?> future = UiUtils.submitUiMachineTask(() -> {
             if (onlySafeZMovesAllowed) {
                 movable.moveToSafeZ();
-                movable.moveTo(startingMachineLocation.derive(movable.getLocation(), false, false, true, false));
+                movable.moveTo(startingMachineLocation.
+                        derive(movable.getLocation(), false, false, true, false));
             }
             movable.moveTo(startingMachineLocation);
         });
-        future.get();
+        try {
+            future.get();
+        }
+        catch (Exception e) {
+            return null;
+        }
 
         Location oldLocation = null;
         Location newLocation = startingMachineLocation.convertToUnits(LengthUnit.Millimeters);
@@ -222,11 +272,17 @@ public class CameraWalker {
                 if (onlySafeZMovesAllowed) {
                     movable.moveToSafeZ();
                     
-                    movable.moveTo(moveLocation.derive(movable.getLocation(), false, false, true, false));
+                    movable.moveTo(moveLocation.
+                            derive(movable.getLocation(), false, false, true, false));
                 }
                 movable.moveTo(moveLocation);
             });
-            future.get();
+            try {
+                future.get();
+            }
+            catch (Exception e) {
+                return null;
+            }
 
             foundPoint = findFeatureInImage.apply(expectedPoint);
             Logger.trace("expectedPoint = " + expectedPoint);
@@ -242,73 +298,72 @@ public class CameraWalker {
     }
 
     /**
-     * Gets the HeadMountable that will move during the walk
-     * @return the movable
+     * Gets the Camera or Nozzle that will do the moving during the walk
      */
     public HeadMountable getMovable() {
         return movable;
     }
 
     /**
-     * Sets the HeadMountable that will do the moving
-     * @param movable - the nozzle or camera that will do the moving
+     * Sets the Camera or Nozzle that will do the moving during the walk
      */
     public void setMovable(HeadMountable movable) {
         this.movable = movable;
     }
 
     /**
-     * Gets the signed units per pixel for the X direction
-     * @return the signedUnitsPerPixelX in millimeters per pixel
+     * Gets the signed units per pixel for the X direction in millimeters per pixel
      */
     public Double getSignedUnitsPerPixelX() {
         return xScaling;
     }
 
     /**
-     * @param signedUnitsPerPixelX the signedUnitsPerPixelX in millimeters per pixel
+     * Sets the signed units per pixel for the X direction in millimeters per pixel
      */
     public void setSignedUnitsPerPixelX(Double signedUnitsPerPixelX) {
         this.xScaling = signedUnitsPerPixelX;
     }
 
     /**
-     * @return the signedUnitsPerPixelY
+     * Gets the signed units per pixel for the Y direction in millimeters per pixel
      */
     public Double getSignedUnitsPerPixelY() {
         return yScaling;
     }
 
     /**
-     * @param signedUnitsPerPixelY the signedUnitsPerPixelY to set
+     * Sets the signed units per pixel for the Y direction in millimeters per pixel
      */
     public void setSignedUnitsPerPixelY(Double signedUnitsPerPixelY) {
         this.yScaling = signedUnitsPerPixelY;
     }
 
     /**
-     * @return the findFeatureInImage
+     * Gets the feature detection function
      */
     public Function<Point, Point> getFindFeatureInImage() {
         return findFeatureInImage;
     }
 
     /**
-     * @param findFeatureInImage the findFeatureInImage to set
+     * Sets the feature detection function
      */
     public void setFindFeatureInImage(Function<Point, Point> findFeatureInImage) {
         this.findFeatureInImage = findFeatureInImage;
     }
 
     /**
-     * @return the loopGain
+     * Gets the loop gain to be used during the walk
      */
     public Double getLoopGain() {
         return loopGain;
     }
 
     /**
-     * @param loopGain the loopGain to set
+     * Sets the loop gain to be used during the walk, must be greater than 0 and less than or equal 
+     * to 1 (use caution as very small loop gains may cause walks to take a very long time to 
+     * complete).
      */
     public void setLoopGain(Double loopGain) {
         if (loopGain <= 0) {
@@ -316,109 +371,142 @@ public class CameraWalker {
             return;
         }
         if (loopGain > 1.0) {
-            Logger.trace("Loop gain too large, limiting to prevent possible unbounded oscillations.");
+            Logger.error("Loop gain too large, limiting to 1.0 to prevent possible unbounded machine oscillations.");
             loopGain = 1.0;
         }
         this.loopGain = loopGain;
     }
 
     /**
-     * @return the maxAllowedPixelStep
+     * Gets the maximum allowable step in pixels that the walk can take
      */
     public double getMaxAllowedPixelStep() {
         return maxAllowedPixelStep;
     }
 
     /**
-     * @param maxAllowedPixelStep the maxAllowedPixelStep to set
+     * Sets the maximum allowable step in pixels that the walk can take.  Must be greater than 0 
+     * (use caution as small values may result in walks that take a very long time to complete).
      */
     public void setMaxAllowedPixelStep(double maxAllowedPixelStep) {
+        if (maxAllowedPixelStep <= 0) {
+            Logger.error("Maximum allowable step in pixels must be greater than 0");
+            return;
+        }
         this.maxAllowedPixelStep = maxAllowedPixelStep;
     }
 
     /**
-     * @return the minAllowedPixelStep
+     * Gets the minimum allowable step in pixels that the walk can take.
      */
     public double getMinAllowedPixelStep() {
         return minAllowedPixelStep;
     }
 
     /**
-     * @param minAllowedPixelStep the minAllowedPixelStep to set
+     * Sets the minimum allowable step in pixels that the walk can take. Must be non-negative.
      */
     public void setMinAllowedPixelStep(double minAllowedPixelStep) {
+        if (minAllowedPixelStep <= 0) {
+            Logger.error("Minimum allowable step in pixels must be non-negative");
+            return;
+        }
         this.minAllowedPixelStep = minAllowedPixelStep;
     }
 
     /**
-     * @return the maxAllowedMachineStep
+     * Gets the maximum allowable step in machine units that the walk can take
      */
     public Length getMaxAllowedMachineStep() {
         return maxAllowedMachineStep;
     }
 
     /**
-     * @param maxAllowedMachineStep the maxAllowedMachineStep to set
+     * Sets the maximum allowable step in machine units that the walk can take. Must be greater 
+     * than 0 (use caution as small values may result in walks that take a very long time to 
+     * complete).
      */
     public void setMaxAllowedMachineStep(Length maxAllowedMachineStep) {
+        if (maxAllowedMachineStep.getValue() <= 0) {
+            Logger.error("Maximum allowable step in machine units must be greater than 0");
+            return;
+        }
         this.maxAllowedMachineStep = maxAllowedMachineStep;
     }
 
     /**
-     * @return the minAllowedMachineStep
+     * Gets the minimum allowable step in machine units that the walk can take.
      */
     public Length getMinAllowedMachineStep() {
         return minAllowedMachineStep;
     }
 
     /**
-     * @param minAllowedMachineStep the minAllowedMachineStep to set
+     * Sets the minimum allowable step in machine units that the walk can take. Must be 
+     * greater than 0 (use caution as very small values can result in a long stream of very tiny 
+     * moves being generated which can result in controller buffer overflows).
      */
     public void setMinAllowedMachineStep(Length minAllowedMachineStep) {
+        if (minAllowedMachineStep.getValue() <= 0) {
+            Logger.error("Minimum allowable step in machine units must be greater than 0");
+            return;
+        }
         this.minAllowedMachineStep = minAllowedMachineStep;
     }
 
     /**
-     * @return the onlySafeZMovesAllowed
+     * Checks to see if only safe Z moves are allowed
+     * 
+     * @return true if only safe Z moves are allowed, false otherwise
      */
     public boolean isOnlySafeZMovesAllowed() {
         return onlySafeZMovesAllowed;
     }
 
     /**
-     * @param onlySafeZMovesAllowed the onlySafeZMovesAllowed to set
+     * Sets the only safe Z moves are allowed flag to the given state
+     * 
+     * @param onlySafeZMovesAllowed - the state to set
      */
     public void setOnlySafeZMovesAllowed(boolean onlySafeZMovesAllowed) {
         this.onlySafeZMovesAllowed = onlySafeZMovesAllowed;
     }
 
     /**
-     * @return the lastFoundPoint
+     * Gets the image coordinates of the detected feature at the end of the walk
      */
     public Point getLastFoundPoint() {
         return lastFoundPoint;
     }
 
     /**
-     * @return the machine3DCoordinates
+     * Gets the list to which the CameraWalker adds machine coordinates as the walk takes place. 
+     * Returns null if {@link #setSaveCoordinates setSaveCoordinates} was not used to set a list to 
+     * save the coordinates.
      */
     public List<double[]> getMachine3DCoordinates() {
         return machine3DCoordinates;
     }
 
     /**
-     * @return the image2DCoordinates
+     * Gets the list to which the CameraWalker adds image coordinates as the walk takes place. 
+     * Returns null if {@link #setSaveCoordinates setSaveCoordinates} was not used to set a list to 
+     * save the coordinates.
      */
     public List<double[]> getImage2DCoordinates() {
         return image2DCoordinates;
     }
 
     /**
+     * The CameraWalker will add (save) the coordinates visited during the walk to the lists 
+     * provided here. Note that both parameters must be non-null in order for the CameraWalker to 
+     * save the coordinates.
      * 
-     * @param machine3dCoordinates
-     * @param image2dCoordinates
+     * @param machine3dCoordinates - the list to which the machine coordinates are added
+     * @param image2dCoordinates - the list to which the image coordinates are added
      */
-    public void setSaveCoordinates(List<double[]> machine3dCoordinates, List<double[]> image2dCoordinates) {
+    public void setSaveCoordinates(List<double[]> machine3dCoordinates, 
+            List<double[]> image2dCoordinates) {
         machine3DCoordinates = machine3dCoordinates;
         image2DCoordinates = image2dCoordinates;
     }
