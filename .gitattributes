@@ -1,6 +1,6 @@
 # .gitatributes file for the OpenPnP repository
 
-# Perform no line ending conversions
+# Force line ending conversions to LF
 *               -text
 
 # Binary files should never be converted nor diff'ed

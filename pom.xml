@@ -353,6 +353,7 @@
 									<property name="format" value="^[A-Z][a-zA-Z0-9_]*$" />
 								</module>
 								<module name="MethodName">
+									<property name="format" value="^[a-z][a-zA-Z0-9]*$" />
 								</module>
 								<module name="LocalVariableName">
 									<property name="format" value="^[a-z][a-zA-Z0-9_]*$" />
@@ -362,6 +363,11 @@
 							    <property name="format" value="(?s:\r\n.*)"/>
 							    <property name="maximum" value="0"/>
 							    <property name="message" value="Has CRLF (Windows) line endings but should have LF (Unix) line endings"/>
+							</module>
+							<module name="RegexpMultiline">
+							    <property name="format" value="(?s:\r[^\n].*)"/>
+							    <property name="maximum" value="0"/>
+							    <property name="message" value="Has CR (Mac) line endings but should have LF (Unix) line endings"/>
 							</module>
 						</module>
 					</checkstyleRules>
