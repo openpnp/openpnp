@@ -66,10 +66,10 @@ If you skip this, you will get a complaint by [[Issues and Solutions]] saying "T
 
 ## Marlin 2.0
 
-Like the others, Marlin must be configured for modern 6- or 9-axis support i.e. using axes `A` `B` `C` etc. OpenPnP does not work reasonably with the old multiplexed extruder `E0` `E1` etc. modes. 
+Marlin must be configured for modern 6- or 9-axis support, i.e. using axes `A` `B` `C` etc. OpenPnP does not work (reasonably) with the old multiplexed extruder `E0` `E1` etc. modes. 
 
 * 6-axis support seems to be included in the official [Marlin bugfix-2.0.x](https://github.com/MarlinFirmware/Marlin/tree/bugfix-2.0.x) branch.
-* 9-axis support was reported to be supported by the [DerAndere1 9axis_pull](https://github.com/DerAndere1/Marlin/tree/9axis_pull).
+* 9-axis support was reported to be included in the [DerAndere1 9axis_pull](https://github.com/DerAndere1/Marlin/tree/9axis_pull).
 * See also the [Teensy 4.1 controller base PCB](https://github.com/bilsef/teensy4_pnp_controller) by OpenPnP user Bill.
 
 HELP WANTED: Configuration was discussed [here](https://github.com/openpnp/openpnp/issues/1240#issuecomment-893778594), but more concise instructions should be contributed as a separate [[Marlin Configuration]] page by Marlin users.
