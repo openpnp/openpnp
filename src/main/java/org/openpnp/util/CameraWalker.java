@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Tony Luken <tonyluken@att.net>
+ * Copyright (C) 2021 Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -31,7 +31,7 @@ import org.openpnp.spi.HeadMountable;
 import org.pmw.tinylog.Logger;
 
 /**
- * A cameraWalker iteratively moves the machine to drive some detectable feature in a camera image 
+ * A CameraWalker iteratively moves the machine to drive some detectable feature in a camera image 
  * to a specific point in the image.  This works for both top and bottom cameras and does not 
  * require the camera to be completely setup or calibrated.  All that is required is a rough signed
  * estimate of the units per pixel for the camera and a function that can detect the feature and 

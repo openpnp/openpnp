@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Tony Luken <tonyluken@att.net>
+ * Copyright (C) Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 

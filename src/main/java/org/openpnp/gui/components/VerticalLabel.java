@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Tony Luken <tonyluken@att.net>
+ * Copyright (C) 2021 Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -17,8 +17,8 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-//Copied verbatim from https://benohead.com/blog/2014/10/15/java-vertical-label-in-swing/ per 
-//the WTFPL license terms (which permits copying and relicensing)
+//Copied almost verbatim from https://benohead.com/blog/2014/10/15/java-vertical-label-in-swing/ per 
+//its WTFPL license terms (which permits copying and relicensing)
 package org.openpnp.gui.components;
 
 import java.awt.Dimension;
