@@ -23,6 +23,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.PercentIntegerConverter;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.util.MovableUtils;
@@ -68,6 +69,14 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -217,6 +226,36 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         
         btnReset = new JButton(resetAction);
         panelTransforms.add(btnReset, "7, 28");
+        
+        lblRedGamma = new JLabel("Red Gamma");
+        panelTransforms.add(lblRedGamma, "2, 32, right, default");
+        
+        redGammaPercent = new JSlider();
+        redGammaPercent.setMajorTickSpacing(100);
+        redGammaPercent.setValue(100);
+        redGammaPercent.setMaximum(200);
+        redGammaPercent.setPaintTicks(true);
+        panelTransforms.add(redGammaPercent, "4, 32, 2, 1");
+        
+        lblGreenGamma = new JLabel("Green Gamma");
+        panelTransforms.add(lblGreenGamma, "2, 34, right, default");
+        
+        greenGammaPercent = new JSlider();
+        greenGammaPercent.setValue(100);
+        greenGammaPercent.setPaintTicks(true);
+        greenGammaPercent.setMaximum(200);
+        greenGammaPercent.setMajorTickSpacing(100);
+        panelTransforms.add(greenGammaPercent, "4, 34, 2, 1");
+        
+        lblBlueGamma = new JLabel("Blue Gamma");
+        panelTransforms.add(lblBlueGamma, "2, 36, right, default");
+        
+        blueGammaPercent = new JSlider();
+        blueGammaPercent.setValue(100);
+        blueGammaPercent.setPaintTicks(true);
+        blueGammaPercent.setMaximum(200);
+        blueGammaPercent.setMajorTickSpacing(100);
+        panelTransforms.add(blueGammaPercent, "4, 36, 2, 1");
         initDataBindings();
     }
 
@@ -246,24 +285,6 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         ComponentDecorators.decorateWithAutoSelect(cropHeightTextField);
         ComponentDecorators.decorateWithAutoSelect(scaleWidthTf);
         ComponentDecorators.decorateWithAutoSelect(scaleHeightTf);
-    }
-
-    protected void initDataBindings() {
-        // These are directly bound to the camera, to see results immediately.
-        BeanProperty<ReferenceCamera, Integer> referenceCameraBeanProperty = BeanProperty.create("redBalancePercent");
-        BeanProperty<JSlider, Integer> jSliderBeanProperty = BeanProperty.create("value");
-        AutoBinding<ReferenceCamera, Integer, JSlider, Integer> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty, redBalance, jSliderBeanProperty);
-        autoBinding.bind();
-        //
-        BeanProperty<ReferenceCamera, Integer> referenceCameraBeanProperty_1 = BeanProperty.create("greenBalancePercent");
-        BeanProperty<JSlider, Integer> jSliderBeanProperty_1 = BeanProperty.create("value");
-        AutoBinding<ReferenceCamera, Integer, JSlider, Integer> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_1, greenBalance, jSliderBeanProperty_1);
-        autoBinding_1.bind();
-        //
-        BeanProperty<ReferenceCamera, Integer> referenceCameraBeanProperty_2 = BeanProperty.create("blueBalancePercent");
-        BeanProperty<JSlider, Integer> jSliderBeanProperty_2 = BeanProperty.create("value");
-        AutoBinding<ReferenceCamera, Integer, JSlider, Integer> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_2, blueBalance, jSliderBeanProperty_2);
-        autoBinding_2.bind();
     }
 
     private final Action autoWhiteBalanceAction = new AbstractAction() {
@@ -345,4 +366,47 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
     private JButton btnAutowhitebalance;
     private JButton btnReset;
     private JButton btnAutowhitebalance_1;
+    private JLabel lblRedGamma;
+    private JLabel lblGreenGamma;
+    private JLabel lblBlueGamma;
+    private JSlider redGammaPercent;
+    private JSlider greenGammaPercent;
+    private JSlider blueGammaPercent;
+    protected void initDataBindings() {
+        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty = BeanProperty.create("redBalance");
+        BeanProperty<JSlider, Integer> jSliderBeanProperty = BeanProperty.create("value");
+        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty, redBalance, jSliderBeanProperty);
+        autoBinding.setConverter(new PercentIntegerConverter());
+        autoBinding.bind();
+        //
+        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty_1 = BeanProperty.create("greenBalance");
+        BeanProperty<JSlider, Integer> jSliderBeanProperty_1 = BeanProperty.create("value");
+        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_1, greenBalance, jSliderBeanProperty_1);
+        autoBinding_1.setConverter(new PercentIntegerConverter());
+        autoBinding_1.bind();
+        //
+        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty_2 = BeanProperty.create("blueBalance");
+        BeanProperty<JSlider, Integer> jSliderBeanProperty_2 = BeanProperty.create("value");
+        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_2, blueBalance, jSliderBeanProperty_2);
+        autoBinding_2.setConverter(new PercentIntegerConverter());
+        autoBinding_2.bind();
+        //
+        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty_3 = BeanProperty.create("redGamma");
+        BeanProperty<JSlider, Integer> jSliderBeanProperty_3 = BeanProperty.create("value");
+        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_3, redGammaPercent, jSliderBeanProperty_3);
+        autoBinding_3.setConverter(new PercentIntegerConverter());
+        autoBinding_3.bind();
+        //
+        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty_4 = BeanProperty.create("greenGamma");
+        BeanProperty<JSlider, Integer> jSliderBeanProperty_4 = BeanProperty.create("value");
+        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_4 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_4, greenGammaPercent, jSliderBeanProperty_4);
+        autoBinding_4.setConverter(new PercentIntegerConverter());
+        autoBinding_4.bind();
+        //
+        BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty_5 = BeanProperty.create("blueGamma");
+        BeanProperty<JSlider, Integer> jSliderBeanProperty_5 = BeanProperty.create("value");
+        AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_5 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_5, blueGammaPercent, jSliderBeanProperty_5);
+        autoBinding_5.setConverter(new PercentIntegerConverter());
+        autoBinding_5.bind();
+    }
 }

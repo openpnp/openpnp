@@ -1184,16 +1184,19 @@ public class CameraView extends JComponent implements CameraListener {
         long maxVal = 0;
         for (int channel = 0; channel < 3; channel++) {
             // Smooth it 
-            for (int bucket = 254; bucket > 0; bucket--) {
+            long lastBucket = histogram[channel][0];
+            for (int bucket = 1; bucket < 255; bucket++) {
+                long currentBucket = histogram[channel][bucket];
                 histogram[channel][bucket] = 
-                        histogram[channel][bucket] 
-                                + histogram[channel][bucket-1]/2
-                                        + histogram[channel][bucket+1]/2;
+                        (currentBucket*2
+                                + lastBucket
+                                + histogram[channel][bucket+1])/4;
+                lastBucket = currentBucket;
             }
             long [] sorted = histogram[channel].clone();
             Arrays.sort(sorted);
-            // Exclude the largest extremes, typically saturation values. 
-            maxVal = Math.max(maxVal, sorted[sorted.length-3]);
+            // Exclude the largest two extremes, typically saturation values. 
+            maxVal = Math.max(maxVal, sorted[sorted.length-1-2]);
         }
         // and scale it to 50 pixels tall
         double scale = 50.0 / maxVal;
@@ -1426,12 +1429,12 @@ public class CameraView extends JComponent implements CameraListener {
      */
     private void captureSnapshot() {
         UiUtils.messageBoxOnException(() -> {
-            flash();
             File dir = new File(Configuration.get().getConfigurationDirectory(), "snapshots");
             dir.mkdirs();
             DateFormat df = new SimpleDateFormat("YYYY-MM-dd_HH.mm.ss.SSS");
             File file = new File(dir, camera.getName() + "_" + df.format(new Date()) + ".png");
             ImageIO.write(camera.lightSettleAndCapture(), "png", file);
+            flash();
         });
     }
 

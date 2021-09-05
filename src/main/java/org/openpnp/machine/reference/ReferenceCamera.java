@@ -37,7 +37,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
-import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
@@ -133,6 +132,15 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Attribute(required = false)
     protected double blueBalance = 1.0; 
+
+    @Attribute(required = false)
+    protected double redGamma = 1.0; 
+
+    @Attribute(required = false)
+    protected double greenGamma = 1.0; 
+
+    @Attribute(required = false)
+    protected double blueGamma = 1.0; 
 
     @Attribute(required = false)
     protected boolean deinterlace;
@@ -402,7 +410,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         this.scaleHeight = scaleHeight;
         viewHasChanged();
     }
-    
+
     public double getRedBalance() {
         return redBalance;
     }
@@ -411,7 +419,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         Object oldValue = this.redBalance;
         this.redBalance = redBalance;
         firePropertyChange("redBalance", oldValue, redBalance);
-        firePropertyChange("redBalancePercent", null, getRedBalancePercent());
         cameraViewHasChanged(null);
     }
 
@@ -423,7 +430,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         Object oldValue = this.greenBalance;
         this.greenBalance = greenBalance;
         firePropertyChange("greenBalance", oldValue, greenBalance);
-        firePropertyChange("greenBalancePercent", null, getGreenBalancePercent());
         cameraViewHasChanged(null);
     }
 
@@ -435,33 +441,43 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         Object oldValue = this.blueBalance;
         this.blueBalance = blueBalance;
         firePropertyChange("blueBalance", oldValue, blueBalance);
-        firePropertyChange("blueBalancePercent", null, getBlueBalancePercent());
         cameraViewHasChanged(null);
     }
 
-    public int getRedBalancePercent() {
-        return (int)Math.round(redBalance*100.0);
+
+    public double getRedGamma() {
+        return redGamma;
     }
 
-    public void setRedBalancePercent(int redBalancePercent) {
-        setRedBalance(redBalancePercent*0.01);
+    public void setRedGamma(double redGamma) {
+        Object oldValue = this.redGamma;
+        this.redGamma = redGamma;
+        firePropertyChange("redGamma", oldValue, redGamma);
+        cameraViewHasChanged(null);
     }
 
-    public int getGreenBalancePercent() {
-        return (int)Math.round(greenBalance*100.0);
+    public double getGreenGamma() {
+        return greenGamma;
     }
 
-    public void setGreenBalancePercent(int greenBalancePercent) {
-        setGreenBalance(greenBalancePercent*0.01);
+    public void setGreenGamma(double greenGamma) {
+        Object oldValue = this.greenGamma;
+        this.greenGamma = greenGamma;
+        firePropertyChange("greenGamma", oldValue, greenGamma);
+        cameraViewHasChanged(null);
     }
 
-    public int getBlueBalancePercent() {
-        return (int)Math.round(blueBalance*100.0);
+    public double getBlueGamma() {
+        return blueGamma;
     }
 
-    public void setBlueBalancePercent(int blueBalancePercent) {
-        setBlueBalance(blueBalancePercent*0.01);
+    public void setBlueGamma(double blueGamma) {
+        Object oldValue = this.blueGamma;
+        this.blueGamma = blueGamma;
+        firePropertyChange("blueGamma", oldValue, blueGamma);
+        cameraViewHasChanged(null);
     }
+
 
     public boolean isDeinterlace() {
         return isDeinterlaced();
@@ -472,7 +488,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     public boolean isWhiteBalanced() {
-        return redBalance != 1.0 || greenBalance != 1.0 || blueBalance != 1.0; 
+        return redBalance != 1.0 || greenBalance != 1.0 || blueBalance != 1.0
+                || redGamma != 1.0 || greenGamma != 1.0 || blueGamma != 1.0; 
     }
 
     @Override
@@ -522,7 +539,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             // We do skip the convert to and from Mat if no transforms are needed.
             // But we must enter while calibrating. 
             if (isDeinterlaced()
-                || isCropped() 
+                || isCropped()
+                || isWhiteBalanced() 
                 || isCalibrating()
                 || isUndistorted()
                 || isScaled()
@@ -537,6 +555,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
                 mat = crop(mat);
 
+                mat = whiteBalance(mat);
+
                 mat = calibrate(mat);
 
                 mat = undistort(mat);
@@ -549,8 +569,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 mat = offset(mat);
 
                 mat = flip(mat);
-
-                mat = whiteBalance(mat);
 
                 image = OpenCvUtils.toBufferedImage(mat);
                 mat.release();
@@ -569,9 +587,20 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     private Mat whiteBalance(Mat mat) {
-        if (isWhiteBalanced()) {
+        if (isWhiteBalanced() && mat.channels() == 3) {
+            Mat lut;
+            byte[] data = new byte[3];
+            lut = new Mat(256, 1, CvType.CV_8UC3);
+            for (int i = 0; i < 256; i++) {
+                // Indexed BGR.
+                data[2] = (byte)Math.min(255, Math.pow(i/255.0*redBalance, 1/redGamma)*255.0);
+                data[1] = (byte)Math.min(255, Math.pow(i/255.0*greenBalance, 1/greenGamma)*255.0);
+                data[0] = (byte)Math.min(255, Math.pow(i/255.0*blueBalance, 1/blueGamma)*255.0);
+                lut.put(i, 0, data);
+            }
             Mat whiteBalanced = new Mat();
-            Core.multiply(mat, new Scalar(blueBalance, greenBalance, redBalance), whiteBalanced);
+            Core.LUT(mat, lut, whiteBalanced);
+            lut.release();
             mat.release();
             mat = whiteBalanced;
         }
@@ -583,6 +612,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         setRedBalance(1.0);
         setGreenBalance(1.0);
         setBlueBalance(1.0);
+        setRedGamma(1.0);
+        setGreenGamma(1.0);
+        setBlueGamma(1.0);
         // Capture.
         BufferedImage image = lightSettleAndCapture();
         // Calculate the histogram.
@@ -640,16 +672,15 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         setRedBalance(r/clip);
         setGreenBalance(g/clip);
         setBlueBalance(b/clip);
-        // Capture a new image for 0fps cameras to see the result.
-        lightSettleAndCapture();
     }
 
     public void resetWhiteBalance() throws Exception {
         setRedBalance(1.0);
         setGreenBalance(1.0);
         setBlueBalance(1.0);
-        // Capture a new image for 0fps cameras to see the result.
-        lightSettleAndCapture();
+        setRedGamma(1.0);
+        setGreenGamma(1.0);
+        setBlueGamma(1.0);
     }
 
     private Mat crop(Mat mat) {
