@@ -4,7 +4,7 @@ This page lists Controllers and associated Firmware that are known to be compati
 
 ### Key Features
 
-These are of course _in addition_ to basic homing and motion commands like [`G1`](https://www.reprap.org/wiki/G-code#G0_.26_G1:_Move) etc.
+The following key features need to be supported (_in addition_ to basic homing and motion commands like [`G1`](https://www.reprap.org/wiki/G-code#G0_.26_G1:_Move) etc. of course):
 
 1. The controller provides a [`M115`](https://www.reprap.org/wiki/G-code#M115:_Get_Firmware_Version_and_Capabilities) firmware report command. This is used to automatically detect the type of the firmware in OpenPnP. Some automated setup can then be provided by the [[Issues and Solutions]] system. Even for a non-motion controller (e.g. a feeder control board) it is recommended to implement this as a minimum, to easily identify a controller on a port and to allow for [[automatic Issues & Solutions auto-setup|Issues-and-Solutions]]. 
 
