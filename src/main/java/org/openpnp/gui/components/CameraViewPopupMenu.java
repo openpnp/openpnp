@@ -98,7 +98,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
                         (RulerReticle) cameraView.getDefaultReticle()));
             }
             else if (cameraView.getDefaultReticle() instanceof GridReticle) {
-                setReticleOptionsMenu(createGridReticleOptionsMenu(
+                setReticleOptionsMenu(createRulerReticleOptionsMenu(
                         (GridReticle) cameraView.getDefaultReticle()));
             }
             else if (cameraView.getDefaultReticle() instanceof FiducialReticle) {
@@ -743,7 +743,7 @@ public class CameraViewPopupMenu extends JPopupMenu {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             GridReticle reticle = new GridReticle();
-            JMenu optionsMenu = createGridReticleOptionsMenu(reticle);
+            JMenu optionsMenu = createRulerReticleOptionsMenu(reticle);
             setReticleOptionsMenu(optionsMenu);
             cameraView.setDefaultReticle(reticle);
         }
