@@ -349,8 +349,6 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         }
         // save current value as reference value
         double vacuumLevel = (readVacuum(nozzle) + readVacuum(nozzle) + readVacuum(nozzle)) / 3.0; // average over three reads to reduce the influence of noise
-        // last pick location
-        nozzle.moveTo(location.add(new Location(LengthUnit.Millimeters, 0, 0, lastFeedDepth, 0)), Motion.MotionOption.SpeedOverPrecision);
 
         // locate parts (or throw exception), return the depth where it was found
         if (pokeForParts == true) {
@@ -396,10 +394,15 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
     private void moveToPokeLocation(Nozzle nozzle, double currentDepth, double partHeight, int step) throws Exception {
         int row = step / 5;
         int coloum = step % 5;
-        Location destination = location.add(new Location(LengthUnit.Millimeters, -1.25 + coloum * 0.625, -1.25 + row * 0.625, currentDepth, 0));
-        nozzle.moveTo(destination.add(new Location(LengthUnit.Millimeters, 0,0, Math.max(1, 2.25 * partHeight), 0)), 1, Motion.MotionOption.SpeedOverPrecision);        
-        nozzle.waitForCompletion(CompletionType.WaitForStillstand);
-        nozzle.moveTo(destination, 0.33, Motion.MotionOption.SpeedOverPrecision);        
+        Location pokeLocation = location.add(new Location(LengthUnit.Millimeters, -1.25 + coloum * 0.625, -1.25 + row * 0.625, currentDepth, 0));
+        row = (step + 1) / 5;
+        coloum = (step + 1) % 5;
+        Location nextLocation = location.add(new Location(LengthUnit.Millimeters, -1.25 + coloum * 0.625, -1.25 + row * 0.625, currentDepth + Math.max(1, 2.25 * partHeight), 0));
+        
+        // move
+        nozzle.moveTo(pokeLocation, 0.33, Motion.MotionOption.SpeedOverPrecision);    
+        nozzle.waitForCompletion(CompletionType.WaitForStillstand);   
+        nozzle.moveTo(nextLocation, 1, Motion.MotionOption.SpeedOverPrecision);        
     }
 
     private double stirParts(Nozzle nozzle, double vacuumLevel) throws Exception {
