@@ -74,7 +74,9 @@ For machines that have very large runout in the nozzle it might be imperative th
 On the "unloaded" nozzle tip's Calibration Wizard, setup the pipeline and other settings as usual. Use the Calibration Z Offset to account for the missing tip on the nozzle and to bring it down into the focal plane of the bottom camera. OpenPNP will safely suppress any changer motion for this pseudo nozzle tip. 
 
 ## Pipeline
-The pipeline should detect the nozzle tip in a very stable way. Furthermore it should best return only exactly ONE result, not many. Here are suggestions how to adapt the default pipeline for your needs. Its not every aspect of the pipelines described here. Just parts that might be helpful for nozzle detection. Find the following animation of a successful measurement with the detected houghcircles overlaid:
+If you are a pipeline editing "pro", you can tune the standard pipeline using the tips below. If not, [the self-tuning Circular Symmetry pipeline posted here](https://github.com/openpnp/openpnp/wiki/DetectCircularSymmetry#nozzle-tip-calibration) might help. It can simply be pasted into the editor. Be sure to read the instructions, especially about the **Vision Diameter**.
+
+Manual editing: The pipeline should detect the nozzle tip in a very stable way. Furthermore, the pipeline should best return only exactly ONE result, not many. Here are suggestions how to adapt the default pipeline for your needs. Its not every aspect of the pipelines described here. Just parts that might be helpful for nozzle detection. Find the following animation of a successful measurement with the detected houghcircles overlaid:
 
 ![calibration-working](https://user-images.githubusercontent.com/3868450/52703639-16b7b100-2f7f-11e9-9c2d-d4e9d95464d2.gif)
 
