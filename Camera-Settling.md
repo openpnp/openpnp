@@ -80,7 +80,7 @@ The **Denoise (Pixel)** setting is an indicator of how precise your Computer Vis
 
 If you have varied brightness and limited contrast levels in your vision scenarios (like black Samsung CP40 nozzle tips in calibration, white paper tape strips on white double-sided tape/shiny metal desk), use the **Contrast Enhance** setting to equalize between the scenarios.
 
-Use the **Center Mask** to remove unwanted image peripherals that might spoil Contrast Enhance (like a diffuser or shade partially in view).
+Use the **Center Mask** to remove unwanted image peripherals that might spoil Contrast Enhance (like a diffuser or shade partially in view). If set to 0.0, no mask is applied. Values larger than 0.0 are relative to the camera dimension, i.e. 1.0 means from edge to edge. You can set values larger than 1.0, the circle will then be partially cropped.
 
 If some of your Vision subjects are low in contrasts but despite using Center Mask you still have some very dark or very bright blurred objects in the camera view, then Contrast Enhance alone might not work. You might then want to combine it with the **Edge Sensitive** mode. A correctly set Denoise (Pixels) value is important to define the relevant sharpness of the edges. Note that the Edge Sensitive mode will not score large motion higher than medium motion, but we only need to judge the small motions anyway. Edge Sensitive mode might be fooled by motion blur, so you may need to combine it with Debounce Frames to make sure there is no longer any motion blur (it depends on the latency of your camera).
 
