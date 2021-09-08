@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
@@ -20,6 +21,7 @@ import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
@@ -27,6 +29,7 @@ import org.openpnp.gui.support.PercentIntegerConverter;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -48,6 +51,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
     private JLabel lblOffsetY;
     private JTextField textFieldOffsetX;
     private JTextField textFieldOffsetY;
+    private JPanel panelColorBalance;
 
 
     public ReferenceCameraTransformsConfigurationWizard(ReferenceCamera referenceCamera) {
@@ -63,28 +67,14 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.LABEL_COMPONENT_GAP_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -127,13 +117,13 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         panelTransforms.add(textFieldOffsetY, "4, 6");
         textFieldOffsetY.setColumns(10);
 
-        lblFlipX = new JLabel("Flip Vertical");
+        lblFlipX = new JLabel("Flip Vertical?");
         panelTransforms.add(lblFlipX, "2, 8, right, default");
 
         chckbxFlipX = new JCheckBox("");
         panelTransforms.add(chckbxFlipX, "4, 8");
 
-        lblFlipY = new JLabel("Flip Horizontal");
+        lblFlipY = new JLabel("Flip Horizontal?");
         panelTransforms.add(lblFlipY, "2, 10, right, default");
 
         checkBoxFlipY = new JCheckBox("");
@@ -147,7 +137,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         cropWidthTextField.setColumns(10);
         
         lblNewLabel = new JLabel("(Use 0 for no cropping)");
-        panelTransforms.add(lblNewLabel, "5, 12");
+        panelTransforms.add(lblNewLabel, "7, 12");
         
         lblCropHeight = new JLabel("Crop Height");
         panelTransforms.add(lblCropHeight, "2, 14, right, default");
@@ -157,7 +147,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         cropHeightTextField.setColumns(10);
         
         lblNewLabel_1 = new JLabel("(Use 0 for no cropping)");
-        panelTransforms.add(lblNewLabel_1, "5, 14");
+        panelTransforms.add(lblNewLabel_1, "7, 14");
         
         lblScaleWidth = new JLabel("Scale Width");
         panelTransforms.add(lblScaleWidth, "2, 16, right, default");
@@ -167,7 +157,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         scaleWidthTf.setColumns(10);
         
         lbluseFor = new JLabel("(Use 0 for no scaling)");
-        panelTransforms.add(lbluseFor, "5, 16");
+        panelTransforms.add(lbluseFor, "7, 16");
         
         lblScaleHeight = new JLabel("Scale Height");
         panelTransforms.add(lblScaleHeight, "2, 18, right, default");
@@ -177,85 +167,154 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         scaleHeightTf.setColumns(10);
         
         label = new JLabel("(Use 0 for no scaling)");
-        panelTransforms.add(label, "5, 18");
+        panelTransforms.add(label, "7, 18");
         
-        lblDeinterlace = new JLabel("De-Interlace");
-        panelTransforms.add(lblDeinterlace, "2, 20");
+        lblDeinterlace = new JLabel("De-Interlace?");
+        panelTransforms.add(lblDeinterlace, "2, 20, right, default");
         
         deinterlaceChk = new JCheckBox("");
         panelTransforms.add(deinterlaceChk, "4, 20");
         
         lblremovesInterlacingFrom = new JLabel("(Removes interlacing from stacked frames)");
-        panelTransforms.add(lblremovesInterlacingFrom, "5, 20");
+        panelTransforms.add(lblremovesInterlacingFrom, "7, 20");
+        
+        panelColorBalance = new JPanel();
+        panelColorBalance.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+                "Color Balance", TitledBorder.LEADING, TitledBorder.TOP, null));
+        contentPanel.add(panelColorBalance);
+        panelColorBalance.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("max(100dlu;default)"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+
         
         lblRedBalance = new JLabel("Red Balance");
-        panelTransforms.add(lblRedBalance, "2, 24, right, default");
+        panelColorBalance.add(lblRedBalance, "2, 2, right, default");
         
         redBalance = new JSlider();
         redBalance.setMajorTickSpacing(100);
         redBalance.setMaximum(200);
         redBalance.setPaintTicks(true);
         redBalance.setValue(100);
-        panelTransforms.add(redBalance, "4, 24, 2, 1");
-        
-        btnAutowhitebalance = new JButton(autoWhiteBalanceAction);
-        panelTransforms.add(btnAutowhitebalance, "7, 24, fill, fill");
+        panelColorBalance.add(redBalance, "4, 2, fill, default");
         
         lblGreenBalance = new JLabel("Green Balance");
-        panelTransforms.add(lblGreenBalance, "2, 26, right, default");
+        panelColorBalance.add(lblGreenBalance, "2, 4, right, default");
         
         greenBalance = new JSlider();
         greenBalance.setPaintTicks(true);
         greenBalance.setValue(100);
         greenBalance.setMaximum(200);
         greenBalance.setMajorTickSpacing(100);
-        panelTransforms.add(greenBalance, "4, 26, 2, 1");
-        
-        btnAutowhitebalance_1 = new JButton(autoWhiteBalanceBrightAction);
-        panelTransforms.add(btnAutowhitebalance_1, "7, 26, default, fill");
+        panelColorBalance.add(greenBalance, "4, 4, fill, default");
         
         lblBlueBalance = new JLabel("Blue Balance");
-        panelTransforms.add(lblBlueBalance, "2, 28, right, default");
+        panelColorBalance.add(lblBlueBalance, "2, 6, right, default");
         
         blueBalance = new JSlider();
         blueBalance.setValue(100);
         blueBalance.setMajorTickSpacing(100);
         blueBalance.setMaximum(200);
         blueBalance.setPaintTicks(true);
-        panelTransforms.add(blueBalance, "4, 28, 2, 1");
-        
-        btnReset = new JButton(resetAction);
-        panelTransforms.add(btnReset, "7, 28");
+        panelColorBalance.add(blueBalance, "4, 6, fill, default");
         
         lblRedGamma = new JLabel("Red Gamma");
-        panelTransforms.add(lblRedGamma, "2, 32, right, default");
+        panelColorBalance.add(lblRedGamma, "2, 10, right, default");
         
         redGammaPercent = new JSlider();
         redGammaPercent.setMajorTickSpacing(100);
         redGammaPercent.setValue(100);
         redGammaPercent.setMaximum(200);
         redGammaPercent.setPaintTicks(true);
-        panelTransforms.add(redGammaPercent, "4, 32, 2, 1");
+        panelColorBalance.add(redGammaPercent, "4, 10, fill, default");
         
         lblGreenGamma = new JLabel("Green Gamma");
-        panelTransforms.add(lblGreenGamma, "2, 34, right, default");
+        panelColorBalance.add(lblGreenGamma, "2, 12, right, default");
         
         greenGammaPercent = new JSlider();
         greenGammaPercent.setValue(100);
         greenGammaPercent.setPaintTicks(true);
         greenGammaPercent.setMaximum(200);
         greenGammaPercent.setMajorTickSpacing(100);
-        panelTransforms.add(greenGammaPercent, "4, 34, 2, 1");
+        panelColorBalance.add(greenGammaPercent, "4, 12, fill, default");
         
         lblBlueGamma = new JLabel("Blue Gamma");
-        panelTransforms.add(lblBlueGamma, "2, 36, right, default");
+        panelColorBalance.add(lblBlueGamma, "2, 14, right, default");
         
         blueGammaPercent = new JSlider();
         blueGammaPercent.setValue(100);
         blueGammaPercent.setPaintTicks(true);
         blueGammaPercent.setMaximum(200);
         blueGammaPercent.setMajorTickSpacing(100);
-        panelTransforms.add(blueGammaPercent, "4, 36, 2, 1");
+        panelColorBalance.add(blueGammaPercent, "4, 14, fill, default");
+        
+        colorGraph = new SimpleGraphView();
+        colorGraph.setPreferredSize(new Dimension(300, 300));
+        panelColorBalance.add(colorGraph, "4, 18, 1, 15, left, fill");
+        
+        lblOutput = new JLabel("Output Level");
+        panelColorBalance.add(lblOutput, "2, 18, 1, 15, right, default");
+        
+        lblAutoWhitebalance = new JLabel("Auto White-Balance");
+        panelColorBalance.add(lblAutoWhitebalance, "6, 18, center, default");
+        
+        btnAutowhitebalance = new JButton(autoWhiteBalanceAction);
+        panelColorBalance.add(btnAutowhitebalance, "6, 20, fill, fill");
+        
+        btnAutowhitebalance_1 = new JButton(autoWhiteBalanceBrightAction);
+        panelColorBalance.add(btnAutowhitebalance_1, "6, 22, default, fill");
+        
+        btnAutowhiteBalanceAdvanced = new JButton(autoWhiteBalanceRoughMapAction);
+        panelColorBalance.add(btnAutowhiteBalanceAdvanced, "6, 26, default, fill");
+        
+        btnAutowhiteBalanceAdvanced_1 = new JButton(autoWhiteBalanceFineMapAction);
+        panelColorBalance.add(btnAutowhiteBalanceAdvanced_1, "6, 28, default, fill");
+        
+        btnReset = new JButton(resetAction);
+        panelColorBalance.add(btnReset, "6, 32");
+        
+        lblInputLevel = new JLabel("Input Level");
+        panelColorBalance.add(lblInputLevel, "4, 34, center, default");
         initDataBindings();
     }
 
@@ -289,7 +348,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
 
     private final Action autoWhiteBalanceAction = new AbstractAction() {
         {
-            putValue(NAME, "Auto White-Balance, Overall");
+            putValue(NAME, "Overall");
             putValue(SHORT_DESCRIPTION, 
                     "<html>Hold a neutral bright object in front of the camera and<br/>"
                     + "press this button to automatically calibrate the white-balance.<br/><br/>"
@@ -309,7 +368,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
 
     private final Action autoWhiteBalanceBrightAction = new AbstractAction() {
         {
-            putValue(NAME, "Auto White-Balance, Brightest");
+            putValue(NAME, "Brightest");
             putValue(SHORT_DESCRIPTION, 
                     "<html>Hold a neutral bright object in front of the camera and<br/>"
                     + "press this button to automatically calibrate the white-balance.<br/><br/>"
@@ -326,6 +385,44 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
             });
         }
     };
+
+    private final Action autoWhiteBalanceRoughMapAction = new AbstractAction() {
+        {
+            putValue(NAME, "Mapped Roughly");
+            putValue(SHORT_DESCRIPTION, 
+                    "<html>Hold a gradiented gray object in front of the camera and<br/>"
+                    + "press this button to automatically calibrate the white-balance.<br/><br/>"
+                    + "This method uses a rough mapped approach, the image must contain all shades.</html>");
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            autoMapped(8);
+        }
+
+    };
+
+    private final Action autoWhiteBalanceFineMapAction = new AbstractAction() {
+        {
+            putValue(NAME, "Mapped Finely");
+            putValue(SHORT_DESCRIPTION, 
+                    "<html>Hold a gradiented gray object in front of the camera and<br/>"
+                    + "press this button to automatically calibrate the white-balance.<br/><br/>"
+                    + "This method uses a fine mapped approach, the image must contain all shades.</html>");
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            autoMapped(16);
+        }
+    };
+
+    protected void autoMapped(int levels) {
+        UiUtils.messageBoxOnException(() -> {
+            referenceCamera.autoAdjustWhiteBalanceMapped(levels);
+            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(referenceCamera);
+            cameraView.setShowImageInfo(true);
+            MovableUtils.fireTargetedUserAction(referenceCamera);
+        });
+    }
 
     private final Action resetAction = new AbstractAction() {
         {
@@ -372,6 +469,13 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
     private JSlider redGammaPercent;
     private JSlider greenGammaPercent;
     private JSlider blueGammaPercent;
+    private JButton btnAutowhiteBalanceAdvanced;
+    private SimpleGraphView colorGraph;
+    private JButton btnAutowhiteBalanceAdvanced_1;
+    private JLabel lblOutput;
+    private JLabel lblInputLevel;
+    private JLabel lblAutoWhitebalance;
+
     protected void initDataBindings() {
         BeanProperty<ReferenceCamera, Double> referenceCameraBeanProperty = BeanProperty.create("redBalance");
         BeanProperty<JSlider, Integer> jSliderBeanProperty = BeanProperty.create("value");
@@ -408,5 +512,10 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         AutoBinding<ReferenceCamera, Double, JSlider, Integer> autoBinding_5 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, referenceCamera, referenceCameraBeanProperty_5, blueGammaPercent, jSliderBeanProperty_5);
         autoBinding_5.setConverter(new PercentIntegerConverter());
         autoBinding_5.bind();
+        //
+        BeanProperty<ReferenceCamera, SimpleGraph> referenceCameraBeanProperty_6 = BeanProperty.create("colorBalanceGraph");
+        BeanProperty<SimpleGraphView, SimpleGraph> simpleGraphViewBeanProperty = BeanProperty.create("graph");
+        AutoBinding<ReferenceCamera, SimpleGraph, SimpleGraphView, SimpleGraph> autoBinding_6 = Bindings.createAutoBinding(UpdateStrategy.READ, referenceCamera, referenceCameraBeanProperty_6, colorGraph, simpleGraphViewBeanProperty);
+        autoBinding_6.bind();
     }
 }

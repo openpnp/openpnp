@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -69,6 +70,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.Collect;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
@@ -164,13 +166,22 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Attribute(required = false)
     private double whiteBalanceClipFractile = 0.99;
-    
+
+    @Element(required = false)
+    private double[] redColorMap;
+    @Element(required = false)
+    private double[] greenColorMap;
+    @Element(required = false)
+    private double[] blueColorMap;
+
+
     private boolean calibrating;
     private CalibrationCallback calibrationCallback;
     private int calibrationCountGoal = 25;
 
     private Mat undistortionMap1;
     private Mat undistortionMap2;
+    private Mat lut;
 
     private LensCalibration lensCalibration;
 
@@ -418,7 +429,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public void setRedBalance(double redBalance) {
         Object oldValue = this.redBalance;
         this.redBalance = redBalance;
+        resetColorMaps();
         firePropertyChange("redBalance", oldValue, redBalance);
+        firePropertyChange("colorBalanceGraph", null, getColorBalanceGraph());
         cameraViewHasChanged(null);
     }
 
@@ -429,7 +442,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public void setGreenBalance(double greenBalance) {
         Object oldValue = this.greenBalance;
         this.greenBalance = greenBalance;
+        resetColorMaps();
         firePropertyChange("greenBalance", oldValue, greenBalance);
+        firePropertyChange("colorBalanceGraph", null, getColorBalanceGraph());
         cameraViewHasChanged(null);
     }
 
@@ -440,7 +455,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public void setBlueBalance(double blueBalance) {
         Object oldValue = this.blueBalance;
         this.blueBalance = blueBalance;
+        resetColorMaps();
         firePropertyChange("blueBalance", oldValue, blueBalance);
+        firePropertyChange("colorBalanceGraph", null, getColorBalanceGraph());
         cameraViewHasChanged(null);
     }
 
@@ -452,7 +469,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public void setRedGamma(double redGamma) {
         Object oldValue = this.redGamma;
         this.redGamma = redGamma;
+        resetColorMaps();
         firePropertyChange("redGamma", oldValue, redGamma);
+        firePropertyChange("colorBalanceGraph", null, getColorBalanceGraph());
         cameraViewHasChanged(null);
     }
 
@@ -463,7 +482,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public void setGreenGamma(double greenGamma) {
         Object oldValue = this.greenGamma;
         this.greenGamma = greenGamma;
+        resetColorMaps();
         firePropertyChange("greenGamma", oldValue, greenGamma);
+        firePropertyChange("colorBalanceGraph", null, getColorBalanceGraph());
         cameraViewHasChanged(null);
     }
 
@@ -474,10 +495,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public void setBlueGamma(double blueGamma) {
         Object oldValue = this.blueGamma;
         this.blueGamma = blueGamma;
+        resetColorMaps();
         firePropertyChange("blueGamma", oldValue, blueGamma);
+        firePropertyChange("colorBalanceGraph", null, getColorBalanceGraph());
         cameraViewHasChanged(null);
     }
-
 
     public boolean isDeinterlace() {
         return isDeinterlaced();
@@ -489,7 +511,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     public boolean isWhiteBalanced() {
         return redBalance != 1.0 || greenBalance != 1.0 || blueBalance != 1.0
-                || redGamma != 1.0 || greenGamma != 1.0 || blueGamma != 1.0; 
+                || redGamma != 1.0 || greenGamma != 1.0 || blueGamma != 1.0
+                || (redColorMap != null & blueColorMap != null & greenColorMap != null); 
     }
 
     @Override
@@ -588,50 +611,66 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     private Mat whiteBalance(Mat mat) {
         if (isWhiteBalanced() && mat.channels() == 3) {
-            Mat lut;
-            byte[] data = new byte[3];
-            lut = new Mat(256, 1, CvType.CV_8UC3);
-            for (int i = 0; i < 256; i++) {
-                // Indexed BGR.
-                data[2] = (byte)Math.min(255, Math.pow(i/255.0*redBalance, 1/redGamma)*255.0);
-                data[1] = (byte)Math.min(255, Math.pow(i/255.0*greenBalance, 1/greenGamma)*255.0);
-                data[0] = (byte)Math.min(255, Math.pow(i/255.0*blueBalance, 1/blueGamma)*255.0);
-                lut.put(i, 0, data);
-            }
+            initWhiteBalanceLut();
             Mat whiteBalanced = new Mat();
             Core.LUT(mat, lut, whiteBalanced);
-            lut.release();
             mat.release();
             mat = whiteBalanced;
         }
         return mat;
     }
 
+    protected void initWhiteBalanceLut() {
+        if (lut == null) {
+            byte[] data = new byte[3];
+            lut = new Mat(256, 1, CvType.CV_8UC3);
+            if (redColorMap != null & blueColorMap != null & greenColorMap != null) {
+                final int levels = redColorMap.length;
+                final int range = 256/levels;
+                final int halfRange = range/2;
+                for (int i = 0; i < 256; i++) {
+                    // Indexed BGR.
+                    int level1 = (i+halfRange)/range;
+                    int level0 = level1 - 1;
+                    double weight1 = ((i + halfRange) % range)/(double)range; 
+                    double weight0 = 1.0 - weight1;
+                    if (level0 < 0) {
+                        level0 = 0;
+                        weight0 = -weight0;
+                    }
+                    if (level1 >= levels) {
+                        level1 = levels-2;
+                        weight0 += 2*weight1; 
+                        weight1 = -weight1;
+                    }
+                    data[2] = (byte)Math.max(0, Math.min(255, (redColorMap[level0]*weight0 + redColorMap[level1]*weight1)*255.0));
+                    data[1] = (byte)Math.max(0, Math.min(255, (greenColorMap[level0]*weight0 + greenColorMap[level1]*weight1)*255.0));
+                    data[0] = (byte)Math.max(0, Math.min(255, (blueColorMap[level0]*weight0 + blueColorMap[level1]*weight1)*255.0));
+                    lut.put(i, 0, data);
+                }
+            }
+            else {
+                for (int i = 0; i < 256; i++) {
+                    // Indexed BGR.
+                    data[2] = (byte)Math.min(255, Math.pow(i/255.0*redBalance, 1/redGamma)*255.0);
+                    data[1] = (byte)Math.min(255, Math.pow(i/255.0*greenBalance, 1/greenGamma)*255.0);
+                    data[0] = (byte)Math.min(255, Math.pow(i/255.0*blueBalance, 1/blueGamma)*255.0);
+                    lut.put(i, 0, data);
+                }
+            }
+        }
+    }
+
     public void autoAdjustWhiteBalance(boolean averaged) throws Exception {
         // Switch it off to get a neutral image.
-        setRedBalance(1.0);
-        setGreenBalance(1.0);
-        setBlueBalance(1.0);
-        setRedGamma(1.0);
-        setGreenGamma(1.0);
-        setBlueGamma(1.0);
+        resetWhiteBalance();
         // Capture.
         BufferedImage image = lightSettleAndCapture();
         // Calculate the histogram.
-        long[][] histogram = new long[3][256];
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
-                int rgb = image.getRGB(x, y);
-                int r = (rgb >> 16) & 0xff;
-                int g = (rgb >> 8) & 0xff;
-                int b = (rgb >> 0) & 0xff;
-                histogram[0][r]++;
-                histogram[1][g]++;
-                histogram[2][b]++;
-            }
-        }
+        long[][] histogram = computeImageHistogram(image);
         // Analyze the percentiles.
         long pixels = image.getHeight()*image.getWidth();
+        double percentileGamma[] = new double[3];
         double percentileLead[] = new double[3];
         double percentileClip[] = new double[3];
         double sum[] = new double[3];
@@ -641,6 +680,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             for (int bin = 0; bin < 256; bin++) {
                 long value = histogram[ch][bin];
                 accumulated += value;
+                if (accumulated < pixels*0.5) {
+                    percentileGamma[ch] = bin;
+                }
                 if (accumulated < pixels*whiteBalanceLeadFractile) {
                     percentileLead[ch] = bin;
                 }
@@ -665,13 +707,156 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         double g = lead/resultLead[1];
         double b = lead/resultLead[2];
 
-        // Norm to the maximum clip percentile, but never amplify.
-        double clip = Math.max(1.0, Math.max(Math.max(r*percentileClip[0], g*percentileClip[1]), b*percentileClip[2])/255.0);
+        // We do not: Norm to the maximum clip percentile, but never amplify.
+        double clip = 1.0; //Math.max(1.0, Math.max(Math.max(r*percentileClip[0], g*percentileClip[1]), b*percentileClip[2])/255.0);
 
         // Set the new balance.
         setRedBalance(r/clip);
         setGreenBalance(g/clip);
         setBlueBalance(b/clip);
+        
+        // Scale the gamma percentile.
+        percentileGamma[0] *= r/clip/255; 
+        percentileGamma[1] *= g/clip/255; 
+        percentileGamma[2] *= b/clip/255;
+        
+        // Make them match.
+        double midGamma = (percentileGamma[0] + percentileGamma[1] + percentileGamma[2])/3;
+        setRedGamma(Math.log(percentileGamma[0])/Math.log(midGamma));
+        setGreenGamma(Math.log(percentileGamma[1])/Math.log(midGamma));
+        setBlueGamma(Math.log(percentileGamma[2])/Math.log(midGamma));
+    }
+
+    protected long[][] computeImageHistogram(BufferedImage image) {
+        long[][] histogram = new long[3][256];
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int rgb = image.getRGB(x, y);
+                int r = (rgb >> 16) & 0xff;
+                int g = (rgb >> 8) & 0xff;
+                int b = (rgb >> 0) & 0xff;
+                histogram[0][r]++;
+                histogram[1][g]++;
+                histogram[2][b]++;
+            }
+        }
+        return histogram;
+    }
+
+    public void autoAdjustWhiteBalanceMapped(int levels) throws Exception {
+        // Switch it off to get a neutral image.
+        resetWhiteBalance();
+        // Capture.
+        BufferedImage image = lightSettleAndCapture();
+        // Map the balance on various levels.
+        final int range = 256/levels;
+        final int halfRange = range/2;
+        final int clip = 254; 
+        final int balanceLimit = 2;
+        long[][] histogram = computeImageHistogram(image);
+        double lead[] = new double[3];
+        long pixels = image.getHeight()*image.getWidth();
+        int fractileLead = 0;
+        for (int ch = 0; ch < 3; ch++) {
+            long accumulated = 0;
+            for (int bin = 0; bin < 256; bin++) {
+                long value = histogram[ch][bin];
+                accumulated += value;
+                if (accumulated > pixels*whiteBalanceLeadFractile) {
+                    lead[ch] = bin;
+                    if (bin > fractileLead) {
+                        fractileLead = bin;
+                    }
+                    break;
+                }
+            }
+        }
+        double amplify = fractileLead*3.0/(lead[0] + lead[1] + lead[2]);
+        long[][][] histogramAtLevel = new long[3][levels][255+range];
+        long[][] counts = new long[3][levels];
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int rgb = image.getRGB(x, y);
+                int r = (rgb >> 16) & 0xff;
+                int g = (rgb >> 8) & 0xff;
+                int b = (rgb >> 0) & 0xff;
+                int lum = ((r >= clip || g >= clip || b >= clip) ? 255 // clip all when one is clipped 
+                        : (int)(amplify*(r+g+b)/3));
+                if (lum >= 1) {
+                    if (r >= 1 && lum/r < balanceLimit && r/lum < balanceLimit) {
+                        int level = r/range;
+                        int midLevel = level*range+halfRange;
+                        histogramAtLevel[0][level][Math.min(255, midLevel*lum/r)]++;
+                        counts[0][level]++;
+                    }
+                    if (g >= 1 && lum/g < balanceLimit && g/lum < balanceLimit) {
+                        int level = g/range;
+                        int midLevel = level*range+halfRange;
+                        histogramAtLevel[1][level][Math.min(255, midLevel*lum/g)]++;
+                        counts[1][level]++;
+                    }
+                    if (b >= 1 && lum/b < balanceLimit && b/lum < balanceLimit) {
+                        int level = b/range;
+                        int midLevel = level*range+halfRange;
+                        histogramAtLevel[2][level][Math.min(255, midLevel*lum/b)]++;
+                        counts[2][level]++;
+                    }
+                }
+            }
+        }
+        // Map the colors.
+        double [][] colorMap = new double[3][levels];
+        for (int ch = 0; ch < 3; ch++) {
+            for (int level = 0; level < levels; level++) {
+                long median = counts[ch][level]/2;
+                long accumulated = 0;
+                for (int bin = 0; bin < 256; bin++) {
+                    long value = histogramAtLevel[ch][level][bin];
+                    accumulated += value;
+                    if (accumulated > median) {
+                        colorMap[ch][level] = bin/255.0;
+                        break;
+                    }
+                }
+            }
+            // Sanity check
+            for (int level = 1; level < levels; level++) {
+                if (level == levels) {
+                    if (colorMap[ch][level] > colorMap[ch][level+1]) {
+                        // extrapolate
+                        colorMap[ch][level] = (colorMap[ch][level+1]*3 - colorMap[ch][level+2])/2;
+                    }
+                }
+                else if (colorMap[ch][level-1] > colorMap[ch][level]) {
+                    if (level+1 >= levels) {
+                        // extrapolate
+                        colorMap[ch][level] = (colorMap[ch][level-1]*3 - colorMap[ch][level-2])/2;
+                    }
+                    else {
+                        if (colorMap[ch][level-1] > colorMap[ch][level+1]) {
+                            throw new Exception("Image does not contain grayscales at level "+100*level/levels+" ... "+100*(level+1)/levels+"%.");
+//                            colorMap[ch][level] = colorMap[ch][level-1];
+                        }
+                        else {
+                        // Simply interpolate.
+                        colorMap[ch][level] = (colorMap[ch][level-1] + colorMap[ch][level+1])/2;
+                        }
+                    }
+                }
+            }
+        }
+
+        // As an approximation, compute the parametric white balance (as feedback 
+        // for the user, and basis for manual override).
+        autoAdjustWhiteBalance(true);
+        // But immediately reset the maps and LUT.
+        resetColorMaps();
+        // And assign our new color maps.
+        redColorMap = colorMap[0];
+        greenColorMap = colorMap[1];
+        blueColorMap = colorMap[2];
+        firePropertyChange("colorBalanceGraph", null, getColorBalanceGraph());
+        cameraViewHasChanged(null);
     }
 
     public void resetWhiteBalance() throws Exception {
@@ -681,6 +866,47 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         setRedGamma(1.0);
         setGreenGamma(1.0);
         setBlueGamma(1.0);
+        resetColorMaps();
+    }
+
+    public SimpleGraph getColorBalanceGraph() {
+        final String COLOR_GRAPH = "C"; 
+        SimpleGraph colorGraph = new SimpleGraph();
+        colorGraph.setRelativePaddingLeft(0.1);
+        colorGraph.setRelativePaddingRight(0.05);
+        SimpleGraph.DataScale scale =  colorGraph.getScale(COLOR_GRAPH);
+        scale.setRelativePaddingTop(0.05);
+        scale.setRelativePaddingBottom(0.1);
+        scale.setColor(SimpleGraph.getDefaultGridColor());
+        scale.setSquareAspectRatio(true);
+        SimpleGraph.DataRow red = colorGraph.getRow(COLOR_GRAPH, "red");
+        red.setColor(new Color(255, 0, 0));
+        SimpleGraph.DataRow green = colorGraph.getRow(COLOR_GRAPH, "green");
+        green.setColor(new Color(0, 255, 0));
+        SimpleGraph.DataRow blue = colorGraph.getRow(COLOR_GRAPH, "blue");
+        blue.setColor(new Color(00, 0, 255));
+        // Make sure the LUT is initialized.
+        initWhiteBalanceLut();
+        Mat lut = this.lut;
+        byte[] data = new byte[3];
+        for (int i = 0; i < 256; i++) {
+            lut.get(i, 0, data);
+            // BGR indexed.
+            red.recordDataPoint(i, Byte.toUnsignedInt(data[2]));
+            green.recordDataPoint(i, Byte.toUnsignedInt(data[1]));
+            blue.recordDataPoint(i, Byte.toUnsignedInt(data[0]));
+        }
+        return colorGraph;
+    }
+
+    protected void resetColorMaps() {
+        redColorMap = null;
+        greenColorMap = null;
+        blueColorMap = null;
+        if (lut != null) {
+            lut.release();
+            lut = null;
+        }
     }
 
     private Mat crop(Mat mat) {
