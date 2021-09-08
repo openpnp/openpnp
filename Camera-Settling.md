@@ -82,6 +82,8 @@ If you have varied brightness and limited contrast levels in your vision scenari
 
 Use the **Center Mask** to remove unwanted image peripherals that might spoil Contrast Enhance (like a diffuser or shade partially in view). If set to 0.0, no mask is applied. Values larger than 0.0 are relative to the camera dimension, i.e. 1.0 means from edge to edge. You can set values larger than 1.0, the circle will then be partially cropped.
 
+![center_mask](https://user-images.githubusercontent.com/9963310/132455869-72eee173-c225-45c8-b847-b5a250708756.png)
+
 If some of your Vision subjects are low in contrasts but despite using Center Mask you still have some very dark or very bright blurred objects in the camera view, then Contrast Enhance alone might not work. You might then want to combine it with the **Edge Sensitive** mode. A correctly set Denoise (Pixels) value is important to define the relevant sharpness of the edges. Note that the Edge Sensitive mode will not score large motion higher than medium motion, but we only need to judge the small motions anyway. Edge Sensitive mode might be fooled by motion blur, so you may need to combine it with Debounce Frames to make sure there is no longer any motion blur (it depends on the latency of your camera).
 
 Use **Color Sensitive** for exotic scenarios, where the Vision subject has a color pattern but hardly any black and white contrast. Or if you simply like to watch your settle images in full color. It's even cooler to watch when combined with Edge Sensitive and a colorful subject :-).
