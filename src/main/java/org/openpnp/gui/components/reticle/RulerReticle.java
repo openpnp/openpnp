@@ -31,6 +31,12 @@ import org.openpnp.model.LengthUnit;
 public class RulerReticle extends CrosshairReticle {
     private LengthUnit units;
     private double unitsPerTick;
+    private boolean drawRulerOnly = true;
+
+    public RulerReticle(boolean drawRulerOnly) {
+        this();
+        this.drawRulerOnly = drawRulerOnly;
+    }
 
     public RulerReticle() {
         super();
@@ -82,9 +88,11 @@ public class RulerReticle extends CrosshairReticle {
                 .convertToUnits(this.units).getValue();
         double pixelsPerTickX = unitsPerTick / uppX;
         double pixelsPerTickY = unitsPerTick / uppY;
-        int tickLength = 3;
-        int fivetickLength = 6;
-        int tentickLength = 12;
+        
+        //If only drawing rulers, use short tick marks; otherwise, make them long to form a grid
+        int tickLength = drawRulerOnly ? 3 : halfDiagonal;
+        int fivetickLength = drawRulerOnly ? 6 : halfDiagonal;
+        int tentickLength = drawRulerOnly ? 12 : halfDiagonal;
 
         g2d.setColor(color);
         for (int i = 1; i < (halfDiagonal / pixelsPerTickX); i++) {
