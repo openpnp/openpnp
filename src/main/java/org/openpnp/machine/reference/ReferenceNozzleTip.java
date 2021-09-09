@@ -143,7 +143,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private Location visionCalibrationOffset;
 
     public enum ZCalibrationTrigger {
-        Manual, MachineHome, NozzleTipChange
+        Manual, MachineHome, NozzleTipChange;
+        public boolean isPerNozzleTip() {
+            return this == NozzleTipChange;
+        }
     }
 
     @Attribute(required = false)

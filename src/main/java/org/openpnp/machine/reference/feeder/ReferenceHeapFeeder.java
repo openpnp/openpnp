@@ -32,6 +32,7 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.CvStage.Result;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -106,7 +107,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * partOn() not used, since the chance is high, that there are larger leakages.
      */
     @Attribute(required = false)
-    private int requiredVacuumDifference = 300;
+    private int requiredVacuumDifference = 150;
 
     /**
      * Pipeline to detect parts (correct laying).
@@ -119,6 +120,13 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      */
     @Element(required = false)
     private CvPipeline trainingPipeline = HeapFeederHelper.createPipeline("Training", dropBox);
+    
+    /**
+     * feed strategy
+     */
+    @Element(required = false)
+    private boolean pokeForParts = false;
+
 
     private Location pickLocation;
 
@@ -200,6 +208,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         pickLocation = null;
 
         // now try to get a good part
+        boolean lastRoundPartsFetched = false;
         for (int attempt = 0; attempt <= maxThrowRetries; attempt++) {
             pickLocation = getFeederPart(nozzle);
             if (pickLocation != null) {
@@ -207,8 +216,15 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             }
             // no part found, try to flip a part by throwing it in the dropBox again
             if (!dropBox.tryToFlipSomePart(nozzle)) {
-                // nothing there, get new parts
-                fetchParts(nozzle);
+                if (lastRoundPartsFetched == true) {
+                    throw new Exception("Feeder " + getName() + ": Fetching parts failed => feed failed.");
+                } else {
+                    // nothing there, get new parts
+                    fetchParts(nozzle);
+                    lastRoundPartsFetched = true;
+                }
+            } else {
+                lastRoundPartsFetched = false;
             }
             // to many failed attempts, discard parts in the dropBox (maybe damaged/wrong parts)
             if (attempt > 0 && attempt % throwAwayDropBoxContentAfterFailedFeeds == 0) {
@@ -256,9 +272,10 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      */
     public void moveToHeap(Nozzle nozzle) throws Exception {
         nozzle.moveToSafeZ();
-        nozzle.moveTo(way3.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
-        nozzle.moveTo(way2.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
-        nozzle.moveTo(way1.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
+        Location nozzleLocation = nozzle.getLocation();
+        nozzle.moveTo(nozzleLocation.derive(way3, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(nozzleLocation.derive(way2, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(nozzleLocation.derive(way1, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
         nozzle.moveTo(location);
     }
 
@@ -270,9 +287,10 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      */
     public void moveFromHeap(Nozzle nozzle) throws Exception {
         nozzle.moveToSafeZ();
-        nozzle.moveTo(way1.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
-        nozzle.moveTo(way2.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
-        nozzle.moveTo(way3.derive(null, null, Double.NaN, Double.NaN), Motion.MotionOption.SpeedOverPrecision);
+        Location nozzleLocation = nozzle.getLocation();
+        nozzle.moveTo(nozzleLocation.derive(way1, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(nozzleLocation.derive(way2, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(nozzleLocation.derive(way3, true, true, false, false), Motion.MotionOption.SpeedOverPrecision);
     }
 
     /**
@@ -319,7 +337,9 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         ((ReferenceNozzle)nozzle).getExpectedVacuumActuator().actuate(true);
         long vacuumOn = System.currentTimeMillis();
         // move to heap
-        nozzle.moveTo(location.derive(null, null, Double.NaN, null), Motion.MotionOption.SpeedOverPrecision);
+        Location nozzleLocation = nozzle.getLocation();
+        nozzle.moveTo(nozzleLocation.derive(location, true, true, false, true), Motion.MotionOption.SpeedOverPrecision);
+
         // if that didn't take long enough, wait
         ((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds();
         vacuumOn = vacuumOn - (System.currentTimeMillis() + 
@@ -329,8 +349,63 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         }
         // save current value as reference value
         double vacuumLevel = (readVacuum(nozzle) + readVacuum(nozzle) + readVacuum(nozzle)) / 3.0; // average over three reads to reduce the influence of noise
-        // last pick location
-        nozzle.moveTo(location.add(new Location(LengthUnit.Millimeters, 0, 0, lastFeedDepth, 0)), Motion.MotionOption.SpeedOverPrecision);
+
+        // locate parts (or throw exception), return the depth where it was found
+        if (pokeForParts == true) {
+            lastFeedDepth = pokeForParts(nozzle, vacuumLevel);
+        } else {
+            lastFeedDepth = stirParts(nozzle, vacuumLevel);
+        } 
+            
+        nozzle.pick(getPart()); // so the nozzle knows what it is carring. introduces some additional delay
+        // but rewrite of pick/place without calling nozzle doesn't seem worth, slow anyway
+        nozzle.moveToSafeZ();
+        moveFromHeap(nozzle); // safe way away from the other heaps
+        dropBox.dropInto(nozzle); // drop the parts in the dropBox
+    }
+
+    private double pokeForParts(Nozzle nozzle, double vacuumLevel) throws Exception {
+        // while vacuum difference is not reached, slowly stir in the heap
+        double currentDepth = lastFeedDepth ; // start at the same height, finish that "level"
+        currentDepth += Math.max(0.05, (part.getHeight().getValue() / 4.0));                                            // add what will be subtracted in the loop
+        for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference)                  // part found
+                && currentDepth > (boxDepth + part.getHeight().getValue()/2)                                            // on the bottom
+                && !(currentDepth <= (lastFeedDepth - 2 * part.getHeight().getValue()) && lastFeedDepth != 0); i=i+2) { // avoid going to deep into parts. Risk of damaging parts and low chance of picking something up. 
+            // searched half a  layer, go down a bit
+            if (i % 25 == 0 || i % 25 == 1) {
+                currentDepth -= Math.max(0.05, (part.getHeight().getValue() / 4.0));                                    // move a bit down, larger steps compared to stir, since we can utilize the spring
+            }                                                                                                           // (but only if not after reset = 0. First time let it find the start of the heap)
+            moveToPokeLocation(nozzle, currentDepth, part.getHeight().getValue(), i % 25);
+            // wait a bit for the vacuum-levels to stabilize
+            Thread.sleep(((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds());
+        }
+        // if at the bottom => failed
+        if (currentDepth <= (boxDepth + part.getHeight().getValue())) {
+            throw new Exception("HeapFeeder " + getName() + ": Can not grab parts. Heap Empty or VacuumDifference wrong.");
+        }
+        // if moved too much into parts => failed
+        if (currentDepth <= (lastFeedDepth - 3 * part.getHeight().getValue()) && lastFeedDepth != 0) {
+            throw new Exception("HeapFeeder " + getName() + ": Can not grab parts. No parts found on three times part height.");
+        }
+        return currentDepth;
+    }
+
+    
+    private void moveToPokeLocation(Nozzle nozzle, double currentDepth, double partHeight, int step) throws Exception {
+        int row = step / 5;
+        int coloum = step % 5;
+        Location pokeLocation = location.add(new Location(LengthUnit.Millimeters, -1.25 + coloum * 0.625, -1.25 + row * 0.625, currentDepth, 0));
+        row = (step + 1) / 5;
+        coloum = (step + 1) % 5;
+        Location nextLocation = location.add(new Location(LengthUnit.Millimeters, -1.25 + coloum * 0.625, -1.25 + row * 0.625, currentDepth + Math.max(1, 2.25 * partHeight), 0));
+        
+        // move
+        nozzle.moveTo(pokeLocation, 0.33, Motion.MotionOption.SpeedOverPrecision);    
+        nozzle.waitForCompletion(CompletionType.WaitForStillstand);   
+        nozzle.moveTo(nextLocation, 1, Motion.MotionOption.SpeedOverPrecision);        
+    }
+
+    private double stirParts(Nozzle nozzle, double vacuumLevel) throws Exception {
         // while vacuum difference is not reached, slowly stir in the heap
         double currentDepth = lastFeedDepth + part.getHeight().getValue() / 1.5; // start always a bit higher than last time, to be sure that level is empty
         for (int i = 0; ! stableVacuumDifferenceReached(nozzle, vacuumLevel, requiredVacuumDifference)              // part found
@@ -372,6 +447,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                     break;
                 }
             }
+            Thread.sleep(((ReferenceNozzle)nozzle).getPlaceDwellMilliseconds() / 3);
         }
         // if at the bottom => failed
         if (currentDepth <= (boxDepth + part.getHeight().getValue())) {
@@ -381,14 +457,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
         if (currentDepth <= (lastFeedDepth - 3 * part.getHeight().getValue()) && lastFeedDepth != 0) {
             throw new Exception("HeapFeeder " + getName() + ": Can not grab parts. No parts found on three times part height.");
         }
-
-        // we have parts
-        lastFeedDepth = currentDepth;
-        nozzle.pick(getPart()); // so the nozzle knows what it is carring. introduces some additional delay
-        // but rewrite of pick/place without calling nozzle doesn't seem worth, slow anyway
-        nozzle.moveToSafeZ();
-        moveFromHeap(nozzle); // safe way away from the other heaps
-        dropBox.dropInto(nozzle); // drop the parts in the dropBox
+        return currentDepth;
     }
 
     /**
@@ -419,7 +488,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
                 break;
             }
         }
-        nozzle.moveTo(destination, 0.33, Motion.MotionOption.SpeedOverPrecision);
+        nozzle.moveTo(destination, 0.25, Motion.MotionOption.SpeedOverPrecision);
     }
 
     /**
@@ -431,7 +500,7 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
      * @throws Exception something went wrong.
      */
     private Location getFeederPart(Nozzle nozzle) throws Exception {
-        Location location = dropBox.centerBottomLocation.derive(null, null, Double.NaN, 0.0);
+        Location location = dropBox.centerBottomLocation.derive(new Location(LengthUnit.Millimeters, 0, 0, 0, 0), false, false, false, true);
         CvPipeline pipeline = getFeederPipeline();
         Camera camera = nozzle.getHead().getDefaultCamera();
         // if there is a part, get a precise location
@@ -440,8 +509,8 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             location = HeapFeederHelper.getNearestPart(pipeline, camera, nozzle, this, getDropBox());
             if (location != null) {
                 // adjust Z
-                location = location.derive(null, null, dropBox.centerBottomLocation.convertToUnits(location.getUnits()).getZ()
-                        + part.getHeight().convertToUnits(location.getUnits()).getValue(), null);
+                location = location.derive(new Location(LengthUnit.Millimeters, 0, 0, dropBox.centerBottomLocation.convertToUnits(location.getUnits()).getZ()
+                        + part.getHeight().convertToUnits(location.getUnits()).getValue(), 0), false, false, true, false);
             }
         }
         MainFrame.get()
@@ -587,6 +656,15 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             throw new Exception("Location is required.");
         }
         this.dropBox.setDropLocation(dropBox);
+    }
+
+    
+    public boolean isPokeForParts() {
+        return pokeForParts;
+    }
+
+    public void setPokeForParts(boolean pokeForParts) {
+        this.pokeForParts = pokeForParts;
     }
 
     
@@ -905,9 +983,12 @@ public class ReferenceHeapFeeder extends ReferenceFeeder {
             pipeline.setProperty("nozzle", nozzle);
             pipeline.setProperty("feeder", feeder);
             pipeline.process();
-            // Grab the results
-            List<RotatedRect> results =
-                    (List<RotatedRect>) pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME).model;
+            // make sure we have a result
+            Result visionResult = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
+            if ( visionResult == null) {
+                return null;
+            }
+            List<RotatedRect> results = (List<RotatedRect>) visionResult.model;
             if (results == null || results.isEmpty()) {
                 return null;
             }
