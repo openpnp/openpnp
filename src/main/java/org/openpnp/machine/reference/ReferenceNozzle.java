@@ -370,7 +370,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Configuration.get().getScripting().on("Nozzle.AfterPlace", globals);
     }
 
-    private ReferenceNozzleTip getUnloadedNozzleTipStandin() {
+    protected ReferenceNozzleTip getUnloadedNozzleTipStandin() {
         for (NozzleTip nozzleTip : this.getCompatibleNozzleTips()) {
             if (nozzleTip instanceof ReferenceNozzleTip) {
                 ReferenceNozzleTip referenceNozzleTip = (ReferenceNozzleTip)nozzleTip;
@@ -559,7 +559,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 .getScripting()
                 .on("NozzleTip.BeforeLoad", globals);
 
-                ensureZCalibrated();
+                ensureZCalibrated(true);
 
                 Logger.debug("{}.loadNozzleTip({}): moveTo Start Location",
                         new Object[] {getName(), nozzleTip.getName()});
@@ -610,7 +610,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         firePropertyChange("nozzleTip", null, getNozzleTip());
         ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
 
-        ensureZCalibrated();
+        ensureZCalibrated(true);
 
         if (!nt.isUnloadedNozzleTipStandin()) {
             if (!changerEnabled) {
@@ -662,7 +662,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 .getScripting()
                 .on("NozzleTip.BeforeUnload", globals);
 
-                ensureZCalibrated();
+                ensureZCalibrated(false);
 
                 Logger.debug("{}.unloadNozzleTip(): moveTo End Location", getName());
                 MovableUtils.moveToLocationAtSafeZ(this, nt.getChangerEndLocationCalibrated(true), speed);
@@ -713,7 +713,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             throw new Exception("Manual NozzleTip "+nt.getName()+" unload from Nozzle "+getName()+" required!");
         }
 
-        ensureZCalibrated();
+        ensureZCalibrated(true);
 
         // May need to calibrate the "unloaded" nozzle tip stand-in i.e. the naked nozzle tip holder. 
         ReferenceNozzleTip calibrationNozzleTip = this.getCalibrationNozzleTip();
@@ -741,7 +741,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         this.changerEnabled = changerEnabled;
     }
 
-    protected void ensureZCalibrated() throws Exception {}
+    protected void ensureZCalibrated(boolean assumeNozzleTipLoaded) throws Exception {}
 
     @Override
     public Wizard getConfigurationWizard() {
