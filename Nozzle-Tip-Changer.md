@@ -71,7 +71,7 @@ All the settings can be cloned to/from other nozzle tips, so you need to configu
 
 * Marking a nozzle tip changer slot as the **Template** makes it the template that others can be cloned from. Use the **Clone Tool Changer Settings to all Nozzle Tips** button to distribute the settings to all the other nozzle tip changer slots. 
     
-    It will not clone to nozzle tips that are marked as **Locked** (see below), that have no **First Location**, or that are the ["unloaded" stand-in](https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#z-calibration-for-the-bare-nozzle).
+    It will not clone to nozzle tips that are marked as **Locked** (see below), or that have no **First Location** set.
 
 * Marking a nozzle tip changer slot as **Clones from Template** lets you clone it from the template. Use the **Clone Tool Changer Settings from Template** button to clone the settings to this nozzle tip changer slots. 
     
@@ -80,7 +80,7 @@ All the settings can be cloned to/from other nozzle tips, so you need to configu
     ![Cloning Error](https://user-images.githubusercontent.com/9963310/132630990-3b837a30-3d3e-4097-9c83-577aa12481cf.png)
 
 
-* Marking a nozzle tip changer slot as **Locked** prevents any cloning to/from it. Use it if this slot is different from others. This must be used for the "unloaded" nozzle tip stand-in.
+* Marking a nozzle tip changer slot as **Locked** prevents any cloning to/from it. Use it if this slot is different from others. This should also be used for the ["unloaded" stand-in for the bare nozzle](https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#z-calibration-for-the-bare-nozzle).
 
 
 
