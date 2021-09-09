@@ -72,6 +72,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import javax.swing.SwingConstants;
+import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 public class ReferenceHeapFeederConfigurationWizard
@@ -415,6 +417,10 @@ public class ReferenceHeapFeederConfigurationWizard
         partCb.setRenderer(new IdentifiableListCellRenderer<Part>());
         whateverPanel.add(partCb, "4, 20");
         
+        chckbxPokeForParts = new JCheckBox("Poke for Parts");
+        chckbxPokeForParts.setToolTipText("If enabled the nozzle is lifted for each move inside the heap. Reduces the risk to damage (large) parts, but slower.");
+        whateverPanel.add(chckbxPokeForParts, "8, 20");
+        
         lblDetectionPipeline = new JLabel("Detection Pipeline");
         whateverPanel.add(lblDetectionPipeline, "2, 22");
         
@@ -451,6 +457,8 @@ public class ReferenceHeapFeederConfigurationWizard
         addWrappedBinding(feeder, "lastFeedDepth", lastFeedDepthTf, "text", doubleConverter);
         addWrappedBinding(feeder, "requiredVacuumDifference", vacuumDifferenceTf, "text", intConverter);
         addWrappedBinding(feeder, "part", partCb, "selectedItem");
+        addWrappedBinding(feeder, "pokeForParts", chckbxPokeForParts, "selected");
+
 
         ComponentDecorators.decorateWithAutoSelect(retryCountTf);
         ComponentDecorators.decorateWithAutoSelect(pickRetryCount);
@@ -746,4 +754,5 @@ public class ReferenceHeapFeederConfigurationWizard
     private JTextField tfDropLocation_z;
     private JLabel lblDropLocation;
     private LocationButtonsPanel dropBoxDropLocButtons;
+    private JCheckBox chckbxPokeForParts;
 }
