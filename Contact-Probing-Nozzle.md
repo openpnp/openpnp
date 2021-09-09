@@ -193,6 +193,8 @@ Case C however, because the nozzle is inserted less when coupling, needs a speci
 
 When you initially capture the changer slot locations, the nozzle is not yet Z calibrated (or it is neutrally calibrated for the "unloaded" state i.e. the bare nozzle). These captured Z coordinates must **not** be made subject to Z calibration, as you can easily see, when you mentally try to load or unload case B or C with _calibrated_ instead of _uncalibrated_ Z. Therefore, OpenPnP voids the Z calibration immediately before unloading a nozzle tip. 
 
+### Z Calibration for the bare Nozzle
+
 For machines with very inconsistent Z homing and/or very uneven multiple nozzles, there must be a way to calibrate Z even before we can load any nozzle tips. There is a simple trick in OpenPNP to do that: just create a nozzle tip that is named "unloaded". The calibration system will automatically use this stand-in whenever the bare nozzle needs to be calibrated and compensated. The "unloaded" stand-in can be configured for Z calibration, like regular nozzle tips. The Z calibration will then be used for unloading/loading any nozzle tip. **CAUTION**: On a machine with very inconsistent Z homing, you must unload all the nozzle tips before exiting OpenPnP, power-cycling or homing the machine. On the next startup the bare nozzle can be measured as the first thing. The "unloaded" stand-in is explained in the similar context of [nozzle tip runout calibration](https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Calibration-Setup#calibrating-the-bare-nozzle).
 
 ### Cloning Settings
@@ -207,4 +209,5 @@ Use the **Clone Tool Changer Settings to all Nozzle Tips** button to distribute 
 
 Use the  **Callibrate all Touch Locations' Z to Template** to reference them to the global machine reference Z.
 
+See also the [Nozzle Tip Changer page](https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Changer#cloning-settings).
 
