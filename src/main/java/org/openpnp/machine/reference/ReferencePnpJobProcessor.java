@@ -664,6 +664,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return;
             }
             try {
+                // Part-off check can only be done at safe Z. An explicit move to safe Z is needed, because some feeder classes 
+                // may move the nozzle to (near) the pick location i.e. down in Z in feed().
+                nozzle.moveToSafeZ();
                 if (!nozzle.isPartOff()) {
                     throw new JobProcessorException(nozzle, "Part vacuum-detected on nozzle before pick.");
                 }
@@ -893,6 +896,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 return;
             }
             try {
+                // Note, we 're already at safe Z, see place().
                 if (!nozzle.isPartOff()) {
                     throw new JobProcessorException(nozzle, "Part vacuum-detected on nozzle after place.");
                 }
