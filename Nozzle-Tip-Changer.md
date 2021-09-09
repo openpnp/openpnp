@@ -67,7 +67,7 @@ Note: with the CP40 black nozzle tips, the difference between empty and occupied
 
 ![Cloning Settings](https://user-images.githubusercontent.com/9963310/113582934-49bed200-9629-11eb-9340-fa6b391f77dd.png)
 
-All the settings can be cloned to/from other nozzle tips, so you need to configure them only once. The various **Locations** are automatically translated according to the **First Location**, so you only need to enter _this one location_ for additional nozzle tip slots. The **First Location** must be set, before any cloning takes place.
+All the settings can be cloned to/from other nozzle tips, so you need to configure them only once. The various **Locations** are automatically translated according to the **First Location** of **each tip**, so you only need to enter _this one location_ for **each** additional nozzle tip slots. The **First Location** of **each tip** must be set, before any cloning takes place.
 
 * Marking a nozzle tip changer slot as the **Template** makes it the template that others can be cloned from. Use the **Clone Tool Changer Settings to all Nozzle Tips** button to distribute the settings to all the other nozzle tip changer slots. 
     
