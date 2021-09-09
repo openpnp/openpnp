@@ -752,7 +752,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         final int range = 256/levels;
         final int halfRange = range/2;
         final int clip = 254; 
-        final int balanceLimit = 2;
+        final int balanceLimit = 4;
         long[][] histogram = computeImageHistogram(image);
         double lead[] = new double[3];
         long pixels = image.getHeight()*image.getWidth();
@@ -846,9 +846,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
         }
 
-        // As an approximation, compute the parametric white balance (as feedback 
-        // for the user, and basis for manual override).
-        autoAdjustWhiteBalance(true);
+        // As an approximation, compute the parametric white balance (as sort of feedback 
+        // for the user, and starting point for manual override).
+        autoAdjustWhiteBalance(false);
         // But immediately reset the maps and LUT.
         resetColorMaps();
         // And assign our new color maps.
@@ -879,24 +879,35 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         scale.setRelativePaddingBottom(0.1);
         scale.setColor(SimpleGraph.getDefaultGridColor());
         scale.setSquareAspectRatio(true);
-        SimpleGraph.DataRow red = colorGraph.getRow(COLOR_GRAPH, "red");
-        red.setColor(new Color(255, 0, 0));
-        SimpleGraph.DataRow green = colorGraph.getRow(COLOR_GRAPH, "green");
-        green.setColor(new Color(0, 255, 0));
-        SimpleGraph.DataRow blue = colorGraph.getRow(COLOR_GRAPH, "blue");
-        blue.setColor(new Color(00, 0, 255));
-        // Make sure the LUT is initialized.
-        initWhiteBalanceLut();
-        Mat lut = this.lut;
-        byte[] data = new byte[3];
-        for (int i = 0; i < 256; i++) {
-            lut.get(i, 0, data);
-            // BGR indexed.
-            red.recordDataPoint(i, Byte.toUnsignedInt(data[2]));
-            green.recordDataPoint(i, Byte.toUnsignedInt(data[1]));
-            blue.recordDataPoint(i, Byte.toUnsignedInt(data[0]));
+        if (!isWhiteBalanced()) {
+            // Show identity.
+            SimpleGraph.DataRow lum = colorGraph.getRow(COLOR_GRAPH, "lum");
+            lum.setColor(SimpleGraph.getDefaultGridColor());
+            lum.recordDataPoint(0, 0);
+            lum.recordDataPoint(255, 255);
+            return colorGraph;
         }
-        return colorGraph;
+        else {
+            // LUT graph.
+            SimpleGraph.DataRow red = colorGraph.getRow(COLOR_GRAPH, "red");
+            red.setColor(new Color(255, 0, 0));
+            SimpleGraph.DataRow green = colorGraph.getRow(COLOR_GRAPH, "green");
+            green.setColor(new Color(0, 255, 0));
+            SimpleGraph.DataRow blue = colorGraph.getRow(COLOR_GRAPH, "blue");
+            blue.setColor(new Color(0, 0, 255));
+            // Make sure the LUT is initialized.
+            initWhiteBalanceLut();
+            Mat lut = this.lut;
+            byte[] data = new byte[3];
+            for (int i = 0; i < 256; i++) {
+                lut.get(i, 0, data);
+                // BGR indexed.
+                red.recordDataPoint(i, Byte.toUnsignedInt(data[2]));
+                green.recordDataPoint(i, Byte.toUnsignedInt(data[1]));
+                blue.recordDataPoint(i, Byte.toUnsignedInt(data[0]));
+            }
+            return colorGraph;
+        }
     }
 
     protected void resetColorMaps() {

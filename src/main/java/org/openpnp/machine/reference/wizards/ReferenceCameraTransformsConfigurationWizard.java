@@ -411,7 +411,7 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         }
 
         public void actionPerformed(ActionEvent e) {
-            autoMapped(16);
+            autoMapped(32);
         }
     };
 
