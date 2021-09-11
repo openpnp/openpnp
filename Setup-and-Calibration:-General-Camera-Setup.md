@@ -71,7 +71,11 @@ Lens calibration can be used to remove lens distortion from your camera. It can 
 
 When you look at the camera image in OpenPnP it should be right side up. Depending on how your camera is mounted, this might not be the case. By setting transformations in the camera configuration you can adjust the image so it appears correct.
 
+### Top Camera
+
 A Top Camera image should appear as if you are looking down at the machine. The top of the image should be away from you, the bottom of the image should be towards you.
+
+### Bottom Camera
 
 A Bottom Camera image should appear as if you are looking onto a mirror laying on the floor reflecting a view up from the camera towards the nozzle. Again the top of the image should be away from you, the bottom of the image should be towards you. But because left and right should remain left and right (and it is actually a mirror image), you usually need to enable either Flip Vertical or Flip Horizontal depending on how you mounted the camera. If you need to make adjustments:
 
@@ -85,6 +89,9 @@ See the GIF below for an example of how the camera view should react after corre
 
 ![0](https://user-images.githubusercontent.com/1182323/42544960-72138ffc-847a-11e8-8477-8b07f965fc41.gif)
 
+### White Balance
+
+White Balance can remove any color cast from the camera image. See the separate [[Camera White Balance]] page.
 
 ## Set Units Per Pixel
 
