@@ -63,6 +63,10 @@ Check out the context menu in the Camera View. You can set various options there
 * [[OpenCVCamera]] - USB Cameras (Not Recommended)
 * [[OnvifIPCamera]] - IP (Network) cameras
 
+## White Balance
+
+White Balance can remove any color cast from the camera image. See the separate [[Camera White Balance]] page.
+
 ## Lens Calibration
 
 Lens calibration can be used to remove lens distortion from your camera. It can also remove the fisheye effect from short lenses. An easy way to tell if you need lens calibration is to hold a piece of graph paper in front of it and see if the lines look curved in the image. If they do, check out [[Camera Lens Calibration]] to learn how to correct it and then come back to this page to continue the rest of the setup.
@@ -88,10 +92,6 @@ A Bottom Camera image should appear as if you are looking onto a mirror laying o
 See the GIF below for an example of how the camera view should react after correct setup:
 
 ![0](https://user-images.githubusercontent.com/1182323/42544960-72138ffc-847a-11e8-8477-8b07f965fc41.gif)
-
-### White Balance
-
-White Balance can remove any color cast from the camera image. See the separate [[Camera White Balance]] page.
 
 ## Set Units Per Pixel
 
