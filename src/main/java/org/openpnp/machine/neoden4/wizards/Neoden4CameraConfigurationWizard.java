@@ -19,17 +19,12 @@
 
 package org.openpnp.machine.neoden4.wizards;
 
-import java.awt.Color;
-import java.util.List;
-
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
+import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 
-import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.neoden4.Neoden4Camera;
@@ -39,7 +34,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.SwingConstants;
 
 @SuppressWarnings("serial")
 public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizard {
@@ -52,7 +46,7 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
 
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
-        panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        panelGeneral.setBorder(new TitledBorder(null,
                 "General", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -114,7 +108,7 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
                 
         panelImage = new JPanel();
         contentPanel.add(panelImage);
-        panelImage.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), 
+        panelImage.setBorder(new TitledBorder(null, 
         		"Image settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelImage.setLayout(new FormLayout(new ColumnSpec[] {
         		FormSpecs.RELATED_GAP_COLSPEC,

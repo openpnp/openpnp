@@ -1,6 +1,5 @@
 package org.openpnp.machine.reference.driver.wizards;
 
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
@@ -16,7 +15,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -44,7 +42,7 @@ public class GcodeDriverConsole extends AbstractConfigurationWizard {
         historyCursor = 0;
 
         JPanel gcodeConsole = new JPanel();
-        gcodeConsole.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        gcodeConsole.setBorder(new TitledBorder(null,
                 "Gcode console", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(gcodeConsole);
 

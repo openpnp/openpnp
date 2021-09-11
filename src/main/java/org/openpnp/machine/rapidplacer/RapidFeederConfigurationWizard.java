@@ -19,7 +19,6 @@
 
 package org.openpnp.machine.rapidplacer;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
@@ -31,7 +30,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -104,7 +102,7 @@ public class RapidFeederConfigurationWizard
         pitch.setColumns(10);
         
         JPanel panelRapidFeederScan = new JPanel();
-        panelRapidFeederScan.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Rapid Feeder Scanning", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelRapidFeederScan.setBorder(new TitledBorder(null, "Rapid Feeder Scanning", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelRapidFeederScan);
         panelRapidFeederScan.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

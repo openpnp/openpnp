@@ -1,28 +1,38 @@
 package org.openpnp.machine.index.sheets.gui;
 
-import javax.swing.*;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
-import org.openpnp.gui.support.*;
+import org.openpnp.gui.components.LocationButtonsPanel;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.machine.index.IndexFeeder;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
-
-import javax.swing.border.TitledBorder;
-
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.RowSpec;
-import com.jgoodies.forms.layout.FormSpecs;
-import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.util.UiUtils;
 
-import javax.swing.border.EtchedBorder;
-import java.awt.Color;
-import java.awt.event.ActionEvent;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 
 public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 
@@ -86,7 +96,7 @@ public class FeederConfigurationWizard extends AbstractConfigurationWizard {
 		infoPanel.add(findButton, "6, 4");
 		
 		JPanel partPanel = new JPanel();
-		partPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Part", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		partPanel.setBorder(new TitledBorder(null, "Part", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		contentPanel.add(partPanel);
 		partPanel.setLayout(new FormLayout(new ColumnSpec[] {
 				FormSpecs.RELATED_GAP_COLSPEC,
