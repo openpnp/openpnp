@@ -19,13 +19,10 @@
 
 package org.openpnp.gui;
 
-import java.awt.Color;
-
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding;
@@ -57,7 +54,7 @@ public class PartSettingsPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
         pickConditionsPanel = new JPanel();
-        pickConditionsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Pick Conditions", TitledBorder.LEADING, TitledBorder.TOP, null));
+        pickConditionsPanel.setBorder(new TitledBorder(null, "Pick Conditions", TitledBorder.LEADING, TitledBorder.TOP, null));
         add(pickConditionsPanel);
         pickConditionsPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

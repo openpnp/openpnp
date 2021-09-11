@@ -57,7 +57,6 @@ import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -288,7 +287,7 @@ public class JobPanel extends JPanel {
         });
 
         JPanel pnlBoards = new JPanel();
-        pnlBoards.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        pnlBoards.setBorder(new TitledBorder(null,
                 Translations.getString("JobPanel.Tab.Boards"),
                 TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
         pnlBoards.setLayout(new BorderLayout(0, 0));
