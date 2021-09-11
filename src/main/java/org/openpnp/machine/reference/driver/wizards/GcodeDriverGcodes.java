@@ -1,6 +1,5 @@
 package org.openpnp.machine.reference.driver.wizards;
 
-import java.awt.Color;
 import java.awt.FileDialog;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -26,7 +25,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -61,7 +59,7 @@ public class GcodeDriverGcodes extends AbstractConfigurationWizard {
         this.driver = driver;
 
         JPanel gcodePanel = new JPanel();
-        gcodePanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Gcode", TitledBorder.LEADING, TitledBorder.TOP, null));
+        gcodePanel.setBorder(new TitledBorder(null, "Gcode", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(gcodePanel);
         gcodePanel.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),

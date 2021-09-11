@@ -215,7 +215,7 @@ extends AbstractConfigurationWizard {
         whateverPanel.add(feederCb, "4, 2, 3, 1");
 
         JPanel feederPanel = new JPanel();
-        feederPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Feeder", TitledBorder.LEADING, TitledBorder.TOP, null));
+        feederPanel.setBorder(new TitledBorder(null, "Feeder", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(feederPanel);
         FormLayout fl_feederPanel = new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -284,7 +284,7 @@ extends AbstractConfigurationWizard {
         feederPartCb.setRenderer(new IdentifiableListCellRenderer<Part>());
 
         JPanel panelActuator = new JPanel();
-        panelActuator.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        panelActuator.setBorder(new TitledBorder(null,
                 "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {
