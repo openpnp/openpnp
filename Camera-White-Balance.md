@@ -64,7 +64,7 @@ Use the **Reset** button to set the color balance to the neutral position (which
 
 ### Notes
 
-* The Auto buttons are **one-time** automatic, i.e. the calibrated balance will then be fixed for repeatable Computer Vision when using color operations such as MaskHSV in bottom vision with Juki nozzles, the BlindsFeeder, ReferencePushPullFeeder, etc. 
+* The Auto buttons are **one-time** automatic, i.e. the calibrated balance will then be fixed for repeatable Computer Vision when using color operations such as MaskHSV. 
 
 * To avoid image noise and posterization effects, the Auto buttons will never increase the whole image brightness, even when the view is dark. You should also not try to do this manually. For good quality, use the **Exposure** slider in the **Device Settings** tab to set the proper camera exposure for the wanted image brightness. 
 
