@@ -58,6 +58,8 @@ Use the **Mapped Roughly** button to get a White-Balance that is mapped to a few
 
 Use the **Mapped Finely** button to get a White-Balance that is mapped to many individual brightness level bands. This will finely compensate casts that are more/less pronounced at certain levels. If certain brightness level bands are missing, OpenPnP will tell you so. You then need to add camera subjects with these brightness levels present.
 
+Use the **Reset** button to set the color balance to the neutral position (which is also the default). The white-balance is then effectively switched off, no computation cost is then incurred. 
+
 ![white-balance-methods](https://user-images.githubusercontent.com/9963310/132952607-9439bded-17dc-4b1a-9631-b53caa26515e.gif)
 
 ### Notes
@@ -65,8 +67,6 @@ Use the **Mapped Finely** button to get a White-Balance that is mapped to many i
 * The Auto buttons are **one-time** automatic, i.e. the calibrated balance will then be fixed for repeatable Computer Vision when using color operations such as MaskHSV in bottom vision with Juki nozzles, the BlindsFeeder, ReferencePushPullFeeder, etc. 
 
 * To avoid image noise and posterization effects, the Auto buttons will never increase the whole image brightness, even when the view is dark. You should also not try to do this manually. For good quality, use the **Exposure** slider in the **Device Settings** tab to set the proper camera exposure for the wanted image brightness. 
-
-Use the **Reset** button to set the color balance to the neutral position (which is also the default). The white-balance is then effectively switched off, the computation skipped. 
 
 ## Manual White Balance
 
