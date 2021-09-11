@@ -256,4 +256,26 @@ public class VisionUtils {
             Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
         }
     }
+
+    /**
+     * Compute an RGB histogram over the provided image.
+     * 
+     * @param image
+     * @return the histogram as long[channel][value] with channel 0=Red 1=Green 2=Blue and value 0...255.
+     */
+    public static long[][] computeImageHistogram(BufferedImage image) {
+        long[][] histogram = new long[3][256];
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int rgb = image.getRGB(x, y);
+                int r = (rgb >> 16) & 0xff;
+                int g = (rgb >> 8) & 0xff;
+                int b = (rgb >> 0) & 0xff;
+                histogram[0][r]++;
+                histogram[1][g]++;
+                histogram[2][b]++;
+            }
+        }
+        return histogram;
+    }
 }

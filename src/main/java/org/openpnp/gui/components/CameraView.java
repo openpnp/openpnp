@@ -81,6 +81,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.util.XmlSerialize;
 import org.pmw.tinylog.Logger;
 
@@ -1168,18 +1169,7 @@ public class CameraView extends JComponent implements CameraListener {
         g2d.fillRect(topLeftX + insets.left, yPen, histogramWidth, histogramHeight);
 
         // Calculate the histogram
-        long[][] histogram = new long[3][256];
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
-                int rgb = image.getRGB(x, y);
-                int r = (rgb >> 16) & 0xff;
-                int g = (rgb >> 8) & 0xff;
-                int b = (rgb >> 0) & 0xff;
-                histogram[0][r]++;
-                histogram[1][g]++;
-                histogram[2][b]++;
-            }
-        }
+        long[][] histogram = VisionUtils.computeImageHistogram(image);
         // find the highest value in the histogram
         long maxVal = 0;
         for (int channel = 0; channel < 3; channel++) {

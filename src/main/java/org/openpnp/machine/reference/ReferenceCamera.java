@@ -52,6 +52,7 @@ import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
+import org.openpnp.machine.reference.camera.wizards.ReferenceCameraWhiteBalanceConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraTransformsConfigurationWizard;
@@ -72,6 +73,7 @@ import org.openpnp.util.Collect;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.LensCalibration;
 import org.openpnp.vision.LensCalibration.LensModel;
 import org.openpnp.vision.LensCalibration.Pattern;
@@ -166,6 +168,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Attribute(required = false)
     private double whiteBalanceClipFractile = 0.99;
+
+    @Attribute(required = false)
+    private double whiteBalanceGammaFractile = 0.5;
 
     @Element(required = false)
     private double[] redColorMap;
@@ -667,7 +672,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         // Capture.
         BufferedImage image = lightSettleAndCapture();
         // Calculate the histogram.
-        long[][] histogram = computeImageHistogram(image);
+        long[][] histogram = VisionUtils.computeImageHistogram(image);
         // Analyze the percentiles.
         long pixels = image.getHeight()*image.getWidth();
         double percentileGamma[] = new double[3];
@@ -680,7 +685,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             for (int bin = 0; bin < 256; bin++) {
                 long value = histogram[ch][bin];
                 accumulated += value;
-                if (accumulated < pixels*0.5) {
+                if (accumulated < pixels*whiteBalanceGammaFractile) {
                     percentileGamma[ch] = bin;
                 }
                 if (accumulated < pixels*whiteBalanceLeadFractile) {
@@ -720,27 +725,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         percentileGamma[1] *= g/clip/255; 
         percentileGamma[2] *= b/clip/255;
         
-        // Make them match.
+        // Make the gamma match by percentile.
         double midGamma = (percentileGamma[0] + percentileGamma[1] + percentileGamma[2])/3;
         setRedGamma(Math.log(percentileGamma[0])/Math.log(midGamma));
         setGreenGamma(Math.log(percentileGamma[1])/Math.log(midGamma));
         setBlueGamma(Math.log(percentileGamma[2])/Math.log(midGamma));
-    }
-
-    protected long[][] computeImageHistogram(BufferedImage image) {
-        long[][] histogram = new long[3][256];
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
-                int rgb = image.getRGB(x, y);
-                int r = (rgb >> 16) & 0xff;
-                int g = (rgb >> 8) & 0xff;
-                int b = (rgb >> 0) & 0xff;
-                histogram[0][r]++;
-                histogram[1][g]++;
-                histogram[2][b]++;
-            }
-        }
-        return histogram;
     }
 
     public void autoAdjustWhiteBalanceMapped(int levels) throws Exception {
@@ -753,7 +742,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         final int halfRange = range/2;
         final int clip = 254; 
         final int balanceLimit = 4;
-        long[][] histogram = computeImageHistogram(image);
+        long[][] histogram = VisionUtils.computeImageHistogram(image);
         double lead[] = new double[3];
         long pixels = image.getHeight()*image.getWidth();
         int fractileLead = 0;
@@ -859,16 +848,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         cameraViewHasChanged(null);
     }
 
-    public void resetWhiteBalance() throws Exception {
-        setRedBalance(1.0);
-        setGreenBalance(1.0);
-        setBlueBalance(1.0);
-        setRedGamma(1.0);
-        setGreenGamma(1.0);
-        setBlueGamma(1.0);
-        resetColorMaps();
-    }
-
     public SimpleGraph getColorBalanceGraph() {
         final String COLOR_GRAPH = "C"; 
         SimpleGraph colorGraph = new SimpleGraph();
@@ -908,6 +887,16 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
             return colorGraph;
         }
+    }
+
+    public void resetWhiteBalance() throws Exception {
+        setRedBalance(1.0);
+        setGreenBalance(1.0);
+        setBlueBalance(1.0);
+        setRedGamma(1.0);
+        setGreenGamma(1.0);
+        setBlueGamma(1.0);
+        resetColorMaps();
     }
 
     protected void resetColorMaps() {
@@ -1155,8 +1144,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public PropertySheet[] getPropertySheets() {
         PropertySheet[] sheets = new PropertySheet[] {
                 new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
-                new PropertySheetWizardAdapter(new CameraVisionConfigurationWizard(this), "Vision"),
+                new PropertySheetWizardAdapter(new CameraVisionConfigurationWizard(this), "Camera Settling"),
                 new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
+                new PropertySheetWizardAdapter(new ReferenceCameraWhiteBalanceConfigurationWizard(this), "White Balance"),
                 new PropertySheetWizardAdapter(new ReferenceCameraPositionConfigurationWizard(getMachine(), this), "Position"),
                 new PropertySheetWizardAdapter(new ReferenceCameraCalibrationConfigurationWizard(this), "Lens Calibration"),
                 new PropertySheetWizardAdapter(new ReferenceCameraTransformsConfigurationWizard(this), "Image Transforms")
