@@ -207,9 +207,11 @@ public class CalibrationSolutions implements Solutions.Subject {
                                         + "linkages of machine axes. More information can be found in the Wiki (press the blue Info button below).</p><br/>"
                                         + "<p>Set the acceptable <strong>Tolerance ±</strong> as high as possible to allow for a more efficient backlash "
                                         + "compensation method, avoiding extra moves and direction changes.</p><br/>"
-                                        + "<p><span color=\"red\">CAUTION</span>: The camera "+camera.getName()+" will move over the fiducial "
-                                        + "and then perform a calibration motion pattern, moving the axis "
-                                        + axis.getName()+" on its full soft-limit range.</p><br/>"
+                                        + "<p><span color=\"red\">CAUTION 1</span>: The camera "+camera.getName()+" will move over the primary fiducial "
+                                        + "and then perform a calibration motion pattern, moving the axis "+axis.getName()+" over its full soft-limit range.</p><br/>"
+                                        + "<p><span color=\"red\">CAUTION 2</span>: The machine will also perform a visual homing cycle, once the new backlash "
+                                        + "compensation method is established. This is done to recalibrate the coordinate system that might be affected by the "
+                                        + "new method.</p><br/>"
                                         + "<p>When ready, press Accept.</p>"
                                         + (getState() == State.Solved ? 
                                                 "<br/><h4>Results:</h4>"
@@ -222,7 +224,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                                 + "<td>"+axis.getSneakUpOffset()+"</td></tr>"
                                                 + "<tr><td align=\"right\">Speed Factor:</td>"
                                                 + "<td>"+axis.getBacklashSpeedFactor()+"</td></tr>"
-                                                + "<tr><td align=\"right\">Applicable Tolerance:</td>"
+                                                + "<tr><td align=\"right\">Applicable Resolution:</td>"
                                                 + "<td>"+String.format("%.4f", getAxisCalibrationTolerance(camera, axis, true))+" mm</td></tr>"
                                                 + "</table>" 
                                                 : "")
@@ -752,6 +754,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                     + "Make sure OpenPnP has effective acceleration/jerk control. "
                     + "Automatic compensation not possible.");
         }
+        // Because this change may affect the coordinate system, perform a (visual) homing cycle.
+        head.visualHome(machine, true);
         // Test the new settings with random moves.
         referenceLocation = machine.getVisionSolutions()
                 .centerInOnSubjectLocation(camera, movable,
@@ -785,7 +789,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             ReferenceControllerAxis axis, boolean tolerance) {
         // Get the axis resolution (it might still be at the default 0.0001).
         Length resolution = new Length(axis.getResolution(), axis.getDriver().getUnits());
-        // Make sure it's >= 0.01mm
+        // Take a multiple of the native resolution that is >= 0.01mm
         Length finestResolution = new Length(0.01, LengthUnit.Millimeters);
         resolution = resolution.multiply(Math.ceil(finestResolution.divide(resolution)));
         // Get the sub-pixel resolution of the detection capability. 
