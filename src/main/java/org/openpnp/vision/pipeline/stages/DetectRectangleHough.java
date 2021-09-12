@@ -6,10 +6,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
 
-import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
+import org.opencv.core.RotatedRect;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -20,7 +21,7 @@ import org.simpleframework.xml.Attribute;
 import org.pmw.tinylog.Logger;
 
 @Stage(description="Find expected rectangle centered on nozzle.")
-public class DetectRectangle extends CvStage {
+public class DetectRectangleHough extends CvStage {
 
     @Attribute
     @Property(description = "Index of rectangle to return.")
@@ -57,6 +58,10 @@ public class DetectRectangle extends CvStage {
     @Attribute
     @Property(description = "Estimated pair distance B")
     private double rhoB = 15;
+
+    @Attribute
+    @Property(description = "Draw selected Hough lines to help with parameter tuning.")
+    private boolean drawLines = false;
 
     public int getIndex() {
         return this.index;
@@ -128,6 +133,14 @@ public class DetectRectangle extends CvStage {
 
     public void setRhoB(double v) {
         this.rhoB = v;
+    }
+    
+    public boolean getDrawLines() {
+        return this.drawLines;
+    }
+
+    public void setDrawLines(boolean v) {
+        this.drawLines = v;
     }
     
     private class HoughLine {
@@ -264,17 +277,14 @@ public class DetectRectangle extends CvStage {
         return new Point(x, y);
     }
 
-    private List<MatOfPoint> getContours(Mat lines, HoughRect rect) {
-        List<MatOfPoint> contours = new ArrayList<>();
-        List<Point> tmp = new ArrayList<>();
-        MatOfPoint mp = new MatOfPoint();
-        tmp.add(getCorner(lines, rect.pairs[0].lines[0], rect.pairs[1].lines[0]));
-        tmp.add(getCorner(lines, rect.pairs[0].lines[0], rect.pairs[1].lines[1]));
-        tmp.add(getCorner(lines, rect.pairs[0].lines[1], rect.pairs[1].lines[0]));
-        tmp.add(getCorner(lines, rect.pairs[0].lines[1], rect.pairs[1].lines[1]));
-        mp.fromList(tmp);
-        contours.add(mp);
-        return contours;
+    private RotatedRect getRotatedRect(Mat lines, HoughRect rect) {
+        List<Point> points = new ArrayList<>();
+        points.add(getCorner(lines, rect.pairs[0].lines[0], rect.pairs[1].lines[0]));
+        points.add(getCorner(lines, rect.pairs[0].lines[0], rect.pairs[1].lines[1]));
+        points.add(getCorner(lines, rect.pairs[0].lines[1], rect.pairs[1].lines[0]));
+        points.add(getCorner(lines, rect.pairs[0].lines[1], rect.pairs[1].lines[1]));
+        MatOfPoint2f pointsMat = new MatOfPoint2f(points.toArray(new Point[]{}));
+        return Imgproc.minAreaRect(pointsMat);
     }
 
     @Override
@@ -302,10 +312,12 @@ public class DetectRectangle extends CvStage {
             }
         });
 
-        drawRect(matImage, matLines, rects.get(this.index));
-        List<MatOfPoint> contours = getContours(matLines, rects.get(this.index));
+        if (this.drawLines) {
+            drawRect(matImage, matLines, rects.get(this.index));
+        }
+        RotatedRect r = getRotatedRect(matLines, rects.get(this.index));
 
         matLines.release();
-        return new Result(matImage, contours);
+        return new Result(matImage, r);
     }
 }
