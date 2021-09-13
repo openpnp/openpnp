@@ -757,7 +757,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         // Because this change may affect the coordinate system, perform a (visual) homing cycle.
         head.visualHome(machine, true);
         // Go back to the fiducial.
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
+        MovableUtils.moveToLocationAtSafeZ(movable, location);
         // Test the new settings with random moves.
         referenceLocation = machine.getVisionSolutions()
                 .centerInOnSubjectLocation(camera, movable,
