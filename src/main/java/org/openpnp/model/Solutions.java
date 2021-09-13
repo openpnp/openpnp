@@ -64,6 +64,9 @@ public class Solutions extends AbstractTableModel {
     @ElementList(required = false)
     private Set<String> solvedSolutions = new HashSet<>();
 
+    @Attribute(required = false)
+    private boolean showIndicator = true;
+
     private boolean showSolved;
 
     private boolean showDismissed;
@@ -185,6 +188,14 @@ public class Solutions extends AbstractTableModel {
         Object oldValue = this.targetMilestone;
         this.targetMilestone = targetMilestone;
         propertyChangeSupport.firePropertyChange("targetMilestone", oldValue, targetMilestone);
+    }
+
+    public boolean isShowIndicator() {
+        return showIndicator;
+    }
+
+    public void setShowIndicator(boolean showIndicator) {
+        this.showIndicator = showIndicator;
     }
 
     public boolean isShowSolved() {

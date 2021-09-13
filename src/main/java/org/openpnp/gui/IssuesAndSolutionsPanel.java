@@ -355,6 +355,10 @@ public class IssuesAndSolutionsPanel extends JPanel {
     }
 
     public void updateIssueIndicator() {
+        if (!machine.getSolutions().isShowIndicator()) {
+            // See Issue https://github.com/openpnp/openpnp/issues/1199. 
+            return;
+        }
         Solutions.Severity maxSeverity = Solutions.Severity.None;
         for (Solutions.Issue issue : machine.getSolutions().getIssues()) {
             if (issue.getSeverity().ordinal() >= maxSeverity.ordinal() 
@@ -363,22 +367,18 @@ public class IssuesAndSolutionsPanel extends JPanel {
             }
         }
         JTabbedPane tabs = frame.getTabs();
-        // Note this strange way to find the right tab is due to some inexplicable instability with 
-        // tabs.indexOfComponent(). See https://github.com/openpnp/openpnp/issues/1199
-        for (int index = 0; index < tabs.getTabCount(); index++) {
-            if (tabs.getTitleAt(index).contains("Issues")) {
-                if (maxSeverity.ordinal() > Solutions.Severity.Information.ordinal()) {
-                    int indicatorUnicode = 0x2B24;
-                    Color color = maxSeverity.color;
-                    color = saturate(color);
-                    tabs.setTitleAt(index, "<html>Issues &amp; Solutions <span style=\"color:#"
-                            +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
-                            +";\">&#"+(indicatorUnicode)+";</span></html>");
-                }
-                else {
-                    tabs.setTitleAt(index, "Issues & Solutions");
-                }
-                break;
+        int index = tabs.indexOfComponent(frame.getIssuesAndSolutionsTab());
+        if (index >= 0) {
+            if (maxSeverity.ordinal() > Solutions.Severity.Information.ordinal()) {
+                int indicatorUnicode = 0x2B24;
+                Color color = maxSeverity.color;
+                color = saturate(color);
+                tabs.setTitleAt(index, "<html>Issues &amp; Solutions <span style=\"color:#"
+                        +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
+                        +";\">&#"+(indicatorUnicode)+";</span></html>");
+            }
+            else {
+                tabs.setTitleAt(index, "Issues & Solutions");
             }
         }
     }
