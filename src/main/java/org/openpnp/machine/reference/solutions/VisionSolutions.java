@@ -771,6 +771,7 @@ public class VisionSolutions implements Solutions.Subject {
                                                 // to keep them so i.e. these rough nozzle-aimed offsets are likely worse. 
                                                 Logger.info("Not setting nozzle "+nozzle.getName()+" head offsets to rough "+headOffsets+" as these are close to "
                                                         + "existing offsets "+headOffsetsBefore+" and existing offsets might already have been calibrated.");
+                                                nozzle.setHeadOffsets(headOffsetsBefore);
                                             }
                                             else {
                                                 nozzle.setHeadOffsets(headOffsets);
