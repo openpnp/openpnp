@@ -123,6 +123,9 @@ public class VisionSolutions implements Solutions.Subject {
     private double zeroKnowledgeDisplacementMm = 1;
     /**
      * How to perform one-sided backlash compensation, before we know anything about the machine. 
+     * Note, due to this having evolved, these are no longer backlash offsets in the classic sense, instead they 
+     * give a "final approach vector". Hence the negative sign, to be as compatible as possible with backlash 
+     * compensation (more specifically with sneak-up offsets), once these are calibrated in turn.
      */
     @Element(required = false)
     private Location zeroKnowledgeBacklashOffsets = new Location(LengthUnit.Millimeters, -1, -1, 0.0, -5);
@@ -768,6 +771,7 @@ public class VisionSolutions implements Solutions.Subject {
                                                 // to keep them so i.e. these rough nozzle-aimed offsets are likely worse. 
                                                 Logger.info("Not setting nozzle "+nozzle.getName()+" head offsets to rough "+headOffsets+" as these are close to "
                                                         + "existing offsets "+headOffsetsBefore+" and existing offsets might already have been calibrated.");
+                                                nozzle.setHeadOffsets(headOffsetsBefore);
                                             }
                                             else {
                                                 nozzle.setHeadOffsets(headOffsets);
@@ -1334,7 +1338,7 @@ public class VisionSolutions implements Solutions.Subject {
      * @throws Exception
      */
     public void zeroKnowledgeMoveTo(HeadMountable hm, Location location, boolean safeZ) throws Exception {
-        Location backlashCompensatedLocation = location.add(zeroKnowledgeBacklashOffsets);
+        Location backlashCompensatedLocation = location.subtract(zeroKnowledgeBacklashOffsets);
         if (safeZ) {
             MovableUtils.moveToLocationAtSafeZ(hm, backlashCompensatedLocation);
         }
@@ -1371,9 +1375,10 @@ public class VisionSolutions implements Solutions.Subject {
      * 
      * @param head
      * @param defaultCamera
+     * @param fiducialDiameter
      * @throws Exception
      */
-    public void calibrateVisualHoming(ReferenceHead head, Camera defaultCamera, Length fiducialDiameter) throws Exception {
+    public void calibrateVisualHoming(ReferenceHead head, ReferenceCamera defaultCamera, Length fiducialDiameter) throws Exception {
         // Make sure we got the homing fiducial set up properly.
         setHomingFiducialDiameter(fiducialDiameter);
         // Set rough location as homing fiducial location.
@@ -1381,9 +1386,10 @@ public class VisionSolutions implements Solutions.Subject {
         head.setHomingFiducialLocation(homingFiducialLocation);
         head.setVisualHomingMethod(VisualHomingMethod.ResetToFiducialLocation);
         // Perform homing to it, but don't reset machine position. 
-        head.visualHome(machine, false);
+        // Note, we do not use the "official" head.visualHome(machine, false), as this is not yet a good thing to do with no backlash calibration.
+        // Instead we use our own method with "built-in" worst case backlash compensation. 
+        homingFiducialLocation = centerInOnSubjectLocation(defaultCamera, defaultCamera, fiducialDiameter, "Visual Homing", false);
         // With the precise location, set the homing fiducial again.
-        homingFiducialLocation = defaultCamera.getLocation();
         head.setHomingFiducialLocation(homingFiducialLocation);
     }
 

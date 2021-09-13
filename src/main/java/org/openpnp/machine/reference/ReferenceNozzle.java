@@ -263,7 +263,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             // Changing a X, Y head offset invalidates the nozzle tip calibration. Just changing Z leaves it intact. 
             ReferenceNozzleTipCalibration.resetAllNozzleTips();
         }
-        if (headOffsetsOld.isInitialized() && headOffsetsNew.isInitialized() && head != null) {
+        if (offsetsDiff.isInitialized() && headOffsetsOld.isInitialized() && headOffsetsNew.isInitialized() && head != null) {
             // The old offsets were not zero, adjust some dependent head offsets.
             
             // Where another HeadMountable, such as an Actuator, is fastened to the nozzle, it may have the same X, Y head offsets, i.e. these were very 
@@ -1344,8 +1344,22 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if (solutions.isTargeting(Milestone.Basics)) {
                 findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
                         new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND });
-                findActuatorIssues(solutions, getVacuumSenseActuator(), "vacuum sensing", 
+                // If at least one nozzle tip uses vacuum sensing, require a sensing actuator.
+                boolean needsSensing = false;
+                for (NozzleTip tip : Configuration.get().getMachine().getNozzleTips()) {
+                    if (tip instanceof ReferenceNozzleTip) {
+                        ReferenceNozzleTip referenceNozzleTip = (ReferenceNozzleTip) tip;
+                        if (referenceNozzleTip.getMethodPartOn() != VacuumMeasurementMethod.None
+                                || referenceNozzleTip.getMethodPartOff() != VacuumMeasurementMethod.None) {
+                            needsSensing = true;
+                            break;
+                        }
+                    }
+                }
+                if (needsSensing) {
+                    findActuatorIssues(solutions, getVacuumSenseActuator(), "vacuum sensing", 
                         new CommandType[] { CommandType.ACTUATOR_READ_COMMAND, CommandType.ACTUATOR_READ_REGEX });
+                }
             }
         }
         catch (Exception e) {
