@@ -32,7 +32,9 @@ Note: some feeders like the [[BlindsFeeder]] still need a precise Z location con
 
 ### Placement Z Auto Learning
 
-The ContactProbeNozzle can also auto-learn the placement Z location of parts. On the first placement the height will be probed and then remembered. This can calibrate the right solder paste height and will equalize nozzle spring compression force. 
+The ContactProbeNozzle can also auto-learn the placement Z location of parts, even if the part height is known. On the first placement the height will be probed and then remembered. This will equalize nozzle (tip) spring compression force, taking solder paste height into consideration. 
+
+Note, Placement Z Auto Learning is part of the **Part Height Probing** settings (below).
 
 ## What is it _not_?
 
