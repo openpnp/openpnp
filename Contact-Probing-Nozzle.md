@@ -96,14 +96,14 @@ Notes: The Wizard will show different fields according to the selection. If at l
 
 **Feeder Height Probing** determines when feeders should be probed for pick location Z offsets. 
 
-**Part Height Probing** determines when parts should be probed for placement location Z offsets. 
+**Part Height Probing** determines when parts should be probed for their height, or if the height is known, for the placement location Z offsets (nozzle spring force/solder paste height). 
 
 ![Probing Triggers](https://user-images.githubusercontent.com/9963310/113590798-6102bd00-9633-11eb-83df-8fc04a234680.png)
 
 * **Off** switches off any probing.
 * **Once** probes for a Z offset only once. The offset is stored in the configuration (machine.xml). 
-* **AfterHoming** probes for a Z offset once after homing the machine.  
-* **Each Time** probes for contact in all picks and placements. This is the most tolerant setting.  
+* **AfterHoming** probes for fresh Z offsets once after homing the machine.  
+* **Each Time** probes for Z offsets in all picks/placements. This is the most tolerant setting, but also likely the slowest. It can even equalize feeders (in pick) or the PCB (in placement) that are not planar (a bit like Z probing on a 3D printer).
 
 **Calibration Z Offset** shows the last Z calibration result for this nozzle with the current nozzle tip attached. See also the Nozzle Tip Probing Configuration.
 
