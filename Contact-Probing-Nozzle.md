@@ -101,9 +101,9 @@ Notes: The Wizard will show different fields according to the selection. If at l
 ![Probing Triggers](https://user-images.githubusercontent.com/9963310/113590798-6102bd00-9633-11eb-83df-8fc04a234680.png)
 
 * **Off** switches off any probing.
-* **Once** probes for a Z offset only once. The offset is stored in the configuration (machine.xml). 
+* **Once** probes for a Z offset only once. The offset is stored in the configuration (`machine.xml`). Note, be mindful of this setting. Z offsets from the first probe will applied quietly, long after probing once. Look for applied offsets in the log (search for "applies feeder" or "applies part"). 
 * **AfterHoming** probes for fresh Z offsets once after homing the machine.  
-* **Each Time** probes for Z offsets in all picks/placements. This is the most tolerant setting, but also likely the slowest. It can even equalize feeders (in pick) or the PCB (in placement) that are not planar (a bit like Z probing on a 3D printer).
+* **Each Time** probes for Z offsets in all picks/placements. This is the most tolerant setting, but also likely the slowest. It can even equalize feeders and/or a PCB that are not planar in Z (a bit like Z probing on a 3D printer).
 
 **Calibration Z Offset** shows the last Z calibration result for this nozzle with the current nozzle tip attached. See also the Nozzle Tip Probing Configuration.
 
