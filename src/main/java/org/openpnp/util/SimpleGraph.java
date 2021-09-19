@@ -47,6 +47,8 @@ public class SimpleGraph {
     @Attribute(required=false)
     private double relativePaddingRight;
     @Attribute(required=false)
+    private boolean logarithmic;
+    @Attribute(required=false)
     private long zeroNanoTime = Long.MIN_VALUE;
     @Attribute(required=false)
     private long lastT = 0;
@@ -65,6 +67,8 @@ public class SimpleGraph {
         private double relativePaddingTop;
         @Attribute(required=false)
         private double relativePaddingBottom;
+        @Attribute(required=false)
+        private boolean logarithmic;
         @Attribute(required=false)
         private boolean symmetricIfSigned;
         @Attribute(required=false)
@@ -119,6 +123,12 @@ public class SimpleGraph {
         public boolean isSymmetricIfSigned() {
             return symmetricIfSigned;
         }
+        public boolean isLogarithmic() {
+            return logarithmic;
+        }
+        public void setLogarithmic(boolean logarithmic) {
+            this.logarithmic = logarithmic;
+        }
         public void setSymmetricIfSigned(boolean symmetricIfSigned) {
             this.symmetricIfSigned = symmetricIfSigned;
         }
@@ -164,6 +174,13 @@ public class SimpleGraph {
                 }
             }
             return maximum; 
+        }
+
+        public double graphY(double y) {
+            return isLogarithmic() ? Math.exp(y) : y;
+        }
+        public Double displayY(Double y) {
+            return y == null ? null : (isLogarithmic() ? Math.log(y > 0 ? y : 1e-4) : y);
         }
     } 
 
@@ -228,6 +245,12 @@ public class SimpleGraph {
     }
     public void setRelativePaddingRight(double relativePaddingRight) {
         this.relativePaddingRight = relativePaddingRight;
+    }
+    public boolean isLogarithmic() {
+        return logarithmic;
+    }
+    public void setLogarithmic(boolean logarithmic) {
+        this.logarithmic = logarithmic;
     }
 
     public static class DataRow {
@@ -438,6 +461,13 @@ public class SimpleGraph {
             }
         }
         return maximum; 
+    }
+
+    public double graphX(double x) {
+        return isLogarithmic() ? Math.exp(x) : x;
+    }
+    public Double displayX(Double x) {
+        return x == null ? null : (isLogarithmic() ? Math.log(x > 0 ? x : 1e-4) : x);
     }
 
     public List<DataScale> getScales() {

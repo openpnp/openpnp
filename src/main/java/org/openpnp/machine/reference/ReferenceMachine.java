@@ -553,7 +553,7 @@ public class ReferenceMachine extends AbstractMachine {
                         this, 
                         "Advanced motion planner set. Revert to a simpler, safer planner.", 
                         "Change to NullMotionPlanner", 
-                        Solutions.Severity.Suggestion,
+                        Solutions.Severity.Information,
                         "https://github.com/openpnp/openpnp/wiki/Motion-Planner#choosing-a-motion-planner") {
                     final MotionPlanner oldMotionPlanner =  ReferenceMachine.this.getMotionPlanner();
 
@@ -561,6 +561,13 @@ public class ReferenceMachine extends AbstractMachine {
                     public boolean isUnhandled( ) {
                         // Never handle a conservative solution as unhandled.
                         return false;
+                    }
+
+                    @Override 
+                    public String getExtendedDescription() {
+                        return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, offered to remove the ReferenceAdvancedMotionPlanner "
+                                + "if it causes problems, or if you don't want it after all. Going back to the plain NullPlanner will lose you all the "
+                                + "advanced configuration.</html>";
                     }
 
                     @Override
