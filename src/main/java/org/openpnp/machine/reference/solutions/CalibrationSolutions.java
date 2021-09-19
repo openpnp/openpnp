@@ -51,6 +51,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
@@ -439,6 +440,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         final String ABSOLUTE_RANDOM = "AR";
         final String RELATIVE = "R";
         final String SCALE = "S";
+        final String TIME = "T";
         final String BACKLASH = "B";
         final String OVERSHOOT = "O";
         final String LIMIT0 = "L0";
@@ -470,10 +472,11 @@ public class CalibrationSolutions implements Solutions.Subject {
         .setColor(new Color(0, 0x80, 0));
 
         SimpleGraph distanceGraph = new SimpleGraph();
+        distanceGraph.setLogarithmic(true);
         distanceGraph.setRelativePaddingLeft(0.05);
-        SimpleGraph.DataScale stepScale =  distanceGraph.getScale(SCALE);
-        stepScale.setRelativePaddingBottom(0.2);
-        stepScale.setColor(SimpleGraph.getDefaultGridColor());
+        SimpleGraph.DataScale distScale =  distanceGraph.getScale(SCALE);
+        distScale.setRelativePaddingBottom(0.55);
+        distScale.setColor(SimpleGraph.getDefaultGridColor());
         distanceGraph.getRow(SCALE, BACKLASH+0)
         .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP blue
         distanceGraph.getRow(SCALE, OVERSHOOT+0)
@@ -488,6 +491,15 @@ public class CalibrationSolutions implements Solutions.Subject {
         .setMarkerShown(true);
         distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
         .setLineShown(false);
+        SimpleGraph.DataScale timeScale =  distanceGraph.getScale(TIME);
+        timeScale.setLogarithmic(true);
+        timeScale.setRelativePaddingTop(0.55);
+        timeScale.setRelativePaddingBottom(0.1);
+        timeScale.setColor(SimpleGraph.getDefaultGridColor());
+        distanceGraph.getRow(TIME, TIME+0)
+        .setColor(new Color(0, 0x80, 0)); 
+        distanceGraph.getRow(TIME, TIME+1)
+        .setColor(new Color(0, 0x80, 0, 128)); 
 
         SimpleGraph speedGraph = new SimpleGraph();
         speedGraph.setRelativePaddingLeft(0.05);
@@ -578,7 +590,12 @@ public class CalibrationSolutions implements Solutions.Subject {
                         MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
                         Thread.sleep(500);
+                        double t0 = NanosecondTime.getRuntimeSeconds();
                         movable.moveTo(location);
+                        movable.waitForCompletion(CompletionType.WaitForStillstand);
+                        double t1 = NanosecondTime.getRuntimeSeconds();
+                        distanceGraph.getRow(TIME, TIME+reverse).recordDataPoint(distance, 
+                                t1-t0);
                     }
                     String passTitle = pass == 0 ? "Backlash at Sneak-up Distance " : "Overshoot at Distance ";
                     String distanceOutput = distance > backlashTestMoveMm ? "∞" : lengthConverter.convertForward(new Length(distance, LengthUnit.Millimeters));
