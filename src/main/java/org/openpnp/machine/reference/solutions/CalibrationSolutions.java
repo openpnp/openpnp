@@ -482,6 +482,12 @@ public class CalibrationSolutions implements Solutions.Subject {
         .setColor(new Color(00, 0x5B, 0xD9, 128)); // the OpenPNP blue
         distanceGraph.getRow(SCALE, OVERSHOOT+1)
         .setColor(new Color(0xFF, 0, 0, 128)); 
+        distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
+        .setColor(new Color(0xBB, 0x77, 0));
+        distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
+        .setMarkerShown(true);
+        distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
+        .setLineShown(false);
 
         SimpleGraph speedGraph = new SimpleGraph();
         speedGraph.setRelativePaddingLeft(0.05);
@@ -538,7 +544,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             }
         }
         // Pseudo-entry for full range.
-        backlashProbingDistances.add(backlashTestMoveMm*2);
+        backlashProbingDistances.add(backlashTestMoveLargeMm);
         Collections.reverse(backlashProbingDistances);
         double[] backlashOffsetByDistance = new double [backlashProbingDistances.size()];
         int iDistance = 0;
@@ -769,8 +775,9 @@ public class CalibrationSolutions implements Solutions.Subject {
         step = 0;
         for (double stepPos = -stepTestMm/2; stepPos < stepTestMm/2; stepPos += stepMm*fraction) {
             step++;
+            double randomDistance = Math.signum(Math.random()-0.5)*Math.exp(Math.random()*rangeLog + minLog);
             Location startMoveLocation = displacedAxisLocation(movable, axis, location, 
-                    Math.signum(Math.random()-0.5)*Math.exp(Math.random()*rangeLog + minLog)*mmAxis, false);
+                    randomDistance*mmAxis, false);
             movable.moveTo(startMoveLocation);
             Location nominalStepLocation = displacedAxisLocation(movable, axis, location, stepPos*mmAxis, false);
             movable.moveTo(nominalStepLocation);
@@ -780,6 +787,8 @@ public class CalibrationSolutions implements Solutions.Subject {
             double absoluteErrUnits = absoluteErr.convertToUnits(axis.getUnits()).getValue();
             stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
             .recordDataPoint(2+(step-1)*fraction, absoluteErrUnits);
+            distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
+            .recordDataPoint(Math.abs(randomDistance*mmAxis), absoluteErrUnits);
         }
         // Publish the graphs.
         axis.setStepTestGraph(stepTestGraph);
