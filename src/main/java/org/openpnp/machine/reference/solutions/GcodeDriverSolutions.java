@@ -104,13 +104,20 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         gcodeDriver, 
                         "Use the GcodeDriver for simpler setup. Accept or Dismiss to continue.", 
                         "Convert to GcodeDriver.", 
-                        Severity.Suggestion,
+                        Severity.Information,
                         "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
 
                     @Override
                     public boolean isUnhandled( ) {
                         // Never handle a conservative solution as unhandled.
                         return false;
+                    }
+
+                    @Override 
+                    public String getExtendedDescription() {
+                        return "<html><span color=\"red\">CAUTION:</span>  This is a troubleshooting option offered to remove the GcodeAsyncDriver "
+                                + "if it causes problems, or if you don't want it after all. Going back to the plain GcodeDriver will lose you all the "
+                                + "advanced configuration.</html>";
                     }
 
                     @Override
@@ -471,6 +478,13 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     return false;
                                 }
 
+                                @Override 
+                                public String getExtendedDescription() {
+                                    return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, you should only choose "
+                                            + newMotionControlType.name()+" if the current "+oldMotionControlType.name()+" causes problems and you "
+                                            + "want to try a simpler setting.</html>";
+                                }
+
                                 @Override
                                 public void setState(Solutions.State state) throws Exception {
                                     gcodeDriver.setMotionControlType((state == Solutions.State.Solved) ? 
@@ -522,8 +536,20 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     gcodeDriver, 
                                     "Disable G-code compression for trouble-free operation with incompatible controllers.", 
                                     "Disable Compress G-code.", 
-                                    Severity.Suggestion,
+                                    Severity.Information,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
+
+                                @Override
+                                public boolean isUnhandled( ) {
+                                    // Never handle a conservative solution as unhandled.
+                                    return false;
+                                }
+
+                                @Override 
+                                public String getExtendedDescription() {
+                                    return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, you should "
+                                            + "only disable G-code compression if it causes problems.</html>";
+                                }
 
                                 @Override
                                 public void setState(Solutions.State state) throws Exception {
@@ -537,13 +563,19 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     gcodeDriver, 
                                     "Keep G-code comments for better debugging.", 
                                     "Disable Remove Comments.", 
-                                    Severity.Suggestion,
+                                    Severity.Information,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
                                 @Override
                                 public boolean isUnhandled( ) {
                                     // Never handle a conservative solution as unhandled.
                                     return false;
+                                }
+
+                                @Override 
+                                public String getExtendedDescription() {
+                                    return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, you should "
+                                            + "only keep G-code comments if removing them causes problems.</html>";
                                 }
 
                                 @Override

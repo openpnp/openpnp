@@ -314,6 +314,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         return nozzleTip;
     }
 
+    public void setNozzleTip(ReferenceNozzleTip nozzleTip) {
+        Object oldValue = this.nozzleTip;
+        currentNozzleTipId = (nozzleTip != null ? nozzleTip.getId() : null);
+        this.nozzleTip = nozzleTip;
+        firePropertyChange("nozzleTip", oldValue, nozzleTip);
+        ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
+    }
+
     @Override
     public boolean isNozzleTipChangedOnManualFeed() {
         return nozzleTipChangedOnManualFeed;
@@ -662,10 +670,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
         }
 
-        this.nozzleTip = nt;
-        currentNozzleTipId = nozzleTip.getId();
-        firePropertyChange("nozzleTip", null, getNozzleTip());
-        ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
+        setNozzleTip(nt);
 
         ensureZCalibrated(true);
 
@@ -760,10 +765,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             }
         }
 
-        nozzleTip = null;
-        currentNozzleTipId = null;
-        firePropertyChange("nozzleTip", null, getNozzleTip());
-        ((ReferenceMachine) head.getMachine()).fireMachineHeadActivity(head);
+        setNozzleTip(null);
 
         if (!changerEnabled) {
             waitForCompletion(CompletionType.WaitForStillstand);
