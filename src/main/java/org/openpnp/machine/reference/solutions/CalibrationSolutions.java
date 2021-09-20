@@ -418,10 +418,13 @@ public class CalibrationSolutions implements Solutions.Subject {
 
         // General note: We always use mm.
         // Calculate the unit vector for the axis in both logical and axis coordinates. 
+        // If the movable axis has a non-linear transformation applied, this is only an approximation that is valid near the fiducial.
         Location unit = new Location(LengthUnit.Millimeters, 
                 (axis.getType() == Type.X ? 1 : 0), 
                 (axis.getType() == Type.Y ? 1 : 0),
                 0, 0);
+        String signPositive = axis.getType() == Type.X ? " ►" : " ▲";
+        String signNegative = axis.getType() == Type.X ? " ◄" : " ▼";
         AxesLocation axesLocation0 = movable.toRaw(location);
         AxesLocation axesLocation1 = movable.toRaw(location.add(unit));
         double mmAxis = axesLocation1.getCoordinate(axis) - axesLocation0.getCoordinate(axis); 
@@ -574,12 +577,14 @@ public class CalibrationSolutions implements Solutions.Subject {
                         continue;
                     }
                     // Approach from minus.
+                    Location displacedAxisLocation = displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm);
+                    Length effectiveDistance0 = location.getLinearLengthTo(displacedAxisLocation);
                     if (pass == 0) {
                         // Sneak-up
                         if (reverse == 0) {
                             MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveLargeMm*mmAxis, distance > backlashTestMoveMm));
                         }
-                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm));
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation);
                         movable.moveTo(location, minimumSpeed);
                     }
                     else {
@@ -587,28 +592,32 @@ public class CalibrationSolutions implements Solutions.Subject {
                         if (reverse == 0) {
                             MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveMm*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
                         }
-                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation, minimumSpeed);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
                         Thread.sleep(500);
                         double t0 = NanosecondTime.getRuntimeSeconds();
                         movable.moveTo(location);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
                         double t1 = NanosecondTime.getRuntimeSeconds();
-                        distanceGraph.getRow(TIME, TIME+reverse).recordDataPoint(distance, 
+                        if (reverse == 0) {
+                            distanceGraph.getRow(TIME, TIME+0).recordDataPoint(effectiveDistance0.convertToUnits(axis.getUnits()).getValue(), 
                                 t1-t0);
+                        }
                     }
                     String passTitle = pass == 0 ? "Backlash at Sneak-up Distance " : "Overshoot at Distance ";
-                    String distanceOutput = distance > backlashTestMoveMm ? "∞" : lengthConverter.convertForward(new Length(distance, LengthUnit.Millimeters));
+                    String distanceOutput = lengthConverter.convertForward(effectiveDistance0);
                     Location effective0 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
-                            location, fiducialDiameter, passTitle+distanceOutput+" ►", false);
+                            location, fiducialDiameter, passTitle+distanceOutput+signPositive, false);
 
                     // Approach from plus.
+                    displacedAxisLocation = displacedAxisLocation(movable, axis, location, distance*mmAxis, distance > backlashTestMoveMm);
+                    Length effectiveDistance1 = location.getLinearLengthTo(displacedAxisLocation);
                     if (pass == 0) {
                         // Sneak-up
                         if (reverse == 0) {
                             MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveLargeMm*mmAxis, distance > backlashTestMoveMm));
                         }
-                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, distance*mmAxis, distance > backlashTestMoveMm));
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation);
                         movable.moveTo(location, minimumSpeed);
                     }
                     else {
@@ -616,13 +625,21 @@ public class CalibrationSolutions implements Solutions.Subject {
                         if (reverse == 0) {
                             MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveMm*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
                         }
-                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, distance*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation, minimumSpeed);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
                         Thread.sleep(500);
+                        double t0 = NanosecondTime.getRuntimeSeconds();
                         movable.moveTo(location);
+                        movable.waitForCompletion(CompletionType.WaitForStillstand);
+                        double t1 = NanosecondTime.getRuntimeSeconds();
+                        if (reverse == 0) {
+                            distanceGraph.getRow(TIME, TIME+1).recordDataPoint(effectiveDistance1.convertToUnits(axis.getUnits()).getValue(), 
+                                t1-t0);
+                        }
                     }
+                    distanceOutput = lengthConverter.convertForward(effectiveDistance1);
                     Location effective1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
-                            location, fiducialDiameter, passTitle+distanceOutput+" ◄", false);
+                            location, fiducialDiameter, passTitle+distanceOutput+signNegative, false);
 
                     double mmError = effective1.subtract(effective0).dotProduct(unit).getValue();
                     if (movable == camera) {
@@ -631,17 +648,18 @@ public class CalibrationSolutions implements Solutions.Subject {
                         mmError = -mmError;
                     }
 
-                    // Record this for the distance. 
+                    // Record this for the distance, all in axis units. 
                     if (pass == 0 && reverse == 0) {
                         backlashOffsetByDistance[iDistance++] = mmError;
                     }
                     double errorUnits = new Length(mmError, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
+                    double effectiveDistance = effectiveDistance0.add(effectiveDistance1).multiply(0.5).convertToUnits(axis.getUnits()).getValue();
                     if (pass == 0) {
-                        distanceGraph.getRow(SCALE, BACKLASH+reverse).recordDataPoint(distance, 
+                        distanceGraph.getRow(SCALE, BACKLASH+reverse).recordDataPoint(effectiveDistance, 
                                 errorUnits);
                     }
                     else {
-                        distanceGraph.getRow(SCALE, OVERSHOOT+reverse).recordDataPoint(distance, 
+                        distanceGraph.getRow(SCALE, OVERSHOOT+reverse).recordDataPoint(effectiveDistance, 
                                 (maxBacklash-errorUnits)/2);
                     }
 
@@ -683,13 +701,13 @@ public class CalibrationSolutions implements Solutions.Subject {
                 MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveLargeMm*mmAxis, false));
                 movable.moveTo(location);
                 Location effective0 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
-                        location, fiducialDiameter, "Backlash at Speed "+speed+"× ►", false);
+                        location, fiducialDiameter, "Backlash at Speed "+speed+"×"+signPositive, false);
 
                 // Approach from plus.
                 MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveLargeMm*mmAxis, false));
                 movable.moveTo(location);
                 Location effective1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
-                        location, fiducialDiameter, "Backlash at Speed "+speed+"× ◄", false);
+                        location, fiducialDiameter, "Backlash at Speed "+speed+"×"+signNegative, false);
 
                 double mmError = effective1.subtract(effective0).dotProduct(unit).getValue();
                 if (movable == camera) {
@@ -708,7 +726,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                     break;
                 }
             }
-            // Record this for the speed. 
+            // Record this for the speed, all in axis units. 
             backlashOffsetBySpeed[iSpeed++] = offsetMm;
             double offsetUnits = new Length(offsetMm, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
             speedGraph.getRow(SCALE, BACKLASH).recordDataPoint(speed, 
@@ -826,7 +844,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         : camera.getUnitsPerPixelPrimary().getLengthY())
                 .multiply(1.0/machine.getVisionSolutions().getSuperSampling());
         if (tolerance) {
-            // Round up to the next full sub-pixel (Note, this also covers the case where the axis resolution is not yet set).
+            // Round up to the next full sub-pixel.
             resolution = subPixelUnit.multiply(Math.ceil(resolution.divide(subPixelUnit)))
                     .convertToUnits(LengthUnit.Millimeters);
             // Add 1% for safe double comparison.
