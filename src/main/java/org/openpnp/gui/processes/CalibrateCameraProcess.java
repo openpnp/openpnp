@@ -32,6 +32,7 @@ import java.util.concurrent.Future;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -85,15 +86,6 @@ public abstract class CalibrateCameraProcess {
     private Location centralLocation;
     private HeadMountable movable;
     private SwingWorker<Void, String> swingWorker;
-
-    private Location trialLocation1;
-    private Location trialLocation2;
-    private Point trialPoint1;
-    private Point trialPoint2;
-
-    private double xScaling;
-
-    private double yScaling;
 
     protected Mat transformImageToMachine;
 
@@ -325,7 +317,7 @@ public abstract class CalibrateCameraProcess {
     
     /**
      * Cancels the background task that displayed the fiducial/nozzle tip detection to the operator
-     * and moves on the unit per pixel estimation
+     * and then moves on to the unit per pixel estimation
      * 
      * @return true when complete
      */
@@ -352,55 +344,37 @@ public abstract class CalibrateCameraProcess {
         centralLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters).
                 derive(null, null, movableZ, 0.0);
         
-        trialLocation1 = centralLocation.subtract(advCal.getTrialStep());
-        trialLocation2 = centralLocation.add(advCal.getTrialStep());
-        trialPoint1 = null;
-        trialPoint2 = null;
+        //Setup the camera walker
+        cameraWalker = new CameraWalker(movable, (Point p)->findAveragedFiducialPoint(p));
+        cameraWalker.setOnlySafeZMovesAllowed(isHeadMountedCamera);
         
         swingWorker = new SwingWorker<Void, String>() {
 
             @Override
             protected Void doInBackground() throws Exception {
-                publish("Finding first test point for Units Per Pixel estimation.");
-                Logger.trace("Checking first test point.");
-
-                trialPoint1 = findAveragedFiducialPoint(trialLocation1, imageCenterPoint);
-                if (trialPoint1 == null || isCancelled()) {
+                publish("Estimating Units Per Pixel.");
+                try {
+                    cameraWalker.estimateScaling(advCal.getTrialStep(), new Point(pixelsX/2, pixelsY/2));
+                }
+                catch (Exception e) {
                     return null;
                 }
                 
-                publish("Finding second test point for Units Per Pixel estimation.");
-                Logger.trace("Checking second test point.");
-                trialPoint2 = findAveragedFiducialPoint(trialLocation2, imageCenterPoint);
-                if (trialPoint1 == null || isCancelled()) {
+                if (isCancelled() || !cameraWalker.isReadyToWalk()) {
                     return null;
                 }
-               
-                //Compute a rough estimate of unitsPerPixel (these may be negative but that's ok)
-                Location trialLocationDifference = trialLocation2.
-                        subtract(trialLocation1);
-                xScaling = trialLocationDifference.getX() /
-                        (trialPoint2.x - trialPoint1.x);
-                yScaling = trialLocationDifference.getY() /
-                        (trialPoint2.y - trialPoint1.y);
-                Logger.trace("xScaling = " + xScaling);
-                Logger.trace("yScaling = " + yScaling);
                 
-                //Setup the camera walker
-                cameraWalker = new CameraWalker(movable, 
-                        new Location(LengthUnit.Millimeters, xScaling, yScaling, 0, 0), 
-                        (Point p)->findAveragedFiducialPoint(p));
-                cameraWalker.setLoopGain(advCal.getWalkingLoopGain());
-                cameraWalker.setOnlySafeZMovesAllowed(isHeadMountedCamera);
-                
-                if (isCancelled()) {
-                    return null;
+                if (calibrationHeightIndex == 0) {
+                    advCal.setApproximateMillimetersPerPixel(
+                            cameraWalker.getEstimatedMillimetersPerPixel());
                 }
                 
                 //Walk the fiducial/nozzle tip to the center of the image
                 publish("Finding image center.");
                 Logger.trace("Finding image center.");
+                cameraWalker.setLoopGain(advCal.getWalkingLoopGain());
                 centralLocation = cameraWalker.walkToPoint(imageCenterPoint);
+                cameraWalker.setLoopGain(advCal.getWalkingLoopGain());
                 
                 return null;
             } 
@@ -415,16 +389,15 @@ public abstract class CalibrateCameraProcess {
             }
             
             @Override
-            protected void done()  
-            {
+            protected void done() {
                 if (isCancelled()) {
                     cleanUpWhenCancelled();
                     return;
                 }
                 
-                if ((trialPoint1 == null) || (trialPoint2 == null)) {
+                if (!cameraWalker.isReadyToWalk()) {
                     if (!isCancelled()) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Error", "Could not find test points so unable to estimate units per pixel - calibration aborting.");
+                        MessageBoxes.errorBox(MainFrame.get(), "Error", "Could not estimate units per pixel - calibration aborting.");
                     }
                     cleanUpWhenCancelled();
                     return;
@@ -467,7 +440,9 @@ public abstract class CalibrateCameraProcess {
         Collections.shuffle(desiredEndPoints, new Random(calibrationHeightIndex+1));
         
         swingWorker = new SwingWorker<Void, String>() {
-
+            
+            int errorCount = 0;
+            
             @Override
             protected Void doInBackground() throws Exception {
                 for (int iLine=0; iLine<numberOfLines; iLine++) {
@@ -475,8 +450,19 @@ public abstract class CalibrateCameraProcess {
                     publish(String.format("Collecting calibration points along radial line %d of %d at calibration Z coordinate %d of %d", 
                             iLine+1, numberOfLines, 
                             calibrationHeightIndex+1, numberOfCalibrationHeights));
-                    cameraWalker.walkToPoint(centralLocation.derive(null, null, null, movable.getLocation().convertToUnits(centralLocation.getUnits()).getRotation()), imageCenterPoint, 
+                    try {
+                        cameraWalker.walkToPoint(centralLocation.derive(null, null, null, movable.getLocation().convertToUnits(centralLocation.getUnits()).getRotation()), imageCenterPoint, 
                             desiredEndPoints.get(iLine));
+                    }
+                    catch (InterruptedException ie) {
+                        return null;
+                    }
+                    catch (Exception e) {
+                        errorCount++;
+                        if (errorCount > 3) {
+                            return null;
+                        }
+                    }
                     if (isCancelled()) {
                         return null;
                     }
@@ -500,6 +486,12 @@ public abstract class CalibrateCameraProcess {
             protected void done()  
             {
                 if (isCancelled()) {
+                    cleanUpWhenCancelled();
+                    return;
+                }
+                
+                if (errorCount > 3) {
+                    MessageBoxes.errorBox(MainFrame.get(), "Error", "Too many misdetects - retry and verify fiducial/nozzle tip detection." );
                     cleanUpWhenCancelled();
                     return;
                 }
@@ -618,7 +610,8 @@ public abstract class CalibrateCameraProcess {
     }
 
     /**
-     * Captures the location of the nozzle tip
+     * Action to Capture the location of the nozzle tip prior to it being lowered to the 
+     * calibration height
      * 
      * @return true when complete
      */
@@ -635,8 +628,8 @@ public abstract class CalibrateCameraProcess {
     }
     
     /**
-     * Moves the nozzle tip to the center of the camera's field-of-view and lowers/raises it to the 
-     * calibration height
+     * Action to move the nozzle tip to the center of the camera's field-of-view and lower/raise it 
+     * to the calibration height
      * 
      * @return true when complete
      */ 
@@ -666,11 +659,16 @@ public abstract class CalibrateCameraProcess {
      */
     private boolean requestOperatorToVerifyNozzleTipIsCenteredAction() {
         setInstructionsAndProceedAction("Using the jog controls on the Machine Controls panel, rotate the nozzle tip through 360 degrees and verify it stays within the green circle. If necessary, jog it in X and/or Y so that it remains within the circle when it is rotated. Click Next when ready.", 
-                ()->captureVerifiedCentralLocation());
+                ()->captureVerifiedCentralLocationAction());
         return true;
     }
     
-    private boolean captureVerifiedCentralLocation() {
+    /**
+     * Action to captures the current nozzle tip location
+     * 
+     * @return true when complete
+     */
+    private boolean captureVerifiedCentralLocationAction() {
         centralLocation = nozzle.getLocation();
 
         requestOperatorToAdjustDiameterAction();
@@ -678,65 +676,6 @@ public abstract class CalibrateCameraProcess {
         return true;
     }
 
-    /**
-     * Finds the fiducial 2D point averaged over all angles
-     * @param testLocation - the machine location where the movable should be positioned to find 
-     * the point
-     * @param expectedPoint - the 2D point, in pixels, where the fiducial is expected to be found
-     * @return the averaged 2D point, in pixels, if the fiducial was found at all angles, otherwise
-     * null
-     */
-    private Point findAveragedFiducialPoint(Location testLocation, 
-            Point expectedPoint) {
-        int count = 0;
-        Point observedPoint = null;
-        Point measuredPoint = new Point(0, 0);
-        
-        do {
-            final Location moveLocation = testLocation.convertToUnits(LengthUnit.Millimeters).
-                    derive(null, null, null, (double) angle);
-
-            //Move the machine and capture the fiducial location
-            Future<Void> future = UiUtils.submitUiMachineTask(() -> {
-                movable.moveTo(moveLocation);
-            });
-
-            //Wait for the move to complete
-            try {
-                future.get();
-            }
-            catch (Exception e) {
-                return null;
-            }
-
-            //Find the calibration rig's fiducial
-            observedPoint = findCalibrationRigFiducialPoint(expectedPoint);
-            
-            if (observedPoint == null) {
-                break;
-            }
-            
-            //Average the point
-            measuredPoint.x += observationWeight * observedPoint.x;
-            measuredPoint.y += observationWeight * observedPoint.y;
-            
-            //Change the angle after each measurement except the last so that the next time we'll 
-            //start with the last angle
-            count++;
-            if (count < numberOfAngles) {
-                angle += angleIncrement;
-                if (angle >= 360) {
-                    angle = 0;
-                }
-            }
-        } while (count < numberOfAngles && !swingWorker.isCancelled() && !Thread.interrupted());
-
-        if (observedPoint == null) {
-            return null;
-        }
-        return measuredPoint;
-    }
-    
     /**
      * Finds the fiducial 2D point averaged over all angles
      * @param expectedPoint - the 2D point, in pixels, where the fiducial is expected to be found
@@ -753,7 +692,7 @@ public abstract class CalibrateCameraProcess {
             observedPoint = findCalibrationRigFiducialPoint(expectedPoint);
             
             if (observedPoint == null) {
-                break;
+                return null;
             }
             
             //Average the point
@@ -787,9 +726,6 @@ public abstract class CalibrateCameraProcess {
             }
         } while (count < numberOfAngles && !swingWorker.isCancelled() && !Thread.interrupted());
 
-        if (observedPoint == null) {
-            return null;
-        }
         return measuredPoint;
     }
     

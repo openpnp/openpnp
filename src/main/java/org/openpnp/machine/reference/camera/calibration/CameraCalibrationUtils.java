@@ -256,8 +256,9 @@ public class CameraCalibrationUtils {
                 optimum = optimizer.optimize(lsp);
             }
             catch (TooManyEvaluationsException e) {
-                throw(new Exception("Camera model failed to converge. Try increasing "
-                        + "the number of Radial Lines Per Cal Z."));
+                throw(new Exception("Camera model failed to converge. Double check Camera Lens Z "
+                        + "value, if that appears correct, try increasing the number of Radial "
+                        + "Lines Per Cal Z."));
             }
             Logger.trace("rms error = " + optimum.getRMS());
             Logger.trace("number of evaluations = " + optimum.getEvaluations());

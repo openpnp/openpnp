@@ -23,6 +23,10 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
+import org.apache.commons.math3.linear.DecompositionSolver;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -33,34 +37,17 @@ import org.pmw.tinylog.Logger;
 /**
  * A CameraWalker iteratively moves the machine to drive some detectable feature in a camera image 
  * to a specific point in the image.  This works for both top and bottom cameras and does not 
- * require the camera to be completely setup or calibrated.  All that is required is a rough signed
- * estimate of the units per pixel for the camera and a function that can detect the feature and 
- * returns its coordinates in the camera's image.
- * <pre>
- * The image coordinate system has its origin at the upper left pixel with the positive 
- * X-axis to the right and the positive Y-axis down (as viewed on a computer monitor):
- * 
- * 
- *      +--------> +X               +--------> +X
- *      |                           |
- *      |                           |      o  After jogging position
- *      |  o  Initial position      |
- *      V                           V
- *      +Y                          +Y
- *      
- * The signed units per pixel for the camera is calculated by observing how far a 
- * feature moves in the image when the machine is jogged. For example, suppose the
- * "o" shown above is such a feature and that it moves 25 pixels right (+X direction) 
- * and 20 pixels up (-Y direction) when the machine is jogged 1.5 millimeter in both the 
- * positive X and Y directions.  The signed X units per pixel is then 
- * (+1.5)/(+25) = 0.060 mm/pixel, and the signed Y units per pixel is 
- * (+1.5)/(-20) = -0.075 mm/pixel.
- * </pre>
- * The feature detection function will typically process a CvPipeline to detect the feature. To aid
- * in the detection, the function is passed a point in image coordinates where the feature is 
- * expected to be found and can be used to select the search area and/or mask-off regions of the 
- * image that may cause false detections.  The function should return either the image coordinates
- * of the feature or null if the feature could not be found.
+ * require the camera to be completely setup or calibrated, i.e., settings for rotation, flips, 
+ * units per pixel, and lens distortion are all irrelevant to its operation. However, it does need 
+ * a function to detect the feature in the image.
+ * <p>
+ * The feature detection function will typically process a CvPipeline to detect the feature. It is 
+ * important that the stages used in the pipeline have no dependencies on any of the aforementioned
+ * uncalibrated settings. To aid in the detection, the function is passed a point in image 
+ * coordinates where the feature is expected to be found and can be used to select the search area 
+ * and/or mask-off regions of the image that may cause false detections.  The function should return
+ * either the image coordinates of the feature if it is found or null if the feature could not be 
+ * found.
  * <p>
  * The size of each step a CameraWalker takes is normally determined by the distance between the 
  * detected feature image coordinates and its desired image coordinates. That distance is scaled by 
@@ -74,7 +61,7 @@ import org.pmw.tinylog.Logger;
  * feature is within a set distance (in pixels) of the desired image coordinates or if the machine 
  * step is below a set distance (in machine units). These can be set with the 
  * {@link #setMinAllowedPixelStep setMinAllowedPixelStep} (defaults to 0) and {@link 
- * #setMinAllowedMachineStep setMinAllowedMachineStep} (defaults to 0.005 mm) 
+ * #setMinAllowedMachineStep setMinAllowedMachineStep} (defaults to 0.0001 mm) 
  * methods respectively.
  * <p>
  * By default, a CameraWalker will only make safe Z moves; however, that behavior can be changed
@@ -82,15 +69,15 @@ import org.pmw.tinylog.Logger;
  */
 public class CameraWalker {
     private HeadMountable movable;
-    private Double xScaling;
-    private Double yScaling;
+    private RealMatrix scalingMat;
+    private double estimatedMillimetersPerPixel;
     private Function<Point, Point> findFeatureInImage;
     private Double loopGain = 0.7;
     private double maxAllowedPixelStep = Double.POSITIVE_INFINITY;
     private double minAllowedPixelStep = 0;
     private Length maxAllowedMachineStep = new Length(Double.POSITIVE_INFINITY, 
             LengthUnit.Millimeters);
-    private Length minAllowedMachineStep = new Length(0.005, LengthUnit.Millimeters);
+    private Length minAllowedMachineStep = new Length(0.0001, LengthUnit.Millimeters);
     private boolean onlySafeZMovesAllowed = true;
     private Point lastFoundPoint = null;
     private List<double[]> machine3DCoordinates;
@@ -100,29 +87,92 @@ public class CameraWalker {
      * Constructs a new CameraWalker with the given parameters
      * 
      * @param movable - the Camera or Nozzle that will be moved during the walk
-     * @param signedUnitsPerPixel - the signed units per pixel
-     * @param findFeatureInImage - the feature detection function
-     */
-    public CameraWalker(HeadMountable movable, Location signedUnitsPerPixel, 
-            Function<Point, Point> findFeatureInImage) {
-        this(movable, signedUnitsPerPixel.getLengthX(), signedUnitsPerPixel.getLengthY(), 
-                findFeatureInImage);
-    }
-    
-    /**
-     * Constructs a new CameraWalker with the given parameters
-     * 
-     * @param movable - the Camera or Nozzle that will be moved during the walk
      * @param signedUnitsPerPixelX - the signed units per pixel in the X direction
      * @param signedUnitsPerPixelY - the signed units per pixel in the Y direction
      * @param findFeatureInImage - the feature detection function
      */
-    public CameraWalker(HeadMountable movable, Length signedUnitsPerPixelX, 
-            Length signedUnitsPerPixelY, Function<Point, Point> findFeatureInImage) {
+    public CameraWalker(HeadMountable movable, Function<Point, Point> findFeatureInImage) {
         this.movable = movable;
-        this.xScaling = signedUnitsPerPixelX.convertToUnits(LengthUnit.Millimeters).getValue();
-        this.yScaling = signedUnitsPerPixelY.convertToUnits(LengthUnit.Millimeters).getValue();
         this.findFeatureInImage = findFeatureInImage;
+        scalingMat = null;
+    }
+    
+    /**
+     * Estimates the machine units to pixel scaling by stepping the machine and observing how far 
+     * the feature moves in the image. The machine needs to be jogged such that the feature is 
+     * visible in the image and close to the expectedPoint prior to calling this method. This method
+     * must be called prior to beginning a walk.
+     *  
+     * @param testStepLength - the distance the machine will step from its current location. This 
+     * should be kept relatively small.
+     * @param expectedPoint - the expected point where the feature is expected to be detected in 
+     * the image
+     * @throws Exception if the scaling can't be estimated
+     */
+    public void estimateScaling(Length testStepLength, Point expectedPoint) throws Exception {
+        testStepLength = testStepLength.convertToUnits(LengthUnit.Millimeters);
+        Location start = movable.getLocation();
+        
+        RealMatrix mMat = MatrixUtils.createRealMatrix(2,2);
+        RealMatrix pMat = MatrixUtils.createRealMatrix(2,2);
+        
+        for (int i=0; i<4; i++) {
+            double s = testStepLength.getValue();
+            double x = (i==0) || (i==3) ? s : -s;
+            double y = (i==0) || (i==2) ? s : -s;
+            Location step = new Location(LengthUnit.Millimeters, x, y, 0, 0);
+            final Location testLocation = start.add(step);
+            
+            //Move the machine to the test location and wait for it to finish
+            Future<?> future = UiUtils.submitUiMachineTask(() -> {
+                if (onlySafeZMovesAllowed) {
+                    movable.moveToSafeZ();
+                    movable.moveTo(testLocation.
+                            derive(movable.getLocation(), false, false, true, false));
+                }
+                movable.moveTo(testLocation);
+            });
+            future.get();
+            
+            Point foundPoint = findFeatureInImage.apply(expectedPoint);
+            if (foundPoint == null) {
+                throw new Exception("Unable to estimate machine to pixel scaling - can't find feature in image.");
+            }
+            
+            switch (i%2) {
+                case 0:
+                    mMat.setEntry(0, i/2, step.getX());
+                    mMat.setEntry(1, i/2, step.getY());
+                    pMat.setEntry(0, i/2, foundPoint.x);
+                    pMat.setEntry(1, i/2, foundPoint.y);
+                    break;
+                case 1:
+                    mMat.setEntry(0, i/2, step.getX() - mMat.getEntry(0, i/2));
+                    mMat.setEntry(1, i/2, step.getY() - mMat.getEntry(1, i/2));
+                    pMat.setEntry(0, i/2, foundPoint.x - pMat.getEntry(0, i/2));
+                    pMat.setEntry(1, i/2, foundPoint.y - pMat.getEntry(1, i/2));
+                    break;
+            }
+        }
+        
+        scalingMat = mMat.multiply(new SingularValueDecomposition(pMat).getSolver().getInverse());
+        Logger.trace("scalingMat = " + scalingMat);
+        
+        RealMatrix s = new SingularValueDecomposition(scalingMat).getS();
+        Logger.trace("s = " + s);
+        estimatedMillimetersPerPixel = Math.sqrt(s.getEntry(0, 0) * s.getEntry(1, 1));
+        Logger.trace("estimatedMillimetersPerPixel = " + estimatedMillimetersPerPixel);
+        
+        if (estimatedMillimetersPerPixel <= 0) {
+            throw new Exception("Unable to estimate machine to pixel scaling - testStepLength may be too small.");
+        }
+    }
+    
+    /**
+     * Returns true if the CameraWalker is ready to walk.
+     */
+    public boolean isReadyToWalk() {
+        return scalingMat != null && Double.isFinite(scalingMat.getFrobeniusNorm());
     }
     
     /**
@@ -139,8 +189,9 @@ public class CameraWalker {
      * due to the feature not being found or the task being interrupted. The image coordinates of 
      * the feature corresponding to this location can be found with {@link #getLastFoundPoint 
      * getLastFoundPoint}
+     * @throws Exception 
      */
-    public Location walkToPoint(Location startingMachineLocation, Point desiredImagePoint) {
+    public Location walkToPoint(Location startingMachineLocation, Point desiredImagePoint) throws Exception {
         return walkToPoint(startingMachineLocation, desiredImagePoint, desiredImagePoint);
     }
     
@@ -156,8 +207,9 @@ public class CameraWalker {
      * due to the feature not being found or the task being interrupted. The image coordinates of 
      * the feature corresponding to this location can be found with {@link #getLastFoundPoint 
      * getLastFoundPoint}
+     * @throws Exception 
      */
-    public Location walkToPoint(Point desiredImagePoint) {
+    public Location walkToPoint(Point desiredImagePoint) throws Exception {
         return walkToPoint(movable.getLocation(), desiredImagePoint, desiredImagePoint);
     }
     
@@ -174,8 +226,9 @@ public class CameraWalker {
      * due to the feature not being found or the task being interrupted. The image coordinates of 
      * the feature corresponding to this location can be found with {@link #getLastFoundPoint 
      * getLastFoundPoint}
+     * @throws Exception 
      */
-    public Location walkToPoint(Point startingImagePoint, Point desiredImagePoint) {
+    public Location walkToPoint(Point startingImagePoint, Point desiredImagePoint) throws Exception {
         return walkToPoint(movable.getLocation(), startingImagePoint, desiredImagePoint);
     }
     
@@ -194,10 +247,15 @@ public class CameraWalker {
      * due to the feature not being found or the task being interrupted. The image coordinates of 
      * the feature corresponding to this location can be found with {@link #getLastFoundPoint 
      * getLastFoundPoint}
+     * @throws Exception if the walk can't be started and/or completed
      */
     public Location walkToPoint(Location startingMachineLocation, Point startingImagePoint, 
-            Point desiredCameraPoint) {
+            Point desiredCameraPoint) throws Exception {
         lastFoundPoint = null;
+        if (!isReadyToWalk()) {
+            throw new Exception("CameraWalker not ready to walk, must call estimateScaling method first.");
+        }
+        
         boolean savePoints = (machine3DCoordinates != null) && (image2DCoordinates != null);
         
         //Move the machine to the starting location and wait for it to finish
@@ -209,21 +267,16 @@ public class CameraWalker {
             }
             movable.moveTo(startingMachineLocation);
         });
-        try {
-            future.get();
-        }
-        catch (Exception e) {
-            return null;
-        }
+        future.get();
 
-        Location oldLocation = null;
-        Location newLocation = startingMachineLocation.convertToUnits(LengthUnit.Millimeters);
+        Location oldLocation = startingMachineLocation.convertToUnits(LengthUnit.Millimeters);
+        Location newLocation = oldLocation;
         Point expectedPoint = new Point(startingImagePoint.x, startingImagePoint.y);
         Logger.trace("expectedPoint = " + expectedPoint);
         Point foundPoint = findFeatureInImage.apply(expectedPoint);
-        Logger.trace("newPoint = " + foundPoint);
+        Logger.trace("foundPoint = " + foundPoint);
         if (foundPoint == null) {
-            return null;
+            throw new Exception("Unable to start walk - can't find feature in image.");
         }
 
         Point error = foundPoint.subtract(desiredCameraPoint);
@@ -231,9 +284,9 @@ public class CameraWalker {
         double newErrorMagnitude = Math.hypot(error.x, error.y);
         
         while ((newErrorMagnitude < oldErrorMagnitude) && 
-                (newErrorMagnitude * loopGain >= minAllowedPixelStep)) {
+                (newErrorMagnitude >= minAllowedPixelStep)) {
             if (Thread.currentThread().isInterrupted()) {
-                return null;
+                throw new InterruptedException();
             }
             oldErrorMagnitude = newErrorMagnitude;
             oldLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters);
@@ -245,20 +298,26 @@ public class CameraWalker {
                 image2DCoordinates.add(new double[] {foundPoint.x, foundPoint.y});
             }
             
+            RealMatrix errorMat = MatrixUtils.createColumnRealMatrix(new double[] {error.x, error.y});
+            RealMatrix machineErrorMat = scalingMat.multiply(errorMat);
+            
             double maxLimitScaling = Math.min(1, 
                     maxAllowedPixelStep/(newErrorMagnitude * loopGain));
             maxLimitScaling = Math.min(maxLimitScaling, 
                     maxAllowedMachineStep.convertToUnits(LengthUnit.Millimeters).getValue()/
-                    (Math.hypot(error.x * xScaling, error.y * yScaling) * loopGain));
+                    (machineErrorMat.getFrobeniusNorm() * loopGain));
             error.x *= maxLimitScaling;
             error.y *= maxLimitScaling;
-
+            
+            errorMat = errorMat.scalarMultiply(maxLimitScaling);
+            machineErrorMat = machineErrorMat.scalarMultiply(maxLimitScaling);
+            
             expectedPoint.x = foundPoint.x - error.x * loopGain; 
             expectedPoint.y = foundPoint.y - error.y * loopGain;
             
             Location correction = new Location(LengthUnit.Millimeters, 
-                    -error.x * xScaling * loopGain, 
-                    -error.y * yScaling * loopGain, 0, 0);
+                    -machineErrorMat.getEntry(0, 0) * loopGain, 
+                    -machineErrorMat.getEntry(1, 0) * loopGain, 0, 0);
             
             newLocation = oldLocation.add(correction);
             if (newLocation.getLinearLengthTo(oldLocation).compareTo(minAllowedMachineStep) < 0) {
@@ -277,18 +336,13 @@ public class CameraWalker {
                 }
                 movable.moveTo(moveLocation);
             });
-            try {
-                future.get();
-            }
-            catch (Exception e) {
-                return null;
-            }
+            future.get();
 
             foundPoint = findFeatureInImage.apply(expectedPoint);
             Logger.trace("expectedPoint = " + expectedPoint);
             Logger.trace("newPoint = " + foundPoint);
             if (foundPoint == null) {
-                return null;
+                throw new Exception("Unable to complete walk - can't find feature in image.");
             }
             
             error = foundPoint.subtract(desiredCameraPoint);
@@ -297,6 +351,18 @@ public class CameraWalker {
         return oldLocation;
     }
 
+    /**
+     * Gets an estimate of a change in machine location for a given change in pixels
+     * 
+     * @param deltaPoint - the change in pixels
+     * @return the change in machine location
+     */
+    public Location getDeltaLocation(Point deltaPoint) {
+        RealMatrix deltaPointMat = MatrixUtils.createColumnRealMatrix(new double[] {deltaPoint.x, deltaPoint.y});
+        RealMatrix deltaLocationMat = scalingMat.multiply(deltaPointMat);
+        return new Location(LengthUnit.Millimeters, deltaLocationMat.getEntry(0, 0), deltaLocationMat.getEntry(1, 0), 0, 0);
+    }
+    
     /**
      * Gets the Camera or Nozzle that will do the moving during the walk
      */
@@ -312,31 +378,17 @@ public class CameraWalker {
     }
 
     /**
-     * Gets the signed units per pixel for the X direction in millimeters per pixel
+     * Gets the scaling matrix
      */
-    public Double getSignedUnitsPerPixelX() {
-        return xScaling;
+    public RealMatrix getScalingMat() {
+        return scalingMat;
     }
 
     /**
-     * Sets the signed units per pixel for the X direction in millimeters per pixel
+     * Gets the estimated millimeters per pixel
      */
-    public void setSignedUnitsPerPixelX(Double signedUnitsPerPixelX) {
-        this.xScaling = signedUnitsPerPixelX;
-    }
-
-    /**
-     * Gets the signed units per pixel for the Y direction in millimeters per pixel
-     */
-    public Double getSignedUnitsPerPixelY() {
-        return yScaling;
-    }
-
-    /**
-     * Sets the signed units per pixel for the Y direction in millimeters per pixel
-     */
-    public void setSignedUnitsPerPixelY(Double signedUnitsPerPixelY) {
-        this.yScaling = signedUnitsPerPixelY;
+    public double getEstimatedMillimetersPerPixel() {
+        return estimatedMillimetersPerPixel;
     }
 
     /**
@@ -362,17 +414,17 @@ public class CameraWalker {
 
     /**
      * Sets the loop gain to be used during the walk, must be greater than 0 and less than or equal 
-     * to 1 (use caution as very small loop gains may cause walks to take a very long time to 
-     * complete).
+     * to 1.7 (use caution as very small loop gains may cause walks to take a very long time to 
+     * complete and too large may cause unbounded machine oscillations).
      */
     public void setLoopGain(Double loopGain) {
         if (loopGain <= 0) {
             Logger.error("Loop gain must be a positive number");
             return;
         }
-        if (loopGain > 1.0) {
-            Logger.error("Loop gain too large, limiting to 1.0 to prevent possible unbounded machine oscillations.");
-            loopGain = 1.0;
+        if (loopGain > 1.7) {
+            Logger.error("Loop gain too large, limiting to 1.7 to prevent possible unbounded machine oscillations.");
+            loopGain = 1.7;
         }
         this.loopGain = loopGain;
     }
@@ -473,7 +525,7 @@ public class CameraWalker {
     }
 
     /**
-     * Gets the image coordinates of the detected feature at the end of the walk
+     * Gets the image coordinates of the detected feature at the end of the last walk
      */
     public Point getLastFoundPoint() {
         return lastFoundPoint;

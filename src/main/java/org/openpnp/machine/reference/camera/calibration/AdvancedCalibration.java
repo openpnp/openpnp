@@ -117,7 +117,13 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private double walkingLoopGain = 0.50;
     
     @Element(required = false)
-    private Location trialStep = new Location(LengthUnit.Millimeters, -0.5, 0.5, 0, 0);
+    private Length trialStep = new Length(0.5, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length approximateCameraZ = new Length(0, LengthUnit.Millimeters);
+    
+    @Attribute(required = false)
+    private double approximateMillimetersPerPixel = 0;
 
 
     private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
@@ -591,18 +597,40 @@ public class AdvancedCalibration extends LensCalibrationParams {
         firePropertyChange("fiducialDiameter", oldSetting, fiducialDiameter);
     }
 
+    public double getApproximateMillimetersPerPixel() {
+        return approximateMillimetersPerPixel;
+    }
+
+    public void setApproximateMillimetersPerPixel(double approximateMillimetersPerPixel) {
+        this.approximateMillimetersPerPixel = approximateMillimetersPerPixel;
+    }
+
     /**
      * @return the trialStep
      */
-    public Location getTrialStep() {
+    public Length getTrialStep() {
         return trialStep;
     }
 
     /**
      * @param trialStep the trialStep to set
      */
-    public void setTrialStep(Location trialStep) {
+    public void setTrialStep(Length trialStep) {
         this.trialStep = trialStep;
+    }
+
+    /**
+     * @return the approximateCameraZ
+     */
+    public Length getApproximateCameraZ() {
+        return approximateCameraZ;
+    }
+
+    /**
+     * @param approximateCameraZ the approximateCameraZ to set
+     */
+    public void setApproximateCameraZ(Length approximateCameraZ) {
+        this.approximateCameraZ = approximateCameraZ;
     }
 
     public void processRawCalibrationData(Size size) throws Exception {
@@ -659,12 +687,16 @@ public class AdvancedCalibration extends LensCalibrationParams {
         List<Mat> rvecs = new ArrayList<>();
         List<Mat> tvecs = new ArrayList<>();
         
+        double approximateF = Math.abs(approximateCameraZ.
+                convertToUnits(LengthUnit.Millimeters).getValue() - primaryZ) / approximateMillimetersPerPixel;
         cameraMatrix.release();
         cameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
-        cameraMatrix.put(0, 0, 1500);
-        cameraMatrix.put(1, 1, 1500);
+        cameraMatrix.put(0, 0, approximateF);
+        cameraMatrix.put(1, 1, approximateF);
         cameraMatrix.put(0, 2, (size.width - 1.0)/2.0);
         cameraMatrix.put(1, 2, (size.height - 1.0)/2.0);
+        Logger.trace("cameraMatrix = " + cameraMatrix.dump());
+        
         distortionCoefficients.release();
         distortionCoefficients = Mat.zeros(5, 1, CvType.CV_64FC1);
         
@@ -681,7 +713,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         double rms = Calib3d.calibrateCamera(testPattern3dPointsList, 
                 testPatternImagePointsList, size,
                 cameraMatrix, distortionCoefficients, rvecs, tvecs, 
-                Calib3d.CALIB_FIX_PRINCIPAL_POINT );
+                Calib3d.CALIB_FIX_PRINCIPAL_POINT | Calib3d.CALIB_USE_INTRINSIC_GUESS );
         Logger.trace("Calib3d.calibrateCamera rms = " + rms);
         
         for (Mat tp : testPattern3dPointsList) {
