@@ -1,0 +1,235 @@
+From 8e207e8da2ea45560ac67ad2a636d389e573ea52 Mon Sep 17 00:00:00 2001
+From: karlinik <karlikova.nikola@gmail.com>
+Date: Mon, 16 Aug 2021 21:44:59 +0200
+Subject: [PATCH] Pipelines editor: UI::option to assign pipeline to individual
+ part /0
+
+Add new column to Parts tab to represent pipelines to add the possibility to assign pipeline to the part manually in the UI
+
+*PackagesComboBoxModel: parametrization - to be used generally for any table combo box)
+
+Plus: minor refactoring done
+---
+ src/main/java/org/openpnp/gui/PartsPanel.java | 16 ++---
+ .../java/org/openpnp/gui/PipelinesPanel.java  | 12 ++--
+ .../gui/support/TableComboBoxModel.java       | 59 +++++++++++++++++++
+ .../gui/tablemodel/PartsTableModel.java       | 13 ++--
+ .../java/org/openpnp/model/Configuration.java |  9 +++
+ src/main/java/org/openpnp/model/Part.java     |  4 ++
+ 6 files changed, 92 insertions(+), 21 deletions(-)
+ create mode 100644 src/main/java/org/openpnp/gui/support/TableComboBoxModel.java
+
+diff --git a/src/main/java/org/openpnp/gui/PartsPanel.java b/src/main/java/org/openpnp/gui/PartsPanel.java
+index 1c414705b6..c82bd7e8c9 100644
+--- a/src/main/java/org/openpnp/gui/PartsPanel.java
++++ b/src/main/java/org/openpnp/gui/PartsPanel.java
+@@ -59,15 +59,7 @@ import javax.swing.event.ListSelectionListener;
+ import javax.swing.table.TableRowSorter;
+ 
+ import org.openpnp.gui.components.AutoSelectTextTable;
+-import org.openpnp.gui.support.ActionGroup;
+-import org.openpnp.gui.support.Helpers;
+-import org.openpnp.gui.support.Icons;
+-import org.openpnp.gui.support.IdentifiableListCellRenderer;
+-import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+-import org.openpnp.gui.support.MessageBoxes;
+-import org.openpnp.gui.support.PackagesComboBoxModel;
+-import org.openpnp.gui.support.Wizard;
+-import org.openpnp.gui.support.WizardContainer;
++import org.openpnp.gui.support.*;
+ import org.openpnp.gui.tablemodel.PartsTableModel;
+ import org.openpnp.model.Configuration;
+ import org.openpnp.model.Part;
+@@ -144,7 +136,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
+         panel_1.add(searchTextField);
+         searchTextField.setColumns(15);
+ 
+-        JComboBox packagesCombo = new JComboBox(new PackagesComboBoxModel());
++//        JComboBox packagesCombo = new JComboBox(new PackagesComboBoxModel());
++        JComboBox packagesCombo = new JComboBox(new TableComboBoxModel<org.openpnp.model.Package>("packages"));
+         packagesCombo.setMaximumRowCount(20);
+         packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
+ 
+@@ -170,6 +163,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
+         table.setDefaultRenderer(org.openpnp.model.Package.class,
+                 new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
+ 
++        table.setDefaultRenderer(org.openpnp.model.Pipeline.class,
++                new IdentifiableTableCellRenderer<org.openpnp.model.Pipeline>());
++
+         table.setRowSorter(tableSorter);
+         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+         splitPane.setLeftComponent(new JScrollPane(table));
+diff --git a/src/main/java/org/openpnp/gui/PipelinesPanel.java b/src/main/java/org/openpnp/gui/PipelinesPanel.java
+index d9dba82b8a..136fd9b849 100644
+--- a/src/main/java/org/openpnp/gui/PipelinesPanel.java
++++ b/src/main/java/org/openpnp/gui/PipelinesPanel.java
+@@ -43,8 +43,8 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
+         tableModel = new PipelinesTableModel();
+         tableSorter = new TableRowSorter<>(tableModel);
+ 
+-        JComboBox pipelinesCombo = new JComboBox(new PackagesComboBoxModel());
+-        pipelinesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Pipeline>());
++//        JComboBox pipelinesCombo = new JComboBox(new PackagesComboBoxModel<Pipeline>());
++//        pipelinesCombo.setRenderer(new IdentifiableListCellRenderer<Pipeline>());
+ 
+         JSplitPane splitPane = new JSplitPane();
+         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+@@ -63,10 +63,10 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
+ 
+         table = new AutoSelectTextTable(tableModel);
+         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+-        table.setDefaultEditor(org.openpnp.model.Package.class,
+-                new DefaultCellEditor(pipelinesCombo));
+-        table.setDefaultRenderer(org.openpnp.model.Package.class,
+-                new IdentifiableTableCellRenderer<Package>());
++//        table.setDefaultEditor(org.openpnp.model.Package.class,
++//                new DefaultCellEditor(pipelinesCombo));
++//        table.setDefaultRenderer(org.openpnp.model.Package.class,
++//                new IdentifiableTableCellRenderer<Package>());
+ 
+         table.setRowSorter(tableSorter);
+         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+diff --git a/src/main/java/org/openpnp/gui/support/TableComboBoxModel.java b/src/main/java/org/openpnp/gui/support/TableComboBoxModel.java
+new file mode 100644
+index 0000000000..fd8baedfd7
+--- /dev/null
++++ b/src/main/java/org/openpnp/gui/support/TableComboBoxModel.java
+@@ -0,0 +1,59 @@
++/*
++ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
++ * 
++ * This file is part of OpenPnP.
++ * 
++ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
++ * General Public License as published by the Free Software Foundation, either version 3 of the
++ * License, or (at your option) any later version.
++ * 
++ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
++ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
++ * Public License for more details.
++ * 
++ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
++ * <http://www.gnu.org/licenses/>.
++ * 
++ * For more information about OpenPnP visit http://openpnp.org
++ */
++
++package org.openpnp.gui.support;
++
++import org.openpnp.model.Configuration;
++import org.openpnp.model.Identifiable;
++
++import javax.swing.*;
++import java.beans.PropertyChangeEvent;
++import java.beans.PropertyChangeListener;
++import java.util.ArrayList;
++import java.util.Collection;
++
++@SuppressWarnings("serial")
++public class TableComboBoxModel<T extends Identifiable> extends DefaultComboBoxModel implements PropertyChangeListener {
++    private final IdentifiableComparator<T> comparator = new IdentifiableComparator<>();
++
++    public TableComboBoxModel(String property) {
++        addAllElements(property);
++        Configuration.get().addPropertyChangeListener(property, this);
++    }
++
++    private void addAllElements(String property) {
++        ArrayList<T> elements;
++        if(property.equals("packages")) {
++            elements = new ArrayList<T>((Collection<? extends T>) Configuration.get().getPackages());
++        } else {
++            elements = (ArrayList<T>) Configuration.get().getPipelines();
++        }
++
++        elements.sort(comparator);
++        for (T element : elements) {
++            addElement(element);
++        }
++    }
++
++    @Override
++    public void propertyChange(PropertyChangeEvent evt) {
++        removeAllElements();
++        addAllElements(evt.getPropertyName());
++    }
++}
+diff --git a/src/main/java/org/openpnp/gui/tablemodel/PartsTableModel.java b/src/main/java/org/openpnp/gui/tablemodel/PartsTableModel.java
+index 23ad4330f8..c41124bf6b 100644
+--- a/src/main/java/org/openpnp/gui/tablemodel/PartsTableModel.java
++++ b/src/main/java/org/openpnp/gui/tablemodel/PartsTableModel.java
+@@ -28,17 +28,15 @@ import javax.swing.table.AbstractTableModel;
+ 
+ import org.openpnp.gui.support.LengthCellValue;
+ import org.openpnp.gui.support.PercentConverter;
+-import org.openpnp.model.Configuration;
+-import org.openpnp.model.Length;
++import org.openpnp.model.*;
+ import org.openpnp.model.Package;
+-import org.openpnp.model.Part;
+ 
+ @SuppressWarnings("serial")
+ public class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
+     private String[] columnNames =
+-            new String[] {"ID", "Description", "Height", "Package", "Speed %"};
++            new String[] {"ID", "Description", "Height", "Package", "Speed %", "Pipeline"};
+     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
+-            Package.class, String.class};
++            Package.class, String.class, Pipeline.class};
+     private List<Part> parts;
+     private PercentConverter percentConverter = new PercentConverter();
+ 
+@@ -102,6 +100,9 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
+             else if (columnIndex == 4) {
+                 part.setSpeed(percentConverter.convertReverse(aValue.toString()));
+             }
++            else if (columnIndex == 5) {
++                part.setPipeline((Pipeline) aValue);
++            }
+         }
+         catch (Exception e) {
+             // TODO: dialog, bad input
+@@ -121,6 +122,8 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
+                 return part.getPackage();
+             case 4:
+                 return percentConverter.convertForward(part.getSpeed());
++            case 5:
++                return part.getPipeline();
+             default:
+                 return null;
+         }
+diff --git a/src/main/java/org/openpnp/model/Configuration.java b/src/main/java/org/openpnp/model/Configuration.java
+index 1cece1b1d8..098e97e95c 100644
+--- a/src/main/java/org/openpnp/model/Configuration.java
++++ b/src/main/java/org/openpnp/model/Configuration.java
+@@ -738,4 +738,13 @@ public class Configuration extends AbstractModelObject {
+         @ElementList(inline = true, entry = "pipeline", required = false)
+         private ArrayList<Pipeline> pipelines = new ArrayList<>();
+     }
++
++    public <T> List<? extends Identifiable> getCollection(T type) {
++        if (type instanceof Package) {
++            return Collections.unmodifiableList(new ArrayList<>(packages.values()));
++        }
++        else {
++            return Collections.unmodifiableList(new ArrayList<>(pipelines.values()));
++        }
++    }
+ }
+diff --git a/src/main/java/org/openpnp/model/Part.java b/src/main/java/org/openpnp/model/Part.java
+index f05a61e110..c4df53ca3f 100644
+--- a/src/main/java/org/openpnp/model/Part.java
++++ b/src/main/java/org/openpnp/model/Part.java
+@@ -160,4 +160,8 @@ public class Part extends AbstractModelObject implements Identifiable {
+     public Pipeline getPipeline() {
+         return pipeline;
+     }
++
++    public void setPipeline(Pipeline pipeline) {
++        this.pipeline = pipeline;
++    }
+ }
+-- 
+2.28.0.windows.1
+

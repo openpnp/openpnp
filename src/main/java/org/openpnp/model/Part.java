@@ -160,4 +160,8 @@ public class Part extends AbstractModelObject implements Identifiable {
     public Pipeline getPipeline() {
         return pipeline;
     }
+
+    public void setPipeline(Pipeline pipeline) {
+        this.pipeline = pipeline;
+    }
 }

@@ -43,8 +43,8 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
         tableModel = new PipelinesTableModel();
         tableSorter = new TableRowSorter<>(tableModel);
 
-        JComboBox pipelinesCombo = new JComboBox(new PackagesComboBoxModel());
-        pipelinesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Pipeline>());
+//        JComboBox pipelinesCombo = new JComboBox(new PackagesComboBoxModel<Pipeline>());
+//        pipelinesCombo.setRenderer(new IdentifiableListCellRenderer<Pipeline>());
 
         JSplitPane splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -63,10 +63,10 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        table.setDefaultEditor(org.openpnp.model.Package.class,
-                new DefaultCellEditor(pipelinesCombo));
-        table.setDefaultRenderer(org.openpnp.model.Package.class,
-                new IdentifiableTableCellRenderer<Package>());
+//        table.setDefaultEditor(org.openpnp.model.Package.class,
+//                new DefaultCellEditor(pipelinesCombo));
+//        table.setDefaultRenderer(org.openpnp.model.Package.class,
+//                new IdentifiableTableCellRenderer<Package>());
 
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
