@@ -1,0 +1,1092 @@
+From 22271d105634517d88c3e7f4c046636bbdc15bb0 Mon Sep 17 00:00:00 2001
+From: karlinik <karlikova.nikola@gmail.com>
+Date: Mon, 9 Aug 2021 21:07:12 +0200
+Subject: [PATCH] Pipelines editor initial commit:
+
+New xml file and responding java object created to represent pipelines to be able to later assign it to individual parts or whole packages.
+New 'Vision' tab created to set a foundation for further pipeline editing.
+---
+ src/main/java/org/openpnp/gui/MainFrame.java  |   3 +
+ src/main/java/org/openpnp/gui/PartsPanel.java |  49 +++--
+ .../java/org/openpnp/gui/PipelinesPanel.java  | 167 ++++++++++++++++++
+ .../gui/tablemodel/PipelinesTableModel.java   |  73 ++++++++
+ .../vision/ReferenceBottomVision.java         |  66 ++++++-
+ ...erenceBottomVisionConfigurationWizard.java |   1 +
+ ...ceBottomVisionPartConfigurationWizard.java |  10 +-
+ .../wizards/VisionConfigurationWizard.java    | 105 +++++++++++
+ .../java/org/openpnp/model/Configuration.java |  59 +++++++
+ src/main/java/org/openpnp/model/Package.java  |  13 ++
+ src/main/java/org/openpnp/model/Part.java     |  25 ++-
+ src/main/java/org/openpnp/model/Pipeline.java |  50 ++++++
+ .../java/org/openpnp/spi/PartAlignment.java   |   8 +-
+ src/main/resources/config/packages.xml        |   6 +-
+ src/main/resources/config/parts.xml           |   4 +-
+ src/main/resources/config/pipelines.xml       |  28 +++
+ 16 files changed, 606 insertions(+), 61 deletions(-)
+ create mode 100644 src/main/java/org/openpnp/gui/PipelinesPanel.java
+ create mode 100644 src/main/java/org/openpnp/gui/tablemodel/PipelinesTableModel.java
+ create mode 100644 src/main/java/org/openpnp/machine/reference/vision/wizards/VisionConfigurationWizard.java
+ create mode 100644 src/main/java/org/openpnp/model/Pipeline.java
+ create mode 100644 src/main/resources/config/pipelines.xml
+
+diff --git a/src/main/java/org/openpnp/gui/MainFrame.java b/src/main/java/org/openpnp/gui/MainFrame.java
+index e3fb585bba..4539744bc1 100644
+--- a/src/main/java/org/openpnp/gui/MainFrame.java
++++ b/src/main/java/org/openpnp/gui/MainFrame.java
+@@ -151,6 +151,7 @@ public class MainFrame extends JFrame {
+     private JPanel panelMachine;
+     private MachineSetupPanel machineSetupPanel;
+     private IssuesAndSolutionsPanel issuesAndSolutionsPanel;
++    private PipelinesPanel pipelinesPanel;
+     private JDialog frameCamera;
+     private JDialog frameMachineControls;
+     private Map<KeyStroke, Action> hotkeyActionMap;
+@@ -266,6 +267,7 @@ public class MainFrame extends JFrame {
+         feedersPanel = new FeedersPanel(configuration, this);
+         machineSetupPanel = new MachineSetupPanel();
+         issuesAndSolutionsPanel = new IssuesAndSolutionsPanel(configuration, this);
++        pipelinesPanel = new PipelinesPanel(configuration, this);
+ 
+         menuBar = new JMenuBar();
+         setJMenuBar(menuBar);
+@@ -615,6 +617,7 @@ public class MainFrame extends JFrame {
+         tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
+         tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
+         tabs.addTab("Issues & Solutions", null, issuesAndSolutionsPanel, null); //$NON-NLS-1$
++        tabs.addTab("Vision", null, pipelinesPanel, null);
+ 
+         LogPanel logPanel = new LogPanel();
+         tabs.addTab("Log", null, logPanel, null); //$NON-NLS-1$
+diff --git a/src/main/java/org/openpnp/gui/PartsPanel.java b/src/main/java/org/openpnp/gui/PartsPanel.java
+index dd66dc6b5a..1c414705b6 100644
+--- a/src/main/java/org/openpnp/gui/PartsPanel.java
++++ b/src/main/java/org/openpnp/gui/PartsPanel.java
+@@ -1,19 +1,19 @@
+ /*
+  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+- * 
++ *
+  * This file is part of OpenPnP.
+- * 
++ *
+  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+  * General Public License as published by the Free Software Foundation, either version 3 of the
+  * License, or (at your option) any later version.
+- * 
++ *
+  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+  * Public License for more details.
+- * 
++ *
+  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+  * <http://www.gnu.org/licenses/>.
+- * 
++ *
+  * For more information about OpenPnP visit http://openpnp.org
+  */
+ 
+@@ -70,18 +70,16 @@ import org.openpnp.gui.support.Wizard;
+ import org.openpnp.gui.support.WizardContainer;
+ import org.openpnp.gui.tablemodel.PartsTableModel;
+ import org.openpnp.model.Configuration;
+-import org.openpnp.model.Location;
+ import org.openpnp.model.Part;
+ import org.openpnp.spi.Feeder;
+ import org.openpnp.spi.FiducialLocator;
+-import org.openpnp.spi.Nozzle;
+ import org.openpnp.spi.PartAlignment;
+-import org.openpnp.util.MovableUtils;
+ import org.openpnp.util.UiUtils;
+ import org.pmw.tinylog.Logger;
+ import org.simpleframework.xml.Serializer;
+ 
+ @SuppressWarnings("serial")
++//TODO NK: add new column Pipeline for quick assignment, same as package
+ public class PartsPanel extends JPanel implements WizardContainer {
+ 
+ 
+@@ -176,17 +174,17 @@ public class PartsPanel extends JPanel implements WizardContainer {
+         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+         splitPane.setLeftComponent(new JScrollPane(table));
+         splitPane.setRightComponent(tabbedPane);
+-        
++
+         toolBar.add(newPartAction);
+         toolBar.add(deletePartAction);
+         toolBar.addSeparator();
+         toolBar.add(pickPartAction);
+-        
++
+         toolBar.addSeparator();
+         JButton btnNewButton = new JButton(copyPartToClipboardAction);
+         btnNewButton.setHideActionText(true);
+         toolBar.add(btnNewButton);
+-        
++
+         JButton btnNewButton_1 = new JButton(pastePartToClipboardAction);
+         btnNewButton_1.setHideActionText(true);
+         toolBar.add(btnNewButton_1);
+@@ -203,8 +201,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
+                 if (selections.size() > 1) {
+                     singleSelectionActionGroup.setEnabled(false);
+                     multiSelectionActionGroup.setEnabled(true);
+-                }
+-                else {
++                } else {
+                     multiSelectionActionGroup.setEnabled(false);
+                     singleSelectionActionGroup.setEnabled(!selections.isEmpty());
+                 }
+@@ -227,7 +224,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
+                             wizard.setWizardContainer(PartsPanel.this);
+                         }
+                     }
+-                    
++
+                     FiducialLocator fiducialLocator =
+                             Configuration.get().getMachine().getFiducialLocator();
+                     Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
+@@ -272,8 +269,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
+         // If current expression doesn't parse, don't update.
+         try {
+             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
+-        }
+-        catch (PatternSyntaxException e) {
++        } catch (PatternSyntaxException e) {
+             Logger.warn(e, "Search failed");
+             return;
+         }
+@@ -328,11 +324,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
+             String formattedIds;
+             if (ids.size() <= 3) {
+                 formattedIds = String.join(", ", ids);
+-            }
+-            else {
++            } else {
+                 formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
+             }
+-            
++
+             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                     "Are you sure you want to delete " + formattedIds + "?",
+                     "Delete " + selections.size() + " parts?", JOptionPane.YES_NO_OPTION);
+@@ -392,8 +387,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
+                 StringSelection stringSelection = new StringSelection(w.toString());
+                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                 clipboard.setContents(stringSelection, null);
+-            }
+-            catch (Exception e) {
++            } catch (Exception e) {
+                 MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
+             }
+         }
+@@ -414,7 +408,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
+                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                 StringReader r = new StringReader(s);
+                 Part part = ser.read(Part.class, s);
+-                for (int i = 0;; i++) {
++                for (int i = 0; ; i++) {
+                     if (Configuration.get().getPart(part.getId() + "-" + i) == null) {
+                         part.setId(part.getId() + "-" + i);
+                         Configuration.get().addPart(part);
+@@ -423,16 +417,17 @@ public class PartsPanel extends JPanel implements WizardContainer {
+                 }
+                 tableModel.fireTableDataChanged();
+                 Helpers.selectLastTableRow(table);
+-            }
+-            catch (Exception e) {
++            } catch (Exception e) {
+                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
+             }
+         }
+     };
+-    
++
+     @Override
+-    public void wizardCompleted(Wizard wizard) {}
++    public void wizardCompleted(Wizard wizard) {
++    }
+ 
+     @Override
+-    public void wizardCancelled(Wizard wizard) {}
++    public void wizardCancelled(Wizard wizard) {
++    }
+ }
+diff --git a/src/main/java/org/openpnp/gui/PipelinesPanel.java b/src/main/java/org/openpnp/gui/PipelinesPanel.java
+new file mode 100644
+index 0000000000..d9dba82b8a
+--- /dev/null
++++ b/src/main/java/org/openpnp/gui/PipelinesPanel.java
+@@ -0,0 +1,167 @@
++package org.openpnp.gui;
++
++import org.openpnp.gui.components.AutoSelectTextTable;
++import org.openpnp.gui.support.*;
++import org.openpnp.gui.tablemodel.PipelinesTableModel;
++import org.openpnp.model.Configuration;
++import org.openpnp.model.Package;
++import org.openpnp.model.Pipeline;
++import org.openpnp.spi.PartAlignment;
++
++import javax.swing.*;
++import javax.swing.event.ListSelectionEvent;
++import javax.swing.event.ListSelectionListener;
++import javax.swing.table.TableRowSorter;
++import java.awt.*;
++import java.awt.event.ActionEvent;
++import java.beans.PropertyChangeEvent;
++import java.beans.PropertyChangeListener;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.prefs.Preferences;
++
++public class PipelinesPanel extends JPanel implements WizardContainer {
++
++    private static final String PREF_DIVIDER_POSITION = "PackagesPanel.dividerPosition";
++    private static final int PREF_DIVIDER_POSITION_DEF = -1;
++    private Preferences prefs = Preferences.userNodeForPackage(PipelinesPanel.class);
++
++    private PipelinesTableModel tableModel;
++    private TableRowSorter<PipelinesTableModel> tableSorter;
++    private JTable table;
++    private ActionGroup singleSelectionActionGroup;
++    private ActionGroup multiSelectionActionGroup;
++
++    public PipelinesPanel(Configuration configuration, Frame frame) {
++
++        singleSelectionActionGroup = new ActionGroup(deletePipelineAction, pickPipelineAction, copyPipelineToClipboardAction);
++        singleSelectionActionGroup.setEnabled(false);
++        multiSelectionActionGroup = new ActionGroup(deletePipelineAction);
++        multiSelectionActionGroup.setEnabled(false);
++
++        setLayout(new BorderLayout(0, 0));
++        tableModel = new PipelinesTableModel();
++        tableSorter = new TableRowSorter<>(tableModel);
++
++        JComboBox pipelinesCombo = new JComboBox(new PackagesComboBoxModel());
++        pipelinesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Pipeline>());
++
++        JSplitPane splitPane = new JSplitPane();
++        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
++        splitPane.setContinuousLayout(true);
++        splitPane
++                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
++        splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
++            @Override
++            public void propertyChange(PropertyChangeEvent evt) {
++                prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
++            }
++        });
++        add(splitPane, BorderLayout.CENTER);
++
++        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
++
++        table = new AutoSelectTextTable(tableModel);
++        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
++        table.setDefaultEditor(org.openpnp.model.Package.class,
++                new DefaultCellEditor(pipelinesCombo));
++        table.setDefaultRenderer(org.openpnp.model.Package.class,
++                new IdentifiableTableCellRenderer<Package>());
++
++        table.setRowSorter(tableSorter);
++        table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
++        splitPane.setLeftComponent(new JScrollPane(table));
++        splitPane.setRightComponent(tabbedPane);
++
++        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
++            @Override
++            public void valueChanged(ListSelectionEvent e) {
++                if (e.getValueIsAdjusting()) {
++                    return;
++                }
++
++                List<Pipeline> selections = getSelections();
++
++                if (selections.size() > 1) {
++                    singleSelectionActionGroup.setEnabled(false);
++                    multiSelectionActionGroup.setEnabled(true);
++                } else {
++                    multiSelectionActionGroup.setEnabled(false);
++                    singleSelectionActionGroup.setEnabled(!selections.isEmpty());
++                }
++
++                Pipeline pipeline = getSelection();
++
++                int selectedTab = tabbedPane.getSelectedIndex();
++                tabbedPane.removeAll();
++
++                if (pipeline != null) {
++                    PartAlignment vision = Configuration.get().getMachine().getPartAlignments().get(0);
++                    Wizard wizard = vision.getPipelineConfigurationWizard(pipeline);
++                    if (wizard != null) {
++                        JPanel panel = new JPanel();
++                        panel.setLayout(new BorderLayout());
++                        panel.add(wizard.getWizardPanel());
++                        tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
++                        wizard.setWizardContainer(PipelinesPanel.this);
++                    }
++                }
++
++                if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
++                    tabbedPane.setSelectedIndex(selectedTab);
++                }
++
++                revalidate();
++                repaint();
++            }
++        });
++    }
++
++    private Pipeline getSelection() {
++        List<Pipeline> selections = getSelections();
++        if (selections.size() != 1) {
++            return null;
++        }
++        return selections.get(0);
++    }
++
++    private List<Pipeline> getSelections() {
++        List<Pipeline> selections = new ArrayList<>();
++        for (int selectedRow : table.getSelectedRows()) {
++            selectedRow = table.convertRowIndexToModel(selectedRow);
++            selections.add(tableModel.getPipeline(selectedRow));
++        }
++        return selections;
++    }
++
++    public final Action deletePipelineAction = new AbstractAction() {
++        @Override
++        public void actionPerformed(ActionEvent e) {
++
++        }
++    };
++
++    public final Action pickPipelineAction = new AbstractAction() {
++        @Override
++        public void actionPerformed(ActionEvent e) {
++
++        }
++    };
++
++    public final Action copyPipelineToClipboardAction = new AbstractAction() {
++        @Override
++        public void actionPerformed(ActionEvent e) {
++
++        }
++    };
++
++    @Override
++    public void wizardCompleted(Wizard wizard) {
++
++    }
++
++    @Override
++    public void wizardCancelled(Wizard wizard) {
++
++    }
++}
+diff --git a/src/main/java/org/openpnp/gui/tablemodel/PipelinesTableModel.java b/src/main/java/org/openpnp/gui/tablemodel/PipelinesTableModel.java
+new file mode 100644
+index 0000000000..6678d200dd
+--- /dev/null
++++ b/src/main/java/org/openpnp/gui/tablemodel/PipelinesTableModel.java
+@@ -0,0 +1,73 @@
++package org.openpnp.gui.tablemodel;
++
++import org.openpnp.model.Configuration;
++import org.openpnp.model.Pipeline;
++
++import javax.swing.table.AbstractTableModel;
++import java.beans.PropertyChangeEvent;
++import java.beans.PropertyChangeListener;
++import java.util.ArrayList;
++import java.util.List;
++
++public class PipelinesTableModel extends AbstractTableModel implements PropertyChangeListener {
++
++    private String[] columnNames =
++            new String[]{"ID", "Name"};
++
++    private List<Pipeline> pipelines;
++
++    public PipelinesTableModel() {
++        Configuration.get().addPropertyChangeListener("pipelines", this);
++        pipelines = new ArrayList<>(Configuration.get().getPipelines());
++    }
++
++    @Override
++    public void propertyChange(PropertyChangeEvent evt) {
++        if (evt.getSource() instanceof Pipeline) {
++            fireTableDataChanged();
++        } else {
++            if (pipelines != null) {
++                for (Pipeline pipeline : pipelines) {
++                    pipeline.removePropertyChangeListener(this);
++                }
++            }
++            pipelines = new ArrayList<>(Configuration.get().getPipelines());
++            fireTableDataChanged();
++            for (Pipeline pipeline : pipelines) {
++                pipeline.addPropertyChangeListener(this);
++            }
++        }
++    }
++
++    @Override
++    public int getRowCount() {
++        return (pipelines == null) ? 0 : pipelines.size();
++    }
++
++    public Pipeline getPipeline(int index) {
++        return pipelines.get(index);
++    }
++
++    @Override
++    public int getColumnCount() {
++        return 2;
++    }
++
++    @Override
++    public String getColumnName(int column) {
++        return columnNames[column];
++    }
++
++    @Override
++    public Object getValueAt(int rowIndex, int columnIndex) {
++        Pipeline pipeline = pipelines.get(rowIndex);
++        switch (columnIndex) {
++            case 0:
++                return pipeline.getId();
++            case 1:
++                return pipeline.getName();
++            default:
++                return null;
++        }
++    }
++}
+diff --git a/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java b/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java
+index 40f8cb2e9e..76802a7227 100644
+--- a/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java
++++ b/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java
+@@ -17,12 +17,8 @@ import org.openpnp.gui.support.Wizard;
+ import org.openpnp.machine.reference.ReferenceNozzleTip;
+ import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
+ import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
+-import org.openpnp.model.BoardLocation;
+-import org.openpnp.model.Footprint;
+-import org.openpnp.model.Length;
+-import org.openpnp.model.LengthUnit;
+-import org.openpnp.model.Location;
+-import org.openpnp.model.Part;
++import org.openpnp.machine.reference.vision.wizards.VisionConfigurationWizard;
++import org.openpnp.model.*;
+ import org.openpnp.spi.Camera;
+ import org.openpnp.spi.Nozzle;
+ import org.openpnp.spi.PartAlignment;
+@@ -63,6 +59,9 @@ public class ReferenceBottomVision implements PartAlignment {
+     @ElementMap(required = false)
+     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
+ 
++    @ElementMap(required = false)
++    protected Map<String, PipelineSettings> pipelineSettingByPartId = new HashMap<>();
++
+     @Override
+     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
+             Location placementLocation, Nozzle nozzle) throws Exception {
+@@ -532,6 +531,15 @@ public class ReferenceBottomVision implements PartAlignment {
+         return partSettings;
+     }
+ 
++    private PipelineSettings getPipelineSettings(Pipeline pipeline) {
++        PipelineSettings pipelineSettings = this.pipelineSettingByPartId.get(pipeline.getId());
++        if (pipelineSettings == null) {
++            pipelineSettings = new PipelineSettings(pipeline);
++            this.pipelineSettingByPartId.put(pipeline.getId(), pipelineSettings);
++        }
++        return pipelineSettings;
++    }
++
+     public Map<String, PartSettings> getPartSettingsByPartId() {
+         return partSettingsByPartId;
+     }
+@@ -547,7 +555,13 @@ public class ReferenceBottomVision implements PartAlignment {
+         }
+         return new ReferenceBottomVisionPartConfigurationWizard(this, part);
+     }
+-    
++
++    @Override
++    public Wizard getPipelineConfigurationWizard(Pipeline pipeline) {
++        PipelineSettings pipelineSettings = getPipelineSettings(pipeline);
++        return new VisionConfigurationWizard(pipelineSettings);
++    }
++
+     public enum PreRotateUsage {
+         Default, AlwaysOn, AlwaysOff
+     }
+@@ -590,6 +604,7 @@ public class ReferenceBottomVision implements PartAlignment {
+         public PartSettings(ReferenceBottomVision bottomVision) {
+             setEnabled(bottomVision.isEnabled());
+             try {
++                //TODO: NK: get pipeline from xml/from the part
+                 setPipeline(bottomVision.getPipeline()
+                                         .clone());
+             }
+@@ -655,4 +670,41 @@ public class ReferenceBottomVision implements PartAlignment {
+         }
+         
+     }
++
++    @Root
++    public static class PipelineSettings {
++        @Attribute
++        protected String id;
++
++        @Attribute
++        protected String name;
++
++        @Element
++        protected CvPipeline pipeline;
++
++        public PipelineSettings(Pipeline pipeline) {
++            this.id = pipeline.getId();
++            this.name = pipeline.getName();
++        }
++
++        public PipelineSettings() {
++
++        }
++
++        public String getId() {
++            return id;
++        }
++
++        public void setId(String id) {
++            this.id = id;
++        }
++
++        public String getName() {
++            return name;
++        }
++
++        public void setName(String name) {
++            this.name = name;
++        }
++    }
+ }
+diff --git a/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionConfigurationWizard.java b/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionConfigurationWizard.java
+index 1686096d58..ec49319974 100644
+--- a/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionConfigurationWizard.java
++++ b/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionConfigurationWizard.java
+@@ -85,6 +85,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
+         editPipelineButton.addActionListener(new ActionListener() {
+             public void actionPerformed(ActionEvent e) {
+                 UiUtils.messageBoxOnException(() -> {
++                    //TODO NK: open new editor for global pipeline management
+                     editPipeline();
+                 });
+             }
+diff --git a/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java b/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java
+index 3ffbf5d337..d3516f08e2 100644
+--- a/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java
++++ b/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java
+@@ -3,14 +3,7 @@ package org.openpnp.machine.reference.vision.wizards;
+ import java.awt.event.ActionEvent;
+ import java.awt.event.ActionListener;
+ 
+-import javax.swing.JButton;
+-import javax.swing.JCheckBox;
+-import javax.swing.JComboBox;
+-import javax.swing.JDialog;
+-import javax.swing.JLabel;
+-import javax.swing.JOptionPane;
+-import javax.swing.JPanel;
+-import javax.swing.JTextField;
++import javax.swing.*;
+ import javax.swing.border.TitledBorder;
+ 
+ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+@@ -152,6 +145,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
+                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+             if (result == JOptionPane.YES_OPTION) {
+                 UiUtils.messageBoxOnException(() -> {
++                    //TODO NK: reset to default part/package, not the global one
+                     partSettings.setPipeline(bottomVision.getPipeline().clone());
+                     editPipeline();
+                 });
+diff --git a/src/main/java/org/openpnp/machine/reference/vision/wizards/VisionConfigurationWizard.java b/src/main/java/org/openpnp/machine/reference/vision/wizards/VisionConfigurationWizard.java
+new file mode 100644
+index 0000000000..a9c0c07287
+--- /dev/null
++++ b/src/main/java/org/openpnp/machine/reference/vision/wizards/VisionConfigurationWizard.java
+@@ -0,0 +1,105 @@
++package org.openpnp.machine.reference.vision.wizards;
++
++import com.jgoodies.forms.layout.ColumnSpec;
++import com.jgoodies.forms.layout.FormLayout;
++import com.jgoodies.forms.layout.FormSpecs;
++import com.jgoodies.forms.layout.RowSpec;
++import org.openpnp.gui.support.AbstractConfigurationWizard;
++import org.openpnp.machine.reference.vision.ReferenceBottomVision;
++import org.openpnp.util.UiUtils;
++
++import javax.swing.*;
++import javax.swing.border.TitledBorder;
++import java.awt.event.ActionEvent;
++import java.awt.event.ActionListener;
++
++@SuppressWarnings("serial")
++public class VisionConfigurationWizard extends AbstractConfigurationWizard {
++    private ReferenceBottomVision.PipelineSettings pipelineSettings;
++
++    private JTextField idEntry;
++    private JTextField nameEntry;
++
++    JPanel panel;
++
++    public VisionConfigurationWizard(ReferenceBottomVision.PipelineSettings pipelineSettings) {
++        this.pipelineSettings = pipelineSettings;
++        createUi();
++    }
++
++    private void createUi() {
++        createPanel();
++
++        JLabel lblId = new JLabel("ID");
++        JLabel lblName = new JLabel("Name");
++
++        idEntry = new JTextField();
++        idEntry.setText(pipelineSettings.getId());
++        idEntry.setColumns(10);
++
++        nameEntry = new JTextField();
++        nameEntry.setText(pipelineSettings.getName());
++        nameEntry.setColumns(20);
++
++        panel.add(lblId, "2, 2, right, default");
++        panel.add(idEntry, "4, 2, left, default");
++        panel.add(lblName, "2, 4, right, default");
++        panel.add(nameEntry, "4, 4, left, default");
++
++        JButton editPipelineButton = new JButton("Edit");
++        editPipelineButton.addActionListener(new ActionListener() {
++            public void actionPerformed(ActionEvent e) {
++                UiUtils.messageBoxOnException(() -> {
++//                    editPipeline();
++                });
++            }
++        });
++        panel.add(editPipelineButton, "4, 6");
++    }
++
++    private void createPanel() {
++        panel = new JPanel();
++        panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
++        contentPanel.add(panel);
++        panel.setLayout(new FormLayout(new ColumnSpec[]{
++                FormSpecs.RELATED_GAP_COLSPEC,
++                ColumnSpec.decode("right:max(70dlu;default)"),
++                FormSpecs.RELATED_GAP_COLSPEC,
++                FormSpecs.DEFAULT_COLSPEC,
++                FormSpecs.RELATED_GAP_COLSPEC,
++                FormSpecs.DEFAULT_COLSPEC,
++                FormSpecs.RELATED_GAP_COLSPEC,
++                FormSpecs.DEFAULT_COLSPEC,
++                FormSpecs.RELATED_GAP_COLSPEC,
++                FormSpecs.DEFAULT_COLSPEC,
++                FormSpecs.RELATED_GAP_COLSPEC,
++                FormSpecs.DEFAULT_COLSPEC,},
++                new RowSpec[]{
++                        FormSpecs.RELATED_GAP_ROWSPEC,
++                        FormSpecs.DEFAULT_ROWSPEC,
++                        FormSpecs.RELATED_GAP_ROWSPEC,
++                        FormSpecs.DEFAULT_ROWSPEC,
++                        FormSpecs.RELATED_GAP_ROWSPEC,
++                        FormSpecs.DEFAULT_ROWSPEC,
++                        FormSpecs.RELATED_GAP_ROWSPEC,
++                        FormSpecs.DEFAULT_ROWSPEC,
++                        FormSpecs.RELATED_GAP_ROWSPEC,
++                        FormSpecs.DEFAULT_ROWSPEC,
++                        FormSpecs.RELATED_GAP_ROWSPEC,
++                        FormSpecs.DEFAULT_ROWSPEC,
++                        FormSpecs.RELATED_GAP_ROWSPEC,
++                        FormSpecs.DEFAULT_ROWSPEC,
++                        FormSpecs.RELATED_GAP_ROWSPEC,
++                        FormSpecs.DEFAULT_ROWSPEC,
++                        FormSpecs.RELATED_GAP_ROWSPEC,
++                        FormSpecs.DEFAULT_ROWSPEC,
++                        FormSpecs.RELATED_GAP_ROWSPEC,
++                        FormSpecs.DEFAULT_ROWSPEC,}));
++    }
++
++    @Override
++    public void createBindings() {
++        addWrappedBinding(pipelineSettings, "id", idEntry, "text");
++        addWrappedBinding(pipelineSettings, "name", nameEntry, "text");
++    }
++}
+diff --git a/src/main/java/org/openpnp/model/Configuration.java b/src/main/java/org/openpnp/model/Configuration.java
+index 1a804f8118..1cece1b1d8 100644
+--- a/src/main/java/org/openpnp/model/Configuration.java
++++ b/src/main/java/org/openpnp/model/Configuration.java
+@@ -87,6 +87,7 @@ public class Configuration extends AbstractModelObject {
+ 
+     private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
+     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
++    private LinkedHashMap<String, Pipeline> pipelines = new LinkedHashMap<>();
+     private Machine machine;
+     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
+     private boolean loaded;
+@@ -362,6 +363,24 @@ public class Configuration extends AbstractModelObject {
+             throw new Exception("Error while reading parts.xml (" + message + ")", e);
+         }
+ 
++        try {
++            File file = new File(configurationDirectory, "pipelines.xml");
++            if (overrideUserConfig || !file.exists()) {
++//                Logger.info("No pipelines.xml found in configuration directory, loading defaults.");
++                file = File.createTempFile("pipelines", "xml");
++                FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/pipelines.xml"), file);
++                forceSave = true;
++            }
++            loadPipelines(file);
++        }
++        catch (Exception e) {
++            String message = e.getMessage();
++            if (e.getCause() != null && e.getCause().getMessage() != null) {
++                message = e.getCause().getMessage();
++            }
++            throw new Exception("Error while reading pipelines.xml (" + message + ")", e);
++        }
++
+ 
+         try {
+             File file = new File(configurationDirectory, "machine.xml");
+@@ -487,6 +506,22 @@ public class Configuration extends AbstractModelObject {
+         firePropertyChange("parts", null, parts);
+     }
+ 
++    public void addPipeline(Pipeline pipeline) {
++        if (null == pipeline.getId()) {
++            throw new Error("pipeline with null Id cannot be added to Configuration.");
++        }
++        pipelines.put(pipeline.getId().toUpperCase(), pipeline);
++        firePropertyChange("pipelines", null, pipelines);
++    }
++
++    public List<Pipeline> getPipelines() {
++        return Collections.unmodifiableList(new ArrayList<>(pipelines.values()));
++    }
++
++    public Pipeline getPipeline(String pipelineId) {
++        return pipelines.get(pipelineId);
++    }
++
+     public List<Board> getBoards() {
+         return Collections.unmodifiableList(new ArrayList<>(boards.values()));
+     }
+@@ -564,6 +599,21 @@ public class Configuration extends AbstractModelObject {
+         serializeObject(holder, file);
+     }
+ 
++    private void loadPipelines(File file) throws Exception {
++        Serializer serializer = createSerializer();
++        PipelinesConfigurationHolder holder =
++                serializer.read(PipelinesConfigurationHolder.class, file);
++        for (Pipeline pipeline : holder.pipelines) {
++            addPipeline(pipeline);
++        }
++    }
++
++    private void savePipelines(File file) throws Exception {
++        PipelinesConfigurationHolder holder = new PipelinesConfigurationHolder();
++        holder.pipelines = new ArrayList<>(pipelines.values());
++        serializeObject(holder, file);
++    }
++
+     public Job loadJob(File file) throws Exception {
+         Serializer serializer = createSerializer();
+         Job job = serializer.read(Job.class, file);
+@@ -679,4 +729,13 @@ public class Configuration extends AbstractModelObject {
+         @ElementList(inline = true, entry = "part", required = false)
+         private ArrayList<Part> parts = new ArrayList<>();
+     }
++
++    /**
++     * Used to provide a fixed root for the Pipelines when serializing.
++     */
++    @Root(name = "openpnp-pipelines")
++    public static class PipelinesConfigurationHolder {
++        @ElementList(inline = true, entry = "pipeline", required = false)
++        private ArrayList<Pipeline> pipelines = new ArrayList<>();
++    }
+ }
+diff --git a/src/main/java/org/openpnp/model/Package.java b/src/main/java/org/openpnp/model/Package.java
+index 3ca5769f36..080941a8a7 100644
+--- a/src/main/java/org/openpnp/model/Package.java
++++ b/src/main/java/org/openpnp/model/Package.java
+@@ -38,6 +38,9 @@ public class Package extends AbstractModelObject implements Identifiable {
+     @Attribute
+     private String id;
+ 
++    @Attribute(required = false)
++    protected String pipelineId;
++
+     @Attribute(required = false)
+     private String description;
+ 
+@@ -62,9 +65,19 @@ public class Package extends AbstractModelObject implements Identifiable {
+         this(null);
+     }
+ 
++    private Pipeline pipeline;
++
+     public Package(String id) {
+         this.id = id;
+         footprint = new Footprint();
++
++//        Configuration.get().addListener(new ConfigurationListener.Adapter() {
++//            @Override
++//            public void configurationLoaded(Configuration configuration) throws Exception {
++//                Machine machine = configuration.getMachine();
++//                pipeline = machine.getPipeline(pipelineId);
++//            }
++//        });
+     }
+ 
+     @Override
+diff --git a/src/main/java/org/openpnp/model/Part.java b/src/main/java/org/openpnp/model/Part.java
+index 208e33f807..f05a61e110 100644
+--- a/src/main/java/org/openpnp/model/Part.java
++++ b/src/main/java/org/openpnp/model/Part.java
+@@ -39,17 +39,21 @@ public class Part extends AbstractModelObject implements Identifiable {
+     @Attribute
+     private double height;
+ 
+-    private Package packag;
++    private Package partPackage;
+ 
+     @Attribute
+     private String packageId;
+ 
++    @Attribute(required = false)
++    protected String pipelineId;
++
+     @Attribute(required = false)
+     private double speed = 1.0;
+     
+     @Attribute(required = false)
+     private int pickRetryCount = 0;
+ 
++    protected Pipeline pipeline;
+ 
+     @SuppressWarnings("unused")
+     private Part() {
+@@ -60,17 +64,16 @@ public class Part extends AbstractModelObject implements Identifiable {
+         this.id = id;
+         Configuration.get().addListener(new ConfigurationListener.Adapter() {
+             @Override
+-            public void configurationLoaded(Configuration configuration) throws Exception {
+-                if (getPackage() == null) {
+-                    setPackage(configuration.getPackage(packageId));
+-                }
++            public void configurationLoaded(Configuration configuration) {
++                partPackage = configuration.getPackage(packageId);
++                pipeline = configuration.getPipeline(pipelineId);
+             }
+         });
+     }
+ 
+     @Persist
+     private void persist() {
+-        packageId = (packag == null ? null : packag.getId());
++        packageId = (partPackage == null ? null : partPackage.getId());
+     }
+ 
+     @Override
+@@ -126,12 +129,12 @@ public class Part extends AbstractModelObject implements Identifiable {
+     }
+ 
+     public Package getPackage() {
+-        return packag;
++        return partPackage;
+     }
+ 
+     public void setPackage(Package packag) {
+-        Object oldValue = this.packag;
+-        this.packag = packag;
++        Object oldValue = this.partPackage;
++        this.partPackage = packag;
+         firePropertyChange("package", oldValue, packag);
+     }
+     
+@@ -153,4 +156,8 @@ public class Part extends AbstractModelObject implements Identifiable {
+     public boolean isPartHeightUnknown() {
+         return getHeight().getValue() <= 0.0;
+     }
++
++    public Pipeline getPipeline() {
++        return pipeline;
++    }
+ }
+diff --git a/src/main/java/org/openpnp/model/Pipeline.java b/src/main/java/org/openpnp/model/Pipeline.java
+new file mode 100644
+index 0000000000..f8c8136326
+--- /dev/null
++++ b/src/main/java/org/openpnp/model/Pipeline.java
+@@ -0,0 +1,50 @@
++package org.openpnp.model;
++
++import org.simpleframework.xml.Attribute;
++import org.simpleframework.xml.ElementList;
++
++import java.util.ArrayList;
++
++public class Pipeline extends AbstractModelObject implements Identifiable {
++    @Attribute(required = false)
++    private String id;
++
++    @Attribute(required = false)
++    private String name;
++
++    @ElementList(inline = true, entry = "stage", required = false)
++    private ArrayList<Stage> stages = new ArrayList<>();
++
++    @Override
++    public String getId() {
++        return id;
++    }
++
++    public String getName() {
++        return name;
++    }
++
++    //TODO: contructor for creation of a new pipeline
++
++    public static class Stage {
++
++        @Attribute(required = false)
++        private String name;
++
++        @Attribute(required = false)
++        private boolean enabled;
++
++        @Attribute(required = false)
++        private boolean settleFirst;
++
++        @Attribute(required = false)
++        private int count;
++
++        @Attribute(required = false)
++        private int kernelSize;
++
++        @Attribute(required = false)
++        private String conversion;
++
++    }
++}
+diff --git a/src/main/java/org/openpnp/spi/PartAlignment.java b/src/main/java/org/openpnp/spi/PartAlignment.java
+index f7bab12290..1b957937bb 100644
+--- a/src/main/java/org/openpnp/spi/PartAlignment.java
++++ b/src/main/java/org/openpnp/spi/PartAlignment.java
+@@ -1,11 +1,7 @@
+ package org.openpnp.spi;
+ 
+ import org.openpnp.gui.support.Wizard;
+-import org.openpnp.model.BoardLocation;
+-import org.openpnp.model.Location;
+-import org.openpnp.model.Part;
+-import org.openpnp.model.Named;
+-import org.openpnp.model.Identifiable;
++import org.openpnp.model.*;
+ 
+ /**
+  * A method to allow after-pick, pre-place alignment of parts on the nozzle. Bottom vision
+@@ -61,5 +57,7 @@ public interface PartAlignment extends Identifiable, Named, PropertySheetHolder
+      */
+     Wizard getPartConfigurationWizard(Part part);
+ 
++    Wizard getPipelineConfigurationWizard(Pipeline pipeline);
++
+     public boolean canHandle(Part part);
+ }
+diff --git a/src/main/resources/config/packages.xml b/src/main/resources/config/packages.xml
+index c84d626f85..0ffd62b39a 100644
+--- a/src/main/resources/config/packages.xml
++++ b/src/main/resources/config/packages.xml
+@@ -1,12 +1,12 @@
+ <openpnp-packages>
+-	<package id="FIDUCIAL-1X2">
++	<package id="FIDUCIAL-1X2" pipeline-id="CVP01">
+ 		<outline units="Millimeters" />
+ 		<footprint units="Millimeters">
+ 			<pad name="1" x="0.0" y="0.0" width="1.0" height="1.0" rotation="0.0"
+ 				roundness="100.0" />
+ 		</footprint>
+ 	</package>
+-	<package id="R0805" description="R0805">
++	<package id="R0805" description="R0805" pipeline-id="CVP01">
+ 		<outline units="Millimeters" />
+ 		<footprint units="Millimeters" body-width="2.0" body-height="1.25">
+ 			<pad name="1" x="-0.825" y="0.0" width="0.35" height="1.25"
+@@ -18,7 +18,7 @@
+ 			<string>NT1</string>
+ 		</compatible-nozzle-tip-ids>
+ 	</package>
+-	<package id="R0603">
++	<package id="R0603" pipeline-id="CVP01">
+ 		<outline units="Millimeters" />
+ 		<footprint units="Millimeters" body-width="1.6" body-height="0.8">
+ 			<pad name="1" x="-0.675" y="0.0" width="0.25" height="0.8"
+diff --git a/src/main/resources/config/parts.xml b/src/main/resources/config/parts.xml
+index 37e0bdad45..68c782f995 100644
+--- a/src/main/resources/config/parts.xml
++++ b/src/main/resources/config/parts.xml
+@@ -1,7 +1,7 @@
+ <openpnp-parts>
+-   <part id="FIDUCIAL-1X2-FIDUCIAL1X2" height-units="Millimeters" height="0.0" package-id="FIDUCIAL-1X2" speed="1.0"/>
++   <part id="FIDUCIAL-1X2-FIDUCIAL1X2" height-units="Millimeters" height="0.0" package-id="FIDUCIAL-1X2" speed="1.0" pipeline-id="CVP02"/>
+    <part id="R0805-1K" height-units="Millimeters" height="1.0" package-id="R0805" speed="1.0"/>
+-   <part id="R0201-1K" height-units="Millimeters" height="0.25" package-id="R0201" speed="1.0"/>
++   <part id="R0201-1K" height-units="Millimeters" height="0.25" package-id="R0201" speed="1.0" pipeline-id="CVP02"/>
+    <part id="R0402-1K" height-units="Millimeters" height="0.5" package-id="R0402" speed="1.0"/>
+    <part id="R0603-1K" height-units="Millimeters" height="0.75" package-id="R0603" speed="1.0"/>
+    <part id="FIDUCIAL-HOME" height-units="Millimeters" height="0.0" package-id="FIDUCIAL-1X2" speed="1.0"/>
+diff --git a/src/main/resources/config/pipelines.xml b/src/main/resources/config/pipelines.xml
+new file mode 100644
+index 0000000000..0011db4489
+--- /dev/null
++++ b/src/main/resources/config/pipelines.xml
+@@ -0,0 +1,28 @@
++<openpnp-pipelines>
++    <pipeline id="CVP01" name="ReferenceBottomTestPipeline">
++<!--        <stage name="original" enabled="true" settle-first="true" count="1"/>-->
++<!--        <stage name="cleanup-original" enabled="true" kernel-size="5"/>-->
++<!--        <stage name="gray" enabled="true" conversion="Bgr2Gray"/>-->
++<!--        <stage name="find-edges" enabled="true"/>-->
++<!--        <stage name="predetect-1" enabled="true" kernel-size="5"/>-->
++<!--        <stage name="predetect-2" enabled="false" kernel-size="7"/>-->
++<!--        &lt;!&ndash;            <cv-stage name="results" enabled="true" dp="1.0" param-1="25.0" param-2="20.0"/>&ndash;&gt;-->
++<!--        &lt;!&ndash;            <cv-stage name="recalled" enabled="true" image-stage-name="original"/>&ndash;&gt;-->
++<!--        &lt;!&ndash;            <cv-stage name="display" threshold-1="5.0" threshold-2="15.0" enabled="true" circles-stage-name="results" thickness="1">&ndash;&gt;-->
++<!--        &lt;!&ndash;                <color r="255" g="0" b="0" a="255"/>&ndash;&gt;-->
++<!--        &lt;!&ndash;            </cv-stage>&ndash;&gt;-->
++    </pipeline>
++    <pipeline id="CVP02" name="ReferenceBottomTestPipeline">
++<!--        <stage name="original" enabled="true" settle-first="true" count="1"/>-->
++<!--        <stage name="cleanup-original" enabled="true" kernel-size="5"/>-->
++<!--        <stage name="gray" enabled="true" conversion="Bgr2Gray"/>-->
++<!--        <stage name="find-edges" enabled="true"/>-->
++<!--        <stage name="predetect-1" enabled="true" kernel-size="5"/>-->
++<!--        <stage name="predetect-2" enabled="false" kernel-size="7"/>-->
++<!--        &lt;!&ndash;            <cv-stage name="results" enabled="true" dp="1.0" param-1="25.0" param-2="20.0"/>&ndash;&gt;-->
++<!--        &lt;!&ndash;            <cv-stage name="recalled" enabled="true" image-stage-name="original"/>&ndash;&gt;-->
++<!--        &lt;!&ndash;            <cv-stage name="display" enabled="true" circles-stage-name="results" thickness="1">&ndash;&gt;-->
++<!--        &lt;!&ndash;                <color r="255" g="0" b="0" a="255"/>&ndash;&gt;-->
++<!--        &lt;!&ndash;            </cv-stage>&ndash;&gt;-->
++    </pipeline>
++</openpnp-pipelines>
+\ No newline at end of file
+-- 
+2.28.0.windows.1
+

@@ -39,6 +39,9 @@ public class Package extends AbstractModelObject implements Identifiable {
     private String id;
 
     @Attribute(required = false)
+    protected String pipelineId;
+
+    @Attribute(required = false)
     private String description;
 
     @Attribute(required = false)
@@ -62,9 +65,19 @@ public class Package extends AbstractModelObject implements Identifiable {
         this(null);
     }
 
+    private Pipeline pipeline;
+
     public Package(String id) {
         this.id = id;
         footprint = new Footprint();
+
+//        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+//            @Override
+//            public void configurationLoaded(Configuration configuration) throws Exception {
+//                Machine machine = configuration.getMachine();
+//                pipeline = machine.getPipeline(pipelineId);
+//            }
+//        });
     }
 
     @Override

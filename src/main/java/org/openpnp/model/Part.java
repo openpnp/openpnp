@@ -39,10 +39,13 @@ public class Part extends AbstractModelObject implements Identifiable {
     @Attribute
     private double height;
 
-    private Package packag;
+    private Package partPackage;
 
     @Attribute
     private String packageId;
+
+    @Attribute(required = false)
+    protected String pipelineId;
 
     @Attribute(required = false)
     private double speed = 1.0;
@@ -50,6 +53,7 @@ public class Part extends AbstractModelObject implements Identifiable {
     @Attribute(required = false)
     private int pickRetryCount = 0;
 
+    protected Pipeline pipeline;
 
     @SuppressWarnings("unused")
     private Part() {
@@ -60,17 +64,16 @@ public class Part extends AbstractModelObject implements Identifiable {
         this.id = id;
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                if (getPackage() == null) {
-                    setPackage(configuration.getPackage(packageId));
-                }
+            public void configurationLoaded(Configuration configuration) {
+                partPackage = configuration.getPackage(packageId);
+                pipeline = configuration.getPipeline(pipelineId);
             }
         });
     }
 
     @Persist
     private void persist() {
-        packageId = (packag == null ? null : packag.getId());
+        packageId = (partPackage == null ? null : partPackage.getId());
     }
 
     @Override
@@ -126,12 +129,12 @@ public class Part extends AbstractModelObject implements Identifiable {
     }
 
     public Package getPackage() {
-        return packag;
+        return partPackage;
     }
 
     public void setPackage(Package packag) {
-        Object oldValue = this.packag;
-        this.packag = packag;
+        Object oldValue = this.partPackage;
+        this.partPackage = packag;
         firePropertyChange("package", oldValue, packag);
     }
     
@@ -152,5 +155,9 @@ public class Part extends AbstractModelObject implements Identifiable {
 
     public boolean isPartHeightUnknown() {
         return getHeight().getValue() <= 0.0;
+    }
+
+    public Pipeline getPipeline() {
+        return pipeline;
     }
 }

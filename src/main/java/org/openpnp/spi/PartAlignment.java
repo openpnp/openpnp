@@ -1,11 +1,7 @@
 package org.openpnp.spi;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Location;
-import org.openpnp.model.Part;
-import org.openpnp.model.Named;
-import org.openpnp.model.Identifiable;
+import org.openpnp.model.*;
 
 /**
  * A method to allow after-pick, pre-place alignment of parts on the nozzle. Bottom vision
@@ -60,6 +56,8 @@ public interface PartAlignment extends Identifiable, Named, PropertySheetHolder 
      * @return
      */
     Wizard getPartConfigurationWizard(Part part);
+
+    Wizard getPipelineConfigurationWizard(Pipeline pipeline);
 
     public boolean canHandle(Part part);
 }

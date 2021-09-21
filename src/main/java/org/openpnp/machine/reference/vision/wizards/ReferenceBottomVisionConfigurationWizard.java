@@ -85,6 +85,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         editPipelineButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.messageBoxOnException(() -> {
+                    //TODO NK: open new editor for global pipeline management
                     editPipeline();
                 });
             }

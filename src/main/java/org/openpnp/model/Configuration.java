@@ -87,6 +87,7 @@ public class Configuration extends AbstractModelObject {
 
     private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
+    private LinkedHashMap<String, Pipeline> pipelines = new LinkedHashMap<>();
     private Machine machine;
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
     private boolean loaded;
@@ -362,6 +363,24 @@ public class Configuration extends AbstractModelObject {
             throw new Exception("Error while reading parts.xml (" + message + ")", e);
         }
 
+        try {
+            File file = new File(configurationDirectory, "pipelines.xml");
+            if (overrideUserConfig || !file.exists()) {
+//                Logger.info("No pipelines.xml found in configuration directory, loading defaults.");
+                file = File.createTempFile("pipelines", "xml");
+                FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/pipelines.xml"), file);
+                forceSave = true;
+            }
+            loadPipelines(file);
+        }
+        catch (Exception e) {
+            String message = e.getMessage();
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                message = e.getCause().getMessage();
+            }
+            throw new Exception("Error while reading pipelines.xml (" + message + ")", e);
+        }
+
 
         try {
             File file = new File(configurationDirectory, "machine.xml");
@@ -487,6 +506,22 @@ public class Configuration extends AbstractModelObject {
         firePropertyChange("parts", null, parts);
     }
 
+    public void addPipeline(Pipeline pipeline) {
+        if (null == pipeline.getId()) {
+            throw new Error("pipeline with null Id cannot be added to Configuration.");
+        }
+        pipelines.put(pipeline.getId().toUpperCase(), pipeline);
+        firePropertyChange("pipelines", null, pipelines);
+    }
+
+    public List<Pipeline> getPipelines() {
+        return Collections.unmodifiableList(new ArrayList<>(pipelines.values()));
+    }
+
+    public Pipeline getPipeline(String pipelineId) {
+        return pipelines.get(pipelineId);
+    }
+
     public List<Board> getBoards() {
         return Collections.unmodifiableList(new ArrayList<>(boards.values()));
     }
@@ -561,6 +596,21 @@ public class Configuration extends AbstractModelObject {
     private void saveParts(File file) throws Exception {
         PartsConfigurationHolder holder = new PartsConfigurationHolder();
         holder.parts = new ArrayList<>(parts.values());
+        serializeObject(holder, file);
+    }
+
+    private void loadPipelines(File file) throws Exception {
+        Serializer serializer = createSerializer();
+        PipelinesConfigurationHolder holder =
+                serializer.read(PipelinesConfigurationHolder.class, file);
+        for (Pipeline pipeline : holder.pipelines) {
+            addPipeline(pipeline);
+        }
+    }
+
+    private void savePipelines(File file) throws Exception {
+        PipelinesConfigurationHolder holder = new PipelinesConfigurationHolder();
+        holder.pipelines = new ArrayList<>(pipelines.values());
         serializeObject(holder, file);
     }
 
@@ -678,5 +728,14 @@ public class Configuration extends AbstractModelObject {
     public static class PartsConfigurationHolder {
         @ElementList(inline = true, entry = "part", required = false)
         private ArrayList<Part> parts = new ArrayList<>();
+    }
+
+    /**
+     * Used to provide a fixed root for the Pipelines when serializing.
+     */
+    @Root(name = "openpnp-pipelines")
+    public static class PipelinesConfigurationHolder {
+        @ElementList(inline = true, entry = "pipeline", required = false)
+        private ArrayList<Pipeline> pipelines = new ArrayList<>();
     }
 }

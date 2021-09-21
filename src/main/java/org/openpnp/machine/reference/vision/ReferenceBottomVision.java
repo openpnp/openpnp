@@ -17,12 +17,8 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Footprint;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.Part;
+import org.openpnp.machine.reference.vision.wizards.VisionConfigurationWizard;
+import org.openpnp.model.*;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -62,6 +58,9 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
+
+    @ElementMap(required = false)
+    protected Map<String, PipelineSettings> pipelineSettingByPartId = new HashMap<>();
 
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
@@ -532,6 +531,15 @@ public class ReferenceBottomVision implements PartAlignment {
         return partSettings;
     }
 
+    private PipelineSettings getPipelineSettings(Pipeline pipeline) {
+        PipelineSettings pipelineSettings = this.pipelineSettingByPartId.get(pipeline.getId());
+        if (pipelineSettings == null) {
+            pipelineSettings = new PipelineSettings(pipeline);
+            this.pipelineSettingByPartId.put(pipeline.getId(), pipelineSettings);
+        }
+        return pipelineSettings;
+    }
+
     public Map<String, PartSettings> getPartSettingsByPartId() {
         return partSettingsByPartId;
     }
@@ -547,7 +555,13 @@ public class ReferenceBottomVision implements PartAlignment {
         }
         return new ReferenceBottomVisionPartConfigurationWizard(this, part);
     }
-    
+
+    @Override
+    public Wizard getPipelineConfigurationWizard(Pipeline pipeline) {
+        PipelineSettings pipelineSettings = getPipelineSettings(pipeline);
+        return new VisionConfigurationWizard(pipelineSettings);
+    }
+
     public enum PreRotateUsage {
         Default, AlwaysOn, AlwaysOff
     }
@@ -590,6 +604,7 @@ public class ReferenceBottomVision implements PartAlignment {
         public PartSettings(ReferenceBottomVision bottomVision) {
             setEnabled(bottomVision.isEnabled());
             try {
+                //TODO: NK: get pipeline from xml/from the part
                 setPipeline(bottomVision.getPipeline()
                                         .clone());
             }
@@ -654,5 +669,42 @@ public class ReferenceBottomVision implements PartAlignment {
             this.visionOffset = visionOffset.derive(null, null, 0.0, 0.0);
         }
         
+    }
+
+    @Root
+    public static class PipelineSettings {
+        @Attribute
+        protected String id;
+
+        @Attribute
+        protected String name;
+
+        @Element
+        protected CvPipeline pipeline;
+
+        public PipelineSettings(Pipeline pipeline) {
+            this.id = pipeline.getId();
+            this.name = pipeline.getName();
+        }
+
+        public PipelineSettings() {
+
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
     }
 }

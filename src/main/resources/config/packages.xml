@@ -1,12 +1,12 @@
 <openpnp-packages>
-	<package id="FIDUCIAL-1X2">
+	<package id="FIDUCIAL-1X2" pipeline-id="CVP01">
 		<outline units="Millimeters" />
 		<footprint units="Millimeters">
 			<pad name="1" x="0.0" y="0.0" width="1.0" height="1.0" rotation="0.0"
 				roundness="100.0" />
 		</footprint>
 	</package>
-	<package id="R0805" description="R0805">
+	<package id="R0805" description="R0805" pipeline-id="CVP01">
 		<outline units="Millimeters" />
 		<footprint units="Millimeters" body-width="2.0" body-height="1.25">
 			<pad name="1" x="-0.825" y="0.0" width="0.35" height="1.25"
@@ -18,7 +18,7 @@
 			<string>NT1</string>
 		</compatible-nozzle-tip-ids>
 	</package>
-	<package id="R0603">
+	<package id="R0603" pipeline-id="CVP01">
 		<outline units="Millimeters" />
 		<footprint units="Millimeters" body-width="1.6" body-height="0.8">
 			<pad name="1" x="-0.675" y="0.0" width="0.25" height="0.8"

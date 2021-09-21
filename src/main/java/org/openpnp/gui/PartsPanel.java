@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- * 
+ *
  * This file is part of OpenPnP.
- * 
+ *
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- * 
+ *
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -70,18 +70,16 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
-import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
 
 @SuppressWarnings("serial")
+//TODO NK: add new column Pipeline for quick assignment, same as package
 public class PartsPanel extends JPanel implements WizardContainer {
 
 
@@ -176,17 +174,17 @@ public class PartsPanel extends JPanel implements WizardContainer {
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
-        
+
         toolBar.add(newPartAction);
         toolBar.add(deletePartAction);
         toolBar.addSeparator();
         toolBar.add(pickPartAction);
-        
+
         toolBar.addSeparator();
         JButton btnNewButton = new JButton(copyPartToClipboardAction);
         btnNewButton.setHideActionText(true);
         toolBar.add(btnNewButton);
-        
+
         JButton btnNewButton_1 = new JButton(pastePartToClipboardAction);
         btnNewButton_1.setHideActionText(true);
         toolBar.add(btnNewButton_1);
@@ -203,8 +201,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 if (selections.size() > 1) {
                     singleSelectionActionGroup.setEnabled(false);
                     multiSelectionActionGroup.setEnabled(true);
-                }
-                else {
+                } else {
                     multiSelectionActionGroup.setEnabled(false);
                     singleSelectionActionGroup.setEnabled(!selections.isEmpty());
                 }
@@ -227,7 +224,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                             wizard.setWizardContainer(PartsPanel.this);
                         }
                     }
-                    
+
                     FiducialLocator fiducialLocator =
                             Configuration.get().getMachine().getFiducialLocator();
                     Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
@@ -272,8 +269,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         // If current expression doesn't parse, don't update.
         try {
             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
-        }
-        catch (PatternSyntaxException e) {
+        } catch (PatternSyntaxException e) {
             Logger.warn(e, "Search failed");
             return;
         }
@@ -328,11 +324,10 @@ public class PartsPanel extends JPanel implements WizardContainer {
             String formattedIds;
             if (ids.size() <= 3) {
                 formattedIds = String.join(", ", ids);
-            }
-            else {
+            } else {
                 formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
             }
-            
+
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "Are you sure you want to delete " + formattedIds + "?",
                     "Delete " + selections.size() + " parts?", JOptionPane.YES_NO_OPTION);
@@ -392,8 +387,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 StringSelection stringSelection = new StringSelection(w.toString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
             }
         }
@@ -414,7 +408,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
                 StringReader r = new StringReader(s);
                 Part part = ser.read(Part.class, s);
-                for (int i = 0;; i++) {
+                for (int i = 0; ; i++) {
                     if (Configuration.get().getPart(part.getId() + "-" + i) == null) {
                         part.setId(part.getId() + "-" + i);
                         Configuration.get().addPart(part);
@@ -423,16 +417,17 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 }
                 tableModel.fireTableDataChanged();
                 Helpers.selectLastTableRow(table);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
             }
         }
     };
-    
-    @Override
-    public void wizardCompleted(Wizard wizard) {}
 
     @Override
-    public void wizardCancelled(Wizard wizard) {}
+    public void wizardCompleted(Wizard wizard) {
+    }
+
+    @Override
+    public void wizardCancelled(Wizard wizard) {
+    }
 }
