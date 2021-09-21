@@ -171,8 +171,11 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Element(required = false)
     private double resolution = 0.0001; // 
 
+    @Element(required = false)
     private SimpleGraph stepTestGraph;
+    @Element(required = false)
     private SimpleGraph backlashDistanceTestGraph;
+    @Element(required = false)
     private SimpleGraph backlashSpeedTestGraph;
 
     public double getResolution() {

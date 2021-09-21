@@ -51,6 +51,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
@@ -207,9 +208,11 @@ public class CalibrationSolutions implements Solutions.Subject {
                                         + "linkages of machine axes. More information can be found in the Wiki (press the blue Info button below).</p><br/>"
                                         + "<p>Set the acceptable <strong>Tolerance ±</strong> as high as possible to allow for a more efficient backlash "
                                         + "compensation method, avoiding extra moves and direction changes.</p><br/>"
-                                        + "<p><span color=\"red\">CAUTION</span>: The camera "+camera.getName()+" will move over the fiducial "
-                                        + "and then perform a calibration motion pattern, moving the axis "
-                                        + axis.getName()+" on its full soft-limit range.</p><br/>"
+                                        + "<p><span color=\"red\">CAUTION 1</span>: The camera "+camera.getName()+" will move over the primary fiducial "
+                                        + "and then perform a calibration motion pattern, moving the axis "+axis.getName()+" over its full soft-limit range.</p><br/>"
+                                        + "<p><span color=\"red\">CAUTION 2</span>: The machine will also perform a visual homing cycle, once the new backlash "
+                                        + "compensation method is established. This is done to recalibrate the coordinate system that might be affected by the "
+                                        + "new method.</p><br/>"
                                         + "<p>When ready, press Accept.</p>"
                                         + (getState() == State.Solved ? 
                                                 "<br/><h4>Results:</h4>"
@@ -222,7 +225,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                                 + "<td>"+axis.getSneakUpOffset()+"</td></tr>"
                                                 + "<tr><td align=\"right\">Speed Factor:</td>"
                                                 + "<td>"+axis.getBacklashSpeedFactor()+"</td></tr>"
-                                                + "<tr><td align=\"right\">Applicable Tolerance:</td>"
+                                                + "<tr><td align=\"right\">Applicable Resolution:</td>"
                                                 + "<td>"+String.format("%.4f", getAxisCalibrationTolerance(camera, axis, true))+" mm</td></tr>"
                                                 + "</table>" 
                                                 : "")
@@ -437,6 +440,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         final String ABSOLUTE_RANDOM = "AR";
         final String RELATIVE = "R";
         final String SCALE = "S";
+        final String TIME = "T";
         final String BACKLASH = "B";
         final String OVERSHOOT = "O";
         final String LIMIT0 = "L0";
@@ -468,10 +472,11 @@ public class CalibrationSolutions implements Solutions.Subject {
         .setColor(new Color(0, 0x80, 0));
 
         SimpleGraph distanceGraph = new SimpleGraph();
+        distanceGraph.setLogarithmic(true);
         distanceGraph.setRelativePaddingLeft(0.05);
-        SimpleGraph.DataScale stepScale =  distanceGraph.getScale(SCALE);
-        stepScale.setRelativePaddingBottom(0.2);
-        stepScale.setColor(SimpleGraph.getDefaultGridColor());
+        SimpleGraph.DataScale distScale =  distanceGraph.getScale(SCALE);
+        distScale.setRelativePaddingBottom(0.55);
+        distScale.setColor(SimpleGraph.getDefaultGridColor());
         distanceGraph.getRow(SCALE, BACKLASH+0)
         .setColor(new Color(00, 0x5B, 0xD9)); // the OpenPNP blue
         distanceGraph.getRow(SCALE, OVERSHOOT+0)
@@ -480,6 +485,21 @@ public class CalibrationSolutions implements Solutions.Subject {
         .setColor(new Color(00, 0x5B, 0xD9, 128)); // the OpenPNP blue
         distanceGraph.getRow(SCALE, OVERSHOOT+1)
         .setColor(new Color(0xFF, 0, 0, 128)); 
+        distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
+        .setColor(new Color(0xBB, 0x77, 0));
+        distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
+        .setMarkerShown(true);
+        distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
+        .setLineShown(false);
+        SimpleGraph.DataScale timeScale =  distanceGraph.getScale(TIME);
+        timeScale.setLogarithmic(true);
+        timeScale.setRelativePaddingTop(0.55);
+        timeScale.setRelativePaddingBottom(0.1);
+        timeScale.setColor(SimpleGraph.getDefaultGridColor());
+        distanceGraph.getRow(TIME, TIME+0)
+        .setColor(new Color(0, 0x80, 0)); 
+        distanceGraph.getRow(TIME, TIME+1)
+        .setColor(new Color(0, 0x80, 0, 128)); 
 
         SimpleGraph speedGraph = new SimpleGraph();
         speedGraph.setRelativePaddingLeft(0.05);
@@ -536,7 +556,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             }
         }
         // Pseudo-entry for full range.
-        backlashProbingDistances.add(backlashTestMoveMm*2);
+        backlashProbingDistances.add(backlashTestMoveLargeMm);
         Collections.reverse(backlashProbingDistances);
         double[] backlashOffsetByDistance = new double [backlashProbingDistances.size()];
         int iDistance = 0;
@@ -570,7 +590,12 @@ public class CalibrationSolutions implements Solutions.Subject {
                         MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
                         Thread.sleep(500);
+                        double t0 = NanosecondTime.getRuntimeSeconds();
                         movable.moveTo(location);
+                        movable.waitForCompletion(CompletionType.WaitForStillstand);
+                        double t1 = NanosecondTime.getRuntimeSeconds();
+                        distanceGraph.getRow(TIME, TIME+reverse).recordDataPoint(distance, 
+                                t1-t0);
                     }
                     String passTitle = pass == 0 ? "Backlash at Sneak-up Distance " : "Overshoot at Distance ";
                     String distanceOutput = distance > backlashTestMoveMm ? "∞" : lengthConverter.convertForward(new Length(distance, LengthUnit.Millimeters));
@@ -752,6 +777,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                     + "Make sure OpenPnP has effective acceleration/jerk control. "
                     + "Automatic compensation not possible.");
         }
+        // Because this change may affect the coordinate system, perform a (visual) homing cycle.
+        head.visualHome(machine, true);
+        // Go back to the fiducial.
+        MovableUtils.moveToLocationAtSafeZ(movable, location);
         // Test the new settings with random moves.
         referenceLocation = machine.getVisionSolutions()
                 .centerInOnSubjectLocation(camera, movable,
@@ -763,8 +792,9 @@ public class CalibrationSolutions implements Solutions.Subject {
         step = 0;
         for (double stepPos = -stepTestMm/2; stepPos < stepTestMm/2; stepPos += stepMm*fraction) {
             step++;
+            double randomDistance = Math.signum(Math.random()-0.5)*Math.exp(Math.random()*rangeLog + minLog);
             Location startMoveLocation = displacedAxisLocation(movable, axis, location, 
-                    Math.signum(Math.random()-0.5)*Math.exp(Math.random()*rangeLog + minLog)*mmAxis, false);
+                    randomDistance*mmAxis, false);
             movable.moveTo(startMoveLocation);
             Location nominalStepLocation = displacedAxisLocation(movable, axis, location, stepPos*mmAxis, false);
             movable.moveTo(nominalStepLocation);
@@ -774,6 +804,8 @@ public class CalibrationSolutions implements Solutions.Subject {
             double absoluteErrUnits = absoluteErr.convertToUnits(axis.getUnits()).getValue();
             stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
             .recordDataPoint(2+(step-1)*fraction, absoluteErrUnits);
+            distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
+            .recordDataPoint(Math.abs(randomDistance*mmAxis), absoluteErrUnits);
         }
         // Publish the graphs.
         axis.setStepTestGraph(stepTestGraph);
@@ -785,7 +817,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             ReferenceControllerAxis axis, boolean tolerance) {
         // Get the axis resolution (it might still be at the default 0.0001).
         Length resolution = new Length(axis.getResolution(), axis.getDriver().getUnits());
-        // Make sure it's >= 0.01mm
+        // Take a multiple of the native resolution that is >= 0.01mm
         Length finestResolution = new Length(0.01, LengthUnit.Millimeters);
         resolution = resolution.multiply(Math.ceil(finestResolution.divide(resolution)));
         // Get the sub-pixel resolution of the detection capability. 

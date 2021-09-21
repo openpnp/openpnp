@@ -63,7 +63,7 @@ public class ReferenceAutoFeederConfigurationWizard extends AbstractReferenceFee
         this.feeder = feeder;
 
         JPanel panelActuator = new JPanel();
-        panelActuator.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        panelActuator.setBorder(new TitledBorder(null,
                 "Actuators", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelActuator);
         panelActuator.setLayout(new FormLayout(new ColumnSpec[] {

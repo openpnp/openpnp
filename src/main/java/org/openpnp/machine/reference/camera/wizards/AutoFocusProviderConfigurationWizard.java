@@ -30,7 +30,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
@@ -71,7 +70,7 @@ public class AutoFocusProviderConfigurationWizard extends AbstractConfigurationW
 
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
-        panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Auto Focus Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelGeneral.setBorder(new TitledBorder(null, "Auto Focus Settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),

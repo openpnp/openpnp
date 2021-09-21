@@ -38,13 +38,17 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.LongConverter;
+import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ContactProbeNozzle;
 import org.openpnp.machine.reference.ContactProbeNozzle.ContactProbeMethod;
 import org.openpnp.machine.reference.ContactProbeNozzle.ContactProbeTrigger;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -101,6 +105,8 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblMethod = new JLabel("Method");
@@ -121,75 +127,85 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         comboBoxContactProbeActuator.setMaximumRowCount(15);
         comboBoxContactProbeActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(comboBoxContactProbeActuator, "4, 4, default, top");
+        
+        lblProbeSpeed = new JLabel("Probe Speed");
+        lblProbeSpeed.setToolTipText("<html>Probing speed factor.<br/>\r\n<strong>NOTE:</strong> this setting will only become effective, once you<br/>\r\naccept the Issues & Solutions G-code suggestion.</html>");
+        panel.add(lblProbeSpeed, "2, 6, right, default");
+        
+        contactProbeSpeed = new JTextField();
+        panel.add(contactProbeSpeed, "4, 6, fill, default");
+        contactProbeSpeed.setColumns(10);
 
         lblStartOffset = new JLabel("Start Offset");
         lblStartOffset.setToolTipText("<html>Contact probing start offset in Z above the nominal location.<br/>\r\nNote: for part height probing, the maximum part height on the NozzleTip <br/>\r\nis used instead, if the part height is not yet known. \r\n</html>");
-        panel.add(lblStartOffset, "2, 6, right, default");
+        panel.add(lblStartOffset, "2, 8, right, default");
 
         contactProbeStartOffsetZ = new JTextField();
-        panel.add(contactProbeStartOffsetZ, "4, 6, fill, default");
+        panel.add(contactProbeStartOffsetZ, "4, 8, fill, default");
         contactProbeStartOffsetZ.setColumns(10);
 
         lblProbeDepth = new JLabel("Probe Depth");
         lblProbeDepth.setToolTipText("Maximum contact probing depth in Z, from the Start Offset.");
-        panel.add(lblProbeDepth, "2, 8, right, default");
+        panel.add(lblProbeDepth, "2, 10, right, default");
 
         contactProbeDepthZ = new JTextField();
-        panel.add(contactProbeDepthZ, "4, 8, fill, default");
+        panel.add(contactProbeDepthZ, "4, 10, fill, default");
         contactProbeDepthZ.setColumns(10);
 
         lblSniffleIncrement = new JLabel("Sniffle Increment");
         lblSniffleIncrement.setToolTipText("Vacuum sensing \"sniffle\" increment in Z. ");
-        panel.add(lblSniffleIncrement, "2, 10, right, default");
+        panel.add(lblSniffleIncrement, "2, 12, right, default");
 
         sniffleIncrementZ = new JTextField();
-        panel.add(sniffleIncrementZ, "4, 10, fill, default");
+        panel.add(sniffleIncrementZ, "4, 12, fill, default");
         sniffleIncrementZ.setColumns(10);
         
         lblSniffleDwellTime = new JLabel("Sniffle Dwell Time [ms]");
-        panel.add(lblSniffleDwellTime, "2, 12, right, default");
+        panel.add(lblSniffleDwellTime, "2, 14, right, default");
         
         sniffleDwellTime = new JTextField();
-        panel.add(sniffleDwellTime, "4, 12, fill, default");
+        panel.add(sniffleDwellTime, "4, 14, fill, default");
         sniffleDwellTime.setColumns(10);
 
         lblFinalAdjustment = new JLabel("Final Adjustment");
         lblFinalAdjustment.setToolTipText("<html>\r\nContact probing final adjustment in Z (positive values point upwards in Z).<br/>\r\n<ul>\r\n<li>Use positive values to compensate probing overshoot.</li>\r\n<li>Use negative values to add additional nozzle tip spring tensioning.</li>\r\n</ul>\r\n</html>");
-        panel.add(lblFinalAdjustment, "2, 14, right, default");
+        panel.add(lblFinalAdjustment, "2, 16, right, default");
 
         contactProbeAdjustZ = new JTextField();
-        panel.add(contactProbeAdjustZ, "4, 14, fill, default");
+        panel.add(contactProbeAdjustZ, "4, 16, fill, default");
         contactProbeAdjustZ.setColumns(10);
 
         lblFeederHeightProbing = new JLabel("Feeder Height Probing");
-        panel.add(lblFeederHeightProbing, "2, 18, right, default");
+        lblFeederHeightProbing.setToolTipText("<html>Probe for feeder heights. On some feeder types, this can probe for the <strong>Part Height</strong>, when it is unknown.</html>");
+        panel.add(lblFeederHeightProbing, "2, 20, right, default");
 
         feederHeightProbing = new JComboBox(ContactProbeTrigger.values());
-        panel.add(feederHeightProbing, "4, 18, fill, default");
+        panel.add(feederHeightProbing, "4, 20, fill, default");
 
-        lblPartHeightProbing = new JLabel("Part Height Probing");
-        panel.add(lblPartHeightProbing, "2, 20, right, default");
+        lblPartHeightProbing = new JLabel("Placement Height Probing");
+        lblPartHeightProbing.setToolTipText("<html>Probe for placement heights. Includes probing for <strong>Part Height</strong>, when it is unknown.</html>");
+        panel.add(lblPartHeightProbing, "2, 22, right, default");
 
         partHeightProbing = new JComboBox(ContactProbeTrigger.values());
-        panel.add(partHeightProbing, "4, 20, fill, default");
+        panel.add(partHeightProbing, "4, 22, fill, default");
         
         lblDiscardProbing = new JLabel("Discard Probing");
         lblDiscardProbing.setToolTipText("<html>Enable contact probing for discard. There must be a surface that the nozzle<br/>\r\ncan probe into that is likely to brush/tilt off a part from the nozzle, like a (ESD safe) soft<br/>\r\nmaterial or a slanted surface. \r\n</html>");
-        panel.add(lblDiscardProbing, "2, 22, right, default");
+        panel.add(lblDiscardProbing, "2, 24, right, default");
 
         discardProbing = new JCheckBox("");
-        panel.add(discardProbing, "4, 22");
+        panel.add(discardProbing, "4, 24");
 
         lblZCalibration = new JLabel("Calibration Z Offset");
-        panel.add(lblZCalibration, "2, 26, right, default");
+        panel.add(lblZCalibration, "2, 28, right, default");
         
         calibrationOffsetZ = new JTextField();
         calibrationOffsetZ.setEditable(false);
-        panel.add(calibrationOffsetZ, "4, 26, fill, default");
+        panel.add(calibrationOffsetZ, "4, 28, fill, default");
         calibrationOffsetZ.setColumns(10);
         
         btnCalibrateNow = new JButton(calibrateZAction);
-        panel.add(btnCalibrateNow, "6, 26");
+        panel.add(btnCalibrateNow, "6, 28");
     }
 
     protected void adaptDialog() {
@@ -210,6 +226,8 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         contactProbeDepthZ.setVisible(isProbing);
         lblFinalAdjustment.setVisible(isProbing);
         contactProbeAdjustZ.setVisible(isProbing);
+        lblProbeSpeed.setVisible(isProbing);
+        contactProbeSpeed.setVisible(isProbing);
 
         lblFeederHeightProbing.setVisible(isActuator);
         feederHeightProbing.setVisible(isActuator);
@@ -227,12 +245,15 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
         LongConverter longConverter = new LongConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        NamedConverter<Actuator> actuatorConverter = (new NamedConverter<>(nozzle.getHead().getActuators()));
 
         addWrappedBinding(nozzle, "contactProbeMethod", contactProbeMethod, "selectedItem");
-        addWrappedBinding(nozzle, "contactProbeActuatorName", comboBoxContactProbeActuator, "selectedItem");
+        addWrappedBinding(nozzle, "contactProbeActuator", comboBoxContactProbeActuator, "selectedItem", actuatorConverter);
 
         addWrappedBinding(nozzle, "contactProbeStartOffsetZ", contactProbeStartOffsetZ, "text", lengthConverter);
         addWrappedBinding(nozzle, "contactProbeDepthZ", contactProbeDepthZ, "text", lengthConverter);
+        addWrappedBinding(nozzle, "contactProbeSpeed", contactProbeSpeed, "text", doubleConverter);
         addWrappedBinding(nozzle, "sniffleIncrementZ", sniffleIncrementZ, "text", lengthConverter);
         addWrappedBinding(nozzle, "sniffleDwellTime", sniffleDwellTime, "text", longConverter);
         addWrappedBinding(nozzle, "contactProbeAdjustZ", contactProbeAdjustZ, "text", lengthConverter);
@@ -291,5 +312,7 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
     private JTextField sniffleDwellTime;
     private JLabel lblDiscardProbing;
     private JCheckBox discardProbing;
+    private JLabel lblProbeSpeed;
+    private JTextField contactProbeSpeed;
 
 }
