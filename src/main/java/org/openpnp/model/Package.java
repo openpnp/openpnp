@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -71,13 +72,12 @@ public class Package extends AbstractModelObject implements Identifiable {
         this.id = id;
         footprint = new Footprint();
 
-//        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-//            @Override
-//            public void configurationLoaded(Configuration configuration) throws Exception {
-//                Machine machine = configuration.getMachine();
-//                pipeline = machine.getPipeline(pipelineId);
-//            }
-//        });
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) {
+                pipeline = configuration.getPipeline(pipelineId);
+            }
+        });
     }
 
     @Override
@@ -186,5 +186,13 @@ public class Package extends AbstractModelObject implements Identifiable {
         compatibleNozzleTips.remove(nt);
         syncCompatibleNozzleTipIds();
         firePropertyChange("compatibleNozzleTips", null, getCompatibleNozzleTips());
+    }
+
+    public Pipeline getPipeline() {
+        return pipeline;
+    }
+
+    public void setPipeline(Pipeline pipeline) {
+        this.pipeline = pipeline;
     }
 }

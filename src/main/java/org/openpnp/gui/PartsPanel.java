@@ -108,46 +108,16 @@ public class PartsPanel extends JPanel implements WizardContainer {
         splitPane.setContinuousLayout(true);
         splitPane
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
-        splitPane.addPropertyChangeListener("dividerLocation", evt -> prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation()));
+        splitPane.addPropertyChangeListener("dividerLocation",
+                evt -> prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation()));
         add(splitPane, BorderLayout.CENTER);
 
         tabbedPane = new JTabbedPane(TOP);
 
         tableSetup();
+
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
-
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (e.getValueIsAdjusting()) {
-                return;
-            }
-
-            List<Part> selections = getSelections();
-
-            if (selections.size() > 1) {
-                singleSelectionActionGroup.setEnabled(false);
-                multiSelectionActionGroup.setEnabled(true);
-            } else {
-                multiSelectionActionGroup.setEnabled(false);
-                singleSelectionActionGroup.setEnabled(!selections.isEmpty());
-            }
-
-            Part part = getSelection();
-
-            int selectedTab = tabbedPane.getSelectedIndex();
-            tabbedPane.removeAll();
-
-            if (part != null) {
-                partSelectionSetup(part);
-            }
-
-            if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
-                tabbedPane.setSelectedIndex(selectedTab);
-            }
-
-            revalidate();
-            repaint();
-        });
     }
 
     private void createAndAddToolbar() {
@@ -211,18 +181,50 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        table.setDefaultEditor(org.openpnp.model.Package.class,
+        table.setDefaultEditor(Package.class,
                 new DefaultCellEditor(packagesCombo));
-        table.setDefaultRenderer(org.openpnp.model.Package.class,
-                new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
+        table.setDefaultRenderer(Package.class,
+                new IdentifiableTableCellRenderer<Package>());
 
-        table.setDefaultEditor(org.openpnp.model.Pipeline.class,
+        table.setDefaultEditor(Pipeline.class,
                 new DefaultCellEditor(pipelinesCombo));
-        table.setDefaultRenderer(org.openpnp.model.Pipeline.class,
-                new IdentifiableTableCellRenderer<org.openpnp.model.Pipeline>());
+        table.setDefaultRenderer(Pipeline.class,
+                new IdentifiableTableCellRenderer<Pipeline>());
 
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (e.getValueIsAdjusting()) {
+                return;
+            }
+
+            List<Part> selections = getSelections();
+
+            if (selections.size() > 1) {
+                singleSelectionActionGroup.setEnabled(false);
+                multiSelectionActionGroup.setEnabled(true);
+            } else {
+                multiSelectionActionGroup.setEnabled(false);
+                singleSelectionActionGroup.setEnabled(!selections.isEmpty());
+            }
+
+            Part part = getSelection();
+
+            int selectedTab = tabbedPane.getSelectedIndex();
+            tabbedPane.removeAll();
+
+            if (part != null) {
+                partSelectionSetup(part);
+            }
+
+            if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
+                tabbedPane.setSelectedIndex(selectedTab);
+            }
+
+            revalidate();
+            repaint();
+        });
     }
 
     private void partSelectionSetup(Part part) {
