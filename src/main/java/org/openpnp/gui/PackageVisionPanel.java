@@ -20,21 +20,10 @@
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.JToolBar;
-import javax.swing.ListSelectionModel;
+import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -69,7 +58,7 @@ public class PackageVisionPanel extends JPanel {
     private FootprintTableModel tableModel;
     private JTable table;
 
-    final private Footprint footprint;
+    private final Footprint footprint;
 
     public PackageVisionPanel(Footprint footprint) {
         this.footprint = footprint;
@@ -111,6 +100,8 @@ public class PackageVisionPanel extends JPanel {
         propertiesPanel.add(bodyHeightTf, "4, 6, left, default");
         bodyHeightTf.setColumns(10);
 
+        /////////////////////////////////////////////
+
         JPanel tablePanel = new JPanel();
         add(tablePanel, BorderLayout.CENTER);
         tablePanel.setBorder(
@@ -119,17 +110,14 @@ public class PackageVisionPanel extends JPanel {
         table = new AutoSelectTextTable(tableModel);
         table.setAutoCreateRowSorter(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
-
-                Pad pad = getSelectedPad();
-
-                deleteAction.setEnabled(pad != null);
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (e.getValueIsAdjusting()) {
+                return;
             }
+
+            Pad pad = getSelectedPad();
+
+            deleteAction.setEnabled(pad != null);
         });
         tablePanel.setLayout(new BorderLayout(0, 0));
 
@@ -147,6 +135,28 @@ public class PackageVisionPanel extends JPanel {
         JScrollPane tableScrollPane = new JScrollPane(table);
         tableScrollPane.setPreferredSize(new Dimension(454, 100));
         tablePanel.add(tableScrollPane);
+
+        //////////////////////////////////////////////
+
+        JPanel bottomVisionPanel = new JPanel();
+        add(bottomVisionPanel, BorderLayout.SOUTH);
+        bottomVisionPanel.setBorder(
+                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Bottom Vision",
+                        TitledBorder.LEADING, TitledBorder.TOP, null));
+        bottomVisionPanel.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+
+        JLabel lblPipeline = new JLabel("Pipeline");
+        JButton editPipelineBtn = new JButton("Edit");
+        JButton resetPipelineBtn = new JButton("Reset to Default");
+
+        bottomVisionPanel.add(lblPipeline, "2, 2, right, default");
+        bottomVisionPanel.add(editPipelineBtn, "4, 2, left, default");
+        bottomVisionPanel.add(resetPipelineBtn, "4, 4, left, default");
 
         showReticle();
         initDataBindings();
@@ -218,14 +228,13 @@ public class PackageVisionPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             String name;
-            while ((name = JOptionPane.showInputDialog(getTopLevelAncestor(),
+            if ((name = JOptionPane.showInputDialog(getTopLevelAncestor(),
                     "Please enter a name for the new pad.")) != null) {
                 Pad pad = new Pad();
                 pad.setName(name);
                 footprint.addPad(pad);
                 tableModel.fireTableDataChanged();
                 Helpers.selectLastTableRow(table);
-                break;
             }
         }
     };

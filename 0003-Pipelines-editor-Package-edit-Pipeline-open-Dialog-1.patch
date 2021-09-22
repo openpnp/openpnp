@@ -1,0 +1,227 @@
+From 4958096835b549abe27d3fc7097e699d65a836c0 Mon Sep 17 00:00:00 2001
+From: karlinik <karlikova.nikola@gmail.com>
+Date: Sun, 22 Aug 2021 15:10:35 +0200
+Subject: [PATCH 03/11] Pipelines editor: Package edit Pipeline open Dialog /1
+
+---
+ .../org/openpnp/gui/PackageVisionPanel.java   | 26 +++++++++----------
+ ...ceBottomVisionPartConfigurationWizard.java |  5 +---
+ src/main/java/org/openpnp/model/Package.java  | 21 +++++++++++++++
+ src/main/java/org/openpnp/model/Part.java     |  8 ++++++
+ src/main/java/org/openpnp/model/Pipeline.java |  3 +++
+ .../openpnp/vision/pipeline/CvPipeline.java   | 10 +++----
+ .../ReferenceBottomVision-DefaultPipeline.xml |  4 +--
+ 7 files changed, 51 insertions(+), 26 deletions(-)
+
+diff --git a/src/main/java/org/openpnp/gui/PackageVisionPanel.java b/src/main/java/org/openpnp/gui/PackageVisionPanel.java
+index 19cdca0f3b..7d29ce9848 100644
+--- a/src/main/java/org/openpnp/gui/PackageVisionPanel.java
++++ b/src/main/java/org/openpnp/gui/PackageVisionPanel.java
+@@ -161,9 +161,7 @@ public class PackageVisionPanel extends JPanel {
+ 
+         JLabel lblPipeline = new JLabel("Pipeline");
+         JButton editPipelineBtn = new JButton("Edit");
+-        editPipelineBtn.addActionListener(e -> UiUtils.messageBoxOnException(() -> {
+-            editPipeline();
+-        }));
++        editPipelineBtn.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
+         JButton resetPipelineBtn = new JButton("Reset to Default");
+ 
+         bottomVisionPanel.add(lblPipeline, "2, 2, right, default");
+@@ -175,7 +173,7 @@ public class PackageVisionPanel extends JPanel {
+     }
+ 
+     private void editPipeline() throws Exception {
+-        CvPipeline pipeline = pkg.getPipeline().getCvPipeline();
++        CvPipeline pipeline = pkg.getCvPipeline();
+         pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
+         pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
+ 
+@@ -195,21 +193,21 @@ public class PackageVisionPanel extends JPanel {
+                         footprintBeanProperty, unitsCombo, jComboBoxBeanProperty);
+         autoBinding.bind();
+         //
+-        BeanProperty<Footprint, Double> footprintBeanProperty_1 = BeanProperty.create("bodyWidth");
++        BeanProperty<Footprint, Double> footprintBeanPropertyWidth = BeanProperty.create("bodyWidth");
+         BeanProperty<JTextField, String> jTextFieldBeanProperty = BeanProperty.create("text");
+-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_1 =
++        AutoBinding<Footprint, Double, JTextField, String> autoBindingWidth =
+                 Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint,
+-                        footprintBeanProperty_1, bodyWidthTf, jTextFieldBeanProperty);
+-        autoBinding_1.setConverter(doubleConverter);
+-        autoBinding_1.bind();
++                        footprintBeanPropertyWidth, bodyWidthTf, jTextFieldBeanProperty);
++        autoBindingWidth.setConverter(doubleConverter);
++        autoBindingWidth.bind();
+         //
+-        BeanProperty<Footprint, Double> footprintBeanProperty_2 = BeanProperty.create("bodyHeight");
++        BeanProperty<Footprint, Double> footprintBeanPropertyHeight = BeanProperty.create("bodyHeight");
+         BeanProperty<JTextField, String> jTextFieldBeanProperty_1 = BeanProperty.create("text");
+-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_2 =
++        AutoBinding<Footprint, Double, JTextField, String> autoBindingHeight =
+                 Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint,
+-                        footprintBeanProperty_2, bodyHeightTf, jTextFieldBeanProperty_1);
+-        autoBinding_2.setConverter(doubleConverter);
+-        autoBinding_2.bind();
++                        footprintBeanPropertyHeight, bodyHeightTf, jTextFieldBeanProperty_1);
++        autoBindingHeight.setConverter(doubleConverter);
++        autoBindingHeight.bind();
+ 
+         ComponentDecorators.decorateWithAutoSelect(bodyWidthTf);
+         ComponentDecorators.decorateWithAutoSelect(bodyHeightTf);
+diff --git a/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java b/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java
+index fa8cc73fbb..189904b9ad 100644
+--- a/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java
++++ b/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java
+@@ -1,8 +1,5 @@
+ package org.openpnp.machine.reference.vision.wizards;
+ 
+-import java.awt.event.ActionEvent;
+-import java.awt.event.ActionListener;
+-
+ import javax.swing.*;
+ import javax.swing.border.TitledBorder;
+ 
+@@ -285,7 +282,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
+ 
+     
+     private void editPipeline() throws Exception {
+-        CvPipeline pipeline = partSettings.getPipeline();
++        CvPipeline pipeline = part.getCvPipeline();
+         pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
+         pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
+ 
+diff --git a/src/main/java/org/openpnp/model/Package.java b/src/main/java/org/openpnp/model/Package.java
+index 51b32ec00d..b7789b2056 100644
+--- a/src/main/java/org/openpnp/model/Package.java
++++ b/src/main/java/org/openpnp/model/Package.java
+@@ -25,8 +25,11 @@ import java.util.HashSet;
+ import java.util.List;
+ import java.util.Set;
+ 
++import org.apache.commons.io.IOUtils;
+ import org.openpnp.ConfigurationListener;
++import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+ import org.openpnp.spi.NozzleTip;
++import org.openpnp.vision.pipeline.CvPipeline;
+ import org.simpleframework.xml.Attribute;
+ import org.simpleframework.xml.Element;
+ import org.simpleframework.xml.ElementList;
+@@ -192,6 +195,24 @@ public class Package extends AbstractModelObject implements Identifiable {
+         return pipeline;
+     }
+ 
++    public CvPipeline getCvPipeline() {
++        if(pipeline == null) {
++            return createDefaultPipeline();
++        }
++        return pipeline.getCvPipeline();
++    }
++
++    public static CvPipeline createDefaultPipeline() {
++        try {
++            String xml = IOUtils.toString(ReferenceBottomVision.class
++                    .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
++            return new CvPipeline(xml);
++        }
++        catch (Exception e) {
++            throw new Error(e);
++        }
++    }
++
+     public void setPipeline(Pipeline pipeline) {
+         this.pipeline = pipeline;
+     }
+diff --git a/src/main/java/org/openpnp/model/Part.java b/src/main/java/org/openpnp/model/Part.java
+index c4df53ca3f..719d4a34b6 100644
+--- a/src/main/java/org/openpnp/model/Part.java
++++ b/src/main/java/org/openpnp/model/Part.java
+@@ -20,6 +20,7 @@
+ package org.openpnp.model;
+ 
+ import org.openpnp.ConfigurationListener;
++import org.openpnp.vision.pipeline.CvPipeline;
+ import org.simpleframework.xml.Attribute;
+ import org.simpleframework.xml.core.Persist;
+ 
+@@ -161,6 +162,13 @@ public class Part extends AbstractModelObject implements Identifiable {
+         return pipeline;
+     }
+ 
++    public CvPipeline getCvPipeline() {
++        if(pipeline == null) {
++            return new CvPipeline();
++        }
++        return pipeline.getCvPipeline();
++    }
++
+     public void setPipeline(Pipeline pipeline) {
+         this.pipeline = pipeline;
+     }
+diff --git a/src/main/java/org/openpnp/model/Pipeline.java b/src/main/java/org/openpnp/model/Pipeline.java
+index 66f28e88f8..9de0ee966a 100644
+--- a/src/main/java/org/openpnp/model/Pipeline.java
++++ b/src/main/java/org/openpnp/model/Pipeline.java
+@@ -24,6 +24,9 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
+     }
+ 
+     public CvPipeline getCvPipeline() {
++        if (cvPipeline == null) {
++            cvPipeline = new CvPipeline();
++        }
+         return cvPipeline;
+     }
+ 
+diff --git a/src/main/java/org/openpnp/vision/pipeline/CvPipeline.java b/src/main/java/org/openpnp/vision/pipeline/CvPipeline.java
+index 65f578a6f2..517f9845f0 100644
+--- a/src/main/java/org/openpnp/vision/pipeline/CvPipeline.java
++++ b/src/main/java/org/openpnp/vision/pipeline/CvPipeline.java
+@@ -3,17 +3,16 @@ package org.openpnp.vision.pipeline;
+ import java.io.IOException;
+ import java.io.StringReader;
+ import java.io.StringWriter;
+-import java.util.ArrayList;
+-import java.util.Collections;
+-import java.util.HashMap;
+-import java.util.List;
+-import java.util.Map;
++import java.util.*;
+ 
++import org.apache.commons.io.IOUtils;
+ import org.opencv.core.CvType;
+ import org.opencv.core.Mat;
+ import org.opencv.core.Point;
+ import org.opencv.core.Scalar;
+ import org.opencv.imgproc.Imgproc;
++import org.openpnp.machine.reference.ReferenceNozzleTip;
++import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+ import org.openpnp.vision.FluentCv.ColorSpace;
+ import org.openpnp.vision.pipeline.CvStage.Result;
+ import org.pmw.tinylog.Logger;
+@@ -66,7 +65,6 @@ public class CvPipeline implements AutoCloseable {
+     private long totalProcessingTimeNs;
+     
+     public CvPipeline() {
+-        
+     }
+     
+     public CvPipeline(String xmlPipeline) {
+diff --git a/src/main/resources/org/openpnp/machine/reference/vision/ReferenceBottomVision-DefaultPipeline.xml b/src/main/resources/org/openpnp/machine/reference/vision/ReferenceBottomVision-DefaultPipeline.xml
+index 6782ba8944..29e1f40b9d 100644
+--- a/src/main/resources/org/openpnp/machine/reference/vision/ReferenceBottomVision-DefaultPipeline.xml
++++ b/src/main/resources/org/openpnp/machine/reference/vision/ReferenceBottomVision-DefaultPipeline.xml
+@@ -1,4 +1,4 @@
+-<pipeline>
++<cv_pipeline>
+ 	<stages>
+ 		<cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture"
+ 			name="0" enabled="true" settle-first="true" />
+@@ -39,4 +39,4 @@
+ 		<cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug"
+ 			name="15" enabled="true" prefix="bv_result_" suffix=".png" />
+ 	</stages>
+-</pipeline>
++</cv_pipeline>
+-- 
+2.28.0.windows.1
+

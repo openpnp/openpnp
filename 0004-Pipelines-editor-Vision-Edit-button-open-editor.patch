@@ -1,0 +1,272 @@
+From 5bcce99029540e3a8a3e78bd0821b56553618b96 Mon Sep 17 00:00:00 2001
+From: karlinik <karlikova.nikola@gmail.com>
+Date: Sun, 29 Aug 2021 11:56:26 +0200
+Subject: [PATCH 04/11] Pipelines editor: Vision Edit button open editor
+
+---
+ .../vision/ReferenceBottomVision.java         | 31 ++++++++++-------
+ ...erenceBottomVisionConfigurationWizard.java | 34 +++++--------------
+ .../wizards/VisionConfigurationWizard.java    | 24 ++++++++-----
+ 3 files changed, 42 insertions(+), 47 deletions(-)
+
+diff --git a/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java b/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java
+index 555a51e9ca..993d0e554a 100644
+--- a/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java
++++ b/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java
+@@ -62,7 +62,7 @@ public class ReferenceBottomVision implements PartAlignment {
+     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
+ 
+     @ElementMap(required = false)
+-    protected Map<String, PipelineSettings> pipelineSettingByPartId = new HashMap<>();
++    protected Map<String, PipelineSettings> pipelineSettingByPipelineId = new HashMap<>();
+ 
+     @Override
+     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
+@@ -139,14 +139,14 @@ public class ReferenceBottomVision implements PartAlignment {
+         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
+         final Location center = new Location(maxLinearOffset.getUnits());
+         
+-        try (CvPipeline pipeline = partSettings.getPipeline()) {
++        try (CvPipeline cvPipeline = partSettings.getPipeline()) {
+ 
+             // The running, iterative offset.
+             Location offsets = new Location(nozzleLocation.getUnits());
+             // Try getting a good fix on the part in multiple passes.
+             for(int pass = 0;;) {
+-                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+-                camera=(Camera)pipeline.getProperty(CAMERA);
++                RotatedRect rect = processPipelineAndGetResult(cvPipeline, camera, part, nozzle);
++                camera=(Camera)cvPipeline.getProperty(CAMERA);
+ 
+                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
+ 
+@@ -219,7 +219,7 @@ public class ReferenceBottomVision implements PartAlignment {
+             offsets = offsets.subtract(partSettings.getVisionOffset().rotateXy(wantedAngle));
+ 
+             Logger.debug("Final offsets {}", offsets);
+-            displayResult(pipeline, part, offsets, camera);
++            displayResult(cvPipeline, part, offsets, camera);
+             return new PartAlignment.PartAlignmentOffset(offsets, true);
+         }
+     }
+@@ -233,9 +233,9 @@ public class ReferenceBottomVision implements PartAlignment {
+         
+         MovableUtils.moveToLocationAtSafeZ(nozzle, wantedLocation);
+ 
+-        try (CvPipeline pipeline = partSettings.getPipeline()) {
+-            RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+-            camera=(Camera)pipeline.getProperty(CAMERA);
++        try (CvPipeline cvPipeline = partSettings.getPipeline()) {
++            RotatedRect rect = processPipelineAndGetResult(cvPipeline, camera, part, nozzle);
++            camera=(Camera)cvPipeline.getProperty(CAMERA);
+ 
+             Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
+ 
+@@ -270,7 +270,7 @@ public class ReferenceBottomVision implements PartAlignment {
+             
+             Logger.debug("Final offsets {}", offsets);
+ 
+-            displayResult(pipeline, part, offsets, camera);
++            displayResult(cvPipeline, part, offsets, camera);
+ 
+             return new PartAlignmentOffset(offsets, false);
+         }
+@@ -324,8 +324,8 @@ public class ReferenceBottomVision implements PartAlignment {
+             measuredSize.width = mHeight;
+         }
+ 
+-        double widthTolerance = pxWidth * 0.01 * (double) partSettings.getCheckSizeTolerancePercent();
+-        double heightTolerance = pxHeight * 0.01 * (double) partSettings.getCheckSizeTolerancePercent();
++        double widthTolerance = pxWidth * 0.01 * partSettings.getCheckSizeTolerancePercent();
++        double heightTolerance = pxHeight * 0.01 * partSettings.getCheckSizeTolerancePercent();
+         double pxMaxWidth = pxWidth + widthTolerance;
+         double pxMinWidth = pxWidth - widthTolerance;
+         double pxMaxHeight = pxHeight + heightTolerance;
+@@ -527,10 +527,10 @@ public class ReferenceBottomVision implements PartAlignment {
+     }
+ 
+     private PipelineSettings getPipelineSettings(Pipeline pipeline) {
+-        PipelineSettings pipelineSettings = this.pipelineSettingByPartId.get(pipeline.getId());
++        PipelineSettings pipelineSettings = this.pipelineSettingByPipelineId.get(pipeline.getId());
+         if (pipelineSettings == null) {
+             pipelineSettings = new PipelineSettings(pipeline);
+-            this.pipelineSettingByPartId.put(pipeline.getId(), pipelineSettings);
++            this.pipelineSettingByPipelineId.put(pipeline.getId(), pipelineSettings);
+         }
+         return pipelineSettings;
+     }
+@@ -680,6 +680,7 @@ public class ReferenceBottomVision implements PartAlignment {
+         public PipelineSettings(Pipeline pipeline) {
+             this.id = pipeline.getId();
+             this.name = pipeline.getName();
++            this.pipeline = pipeline.getCvPipeline();
+         }
+ 
+         public PipelineSettings() {
+@@ -701,5 +702,9 @@ public class ReferenceBottomVision implements PartAlignment {
+         public void setName(String name) {
+             this.name = name;
+         }
++
++        public CvPipeline getPipeline() {
++            return pipeline;
++        }
+     }
+ }
+diff --git a/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionConfigurationWizard.java b/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionConfigurationWizard.java
+index ec49319974..b170c82fb8 100644
+--- a/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionConfigurationWizard.java
++++ b/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionConfigurationWizard.java
+@@ -1,8 +1,5 @@
+ package org.openpnp.machine.reference.vision.wizards;
+ 
+-import java.awt.event.ActionEvent;
+-import java.awt.event.ActionListener;
+-
+ import javax.swing.JButton;
+ import javax.swing.JCheckBox;
+ import javax.swing.JDialog;
+@@ -11,7 +8,6 @@ import javax.swing.JOptionPane;
+ import javax.swing.JPanel;
+ import javax.swing.border.TitledBorder;
+ 
+-import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+ import org.openpnp.gui.MainFrame;
+ import org.openpnp.gui.components.ComponentDecorators;
+ import org.openpnp.gui.support.AbstractConfigurationWizard;
+@@ -19,7 +15,6 @@ import org.openpnp.gui.support.DoubleConverter;
+ import org.openpnp.gui.support.IntegerConverter;
+ import org.openpnp.gui.support.LengthConverter;
+ import org.openpnp.gui.support.MessageBoxes;
+-import org.openpnp.gui.support.MutableLocationProxy;
+ import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+ import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+ import org.openpnp.model.Configuration;
+@@ -82,18 +77,11 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
+         panel.add(lblPipeline, "2, 4");
+ 
+         JButton editPipelineButton = new JButton("Edit");
+-        editPipelineButton.addActionListener(new ActionListener() {
+-            public void actionPerformed(ActionEvent e) {
+-                UiUtils.messageBoxOnException(() -> {
+-                    //TODO NK: open new editor for global pipeline management
+-                    editPipeline();
+-                });
+-            }
+-        });
++        editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(ReferenceBottomVisionConfigurationWizard.this::editPipeline));
+         panel.add(editPipelineButton, "4, 4");
+ 
+         JButton btnResetToDefault = new JButton("Reset to Default");
+-        btnResetToDefault.addActionListener((e) -> {
++        btnResetToDefault.addActionListener(e -> {
+             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                     "This will replace the current pipeline with the built in default pipeline. Are you sure?",
+                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+@@ -107,7 +95,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
+         panel.add(btnResetToDefault, "6, 4");
+ 
+         JButton btnResetAllTo = new JButton("Reset All Parts");
+-        btnResetAllTo.addActionListener((e) -> {
++        btnResetAllTo.addActionListener(e -> {
+             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                     "This will replace all custom part pipelines with the current pipeline. Are you sure?",
+                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+@@ -156,17 +144,11 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
+         panel.add(textFieldMaxAngularOffset, "8, 10, fill, default");
+         textFieldMaxAngularOffset.setColumns(10);
+ 
+-        preRotCheckbox.addActionListener(new ActionListener()
+-        {
+-            @Override
+-            public void actionPerformed(ActionEvent e) {
+-                updateEnabledState();
+-            }
+-        });
++        preRotCheckbox.addActionListener(e -> updateEnabledState());
+     }
+ 
+     private void updateEnabledState() {
+-        boolean enabled = (preRotCheckbox.getModel().isSelected());
++//        boolean enabled = (preRotCheckbox.getModel().isSelected());
+         /* No longer disable the config, as the enabled checkbox is only the system default
+          * and pre-rotate can still be enabled on individual parts. Left the code for the moment
+            as this might be reconsidered.
+@@ -175,15 +157,15 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
+         textFieldMaxAngularOffset.setEnabled(enabled);
+         */
+     }
+-    
++
+     private void editPipeline() throws Exception {
+         CvPipeline pipeline = bottomVision.getPipeline();
+         pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
+-		pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
++        pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
+         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
+         dialog.setVisible(true);
+-}
++    }
+ 
+     @Override
+     public String getWizardName() {
+diff --git a/src/main/java/org/openpnp/machine/reference/vision/wizards/VisionConfigurationWizard.java b/src/main/java/org/openpnp/machine/reference/vision/wizards/VisionConfigurationWizard.java
+index a9c0c07287..1f3f7ae5f2 100644
+--- a/src/main/java/org/openpnp/machine/reference/vision/wizards/VisionConfigurationWizard.java
++++ b/src/main/java/org/openpnp/machine/reference/vision/wizards/VisionConfigurationWizard.java
+@@ -4,14 +4,16 @@ import com.jgoodies.forms.layout.ColumnSpec;
+ import com.jgoodies.forms.layout.FormLayout;
+ import com.jgoodies.forms.layout.FormSpecs;
+ import com.jgoodies.forms.layout.RowSpec;
++import org.openpnp.gui.MainFrame;
+ import org.openpnp.gui.support.AbstractConfigurationWizard;
+ import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+ import org.openpnp.util.UiUtils;
++import org.openpnp.vision.pipeline.CvPipeline;
++import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
++import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
+ 
+ import javax.swing.*;
+ import javax.swing.border.TitledBorder;
+-import java.awt.event.ActionEvent;
+-import java.awt.event.ActionListener;
+ 
+ @SuppressWarnings("serial")
+ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
+@@ -47,13 +49,12 @@ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
+         panel.add(nameEntry, "4, 4, left, default");
+ 
+         JButton editPipelineButton = new JButton("Edit");
+-        editPipelineButton.addActionListener(new ActionListener() {
+-            public void actionPerformed(ActionEvent e) {
+-                UiUtils.messageBoxOnException(() -> {
+-//                    editPipeline();
+-                });
++        editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(new UiUtils.Thrunnable() {
++            @Override
++            public void thrun() throws Exception {
++                VisionConfigurationWizard.this.editPipeline();
+             }
+-        });
++        }));
+         panel.add(editPipelineButton, "4, 6");
+     }
+ 
+@@ -97,6 +98,13 @@ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
+                         FormSpecs.DEFAULT_ROWSPEC,}));
+     }
+ 
++    private void editPipeline() {
++        CvPipeline pipeline = pipelineSettings.getPipeline();
++        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
++        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Vision Pipeline", editor);
++        dialog.setVisible(true);
++    }
++
+     @Override
+     public void createBindings() {
+         addWrappedBinding(pipelineSettings, "id", idEntry, "text");
+-- 
+2.28.0.windows.1
+

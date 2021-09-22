@@ -1,0 +1,160 @@
+From 9651f488f3bc120ee1d22bc7634ecb93be950ba1 Mon Sep 17 00:00:00 2001
+From: karlinik <karlikova.nikola@gmail.com>
+Date: Sun, 22 Aug 2021 12:57:23 +0200
+Subject: [PATCH 02/11] Pipelines editor: Package edit Pipeline open Dialog
+
+---
+ .../org/openpnp/gui/PackageVisionPanel.java   | 30 ++++++++++++++++---
+ .../java/org/openpnp/gui/PackagesPanel.java   |  2 +-
+ ...ceBottomVisionPartConfigurationWizard.java | 10 ++-----
+ .../java/org/openpnp/model/Configuration.java |  3 --
+ src/main/java/org/openpnp/model/Pipeline.java |  4 +++
+ 5 files changed, 34 insertions(+), 15 deletions(-)
+
+diff --git a/src/main/java/org/openpnp/gui/PackageVisionPanel.java b/src/main/java/org/openpnp/gui/PackageVisionPanel.java
+index 42fe4ee4e2..19cdca0f3b 100644
+--- a/src/main/java/org/openpnp/gui/PackageVisionPanel.java
++++ b/src/main/java/org/openpnp/gui/PackageVisionPanel.java
+@@ -26,8 +26,6 @@ import java.awt.event.ActionEvent;
+ import javax.swing.*;
+ import javax.swing.border.EtchedBorder;
+ import javax.swing.border.TitledBorder;
+-import javax.swing.event.ListSelectionEvent;
+-import javax.swing.event.ListSelectionListener;
+ 
+ import org.jdesktop.beansbinding.AutoBinding;
+ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+@@ -46,12 +44,18 @@ import org.openpnp.model.Configuration;
+ import org.openpnp.model.Footprint;
+ import org.openpnp.model.Footprint.Pad;
+ import org.openpnp.model.LengthUnit;
++import org.openpnp.model.Package;
+ import org.openpnp.spi.Camera;
+ 
+ import com.jgoodies.forms.layout.ColumnSpec;
+ import com.jgoodies.forms.layout.FormLayout;
+ import com.jgoodies.forms.layout.FormSpecs;
+ import com.jgoodies.forms.layout.RowSpec;
++import org.openpnp.util.UiUtils;
++import org.openpnp.util.VisionUtils;
++import org.openpnp.vision.pipeline.CvPipeline;
++import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
++import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
+ 
+ @SuppressWarnings("serial")
+ public class PackageVisionPanel extends JPanel {
+@@ -59,10 +63,15 @@ public class PackageVisionPanel extends JPanel {
+     private JTable table;
+ 
+     private final Footprint footprint;
++    private final Package pkg;
+ 
+-    public PackageVisionPanel(Footprint footprint) {
+-        this.footprint = footprint;
++    public PackageVisionPanel(Package pkg) {
++        this.pkg = pkg;
++        this.footprint = pkg.getFootprint();
++        initialize();
++    }
+ 
++    private void initialize() {
+         setLayout(new BorderLayout(0, 0));
+         tableModel = new FootprintTableModel(footprint);
+ 
+@@ -152,6 +161,9 @@ public class PackageVisionPanel extends JPanel {
+ 
+         JLabel lblPipeline = new JLabel("Pipeline");
+         JButton editPipelineBtn = new JButton("Edit");
++        editPipelineBtn.addActionListener(e -> UiUtils.messageBoxOnException(() -> {
++            editPipeline();
++        }));
+         JButton resetPipelineBtn = new JButton("Reset to Default");
+ 
+         bottomVisionPanel.add(lblPipeline, "2, 2, right, default");
+@@ -162,6 +174,16 @@ public class PackageVisionPanel extends JPanel {
+         initDataBindings();
+     }
+ 
++    private void editPipeline() throws Exception {
++        CvPipeline pipeline = pkg.getPipeline().getCvPipeline();
++        pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
++        pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
++
++        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
++        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
++        dialog.setVisible(true);
++    }
++
+     protected void initDataBindings() {
+         DoubleConverter doubleConverter =
+                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+diff --git a/src/main/java/org/openpnp/gui/PackagesPanel.java b/src/main/java/org/openpnp/gui/PackagesPanel.java
+index 5b2241bedf..72292ff6d9 100644
+--- a/src/main/java/org/openpnp/gui/PackagesPanel.java
++++ b/src/main/java/org/openpnp/gui/PackagesPanel.java
+@@ -211,7 +211,7 @@ public class PackagesPanel extends JPanel {
+ 
+     private void packageSelectionSetup(Package pkg, int selectedTab) {
+         tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
+-        tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg.getFootprint())));
++        tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg)));
+         tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
+         if (selectedTab != -1) {
+             tabbedPane.setSelectedIndex(selectedTab);
+diff --git a/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java b/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java
+index d3516f08e2..fa8cc73fbb 100644
+--- a/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java
++++ b/src/main/java/org/openpnp/machine/reference/vision/wizards/ReferenceBottomVisionPartConfigurationWizard.java
+@@ -129,13 +129,9 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
+         panel.add(lblPipeline, "2, 8");
+ 
+         JButton editPipelineButton = new JButton("Edit");
+-        editPipelineButton.addActionListener(new ActionListener() {
+-            public void actionPerformed(ActionEvent e) {
+-                UiUtils.messageBoxOnException(() -> {
+-                    editPipeline();
+-                });
+-            }
+-        });
++        editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(() -> {
++            editPipeline();
++        }));
+         panel.add(editPipelineButton, "4, 8");
+ 
+         JButton btnLoadDefault = new JButton("Reset to Default");
+diff --git a/src/main/java/org/openpnp/model/Configuration.java b/src/main/java/org/openpnp/model/Configuration.java
+index 05b75442b1..580e67d9cc 100644
+--- a/src/main/java/org/openpnp/model/Configuration.java
++++ b/src/main/java/org/openpnp/model/Configuration.java
+@@ -20,14 +20,11 @@
+ package org.openpnp.model;
+ 
+ import java.io.*;
+-import java.nio.file.CopyOption;
+ import java.nio.file.Files;
+ import java.nio.file.Paths;
+ import java.nio.file.StandardCopyOption;
+-import java.time.LocalDate;
+ import java.time.LocalDateTime;
+ import java.time.format.DateTimeFormatter;
+-import java.time.temporal.TemporalUnit;
+ import java.util.*;
+ import java.util.prefs.Preferences;
+ 
+diff --git a/src/main/java/org/openpnp/model/Pipeline.java b/src/main/java/org/openpnp/model/Pipeline.java
+index cf7e5a2721..66f28e88f8 100644
+--- a/src/main/java/org/openpnp/model/Pipeline.java
++++ b/src/main/java/org/openpnp/model/Pipeline.java
+@@ -23,5 +23,9 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
+         return name;
+     }
+ 
++    public CvPipeline getCvPipeline() {
++        return cvPipeline;
++    }
++
+     //TODO: contructor for creation of a new pipeline
+ }
+-- 
+2.28.0.windows.1
+

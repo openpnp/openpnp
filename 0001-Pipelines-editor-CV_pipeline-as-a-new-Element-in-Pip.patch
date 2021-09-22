@@ -1,0 +1,396 @@
+From 4b17ba46a65b30ee1a65540980692c2874e82440 Mon Sep 17 00:00:00 2001
+From: karlinik <karlikova.nikola@gmail.com>
+Date: Sun, 22 Aug 2021 12:24:50 +0200
+Subject: [PATCH 01/11] Pipelines editor: CV_pipeline as a new @Element in
+ Pipeline /0
+
+---
+ .../vision/ReferenceBottomVision.java         | 55 +++++++++----------
+ src/main/java/org/openpnp/model/Pipeline.java | 33 ++---------
+ src/main/resources/config/pipelines.xml       | 41 +++++++-------
+ .../java/ReferenceBottomVisionOffsetTest.java | 18 +++---
+ 4 files changed, 58 insertions(+), 89 deletions(-)
+
+diff --git a/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java b/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java
+index 76802a7227..555a51e9ca 100644
+--- a/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java
++++ b/src/main/java/org/openpnp/machine/reference/vision/ReferenceBottomVision.java
+@@ -7,7 +7,6 @@ import java.util.Map;
+ import javax.swing.Action;
+ import javax.swing.Icon;
+ 
+-import org.apache.commons.io.IOUtils;
+ import org.opencv.core.Point;
+ import org.opencv.core.RotatedRect;
+ import org.opencv.core.Size;
+@@ -38,6 +37,9 @@ import org.simpleframework.xml.Root;
+ public class ReferenceBottomVision implements PartAlignment {
+ 
+ 
++    public static final String CAMERA = "camera";
++
++    //TODO NK: remove
+     @Element(required = false)
+     protected CvPipeline pipeline = createDefaultPipeline();
+ 
+@@ -80,13 +82,13 @@ public class ReferenceBottomVision implements PartAlignment {
+ 
+         Camera camera = VisionUtils.getBottomVisionCamera();
+ 
+-        if ((partSettings.getPreRotateUsage() == PreRotateUsage.Default && preRotate)
+-                || (partSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
++        if ((partSettings.getPreRotateUsage() == PreRotateUsage.DEFAULT && preRotate)
++                || (partSettings.getPreRotateUsage() == PreRotateUsage.ALWAYS_ON)) {
+             return findOffsetsPreRotate(part, boardLocation, placementLocation, nozzle, camera,
+                     partSettings);
+         }
+         else {
+-            return findOffsetsPostRotate(part, boardLocation, placementLocation, nozzle, camera,
++            return findOffsetsPostRotate(part, nozzle, camera,
+                     partSettings);
+         }
+     }
+@@ -144,7 +146,7 @@ public class ReferenceBottomVision implements PartAlignment {
+             // Try getting a good fix on the part in multiple passes.
+             for(int pass = 0;;) {
+                 RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+-                camera=(Camera)pipeline.getProperty("camera");
++                camera=(Camera)pipeline.getProperty(CAMERA);
+ 
+                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
+ 
+@@ -157,7 +159,7 @@ public class ReferenceBottomVision implements PartAlignment {
+                 // wrapping-around range of 0° .. 90° as it has no notion of which rectangle side 
+                 // is which. We can assume that the part is never picked more than +/-45º rotated.
+                 // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
+-                if (partSettings.getMaxRotation() == MaxRotation.Adjust ) {
++                if (partSettings.getMaxRotation() == MaxRotation.ADJUST) {
+                     angleOffset = angleNorm(angleOffset);
+                 } else {
+                     // turning more than 180° in one direction makes no sense
+@@ -178,7 +180,7 @@ public class ReferenceBottomVision implements PartAlignment {
+                 
+                 // We not only check the center offset but also the corner offset brought about by the angular offset
+                 // so a large part will react more sensitively to angular offsets.
+-                Point corners[] = new Point[4];
++                Point[] corners = new Point[4];
+                 rect.points(corners);
+                 Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
+                         .convertToUnits(maxLinearOffset.getUnits());
+@@ -222,8 +224,8 @@ public class ReferenceBottomVision implements PartAlignment {
+         }
+     }
+ 
+-    private PartAlignmentOffset findOffsetsPostRotate(Part part, BoardLocation boardLocation,
+-            Location placementLocation, Nozzle nozzle, Camera camera, PartSettings partSettings)
++    private PartAlignmentOffset findOffsetsPostRotate(Part part,
++                                                      Nozzle nozzle, Camera camera, PartSettings partSettings)
+                     throws Exception {
+         // Create a location that is the Camera's X, Y, it's Z + part height
+         // and a rotation of 0, unless preRotate is enabled
+@@ -233,7 +235,7 @@ public class ReferenceBottomVision implements PartAlignment {
+ 
+         try (CvPipeline pipeline = partSettings.getPipeline()) {
+             RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+-            camera=(Camera)pipeline.getProperty("camera");
++            camera=(Camera)pipeline.getProperty(CAMERA);
+ 
+             Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
+ 
+@@ -246,7 +248,7 @@ public class ReferenceBottomVision implements PartAlignment {
+             // wrapping-around range of 0° .. 90° as it has no notion of which rectangle side 
+             // is which. We can assume that the part is never picked more than +/-45º rotated.
+             // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
+-            if (partSettings.getMaxRotation() == MaxRotation.Adjust ) {
++            if (partSettings.getMaxRotation() == MaxRotation.ADJUST) {
+                 angleOffset = angleNorm(angleOffset);
+             } else {
+                 // turning more than 180° in one direction makes no sense
+@@ -287,13 +289,13 @@ public class ReferenceBottomVision implements PartAlignment {
+ 
+         // Get the part footprint body dimensions to compare to
+         switch (partSizeCheckMethod) {
+-        case Disabled:
++        case DISABLED:
+             return true;
+-        case BodySize:
++        case BODY_SIZE:
+             checkWidth = footprint.getBodyWidth();
+             checkHeight = footprint.getBodyHeight();
+             break;
+-        case PadExtents:
++        case PAD_EXTENTS:
+             Rectangle bounds = footprint.getPadsShape().getBounds();
+             checkWidth = bounds.getWidth();
+             checkHeight = bounds.getHeight();
+@@ -368,7 +370,7 @@ public class ReferenceBottomVision implements PartAlignment {
+ 
+     private static RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
+             Nozzle nozzle) throws Exception {
+-        pipeline.setProperty("camera", camera);
++        pipeline.setProperty(CAMERA, camera);
+         pipeline.setProperty("part", part);
+         pipeline.setProperty("nozzle", nozzle);
+         pipeline.process();
+@@ -411,14 +413,7 @@ public class ReferenceBottomVision implements PartAlignment {
+     }
+ 
+     public static CvPipeline createDefaultPipeline() {
+-        try {
+-            String xml = IOUtils.toString(ReferenceBottomVision.class.getResource(
+-                    "ReferenceBottomVision-DefaultPipeline.xml"));
+-            return new CvPipeline(xml);
+-        }
+-        catch (Exception e) {
+-            throw new Error(e);
+-        }
++        return new CvPipeline();
+     }
+ 
+     private static double angleNorm(double val, double lim) {
+@@ -549,7 +544,7 @@ public class ReferenceBottomVision implements PartAlignment {
+         PartSettings partSettings = getPartSettings(part);
+         try {
+             partSettings.getPipeline()
+-                        .setProperty("camera", VisionUtils.getBottomVisionCamera());
++                        .setProperty(CAMERA, VisionUtils.getBottomVisionCamera());
+         }
+         catch (Exception e) {
+         }
+@@ -563,33 +558,33 @@ public class ReferenceBottomVision implements PartAlignment {
+     }
+ 
+     public enum PreRotateUsage {
+-        Default, AlwaysOn, AlwaysOff
++        DEFAULT, ALWAYS_ON, ALWAYS_OFF
+     }
+     
+     public enum MaxRotation {
+-        Adjust, Full
++        ADJUST, FULL
+     }
+     
+     @Root
+     public static class PartSettings {
+ 
+         public enum PartSizeCheckMethod {
+-            Disabled, BodySize, PadExtents
++            DISABLED, BODY_SIZE, PAD_EXTENTS
+         }
+ 
+         @Attribute
+         protected boolean enabled;
+         @Attribute(required = false)
+-        protected PreRotateUsage preRotateUsage = PreRotateUsage.Default;
++        protected PreRotateUsage preRotateUsage = PreRotateUsage.DEFAULT;
+         
+         @Attribute(required = false)
+-        protected PartSizeCheckMethod checkPartSizeMethod = PartSizeCheckMethod.Disabled;
++        protected PartSizeCheckMethod checkPartSizeMethod = PartSizeCheckMethod.DISABLED;
+ 
+         @Attribute(required = false)
+         protected int checkSizeTolerancePercent = 20;
+ 
+         @Attribute(required = false)
+-        protected MaxRotation maxRotation = MaxRotation.Adjust;
++        protected MaxRotation maxRotation = MaxRotation.ADJUST;
+         
+         @Element(required = false)
+         protected Location visionOffset = new Location(LengthUnit.Millimeters);
+diff --git a/src/main/java/org/openpnp/model/Pipeline.java b/src/main/java/org/openpnp/model/Pipeline.java
+index f8c8136326..cf7e5a2721 100644
+--- a/src/main/java/org/openpnp/model/Pipeline.java
++++ b/src/main/java/org/openpnp/model/Pipeline.java
+@@ -1,19 +1,18 @@
+ package org.openpnp.model;
+ 
++import org.openpnp.vision.pipeline.CvPipeline;
+ import org.simpleframework.xml.Attribute;
+-import org.simpleframework.xml.ElementList;
+-
+-import java.util.ArrayList;
++import org.simpleframework.xml.Element;
+ 
+ public class Pipeline extends AbstractModelObject implements Identifiable {
+-    @Attribute(required = false)
++    @Attribute()
+     private String id;
+ 
+     @Attribute(required = false)
+     private String name;
+ 
+-    @ElementList(inline = true, entry = "stage", required = false)
+-    private ArrayList<Stage> stages = new ArrayList<>();
++    @Element()
++    private CvPipeline cvPipeline;
+ 
+     @Override
+     public String getId() {
+@@ -25,26 +24,4 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
+     }
+ 
+     //TODO: contructor for creation of a new pipeline
+-
+-    public static class Stage {
+-
+-        @Attribute(required = false)
+-        private String name;
+-
+-        @Attribute(required = false)
+-        private boolean enabled;
+-
+-        @Attribute(required = false)
+-        private boolean settleFirst;
+-
+-        @Attribute(required = false)
+-        private int count;
+-
+-        @Attribute(required = false)
+-        private int kernelSize;
+-
+-        @Attribute(required = false)
+-        private String conversion;
+-
+-    }
+ }
+diff --git a/src/main/resources/config/pipelines.xml b/src/main/resources/config/pipelines.xml
+index 0011db4489..644bdce997 100644
+--- a/src/main/resources/config/pipelines.xml
++++ b/src/main/resources/config/pipelines.xml
+@@ -1,28 +1,25 @@
+ <openpnp-pipelines>
+     <pipeline id="CVP01" name="ReferenceBottomTestPipeline">
+-<!--        <stage name="original" enabled="true" settle-first="true" count="1"/>-->
+-<!--        <stage name="cleanup-original" enabled="true" kernel-size="5"/>-->
+-<!--        <stage name="gray" enabled="true" conversion="Bgr2Gray"/>-->
+-<!--        <stage name="find-edges" enabled="true"/>-->
+-<!--        <stage name="predetect-1" enabled="true" kernel-size="5"/>-->
+-<!--        <stage name="predetect-2" enabled="false" kernel-size="7"/>-->
+-<!--        &lt;!&ndash;            <cv-stage name="results" enabled="true" dp="1.0" param-1="25.0" param-2="20.0"/>&ndash;&gt;-->
+-<!--        &lt;!&ndash;            <cv-stage name="recalled" enabled="true" image-stage-name="original"/>&ndash;&gt;-->
+-<!--        &lt;!&ndash;            <cv-stage name="display" threshold-1="5.0" threshold-2="15.0" enabled="true" circles-stage-name="results" thickness="1">&ndash;&gt;-->
+-<!--        &lt;!&ndash;                <color r="255" g="0" b="0" a="255"/>&ndash;&gt;-->
+-<!--        &lt;!&ndash;            </cv-stage>&ndash;&gt;-->
++        <cv_pipeline>
++            <stages>
++                <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" settle-first="true" />
++                <!--        <cv-stage name="cleanup-original" enabled="true" kernel-size="5"/>-->
++                <!--        <cv-stage name="gray" enabled="true" conversion="Bgr2Gray"/>-->
++                <!--        <cv-stage name="find-edges" enabled="true"/>-->
++                <!--        <cv-stage name="predetect-1" enabled="true" kernel-size="5"/>-->
++                <!--        <cv-stage name="predetect-2" enabled="false" kernel-size="7"/>-->
++                <!--        <cv-stage name="results" enabled="true" dp="1.0" param-1="25.0" param-2="20.0"/>&ndash;&gt;-->
++                <!--        <cv-stage name="recalled" enabled="true" image-stage-name="original"/>&ndash;&gt;-->
++                <!--        <cv-stage name="display" threshold-1="5.0" threshold-2="15.0" enabled="true" circles-stage-name="results" thickness="1">&ndash;&gt;-->
++                <!--        <color r="255" g="0" b="0" a="255"/>&ndash;&gt;-->
++                <!--        </cv-stage>&ndash;&gt;-->
++            </stages>
++        </cv_pipeline>
+     </pipeline>
+     <pipeline id="CVP02" name="ReferenceBottomTestPipeline">
+-<!--        <stage name="original" enabled="true" settle-first="true" count="1"/>-->
+-<!--        <stage name="cleanup-original" enabled="true" kernel-size="5"/>-->
+-<!--        <stage name="gray" enabled="true" conversion="Bgr2Gray"/>-->
+-<!--        <stage name="find-edges" enabled="true"/>-->
+-<!--        <stage name="predetect-1" enabled="true" kernel-size="5"/>-->
+-<!--        <stage name="predetect-2" enabled="false" kernel-size="7"/>-->
+-<!--        &lt;!&ndash;            <cv-stage name="results" enabled="true" dp="1.0" param-1="25.0" param-2="20.0"/>&ndash;&gt;-->
+-<!--        &lt;!&ndash;            <cv-stage name="recalled" enabled="true" image-stage-name="original"/>&ndash;&gt;-->
+-<!--        &lt;!&ndash;            <cv-stage name="display" enabled="true" circles-stage-name="results" thickness="1">&ndash;&gt;-->
+-<!--        &lt;!&ndash;                <color r="255" g="0" b="0" a="255"/>&ndash;&gt;-->
+-<!--        &lt;!&ndash;            </cv-stage>&ndash;&gt;-->
++        <cv_pipeline>
++            <stages>
++            </stages>
++        </cv_pipeline>
+     </pipeline>
+ </openpnp-pipelines>
+\ No newline at end of file
+diff --git a/src/test/java/ReferenceBottomVisionOffsetTest.java b/src/test/java/ReferenceBottomVisionOffsetTest.java
+index 24933373b8..2ca3576ade 100644
+--- a/src/test/java/ReferenceBottomVisionOffsetTest.java
++++ b/src/test/java/ReferenceBottomVisionOffsetTest.java
+@@ -73,7 +73,7 @@ public class ReferenceBottomVisionOffsetTest {
+         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
+         
+         // No pre rotate
+-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
++        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
+         
+         // test data
+         Location[][] testData = {
+@@ -115,7 +115,7 @@ public class ReferenceBottomVisionOffsetTest {
+         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
+         
+         // No pre rotate
+-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
++        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
+         
+         // test data
+         Location[][] testData = {
+@@ -158,7 +158,7 @@ public class ReferenceBottomVisionOffsetTest {
+         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 1.0, 1.0, 0.0, 0.0));
+         
+         // No pre rotate
+-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
++        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
+         
+         // test data
+         Location[][] testData = {
+@@ -201,7 +201,7 @@ public class ReferenceBottomVisionOffsetTest {
+         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
+         
+         // No pre rotate
+-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
++        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
+         
+         // test data
+         Location[][] testData = {
+@@ -243,7 +243,7 @@ public class ReferenceBottomVisionOffsetTest {
+         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
+         
+         // With pre rotate
+-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
++        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
+         
+         // test data
+         Location[][] testData = {
+@@ -286,7 +286,7 @@ public class ReferenceBottomVisionOffsetTest {
+         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+         
+         // No pre rotate
+-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
++        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
+         
+         // test data
+         Location[][] testData = {
+@@ -329,7 +329,7 @@ public class ReferenceBottomVisionOffsetTest {
+         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+         
+         // With pre rotate
+-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
++        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
+         
+         // test data
+         Location[][] testData = {
+@@ -371,7 +371,7 @@ public class ReferenceBottomVisionOffsetTest {
+         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+         
+         // No pre rotate
+-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
++        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
+         
+         // test data
+         Location error = new Location(LengthUnit.Millimeters, 1.0, -0.5, 0.0, 18.0);
+@@ -420,7 +420,7 @@ public class ReferenceBottomVisionOffsetTest {
+         partSettings.setVisionOffset(partVisionOffset);
+         
+         // With pre rotate
+-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
++        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
+         
+         // error of vision
+         Location error = new Location(LengthUnit.Millimeters, -0.6, 1.2, 0.0, -12.0);
+-- 
+2.28.0.windows.1
+

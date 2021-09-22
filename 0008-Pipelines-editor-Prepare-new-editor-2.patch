@@ -1,0 +1,196 @@
+From 2096b2dc6565d292a9e6652ea51d1bd2eeb3333b Mon Sep 17 00:00:00 2001
+From: karlinik <karlikova.nikola@gmail.com>
+Date: Tue, 14 Sep 2021 21:55:27 +0200
+Subject: [PATCH 08/11] Pipelines editor: Prepare new editor /2
+
+All packages linked to pipeline are displayed in the pipeline editor in new tab Parts/Packages
+---
+ src/main/java/org/openpnp/model/Package.java  |  8 +-
+ src/main/java/org/openpnp/model/Part.java     |  1 +
+ .../ui/PipelineEditorPackagesTableModel.java  | 86 +++++++++++++++++++
+ .../vision/pipeline/ui/PipelinePanel.java     | 21 +++--
+ 4 files changed, 106 insertions(+), 10 deletions(-)
+ create mode 100644 src/main/java/org/openpnp/vision/pipeline/ui/PipelineEditorPackagesTableModel.java
+
+diff --git a/src/main/java/org/openpnp/model/Package.java b/src/main/java/org/openpnp/model/Package.java
+index b7789b2056..2b8826ba01 100644
+--- a/src/main/java/org/openpnp/model/Package.java
++++ b/src/main/java/org/openpnp/model/Package.java
+@@ -79,6 +79,11 @@ public class Package extends AbstractModelObject implements Identifiable {
+             @Override
+             public void configurationLoaded(Configuration configuration) {
+                 pipeline = configuration.getPipeline(pipelineId);
++
++                //TODO: NK Add the default pipeline
++                if (pipeline == null) {
++                    pipeline = new Pipeline();
++                }
+             }
+         });
+     }
+@@ -196,9 +201,6 @@ public class Package extends AbstractModelObject implements Identifiable {
+     }
+ 
+     public CvPipeline getCvPipeline() {
+-        if(pipeline == null) {
+-            return createDefaultPipeline();
+-        }
+         return pipeline.getCvPipeline();
+     }
+ 
+diff --git a/src/main/java/org/openpnp/model/Part.java b/src/main/java/org/openpnp/model/Part.java
+index b67f3cc224..2b672a6767 100644
+--- a/src/main/java/org/openpnp/model/Part.java
++++ b/src/main/java/org/openpnp/model/Part.java
+@@ -69,6 +69,7 @@ public class Part extends AbstractModelObject implements Identifiable {
+                 partPackage = configuration.getPackage(packageId);
+                 pipeline = configuration.getPipeline(pipelineId);
+ 
++                //TODO: NK Add the default pipeline
+                 if (pipeline == null) {
+                     pipeline = new Pipeline();
+                 }
+diff --git a/src/main/java/org/openpnp/vision/pipeline/ui/PipelineEditorPackagesTableModel.java b/src/main/java/org/openpnp/vision/pipeline/ui/PipelineEditorPackagesTableModel.java
+new file mode 100644
+index 0000000000..a41c542cfb
+--- /dev/null
++++ b/src/main/java/org/openpnp/vision/pipeline/ui/PipelineEditorPackagesTableModel.java
+@@ -0,0 +1,86 @@
++package org.openpnp.vision.pipeline.ui;
++
++import org.openpnp.model.Configuration;
++import org.openpnp.model.Package;
++import org.openpnp.model.Pipeline;
++
++import javax.swing.table.AbstractTableModel;
++import java.util.ArrayList;
++import java.util.List;
++
++public class PipelineEditorPackagesTableModel extends AbstractTableModel implements Reorderable {
++    private static String[] columnNames = {"ID"};
++
++    private static Class<?>[] columnClasses = {String.class};
++
++    private final List<Package> packages;
++    private final Pipeline pipeline;
++
++    public PipelineEditorPackagesTableModel(Pipeline pipeline) {
++        this.pipeline = pipeline;
++        packages = getPackages();
++    }
++
++    public void refresh() {
++        fireTableDataChanged();
++    }
++
++    @Override
++    public int getRowCount() {
++        return packages.size();
++    }
++
++    @Override
++    public int getColumnCount() {
++        return columnNames.length;
++    }
++
++    @Override
++    public Object getValueAt(int rowIndex, int columnIndex) {
++        Package pkg = getPackage(rowIndex);
++        if (columnIndex == 0) {
++            return pkg.getId();
++        }
++
++        return null;
++    }
++
++    @Override
++    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
++        Package pkg = getPackage(rowIndex);
++        if (columnIndex == 0) {
++            pkg.setId(aValue.toString());
++        }
++    }
++
++    @Override
++    public String getColumnName(int column) {
++        return columnNames[column];
++    }
++
++    @Override
++    public Class<?> getColumnClass(int columnIndex) {
++        return columnClasses[columnIndex];
++    }
++
++    @Override
++    public void reorder(int fromIndex, int toIndex) {
++
++    }
++
++    public Package getPackage(int index) {
++        return packages.get(index);
++    }
++
++    private List<Package> getPackages() {
++        List<Package> result = new ArrayList<>();
++        Configuration.get().getPackages().forEach(pkg -> {
++            //TODO: NK: not safe, ensure every part gets at least default pipeline, otherwise pipeline id is null
++            if (pkg.getPipeline().getId() != null && pkg.getPipeline().getId().equals(pipeline.getId())) {
++                result.add(pkg);
++            }
++        });
++
++        return result;
++    }
++}
+diff --git a/src/main/java/org/openpnp/vision/pipeline/ui/PipelinePanel.java b/src/main/java/org/openpnp/vision/pipeline/ui/PipelinePanel.java
+index 0d14d223de..4e9a8dc270 100644
+--- a/src/main/java/org/openpnp/vision/pipeline/ui/PipelinePanel.java
++++ b/src/main/java/org/openpnp/vision/pipeline/ui/PipelinePanel.java
+@@ -39,7 +39,7 @@ public class PipelinePanel extends JPanel {
+     private JTable packagesTable;
+     private StagesTableModel stagesTableModel;
+     private PipelineEditorPartsTableModel partsTableModel;
+-    private StagesTableModel packagesTableModel;
++    private PipelineEditorPackagesTableModel packagesTableModel;
+     private PropertySheetPanel propertySheetPanel;
+     private PipelinePropertySheetTable pipelinePropertySheetTable;
+ 
+@@ -135,11 +135,18 @@ public class PipelinePanel extends JPanel {
+         partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
+         partsTable = preparePartsPackagesTable(partsTableModel);
+ 
+-        JScrollPane scrollPaneStages = new JScrollPane(partsTable);
+-
+         partsTable.changeSelection(partsTable.getRowCount()-1,  0,  false, false);
+ 
+-        return scrollPaneStages;
++        return new JScrollPane(partsTable);
++    }
++
++    private JScrollPane preparePackagesPane() {
++        packagesTableModel = new PipelineEditorPackagesTableModel(editor.getUpperPipeline());
++        packagesTable = preparePartsPackagesTable(packagesTableModel);
++
++        packagesTable.changeSelection(packagesTable.getRowCount()-1,  0,  false, false);
++
++        return new JScrollPane(packagesTable);
+     }
+ 
+     private void prepareToolbar() {
+@@ -174,10 +181,10 @@ public class PipelinePanel extends JPanel {
+         splitPanePartsPackages.setContinuousLayout(true);
+         splitPanePartsPackages.setOrientation(JSplitPane.VERTICAL_SPLIT);
+ 
+-        JScrollPane scrollPanePackages = new JScrollPane(packagesTable);
+-
+         splitPanePartsPackages.setLeftComponent(preparePartsPane());
+-        splitPanePartsPackages.setRightComponent(scrollPanePackages);
++        splitPanePartsPackages.setRightComponent(preparePackagesPane());
++
++        splitPanePartsPackages.setResizeWeight(0.4);
+ 
+         return splitPanePartsPackages;
+     }
+-- 
+2.28.0.windows.1
+
