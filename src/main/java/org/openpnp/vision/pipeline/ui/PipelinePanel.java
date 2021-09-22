@@ -7,28 +7,12 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.DropMode;
-import javax.swing.JButton;
-import javax.swing.JEditorPane;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTable;
-import javax.swing.JToolBar;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Helpers;
@@ -44,15 +28,19 @@ import com.l2fprod.common.propertysheet.PropertySheetPanel;
 import com.l2fprod.common.propertysheet.PropertySheetTableModel;
 import com.l2fprod.common.swing.renderer.DefaultCellRenderer;
 
+import static javax.swing.SwingConstants.TOP;
+
 public class PipelinePanel extends JPanel {
     private final CvPipelineEditor editor;
 
     private JTable stagesTable;
+    private JTable partsTable;
+    private JTable packagesTable;
     private StagesTableModel stagesTableModel;
     private PropertySheetPanel propertySheetPanel;
     private PipelinePropertySheetTable pipelinePropertySheetTable;
 
-    public PipelinePanel(CvPipelineEditor editor) {
+    public PipelinePanel(CvPipelineEditor editor, boolean tabs) {
         this.editor = editor;
 
         pipelinePropertySheetTable = new PipelinePropertySheetTable(this);
@@ -61,11 +49,86 @@ public class PipelinePanel extends JPanel {
 
         setLayout(new BorderLayout(0, 0));
 
+        prepareToolbar();
+
+        if (tabs) {
+            add(prepareTabView());
+        } else {
+            add(prepareStagesSplitView(), BorderLayout.CENTER);
+        }
+    }
+
+    private JTabbedPane prepareTabView() {
+        JTabbedPane tabs = new JTabbedPane(TOP);
+
+        tabs.addTab("Stages", null, prepareStagesSplitView(), null);
+        tabs.addTab("Parts/Packages", null, preparePartsPackagesSplitView(), null);
+
+        return tabs;
+    }
+
+    private JSplitPane prepareStagesSplitView() {
         JSplitPane splitPaneMain = new JSplitPane();
-        add(splitPaneMain, BorderLayout.CENTER);
         splitPaneMain.setContinuousLayout(true);
         splitPaneMain.setOrientation(JSplitPane.VERTICAL_SPLIT);
 
+        splitPaneMain.setLeftComponent(prepareSplitPaneStages());
+        splitPaneMain.setRightComponent(propertySheetPanel);
+
+        splitPaneMain.setResizeWeight(0.5);
+
+        return splitPaneMain;
+    }
+
+    private JSplitPane prepareSplitPaneStages() {
+        JSplitPane splitPaneStages = new JSplitPane();
+        splitPaneStages.setOrientation(JSplitPane.VERTICAL_SPLIT);
+
+        stagesTableModel = new StagesTableModel(editor.getPipeline());
+        stagesTable = prepareTable(stagesTableModel);
+
+        JScrollPane scrollPaneStages = new JScrollPane(stagesTable);
+        splitPaneStages.setLeftComponent(scrollPaneStages);
+
+        JScrollPane scrollPaneDescription = new JScrollPane();
+        splitPaneStages.setRightComponent(scrollPaneDescription);
+        scrollPaneDescription.setMinimumSize(new Dimension(50, 50));
+        descriptionTa = new JEditorPane("text/html", "<html/>");
+        scrollPaneDescription.setViewportView(descriptionTa);
+        descriptionTa.setText("");
+        descriptionTa.setEditable(false);
+
+        // Listen for changes to the selection of the table and update the properties for the selected stage.
+        stagesTable.getSelectionModel().addListSelectionListener(e -> {
+            if (e.getValueIsAdjusting()) {
+                return;
+            }
+            CvStage stage = getSelectedStage();
+            editor.stageSelected(stage);
+            refreshDescription();
+            refreshProperties();
+        });
+
+        // Listen for changes to the structure of the table (adding or removing rows) and process
+        // the pipeline to update the results.
+        stagesTable.getModel().addTableModelListener(e -> editor.process());
+
+        stagesTable.changeSelection(stagesTable.getRowCount()-1,  0,  false, false);
+
+        // Listen for editing events in the stages table and process the pipeline to update the results.
+        stagesTable.addPropertyChangeListener(e -> {
+            if ("tableCellEditor".equals(e.getPropertyName()) && !propertySheetPanel.getTable().isEditing()) {
+                // editing has ended for a cell, save the values
+                editor.process();
+            }
+        });
+
+        splitPaneStages.setResizeWeight(0.80);
+
+        return splitPaneStages;
+    }
+
+    private void prepareToolbar() {
         JToolBar toolbar = new JToolBar();
         add(toolbar, BorderLayout.NORTH);
 
@@ -90,75 +153,35 @@ public class PipelinePanel extends JPanel {
         JButton pasteButton = new JButton(pasteAction);
         pasteButton.setHideActionText(true);
         toolbar.add(pasteButton);
-
-        JSplitPane splitPaneStages = new JSplitPane();
-        splitPaneStages.setOrientation(JSplitPane.VERTICAL_SPLIT);
-
-        stagesTable = new JTable(stagesTableModel = new StagesTableModel(editor.getPipeline()));
-        stagesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        stagesTable.setDragEnabled(true);
-        stagesTable.setDropMode(DropMode.INSERT_ROWS);
-        stagesTable.setTransferHandler(new TableRowTransferHandler(stagesTable));
-        stagesTable.getColumnModel().getColumn(0).setPreferredWidth(50);
-        stagesTable.getColumnModel().getColumn(1).setPreferredWidth(50);
-        stagesTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-        JScrollPane scrollPaneStages = new JScrollPane(stagesTable);
-        splitPaneStages.setLeftComponent(scrollPaneStages);
-
-        JScrollPane scrollPaneDescription = new JScrollPane();
-        splitPaneStages.setRightComponent(scrollPaneDescription);
-        scrollPaneDescription.setMinimumSize(new Dimension(50, 50));
-        descriptionTa = new JEditorPane("text/html", "<html/>");
-        scrollPaneDescription.setViewportView(descriptionTa);
-        descriptionTa.setText("");
-        descriptionTa.setEditable(false);
-
-        // Listen for changes to the selection of the table and update the properties for the
-        // selected stage.
-        stagesTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
-                CvStage stage = getSelectedStage();
-                editor.stageSelected(stage);
-                refreshDescription();
-                refreshProperties();
-            }
-        });
-
-        // Listen for changes to the structure of the table (adding or removing rows) and process
-        // the pipeline to update the results.
-        stagesTable.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                editor.process();
-            }
-        });
-
-        // Listen for editing events in the stages table and process the pipeline to update the
-        // results.
-        stagesTable.addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent e) {
-                if ("tableCellEditor".equals(e.getPropertyName())) {
-                    if (!propertySheetPanel.getTable().isEditing()) {
-                        // editing has ended for a cell, save the values
-                        editor.process();
-                    }
-                }
-            }
-        });
-        stagesTable.changeSelection(stagesTable.getRowCount()-1,  0,  false, false);
-          
-        splitPaneMain.setLeftComponent(splitPaneStages);
-        splitPaneMain.setRightComponent(propertySheetPanel);
-        
-        splitPaneMain.setResizeWeight(0.5);
-        splitPaneStages.setResizeWeight(0.80);
     }
-    
+
+    private JSplitPane preparePartsPackagesSplitView() {
+        JSplitPane splitPanePartsPackages = new JSplitPane();
+        splitPanePartsPackages.setContinuousLayout(true);
+        splitPanePartsPackages.setOrientation(JSplitPane.VERTICAL_SPLIT);
+
+        JScrollPane scrollPaneParts = new JScrollPane(partsTable);
+        JScrollPane scrollPanePackages = new JScrollPane(packagesTable);
+
+        splitPanePartsPackages.setLeftComponent(scrollPaneParts);
+        splitPanePartsPackages.setRightComponent(scrollPanePackages);
+
+        return splitPanePartsPackages;
+    }
+
+    private JTable prepareTable(AbstractTableModel tableModel) {
+        JTable table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setDragEnabled(true);
+        table.setDropMode(DropMode.INSERT_ROWS);
+        table.setTransferHandler(new TableRowTransferHandler(table));
+        table.getColumnModel().getColumn(0).setPreferredWidth(50);
+        table.getColumnModel().getColumn(1).setPreferredWidth(50);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+
+        return table;
+    }
+
     public void initializeFocus() {
         stagesTable.grabFocus();
         try {
@@ -172,7 +195,7 @@ public class PipelinePanel extends JPanel {
         }
     }
 
-    public void onStagePropertySheetValueChanged(Object aValue, int row, int column) {
+    public void onStagePropertySheetValueChanged(int row) {
         // editing has ended for a cell, save the values
         refreshDescription();
 
@@ -185,8 +208,7 @@ public class PipelinePanel extends JPanel {
 
         editor.process();
     }
-    
-   
+
     private void refreshProperties() {
         CvStage stage = getSelectedStage();
         if (stage == null) {
@@ -205,7 +227,7 @@ public class PipelinePanel extends JPanel {
             }
         }
     }
-    
+
     private void refreshDescription() {
         CvStage stage = getSelectedStage();
         if (stage == null) {
@@ -221,7 +243,7 @@ public class PipelinePanel extends JPanel {
             }
         }
     }
-    
+
     public CvStage getSelectedStage() {
         int index = stagesTable.getSelectedRow();
         if (index == -1) {
@@ -242,14 +264,8 @@ public class PipelinePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            List<Class<? extends CvStage>> stageClasses = new ArrayList<>(editor.getStageClasses());
-            stageClasses.sort(new Comparator<Class<? extends CvStage>>() {
-                @Override
-                public int compare(Class<? extends CvStage> o1, Class<? extends CvStage> o2) {
-                    return o1.getSimpleName().toLowerCase()
-                            .compareTo(o2.getSimpleName().toLowerCase());
-                }
-            });
+            List<Class<? extends CvStage>> stageClasses = new ArrayList<>(CvPipelineEditor.getStageClasses());
+            stageClasses.sort(Comparator.comparing(o -> o.getSimpleName().toLowerCase()));
             ClassSelectionDialog<CvStage> dialog = new ClassSelectionDialog<>(
                     JOptionPane.getFrameForComponent(PipelinePanel.this), "New stage",
                     "Please select a stage implemention from the list below.", stageClasses);

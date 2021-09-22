@@ -22,7 +22,7 @@ public class PipelinePropertySheetTable extends PropertySheetTable {
     public void setValueAt(Object aValue, int row, int column) {
         super.setValueAt(aValue, row, column);
 
-        pipelinePanel.onStagePropertySheetValueChanged(aValue, row, column);
+        pipelinePanel.onStagePropertySheetValueChanged(row);
     }
 
     /**

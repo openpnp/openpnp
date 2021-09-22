@@ -52,7 +52,7 @@ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
         editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(new UiUtils.Thrunnable() {
             @Override
             public void thrun() throws Exception {
-                VisionConfigurationWizard.this.editPipeline();
+                editPipeline();
             }
         }));
         panel.add(editPipelineButton, "4, 6");
@@ -100,7 +100,7 @@ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
 
     private void editPipeline() {
         CvPipeline pipeline = pipelineSettings.getPipeline();
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        CvPipelineEditor editor = new CvPipelineEditor(pipeline, true);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Vision Pipeline", editor);
         dialog.setVisible(true);
     }

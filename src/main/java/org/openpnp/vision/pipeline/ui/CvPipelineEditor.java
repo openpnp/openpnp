@@ -1,8 +1,6 @@
 package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
-import java.awt.event.HierarchyEvent;
-import java.awt.event.HierarchyListener;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -164,7 +162,7 @@ public class CvPipelineEditor extends JPanel {
         
     }
 
-    private final static Set<Class<? extends CvStage>> stageClasses;
+    private static final Set<Class<? extends CvStage>> stageClasses;
 
     private final CvPipeline pipeline;
     private PipelinePanel pipelinePanel;
@@ -173,6 +171,10 @@ public class CvPipelineEditor extends JPanel {
     private String originalVersion = "";
 
     public CvPipelineEditor(CvPipeline pipeline) {
+        this(pipeline, false);
+    }
+
+    public CvPipelineEditor(CvPipeline pipeline, boolean tabs) {
         this.pipeline = pipeline;
         try {
             originalVersion = pipeline.toXmlString();
@@ -189,15 +191,10 @@ public class CvPipelineEditor extends JPanel {
 
         resultsPanel = new ResultsPanel(this);
         inputAndOutputSplitPane.setRightComponent(resultsPanel);
-        pipelinePanel = new PipelinePanel(this);
+        pipelinePanel = new PipelinePanel(this, tabs);
         inputAndOutputSplitPane.setLeftComponent(pipelinePanel);
         
-        addHierarchyListener(new HierarchyListener() {
-            @Override
-            public void hierarchyChanged(HierarchyEvent e) {
-                inputAndOutputSplitPane.setDividerLocation(0.25);
-            }
-        });
+        addHierarchyListener(e -> inputAndOutputSplitPane.setDividerLocation(0.25));
         
         process();
     }
