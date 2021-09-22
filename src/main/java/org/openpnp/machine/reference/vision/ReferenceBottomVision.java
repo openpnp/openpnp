@@ -61,9 +61,6 @@ public class ReferenceBottomVision implements PartAlignment {
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
-    @ElementMap(required = false)
-    protected Map<String, PipelineSettings> pipelineSettingByPipelineId = new HashMap<>();
-
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
             Location placementLocation, Nozzle nozzle) throws Exception {
@@ -520,19 +517,10 @@ public class ReferenceBottomVision implements PartAlignment {
     public PartSettings getPartSettings(Part part) {
         PartSettings partSettings = this.partSettingsByPartId.get(part.getId());
         if (partSettings == null) {
-            partSettings = new PartSettings(this, part);
+            partSettings = new PartSettings(this);
             this.partSettingsByPartId.put(part.getId(), partSettings);
         }
         return partSettings;
-    }
-
-    private PipelineSettings getPipelineSettings(Pipeline pipeline) {
-        PipelineSettings pipelineSettings = this.pipelineSettingByPipelineId.get(pipeline.getId());
-        if (pipelineSettings == null) {
-            pipelineSettings = new PipelineSettings(pipeline);
-            this.pipelineSettingByPipelineId.put(pipeline.getId(), pipelineSettings);
-        }
-        return pipelineSettings;
     }
 
     public Map<String, PartSettings> getPartSettingsByPartId() {
@@ -551,8 +539,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public Wizard getPipelineConfigurationWizard(Pipeline pipeline) {
-        PipelineSettings pipelineSettings = getPipelineSettings(pipeline);
-        return new VisionConfigurationWizard(pipelineSettings);
+        return new VisionConfigurationWizard(pipeline);
     }
 
     public enum PreRotateUsage {
@@ -591,7 +578,7 @@ public class ReferenceBottomVision implements PartAlignment {
 
         }
 
-        public PartSettings(ReferenceBottomVision bottomVision, Part part) {
+        public PartSettings(ReferenceBottomVision bottomVision) {
             setEnabled(bottomVision.isEnabled());
         }
 

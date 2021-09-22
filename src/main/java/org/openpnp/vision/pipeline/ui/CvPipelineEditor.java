@@ -8,6 +8,7 @@ import java.util.Set;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
+import org.openpnp.model.Pipeline;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -164,20 +165,30 @@ public class CvPipelineEditor extends JPanel {
 
     private static final Set<Class<? extends CvStage>> stageClasses;
 
-    private final CvPipeline pipeline;
+    private final Pipeline pipeline;
     private PipelinePanel pipelinePanel;
     private ResultsPanel resultsPanel;
     
     private String originalVersion = "";
 
     public CvPipelineEditor(CvPipeline pipeline) {
-        this(pipeline, false);
+        this(null, pipeline, false);
     }
 
-    public CvPipelineEditor(CvPipeline pipeline, boolean tabs) {
-        this.pipeline = pipeline;
+    public CvPipelineEditor(Pipeline pipeline, boolean tabs) {
+        this(pipeline, pipeline.getCvPipeline(), tabs);
+    }
+
+    public CvPipelineEditor(Pipeline pipeline, CvPipeline cvPipeline, boolean tabs) {
+        if (pipeline == null) {
+            this.pipeline = new Pipeline();
+            this.pipeline.setCvPipeline(cvPipeline);
+        } else {
+            this.pipeline = pipeline;
+        }
+
         try {
-            originalVersion = pipeline.toXmlString();
+            originalVersion = this.pipeline.getCvPipeline().toXmlString();
         }
         catch (Exception e1) {
             // Do nothing
@@ -203,12 +214,16 @@ public class CvPipelineEditor extends JPanel {
         pipelinePanel.initializeFocus();    	
     }
     
-    public CvPipeline getPipeline() {
+    public Pipeline getUpperPipeline() {
         return pipeline;
     }
 
+    public CvPipeline getPipeline() {
+        return pipeline.getCvPipeline();
+    }
+
     public void process() {
-        UiUtils.messageBoxOnException(() -> getPipeline().process());
+        UiUtils.messageBoxOnException(() -> pipeline.getCvPipeline().process());
         resultsPanel.refresh();
     }
 
@@ -219,7 +234,7 @@ public class CvPipelineEditor extends JPanel {
     public boolean isDirty( ) {
         String editedVersion = "";
         try {
-            editedVersion = pipeline.toXmlString();
+            editedVersion = pipeline.getCvPipeline().toXmlString();
         }
         catch (Exception e) {
             // Do nothing
@@ -229,7 +244,7 @@ public class CvPipelineEditor extends JPanel {
     
     public void undoEdits() {
         try {
-            pipeline.fromXmlString(originalVersion);
+            pipeline.getCvPipeline().fromXmlString(originalVersion);
         }
         catch (Exception e) {
             // Do nothing

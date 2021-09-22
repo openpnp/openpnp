@@ -18,6 +18,7 @@ import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -37,6 +38,8 @@ public class PipelinePanel extends JPanel {
     private JTable partsTable;
     private JTable packagesTable;
     private StagesTableModel stagesTableModel;
+    private PipelineEditorPartsTableModel partsTableModel;
+    private StagesTableModel packagesTableModel;
     private PropertySheetPanel propertySheetPanel;
     private PipelinePropertySheetTable pipelinePropertySheetTable;
 
@@ -128,6 +131,17 @@ public class PipelinePanel extends JPanel {
         return splitPaneStages;
     }
 
+    private JScrollPane preparePartsPane() {
+        partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
+        partsTable = preparePartsPackagesTable(partsTableModel);
+
+        JScrollPane scrollPaneStages = new JScrollPane(partsTable);
+
+        partsTable.changeSelection(partsTable.getRowCount()-1,  0,  false, false);
+
+        return scrollPaneStages;
+    }
+
     private void prepareToolbar() {
         JToolBar toolbar = new JToolBar();
         add(toolbar, BorderLayout.NORTH);
@@ -160,13 +174,24 @@ public class PipelinePanel extends JPanel {
         splitPanePartsPackages.setContinuousLayout(true);
         splitPanePartsPackages.setOrientation(JSplitPane.VERTICAL_SPLIT);
 
-        JScrollPane scrollPaneParts = new JScrollPane(partsTable);
         JScrollPane scrollPanePackages = new JScrollPane(packagesTable);
 
-        splitPanePartsPackages.setLeftComponent(scrollPaneParts);
+        splitPanePartsPackages.setLeftComponent(preparePartsPane());
         splitPanePartsPackages.setRightComponent(scrollPanePackages);
 
         return splitPanePartsPackages;
+    }
+
+    private JTable preparePartsPackagesTable(AbstractTableModel tableModel) {
+        JTable table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setDragEnabled(true);
+        table.setDropMode(DropMode.INSERT_ROWS);
+        table.setTransferHandler(new TableRowTransferHandler(table));
+        table.getColumnModel().getColumn(0).setPreferredWidth(100);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+
+        return table;
     }
 
     private JTable prepareTable(AbstractTableModel tableModel) {
@@ -252,6 +277,17 @@ public class PipelinePanel extends JPanel {
         else {
             index = stagesTable.convertRowIndexToModel(index);
             return stagesTableModel.getStage(index);
+        }
+    }
+
+    public Part getSelectedPart() {
+        int index = partsTable.getSelectedRow();
+        if (index == -1) {
+            return null;
+        }
+        else {
+            index = partsTable.convertRowIndexToModel(index);
+            return partsTableModel.getPart(index);
         }
     }
 

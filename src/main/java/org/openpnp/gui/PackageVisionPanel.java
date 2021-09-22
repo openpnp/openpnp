@@ -40,10 +40,8 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.tablemodel.FootprintTableModel;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Footprint;
+import org.openpnp.model.*;
 import org.openpnp.model.Footprint.Pad;
-import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Package;
 import org.openpnp.spi.Camera;
 
