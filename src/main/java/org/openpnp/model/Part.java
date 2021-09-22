@@ -68,6 +68,10 @@ public class Part extends AbstractModelObject implements Identifiable {
             public void configurationLoaded(Configuration configuration) {
                 partPackage = configuration.getPackage(packageId);
                 pipeline = configuration.getPipeline(pipelineId);
+
+                if (pipeline == null) {
+                    pipeline = new Pipeline();
+                }
             }
         });
     }
@@ -75,6 +79,7 @@ public class Part extends AbstractModelObject implements Identifiable {
     @Persist
     private void persist() {
         packageId = (partPackage == null ? null : partPackage.getId());
+        pipelineId = (pipeline == null ? null : pipeline.getId());
     }
 
     @Override
@@ -163,9 +168,6 @@ public class Part extends AbstractModelObject implements Identifiable {
     }
 
     public CvPipeline getCvPipeline() {
-        if(pipeline == null) {
-            return new CvPipeline();
-        }
         return pipeline.getCvPipeline();
     }
 

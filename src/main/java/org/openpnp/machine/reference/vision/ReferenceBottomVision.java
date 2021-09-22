@@ -139,7 +139,7 @@ public class ReferenceBottomVision implements PartAlignment {
         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
         final Location center = new Location(maxLinearOffset.getUnits());
         
-        try (CvPipeline cvPipeline = partSettings.getPipeline()) {
+        try (CvPipeline cvPipeline = part.getCvPipeline()) {
 
             // The running, iterative offset.
             Location offsets = new Location(nozzleLocation.getUnits());
@@ -233,7 +233,7 @@ public class ReferenceBottomVision implements PartAlignment {
         
         MovableUtils.moveToLocationAtSafeZ(nozzle, wantedLocation);
 
-        try (CvPipeline cvPipeline = partSettings.getPipeline()) {
+        try (CvPipeline cvPipeline = part.getCvPipeline()) {
             RotatedRect rect = processPipelineAndGetResult(cvPipeline, camera, part, nozzle);
             camera=(Camera)cvPipeline.getProperty(CAMERA);
 
@@ -520,7 +520,7 @@ public class ReferenceBottomVision implements PartAlignment {
     public PartSettings getPartSettings(Part part) {
         PartSettings partSettings = this.partSettingsByPartId.get(part.getId());
         if (partSettings == null) {
-            partSettings = new PartSettings(this);
+            partSettings = new PartSettings(this, part);
             this.partSettingsByPartId.put(part.getId(), partSettings);
         }
         return partSettings;
@@ -541,10 +541,8 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Override
     public Wizard getPartConfigurationWizard(Part part) {
-        PartSettings partSettings = getPartSettings(part);
         try {
-            partSettings.getPipeline()
-                        .setProperty(CAMERA, VisionUtils.getBottomVisionCamera());
+            part.getCvPipeline().setProperty(CAMERA, VisionUtils.getBottomVisionCamera());
         }
         catch (Exception e) {
         }
@@ -588,24 +586,13 @@ public class ReferenceBottomVision implements PartAlignment {
         
         @Element(required = false)
         protected Location visionOffset = new Location(LengthUnit.Millimeters);
-        
-        @Element
-        protected CvPipeline pipeline;
 
         public PartSettings() {
 
         }
 
-        public PartSettings(ReferenceBottomVision bottomVision) {
+        public PartSettings(ReferenceBottomVision bottomVision, Part part) {
             setEnabled(bottomVision.isEnabled());
-            try {
-                //TODO: NK: get pipeline from xml/from the part
-                setPipeline(bottomVision.getPipeline()
-                                        .clone());
-            }
-            catch (Exception e) {
-                throw new Error(e);
-            }
         }
 
         public boolean isEnabled() {
@@ -622,14 +609,6 @@ public class ReferenceBottomVision implements PartAlignment {
 
         public void setPreRotateUsage(PreRotateUsage preRotateUsage) {
             this.preRotateUsage = preRotateUsage;
-        }
-
-        public CvPipeline getPipeline() {
-            return pipeline;
-        }
-
-        public void setPipeline(CvPipeline pipeline) {
-            this.pipeline = pipeline;
         }
         
         public MaxRotation getMaxRotation() {

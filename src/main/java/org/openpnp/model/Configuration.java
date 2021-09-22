@@ -430,6 +430,12 @@ public class Configuration extends AbstractModelObject {
         catch (Exception e) {
             throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
         }
+        try {
+            savePipelines(createBackedUpFile("pipelines.xml", now));
+        }
+        catch (Exception e) {
+            throw new Exception("Error while saving pipelines.xml (" + e.getMessage() + ")", e);
+        }
     }
 
     protected File createBackedUpFile(String fileName, LocalDateTime now) throws Exception {

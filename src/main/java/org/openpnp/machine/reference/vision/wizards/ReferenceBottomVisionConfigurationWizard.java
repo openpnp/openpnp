@@ -100,15 +100,16 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                     "This will replace all custom part pipelines with the current pipeline. Are you sure?",
                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    for (PartSettings partSettings : bottomVision.getPartSettingsByPartId()
-                                                                 .values()) {
-                        partSettings.setPipeline(bottomVision.getPipeline()
-                                                             .clone());
-                    }
-                    MessageBoxes.infoBox("Parts Reset",
-                            "All custom part pipelines have been reset.");
-                });
+                //TODO: NK change using configuration parts
+//                UiUtils.messageBoxOnException(() -> {
+//                    for (PartSettings partSettings : bottomVision.getPartSettingsByPartId()
+//                                                                 .values()) {
+//                        partSettings.setPipeline(bottomVision.getPipeline()
+//                                                             .clone());
+//                    }
+//                    MessageBoxes.infoBox("Parts Reset",
+//                            "All custom part pipelines have been reset.");
+//                });
             }
         });
         panel.add(btnResetAllTo, "8, 4");

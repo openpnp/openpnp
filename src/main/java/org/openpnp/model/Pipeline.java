@@ -24,10 +24,12 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
     }
 
     public CvPipeline getCvPipeline() {
-        if (cvPipeline == null) {
-            cvPipeline = new CvPipeline();
-        }
+        //TODO: NK check if really initialize, should not be ever null
         return cvPipeline;
+    }
+
+    public void setCvPipeline(CvPipeline cvPipeline) {
+        this.cvPipeline = cvPipeline;
     }
 
     //TODO: contructor for creation of a new pipeline

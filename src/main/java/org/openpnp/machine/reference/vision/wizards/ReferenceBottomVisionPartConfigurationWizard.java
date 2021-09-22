@@ -139,7 +139,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
                     //TODO NK: reset to default part/package, not the global one
-                    partSettings.setPipeline(bottomVision.getPipeline().clone());
+                    part.getPipeline().setCvPipeline(bottomVision.getPipeline().clone());
                     editPipeline();
                 });
             }

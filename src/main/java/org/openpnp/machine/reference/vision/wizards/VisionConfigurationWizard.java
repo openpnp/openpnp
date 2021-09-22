@@ -24,6 +24,7 @@ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
 
     JPanel panel;
 
+    //TODO: NK May need also ReferenceBottomVision or parts/packages settings
     public VisionConfigurationWizard(ReferenceBottomVision.PipelineSettings pipelineSettings) {
         this.pipelineSettings = pipelineSettings;
         createUi();
