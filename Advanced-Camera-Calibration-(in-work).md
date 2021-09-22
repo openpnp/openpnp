@@ -9,17 +9,20 @@ The purpose of advanced camera calibration is to:
 
 # Enabling/Disabling
 Advanced camera calibration is enabled/disabled for a particular camera by selecting the camera in the Machine Setup tree, selecting the Experimental Calibration tab, and checking/clearing the check box "Enable experimental calibration to override old style image transforms and distortion correction" (see below). Other than the settings under the General Settings section, no other settings on this tab will have any effect on machine operation if this check box is cleared (all the settings prior to running Advance Camera Calibration will be restored):
-![Experimental Calibration Tab](https://user-images.githubusercontent.com/50550971/132746491-2e46dfa1-d5bc-4f2e-bd82-7cdc7786d8e7.png)
+![Experimental Calibration Tab](https://user-images.githubusercontent.com/50550971/134405655-af1e0392-208b-47e2-86a5-38b05bbca6af.png)
 
 # General Settings
 ![General Settings](https://user-images.githubusercontent.com/50550971/132746519-9b87e1bb-b9ff-4d80-b05c-7c1be3f0a565.png)
 The settings here are simply copies of settings available on other tabs.  They are provided here as a convenience since they should be set to their desired values prior to running Advanced Calibration.  Note that any changes made here take effect immediately and will change the corresponding value on any other tabs on which they appear.
 
 # Calibration Setup
-![Calibration Setup](https://user-images.githubusercontent.com/50550971/132746566-76f7f224-9ecd-41ae-a966-f752de753103.png)
+![Calibration Setup](https://user-images.githubusercontent.com/50550971/134420670-04849671-d67a-4606-8834-409b9f57b74b.png)
+
 The **Primary Cal Z** and **Secondary Cal Z** settings determine the Z coordinate of the calibration test patterns that will be used to calibrate the camera.  For top cameras, these are set to the Z coordinate of the Primary and Secondary Calibration Fiducials respectively and are not editable here.  For bottom cameras, the **Primary Cal Z** is set to the Z coordinate where the nozzle tip is in best focus as determined by auto focus (not editable here) and the **Secondary Cal Z** is set by default to half of the primary setting. The operator should set this as high (more positive) as possible but still keeping the nozzle tip in reasonable focus. 
 
 The **Radial Lines Per Cal Z** setting is used to control how many calibration data points are collected during the calibration process.  The calibration data is collected along lines that start at the center of the image and proceed out to the edge of the image.  This setting controls how many such lines are used.  This setting gets rounded up to the next multiple of four.  Reducing this number will reduce the duration of the collection sequence but at the risk of lower quality or even failed calibration. Increasing this number will increase the duration of the collection but may result in a higher quality calibration.
+
+The **Approximate Camera Lens Z** setting is used to give the calibration algorithms a hint at the Z coordinate of the camera lens. Since this is only a hint, a rough approximation (within +/- 20 percent) is generally sufficient. A rough ruler measurement from an object of known Z such as the top surface of a PCB to the camera lens is all that is required. For top cameras add the ruler measurement to the object's Z coordinate and for bottom cameras, subtract the ruler measurement.
 
 The **Start Calibration** button starts the calibration collection process.  All settings on this tab above the button should be setup before clicking this. During the calibration collection process, instructions will appear below the camera view guiding the operator through the process.
 
@@ -27,7 +30,7 @@ The **Detection Diameter** spinner sets the size of the fiducial/nozzle tip that
 
 Once the calibration data has been collected and processed, the **Apply Calibration** check box will automatically be selected thereby applying the calibration to the camera and enabling calibrated images to be displayed in the Camera View.  Clearing this checkbox, results in raw images being displayed in the Camera View.
 
-The slider at the bottom of this section allows the operator to control the cropping of invalid pixels along the edges of the calibrated camera images.  While mostly aesthetic, changing this setting does change the Units Per Pixel for the camera.  Setting the slider to the far right ensures all available pixels from the camera are displayed.  Setting the slider to the far left ensures that the edges of the image are cropped symmetrically about the reticle crosshairs.
+The **Crop All Invalid Pixels <--> Show All Valid Pixels** slider at the bottom of this section allows the operator to control the cropping of invalid pixels along the edges of the calibrated camera images.  Invalid pixels (usually displayed as black) on the edges of the image may result due to the image processing that compensates for errors in camera mounting and lens distortion. While mostly aesthetic, changing this setting does change the Units Per Pixel for the camera.  Setting the slider to the far right ensures all available pixels from the camera are displayed.  Setting the slider to the far left ensures that the edges of the image are cropped symmetrically about the reticle crosshairs so that no invalid pixels remain at the edges. Intermediate settings will produce results between the two extremes.
 
 # Calibration Data Collection
 Upon clicking the **Start Calibration** button, the calibration proceeds as follows:
