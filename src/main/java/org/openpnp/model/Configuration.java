@@ -516,6 +516,10 @@ public class Configuration extends AbstractModelObject {
     }
 
     public Pipeline getPipeline(String pipelineId) {
+        if (pipelineId == null) {
+            return null;
+        }
+
         return pipelines.get(pipelineId);
     }
 

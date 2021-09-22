@@ -29,6 +29,8 @@ import org.simpleframework.xml.core.Persist;
  * from one or more Feeders and is placed at a Placement as part of a Job. Parts can be used across
  * many boards and should generally represent a single part in the real world.
  */
+
+//TODO: NK constructor to initialize cvpipeline
 public class Part extends AbstractModelObject implements Identifiable {
     @Attribute
     private String id;

@@ -53,9 +53,9 @@ public class CvPipeline implements AutoCloseable {
     @ElementList
     private ArrayList<CvStage> stages = new ArrayList<>();
 
-    private Map<CvStage, Result> results = new HashMap<CvStage, Result>();
+    private Map<CvStage, Result> results = new HashMap<>();
     
-    private Map<String, Object> properties = new HashMap<String, Object>();
+    private Map<String, Object> properties = new HashMap<>();
 
     private Mat workingImage;
     private Object workingModel;
