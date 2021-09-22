@@ -7,10 +7,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-
+import java.util.*;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 
@@ -21,6 +18,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.PairKey;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 
@@ -32,19 +30,31 @@ import com.l2fprod.common.swing.renderer.DefaultCellRenderer;
 import static javax.swing.SwingConstants.TOP;
 
 public class PipelinePanel extends JPanel {
-    private final CvPipelineEditor editor;
+    public static final String ADD = "add";
+    public static final String DELETE = "delete";
+    public static final int STAGES = 0;
+    public static final int PARTS_PACKAGES = 1;
+
+    public final CvPipelineEditor editor;
 
     private JTable stagesTable;
     private JTable partsTable;
     private JTable packagesTable;
+    private JButton btnAdd;
+    private JButton btnRemove;
+
     private StagesTableModel stagesTableModel;
     private PipelineEditorPartsTableModel partsTableModel;
     private PipelineEditorPackagesTableModel packagesTableModel;
     private PropertySheetPanel propertySheetPanel;
     private PipelinePropertySheetTable pipelinePropertySheetTable;
 
+    HashMap<PairKey<String, Integer>, Action> toolbarActionMap = new HashMap<>();
+
     public PipelinePanel(CvPipelineEditor editor, boolean tabs) {
         this.editor = editor;
+
+        initializeToolbarActionMap();
 
         pipelinePropertySheetTable = new PipelinePropertySheetTable(this);
         propertySheetPanel = new PropertySheetPanel(pipelinePropertySheetTable);
@@ -61,11 +71,20 @@ public class PipelinePanel extends JPanel {
         }
     }
 
+    private void initializeToolbarActionMap() {
+        toolbarActionMap.put(new PairKey<>(ADD, STAGES), new NewStageAction("New stage...", "Create a new stage."));
+        toolbarActionMap.put(new PairKey<>(DELETE, STAGES), new DeleteStageAction("Delete Stage...", "Delete the selected stage."));
+        toolbarActionMap.put(new PairKey<>(ADD, PARTS_PACKAGES), new NewPartPackageAction("New part/package", "Add new part of package"));
+        toolbarActionMap.put(new PairKey<>(DELETE, PARTS_PACKAGES), new DeletePartPackageAction("Delete Part/Package...", "Delete the selected Part or Package."));
+    }
+
     private JTabbedPane prepareTabView() {
         JTabbedPane tabs = new JTabbedPane(TOP);
 
         tabs.addTab("Stages", null, prepareStagesSplitView(), null);
         tabs.addTab("Parts/Packages", null, preparePartsPackagesSplitView(), null);
+
+        tabs.addChangeListener(e -> setToolbarButtonsActions(tabs.getSelectedIndex()));
 
         return tabs;
     }
@@ -153,27 +172,34 @@ public class PipelinePanel extends JPanel {
         JToolBar toolbar = new JToolBar();
         add(toolbar, BorderLayout.NORTH);
 
-        JButton refreshButton = new JButton(refreshAction);
+        JButton refreshButton = new JButton(new RefreshAction(Icons.refresh, "Update picture from current view.", "Update picture from current view."));
         refreshButton.setHideActionText(true);
         toolbar.add(refreshButton);
 
-        JButton btnAdd = new JButton(newStageAction);
-        btnAdd.setHideActionText(true);
+        btnAdd = new JButton("Add new ...");
         toolbar.add(btnAdd);
+        btnAdd.setHideActionText(true);
 
-        JButton btnRemove = new JButton(deleteStageAction);
-        btnRemove.setHideActionText(true);
+        btnRemove = new JButton("Delete ...");
         toolbar.add(btnRemove);
+        btnRemove.setHideActionText(true);
 
         toolbar.addSeparator();
 
-        JButton copyButton = new JButton(copyAction);
-        copyButton.setHideActionText(true);
+        JButton copyButton = new JButton(new CopyPipelineAction("Copy pipeline to clipboard", "Copy the pipeline to the clipboard in text format."));
         toolbar.add(copyButton);
+        copyButton.setHideActionText(true);
 
-        JButton pasteButton = new JButton(pasteAction);
-        pasteButton.setHideActionText(true);
+        JButton pasteButton = new JButton(new PastePipelineAction("Paste pipeline from clipboard", "Paste new pipeline from a definition on the clipboard."));
         toolbar.add(pasteButton);
+        pasteButton.setHideActionText(true);
+
+        setToolbarButtonsActions(STAGES);
+    }
+
+    private void setToolbarButtonsActions(int selectedPane) {
+        btnAdd.setAction(toolbarActionMap.get(new PairKey<>(ADD, selectedPane)));
+        btnRemove.setAction(toolbarActionMap.get(new PairKey<>(DELETE, selectedPane)));
     }
 
     private JSplitPane preparePartsPackagesSplitView() {
@@ -298,11 +324,22 @@ public class PipelinePanel extends JPanel {
         }
     }
 
-    public Action newStageAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New stage...");
-            putValue(SHORT_DESCRIPTION, "Create a new stage.");
+    class Action extends AbstractAction {
+        Action(Icon icon, String name, String description) {
+            putValue(SMALL_ICON, icon);
+            putValue(NAME, name);
+            putValue(SHORT_DESCRIPTION, description);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            //TODO NK: throw an exception
+        }
+    }
+
+    class NewStageAction extends Action {
+        NewStageAction(String name, String description) {
+            super(Icons.add, name, description);
         }
 
         @Override
@@ -329,51 +366,44 @@ public class PipelinePanel extends JPanel {
                         e);
             }
         }
-    };
+    }
 
-    public Action deleteStageAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Stage...");
-            putValue(SHORT_DESCRIPTION, "Delete the selected stage.");
+    class DeleteStageAction extends Action {
+        DeleteStageAction(String name, String description) {
+            super(Icons.delete, name, description);
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {
+        public void actionPerformed(ActionEvent e) {
             CvStage stage = getSelectedStage();
             editor.getPipeline().remove(stage);
             stagesTableModel.refresh();
             editor.process();
         }
-    };
+    }
 
-    public final Action copyAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy pipeline to clipboard");
-            putValue(SHORT_DESCRIPTION, "Copy the pipeline to the clipboard in text format.");
+    class CopyPipelineAction extends Action {
+        CopyPipelineAction(String name, String description) {
+            super(Icons.copy, name, description);
         }
 
         @Override
-        public void actionPerformed(ActionEvent arg0) {
+        public void actionPerformed(ActionEvent e) {
             try {
                 StringSelection stringSelection =
                         new StringSelection(editor.getPipeline().toXmlString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
             }
-            catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy failed", e);
+            catch (Exception exception) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy failed", exception);
             }
         }
-    };
+    }
 
-    public final Action pasteAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create pipeline from clipboard");
-            putValue(SHORT_DESCRIPTION,
-                    "Create a new pipeline from a definition on the clipboard.");
+    class PastePipelineAction extends Action {
+        PastePipelineAction(String name, String description) {
+            super(Icons.paste, name, description);
         }
 
         @Override
@@ -390,19 +420,41 @@ public class PipelinePanel extends JPanel {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste failed", e);
             }
         }
-    };
+    }
 
-    public final Action refreshAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.refresh);
-            putValue(NAME, "Update picture from current view.");
-            putValue(SHORT_DESCRIPTION, "Update picture from current view.");
+    class NewPartPackageAction extends Action {
+        NewPartPackageAction(String name, String description) {
+            super(Icons.add, name, description);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            System.out.println("New part/package action called");
+            JDialog dialog = new JDialog();
+            dialog.setVisible(true);
+        }
+    }
+
+    class DeletePartPackageAction extends Action {
+        DeletePartPackageAction(String name, String description) {
+            super(Icons.delete, name, description);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            System.out.println("Delete part/package action called");
+        }
+    }
+
+    class RefreshAction extends Action {
+        RefreshAction(Icon icon, String name, String description) {
+            super(icon, name, description);
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             editor.process();
         }
-    };
+    }
     private JEditorPane descriptionTa;
 }
