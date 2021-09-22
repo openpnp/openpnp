@@ -211,7 +211,7 @@ public class PackagesPanel extends JPanel {
 
     private void packageSelectionSetup(Package pkg, int selectedTab) {
         tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
-        tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg.getFootprint())));
+        tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg)));
         tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
         if (selectedTab != -1) {
             tabbedPane.setSelectedIndex(selectedTab);

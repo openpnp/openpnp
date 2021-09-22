@@ -26,8 +26,6 @@ import java.awt.event.ActionEvent;
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -46,12 +44,18 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Package;
 import org.openpnp.spi.Camera;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.openpnp.util.UiUtils;
+import org.openpnp.util.VisionUtils;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 @SuppressWarnings("serial")
 public class PackageVisionPanel extends JPanel {
@@ -59,10 +63,15 @@ public class PackageVisionPanel extends JPanel {
     private JTable table;
 
     private final Footprint footprint;
+    private final Package pkg;
 
-    public PackageVisionPanel(Footprint footprint) {
-        this.footprint = footprint;
+    public PackageVisionPanel(Package pkg) {
+        this.pkg = pkg;
+        this.footprint = pkg.getFootprint();
+        initialize();
+    }
 
+    private void initialize() {
         setLayout(new BorderLayout(0, 0));
         tableModel = new FootprintTableModel(footprint);
 
@@ -152,6 +161,9 @@ public class PackageVisionPanel extends JPanel {
 
         JLabel lblPipeline = new JLabel("Pipeline");
         JButton editPipelineBtn = new JButton("Edit");
+        editPipelineBtn.addActionListener(e -> UiUtils.messageBoxOnException(() -> {
+            editPipeline();
+        }));
         JButton resetPipelineBtn = new JButton("Reset to Default");
 
         bottomVisionPanel.add(lblPipeline, "2, 2, right, default");
@@ -160,6 +172,16 @@ public class PackageVisionPanel extends JPanel {
 
         showReticle();
         initDataBindings();
+    }
+
+    private void editPipeline() throws Exception {
+        CvPipeline pipeline = pkg.getPipeline().getCvPipeline();
+        pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
+        pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
+
+        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
+        dialog.setVisible(true);
     }
 
     protected void initDataBindings() {

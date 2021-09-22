@@ -23,5 +23,9 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
         return name;
     }
 
+    public CvPipeline getCvPipeline() {
+        return cvPipeline;
+    }
+
     //TODO: contructor for creation of a new pipeline
 }

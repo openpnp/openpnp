@@ -129,13 +129,9 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         panel.add(lblPipeline, "2, 8");
 
         JButton editPipelineButton = new JButton("Edit");
-        editPipelineButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-                    editPipeline();
-                });
-            }
-        });
+        editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(() -> {
+            editPipeline();
+        }));
         panel.add(editPipelineButton, "4, 8");
 
         JButton btnLoadDefault = new JButton("Reset to Default");
