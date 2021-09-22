@@ -161,9 +161,7 @@ public class PackageVisionPanel extends JPanel {
 
         JLabel lblPipeline = new JLabel("Pipeline");
         JButton editPipelineBtn = new JButton("Edit");
-        editPipelineBtn.addActionListener(e -> UiUtils.messageBoxOnException(() -> {
-            editPipeline();
-        }));
+        editPipelineBtn.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
         JButton resetPipelineBtn = new JButton("Reset to Default");
 
         bottomVisionPanel.add(lblPipeline, "2, 2, right, default");
@@ -175,7 +173,7 @@ public class PackageVisionPanel extends JPanel {
     }
 
     private void editPipeline() throws Exception {
-        CvPipeline pipeline = pkg.getPipeline().getCvPipeline();
+        CvPipeline pipeline = pkg.getCvPipeline();
         pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
         pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
 
@@ -195,21 +193,21 @@ public class PackageVisionPanel extends JPanel {
                         footprintBeanProperty, unitsCombo, jComboBoxBeanProperty);
         autoBinding.bind();
         //
-        BeanProperty<Footprint, Double> footprintBeanProperty_1 = BeanProperty.create("bodyWidth");
+        BeanProperty<Footprint, Double> footprintBeanPropertyWidth = BeanProperty.create("bodyWidth");
         BeanProperty<JTextField, String> jTextFieldBeanProperty = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_1 =
+        AutoBinding<Footprint, Double, JTextField, String> autoBindingWidth =
                 Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint,
-                        footprintBeanProperty_1, bodyWidthTf, jTextFieldBeanProperty);
-        autoBinding_1.setConverter(doubleConverter);
-        autoBinding_1.bind();
+                        footprintBeanPropertyWidth, bodyWidthTf, jTextFieldBeanProperty);
+        autoBindingWidth.setConverter(doubleConverter);
+        autoBindingWidth.bind();
         //
-        BeanProperty<Footprint, Double> footprintBeanProperty_2 = BeanProperty.create("bodyHeight");
+        BeanProperty<Footprint, Double> footprintBeanPropertyHeight = BeanProperty.create("bodyHeight");
         BeanProperty<JTextField, String> jTextFieldBeanProperty_1 = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_2 =
+        AutoBinding<Footprint, Double, JTextField, String> autoBindingHeight =
                 Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint,
-                        footprintBeanProperty_2, bodyHeightTf, jTextFieldBeanProperty_1);
-        autoBinding_2.setConverter(doubleConverter);
-        autoBinding_2.bind();
+                        footprintBeanPropertyHeight, bodyHeightTf, jTextFieldBeanProperty_1);
+        autoBindingHeight.setConverter(doubleConverter);
+        autoBindingHeight.bind();
 
         ComponentDecorators.decorateWithAutoSelect(bodyWidthTf);
         ComponentDecorators.decorateWithAutoSelect(bodyHeightTf);

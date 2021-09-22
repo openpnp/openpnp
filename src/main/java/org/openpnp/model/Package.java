@@ -25,8 +25,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -190,6 +193,24 @@ public class Package extends AbstractModelObject implements Identifiable {
 
     public Pipeline getPipeline() {
         return pipeline;
+    }
+
+    public CvPipeline getCvPipeline() {
+        if(pipeline == null) {
+            return createDefaultPipeline();
+        }
+        return pipeline.getCvPipeline();
+    }
+
+    public static CvPipeline createDefaultPipeline() {
+        try {
+            String xml = IOUtils.toString(ReferenceBottomVision.class
+                    .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
+            return new CvPipeline(xml);
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
     }
 
     public void setPipeline(Pipeline pipeline) {

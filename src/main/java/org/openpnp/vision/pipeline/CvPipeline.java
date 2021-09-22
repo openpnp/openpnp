@@ -3,17 +3,16 @@ package org.openpnp.vision.pipeline;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import org.apache.commons.io.IOUtils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
@@ -66,7 +65,6 @@ public class CvPipeline implements AutoCloseable {
     private long totalProcessingTimeNs;
     
     public CvPipeline() {
-        
     }
     
     public CvPipeline(String xmlPipeline) {

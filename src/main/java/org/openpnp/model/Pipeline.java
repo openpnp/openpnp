@@ -24,6 +24,9 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
     }
 
     public CvPipeline getCvPipeline() {
+        if (cvPipeline == null) {
+            cvPipeline = new CvPipeline();
+        }
         return cvPipeline;
     }
 

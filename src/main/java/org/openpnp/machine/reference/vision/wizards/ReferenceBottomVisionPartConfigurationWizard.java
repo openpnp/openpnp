@@ -1,8 +1,5 @@
 package org.openpnp.machine.reference.vision.wizards;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
@@ -285,7 +282,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
     
     private void editPipeline() throws Exception {
-        CvPipeline pipeline = partSettings.getPipeline();
+        CvPipeline pipeline = part.getCvPipeline();
         pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
         pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
 

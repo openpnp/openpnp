@@ -20,6 +20,7 @@
 package org.openpnp.model;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persist;
 
@@ -159,6 +160,13 @@ public class Part extends AbstractModelObject implements Identifiable {
 
     public Pipeline getPipeline() {
         return pipeline;
+    }
+
+    public CvPipeline getCvPipeline() {
+        if(pipeline == null) {
+            return new CvPipeline();
+        }
+        return pipeline.getCvPipeline();
     }
 
     public void setPipeline(Pipeline pipeline) {

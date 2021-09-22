@@ -1,4 +1,4 @@
-<pipeline>
+<cv_pipeline>
 	<stages>
 		<cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture"
 			name="0" enabled="true" settle-first="true" />
@@ -39,4 +39,4 @@
 		<cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug"
 			name="15" enabled="true" prefix="bv_result_" suffix=".png" />
 	</stages>
-</pipeline>
+</cv_pipeline>
