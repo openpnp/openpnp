@@ -12,9 +12,11 @@ import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.components.ClassSelectionDialog;
+import org.openpnp.gui.components.PartPackageSelectionDialog;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
@@ -430,8 +432,26 @@ public class PipelinePanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             System.out.println("New part/package action called");
-            JDialog dialog = new JDialog();
+            List<Part> parts = Configuration.get().getParts();
+            //TODO NK: unmodifiable list, cannot sort
+            PartPackageSelectionDialog dialog = new PartPackageSelectionDialog(JOptionPane.getFrameForComponent(PipelinePanel.this), "New Part",
+                    "Please select a part from the list below.", parts);
             dialog.setVisible(true);
+
+            Part selectedPart = dialog.getSelected();
+
+            if (selectedPart == null) {
+                return;
+            }
+            try {
+                selectedPart.setPipeline(editor.getUpperPipeline());
+                partsTableModel.refresh();
+//                Helpers.selectLastTableRow(partsTable);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this), "Error",
+                        e);
+            }
         }
     }
 
