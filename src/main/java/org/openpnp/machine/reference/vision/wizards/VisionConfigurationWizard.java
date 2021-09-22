@@ -4,14 +4,16 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.util.UiUtils;
+import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 @SuppressWarnings("serial")
 public class VisionConfigurationWizard extends AbstractConfigurationWizard {
@@ -47,13 +49,12 @@ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
         panel.add(nameEntry, "4, 4, left, default");
 
         JButton editPipelineButton = new JButton("Edit");
-        editPipelineButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-//                    editPipeline();
-                });
+        editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(new UiUtils.Thrunnable() {
+            @Override
+            public void thrun() throws Exception {
+                VisionConfigurationWizard.this.editPipeline();
             }
-        });
+        }));
         panel.add(editPipelineButton, "4, 6");
     }
 
@@ -95,6 +96,13 @@ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
+    }
+
+    private void editPipeline() {
+        CvPipeline pipeline = pipelineSettings.getPipeline();
+        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Vision Pipeline", editor);
+        dialog.setVisible(true);
     }
 
     @Override

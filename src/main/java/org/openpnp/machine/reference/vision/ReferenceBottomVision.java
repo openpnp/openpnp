@@ -62,7 +62,7 @@ public class ReferenceBottomVision implements PartAlignment {
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
     @ElementMap(required = false)
-    protected Map<String, PipelineSettings> pipelineSettingByPartId = new HashMap<>();
+    protected Map<String, PipelineSettings> pipelineSettingByPipelineId = new HashMap<>();
 
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
@@ -139,14 +139,14 @@ public class ReferenceBottomVision implements PartAlignment {
         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
         final Location center = new Location(maxLinearOffset.getUnits());
         
-        try (CvPipeline pipeline = partSettings.getPipeline()) {
+        try (CvPipeline cvPipeline = partSettings.getPipeline()) {
 
             // The running, iterative offset.
             Location offsets = new Location(nozzleLocation.getUnits());
             // Try getting a good fix on the part in multiple passes.
             for(int pass = 0;;) {
-                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
-                camera=(Camera)pipeline.getProperty(CAMERA);
+                RotatedRect rect = processPipelineAndGetResult(cvPipeline, camera, part, nozzle);
+                camera=(Camera)cvPipeline.getProperty(CAMERA);
 
                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
 
@@ -219,7 +219,7 @@ public class ReferenceBottomVision implements PartAlignment {
             offsets = offsets.subtract(partSettings.getVisionOffset().rotateXy(wantedAngle));
 
             Logger.debug("Final offsets {}", offsets);
-            displayResult(pipeline, part, offsets, camera);
+            displayResult(cvPipeline, part, offsets, camera);
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
     }
@@ -233,9 +233,9 @@ public class ReferenceBottomVision implements PartAlignment {
         
         MovableUtils.moveToLocationAtSafeZ(nozzle, wantedLocation);
 
-        try (CvPipeline pipeline = partSettings.getPipeline()) {
-            RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
-            camera=(Camera)pipeline.getProperty(CAMERA);
+        try (CvPipeline cvPipeline = partSettings.getPipeline()) {
+            RotatedRect rect = processPipelineAndGetResult(cvPipeline, camera, part, nozzle);
+            camera=(Camera)cvPipeline.getProperty(CAMERA);
 
             Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
 
@@ -270,7 +270,7 @@ public class ReferenceBottomVision implements PartAlignment {
             
             Logger.debug("Final offsets {}", offsets);
 
-            displayResult(pipeline, part, offsets, camera);
+            displayResult(cvPipeline, part, offsets, camera);
 
             return new PartAlignmentOffset(offsets, false);
         }
@@ -324,8 +324,8 @@ public class ReferenceBottomVision implements PartAlignment {
             measuredSize.width = mHeight;
         }
 
-        double widthTolerance = pxWidth * 0.01 * (double) partSettings.getCheckSizeTolerancePercent();
-        double heightTolerance = pxHeight * 0.01 * (double) partSettings.getCheckSizeTolerancePercent();
+        double widthTolerance = pxWidth * 0.01 * partSettings.getCheckSizeTolerancePercent();
+        double heightTolerance = pxHeight * 0.01 * partSettings.getCheckSizeTolerancePercent();
         double pxMaxWidth = pxWidth + widthTolerance;
         double pxMinWidth = pxWidth - widthTolerance;
         double pxMaxHeight = pxHeight + heightTolerance;
@@ -527,10 +527,10 @@ public class ReferenceBottomVision implements PartAlignment {
     }
 
     private PipelineSettings getPipelineSettings(Pipeline pipeline) {
-        PipelineSettings pipelineSettings = this.pipelineSettingByPartId.get(pipeline.getId());
+        PipelineSettings pipelineSettings = this.pipelineSettingByPipelineId.get(pipeline.getId());
         if (pipelineSettings == null) {
             pipelineSettings = new PipelineSettings(pipeline);
-            this.pipelineSettingByPartId.put(pipeline.getId(), pipelineSettings);
+            this.pipelineSettingByPipelineId.put(pipeline.getId(), pipelineSettings);
         }
         return pipelineSettings;
     }
@@ -680,6 +680,7 @@ public class ReferenceBottomVision implements PartAlignment {
         public PipelineSettings(Pipeline pipeline) {
             this.id = pipeline.getId();
             this.name = pipeline.getName();
+            this.pipeline = pipeline.getCvPipeline();
         }
 
         public PipelineSettings() {
@@ -700,6 +701,10 @@ public class ReferenceBottomVision implements PartAlignment {
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        public CvPipeline getPipeline() {
+            return pipeline;
         }
     }
 }
