@@ -1,19 +1,18 @@
 package org.openpnp.model;
 
+import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.ElementList;
-
-import java.util.ArrayList;
+import org.simpleframework.xml.Element;
 
 public class Pipeline extends AbstractModelObject implements Identifiable {
-    @Attribute(required = false)
+    @Attribute()
     private String id;
 
     @Attribute(required = false)
     private String name;
 
-    @ElementList(inline = true, entry = "stage", required = false)
-    private ArrayList<Stage> stages = new ArrayList<>();
+    @Element()
+    private CvPipeline cvPipeline;
 
     @Override
     public String getId() {
@@ -25,26 +24,4 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
     }
 
     //TODO: contructor for creation of a new pipeline
-
-    public static class Stage {
-
-        @Attribute(required = false)
-        private String name;
-
-        @Attribute(required = false)
-        private boolean enabled;
-
-        @Attribute(required = false)
-        private boolean settleFirst;
-
-        @Attribute(required = false)
-        private int count;
-
-        @Attribute(required = false)
-        private int kernelSize;
-
-        @Attribute(required = false)
-        private String conversion;
-
-    }
 }

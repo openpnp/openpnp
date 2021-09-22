@@ -73,7 +73,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
+        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
         
         // test data
         Location[][] testData = {
@@ -115,7 +115,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
+        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
         
         // test data
         Location[][] testData = {
@@ -158,7 +158,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 1.0, 1.0, 0.0, 0.0));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
+        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
         
         // test data
         Location[][] testData = {
@@ -201,7 +201,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
+        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
         
         // test data
         Location[][] testData = {
@@ -243,7 +243,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // With pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
+        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
         
         // test data
         Location[][] testData = {
@@ -286,7 +286,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
+        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
         
         // test data
         Location[][] testData = {
@@ -329,7 +329,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // With pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
+        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
         
         // test data
         Location[][] testData = {
@@ -371,7 +371,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
+        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
         
         // test data
         Location error = new Location(LengthUnit.Millimeters, 1.0, -0.5, 0.0, 18.0);
@@ -420,7 +420,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(partVisionOffset);
         
         // With pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
+        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
         
         // error of vision
         Location error = new Location(LengthUnit.Millimeters, -0.6, 1.2, 0.0, -12.0);

@@ -1,28 +1,25 @@
 <openpnp-pipelines>
     <pipeline id="CVP01" name="ReferenceBottomTestPipeline">
-<!--        <stage name="original" enabled="true" settle-first="true" count="1"/>-->
-<!--        <stage name="cleanup-original" enabled="true" kernel-size="5"/>-->
-<!--        <stage name="gray" enabled="true" conversion="Bgr2Gray"/>-->
-<!--        <stage name="find-edges" enabled="true"/>-->
-<!--        <stage name="predetect-1" enabled="true" kernel-size="5"/>-->
-<!--        <stage name="predetect-2" enabled="false" kernel-size="7"/>-->
-<!--        &lt;!&ndash;            <cv-stage name="results" enabled="true" dp="1.0" param-1="25.0" param-2="20.0"/>&ndash;&gt;-->
-<!--        &lt;!&ndash;            <cv-stage name="recalled" enabled="true" image-stage-name="original"/>&ndash;&gt;-->
-<!--        &lt;!&ndash;            <cv-stage name="display" threshold-1="5.0" threshold-2="15.0" enabled="true" circles-stage-name="results" thickness="1">&ndash;&gt;-->
-<!--        &lt;!&ndash;                <color r="255" g="0" b="0" a="255"/>&ndash;&gt;-->
-<!--        &lt;!&ndash;            </cv-stage>&ndash;&gt;-->
+        <cv_pipeline>
+            <stages>
+                <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" settle-first="true" />
+                <!--        <cv-stage name="cleanup-original" enabled="true" kernel-size="5"/>-->
+                <!--        <cv-stage name="gray" enabled="true" conversion="Bgr2Gray"/>-->
+                <!--        <cv-stage name="find-edges" enabled="true"/>-->
+                <!--        <cv-stage name="predetect-1" enabled="true" kernel-size="5"/>-->
+                <!--        <cv-stage name="predetect-2" enabled="false" kernel-size="7"/>-->
+                <!--        <cv-stage name="results" enabled="true" dp="1.0" param-1="25.0" param-2="20.0"/>&ndash;&gt;-->
+                <!--        <cv-stage name="recalled" enabled="true" image-stage-name="original"/>&ndash;&gt;-->
+                <!--        <cv-stage name="display" threshold-1="5.0" threshold-2="15.0" enabled="true" circles-stage-name="results" thickness="1">&ndash;&gt;-->
+                <!--        <color r="255" g="0" b="0" a="255"/>&ndash;&gt;-->
+                <!--        </cv-stage>&ndash;&gt;-->
+            </stages>
+        </cv_pipeline>
     </pipeline>
     <pipeline id="CVP02" name="ReferenceBottomTestPipeline">
-<!--        <stage name="original" enabled="true" settle-first="true" count="1"/>-->
-<!--        <stage name="cleanup-original" enabled="true" kernel-size="5"/>-->
-<!--        <stage name="gray" enabled="true" conversion="Bgr2Gray"/>-->
-<!--        <stage name="find-edges" enabled="true"/>-->
-<!--        <stage name="predetect-1" enabled="true" kernel-size="5"/>-->
-<!--        <stage name="predetect-2" enabled="false" kernel-size="7"/>-->
-<!--        &lt;!&ndash;            <cv-stage name="results" enabled="true" dp="1.0" param-1="25.0" param-2="20.0"/>&ndash;&gt;-->
-<!--        &lt;!&ndash;            <cv-stage name="recalled" enabled="true" image-stage-name="original"/>&ndash;&gt;-->
-<!--        &lt;!&ndash;            <cv-stage name="display" enabled="true" circles-stage-name="results" thickness="1">&ndash;&gt;-->
-<!--        &lt;!&ndash;                <color r="255" g="0" b="0" a="255"/>&ndash;&gt;-->
-<!--        &lt;!&ndash;            </cv-stage>&ndash;&gt;-->
+        <cv_pipeline>
+            <stages>
+            </stages>
+        </cv_pipeline>
     </pipeline>
 </openpnp-pipelines>
