@@ -69,6 +69,7 @@ public class Part extends AbstractModelObject implements Identifiable {
                 partPackage = configuration.getPackage(packageId);
                 pipeline = configuration.getPipeline(pipelineId);
 
+                //TODO: NK Add the default pipeline
                 if (pipeline == null) {
                     pipeline = new Pipeline();
                 }

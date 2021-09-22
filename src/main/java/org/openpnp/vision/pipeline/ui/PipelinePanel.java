@@ -39,7 +39,7 @@ public class PipelinePanel extends JPanel {
     private JTable packagesTable;
     private StagesTableModel stagesTableModel;
     private PipelineEditorPartsTableModel partsTableModel;
-    private StagesTableModel packagesTableModel;
+    private PipelineEditorPackagesTableModel packagesTableModel;
     private PropertySheetPanel propertySheetPanel;
     private PipelinePropertySheetTable pipelinePropertySheetTable;
 
@@ -135,11 +135,18 @@ public class PipelinePanel extends JPanel {
         partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
         partsTable = preparePartsPackagesTable(partsTableModel);
 
-        JScrollPane scrollPaneStages = new JScrollPane(partsTable);
-
         partsTable.changeSelection(partsTable.getRowCount()-1,  0,  false, false);
 
-        return scrollPaneStages;
+        return new JScrollPane(partsTable);
+    }
+
+    private JScrollPane preparePackagesPane() {
+        packagesTableModel = new PipelineEditorPackagesTableModel(editor.getUpperPipeline());
+        packagesTable = preparePartsPackagesTable(packagesTableModel);
+
+        packagesTable.changeSelection(packagesTable.getRowCount()-1,  0,  false, false);
+
+        return new JScrollPane(packagesTable);
     }
 
     private void prepareToolbar() {
@@ -174,10 +181,10 @@ public class PipelinePanel extends JPanel {
         splitPanePartsPackages.setContinuousLayout(true);
         splitPanePartsPackages.setOrientation(JSplitPane.VERTICAL_SPLIT);
 
-        JScrollPane scrollPanePackages = new JScrollPane(packagesTable);
-
         splitPanePartsPackages.setLeftComponent(preparePartsPane());
-        splitPanePartsPackages.setRightComponent(scrollPanePackages);
+        splitPanePartsPackages.setRightComponent(preparePackagesPane());
+
+        splitPanePartsPackages.setResizeWeight(0.4);
 
         return splitPanePartsPackages;
     }

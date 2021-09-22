@@ -79,6 +79,11 @@ public class Package extends AbstractModelObject implements Identifiable {
             @Override
             public void configurationLoaded(Configuration configuration) {
                 pipeline = configuration.getPipeline(pipelineId);
+
+                //TODO: NK Add the default pipeline
+                if (pipeline == null) {
+                    pipeline = new Pipeline();
+                }
             }
         });
     }
@@ -196,9 +201,6 @@ public class Package extends AbstractModelObject implements Identifiable {
     }
 
     public CvPipeline getCvPipeline() {
-        if(pipeline == null) {
-            return createDefaultPipeline();
-        }
         return pipeline.getCvPipeline();
     }
 
