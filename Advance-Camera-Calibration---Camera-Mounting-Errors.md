@@ -1,3 +1,3 @@
 # Camera Mounting Errors
-Cameras are normally expected to be mounted so that their optical axes are parallel with the machine Z axis, i.e. the cameras are expected to look straight up or down. 
+Ideally, cameras are mounted so that their optical axes are parallel with the machine Z axis and rotated such that the image axes are aligned parallel with the machine X-Y axes.  That is, the cameras are expected to look perfectly straight up or down and their images are perfectly "square" with the machine's X-Y axes. While Advance Camera Calibration corrects for these errors, it may produce results that are unexpected to the operator if they are unaware of them. The figure below shows how the images from a top camera would be affected by various mounting errors (for bottom cameras the X and Y rotational errors will have the opposite sign).
 ![Camera Mounting Errors](https://user-images.githubusercontent.com/50550971/134741115-59a66363-51bc-4e52-a6d1-feee6be8583a.png)
