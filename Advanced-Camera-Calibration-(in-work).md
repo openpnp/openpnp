@@ -66,4 +66,4 @@ The first item displayed here is the **Head Offsets** (for top cameras) or the *
 
 **Units Per Pixel** displays the computed units per pixel at default Z for this camera. Note that images are scaled such that the units per pixel is the same in both the X and Y directions.
 
-**Camera Mounting Error** shows the estimated mounting errors of the camera as measured by the right hand rule about each machine axis. See [here](https://github.com/openpnp/openpnp/wiki/_new#camera-mounting-errors) how mounting errors effect the images as seen in the camera view pane.  
+**Camera Mounting Error** shows the estimated mounting errors of the camera as measured by the right hand rule about each machine axis. See [here](https://github.com/openpnp/openpnp/wiki/Advance-Camera-Calibration---Camera-Mounting-Errors#camera-mounting-errors) for how mounting errors effect the images as seen in the camera view pane.  
