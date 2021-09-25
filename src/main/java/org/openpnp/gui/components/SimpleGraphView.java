@@ -36,6 +36,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Set;
 
 import javax.swing.JComponent;
@@ -166,18 +167,33 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                     double yScale = (h-1)*(1.0-dataScale.getRelativePaddingTop()-dataScale.getRelativePaddingBottom())/(max.y-min.y);
 
                     double yUnitFont = fontLineHeight/yScale;
-                    double y0 = min.y;
-                    double y1 = min.y + yUnitFont;
-                    double yUnitGraph = dataScale.graphY(y1)-dataScale.graphY(y0);
-                    double yUnit10 = Math.pow(10.0, Math.ceil(Math.log10(yUnitGraph)));
-                    double yUnitDisplay = yUnit10;
-                    if (yUnitGraph < yUnitDisplay/5) {
-                        yUnitDisplay /= 5;
+                    double yUnit;
+                    double yUnitDisplay;
+                    if (dataScale.isLogarithmic()) {
+                        // Increasing the log by a fraction of the font units gives our base unit.
+                        double rDiff = Math.exp(0.2*yUnitFont) - 1;
+                        double yUnit10 = Math.pow(10.0, Math.ceil(Math.log10(rDiff)));
+                        yUnitDisplay = yUnit10;
+                        if (rDiff < yUnitDisplay/5) {
+                            yUnitDisplay /= 5;
+                        }
+                        else if (rDiff < yUnitDisplay/2) {
+                            yUnitDisplay /= 2;
+                        }
+                        // Scan pixel by pixel.
+                        yUnit = 1/yScale;
                     }
-                    else if (yUnitGraph < yUnitDisplay/2) {
-                        yUnitDisplay /= 2;
+                    else {
+                        double yUnit10 = Math.pow(10.0, Math.ceil(Math.log10(yUnitFont)));
+                        yUnitDisplay = yUnit10;
+                        if (yUnitFont < yUnitDisplay/5) {
+                            yUnitDisplay /= 5;
+                        }
+                        else if (yUnitFont < yUnitDisplay/2) {
+                            yUnitDisplay /= 2;
+                        }
+                        yUnit = yUnitDisplay; 
                     }
-                    double yUnit = (dataScale.isLogarithmic() ? yUnitFont*0.1 : yUnitDisplay);
 
                     if (dataScale.getColor() != null) {
                         // Scale is colored -> draw it
@@ -210,27 +226,16 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                     double yGraph = dataScale.graphY(y);
                                     String text;
                                     if (dataScale.isLogarithmic()) {
-                                        double y10 = Math.pow(10.0, Math.ceil(Math.log10(yGraph)));
-                                        if (yGraph < y10/5) {
-                                            y10 /= 5;
-                                        }
-                                        else if (yGraph < y10/2) {
-                                            y10 /= 2;
-                                        }
-                                        text = formatNumber(yGraph, y10*0.5);
+                                        double yU = Math.pow(10.0, Math.ceil(Math.log10(yGraph)))*yUnitDisplay;
+                                        double yLog = Math.ceil(yGraph/yU)*yU;
+                                        text = formatNumber(yLog, yU);
+                                        y = dataScale.displayY(yLog);
                                     }
                                     else {
                                         text = formatNumber(yGraph, yUnitDisplay);
                                     }
                                     if(!text.equals(text0)) {
                                         text0 = text;
-                                        if (dataScale.isLogarithmic()) {
-                                            double yn = dataScale.displayY(Double.parseDouble(text));
-                                            if (yn < y) {
-                                                continue;
-                                            }
-                                            y= yn;
-                                        }
                                         Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
                                         if (pass == 0) {
                                             maxWidth = Math.max(maxWidth, bounds.getWidth());
@@ -249,18 +254,33 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                         if (firstScale) {
                             firstScale = false;
                             double xUnitFont = fontLineHeight/xScale;
-                            double x0 = min.x;
-                            double x1 = min.x + xUnitFont;
-                            double xUnitGraph = graph.graphX(x1) - graph.graphX(x0);
-                            double xUnit10 = Math.pow(10.0, Math.ceil(Math.log10(xUnitGraph)));
-                            double xUnitDisplay = xUnit10;
-                            if (xUnitGraph < xUnitDisplay/5) {
-                                xUnitDisplay /= 5;
+                            double xUnit;
+                            double xUnitDisplay;
+                            if (graph.isLogarithmic()) {
+                                // Increasing the log by a fraction of the font units gives our base unit.
+                                double rDiff = Math.exp(0.2*xUnitFont) - 1;
+                                double xUnit10 = Math.pow(10.0, Math.ceil(Math.log10(rDiff)));
+                                xUnitDisplay = xUnit10;
+                                if (rDiff < xUnitDisplay/5) {
+                                    xUnitDisplay /= 5;
+                                }
+                                else if (rDiff < xUnitDisplay/2) {
+                                    xUnitDisplay /= 2;
+                                }
+                                // Scan pixel by pixel.
+                                xUnit = 1/xScale; 
                             }
-                            else if (xUnitGraph < xUnitDisplay/2) {
-                                xUnitDisplay /= 2;
+                            else {
+                                double xUnit10 = Math.pow(10.0, Math.ceil(Math.log10(xUnitFont)));
+                                xUnitDisplay = xUnit10;
+                                if (xUnitFont < xUnitDisplay/5) {
+                                    xUnitDisplay /= 5;
+                                }
+                                else if (xUnitFont < xUnitDisplay/2) {
+                                    xUnitDisplay /= 2;
+                                }
+                                xUnit = xUnitDisplay;
                             }
-                            double xUnit = (graph.isLogarithmic() ? xUnitFont*0.1 : xUnitDisplay);
                             double xUnit0 = min.x+xUnitFont*0.5;
                             double xUnit1 = max.x-xUnitFont*0.5;
                             if (!graph.isLogarithmic()) {
@@ -272,7 +292,8 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                             }
                             if (selectedX != null) {
                                 // X indicator.
-                                String text = formatNumber(selectedX, xUnitDisplay*0.25);
+                                String text = formatNumber(selectedX, 
+                                        graph.isLogarithmic() ? Math.pow(10.0, Math.ceil(Math.log10(selectedX))-3) : xUnitDisplay*0.25);
                                 Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
                                 double dispX = graph.displayX(selectedX);
                                 g2d.drawLine((int)(xOrigin+(dispX-min.x)*xScale), h-1-(int)bounds.getWidth()-2, (int)(xOrigin+(dispX-min.x)*xScale), 0);
@@ -284,6 +305,32 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                 g2d.setTransform(transform);
                             }
                             else {
+                                // Prepare a list of gaps between scales (if there are multiple).
+                                ArrayList<Double> gaps = new ArrayList<>(); 
+                                final double scaleGap = yUnitFont;
+                                // As scales are allowed to overlap, we can't just sort them. Instead compare each with each and make
+                                // sure there is no overlap. Then take the closest one and compute the gap position.
+                                for (DataScale dataScale1 : graph.getDataScales()) {
+                                    boolean after = false;
+                                    double nearestBottom = Double.NEGATIVE_INFINITY;
+                                    for (DataScale dataScale2 : graph.getDataScales()) {
+                                        if (dataScale2 == dataScale1) {
+                                            after = true;
+                                        }
+                                        else if (dataScale1.getRelativePaddingTop() > dataScale2.getRelativePaddingTop()
+                                              || (dataScale1.getRelativePaddingTop() == dataScale2.getRelativePaddingTop() && after)) {
+                                            if (nearestBottom < dataScale2.getRelativePaddingBottom()) {
+                                                nearestBottom = dataScale2.getRelativePaddingBottom();
+                                            }
+                                        }
+                                    }
+                                    if (Double.isFinite(nearestBottom) 
+                                            && nearestBottom > (1.0 - dataScale1.getRelativePaddingTop() + scaleGap)) {
+                                        gaps.add((nearestBottom + 1.0 - dataScale1.getRelativePaddingTop() - scaleGap)*0.5);
+                                    }
+                                }
+                                gaps.add(1.0);
+                                gaps.sort(null);
                                 // Two passes: 1. measure longest scale label, 2. draw the scale 
                                 double maxWidth = 0;
                                 for (int pass = 0; pass < 2; pass++) {
@@ -293,33 +340,30 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
                                         double xGraph = graph.graphX(x);
                                         String text;
                                         if (graph.isLogarithmic()) {
-                                            double x10 = Math.pow(10.0, Math.ceil(Math.log10(xGraph)));
-                                            if (xGraph < x10/5) {
-                                                x10 /= 5;
-                                            }
-                                            else if (xGraph < x10/2) {
-                                                x10 /= 2;
-                                            }
-                                            text = formatNumber(xGraph, x10*0.5);
+                                            double xU = Math.pow(10.0, Math.ceil(Math.log10(xGraph)))*xUnitDisplay;
+                                            double xLog = Math.ceil(xGraph/xU)*xU;
+                                            text = formatNumber(xLog, xU);
+                                            x = graph.displayX(xLog);
                                         }
                                         else {
                                             text = formatNumber(xGraph, xUnitDisplay);
                                         }
                                         if (!text.equals(text0)) {
                                             text0 = text;
-                                            if (graph.isLogarithmic()) {
-                                                double xn = graph.displayX(Double.parseDouble(text));
-                                                if (xn < x) {
-                                                    continue;
-                                                }
-                                                x = xn;
-                                            }
                                             Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
                                             if (pass == 0) {
                                                 maxWidth = Math.max(maxWidth, bounds.getWidth());
                                             }
                                             else {
-                                                g2d.drawLine((int)(xOrigin+(x-min.x)*xScale), h-1-(int)maxWidth-2, (int)(xOrigin+(x-min.x)*xScale), 0);
+                                                int xl = (int)(xOrigin+(x-min.x)*xScale);
+                                                int yl0 = h-1-(int)maxWidth-2;
+                                                for (Double gap : gaps) {
+                                                    int yl1 = (int) ((h-1)*(1.0-gap));
+                                                    g2d.drawLine(
+                                                            xl, yl0, 
+                                                            xl, yl1);
+                                                    yl0 = (int) (yl1 - scaleGap*yScale);
+                                                }
                                                 if (xp + xUnitFont <= x) {
                                                     AffineTransform transform = g2d.getTransform();
                                                     int tx = (int)(xOrigin+(x-min.x)*xScale - bounds.getCenterY());
@@ -411,7 +455,7 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
             g2d.setColor(gridColor);
             String text = "no data";
             Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
-            g2d.drawString(text, (int)(Math.min(h, w)/2-bounds.getWidth()/2), (int)(h/2));
+            g2d.drawString(text, (int)(bounds.getHeight()*2), (int)(h/2));
         }
     }
     protected void drawYIndicator(Graphics2D g2d, FontMetrics dfm, int fontAscent, int w,
@@ -426,7 +470,9 @@ public class SimpleGraphView extends JComponent implements MouseMotionListener, 
         if (y > max.y) {
             return;
         }
-        String text = formatNumber(dataScale.graphY(y), yUnitDisplay*0.25);
+        double graphY = dataScale.graphY(y);
+        String text = formatNumber(graphY, 
+                dataScale.isLogarithmic() ? Math.pow(10.0, Math.ceil(Math.log10(graphY))-3) : yUnitDisplay*0.25);
         Rectangle2D bounds = dfm.getStringBounds(text, 0, text.length(), g2d);
         g2d.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 64));
         g2d.drawLine((int)bounds.getWidth()+2, (int)(yOrigin-(y-min.y)*yScale), w-1, (int)(yOrigin-(y-min.y)*yScale));
