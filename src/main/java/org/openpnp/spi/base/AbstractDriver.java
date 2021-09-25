@@ -1,6 +1,8 @@
 package org.openpnp.spi.base;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -18,12 +20,13 @@ import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
-import org.openpnp.spi.Axis.Type;
 import org.simpleframework.xml.Attribute;
 
 public abstract class AbstractDriver extends AbstractModelObject implements Driver {
@@ -81,6 +84,18 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     @Override
     public String toString() {
         return getName();
+    }
+
+    public List<ControllerAxis> getAxes(ReferenceMachine machine) {
+        List<ControllerAxis> list = new ArrayList<>(); 
+        for (org.openpnp.spi.Axis axis : machine.getAxes()) {
+            if (axis instanceof ControllerAxis) {
+                if (((ControllerAxis) axis).getDriver() == this) {
+                    list.add((ControllerAxis) axis);
+                }
+            }
+        }
+        return list;
     }
 
     protected void createAxisMappingDefaults(ReferenceMachine machine) throws Exception {
