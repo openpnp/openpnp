@@ -263,7 +263,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                     UiUtils.submitUiMachineTask(
                                             () -> {
                                                 axis.setAcceptableTolerance(tolerance);
-                                                calibrateAxisBacklash(head, camera, camera, axis, tolerance);
+                                                calibrateAxisBacklash(head, camera, camera, axis);
                                                 return true;
                                             },
                                             (result) -> {
@@ -396,7 +396,7 @@ public class CalibrationSolutions implements Solutions.Subject {
     }
 
     public void calibrateAxisBacklash(ReferenceHead head, ReferenceCamera camera,
-            HeadMountable movable, ReferenceControllerAxis axis, Length acceptableTolerance) throws Exception {
+            HeadMountable movable, ReferenceControllerAxis axis) throws Exception {
         // Check pre-conditions (this method can be called from outside Issues & Solutions).
         if (!(axis.isSoftLimitLowEnabled() && axis.isSoftLimitHighEnabled())) {
             throw new Exception("Axis "+axis.getName()+" must have soft limits enabled for backlash calibration.");
@@ -431,14 +431,18 @@ public class CalibrationSolutions implements Solutions.Subject {
         AxesLocation axesLocation1 = movable.toRaw(location.add(unit));
         double mmAxis = axesLocation1.getCoordinate(axis) - axesLocation0.getCoordinate(axis); 
         double minimumSpeed = backlashProbingSpeeds[0];
-        
+        double unitsPerMm = new Length(1, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
+
         double stepMm = getAxisCalibrationTolerance(camera, axis, false);
-        Length stepLength = new Length(stepMm, LengthUnit.Millimeters);
+        // Compute the applicable tolerance from axis resolution and vision sub-pixel resolution. 
         double toleranceMm = getAxisCalibrationTolerance(camera, axis, false);
+        Length acceptableTolerance = axis.getAcceptableTolerance();
         if (acceptableTolerance != null) {
-            toleranceMm = Math.ceil(acceptableTolerance.convertToUnits(LengthUnit.Millimeters).getValue()/toleranceMm)*toleranceMm;
+            toleranceMm = Math.max(1, Math.round(acceptableTolerance.convertToUnits(LengthUnit.Millimeters).getValue()/toleranceMm))*toleranceMm;
         }
-        double toleranceUnits = new Length(toleranceMm, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
+        acceptableTolerance = new Length(toleranceMm, LengthUnit.Millimeters);
+        axis.setAcceptableTolerance(acceptableTolerance);
+        double toleranceUnits = acceptableTolerance.convertToUnits(axis.getUnits()).getValue();
 
         // Diagnostics graph.
         final String ERROR = "E";
@@ -450,9 +454,8 @@ public class CalibrationSolutions implements Solutions.Subject {
         final String VELOCITY = "V";
         final String BACKLASH = "B";
         final String OVERSHOOT = "O";
-        final String LIMIT0 = "L0";
-        final String LIMIT1 = "L1";
-
+        final String LIMIT = "L";
+        
         SimpleGraph stepTestGraph = new SimpleGraph();
         stepTestGraph.setRelativePaddingLeft(0.05);
         SimpleGraph.DataScale errorScale =  stepTestGraph.getScale(ERROR);
@@ -473,10 +476,10 @@ public class CalibrationSolutions implements Solutions.Subject {
         .setMarkerShown(true);
         stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
         .setLineShown(false);
-        stepTestGraph.getRow(ERROR, LIMIT0)
-        .setColor(new Color(0, 0x80, 0)); 
-        stepTestGraph.getRow(ERROR, LIMIT1)
-        .setColor(new Color(0, 0x80, 0));
+        stepTestGraph.getRow(ERROR, LIMIT+0)
+        .setColor(new Color(0, 0, 0x77)); 
+        stepTestGraph.getRow(ERROR, LIMIT+1)
+        .setColor(new Color(0, 0, 0x77));
 
         SimpleGraph distanceGraph = new SimpleGraph();
         distanceGraph.setLogarithmic(true);
@@ -492,6 +495,10 @@ public class CalibrationSolutions implements Solutions.Subject {
         .setColor(new Color(00, 0x5B, 0xD9, 128)); // the OpenPNP blue
         distanceGraph.getRow(SCALE, OVERSHOOT+1)
         .setColor(new Color(0xFF, 0, 0, 128)); 
+        distanceGraph.getRow(SCALE, LIMIT+0)
+        .setColor(new Color(0, 0, 0x77)); 
+        distanceGraph.getRow(SCALE, LIMIT+1)
+        .setColor(new Color(0, 0, 0x77));
         distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
         .setColor(new Color(0xBB, 0x77, 0));
         distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
@@ -594,9 +601,9 @@ public class CalibrationSolutions implements Solutions.Subject {
                 double relativeErrorUnits = relativeErr.convertToUnits(axis.getUnits()).getValue();
                 stepTestGraph.getRow(ERROR, RELATIVE)
                     .recordDataPoint(step, relativeErrorUnits);
-                stepTestGraph.getRow(ERROR, LIMIT0)
+                stepTestGraph.getRow(ERROR, LIMIT+0)
                     .recordDataPoint(step, -toleranceUnits);
-                stepTestGraph.getRow(ERROR, LIMIT1)
+                stepTestGraph.getRow(ERROR, LIMIT+1)
                     .recordDataPoint(step, toleranceUnits);
             }
             else {
@@ -631,7 +638,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         for (int pass = 0; pass < 2; pass++) {
             for (double distance : backlashProbingDistances) {
                 // measure the backlash offset over distance.
-                for (int reverse = 0; reverse <= 1; reverse++) {
+                for (int reverse = 1; reverse >= 0; reverse--) {
                     if (reverse == 1 && distance > backlashTestMoveMm) {
                         continue;
                     }
@@ -711,7 +718,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                     if (pass == 0 && reverse == 0) {
                         backlashOffsetByDistance[iDistance++] = mmError;
                     }
-                    double errorUnits = new Length(mmError, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
+                    double errorUnits = mmError*unitsPerMm;
                     double effectiveDistance = effectiveDistance0.add(effectiveDistance1).multiply(0.5).convertToUnits(axis.getUnits()).getValue();
                     if (pass == 0) {
                         distanceGraph.getRow(SCALE, BACKLASH+reverse).recordDataPoint(effectiveDistance, 
@@ -738,7 +745,23 @@ public class CalibrationSolutions implements Solutions.Subject {
                         }
                         else {
                             // Once it dips under the maximum minus tolerance, its not eligible.
-                            maxBacklashOpen = false;
+                            if (maxBacklashOpen) {
+                                double minBacklashByTolerance = maxBacklash - 2*toleranceMm;
+                                distanceGraph.getRow(SCALE, LIMIT+0)
+                                .recordDataPoint(maxBacklashDistance*unitsPerMm, 0);
+                                distanceGraph.getRow(SCALE, LIMIT+0)
+                                .recordDataPoint(maxBacklashDistance*unitsPerMm+1e-8, minBacklashByTolerance*unitsPerMm);
+                                distanceGraph.getRow(SCALE, LIMIT+0)
+                                .recordDataPoint(maxSneakUpOffsetMm*unitsPerMm, minBacklashByTolerance*unitsPerMm);
+                                distanceGraph.getRow(SCALE, LIMIT+1)
+                                .recordDataPoint(maxBacklashDistance*unitsPerMm, minBacklashByTolerance*unitsPerMm);
+                                distanceGraph.getRow(SCALE, LIMIT+1)
+                                .recordDataPoint(maxBacklashDistance*unitsPerMm+1e-8, maxBacklash*unitsPerMm);
+                                distanceGraph.getRow(SCALE, LIMIT+1)
+                                .recordDataPoint(maxSneakUpOffsetMm*unitsPerMm, maxBacklash*unitsPerMm);
+                                // remember
+                                maxBacklashOpen = false;
+                            }
                         }
                     }
                 }

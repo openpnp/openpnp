@@ -121,8 +121,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
                             ReferenceMachine refMachine = (ReferenceMachine) Configuration.get().getMachine();
                             refMachine.getCalibrationSolutions()
                             .calibrateAxisBacklash((ReferenceHead)(camera.getHead()), camera,
-                                    camera, (ReferenceControllerAxis)axis, 
-                                    ((ReferenceControllerAxis)axis).getAcceptableTolerance());
+                                    camera, (ReferenceControllerAxis)axis);
                             MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
                             return true;
                         }
@@ -207,19 +206,19 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         panelBacklashDiagnostics.add(backlashSpeedFactor, "4, 6");
         backlashSpeedFactor.setColumns(10);
 
-        lblStepTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nAbsolute <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRelative <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRandom <span style=\"color:#BB7700\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nTolerance <span style=\"color:#008000\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nerror at step.\r\n</p>\r\n</body>\r\n</html>");
+        lblStepTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nAbsolute <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRelative <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRandom <span style=\"color:#BB7700\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nTolerance <span style=\"color:#000077\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nerror at step.\r\n</p>\r\n</body>\r\n</html>");
         panelBacklashDiagnostics.add(lblStepTest, "2, 8, right, default");
 
         stepTestGraph = new SimpleGraphView();
-        stepTestGraph.setPreferredSize(new Dimension(300, 200));
+        stepTestGraph.setPreferredSize(new Dimension(300, 100));
         stepTestGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelBacklashDiagnostics.add(stepTestGraph, "4, 8, 7, 1, fill, fill");
 
-        lblBacklashDistanceTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nBacklash <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nOvershoot <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRandom <span style=\"color:#BB7700\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nMove Time <span style=\"color:#00AA00\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<br/>\r\n<p>\r\nforward/ <span style=\"color:#777777\">reverse</span><br/>\r\nat move distance.\r\n<p/>\r\n</body>\r\n</html>");
+        lblBacklashDistanceTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nBacklash <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nEnvelope <span style=\"color:#000077\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nOvershoot <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRandom <span style=\"color:#BB7700\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nMove Time <span style=\"color:#00AA00\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<br/>\r\n<p>\r\nforward/ <span style=\"color:#777777\">reverse</span><br/>\r\nat move distance.\r\n<p/>\r\n</body>\r\n</html>");
         panelBacklashDiagnostics.add(lblBacklashDistanceTest, "2, 10, right, default");
 
         backlashDistanceTestGraph = new SimpleGraphView();
-        backlashDistanceTestGraph.setPreferredSize(new Dimension(300, 400));
+        backlashDistanceTestGraph.setPreferredSize(new Dimension(300, 200));
         backlashDistanceTestGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelBacklashDiagnostics.add(backlashDistanceTestGraph, "4, 10, 7, 1, fill, fill");
 
@@ -227,7 +226,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         panelBacklashDiagnostics.add(lblBacklashSpeedTest, "2, 12, right, default");
 
         backlashSpeedTestGraph = new SimpleGraphView();
-        backlashSpeedTestGraph.setPreferredSize(new Dimension(300, 200));
+        backlashSpeedTestGraph.setPreferredSize(new Dimension(300, 100));
         backlashSpeedTestGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelBacklashDiagnostics.add(backlashSpeedTestGraph, "4, 12, 7, 1, fill, fill");
     }

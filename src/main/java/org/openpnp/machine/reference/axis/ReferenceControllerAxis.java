@@ -246,7 +246,9 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public void setAcceptableTolerance(Length acceptableTolerance) {
+        Object oldValue = this.acceptableTolerance;
         this.acceptableTolerance = acceptableTolerance;
+        firePropertyChange("acceptableTolerance", oldValue, acceptableTolerance);
     }
 
     public Length getBacklashOffset() {
