@@ -32,7 +32,7 @@ The **Start Calibration** button starts the calibration collection process.  All
 
 The **Detection Diameter** spinner sets the size of the fiducial/nozzle tip that is used.  During the calibration sequence, the operator will be instructed to set this at the appropriate time.
 
-Once the calibration data has been collected and processed, the **Apply Calibration** check box will automatically be selected thereby applying the calibration to the camera and enabling calibrated images to be displayed in the Camera View.  Clearing this checkbox, results in raw images being displayed in the Camera View.
+Once the calibration data has been collected and successfully processed, the **Apply Calibration** check box will automatically be selected thereby applying the calibration to the camera and enabling corrected images to be displayed in the Camera View.  Clearing this checkbox, results in raw images being displayed in the Camera View.
 
 The **Crop All Invalid Pixels <--> Show All Valid Pixels** slider at the bottom of this section allows the operator to control the cropping of invalid pixels along the edges of the calibrated camera images.  Invalid pixels (usually displayed as black) on the edges of the image may result due to the image processing that compensates for errors in camera mounting and lens distortion. While mostly aesthetic, changing this setting does change the Units Per Pixel for the camera.  Setting the slider to the far right ensures all available pixels from the camera are displayed.  Setting the slider to the far left ensures that the edges of the image are cropped symmetrically about the reticle crosshairs so that no invalid pixels remain at the edges. Intermediate settings will produce results between the two extremes.
 
@@ -67,3 +67,5 @@ The first item displayed here is the **Head Offsets** (for top cameras) or the *
 **Units Per Pixel** displays the computed units per pixel at default Z for this camera. Note that images are scaled such that the units per pixel is the same in both the X and Y directions.
 
 **Camera Mounting Error** shows the estimated mounting errors of the camera as measured by the right hand rule about each machine axis. See [here](https://github.com/openpnp/openpnp/wiki/Advance-Camera-Calibration---Camera-Mounting-Errors#camera-mounting-errors) for how mounting errors effect the images as seen in the camera view pane.  
+
+**Estimated Locating Accuracy** shows an estimate of the accuracy of locations captured by this camera. This includes not only inaccuracies due to uncompensated camera errors but also inaccuracies due to machine mechanics such as stepper motor non-linearities, mechanical backlash, etcetera.
