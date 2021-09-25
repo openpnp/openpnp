@@ -223,7 +223,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         backlashDistanceTestGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelBacklashDiagnostics.add(backlashDistanceTestGraph, "4, 10, 7, 1, fill, fill");
 
-        lblBacklashSpeedTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nBacklash <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nat move speed.\r\n</p>\r\n</body>\r\n</html>");
+        lblBacklashSpeedTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nBacklash <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nEffective Speed <span style=\"color:#00AA00\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<br/>\r\n<p>\r\nforward/ <span style=\"color:#777777\">reverse</span><br/>\r\nat nominal speed.\r\n</p>\r\n</body>\r\n</html>");
         panelBacklashDiagnostics.add(lblBacklashSpeedTest, "2, 12, right, default");
 
         backlashSpeedTestGraph = new SimpleGraphView();

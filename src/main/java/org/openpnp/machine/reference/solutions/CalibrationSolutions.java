@@ -98,6 +98,8 @@ public class CalibrationSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private long extraVacuumDwellMs = 300;
 
+    @Attribute(required = false)
+    private long machineSettleMs = 500;
 
     public CalibrationSolutions setMachine(ReferenceMachine machine) {
         this.machine = machine;
@@ -428,7 +430,8 @@ public class CalibrationSolutions implements Solutions.Subject {
         AxesLocation axesLocation0 = movable.toRaw(location);
         AxesLocation axesLocation1 = movable.toRaw(location.add(unit));
         double mmAxis = axesLocation1.getCoordinate(axis) - axesLocation0.getCoordinate(axis); 
-
+        double minimumSpeed = backlashProbingSpeeds[0];
+        
         double stepMm = getAxisCalibrationTolerance(camera, axis, false);
         Length stepLength = new Length(stepMm, LengthUnit.Millimeters);
         double toleranceMm = getAxisCalibrationTolerance(camera, axis, false);
@@ -444,6 +447,7 @@ public class CalibrationSolutions implements Solutions.Subject {
         final String RELATIVE = "R";
         final String SCALE = "S";
         final String TIME = "T";
+        final String VELOCITY = "V";
         final String BACKLASH = "B";
         final String OVERSHOOT = "O";
         final String LIMIT0 = "L0";
@@ -511,10 +515,65 @@ public class CalibrationSolutions implements Solutions.Subject {
         speedScale.setColor(SimpleGraph.getDefaultGridColor());
         speedGraph.getRow(SCALE, BACKLASH)
         .setColor(new Color(0xFF, 0, 0));
+        speedGraph.getRow(SCALE, BACKLASH)
+        .setMarkerShown(true); 
+        SimpleGraph.DataScale velocityScale = speedGraph.getScale(VELOCITY);
+        velocityScale.setRelativePaddingTop(0.1);
+        velocityScale.setRelativePaddingBottom(0.2);
+        //timeAtSpeedScale.setColor(SimpleGraph.getDefaultGridColor());
+        speedGraph.getRow(VELOCITY, VELOCITY+0)
+        .setColor(new Color(0, 0x80, 0)); 
+        speedGraph.getRow(VELOCITY, VELOCITY+0)
+        .setMarkerShown(true); 
+        speedGraph.getRow(VELOCITY, VELOCITY+1)
+        .setColor(new Color(0, 0x80, 0, 128)); 
+        speedGraph.getRow(VELOCITY, VELOCITY+1)
+        .setMarkerShown(true); 
+
+        // Measure times used for same distance at different speeds.
+        MovableUtils.moveToLocationAtSafeZ(movable, location);
+        movable.waitForCompletion(CompletionType.WaitForStillstand);
+        Location timedLocation = displacedAxisLocation(movable, axis, location, -backlashTestMoveMm*mmAxis, false);
+        double dtBaseline;
+        { 
+            Thread.sleep(machineSettleMs);
+            double t0 = NanosecondTime.getRuntimeSeconds();
+            movable.moveTo(timedLocation, 1.0);
+            movable.waitForCompletion(CompletionType.WaitForStillstand);
+            movable.moveTo(location, 1.0);
+            movable.waitForCompletion(CompletionType.WaitForStillstand);
+            double t1 = NanosecondTime.getRuntimeSeconds();
+            dtBaseline = (t1-t0)/2;
+        }
+        for (double speed : backlashProbingSpeeds) {
+            { 
+                Thread.sleep(machineSettleMs);
+                double t0 = NanosecondTime.getRuntimeSeconds();
+                movable.moveTo(timedLocation, speed);
+                movable.waitForCompletion(CompletionType.WaitForStillstand);
+                double t1 = NanosecondTime.getRuntimeSeconds();
+                speedGraph.getRow(VELOCITY, VELOCITY+1).recordDataPoint(speed, dtBaseline/(t1-t0));
+            }
+            {
+                Thread.sleep(machineSettleMs);
+                double t0 = NanosecondTime.getRuntimeSeconds();
+                movable.moveTo(location, speed);
+                movable.waitForCompletion(CompletionType.WaitForStillstand);
+                double t1 = NanosecondTime.getRuntimeSeconds();
+                double effSpeed = dtBaseline/(t1-t0);
+                speedGraph.getRow(VELOCITY, VELOCITY+0).recordDataPoint(speed, effSpeed);
+                if (speed == minimumSpeed) {
+                    if (effSpeed > Math.sqrt(speed)) {
+                        throw new Exception("Speed factor seems not to be effective. "
+                                + "Should move at "+(int)(speed*100)+"%, moved at "+(int)(effSpeed*100)+"%. "
+                                        + "Check your driver motion control and axis configuration.");
+                    }
+                }
+            }
+        }
 
         // Perform a step test over a small distance.
         MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveLargeMm*mmAxis, false));
-        double minimumSpeed = backlashProbingSpeeds[0];
         int step = 0;
         Location referenceLocation = location;
         Location stepLocation0 = null;
@@ -594,7 +653,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         }
                         MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation, minimumSpeed);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
-                        Thread.sleep(500);
+                        Thread.sleep(machineSettleMs);
                         double t0 = NanosecondTime.getRuntimeSeconds();
                         movable.moveTo(location);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
@@ -627,7 +686,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         }
                         MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation, minimumSpeed);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
-                        Thread.sleep(500);
+                        Thread.sleep(machineSettleMs);
                         double t0 = NanosecondTime.getRuntimeSeconds();
                         movable.moveTo(location);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
