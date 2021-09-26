@@ -121,7 +121,7 @@ public class CameraWalker {
             double x = (i==0) || (i==3) ? s : -s;
             double y = (i==0) || (i==2) ? s : -s;
             Location step = new Location(LengthUnit.Millimeters, x, y, 0, 0);
-            final Location testLocation = start.add(step);
+            final Location testLocation = start.add(step).derive(null, null, null, movable.getLocation().getRotation());
             
             //Move the machine to the test location and wait for it to finish
             Future<?> future = UiUtils.submitUiMachineTask(() -> {

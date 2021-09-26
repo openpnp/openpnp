@@ -55,6 +55,7 @@ import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.camera.calibration.LensCalibrationParams;
+import org.openpnp.machine.reference.camera.wizards.ReferenceCameraWhiteBalanceConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;

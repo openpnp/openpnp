@@ -292,15 +292,15 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         lblDescription = new JLabel("<html><p width=\"500\">"
                 + "The settings on this tab are intended to eventually replace all of the Units "
                 + "Per Pixel settings on the General Configuration tab, everything on the Lens "
-                + "Calibration tab, and everything on the Image Transforms tab (except for the new "
-                + "white balance controls). It will also replace the Calibrate Camera Position and "
-                + "Rotation button on the Nozzle Tips Calibration tab.</p>"
+                + "Calibration tab, and everything on the Image Transforms tab. It will also "
+                + "replace the Calibrate Camera Position and Rotation button on the Nozzle Tips "
+                + "Calibration tab.</p>"
                 + "<p> </p>"
                 + "<p width=\"500\">"
                 + "<b>Prerequsites:</b> The machine X, Y, and Z axis; backlash compensation; and "
                 + "non-squareness correction must all be properly calibrated. And any issues with "
                 + "mechanical non-repeatability (missed steps, loose pulleys/cogs, slipping belts "
-                + "etcetra) must be resolved before attempting camera calibration. In addition; "
+                + "etcetra) should be resolved before attempting camera calibration. In addition; "
                 + "for bottom cameras, the rotation axis and nozzle offsets must be properly "
                 + "calibrated; and, visual homing, if it is going to be used, must be setup and "
                 + "working properly."
@@ -521,7 +521,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             offsetOrPositionLabel = "Head Offsets";
         }
         else {
-            offsetOrPositionLabel = "Location";
+            offsetOrPositionLabel = "Camera Location";
         }
         lblHeadOffsetOrPosition = new JLabel(offsetOrPositionLabel);
         lblHeadOffsetOrPosition.setHorizontalAlignment(SwingConstants.TRAILING);
@@ -824,6 +824,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             textFieldDefaultZ.setEnabled(isMovable);
             textFieldSecondaryCalZ.setEnabled(!isMovable);
             textFieldDesiredNumberOfRadialLines.setEnabled(true);
+            textFieldApproximateCameraZ.setEnabled(true);
             startCameraCalibrationBtn.setEnabled(true);
             chckbxUseSavedData.setEnabled(advancedCalibration.isDataAvailable());
             sliderAlpha.setEnabled(true);
@@ -838,6 +839,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             textFieldDefaultZ.setEnabled(false);
             textFieldSecondaryCalZ.setEnabled(false);
             textFieldDesiredNumberOfRadialLines.setEnabled(false);
+            textFieldApproximateCameraZ.setEnabled(false);
             startCameraCalibrationBtn.setEnabled(false);
             chckbxUseSavedData.setEnabled(false);
             sliderAlpha.setEnabled(false);

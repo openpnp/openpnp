@@ -1429,7 +1429,7 @@ public class CameraCalibrationUtils {
 
         //Smooth the image 
         double kernelSize =
-                1.3 * Math.sqrt(size.height * size.width / actual2DPoints[testPatternIndex].length);
+                1.0 * Math.sqrt(size.height * size.width / actual2DPoints[testPatternIndex].length);
         Imgproc.blur(grayImage, grayImage, new Size(kernelSize, kernelSize));
         
         //Apply the TURBO color mapping - 0 : Dark Blue ... 255 : Dark Red
