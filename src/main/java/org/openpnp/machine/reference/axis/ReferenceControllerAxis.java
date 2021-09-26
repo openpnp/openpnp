@@ -21,7 +21,9 @@
 
 package org.openpnp.machine.reference.axis;
 
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.axis.wizards.BacklashCompensationConfigurationWizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
@@ -244,7 +246,9 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public void setAcceptableTolerance(Length acceptableTolerance) {
+        Object oldValue = this.acceptableTolerance;
         this.acceptableTolerance = acceptableTolerance;
+        firePropertyChange("acceptableTolerance", oldValue, acceptableTolerance);
     }
 
     public Length getBacklashOffset() {
@@ -440,6 +444,14 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceControllerAxisConfigurationWizard(this);
+    }
+
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard()),
+                new PropertySheetWizardAdapter(new BacklashCompensationConfigurationWizard(this), "Backlash Compensation"),
+        };
     }
 
     @Override

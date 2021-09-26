@@ -700,10 +700,19 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                         commandBuilt = "G28.2 ";
                                         for (String variable : gcodeDriver.getAxisVariables(machine)) {
                                             if ("XYZ".indexOf(variable) >= 0) {
-                                                commandBuilt += variable+"0 "; // In TinyG you need to indicate the axis and only 0 is possible. 
+                                                // In TinyG you need to indicate the axis and only 0 is possible as coordinate.
+                                                commandBuilt += variable+"0 ";  
                                             }
                                         }
-                                        commandBuilt += "; Home all axes";
+                                        commandBuilt += "; Home all axes\n";
+                                        commandBuilt += "G28.3 ";
+                                        for (ControllerAxis axis : gcodeDriver.getAxes(machine)) {
+                                            if (!axis.getLetter().isEmpty()) {
+                                                commandBuilt += axis.getLetter()+axis.getHomeCoordinate()+" ";
+                                            }
+                                        }
+                                        commandBuilt += "; Set all axes to home coordinates\n";
+                                        commandBuilt += "G92.1 ; Reset all offsets\n";
                                     }
                                     else {
                                         commandBuilt = "G28 ; Home all axes";
