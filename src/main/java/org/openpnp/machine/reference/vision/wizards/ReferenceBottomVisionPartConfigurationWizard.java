@@ -285,6 +285,8 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         CvPipeline pipeline = part.getCvPipeline();
         pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
         pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
+        pipeline.setProperty("part", part);
+        pipeline.setProperty("package", part.getPackage());
 
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);

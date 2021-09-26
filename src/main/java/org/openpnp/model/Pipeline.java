@@ -35,5 +35,9 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
         this.cvPipeline = cvPipeline;
     }
 
-    //TODO: NK contructor for creation of a new pipeline
+    public String toString() {
+        return String.format("id %s", id);
+    }
+
+    //TODO: NK constructor for creation of a new pipeline
 }

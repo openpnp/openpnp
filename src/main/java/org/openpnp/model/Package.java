@@ -80,9 +80,8 @@ public class Package extends AbstractModelObject implements Identifiable {
             public void configurationLoaded(Configuration configuration) {
                 pipeline = configuration.getPipeline(pipelineId);
 
-                //TODO: NK Add the default pipeline
                 if (pipeline == null) {
-                    pipeline = new Pipeline();
+                    pipeline = configuration.getDefaultPipeline();
                 }
             }
         });
@@ -196,6 +195,9 @@ public class Package extends AbstractModelObject implements Identifiable {
         firePropertyChange("compatibleNozzleTips", null, getCompatibleNozzleTips());
     }
 
+    public String getPipelineId() {
+        return pipelineId;
+    }
     public Pipeline getPipeline() {
         return pipeline;
     }
@@ -204,18 +206,18 @@ public class Package extends AbstractModelObject implements Identifiable {
         return pipeline.getCvPipeline();
     }
 
-    public static CvPipeline createDefaultPipeline() {
-        try {
-            String xml = IOUtils.toString(ReferenceBottomVision.class
-                    .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
-            return new CvPipeline(xml);
-        }
-        catch (Exception e) {
-            throw new Error(e);
-        }
+    public void setPipeline(Pipeline pipeline) {
+        Pipeline odlValue = this.pipeline;
+        this.pipeline = pipeline;
+        updateParts();
+        firePropertyChange("pipeline", odlValue, pipeline);
     }
 
-    public void setPipeline(Pipeline pipeline) {
-        this.pipeline = pipeline;
+    private void updateParts() {
+        Configuration.get().getParts().forEach(part -> {
+            if (part.getPackage() == this) {
+                part.setPipeline(pipeline);
+            }
+        });
     }
 }

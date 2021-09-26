@@ -62,7 +62,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 1 || columnIndex == 2;
+        return columnIndex != 0;
     }
 
     public Package getPackage(int index) {

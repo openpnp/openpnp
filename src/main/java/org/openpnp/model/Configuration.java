@@ -615,6 +615,10 @@ public class Configuration extends AbstractModelObject {
         serializeObject(holder, file);
     }
 
+    public Pipeline getDefaultPipeline() {
+        return pipelines.get("CVP_DEF");
+    }
+
     public Job loadJob(File file) throws Exception {
         Serializer serializer = createSerializer();
         Job job = serializer.read(Job.class, file);
