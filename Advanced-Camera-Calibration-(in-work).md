@@ -30,9 +30,9 @@ The **Approximate Camera Lens Z** setting is used to give the calibration algori
 The **Start Calibration** button starts the calibration collection process.  All settings on this tab above the button should be setup before clicking this. During the calibration collection process, instructions/status will appear below the camera view guiding the operator through the process:
 ![Instructions/Status](https://user-images.githubusercontent.com/50550971/134715025-15d9b20d-ef11-4ad6-b3ec-34d5fdf1e4a5.png)
 
-The **Detection Diameter** spinner sets the size of the fiducial/nozzle tip that is used.  During the calibration sequence, the operator will be instructed to set this at the appropriate time.
+The **Detection Diameter** spinner sets the size of the fiducial/nozzle tip that is used.  During the calibration collection process, the operator will be instructed to set this at the appropriate time.
 
-Once the calibration data has been collected and successfully processed, the **Apply Calibration** check box will automatically be selected thereby applying the calibration to the camera and enabling corrected images to be displayed in the Camera View.  Clearing this checkbox, results in raw images being displayed in the Camera View.
+Once the calibration data has been collected and successfully processed, the **Apply Calibration** check box will automatically be selected thereby applying the calibration to the camera and enabling corrected images to be displayed in the Camera View.  Clearing this checkbox, results in raw uncorrected images being displayed in the Camera View.
 
 The **Crop All Invalid Pixels <--> Show All Valid Pixels** slider at the bottom of this section allows the operator to control the cropping of invalid pixels along the edges of the calibrated camera images.  Invalid pixels (usually displayed as black) on the edges of the image may result due to the image processing that compensates for errors in camera mounting and lens distortion. While mostly aesthetic, changing this setting does change the Units Per Pixel for the camera.  Setting the slider to the far right ensures all available pixels from the camera are displayed.  Setting the slider to the far left ensures that the edges of the image are cropped symmetrically about the reticle crosshairs so that no invalid pixels remain at the edges. Intermediate settings will produce results between the two extremes.
 
@@ -68,4 +68,13 @@ The first item displayed here is the **Head Offsets** (for top cameras) or the *
 
 **Camera Mounting Error** shows the estimated mounting errors of the camera as measured by the right hand rule about each machine axis. See [here](https://github.com/openpnp/openpnp/wiki/Advance-Camera-Calibration---Camera-Mounting-Errors#camera-mounting-errors) for how mounting errors effect the images as seen in the camera view pane.  
 
-**Estimated Locating Accuracy** shows an estimate of the accuracy of locations captured by this camera. This includes not only inaccuracies due to uncompensated camera errors but also inaccuracies due to machine mechanics such as stepper motor non-linearities, mechanical backlash, etcetera.
+**Estimated Locating Accuracy** shows an estimate of the expected accuracy of locations that are captured by using this camera. This includes not only inaccuracies due to uncompensated residual camera errors but also inaccuracies due to machine mechanics such as stepper motor non-linearities, mechanical backlash, etcetera.  As this is a statistical measure, it should be expected that about 63 percent of all measurements will be better than this and that 98 percent of all measurements will be better than double this value.
+
+The **Select Cal Z For Plotting** spinner selects the data to be plotted in the plots below it.
+
+The **Show Outliers** checkbox enables data points that were judged to be bad measurements to be display in the plots.
+
+The three plots at the bottom of this section all plot the residual errors although they display it different ways. Residual error is defined as the difference  between where the model says the detected fiducial/nozzle tip should have appeared in the image and where it actually appeared in the image.
+The **Residual Errors In Collection Order** plot
+The **Residual Error X-Y Scatter Plot** 
+The **Residual Error Map**
