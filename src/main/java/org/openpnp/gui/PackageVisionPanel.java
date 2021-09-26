@@ -161,6 +161,17 @@ public class PackageVisionPanel extends JPanel {
         JButton editPipelineBtn = new JButton("Edit");
         editPipelineBtn.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
         JButton resetPipelineBtn = new JButton("Reset to Default");
+        resetPipelineBtn.addActionListener((e) -> {
+            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                    "This will replace the current package's and all its parts' pipeline with the default pipeline. Are you sure?", null,
+                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (result == JOptionPane.YES_OPTION) {
+                UiUtils.messageBoxOnException(() -> {
+                    pkg.setPipeline(Configuration.get().getDefaultPipeline());
+                    editPipeline();
+                });
+            }
+        });
 
         bottomVisionPanel.add(lblPipeline, "2, 2, right, default");
         bottomVisionPanel.add(editPipelineBtn, "4, 2, left, default");

@@ -134,12 +134,11 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         JButton btnLoadDefault = new JButton("Reset to Default");
         btnLoadDefault.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current part pipeline with the default pipeline. Are you sure?", null,
+                    "This will replace the current part pipeline with the package default pipeline. Are you sure?", null,
                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
-                    //TODO NK: reset to default part/package, not the global one
-                    part.getPipeline().setCvPipeline(bottomVision.getPipeline().clone());
+                    part.resetPipelineToDefault();
                     editPipeline();
                 });
             }

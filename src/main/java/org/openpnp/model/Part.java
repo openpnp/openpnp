@@ -180,4 +180,15 @@ public class Part extends AbstractModelObject implements Identifiable {
     public void setPipeline(Pipeline pipeline) {
         this.pipeline = pipeline;
     }
+
+    public void resetPipelineToDefault() {
+        Pipeline oldValue = pipeline;
+        if (partPackage.getPipeline() == null) {
+            pipeline = Configuration.get().getDefaultPipeline();
+        } else {
+            pipeline = partPackage.getPipeline();
+        }
+
+        firePropertyChange("pipeline", oldValue, this.pipeline);
+    }
 }
