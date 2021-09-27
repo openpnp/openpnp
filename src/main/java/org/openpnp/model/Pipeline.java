@@ -30,6 +30,10 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public CvPipeline getCvPipeline() {
         if(cvPipeline == null) {
             cvPipeline = new CvPipeline();

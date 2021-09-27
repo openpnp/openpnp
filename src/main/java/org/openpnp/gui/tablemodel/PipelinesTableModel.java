@@ -13,6 +13,7 @@ public class PipelinesTableModel extends AbstractTableModel implements PropertyC
 
     private String[] columnNames =
             new String[]{"ID", "Name"};
+    private Class[] columnTypes = new Class[] {String.class, String.class};
 
     private List<Pipeline> pipelines;
 
@@ -44,10 +45,6 @@ public class PipelinesTableModel extends AbstractTableModel implements PropertyC
         return (pipelines == null) ? 0 : pipelines.size();
     }
 
-    public Pipeline getPipeline(int index) {
-        return pipelines.get(index);
-    }
-
     @Override
     public int getColumnCount() {
         return 2;
@@ -56,6 +53,16 @@ public class PipelinesTableModel extends AbstractTableModel implements PropertyC
     @Override
     public String getColumnName(int column) {
         return columnNames[column];
+    }
+
+    @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        return columnTypes[columnIndex];
+    }
+
+    @Override
+    public boolean isCellEditable(int rowIndex, int columnIndex) {
+        return columnIndex != 0;
     }
 
     @Override
@@ -70,4 +77,17 @@ public class PipelinesTableModel extends AbstractTableModel implements PropertyC
                 return null;
         }
     }
+
+    public Pipeline getPipeline(int index) {
+        return pipelines.get(index);
+    }
+
+    @Override
+    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+        Pipeline pipeline = pipelines.get(rowIndex);
+        if (columnIndex == 1) {
+            pipeline.setName((String) aValue);
+        }
+    }
+
 }
