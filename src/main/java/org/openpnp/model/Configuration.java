@@ -523,6 +523,11 @@ public class Configuration extends AbstractModelObject {
         return pipelines.get(pipelineId);
     }
 
+    public void removePipeline(Pipeline pipeline) {
+        pipelines.remove(pipeline.getId().toUpperCase());
+        firePropertyChange("pipelines", null, pipelines);
+    }
+
     public List<Board> getBoards() {
         return Collections.unmodifiableList(new ArrayList<>(boards.values()));
     }

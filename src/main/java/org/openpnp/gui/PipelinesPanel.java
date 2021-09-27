@@ -14,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 public class PipelinesPanel extends JPanel implements WizardContainer {
 
@@ -181,7 +182,24 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            List<Pipeline> selections = getSelections();
+            List<String> ids = selections.stream().map(Pipeline::getId).collect(Collectors.toList());
 
+            String formattedIds;
+            if (ids.size() <= 3) {
+                formattedIds = String.join(", ", ids);
+            } else {
+                formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
+            }
+
+            int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                    "Are you sure you want to delete " + formattedIds + "?",
+                    "Delete " + selections.size() + " pipelines?", JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                for (Pipeline pipeline : selections) {
+                    Configuration.get().removePipeline(pipeline);
+                }
+            }
         }
     };
 
