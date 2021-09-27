@@ -58,11 +58,11 @@ The first graph shows you the positional precision of the axis, stepping over on
 * The **Absolute Error** (red line) should not show any sagging and no trend that goes outside the dark blue limits. 
 * The **Random Move Error** (brown dots) should also mostly remain inside the dark blue tolerance limits. These dots represent random distance moves made with the newly calibrated backlash compensation settings applied, i.e. this is a success test. The same brown dots are also plotted in the second graph, this time over move distance. 
 
-Failure to meet these goals may indicate that the motor currents are too weak or that the axis resolution/microstepping is too high, i.e. the transmission ratio is too large, e.g. the pulleys may be too large for the given motor power. Also check any dynamic motor current control such as Trinamic CoolStep™. You may have to switch it off.  
+Failure to meet these goals may indicate that the motor currents are too weak and/or that the axis resolution/micro-stepping is too fine. The transmission ratio may be too large, e.g. the pulleys too large for the given motor power. Also check any dynamic motor current control such as Trinamic CoolStep™. You may have to switch it off.  
 
 ### Backlash Offset and Overshoot Graph
 
-The second graph shows the measured **Backlash Offset** (blue) and **Overshoot** (red) at different approach distances. These are measured at minimum (usually 25%) speed and full speed, respectively. Both are performed after a straight and after a direction reversing move. The routine tries to find a minimum approach distance, where the backlash remains consistent within the **Tolerance ±** window. This minimum approach distance is called **Sneak-up Distance**. 
+The second graph shows the measured **Backlash Offset** (blue) and **Overshoot** (red) at different approach distances. These are measured at minimum (usually 25%) speed and full speed, respectively. Both are performed after a straight and after a direction reversing move. The routine tries to find a minimum approach distance, where the backlash remains consistent within the given **Tolerance ±** window. This minimum approach distance with consistent backlash is called **Sneak-up Distance**. 
 
 ![Letter F Indicator](https://user-images.githubusercontent.com/9963310/134901088-453a60f2-1190-4a6c-a662-90149cafc2af.png)
 
