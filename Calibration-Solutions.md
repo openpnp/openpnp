@@ -58,7 +58,7 @@ The first graph shows you the positional precision of the axis, stepping over on
 * The **Absolute Error** (red line) should not show any sagging and no trend that goes outside the dark blue limits. 
 * The **Random Move Error** (brown dots) should also mostly remain inside the dark blue tolerance limits. These dots represent random distance moves made with the newly calibrated backlash compensation settings applied, i.e. this is a success test. The same brown dots are also plotted in the second graph, this time over move distance. 
 
-If these targets are not met, it may indicate that the motor currents are too weak or that the axis resolution/microstepping is too high, i.e. the transmission ratio is too large, e.g. the pulleys may be too large for the given motor power. 
+Failure to meet these goals may indicate that the motor currents are too weak or that the axis resolution/microstepping is too high, i.e. the transmission ratio is too large, e.g. the pulleys may be too large for the given motor power. Also check any dynamic motor current control such as Trinamic CoolStep™. You may have to switch it off.  
 
 ### Backlash Offset and Overshoot Graph
 
