@@ -34,6 +34,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Version;
+import org.simpleframework.xml.core.Persist;
 
 public class Package extends AbstractModelObject implements Identifiable {
     @Version(revision=1.1)
@@ -85,6 +86,11 @@ public class Package extends AbstractModelObject implements Identifiable {
                 }
             }
         });
+    }
+
+    @Persist
+    private void persist() {
+        pipelineId = (pipeline == null ? null : pipeline.getId());
     }
 
     @Override
