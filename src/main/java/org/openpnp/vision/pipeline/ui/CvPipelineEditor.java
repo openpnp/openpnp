@@ -181,7 +181,8 @@ public class CvPipelineEditor extends JPanel {
 
     public CvPipelineEditor(Pipeline pipeline, CvPipeline cvPipeline, boolean tabs) {
         if (pipeline == null) {
-            this.pipeline = new Pipeline();
+            //TODO NK: investigate where is this coming from and avoid it
+            this.pipeline = new Pipeline("To be deleted");
             this.pipeline.setCvPipeline(cvPipeline);
         } else {
             this.pipeline = pipeline;

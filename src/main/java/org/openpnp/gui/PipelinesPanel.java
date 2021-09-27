@@ -4,20 +4,13 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.*;
 import org.openpnp.gui.tablemodel.PipelinesTableModel;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Package;
 import org.openpnp.model.Pipeline;
 import org.openpnp.spi.PartAlignment;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -28,6 +21,8 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
     private Preferences prefs = Preferences.userNodeForPackage(PipelinesPanel.class);
 
+    private final Frame frame;
+
     private PipelinesTableModel tableModel;
     private TableRowSorter<PipelinesTableModel> tableSorter;
     private JTable table;
@@ -35,6 +30,7 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
     private ActionGroup multiSelectionActionGroup;
 
     public PipelinesPanel(Configuration configuration, Frame frame) {
+        this.frame = frame;
 
         singleSelectionActionGroup = new ActionGroup(deletePipelineAction, pastePipelineFromClipboardAction, copyPipelineToClipboardAction);
         singleSelectionActionGroup.setEnabled(false);
@@ -53,12 +49,7 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
         splitPane.setContinuousLayout(true);
         splitPane
                 .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
-        splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
-            }
-        });
+        splitPane.addPropertyChangeListener("dividerLocation", evt -> prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation()));
         add(splitPane, BorderLayout.CENTER);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -164,7 +155,20 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            String id;
+            while ((id = JOptionPane.showInputDialog(frame,
+                    "Please enter an ID for the new pipeline.")) != null) {
+                if (Configuration.get().getPipeline(id) == null) {
+                    Pipeline pipeline = new Pipeline(id);
 
+                    Configuration.get().addPipeline(pipeline);
+                    tableModel.fireTableDataChanged();
+                    Helpers.selectLastTableRow(table);
+                    break;
+                }
+
+                MessageBoxes.errorBox(frame, "Error", "Pipeline ID " + id + " already exists.");
+            }
         }
     };
 

@@ -14,6 +14,12 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
     @Element()
     private CvPipeline cvPipeline;
 
+    public Pipeline(){}
+
+    public Pipeline(String id) {
+        this.id = id;
+    }
+
     @Override
     public String getId() {
         return id;
