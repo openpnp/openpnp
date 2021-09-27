@@ -52,6 +52,8 @@ Elaborate graphical diagnostics are present after each calibration (both from Is
 
 The first graph shows you the positional precision of the axis, stepping over one Millimeter. 
 
+![Stepping Precision Graph](https://user-images.githubusercontent.com/9963310/134904889-dca2d798-7640-4325-a2a6-b766fe4447ee.png)
+
 * The **Relative Step Errors** (blue dots) should remain inside the dark blue tolerance limits.  
 * The **Absolute Error** (red line) should not show any sagging and no trend that goes outside the dark blue limits. 
 * The **Random Move Error** (brown dots) should also mostly remain inside the dark blue tolerance limits. These dots represent random distance moves made with the newly calibrated backlash compensation settings applied, i.e. this is a success test. The same brown dots are also plotted in the second graph, this time over move distance. 
@@ -62,14 +64,16 @@ If these targets are not met, it may indicate that the motor currents are too we
 
 The second graph shows the measured **Backlash Offset** (blue) and **Overshoot** (red) at different approach distances. These are measured at minimum (usually 25%) speed and full speed, respectively. Both are performed after a straight and after a direction reversing move. The routine tries to find a minimum approach distance, where the backlash remains consistent within the **Tolerance ±** window. This minimum approach distance is called **Sneak-up Distance**. 
 
-### Letter F Shaped Indicator
-
-* The determined **Sneak-up Distance** is visible through the vertical line in the dark blue letter-F-shaped indicator. 
-* The determined consistent **Backlash Offsets** with **Tolerance ±** window are visible through the horizontal lines in the dark blue letter-F-shaped indicator. 
-
 ![Letter F Indicator](https://user-images.githubusercontent.com/9963310/134901088-453a60f2-1190-4a6c-a662-90149cafc2af.png)
 
-### Backlash Compensation Method Selection
+#### Letter F Shaped Indicator
+
+There is a dark blue letter-F-shaped indicator superimposed on the graph:
+
+* The determined **Sneak-up Distance** is indicated by the vertical line of the letter "F".
+* The determined consistent **Backlash Offsets** with **Tolerance ±** window is bracketed by the horizontal lines of the letter "F". 
+
+#### Backlash Compensation Method Selection
 
 * If the **Backlash Offset** and **Sneak-up Distance** are within **Tolerance ±**, the backlash compensation is switched off. Bravo for a superb machine!
 * If the **Sneak-up Distance** is smaller than the average **Backlash Offset**, the most efficient **DirectionalCompensation** method is chosen. This method is as fast and fluid as with no compensation. 
@@ -80,11 +84,15 @@ The second graph shows the measured **Backlash Offset** (blue) and **Overshoot**
 
 The green line shows you the Move Time over distance. Note the [logarithmic scale](https://en.wikipedia.org/wiki/Logarithmic_scale), both on distance and move time. This is a good indicator of your axis performance. 
 
+![Move Time](https://user-images.githubusercontent.com/9963310/134905005-c7e5b2df-d68c-49ac-aa18-356046128b48.png)
+
 ### Backlash at Sneak-up Speed
 
 In this graph, the calibration routine measures **Backlash Offset** consistency at different approach speeds. If possible the speed is increased, up from the initial 25%. 
 
 The graph also shows you how _effective_ the speed control is (green line). Ideally, the line is perfectly diagonal, i.e. effective speed factor and nominal speed factor (on the horizontal axis) are the same at each dot. 
+
+![Speed Factor](https://user-images.githubusercontent.com/9963310/134905076-5ef2bb61-2ef5-4e92-b75b-11c5d0dc062a.png)
 
 # Calibrating Precision Camera to Nozzle Offsets
 
