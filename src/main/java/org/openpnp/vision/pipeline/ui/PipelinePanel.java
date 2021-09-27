@@ -80,6 +80,35 @@ public class PipelinePanel extends JPanel {
         toolbarActionMap.put(new PairKey<>(DELETE, PARTS_PACKAGES), new DeletePartPackageAction("Delete Part/Package...", "Delete the selected Part or Package."));
     }
 
+    private void prepareToolbar() {
+        JToolBar toolbar = new JToolBar();
+        add(toolbar, BorderLayout.NORTH);
+
+        JButton refreshButton = new JButton(new RefreshAction(Icons.refresh, "Update picture from current view.", "Update picture from current view."));
+        refreshButton.setHideActionText(true);
+        toolbar.add(refreshButton);
+
+        btnAdd = new JButton("Add new ...");
+        toolbar.add(btnAdd);
+        btnAdd.setHideActionText(true);
+
+        btnRemove = new JButton("Delete ...");
+        toolbar.add(btnRemove);
+        btnRemove.setHideActionText(true);
+
+        toolbar.addSeparator();
+
+        JButton copyButton = new JButton(new CopyPipelineAction("Copy pipeline to clipboard", "Copy the pipeline to the clipboard in text format."));
+        toolbar.add(copyButton);
+        copyButton.setHideActionText(true);
+
+        JButton pasteButton = new JButton(new PastePipelineAction("Paste pipeline from clipboard", "Paste new pipeline from a definition on the clipboard."));
+        toolbar.add(pasteButton);
+        pasteButton.setHideActionText(true);
+
+        setToolbarButtonsActions(STAGES);
+    }
+
     private JTabbedPane prepareTabView() {
         JTabbedPane tabs = new JTabbedPane(TOP);
 
@@ -89,6 +118,11 @@ public class PipelinePanel extends JPanel {
         tabs.addChangeListener(e -> setToolbarButtonsActions(tabs.getSelectedIndex()));
 
         return tabs;
+    }
+
+    private void setToolbarButtonsActions(int selectedPane) {
+        btnAdd.setAction(toolbarActionMap.get(new PairKey<>(ADD, selectedPane)));
+        btnRemove.setAction(toolbarActionMap.get(new PairKey<>(DELETE, selectedPane)));
     }
 
     private JSplitPane prepareStagesSplitView() {
@@ -152,56 +186,17 @@ public class PipelinePanel extends JPanel {
         return splitPaneStages;
     }
 
-    private JScrollPane preparePartsPane() {
-        partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
-        partsTable = preparePartsPackagesTable(partsTableModel);
+    private JTable prepareTable(AbstractTableModel tableModel) {
+        JTable table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setDragEnabled(true);
+        table.setDropMode(DropMode.INSERT_ROWS);
+        table.setTransferHandler(new TableRowTransferHandler(table));
+        table.getColumnModel().getColumn(0).setPreferredWidth(50);
+        table.getColumnModel().getColumn(1).setPreferredWidth(50);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
-        partsTable.changeSelection(partsTable.getRowCount()-1,  0,  false, false);
-
-        return new JScrollPane(partsTable);
-    }
-
-    private JScrollPane preparePackagesPane() {
-        packagesTableModel = new PipelineEditorPackagesTableModel(editor.getUpperPipeline());
-        packagesTable = preparePartsPackagesTable(packagesTableModel);
-
-        packagesTable.changeSelection(packagesTable.getRowCount()-1,  0,  false, false);
-
-        return new JScrollPane(packagesTable);
-    }
-
-    private void prepareToolbar() {
-        JToolBar toolbar = new JToolBar();
-        add(toolbar, BorderLayout.NORTH);
-
-        JButton refreshButton = new JButton(new RefreshAction(Icons.refresh, "Update picture from current view.", "Update picture from current view."));
-        refreshButton.setHideActionText(true);
-        toolbar.add(refreshButton);
-
-        btnAdd = new JButton("Add new ...");
-        toolbar.add(btnAdd);
-        btnAdd.setHideActionText(true);
-
-        btnRemove = new JButton("Delete ...");
-        toolbar.add(btnRemove);
-        btnRemove.setHideActionText(true);
-
-        toolbar.addSeparator();
-
-        JButton copyButton = new JButton(new CopyPipelineAction("Copy pipeline to clipboard", "Copy the pipeline to the clipboard in text format."));
-        toolbar.add(copyButton);
-        copyButton.setHideActionText(true);
-
-        JButton pasteButton = new JButton(new PastePipelineAction("Paste pipeline from clipboard", "Paste new pipeline from a definition on the clipboard."));
-        toolbar.add(pasteButton);
-        pasteButton.setHideActionText(true);
-
-        setToolbarButtonsActions(STAGES);
-    }
-
-    private void setToolbarButtonsActions(int selectedPane) {
-        btnAdd.setAction(toolbarActionMap.get(new PairKey<>(ADD, selectedPane)));
-        btnRemove.setAction(toolbarActionMap.get(new PairKey<>(DELETE, selectedPane)));
+        return table;
     }
 
     private JSplitPane preparePartsPackagesSplitView() {
@@ -217,6 +212,22 @@ public class PipelinePanel extends JPanel {
         return splitPanePartsPackages;
     }
 
+    private JScrollPane preparePartsPane() {
+        partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
+        partsTable = preparePartsPackagesTable(partsTableModel);
+
+        return new JScrollPane(partsTable);
+    }
+
+    private JScrollPane preparePackagesPane() {
+        packagesTableModel = new PipelineEditorPackagesTableModel(editor.getUpperPipeline());
+        packagesTable = preparePartsPackagesTable(packagesTableModel);
+
+        packagesTable.changeSelection(packagesTable.getRowCount()-1,  0,  false, false);
+
+        return new JScrollPane(packagesTable);
+    }
+
     private JTable preparePartsPackagesTable(AbstractTableModel tableModel) {
         JTable table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -224,19 +235,6 @@ public class PipelinePanel extends JPanel {
         table.setDropMode(DropMode.INSERT_ROWS);
         table.setTransferHandler(new TableRowTransferHandler(table));
         table.getColumnModel().getColumn(0).setPreferredWidth(100);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-
-        return table;
-    }
-
-    private JTable prepareTable(AbstractTableModel tableModel) {
-        JTable table = new JTable(tableModel);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setDragEnabled(true);
-        table.setDropMode(DropMode.INSERT_ROWS);
-        table.setTransferHandler(new TableRowTransferHandler(table));
-        table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(1).setPreferredWidth(50);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         return table;
@@ -431,7 +429,6 @@ public class PipelinePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            System.out.println("New part/package action called");
             List<Part> parts = Configuration.get().getParts();
             //TODO NK: unmodifiable list, cannot sort
             PartPackageSelectionDialog dialog = new PartPackageSelectionDialog(JOptionPane.getFrameForComponent(PipelinePanel.this), "New Part",
@@ -445,8 +442,8 @@ public class PipelinePanel extends JPanel {
             }
             try {
                 selectedPart.setPipeline(editor.getUpperPipeline());
-                partsTableModel.refresh();
-//                Helpers.selectLastTableRow(partsTable);
+                partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
+                partsTable.setModel(partsTableModel);
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this), "Error",
