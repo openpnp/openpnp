@@ -68,13 +68,16 @@ The first item displayed here is the **Head Offsets** (for top cameras) or the *
 
 **Camera Mounting Error** shows the estimated mounting errors of the camera as measured by the right hand rule about each machine axis. See [here](https://github.com/openpnp/openpnp/wiki/Advance-Camera-Calibration---Camera-Mounting-Errors#camera-mounting-errors) for how mounting errors effect the images as seen in the camera view pane.  
 
-**Estimated Locating Accuracy** shows an estimate of the expected accuracy of locations that are captured by using this camera. This includes not only inaccuracies due to uncompensated residual camera errors but also inaccuracies due to machine mechanics such as stepper motor non-linearities, mechanical backlash, etcetera.  As this is a statistical measure, it should be expected that about 63 percent of all measurements will be better than this and that 98 percent of all measurements will be better than double this value.
+**Estimated Locating Accuracy** shows an estimate of the expected accuracy of locations that are captured by using this camera. This includes not only inaccuracies due to uncompensated residual camera errors but also inaccuracies due to machine mechanics such as stepper motor non-linearities, mechanical backlash, etcetera.  As this is a statistical measure, it should be expected that about 63 percent of all measurements will be better than this and that 98 percent of all measurements will be better than double this value. See [Circular Error Probable](https://en.wikipedia.org/wiki/Circular_error_probable) for more information.
 
 The **Select Cal Z For Plotting** spinner selects the data to be plotted in the plots below it.
 
 The **Show Outliers** checkbox enables data points that were judged to be bad measurements to be display in the plots.
 
-The three plots at the bottom of this section all plot the residual errors although they display it different ways. Residual error is defined as the difference  between where the model says the detected fiducial/nozzle tip should have appeared in the image and where it actually appeared in the image.
-The **Residual Errors In Collection Order** plot
-The **Residual Error X-Y Scatter Plot** 
+The three plots at the bottom of this section all plot the residual errors observed from the calibration data although they display it different ways. Residual error is defined as the difference between where the fitted model says the detected fiducial/nozzle tip should have appeared in the image and where it actually appeared in the image. And rather than displaying the errors in pixels, they are scaled to machine units at the Z level at which they were collected.
+
+The **Residual Errors In Collection Order** plot shows the individual X and Y residual errors in a time ordered sequence. This will highlight any time dependent trends in the data that may be due to effects such as thermal expansion/contraction, missed steps, etcetera.
+
+The **Residual Error X-Y Scatter Plot** shows the residual error for each collected data point
+
 The **Residual Error Map**
