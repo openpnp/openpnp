@@ -2,10 +2,13 @@
 
 # Purpose
 The purpose of advanced camera calibration is to:
-1. Determine the head offsets (or absolute location for bottom cameras) and orientation of the camera;
+1. Determine the head offset (or absolute location for bottom cameras) and orientation of the camera;
 1. Determine the scaling of machine units to camera pixels, i.e., units per pixel and how it varies with machine Z;
 1. Correct for imperfections in how the camera is mounted, i.e., rotation from ideal about the X, Y and Z axis; and,
 1. Correct for lens imperfections, i.e., barrel/pincushion and tangential distortion.
+
+# How It Works
+Advanced Camera Calibration works by creating a mathematical model of the camera that basically takes a machine 3D coordinate and maps it to an image pixel 2D coordinate. Calibration data is collected that consists of a large set of machine 3D coordinates and their corresponding image pixel 2D coordinates. The camera model is then "fitted" to the data such that the difference between where the modelled image coordinates and the actual image coordinates is minimized. The camera model is then used to generate a remapping of image pixels from the physical camera to correct for the above mentioned imperfections in the camera. The camera model also includes information used to determine the head offset (or absolute location for bottom cameras) as well as information to determine the scaling of machine units to the camera pixels at any given Z coordinate. 
 
 # Enabling/Disabling
 Advanced camera calibration is enabled/disabled for a particular camera by selecting the camera in the Machine Setup tree, selecting the Experimental Calibration tab, and checking/clearing the check box "Enable experimental calibration to override old style image transforms and distortion correction" (see below). Other than the settings under the General Settings section, no other settings on this tab will have any effect on machine operation if this check box is cleared (all the settings prior to running Advance Camera Calibration will be restored):
@@ -16,7 +19,7 @@ Advanced camera calibration is enabled/disabled for a particular camera by selec
 
 The settings here are simply copies of settings available on other tabs.  They are provided here as a convenience since they should be set to their desired values prior to running Advanced Calibration.  Any changes made here take effect immediately and will change the corresponding value on any other tabs on which they appear.
 
-Note that **Cropped Width** and **Cropped Height** are applied to the raw camera images prior to any other corrections made by this calibration.  Therefore, calibration data is only collected over the cropped image and any corrections will only be valid over that portion of the image. 
+Note that **Cropped Width** and **Cropped Height** are applied to the raw camera images prior to any other corrections made by this calibration.  Therefore, calibration data is only collected over the cropped image and any corrections will only be valid over that portion of the raw image. 
 
 # Calibration Setup
 ![Calibration Setup](https://user-images.githubusercontent.com/50550971/134420670-04849671-d67a-4606-8834-409b9f57b74b.png)
@@ -78,6 +81,6 @@ The three plots at the bottom of this section all plot the residual errors obser
 
 The **Residual Errors In Collection Order** plot shows the individual X and Y residual errors in a time ordered sequence. This will highlight any time dependent trends in the data that may be due to effects such as thermal expansion/contraction, missed steps, etcetera.
 
-The **Residual Error X-Y Scatter Plot** shows the residual error for each collected data point
+The **Residual Error X-Y Scatter Plot** shows the residual error for each collected data point in a manner that shows any dependencies between the X and Y residual errors.  
 
 The **Residual Error Map**
