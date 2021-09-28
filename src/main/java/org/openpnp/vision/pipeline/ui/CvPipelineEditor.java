@@ -2,6 +2,7 @@ package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
@@ -169,9 +170,7 @@ public class CvPipelineEditor extends JPanel {
     
     private String originalVersion = "";
     private Set<String> partsOriginal;
-    private HashMap<String, String> partsPipelines = new HashMap<>();
     private Set<String> packagesOriginal;
-    private HashMap<String, String> packagesPipelines = new HashMap<>();
 
     public CvPipelineEditor(CvPipeline pipeline) {
         this(null, pipeline, false);
@@ -190,11 +189,9 @@ public class CvPipelineEditor extends JPanel {
             this.pipeline = pipeline;
         }
 
-        setPipelinesMap();
-
         try {
             originalVersion = this.pipeline.getCvPipeline().toXmlString();
-            partsOriginal = getParts();
+            partsOriginal = getAssignedPartIds();
             packagesOriginal = getPackages();
         }
         catch (Exception e1) {
@@ -238,20 +235,10 @@ public class CvPipelineEditor extends JPanel {
         resultsPanel.setSelectedStage(stage);
     }
 
-    private void setPipelinesMap() {
-        Configuration.get().getParts().forEach(part -> partsPipelines.put(part.getId(), part.getPipeline().getId()));
-        Configuration.get().getPackages().forEach(pkg -> packagesPipelines.put(pkg.getId(), pkg.getPipeline().getId()));
-    }
-
-    private Set<String> getParts() {
-        Set<String> result = new HashSet<>();
-        Configuration.get().getParts().forEach(part -> {
-            if (part.getPipeline().getId() != null && part.getPipeline().getId().equals(pipeline.getId())) {
-                result.add(part.getId());
-            }
-        });
-
-        return result;
+    private Set<String> getAssignedPartIds() {
+        return Configuration.get().getParts(pipeline.getId()).stream()
+                .map(Part::getId)
+                .collect(Collectors.toSet());
     }
 
     private Set<String> getPackages() {
@@ -271,7 +258,7 @@ public class CvPipelineEditor extends JPanel {
         Set<String> packagesEdited = new HashSet<>();
         try {
             editedVersion = pipeline.getCvPipeline().toXmlString();
-            partsEdited = getParts();
+            partsEdited = getAssignedPartIds();
             packagesEdited = getPackages();
         }
         catch (Exception e) {
@@ -285,22 +272,11 @@ public class CvPipelineEditor extends JPanel {
     public void undoEdits() {
         try {
             pipeline.getCvPipeline().fromXmlString(originalVersion);
-            restorePipelines();
+            Configuration.get().restorePipelines();
         }
         catch (Exception e) {
             // Do nothing
         }
-    }
-
-    private void restorePipelines() {
-        //TODO NK: leave that to Configuration?
-        partsPipelines.forEach((k,v) -> {
-            Configuration.get().getPart(k).setPipeline(Configuration.get().getPipeline(v));
-        });
-
-        packagesPipelines.forEach((k,v) -> {
-            Configuration.get().getPackage(k).setPipeline(Configuration.get().getPipeline(v));
-        });
     }
     
     public static Set<Class<? extends CvStage>> getStageClasses() {

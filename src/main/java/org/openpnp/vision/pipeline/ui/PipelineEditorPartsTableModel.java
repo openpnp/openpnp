@@ -73,14 +73,6 @@ public class PipelineEditorPartsTableModel extends AbstractTableModel implements
     }
 
     private List<Part> getParts() {
-        List<Part> result = new ArrayList<>();
-        Configuration.get().getParts().forEach(part -> {
-            //TODO: NK: not safe, ensure every part gets at least default pipeline, otherwise pipeline id is null
-            if (part.getPipeline().getId() != null && part.getPipeline().getId().equals(pipeline.getId())) {
-                result.add(part);
-            }
-        });
-
-        return result;
+        return Configuration.get().getParts(pipeline.getId());
     }
 }

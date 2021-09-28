@@ -101,7 +101,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
                 part.setSpeed(percentConverter.convertReverse(aValue.toString()));
             }
             else if (columnIndex == 5) {
-                part.setPipeline((Pipeline) aValue);
+                Configuration.get().assignPipelineToPartUpdateMaps(part, (Pipeline) aValue);
             }
         }
         catch (Exception e) {

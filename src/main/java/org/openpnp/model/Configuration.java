@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.prefs.Preferences;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
@@ -79,6 +80,7 @@ public class Configuration extends AbstractModelObject {
     private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
     private LinkedHashMap<String, Pipeline> pipelines = new LinkedHashMap<>();
+    private HashMap<String, Pipeline> partsPipelines = new HashMap<>();
     private Machine machine;
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
     private boolean loaded;
@@ -399,6 +401,8 @@ public class Configuration extends AbstractModelObject {
             listener.configurationLoaded(this);
         }
 
+        loadPipelinesMaps();
+
         if (forceSave) {
             Logger.info("Defaults were loaded. Saving to configuration directory.");
             configurationDirectory.mkdirs();
@@ -551,6 +555,33 @@ public class Configuration extends AbstractModelObject {
         boards.put(file, board);
         firePropertyChange("boards", null, boards);
         return board;
+    }
+
+    public void loadPipelinesMaps() {
+        parts.values().forEach(part -> {
+            partsPipelines.put(part.getId(), part.getPipeline());
+        });
+    }
+
+    public List<Part> getParts(String pipelineId) {
+        return parts.values().stream()
+                .filter(part -> part.getPipeline().getId().equals(pipelineId))
+                .collect(Collectors.toList());
+    }
+
+    public void assignPipelineToPart(Part part, Pipeline pipeline) {
+        parts.get(part.getId()).setPipeline(pipeline);
+    }
+
+    public void assignPipelineToPartUpdateMaps(Part part, Pipeline pipeline) {
+        parts.get(part.getId()).setPipeline(pipeline);
+        partsPipelines.put(part.getId(), pipeline);
+    }
+
+    public void restorePipelines() {
+        partsPipelines.forEach((partId, pipeline) -> {
+            Configuration.get().getPart(partId).setPipeline(pipeline);
+        });
     }
     
     private static void serializeObject(Object o, File file) throws Exception {

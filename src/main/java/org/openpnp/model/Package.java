@@ -221,8 +221,8 @@ public class Package extends AbstractModelObject implements Identifiable {
 
     private void updateParts() {
         Configuration.get().getParts().forEach(part -> {
-            if (part.getPackage() == this) {
-                part.setPipeline(pipeline);
+            if (part.getPackage().getId().equals(id)) {
+                Configuration.get().assignPipelineToPartUpdateMaps(part, pipeline);
             }
         });
     }

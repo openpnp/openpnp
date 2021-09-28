@@ -453,7 +453,7 @@ public class PipelinePanel extends JPanel {
                 }
             }
             try {
-                selectedPart.setPipeline(editor.getUpperPipeline());
+                Configuration.get().assignPipelineToPart(selectedPart, editor.getUpperPipeline());
                 partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
                 partsTable.setModel(partsTableModel);
             }
