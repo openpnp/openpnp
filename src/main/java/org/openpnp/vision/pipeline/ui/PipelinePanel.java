@@ -471,7 +471,10 @@ public class PipelinePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            System.out.println("Delete part/package action called");
+            Part selectedPart = getSelectedPart();
+            selectedPart.setPipeline(Configuration.get().getDefaultPipeline());
+            partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
+            partsTable.setModel(partsTableModel);
         }
     }
 
