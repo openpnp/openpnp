@@ -179,6 +179,8 @@ public class Part extends AbstractModelObject implements Identifiable {
 
     public void setPipeline(Pipeline pipeline) {
         this.pipeline = pipeline;
+        //TODO NK: should not be needed
+        this.pipelineId = pipeline.getId();
     }
 
     public void resetPipelineToDefault() {

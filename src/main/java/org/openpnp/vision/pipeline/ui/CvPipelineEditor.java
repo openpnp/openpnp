@@ -1,14 +1,12 @@
 package org.openpnp.vision.pipeline.ui;
 
 import java.awt.BorderLayout;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
-import org.openpnp.model.Pipeline;
+import org.openpnp.model.*;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -170,6 +168,10 @@ public class CvPipelineEditor extends JPanel {
     private ResultsPanel resultsPanel;
     
     private String originalVersion = "";
+    private Set<String> partsOriginal;
+    private HashMap<String, String> partsPipelines = new HashMap<>();
+    private Set<String> packagesOriginal;
+    private HashMap<String, String> packagesPipelines = new HashMap<>();
 
     public CvPipelineEditor(CvPipeline pipeline) {
         this(null, pipeline, false);
@@ -188,8 +190,12 @@ public class CvPipelineEditor extends JPanel {
             this.pipeline = pipeline;
         }
 
+        setPipelinesMap();
+
         try {
             originalVersion = this.pipeline.getCvPipeline().toXmlString();
+            partsOriginal = getParts();
+            packagesOriginal = getPackages();
         }
         catch (Exception e1) {
             // Do nothing
@@ -232,24 +238,69 @@ public class CvPipelineEditor extends JPanel {
         resultsPanel.setSelectedStage(stage);
     }
 
+    private void setPipelinesMap() {
+        Configuration.get().getParts().forEach(part -> partsPipelines.put(part.getId(), part.getPipeline().getId()));
+        Configuration.get().getPackages().forEach(pkg -> packagesPipelines.put(pkg.getId(), pkg.getPipeline().getId()));
+    }
+
+    private Set<String> getParts() {
+        Set<String> result = new HashSet<>();
+        Configuration.get().getParts().forEach(part -> {
+            if (part.getPipeline().getId() != null && part.getPipeline().getId().equals(pipeline.getId())) {
+                result.add(part.getId());
+            }
+        });
+
+        return result;
+    }
+
+    private Set<String> getPackages() {
+        Set<String> result = new HashSet<>();
+        Configuration.get().getPackages().forEach(pkg -> {
+            if (pkg.getPipeline().getId() != null && pkg.getPipeline().getId().equals(pipeline.getId())) {
+                result.add(pkg.getId());
+            }
+        });
+
+        return result;
+    }
+
     public boolean isDirty( ) {
         String editedVersion = "";
+        Set<String> partsEdited = new HashSet<>();
+        Set<String> packagesEdited = new HashSet<>();
         try {
             editedVersion = pipeline.getCvPipeline().toXmlString();
+            partsEdited = getParts();
+            packagesEdited = getPackages();
         }
         catch (Exception e) {
             // Do nothing
         }
-        return !editedVersion.equals(originalVersion);
+        return !editedVersion.equals(originalVersion) ||
+                !partsEdited.equals(partsOriginal) ||
+                !packagesEdited.equals(packagesOriginal);
     }
     
     public void undoEdits() {
         try {
             pipeline.getCvPipeline().fromXmlString(originalVersion);
+            restorePipelines();
         }
         catch (Exception e) {
             // Do nothing
         }
+    }
+
+    private void restorePipelines() {
+        //TODO NK: leave that to Configuration?
+        partsPipelines.forEach((k,v) -> {
+            Configuration.get().getPart(k).setPipeline(Configuration.get().getPipeline(v));
+        });
+
+        packagesPipelines.forEach((k,v) -> {
+            Configuration.get().getPackage(k).setPipeline(Configuration.get().getPipeline(v));
+        });
     }
     
     public static Set<Class<? extends CvStage>> getStageClasses() {

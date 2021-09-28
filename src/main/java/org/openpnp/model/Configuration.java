@@ -520,7 +520,7 @@ public class Configuration extends AbstractModelObject {
             return null;
         }
 
-        return pipelines.get(pipelineId);
+        return pipelines.get(pipelineId.toUpperCase());
     }
 
     public void removePipeline(Pipeline pipeline) {
