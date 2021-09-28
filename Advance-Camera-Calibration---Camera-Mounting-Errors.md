@@ -1,7 +1,7 @@
 # Camera Mounting Errors
 Ideally, cameras are mounted such that their image axes are aligned parallel with the machine X-Y axes and their optical axes are parallel with the machine Z axis.  That is, the cameras are expected to be mounted so that their images are perfectly "square" with the machine's X-Y axes and that they look perfectly straight up or down (no tilt). In practice however, it may be quite difficult to mount a camera that achieves that ideal. Even if the camera case/PCB is mounted exactly aligned with the machine's axes, there is no guarantee the camera's internal mounting of the image sensor and lens system are so aligned. 
 
-The consequences of uncorrected camera mounting errors are two-fold. First, and most obvious, is that if the image axes are not aligned with the machine's X-Y axes, there will be an error in the rotation of imaged objects.  The second is that if the optical axis of the camera is not perfectly vertical, there will be an apparent shift in the measured X and/or Y coordinate of the object that varies with Z as shown in the animated figure below.
+The consequences of uncorrected camera mounting errors are two-fold. First, and most obvious, is that if the image axes are not aligned with the machine's X-Y axes, there will be an error in the rotation of imaged objects.  The second is that if the optical axis of the camera is not perfectly vertical, there will be an apparent shift in the measured X and/or Y coordinate of the object that varies with the object's Z as shown in the animated figure below.
 
 ![CameraTiltGif](https://user-images.githubusercontent.com/50550971/134785947-5d909fe5-4702-4e00-b7ed-0309a10a11c9.gif)
  
