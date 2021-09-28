@@ -37,7 +37,9 @@ The **Detection Diameter** spinner sets the size of the fiducial/nozzle tip that
 
 Once the calibration data has been collected and successfully processed, the **Apply Calibration** check box will automatically be selected thereby applying the calibration to the camera and enabling corrected images to be displayed in the Camera View.  Clearing this checkbox, results in raw uncorrected images being displayed in the Camera View.
 
-The **Crop All Invalid Pixels <--> Show All Valid Pixels** slider at the bottom of this section allows the operator to control the cropping of invalid pixels along the edges of the calibrated camera images.  Invalid pixels (usually displayed as black) on the edges of the image may result due to the image processing that compensates for errors in camera mounting and lens distortion. While mostly aesthetic, changing this setting does change the Units Per Pixel for the camera.  Setting the slider to the far right ensures all available pixels from the camera are displayed.  Setting the slider to the far left ensures that the edges of the image are cropped symmetrically about the reticle crosshairs so that no invalid pixels remain at the edges. Intermediate settings will produce results between the two extremes.
+The **Crop All Invalid Pixels <--> Show All Valid Pixels** slider at the bottom of this section allows the operator to control the cropping of invalid pixels along the edges of the calibrated camera images. Invalid pixels (usually displayed as black) on the edges of the image may result due to the image processing that compensates for errors in camera mounting and lens distortion. While mostly aesthetic, changing this setting does change the Units Per Pixel for the camera.  Setting the slider to the far right ensures all available pixels from the camera are displayed.  Setting the slider to the far left ensures that the edges of the image are cropped rectangularly and symmetrically about the reticle crosshairs so that no invalid pixels remain at the edges. Intermediate settings will produce results between the two extremes. See the animation below for a visualization of how this works:
+
+![Slider Animation](https://user-images.githubusercontent.com/50550971/135167265-86140afa-a279-4c7c-8bbe-4fdcd8cdedfa.gif)
 
 ## Calibration Data Collection
 Upon clicking the **Start Calibration** button, the calibration proceeds as follows:
@@ -85,7 +87,7 @@ The **Residual Error X-Y Scatter Plot** shows the residual error for each collec
 
 The **Residual Error Map** shows how the residual errors are distributed across the camera image. Dark blue areas have very low errors while dark red areas have the highest errors.  Note that the color range is always scaled so that zero error is the darkest blue and the maximum magnitude error is the darkest red. Therefore, this plot cannot be used to judge the magnitude of the error but only its distribution about the image. This distribution should look more or less random with no discernible patterns. If patterns such as rings or stripes are clearly visible and the residual errors observed in the other plots are larger than expected, the mathematical model of the camera does not fit very well with the physics of the camera and may indicate something is wrong with the camera and/or lens.
 
-# Results
-The animated gif below shows a piece of 2 millimeter graph paper face up on the machine table and imaged by the top camera (with a Grid Reticle). It alternates between uncorrected raw images and corrected images (note the state of the Apply Calibration checkbox):
+# Comparison of Uncalibrated to Calibrated Images
+The animated gif below shows a piece of 2 millimeter graph paper face up on the machine table and imaged by the top camera. The camera's virtual Z axis was jogged to match the Z height of the graph paper and a Grid Reticle was selected. The gif alternates between uncorrected raw images and corrected images (note the state of the Apply Calibration checkbox):
 
 ![Before And After Calibration Image](https://user-images.githubusercontent.com/50550971/135157358-ad63e034-a3d5-4f7c-8605-800b5185cdc2.gif)
