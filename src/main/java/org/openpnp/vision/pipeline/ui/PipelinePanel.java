@@ -440,6 +440,18 @@ public class PipelinePanel extends JPanel {
             if (selectedPart == null) {
                 return;
             }
+            if (!selectedPart.getPipeline().getId().equals("CVP_DEF")) {
+                int selection = JOptionPane.showConfirmDialog(editor,
+                        "Part/Package already has a pipeline assigned, do you want to rewrite it?",
+                        "Rewrite pipeline",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null
+                );
+                if (selection == JOptionPane.NO_OPTION) {
+                    return;
+                }
+            }
             try {
                 selectedPart.setPipeline(editor.getUpperPipeline());
                 partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
