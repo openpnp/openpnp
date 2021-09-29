@@ -11,15 +11,23 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
+import static javax.swing.SwingConstants.TOP;
+
 @SuppressWarnings("serial")
 public class PartPackageSelectionDialog extends JDialog {
     public static final String ESCAPE = "ESCAPE";
     private Part selectedPart;
     private JList<Part> partSelectionJList;
 
+    Frame parent;
+    List<Part> partList;
+
     public PartPackageSelectionDialog(Frame parent, String title, String description,
                                       List<Part> partList) {
         super(parent, title, true);
+
+        this.parent = parent;
+        this.partList = partList;
 
         JPanel panel = new JPanel();
         panel.setBorder(new EmptyBorder(8, 8, 4, 8));
@@ -43,6 +51,19 @@ public class PartPackageSelectionDialog extends JDialog {
         lblDescription.setHorizontalAlignment(SwingConstants.LEFT);
         lblDescription.setText(description);
 
+        panel.add(createCenterTabbedPane(), BorderLayout.CENTER);
+    }
+
+    private JTabbedPane createCenterTabbedPane() {
+        JTabbedPane tabs = new JTabbedPane(TOP);
+
+        tabs.addTab("Parts", null, createPartSelectionSelectionPane(), null);
+        tabs.addTab("Packages", null, new JScrollPane(), null);
+
+        return tabs;
+    }
+
+    private JScrollPane createPartSelectionSelectionPane() {
         partSelectionJList = new JList<>();
         partSelectionJList.addMouseListener(new MouseAdapter() {
             @Override
@@ -54,7 +75,7 @@ public class PartPackageSelectionDialog extends JDialog {
         });
         partSelectionJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         partSelectionJList.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        panel.add(new JScrollPane(partSelectionJList), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(partSelectionJList);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setSize(400, 400);
         setLocationRelativeTo(parent);
@@ -80,6 +101,8 @@ public class PartPackageSelectionDialog extends JDialog {
         rootPane.getActionMap().put(ESCAPE, cancelAction);
 
         selectAction.setEnabled(false);
+
+        return scrollPane;
     }
 
     private final Action selectAction = new AbstractAction("Accept") {
