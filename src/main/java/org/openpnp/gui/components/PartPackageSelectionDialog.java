@@ -18,12 +18,15 @@ import static javax.swing.SwingConstants.TOP;
 public class PartPackageSelectionDialog extends JDialog {
     public static final String ESCAPE = "ESCAPE";
     private Part selectedPart;
+    private Package selectedPackage;
     private JList<Part> partSelectionJList;
     private JList<Package> packageSelectionJList;
 
-    Frame parent;
-    List<Part> partList;
-    List<Package> packageList;
+    private Frame parent;
+    private List<Part> partList;
+    private List<Package> packageList;
+
+    private int selectedPane = 0;
 
     public PartPackageSelectionDialog(Frame parent, String title, String description,
                                       List<Part> partList, List<Package> packageList) {
@@ -74,21 +77,15 @@ public class PartPackageSelectionDialog extends JDialog {
         tabs.addTab("Parts", null, createPartSelectionSelectionPane(), null);
         tabs.addTab("Packages", null, createPackagesSelectionSelectionPane(), null);
 
+        tabs.addChangeListener(e -> selectedPane = tabs.getSelectedIndex());
+
         return tabs;
     }
 
     private JScrollPane createPartSelectionSelectionPane() {
         partSelectionJList = new JList<>();
-        partSelectionJList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    selectAction.actionPerformed(null);
-                }
-            }
-        });
-        partSelectionJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        partSelectionJList.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+        setListActions(partSelectionJList);
+
         JScrollPane scrollPane = new JScrollPane(partSelectionJList);
 
         DefaultListModel<Part> listModel = new DefaultListModel<>();
@@ -97,12 +94,6 @@ public class PartPackageSelectionDialog extends JDialog {
             listModel.addElement(item);
         }
 
-        partSelectionJList.addListSelectionListener(e -> {
-            if (e.getValueIsAdjusting()) {
-                return;
-            }
-            selectAction.setEnabled(PartPackageSelectionDialog.this.partSelectionJList.getSelectedValue() != null);
-        });
         partSelectionJList.setCellRenderer(new IdRenderer());
 
         selectAction.setEnabled(false);
@@ -112,9 +103,7 @@ public class PartPackageSelectionDialog extends JDialog {
 
     private JScrollPane createPackagesSelectionSelectionPane() {
         packageSelectionJList = new JList<>();
-
-        packageSelectionJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        packageSelectionJList.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+        setListActions(packageSelectionJList);
 
         JScrollPane scrollPane = new JScrollPane(packageSelectionJList);
 
@@ -129,10 +118,35 @@ public class PartPackageSelectionDialog extends JDialog {
         return scrollPane;
     }
 
+    private void setListActions(JList list) {
+        list.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    selectAction.actionPerformed(null);
+                }
+            }
+        });
+
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+
+        list.addListSelectionListener(e -> {
+            if (e.getValueIsAdjusting()) {
+                return;
+            }
+            selectAction.setEnabled(list.getSelectedValue() != null);
+        });
+    }
+
     private final Action selectAction = new AbstractAction("Accept") {
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            selectedPart = partSelectionJList.getSelectedValue();
+            if (selectedPane == 0) {
+                selectedPart = partSelectionJList.getSelectedValue();
+            } else {
+                selectedPackage = packageSelectionJList.getSelectedValue();
+            }
             setVisible(false);
         }
     };
@@ -144,8 +158,15 @@ public class PartPackageSelectionDialog extends JDialog {
         }
     };
 
-    public Part getSelected() {
+    public int getSelectedPane() {
+        return selectedPane;
+    }
+
+    public Part getSelectedPart() {
         return selectedPart;
+    }
+    public Package getSelectedPackage() {
+        return selectedPackage;
     }
 
     class IdRenderer extends DefaultListCellRenderer {

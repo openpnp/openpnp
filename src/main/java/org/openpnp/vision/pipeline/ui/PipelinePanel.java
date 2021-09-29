@@ -437,32 +437,71 @@ public class PipelinePanel extends JPanel {
                     "Please select a part/package from the lists below.", parts, packages);
             dialog.setVisible(true);
 
-            Part selectedPart = dialog.getSelected();
+            if (dialog.getSelectedPane() == 0) {
+                addSelectedPart(dialog.getSelectedPart());
+            } else {
+                addSelectedPackage(dialog.getSelectedPackage());
+            }
+        }
+    }
 
-            if (selectedPart == null) {
+    private void addSelectedPart(Part selected) {
+        if (selected == null) {
+            return;
+        }
+
+        if (!selected.getPipeline().getId().equals("CVP_DEF")) {
+            int selection = JOptionPane.showConfirmDialog(editor,
+                    "Part already has a pipeline assigned, do you want to rewrite it?",
+                    "Rewrite pipeline",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null
+            );
+            if (selection == JOptionPane.NO_OPTION) {
                 return;
             }
-            if (!selectedPart.getPipeline().getId().equals("CVP_DEF")) {
-                int selection = JOptionPane.showConfirmDialog(editor,
-                        "Part/Package already has a pipeline assigned, do you want to rewrite it?",
-                        "Rewrite pipeline",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null
-                );
-                if (selection == JOptionPane.NO_OPTION) {
-                    return;
-                }
+        }
+
+        try {
+            Configuration.get().assignPipelineToPart(selected, editor.getUpperPipeline());
+            partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
+            partsTable.setModel(partsTableModel);
+        }
+        catch (Exception e) {
+            MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this), "Error",
+                    e);
+        }
+    }
+
+    private void addSelectedPackage(Package selected) {
+        if (selected == null) {
+            return;
+        }
+
+        if (!selected.getPipeline().getId().equals("CVP_DEF")) {
+            int selection = JOptionPane.showConfirmDialog(editor,
+                    "Package already has a pipeline assigned, its and all its parts' pipeline will be set to default. Do you want to proceed?",
+                    "Rewrite pipeline",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null
+            );
+            if (selection == JOptionPane.NO_OPTION) {
+                return;
             }
-            try {
-                Configuration.get().assignPipelineToPart(selectedPart, editor.getUpperPipeline());
-                partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
-                partsTable.setModel(partsTableModel);
-            }
-            catch (Exception e) {
-                MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this), "Error",
-                        e);
-            }
+        }
+
+        try {
+            Configuration.get().assignPipelineToPackage(selected, editor.getUpperPipeline());
+            partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
+            packagesTableModel = new PipelineEditorPackagesTableModel(editor.getUpperPipeline());
+            partsTable.setModel(partsTableModel);
+            packagesTable.setModel(packagesTableModel);
+        }
+        catch (Exception e) {
+            MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this), "Error",
+                    e);
         }
     }
 

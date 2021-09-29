@@ -81,6 +81,7 @@ public class Configuration extends AbstractModelObject {
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
     private LinkedHashMap<String, Pipeline> pipelines = new LinkedHashMap<>();
     private HashMap<String, Pipeline> partsPipelines = new HashMap<>();
+    private HashMap<String, Pipeline> packagesPipelines = new HashMap<>();
     private Machine machine;
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
     private boolean loaded;
@@ -558,9 +559,8 @@ public class Configuration extends AbstractModelObject {
     }
 
     public void loadPipelinesMaps() {
-        parts.values().forEach(part -> {
-            partsPipelines.put(part.getId(), part.getPipeline());
-        });
+        parts.values().forEach(part -> partsPipelines.put(part.getId(), part.getPipeline()));
+        packages.values().forEach(pkg -> packagesPipelines.put(pkg.getId(), pkg.getPipeline()));
     }
 
     public List<Part> getParts(String pipelineId) {
@@ -578,9 +578,27 @@ public class Configuration extends AbstractModelObject {
         partsPipelines.put(part.getId(), pipeline);
     }
 
+    public List<Package> getPackages(String pipelineId) {
+        return packages.values().stream()
+                .filter(pkg -> pkg.getPipeline().getId().equals(pipelineId))
+                .collect(Collectors.toList());
+    }
+
+    public void assignPipelineToPackage(Package pkg, Pipeline pipeline) {
+        packages.get(pkg.getId()).setPipeline(pipeline);
+    }
+
+    public void assignPipelineToPackageUpdateMaps(Package pkg, Pipeline pipeline) {
+        packages.get(pkg.getId()).setPipeline(pipeline);
+        partsPipelines.put(pkg.getId(), pipeline);
+    }
+
     public void restorePipelines() {
         partsPipelines.forEach((partId, pipeline) -> {
-            Configuration.get().getPart(partId).setPipeline(pipeline);
+            getPart(partId).setPipeline(pipeline);
+        });
+        packagesPipelines.forEach((packageId, pipeline) -> {
+            getPackage(packageId).setPipeline(pipeline);
         });
     }
     

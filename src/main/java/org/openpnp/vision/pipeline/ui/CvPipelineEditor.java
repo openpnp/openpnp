@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
 import org.openpnp.model.*;
+import org.openpnp.model.Package;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -192,7 +193,7 @@ public class CvPipelineEditor extends JPanel {
         try {
             originalVersion = this.pipeline.getCvPipeline().toXmlString();
             partsOriginal = getAssignedPartIds();
-            packagesOriginal = getPackages();
+            packagesOriginal = getAssignedPackagesIds();
         }
         catch (Exception e1) {
             // Do nothing
@@ -241,15 +242,10 @@ public class CvPipelineEditor extends JPanel {
                 .collect(Collectors.toSet());
     }
 
-    private Set<String> getPackages() {
-        Set<String> result = new HashSet<>();
-        Configuration.get().getPackages().forEach(pkg -> {
-            if (pkg.getPipeline().getId() != null && pkg.getPipeline().getId().equals(pipeline.getId())) {
-                result.add(pkg.getId());
-            }
-        });
-
-        return result;
+    private Set<String> getAssignedPackagesIds() {
+        return Configuration.get().getPackages(pipeline.getId()).stream()
+                .map(Package::getId)
+                .collect(Collectors.toSet());
     }
 
     public boolean isDirty( ) {
@@ -259,7 +255,7 @@ public class CvPipelineEditor extends JPanel {
         try {
             editedVersion = pipeline.getCvPipeline().toXmlString();
             partsEdited = getAssignedPartIds();
-            packagesEdited = getPackages();
+            packagesEdited = getAssignedPackagesIds();
         }
         catch (Exception e) {
             // Do nothing

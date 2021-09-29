@@ -73,14 +73,6 @@ public class PipelineEditorPackagesTableModel extends AbstractTableModel impleme
     }
 
     private List<Package> getPackages() {
-        List<Package> result = new ArrayList<>();
-        Configuration.get().getPackages().forEach(pkg -> {
-            //TODO: NK: not safe, ensure every part gets at least default pipeline, otherwise pipeline id is null
-            if (pkg.getPipeline().getId() != null && pkg.getPipeline().getId().equals(pipeline.getId())) {
-                result.add(pkg);
-            }
-        });
-
-        return result;
+        return Configuration.get().getPackages(pipeline.getId());
     }
 }

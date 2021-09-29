@@ -79,7 +79,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
             else if (columnIndex == 2) {
                 pkg.setTapeSpecification((String) aValue);
             } else if (columnIndex == 3) {
-                pkg.setPipeline((Pipeline) aValue);
+                Configuration.get().assignPipelineToPackageUpdateMaps(pkg, (Pipeline) aValue);
             }
         }
         catch (Exception e) {
