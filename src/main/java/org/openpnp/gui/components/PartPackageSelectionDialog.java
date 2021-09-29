@@ -1,5 +1,6 @@
 package org.openpnp.gui.components;
 
+import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 
 import javax.swing.*;
@@ -18,16 +19,23 @@ public class PartPackageSelectionDialog extends JDialog {
     public static final String ESCAPE = "ESCAPE";
     private Part selectedPart;
     private JList<Part> partSelectionJList;
+    private JList<Package> packageSelectionJList;
 
     Frame parent;
     List<Part> partList;
+    List<Package> packageList;
 
     public PartPackageSelectionDialog(Frame parent, String title, String description,
-                                      List<Part> partList) {
+                                      List<Part> partList, List<Package> packageList) {
         super(parent, title, true);
 
         this.parent = parent;
         this.partList = partList;
+        this.packageList = packageList;
+
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        setSize(400, 400);
+        setLocationRelativeTo(parent);
 
         JPanel panel = new JPanel();
         panel.setBorder(new EmptyBorder(8, 8, 4, 8));
@@ -51,6 +59,12 @@ public class PartPackageSelectionDialog extends JDialog {
         lblDescription.setHorizontalAlignment(SwingConstants.LEFT);
         lblDescription.setText(description);
 
+        JRootPane rootPane = getRootPane();
+        KeyStroke stroke = KeyStroke.getKeyStroke(ESCAPE);
+        InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        inputMap.put(stroke, ESCAPE);
+        rootPane.getActionMap().put(ESCAPE, cancelAction);
+
         panel.add(createCenterTabbedPane(), BorderLayout.CENTER);
     }
 
@@ -58,7 +72,7 @@ public class PartPackageSelectionDialog extends JDialog {
         JTabbedPane tabs = new JTabbedPane(TOP);
 
         tabs.addTab("Parts", null, createPartSelectionSelectionPane(), null);
-        tabs.addTab("Packages", null, new JScrollPane(), null);
+        tabs.addTab("Packages", null, createPackagesSelectionSelectionPane(), null);
 
         return tabs;
     }
@@ -76,9 +90,6 @@ public class PartPackageSelectionDialog extends JDialog {
         partSelectionJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         partSelectionJList.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         JScrollPane scrollPane = new JScrollPane(partSelectionJList);
-        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        setSize(400, 400);
-        setLocationRelativeTo(parent);
 
         DefaultListModel<Part> listModel = new DefaultListModel<>();
         partSelectionJList.setModel(listModel);
@@ -94,13 +105,26 @@ public class PartPackageSelectionDialog extends JDialog {
         });
         partSelectionJList.setCellRenderer(new IdRenderer());
 
-        JRootPane rootPane = getRootPane();
-        KeyStroke stroke = KeyStroke.getKeyStroke(ESCAPE);
-        InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        inputMap.put(stroke, ESCAPE);
-        rootPane.getActionMap().put(ESCAPE, cancelAction);
-
         selectAction.setEnabled(false);
+
+        return scrollPane;
+    }
+
+    private JScrollPane createPackagesSelectionSelectionPane() {
+        packageSelectionJList = new JList<>();
+
+        packageSelectionJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        packageSelectionJList.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+
+        JScrollPane scrollPane = new JScrollPane(packageSelectionJList);
+
+        DefaultListModel<Package> listModel = new DefaultListModel<>();
+        packageSelectionJList.setModel(listModel);
+        for (Package item : packageList) {
+            listModel.addElement(item);
+        }
+
+        packageSelectionJList.setCellRenderer(new PackageRenderer());
 
         return scrollPane;
     }
@@ -132,6 +156,19 @@ public class PartPackageSelectionDialog extends JDialog {
 
             Part part = (Part) value;
             setText(part.getId() + " (" + part.getPackage() + ")");
+
+            return this;
+        }
+    }
+
+    class PackageRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(
+                JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            Package pkg = (Package) value;
+            setText(pkg.getId());
 
             return this;
         }

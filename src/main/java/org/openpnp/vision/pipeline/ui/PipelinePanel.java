@@ -17,6 +17,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
@@ -430,9 +431,10 @@ public class PipelinePanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             List<Part> parts = Configuration.get().getParts();
+            List<Package> packages = Configuration.get().getPackages();
             //TODO NK: unmodifiable list, cannot sort
             PartPackageSelectionDialog dialog = new PartPackageSelectionDialog(JOptionPane.getFrameForComponent(PipelinePanel.this), "New Part",
-                    "Please select a part from the list below.", parts);
+                    "Please select a part/package from the lists below.", parts, packages);
             dialog.setVisible(true);
 
             Part selectedPart = dialog.getSelected();
