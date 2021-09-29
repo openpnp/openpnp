@@ -224,8 +224,6 @@ public class PipelinePanel extends JPanel {
         packagesTableModel = new PipelineEditorPackagesTableModel(editor.getUpperPipeline());
         packagesTable = preparePartsPackagesTable(packagesTableModel);
 
-        packagesTable.changeSelection(packagesTable.getRowCount()-1,  0,  false, false);
-
         return new JScrollPane(packagesTable);
     }
 
@@ -318,10 +316,17 @@ public class PipelinePanel extends JPanel {
         int index = partsTable.getSelectedRow();
         if (index == -1) {
             return null;
+        } else {
+            return partsTableModel.getPart(partsTable.convertRowIndexToModel(index));
         }
-        else {
-            index = partsTable.convertRowIndexToModel(index);
-            return partsTableModel.getPart(index);
+    }
+
+    public Package getSelectedPackage() {
+        int index = packagesTable.getSelectedRow();
+        if (index == -1) {
+            return null;
+        } else {
+            return packagesTableModel.getPackage(packagesTable.convertRowIndexToModel(index));
         }
     }
 
@@ -513,9 +518,20 @@ public class PipelinePanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Part selectedPart = getSelectedPart();
-            selectedPart.setPipeline(Configuration.get().getDefaultPipeline());
+            if (selectedPart != null) {
+                Configuration.get().assignPipelineToPart(selectedPart, Configuration.get().getDefaultPipeline());
+            } else {
+                Package selectedPackage = getSelectedPackage();
+                if (selectedPackage == null) {
+                    return;
+                }
+                Configuration.get().assignPipelineToPackage(selectedPackage, Configuration.get().getDefaultPipeline());
+            }
+
             partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
+            packagesTableModel = new PipelineEditorPackagesTableModel(editor.getUpperPipeline());
             partsTable.setModel(partsTableModel);
+            packagesTable.setModel(packagesTableModel);
         }
     }
 
