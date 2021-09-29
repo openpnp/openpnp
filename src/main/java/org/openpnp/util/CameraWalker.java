@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
-import org.apache.commons.math3.linear.DecompositionSolver;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;

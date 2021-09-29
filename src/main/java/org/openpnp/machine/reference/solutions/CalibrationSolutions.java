@@ -951,13 +951,11 @@ public class CalibrationSolutions implements Solutions.Subject {
                         new AxesLocation(axis, axis.getSoftLimitHigh()));
         }
         else {
+            double currentValue = axesLocation.getLengthCoordinate(axis).getValue();
+            displacement = Math.max(Math.min(displacement, 
+                    axis.getSoftLimitHigh().convertToUnits(LengthUnit.Millimeters).getValue() - currentValue), 
+                    axis.getSoftLimitLow().convertToUnits(LengthUnit.Millimeters).getValue() - currentValue);
             axesLocation = axesLocation.add(new AxesLocation(axis, displacement));
-            if (axesLocation.getLengthCoordinate(axis).compareTo(axis.getSoftLimitLow()) < 0) {
-                axesLocation = new AxesLocation(axis, axis.getSoftLimitLow());
-            }
-            if (axesLocation.getLengthCoordinate(axis).compareTo(axis.getSoftLimitHigh()) > 0) {
-                axesLocation = new AxesLocation(axis, axis.getSoftLimitHigh());
-            }
         }
         Location newLocation = movable.toTransformed(axesLocation);
         newLocation = movable.toHeadMountableLocation(newLocation);

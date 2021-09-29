@@ -32,7 +32,6 @@ import java.util.concurrent.Future;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
-import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;

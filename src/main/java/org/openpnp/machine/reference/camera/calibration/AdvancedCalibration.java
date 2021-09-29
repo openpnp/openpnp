@@ -34,7 +34,6 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;

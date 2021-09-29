@@ -39,7 +39,6 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
-import org.opencv.core.TermCriteria;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
@@ -60,7 +59,6 @@ import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigura
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraTransformsConfigurationWizard;
-import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -84,8 +82,6 @@ import org.openpnp.vision.LensCalibration.Pattern;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Persist;
 
 public abstract class ReferenceCamera extends AbstractBroadcastingCamera implements ReferenceHeadMountable {
     static {

@@ -56,7 +56,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Head;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.SimpleGraph.DataRow;
 import org.openpnp.util.UiUtils;
