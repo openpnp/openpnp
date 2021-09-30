@@ -957,7 +957,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                         new AxesLocation(axis, axis.getSoftLimitHigh()));
         }
         else {
-            axesLocation = axesLocation.add(new AxesLocation(axis, displacement));
+            axesLocation = axesLocation.put(new AxesLocation(axis, 
+                    Math.max(axis.getSoftLimitLow().convertToUnits(axis.getUnits()).getValue(),
+                            Math.min(axis.getSoftLimitHigh().convertToUnits(axis.getUnits()).getValue(),
+                                    axesLocation.getCoordinate(axis) + displacement))));
         }
         Location newLocation = movable.toTransformed(axesLocation);
         newLocation = movable.toHeadMountableLocation(newLocation);
