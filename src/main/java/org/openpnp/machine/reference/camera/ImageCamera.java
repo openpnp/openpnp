@@ -304,7 +304,9 @@ public class ImageCamera extends ReferenceCamera {
         Location fiducial2 = getSecondaryFiducial();
         if (fiducial2.isInitialized()) {
             fiducial2 = fiducial2.convertToUnits(AxesLocation.getUnits()).subtract(location);
-            double secondaryDistance = cameraDistance + fiducial1.getZ() - fiducial2.getZ(); 
+            double secondaryDistance = cameraDistance + fiducial1.getZ() - fiducial2.getZ();
+            double xYawOffset = Math.tan(Math.toRadians(getSimulatedYaw()))*(fiducial1.getZ() - fiducial2.getZ());
+            fiducial2 = fiducial2.add(new Location(AxesLocation.getUnits(), xYawOffset, 0, 0, 0));
             Location upp2 = upp.multiply(secondaryDistance/cameraDistance);
             drawFiducial(gFrame, width, height, upp, upp2, fiducial2);
         }
