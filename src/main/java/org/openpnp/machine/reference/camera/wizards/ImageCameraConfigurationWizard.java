@@ -92,6 +92,10 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblWidth = new JLabel("X");
@@ -139,27 +143,43 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         simulatedScale = new JTextField();
         panelGeneral.add(simulatedScale, "4, 10, fill, default");
         simulatedScale.setColumns(10);
+        
+        lblDistortion = new JLabel("Distortion [%]");
+        lblDistortion.setToolTipText("<html>Simulated lens distortion. Positive values create Barrel distortion, negative values create a Pincushion distortion.</html>");
+        panelGeneral.add(lblDistortion, "2, 12, right, default");
+        
+        simulatedDistortion = new JTextField();
+        panelGeneral.add(simulatedDistortion, "4, 12, fill, default");
+        simulatedDistortion.setColumns(10);
+        
+        lblYaw = new JLabel("Mounting Yaw");
+        lblYaw.setToolTipText("Simulated camera yaw angle, i.e. mounting error as an angle around the Y axis.");
+        panelGeneral.add(lblYaw, "2, 14, right, default");
+        
+        simulatedYaw = new JTextField();
+        panelGeneral.add(simulatedYaw, "4, 14, fill, default");
+        simulatedYaw.setColumns(10);
 
 
         lblCameraFlipped = new JLabel("View mirrored?");
         lblCameraFlipped.setToolTipText("Simulate the camera as showing a mirrored view");
-        panelGeneral.add(lblCameraFlipped, "2, 12, right, default");
+        panelGeneral.add(lblCameraFlipped, "2, 16, right, default");
 
         simulatedFlipped = new JCheckBox("");
-        panelGeneral.add(simulatedFlipped, "4, 12");
+        panelGeneral.add(simulatedFlipped, "4, 16");
 
         label = new JLabel(" ");
-        panelGeneral.add(label, "8, 12");
+        panelGeneral.add(label, "8, 16");
 
         lblSourceUrl = new JLabel("Source URL");
-        panelGeneral.add(lblSourceUrl, "2, 16, right, default");
+        panelGeneral.add(lblSourceUrl, "2, 20, right, default");
 
         textFieldSourceUrl = new JTextField();
-        panelGeneral.add(textFieldSourceUrl, "4, 16, 7, 1, fill, default");
+        panelGeneral.add(textFieldSourceUrl, "4, 20, 7, 1, fill, default");
         textFieldSourceUrl.setColumns(40);
 
         btnBrowse = new JButton(browseAction);
-        panelGeneral.add(btnBrowse, "12, 16");
+        panelGeneral.add(btnBrowse, "12, 20");
         
         panelExtra = new JPanel();
         contentPanel.add(panelExtra);
@@ -257,6 +277,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
 
         addWrappedBinding(camera, "simulatedRotation", simulatedRotation, "text", doubleConverter);
         addWrappedBinding(camera, "simulatedScale", simulatedScale, "text", doubleConverter);
+        addWrappedBinding(camera, "simulatedDistortion", simulatedDistortion, "text", doubleConverter);
+        addWrappedBinding(camera, "simulatedYaw", simulatedYaw, "text", doubleConverter);
         addWrappedBinding(camera, "simulatedFlipped", simulatedFlipped, "selected");
 
         addWrappedBinding(camera, "sourceUri", textFieldSourceUrl, "text");
@@ -364,6 +386,10 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
     private JLabel lblSensorDiagonal;
     private JTextField sensorDiagonal;
     private JLabel lblDimension;
+    private JLabel lblDistortion;
+    private JTextField simulatedDistortion;
+    private JLabel lblYaw;
+    private JTextField simulatedYaw;
 
     @Override
     protected void saveToModel() {
