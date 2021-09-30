@@ -52,6 +52,7 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider.TemplateMatch;
+import org.openpnp.util.ImageUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.FluentCv;
 import org.pmw.tinylog.Logger;
@@ -76,6 +77,12 @@ public class ImageCamera extends ReferenceCamera {
 
     @Attribute(required = false)
     private double simulatedScale = 1.0;
+
+    @Attribute(required = false)
+    private double simulatedDistortion = 0.0;
+
+    @Attribute(required = false)
+    private double simulatedYaw = 0.0;
 
     @Attribute(required = false)
     private boolean simulatedFlipped = false;
@@ -150,6 +157,22 @@ public class ImageCamera extends ReferenceCamera {
 
     public void setSimulatedScale(double simulatedScale) {
         this.simulatedScale = simulatedScale;
+    }
+
+    public double getSimulatedDistortion() {
+        return simulatedDistortion;
+    }
+
+    public void setSimulatedDistortion(double simulatedDistortion) {
+        this.simulatedDistortion = simulatedDistortion;
+    }
+
+    public double getSimulatedYaw() {
+        return simulatedYaw;
+    }
+
+    public void setSimulatedYaw(double simulatedYaw) {
+        this.simulatedYaw = simulatedYaw;
     }
 
     public boolean isSimulatedFlipped() {
@@ -268,6 +291,10 @@ public class ImageCamera extends ReferenceCamera {
         }
         gFrame.drawImage(source, t, null);
 
+        double cameraViewDiagonal = Math.sqrt(Math.pow(upp.getX()*width, 2) + Math.pow(upp.getY()*height, 2));
+        double sensorDiagonal = getSensorDiagonal().convertToUnits(AxesLocation.getUnits()).getValue();
+        double focalLength = getFocalLength().convertToUnits(AxesLocation.getUnits()).getValue();
+        double cameraDistance = focalLength*cameraViewDiagonal/sensorDiagonal;
         // Draw the calibration fiducials. 
         Location fiducial1 = getPrimaryFiducial();
         if (fiducial1.isInitialized()) {
@@ -277,15 +304,107 @@ public class ImageCamera extends ReferenceCamera {
         Location fiducial2 = getSecondaryFiducial();
         if (fiducial2.isInitialized()) {
             fiducial2 = fiducial2.convertToUnits(AxesLocation.getUnits()).subtract(location);
-            double cameraViewDiagonal = Math.sqrt(Math.pow(upp.getX()*width, 2) + Math.pow(upp.getY()*height, 2));
-            double sensorDiagonal = getSensorDiagonal().convertToUnits(AxesLocation.getUnits()).getValue();
-            double focalLength = getFocalLength().convertToUnits(AxesLocation.getUnits()).getValue();
-            double cameraDistance = focalLength*cameraViewDiagonal/sensorDiagonal;
-            double secondaryDistance = cameraDistance + fiducial1.getZ() - fiducial2.getZ(); 
+            double secondaryDistance = cameraDistance + fiducial1.getZ() - fiducial2.getZ();
+            double xYawOffset = Math.tan(Math.toRadians(getSimulatedYaw()))*(fiducial1.getZ() - fiducial2.getZ());
+            fiducial2 = fiducial2.add(new Location(AxesLocation.getUnits(), xYawOffset, 0, 0, 0));
             Location upp2 = upp.multiply(secondaryDistance/cameraDistance);
             drawFiducial(gFrame, width, height, upp, upp2, fiducial2);
         }
 
+        if (getSimulatedDistortion() != 0.0 || getSimulatedYaw() != 0.0) {
+            // Simulate camera lens distortion and mounting yaw.
+            BufferedImage undistorted  = ImageUtils.clone(frame);
+            final double sampling = 0.5;
+            final int scansize = 3;
+            int [] pixels = new int[scansize*scansize];
+            double xo = 0.5 - width/2;
+            double yo = 0.5 - height/2;
+            double radius = Math.sqrt(width*width+height*height)/2;
+            double dist = cameraDistance/(upp.getX()*radius);
+            double factor = 1.0/radius;
+            double zFactor = 1.0/dist;
+            double yawRad = Math.toRadians(getSimulatedYaw());
+            double sinYaw = Math.sin(yawRad);
+            double cosYaw = Math.cos(yawRad);
+            double tanYaw = sinYaw/cosYaw;
+            double zFactorYaw = zFactor*sinYaw;
+            double distort = 0.01*getSimulatedDistortion();
+            double projectionFactor = radius;
+            // First pass: stake out the projection by 9 points and calculate the projectionFactor.
+            for (int x = 0; x <= width; x += width/2) {
+                for (int y = 0; y <= height; y += height/2) {
+                    // NOTE: as this cannot be refactored without performance penalty,
+                    // the following code block is an exact duplicate in both passes.
+                    // BEGIN:-------------------------------------- //
+                    // Normed to ±1.0
+                    double xN = (x + xo)*factor; 
+                    double yN = (y + yo)*factor;
+                    // Distortion
+                    double vect = Math.sqrt(xN*xN + yN*yN);
+                    double distortion = vect*distort + (1.0-distort);
+                    double xD = xN*distortion;
+                    double yD = yN*distortion;
+                    // Reverse perspective transform
+                    double alpha = Math.atan2(xD, dist)-yawRad;
+                    double xT = (Math.tan(alpha)+tanYaw)*dist;
+                    double zT = 1.0 - xT*zFactorYaw;
+                    double yT = yD*zT;
+                    // Pixel coordinates
+                    int xP = (int) (xT*projectionFactor - xo);
+                    int yP = (int) (yT*projectionFactor - yo);
+                    // END:---------------------------------------- //
+
+                    // Minimize the projectionFactor.
+                    if (xP < 0) {
+                        projectionFactor = xo/xT;
+                    }
+                    else if (xP > width) {
+                        projectionFactor = (width + xo)/xT;
+                    }
+                    else if (yP < 0) {
+                        projectionFactor = yo/yT;
+                    }
+                    else if (yP > width) {
+                        projectionFactor = (width + yo)/yT;
+                    }
+                }
+            }
+            // Second pass: transform the image.
+            int grayRGB = new Color(128, 128, 128).getRGB();
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    // NOTE: as this cannot be refactored without performance penalty,
+                    // the following code block is an exact duplicate in both passes.
+                    // BEGIN:-------------------------------------- //
+                    // Normed to ±1.0
+                    double xN = (x + xo)*factor; 
+                    double yN = (y + yo)*factor;
+                    // Distortion
+                    double vect = Math.sqrt(xN*xN + yN*yN);
+                    double distortion = vect*distort + (1.0-distort);
+                    double xD = xN*distortion;
+                    double yD = yN*distortion;
+                    // Reverse perspective transform
+                    double alpha = Math.atan2(xD, dist)-yawRad;
+                    double xT = (Math.tan(alpha)+tanYaw)*dist;
+                    double zT = 1.0 - xT*zFactorYaw;
+                    double yT = yD*zT;
+                    // Pixel coordinates
+                    int xP = (int) (xT*projectionFactor - xo);
+                    int yP = (int) (yT*projectionFactor - yo);
+                    // END:---------------------------------------- //
+
+                    // Set the pixel.
+                    if (xP >= 0 && xP < width && yP >= 0 && yP < height) {
+                        int rgb = undistorted.getRGB(xP, yP);
+                        frame.setRGB(x, y, rgb);
+                    }
+                    else {
+                        frame.setRGB(x, y, grayRGB);
+                    }
+                }
+            }
+        }
         if (simulation) {
             SimulationModeMachine.simulateCameraExposure(this, gFrame, width, height);
         }
