@@ -33,6 +33,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
+import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
@@ -50,6 +51,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.SimpleGraph;
@@ -298,8 +300,10 @@ public class CalibrationSolutions implements Solutions.Subject {
     private void perNozzleSolutions(Solutions solutions, ReferenceHead head, ReferenceCamera defaultCamera,
             Nozzle defaultNozzle, ReferenceNozzle nozzle) {
         VisionSolutions visualSolutions = machine.getVisionSolutions();
+        // Allow zero offsets on the simulated default nozzle.
+        boolean isSimulatedNozzle = (nozzle == defaultNozzle && defaultCamera instanceof ImageCamera);
         if (visualSolutions.isSolvedPrimaryXY(head) && visualSolutions.isSolvedPrimaryZ(head) 
-                && (nozzle == defaultNozzle || nozzle.getHeadOffsets().isInitialized())) {
+                && (nozzle.getHeadOffsets().isInitialized() || isSimulatedNozzle)) {
             final Location oldNozzleOffsets = nozzle.getHeadOffsets();
             final Length oldTestObjectDiameter = head.getCalibrationTestObjectDiameter(); 
             // Get the test subject diameter.
@@ -878,7 +882,9 @@ public class CalibrationSolutions implements Solutions.Subject {
                     + "Automatic compensation not possible.");
         }
         // Because this change may affect the coordinate system, perform a (visual) homing cycle.
-        head.visualHome(machine, true);
+        if (head.getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
+            head.visualHome(machine, true);
+        }
         // Go back to the fiducial.
         MovableUtils.moveToLocationAtSafeZ(movable, location);
         // Test the new settings with random moves.
@@ -951,7 +957,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                         new AxesLocation(axis, axis.getSoftLimitHigh()));
         }
         else {
-            axesLocation = axesLocation.add(new AxesLocation(axis, displacement));
+            axesLocation = axesLocation.put(new AxesLocation(axis, 
+                    Math.max(axis.getSoftLimitLow().convertToUnits(axis.getUnits()).getValue(),
+                            Math.min(axis.getSoftLimitHigh().convertToUnits(axis.getUnits()).getValue(),
+                                    axesLocation.getCoordinate(axis) + displacement))));
         }
         Location newLocation = movable.toTransformed(axesLocation);
         newLocation = movable.toHeadMountableLocation(newLocation);

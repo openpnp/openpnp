@@ -675,7 +675,7 @@ public class VisionSolutions implements Solutions.Subject {
         if (isSolvedPrimaryXY(head) 
                 && (isSolvedPrimaryZ(head) || defaultNozzle == nozzle)) {
             final Location oldPrimaryFiducialLocation = head.getCalibrationPrimaryFiducialLocation();
-            final Location oldSecondaryFiducialLocation = head.getCalibrationPrimaryFiducialLocation();
+            final Location oldSecondaryFiducialLocation = head.getCalibrationSecondaryFiducialLocation();
             final Location oldPrimaryUpp = defaultCamera.getUnitsPerPixelPrimary();
             final Location oldSecondaryUpp = defaultCamera.getUnitsPerPixelSecondary();
             
