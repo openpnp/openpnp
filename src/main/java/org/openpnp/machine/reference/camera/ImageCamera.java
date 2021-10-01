@@ -24,6 +24,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
@@ -82,7 +83,7 @@ public class ImageCamera extends ReferenceCamera {
     private double simulatedDistortion = 0.0;
 
     @Attribute(required = false)
-    private double simulatedYaw = 0.0;
+    private double simulatedYRotation = 0.0;
 
     @Attribute(required = false)
     private boolean simulatedFlipped = false;
@@ -167,12 +168,12 @@ public class ImageCamera extends ReferenceCamera {
         this.simulatedDistortion = simulatedDistortion;
     }
 
-    public double getSimulatedYaw() {
-        return simulatedYaw;
+    public double getSimulatedYRotation() {
+        return simulatedYRotation;
     }
 
-    public void setSimulatedYaw(double simulatedYaw) {
-        this.simulatedYaw = simulatedYaw;
+    public void setSimulatedYRotation(double simulatedYRotation) {
+        this.simulatedYRotation = simulatedYRotation;
     }
 
     public boolean isSimulatedFlipped() {
@@ -281,14 +282,16 @@ public class ImageCamera extends ReferenceCamera {
         gFrame.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);//VALUE_INTERPOLATION_BILINEAR);
         gFrame.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         gFrame.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        if (simulation) {
+            AffineTransform tg = new AffineTransform();
+            tg.translate(width/2, height/2);
+            tg.scale(isSimulatedFlipped() ? -getSimulatedScale() : getSimulatedScale(), getSimulatedScale());
+            tg.rotate(-Math.toRadians(getSimulatedRotation()));
+            tg.translate(- width/2, - height/2);
+            gFrame.setTransform(tg);
+        }
         AffineTransform t = new AffineTransform();
         t.translate(-dx, -dy); // x/y set here
-        if (simulation) {
-            t.translate(dx + width/2, dy + height/2);
-            t.scale(isSimulatedFlipped() ? -getSimulatedScale() : getSimulatedScale(), getSimulatedScale());
-            t.translate(-dx - width/2, -dy - height/2);
-            t.rotate(-Math.toRadians(getSimulatedRotation()), dx + width/2, dy + height/2);
-        }
         gFrame.drawImage(source, t, null);
 
         double cameraViewDiagonal = Math.sqrt(Math.pow(upp.getX()*width, 2) + Math.pow(upp.getY()*height, 2));
@@ -305,31 +308,29 @@ public class ImageCamera extends ReferenceCamera {
         if (fiducial2.isInitialized()) {
             fiducial2 = fiducial2.convertToUnits(AxesLocation.getUnits()).subtract(location);
             double secondaryDistance = cameraDistance + fiducial1.getZ() - fiducial2.getZ();
-            double xYawOffset = Math.tan(Math.toRadians(getSimulatedYaw()))*(fiducial1.getZ() - fiducial2.getZ());
-            fiducial2 = fiducial2.add(new Location(AxesLocation.getUnits(), xYawOffset, 0, 0, 0));
+            double xYRotOffset = Math.tan(Math.toRadians(getSimulatedYRotation()))*(fiducial1.getZ() - fiducial2.getZ());
+            fiducial2 = fiducial2.add(new Location(AxesLocation.getUnits(), xYRotOffset, 0, 0, 0));
             Location upp2 = upp.multiply(secondaryDistance/cameraDistance);
             drawFiducial(gFrame, width, height, upp, upp2, fiducial2);
         }
 
-        if (getSimulatedDistortion() != 0.0 || getSimulatedYaw() != 0.0) {
-            // Simulate camera lens distortion and mounting yaw.
+        if (getSimulatedDistortion() != 0.0 || getSimulatedYRotation() != 0.0) {
+            // Simulate camera lens distortion and mounting y rotation.
             BufferedImage undistorted  = ImageUtils.clone(frame);
-            final double sampling = 0.5;
-            final int scansize = 3;
-            int [] pixels = new int[scansize*scansize];
             double xo = 0.5 - width/2;
             double yo = 0.5 - height/2;
             double radius = Math.sqrt(width*width+height*height)/2;
             double dist = cameraDistance/(upp.getX()*radius);
             double factor = 1.0/radius;
             double zFactor = 1.0/dist;
-            double yawRad = Math.toRadians(getSimulatedYaw());
-            double sinYaw = Math.sin(yawRad);
-            double cosYaw = Math.cos(yawRad);
+            double yRotRad = Math.toRadians(getSimulatedYRotation());
+            double sinYaw = Math.sin(yRotRad);
+            double cosYaw = Math.cos(yRotRad);
             double tanYaw = sinYaw/cosYaw;
             double zFactorYaw = zFactor*sinYaw;
             double distort = 0.01*getSimulatedDistortion();
             double projectionFactor = radius;
+            final int kernel_r = 1;
             // First pass: stake out the projection by 9 points and calculate the projectionFactor.
             for (int x = 0; x <= width; x += width/2) {
                 for (int y = 0; y <= height; y += height/2) {
@@ -345,32 +346,33 @@ public class ImageCamera extends ReferenceCamera {
                     double xD = xN*distortion;
                     double yD = yN*distortion;
                     // Reverse perspective transform
-                    double alpha = Math.atan2(xD, dist)-yawRad;
+                    double alpha = Math.atan2(xD, dist)-yRotRad;
                     double xT = (Math.tan(alpha)+tanYaw)*dist;
                     double zT = 1.0 - xT*zFactorYaw;
                     double yT = yD*zT;
                     // Pixel coordinates
-                    int xP = (int) (xT*projectionFactor - xo);
-                    int yP = (int) (yT*projectionFactor - yo);
+                    double xP = (xT*projectionFactor - xo);
+                    double yP = (yT*projectionFactor - yo);
                     // END:---------------------------------------- //
 
                     // Minimize the projectionFactor.
-                    if (xP < 0) {
-                        projectionFactor = xo/xT;
+                    if (xP < kernel_r) {
+                        projectionFactor = (kernel_r + xo)/xT;
                     }
-                    else if (xP > width) {
-                        projectionFactor = (width + xo)/xT;
+                    else if (xP > width-kernel_r) {
+                        projectionFactor = (-kernel_r + width + xo)/xT;
                     }
-                    else if (yP < 0) {
-                        projectionFactor = yo/yT;
+                    else if (yP < kernel_r) {
+                        projectionFactor = (kernel_r + yo)/yT;
                     }
-                    else if (yP > width) {
-                        projectionFactor = (width + yo)/yT;
+                    else if (yP > height-kernel_r) {
+                        projectionFactor = (-kernel_r + height + yo)/yT;
                     }
                 }
             }
             // Second pass: transform the image.
             int grayRGB = new Color(128, 128, 128).getRGB();
+            int baseRGB = new Color(0, 0, 0).getRGB();
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
                     // NOTE: as this cannot be refactored without performance penalty,
@@ -385,19 +387,44 @@ public class ImageCamera extends ReferenceCamera {
                     double xD = xN*distortion;
                     double yD = yN*distortion;
                     // Reverse perspective transform
-                    double alpha = Math.atan2(xD, dist)-yawRad;
+                    double alpha = Math.atan2(xD, dist)-yRotRad;
                     double xT = (Math.tan(alpha)+tanYaw)*dist;
                     double zT = 1.0 - xT*zFactorYaw;
                     double yT = yD*zT;
                     // Pixel coordinates
-                    int xP = (int) (xT*projectionFactor - xo);
-                    int yP = (int) (yT*projectionFactor - yo);
+                    double xP = (xT*projectionFactor - xo);
+                    double yP = (yT*projectionFactor - yo);
                     // END:---------------------------------------- //
 
                     // Set the pixel.
-                    if (xP >= 0 && xP < width && yP >= 0 && yP < height) {
-                        int rgb = undistorted.getRGB(xP, yP);
-                        frame.setRGB(x, y, rgb);
+                    if (xP >= kernel_r && xP < width-kernel_r && yP >= kernel_r && yP < height-kernel_r) {
+                        int x0 = (int)(xP + 0.5);
+                        int y0 = (int)(yP + 0.5);
+                        double red = 0;
+                        double green = 0;
+                        double blue = 0;
+                        double norm = 0;
+                        for (int ix = x0-kernel_r; ix <= x0+kernel_r; ix++) {
+                            for (int iy = y0-kernel_r; iy <= y0+kernel_r; iy++) {
+                                int rgb = undistorted.getRGB(ix, iy);
+                                int r = (rgb >> 16) & 0xff;
+                                int g = (rgb >> 8) & 0xff;
+                                int b = (rgb >> 0) & 0xff;
+                                double dix = ix - xP;
+                                double diy = iy - yP;
+                                double di = (dix*dix + diy*diy);
+                                double weight = Math.max(0, 1.0 - di);
+                                norm += weight;
+                                red += weight*r;
+                                green += weight*g;
+                                blue += weight*b;
+                            }
+                        }
+                        int r = Math.max(0, Math.min(255, (int)(red/norm)));
+                        int g = Math.max(0, Math.min(255, (int)(green/norm)));
+                        int b = Math.max(0, Math.min(255, (int)(blue/norm)));
+                        int newRGB = baseRGB|(r<<16)|(g<<8)|(b<<0);
+                        frame.setRGB(x, y, newRGB);
                     }
                     else {
                         frame.setRGB(x, y, grayRGB);
@@ -455,11 +482,18 @@ public class ImageCamera extends ReferenceCamera {
         double yc = (cameraHeight / 2.0) - fiducial.getY()/upp.getY();
         double w = 1.0/upp.getX();
         double h = 1.0/upp.getY();
-        if (xc + w < 0 || xc - w > cameraWidth || yc + h < 0 || yc - w > cameraHeight) { 
+        AffineTransform oldTx = gFrame.getTransform();
+        Point2D pt0 = new Point2D.Double(xc, yc);
+        Point2D pt1 = new Point2D.Double(xc+w, yc+h);
+        oldTx.transform(pt0, pt0);
+        oldTx.transform(pt1, pt1);
+        double dia = Math.sqrt(Math.pow(pt1.getX() - pt0.getX(), 2)
+                + Math.pow(pt1.getY() - pt0.getY(), 2));
+        if (pt0.getX() + dia < 0 || pt1.getX() - dia > cameraWidth || pt0.getY() + dia < 0 || pt1.getY() - dia > cameraHeight) { 
             return;
         }
-        AffineTransform oldTx = gFrame.getTransform();
-        AffineTransform tx = new AffineTransform();
+
+        AffineTransform tx = new AffineTransform(oldTx);
         tx.translate(xc - w/2, yc - h/2);
 
         if (upp == uppDefault) {
