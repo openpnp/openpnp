@@ -130,35 +130,36 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelGeneral.add(imageUnitsPerPixelY, "6, 6");
         imageUnitsPerPixelY.setColumns(10);
 
-        lblRotation = new JLabel("Rotation");
+        lblRotation = new JLabel("Z Rotation");
+        lblRotation.setToolTipText("Simulated camera mounting rotation around the Z axis (Portrait/Landscape/mounting error).");
         panelGeneral.add(lblRotation, "2, 8, right, default");
 
         simulatedRotation = new JTextField();
         panelGeneral.add(simulatedRotation, "4, 8, fill, default");
         simulatedRotation.setColumns(10);
         
+        lblYaw = new JLabel("Y Rotation");
+        lblYaw.setToolTipText("Simulated camera mounting error as a rotation around the Y axis (sideways tilt).");
+        panelGeneral.add(lblYaw, "2, 10, right, default");
+        
+        simulatedYRotation = new JTextField();
+        panelGeneral.add(simulatedYRotation, "4, 10, fill, default");
+        simulatedYRotation.setColumns(10);
+        
         lblScale = new JLabel("Viewing Scale");
-        panelGeneral.add(lblScale, "2, 10, right, default");
+        panelGeneral.add(lblScale, "2, 12, right, default");
         
         simulatedScale = new JTextField();
-        panelGeneral.add(simulatedScale, "4, 10, fill, default");
+        panelGeneral.add(simulatedScale, "4, 12, fill, default");
         simulatedScale.setColumns(10);
         
         lblDistortion = new JLabel("Distortion [%]");
         lblDistortion.setToolTipText("<html>Simulated lens distortion. Positive values create Barrel distortion, negative values create a Pincushion distortion.</html>");
-        panelGeneral.add(lblDistortion, "2, 12, right, default");
+        panelGeneral.add(lblDistortion, "2, 14, right, default");
         
         simulatedDistortion = new JTextField();
-        panelGeneral.add(simulatedDistortion, "4, 12, fill, default");
+        panelGeneral.add(simulatedDistortion, "4, 14, fill, default");
         simulatedDistortion.setColumns(10);
-        
-        lblYaw = new JLabel("Mounting Yaw");
-        lblYaw.setToolTipText("Simulated camera yaw angle, i.e. mounting error as an angle around the Y axis.");
-        panelGeneral.add(lblYaw, "2, 14, right, default");
-        
-        simulatedYaw = new JTextField();
-        panelGeneral.add(simulatedYaw, "4, 14, fill, default");
-        simulatedYaw.setColumns(10);
 
 
         lblCameraFlipped = new JLabel("View mirrored?");
@@ -278,7 +279,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         addWrappedBinding(camera, "simulatedRotation", simulatedRotation, "text", doubleConverter);
         addWrappedBinding(camera, "simulatedScale", simulatedScale, "text", doubleConverter);
         addWrappedBinding(camera, "simulatedDistortion", simulatedDistortion, "text", doubleConverter);
-        addWrappedBinding(camera, "simulatedYaw", simulatedYaw, "text", doubleConverter);
+        addWrappedBinding(camera, "simulatedYRotation", simulatedYRotation, "text", doubleConverter);
         addWrappedBinding(camera, "simulatedFlipped", simulatedFlipped, "selected");
 
         addWrappedBinding(camera, "sourceUri", textFieldSourceUrl, "text");
@@ -389,7 +390,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
     private JLabel lblDistortion;
     private JTextField simulatedDistortion;
     private JLabel lblYaw;
-    private JTextField simulatedYaw;
+    private JTextField simulatedYRotation;
 
     @Override
     protected void saveToModel() {
