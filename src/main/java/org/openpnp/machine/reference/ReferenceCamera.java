@@ -390,6 +390,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return headOffsets;
     }
     
+    public void setUncalibratedHeadOffsets(Location uncalibratedHeadOffsets) {
+        this.headOffsets = uncalibratedHeadOffsets;
+        viewHasChanged();
+    }
+    
     @Override
     public void home() throws Exception {
     }

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
+import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
@@ -69,6 +70,7 @@ import org.pmw.tinylog.Logger;
 public class CameraWalker {
     private HeadMountable movable;
     private RealMatrix scalingMat;
+    private double mirror = 1;
     private double estimatedMillimetersPerPixel;
     private Function<Point, Point> findFeatureInImage;
     private Double loopGain = 0.7;
@@ -165,6 +167,9 @@ public class CameraWalker {
         if (estimatedMillimetersPerPixel <= 0) {
             throw new Exception("Unable to estimate machine to pixel scaling - testStepLength may be too small.");
         }
+        
+        mirror  = Math.signum((new LUDecomposition(scalingMat)).getDeterminant());
+        
     }
     
     /**
@@ -381,6 +386,13 @@ public class CameraWalker {
      */
     public RealMatrix getScalingMat() {
         return scalingMat;
+    }
+
+    /**
+     * @return the mirror
+     */
+    public double getMirror() {
+        return mirror;
     }
 
     /**

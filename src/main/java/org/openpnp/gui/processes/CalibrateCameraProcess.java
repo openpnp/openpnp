@@ -78,6 +78,7 @@ public abstract class CalibrateCameraProcess {
     private Nozzle nozzle;
     private CvPipeline pipeline;
     private double apparentMotionDirection;
+    private double mirrored;
     private double movableZ;
     private double testPatternZ;
     private int pixelsX;
@@ -184,10 +185,16 @@ public abstract class CalibrateCameraProcess {
      * of the corresponding machine coordinates in testPatternImagePoints
      * 
      * @param size - the size of the images
+     * 
+     * @param mirrored - -1.0 if the raw camera image coordinates are mirrored (flipped) relative to
+     * the machine coordinates, +1.0 otherwise
+     * @param apparentMotionDirection - +1.0 if the apparent motion of objects in the images moves 
+     * in the same direction as the machine moves, -1.0 otherwise
      * @throws Exception 
      */
     protected abstract void processRawCalibrationData(double[][][] testPattern3dPoints, 
-            double[][][] testPatternImagePoints, Size size) throws Exception;
+            double[][][] testPatternImagePoints, Size size, double mirrored, 
+            double apparentMotionDirection) throws Exception;
     
     /**
      * This method is called when the raw calibration data collection has been canceled and must 
@@ -401,6 +408,7 @@ public abstract class CalibrateCameraProcess {
                     cleanUpWhenCancelled();
                     return;
                 }
+                mirrored = cameraWalker.getMirror();
                 
                 collectCalibrationPointsAlongRadialLinesAction();
             }
@@ -507,7 +515,7 @@ public abstract class CalibrateCameraProcess {
                         for (int ptIdx=0; ptIdx<tp.size(); ptIdx++) {
                             double[] pt = tp.get(ptIdx);
                             testPattern3dPointsArray[tpIdx][ptIdx] = new double[] {
-                                    apparentMotionDirection*pt[0], apparentMotionDirection*pt[1], 
+                                    mirrored*pt[0], apparentMotionDirection*pt[1], 
                                     calibrationHeights.get(tpIdx).
                                     convertToUnits(LengthUnit.Millimeters).getValue()};
                         }
@@ -526,7 +534,7 @@ public abstract class CalibrateCameraProcess {
                     
                     try {
                         processRawCalibrationData(testPattern3dPointsArray, testPatternImagePointsArray, 
-                            new Size(pixelsX, pixelsY));
+                            new Size(pixelsX, pixelsY), mirrored, apparentMotionDirection);
                     }
                     catch (Exception ex) {
                         MessageBoxes.errorBox(MainFrame.get(), "Error", ex);

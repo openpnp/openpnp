@@ -124,6 +124,12 @@ public class AdvancedCalibration extends LensCalibrationParams {
     @Attribute(required = false)
     private double approximateMillimetersPerPixel = 0;
 
+    @Attribute(required = false)
+    private double mirrored = 1;
+
+    @Attribute(required = false)
+    private double apparentMotionDirection = 1;
+    
 
     private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
     private Mat rectificationMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
@@ -139,7 +145,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private ArrayList<Integer> outlierPointList = new ArrayList<Integer>();
 
     private int fiducialDiameter;
-    
+
     
     @Commit 
     public void commit() {
@@ -605,6 +611,34 @@ public class AdvancedCalibration extends LensCalibrationParams {
     }
 
     /**
+     * @return the mirrored
+     */
+    public double getMirrored() {
+        return mirrored;
+    }
+
+    /**
+     * @param mirrored the mirrored to set
+     */
+    public void setMirrored(double mirrored) {
+        this.mirrored = mirrored;
+    }
+
+    /**
+     * @return the apparentMotionDirection
+     */
+    public double getApparentMotionDirection() {
+        return apparentMotionDirection;
+    }
+
+    /**
+     * @param apparentMotionDirection the apparentMotionDirection to set
+     */
+    public void setApparentMotionDirection(double apparentMotionDirection) {
+        this.apparentMotionDirection = apparentMotionDirection;
+    }
+
+    /**
      * @return the trialStep
      */
     public Length getTrialStep() {
@@ -634,7 +668,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
 
     public void processRawCalibrationData(Size size) throws Exception {
         processRawCalibrationData(savedTestPattern3dPointsList, 
-                savedTestPatternImagePointsList, size);
+                savedTestPatternImagePointsList, size, mirrored, apparentMotionDirection);
     }
     
     /**
@@ -649,13 +683,17 @@ public class AdvancedCalibration extends LensCalibrationParams {
      * @throws Exception
      */
     public void processRawCalibrationData(double[][][] testPattern3dPoints, 
-            double[][][] testPatternImagePoints, Size size) throws Exception {
+            double[][][] testPatternImagePoints, Size size, double mirrored,
+            double apparentMotionDirection) throws Exception {
         
         double primaryZ = testPattern3dPoints[0][0][2];
         
         savedTestPattern3dPointsList = testPattern3dPoints;
         savedTestPatternImagePointsList = testPatternImagePoints;
 
+        this.mirrored = mirrored;
+        this.apparentMotionDirection = apparentMotionDirection;
+        
         int numberOfTestPatterns = Math.min(testPattern3dPoints.length, 
                 testPatternImagePoints.length);
         
@@ -970,7 +1008,6 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Core.multiply(vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame, 
                 new Scalar(1.0/vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame.get(2, 0)[0]), 
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame);
-        vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame.release();
         Logger.trace("vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame = " + 
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.dump());
 
@@ -997,13 +1034,16 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Logger.trace("absoluteCameraToPrimaryZPrincipalPointDistance = " +
                 absoluteCameraToPrimaryZPrincipalPointDistance);
         
-        //The virtual camera is centered directly above the physical camera and looks straight 
-        //down orthogonal to the machine's X-Y plane. This may be intuitive for top cameras, but
-        //this is also desired for bottom cameras as this will make the image of the bottom of a
-        //part held by the nozzle look as if it were taken from above through the top of the part
-        //by an x-ray camera (which is exactly what is desired).
-        vectorFromMachToVirCamInMachRefFrame.release();
-        vectorFromMachToVirCamInMachRefFrame = vectorFromMachToPhyCamInMachRefFrame.clone();
+        //The virtual camera is centered directly above where the physical camera's Z axis 
+        //intersects the primary Z plane and looks straight down orthogonal to the machine's X-Y 
+        //plane. This may be intuitive for top cameras, but this is also desired for bottom cameras
+        //as this will make the image of the bottom of a part held by the nozzle look as if it were
+        //taken from above through the top of the part by an x-ray camera (which is exactly what is
+        //desired).
+        Core.gemm(transformFromMachToPhyCamRefFrame.t(), 
+                vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame, 1.0, 
+                vectorFromMachToPhyCamInMachRefFrame, 1.0, vectorFromMachToVirCamInMachRefFrame);
+        vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame.release();
         vectorFromMachToVirCamInMachRefFrame.put(2, 0, 
                 primaryZ + absoluteCameraToPrimaryZPrincipalPointDistance);
         Logger.trace("vectorFromMachToVirCamInMachRefFrame = " + 

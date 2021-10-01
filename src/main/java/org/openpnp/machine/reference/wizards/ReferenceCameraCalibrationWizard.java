@@ -907,7 +907,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     
                         @Override 
                         public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
-                                double[][][] testPatternImagePointsList, Size size) throws Exception {
+                                double[][][] testPatternImagePointsList, Size size, double mirrored,
+                                double apparentMotionDirection) throws Exception {
                             
                             Logger.trace("processing thread = " + Thread.currentThread());
                             
@@ -917,7 +918,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                             try {
                                 advancedCalibration.processRawCalibrationData(
                                         testPattern3dPointsList, testPatternImagePointsList, 
-                                        size);
+                                        size, mirrored, apparentMotionDirection);
                                 
                                 //Reload the calibration heights and refresh the table
                                 calibrationHeights.clear();
