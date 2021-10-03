@@ -13,7 +13,7 @@ Some notes to help get started with a Neoden4 machine and Openpnp
 
 ### Building Openpnp application
 
-Get Eclipse (I used 32-bit, JDK 8 32-bit), pull the neoden4camera_jna branch from
+Get Eclipse, pull the neoden4camera_jna branch from
 https://github.com/MatSpy/openpnp/commits/neoden4camera_jna . 
 
 Some other notes in this one on importing the maven project
