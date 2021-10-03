@@ -1,23 +1,17 @@
 Some notes to help get started with a Neoden4 machine and Openpnp
 
 ### Getting ready
-1) Get a windows 7 32-bit ISO 
-e.g. https://tech-latest.com/download-windows-7-iso/
+1) The onboard Atom PC running Openpnp directly or streaming with KernelPro causes occasional pauses, get a secondary Windows PC for this setup.
 
-2) Make a bootable USB drive (>16GB) with WinToUSB (free version is fine)
-https://www.easyuefi.com/wintousb/ use a faster drive if you can (SDXC, etc.) for better performance
+2) Open the bottom of the ND4 case, attach the two USB cables (cameras) to the secondary Windows PC
 
-3) Plug in USB drive to Neoden4, select boot order for USB drive in BIOS
+3) Get a USB serial (RS232) adapter, attach to the ND4 machine uart to the secondary Windows PC
 
-4) Windows boots up. Suggest using a USB-Ethernet adapter and enabling remote desktop access if useful.
+4) Install the camera drivers (top and bottom camera) in device manager. There are two camera hardware versions (new and old), the new version VID:PID is 0x52CB:0x52CB. Drivers available here https://github.com/charlie-x/neoden4/tree/master/windows7/camera
 
-5) Install the camera drivers (top and bottom camera) in device manager. There are two camera hardware versions (new and old), the new version VID:PID is 0x52CB:0x52CB. Drivers available here https://github.com/charlie-x/neoden4/tree/master/windows7/camera
-
-6) Install java (e.g. JRE 8 32-bit http://dl.msystems.ch/Java/jre-8u301-windows-i586.exe )
+5) Install java 
 
 ### Building Openpnp application
-
-In my experience was easier to build the openpnp (jar) on a second machine. 
 
 Get Eclipse (I used 32-bit, JDK 8 32-bit), pull the neoden4camera_jna branch from
 https://github.com/MatSpy/openpnp/commits/neoden4camera_jna . 
