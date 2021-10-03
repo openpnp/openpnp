@@ -5,7 +5,7 @@ Some notes to help get started with a Neoden4 machine and Openpnp
 
 2) Open the bottom of the ND4 case, attach the two USB cables (cameras) to the secondary Windows PC
 
-3) Get a USB serial (RS232) adapter, attach to the ND4 machine uart to the secondary Windows PC
+3) Get a USB serial (RS232) adapter <link>, attach to the ND4 machine uart to the secondary Windows PC
 
 4) Install the camera drivers (top and bottom camera) in device manager. There are two camera hardware versions (new and old), the new version VID:PID is 0x52CB:0x52CB. Drivers available here https://github.com/charlie-x/neoden4/tree/master/windows7/camera
 
@@ -31,3 +31,7 @@ Copy the 'target' folder onto the neoden machine. Also need to copy NeodenCamera
 - Head setup
 
 ### Running a first job
+
+### Replacing the motor drivers
+
+### Adjusting the up looking camera
