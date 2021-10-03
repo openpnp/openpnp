@@ -24,6 +24,10 @@ To build the jar in eclipse, choose Run Configurations->Maven Build->Open PNP, t
 Copy the 'target' folder onto the neoden machine. Also need to copy NeodenCamera.dll into the folder with openpnp.bat.
 
 ### Configuring Openpnp
-- Starting .xml files
+- Starting machine .xml files
 - Camera setup
 - Axis setup
+- Feeder setup
+- Head setup
+
+### Running a first job
