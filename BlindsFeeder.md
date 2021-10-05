@@ -36,7 +36,7 @@ https://youtu.be/dGde59Iv6eY
 21.	Shared properties of the arrayed feeders (such as fiducial locations etc.) are automatically synced.  
 22.	Can later move/rotate a whole feeder array on the machine table, by recapturing one fiducial (move) or two (move and rotate). 
 23.	Z height capture.
-24.     OCR/QR-Code part recognition.
+24. OCR/QR-Code part recognition.
 
 # Setting up a Feeder
 
