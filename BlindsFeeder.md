@@ -36,6 +36,7 @@ https://youtu.be/dGde59Iv6eY
 21.	Shared properties of the arrayed feeders (such as fiducial locations etc.) are automatically synced.  
 22.	Can later move/rotate a whole feeder array on the machine table, by recapturing one fiducial (move) or two (move and rotate). 
 23.	Z height capture.
+24.     OCR/QR-Code part recognition.
 
 # Setting up a Feeder
 
@@ -267,6 +268,52 @@ You can choose when the cover will automatically be opened.
 * **OpenOnJobStart**: The cover is opened when the job starts. This happens collectively for all the BlindsFeeders with this setting. OpenPNP solves the [Travelling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem) using [Simulated Annealing](https://en.wikipedia.org/wiki/Simulated_annealing) to optimize the path among the feeders. If the pick happens outside a job, or if the feeder wasn't opened on job start (feeder enabled later, reloaded tape and reset, etc.), it behaves like **OpenOnFirstUse**. 
  
 You can also use the Open / Close all Covers buttons.
+
+### OCR / QR Code
+
+The BlindsFeeder also supports OCR and Barcodes to detect parts automatically, similar to the [[ReferencePushPullFeeder]]. 
+
+![BlindsFeeder with OCR](https://user-images.githubusercontent.com/9963310/122680340-ed625c00-d1ee-11eb-8e78-e6487bd21b7b.png)
+
+You can add OCR or Barcode (QR-codes etc.) labels on the margin of the feeder. Their position is automatically calculated. 
+
+![grafik](https://user-images.githubusercontent.com/9963310/122680004-86907300-d1ed-11eb-8bdf-abe8e0602a62.png)
+
+**OCR Action** determines the OCR functionality:
+
+![OCR Action](https://user-images.githubusercontent.com/9963310/135982730-53512b42-22ee-45cc-8e9d-1919b57b4f06.png)
+
+* **None**: OCR Switched off
+* **CheckCorrect**: Checks if the part in the feeder is correct. If not, the running job/action is interrupted.
+* **ChangePart**: Changes the part in the feeder automatically. If this happens during a job, the job is interrupted after all the feeders have been handled.
+
+**OCR Text Orientation** determines whether the text runs away from the tape of towards it, i.e. it can turn the text upside down, if the feeder is oriented towards the left:
+
+![OCR Text Orientation](https://user-images.githubusercontent.com/9963310/135983442-379b2596-8901-48bf-bc72-2e33600d6ad1.png)
+
+**OCR Margin** sets the width of the label. Set a negative width, if youz want the label on the other side of the feeder (not recommended). 
+
+**OCR Font** can set the font used for OCR. It is highly recommended to use a monospace font. Make sure the font is installed on the machine that does the recognition (it is used to create character templates). Barcode/QR-Code recognition is enabled by selectting the `[Barcode]` font: 
+
+![OCR Font](https://user-images.githubusercontent.com/9963310/122678208-12060600-d1e6-11eb-9df3-b68c68abe624.png)
+
+**Font Size [pt]** sets the OCR Font size. It must be accurate to get good recognition results.
+
+The **Set OCR Settings to all** button can distribute OCR settings to all BlindsFeeders on the machine.
+
+#### Pipeline
+
+Use the **Edit Pipeline** and **Reset Pipeline** buttons as usual. 
+
+Pipeline, when set to a normal font: 
+
+![grafik](https://user-images.githubusercontent.com/9963310/122678153-c81d2000-d1e5-11eb-8d50-58a398d131c4.png)
+
+Pipeline, when set to [Barcode]:
+
+![grafik](https://user-images.githubusercontent.com/9963310/122678192-ef73ed00-d1e5-11eb-8149-68340bd4de72.png)
+
+
 
 ### More Feeders on the same Array
 
