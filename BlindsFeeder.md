@@ -95,7 +95,7 @@ ___
 
 ![grafik](https://user-images.githubusercontent.com/9963310/122678424-1b43a280-d1e7-11eb-86c1-c76a54dd089f.png)
 
-Use the margin_length_begin parameter to set aside a margin for OCR Labels and visualize them: 
+Use the `margin_length_begin` parameter to set aside a margin for OCR Labels and visualize them: 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/122680832-9c079c00-d1f1-11eb-8cc3-196d55e85192.png)
 
