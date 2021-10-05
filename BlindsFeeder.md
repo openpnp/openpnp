@@ -89,6 +89,18 @@ The `pocket_width` is the width the physical pocket across the tape. You can mak
 `tape_play`, `cover_play` (negative or positive) are empirical. Start from the examples. There is more about those in the [Advanced](#Advanced) section.
 
 ### Building up the Feeder Array
+___
+
+**CAUTION**: the OpenPnP 2.0 testing version has changed the way to define the tape lanes (see below this section for the old way): 
+
+![grafik](https://user-images.githubusercontent.com/9963310/122678424-1b43a280-d1e7-11eb-86c1-c76a54dd089f.png)
+
+Use the margin_length_begin parameter to set aside a margin for OCR Labels and visualize them: 
+
+![grafik](https://user-images.githubusercontent.com/9963310/122680832-9c079c00-d1f1-11eb-8cc3-196d55e85192.png)
+
+
+___
 
 Once you've defined your `TapeDefinition`s, you can multiply and mix them to build up a feeder array i.e. print many feeders in one piece (at end of the `BlindsFeeder-3DPrinting.scad` file):
 
