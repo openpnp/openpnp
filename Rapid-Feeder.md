@@ -4,7 +4,7 @@
 
 Rapid Feeder is a new type of automatic feeder developed by and soon available at [Deltaprintr.com](deltaprintr.com). It's small, compact and very precise, capable of handling up to 0402 components and supports all tape widths up to 2mm pitch. Each feeder has a UUID address that's also readable on the QR sticker on the top and the side of the feeder. As a result, each feeder has a unique address that's pre-set by Deltaprintr. It was designed specifically so you don't have to mechanically index your feeders with a slot built into the machine. The feeder system is designed so you can save space by grouping many different width feeders close together in any order you'd like. No more feeder banks or empty gaps between feeders! The smallest width tape feeders (8mm tape) are only 10mm wide!
 
-![](https://i.imgur.com/w4hB2dW.png)
+![](https://www.deltaprintr.com/wp-content/uploads/2020/12/Feeder-v3.png)
 
 ### Features
 1. Can detect if tape's cover takes too long to pull and will send an error to OpenPNP and turn on a red light to identify feeder. Useful if tape's cover has come loose.
