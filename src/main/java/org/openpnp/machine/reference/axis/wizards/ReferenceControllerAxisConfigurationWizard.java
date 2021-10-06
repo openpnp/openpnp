@@ -324,11 +324,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         panelControllerSettings.add(resolution, "4, 12, fill, default");
         resolution.setColumns(10);
 
-        lblLimitRotation = new JLabel("Limit to ±180°");
-        lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180°. ");
+        lblLimitRotation = new JLabel("Limit to Range");
+        lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180° or the custom Soft-Limits if enabled.");
         panelControllerSettings.add(lblLimitRotation, "2, 14, right, default");
 
         limitRotation = new JCheckBox("");
+        limitRotation.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                adaptDialog();
+            }
+        });
         panelControllerSettings.add(limitRotation, "4, 14");
 
         lblWrapAroundRotation = new JLabel("Wrap Around");
@@ -484,7 +489,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         Driver selectedDriver = driverConverter.convertReverse((String) driver.getSelectedItem());
         boolean showPreMove = (selectedDriver != null && selectedDriver.isSupportingPreMove());
         boolean showRotationSettings = type.getSelectedItem() == Type.Rotation;
-        boolean showCalibration = (type.getSelectedItem() == Type.X || type.getSelectedItem() == Type.Y);
+        boolean showSoftLimits = type.getSelectedItem() != Type.Rotation || limitRotation.isSelected();
         lblPremoveCommand.setVisible(showPreMove);
         scrollPane.setVisible(showPreMove);
 
@@ -493,16 +498,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         lblWrapAroundRotation.setVisible(showRotationSettings);
         wrapAroundRotation.setVisible(showRotationSettings);
 
-        lblSoftLimitLow.setVisible(!showRotationSettings);
-        lblSoftLimitHigh.setVisible(!showRotationSettings);
-        softLimitLow.setVisible(!showRotationSettings);
-        softLimitHigh.setVisible(!showRotationSettings);
-        softLimitLowEnabled.setVisible(!showRotationSettings);
-        softLimitHighEnabled.setVisible(!showRotationSettings);
-        btnCaptureSoftLimitLow.setVisible(!showRotationSettings);
-        btnCaptureSoftLimitHigh.setVisible(!showRotationSettings);
-        btnPositionSoftLimitLow.setVisible(!showRotationSettings);
-        btnPositionSoftLimitHigh.setVisible(!showRotationSettings);
+        lblSoftLimitLow.setVisible(showSoftLimits);
+        lblSoftLimitHigh.setVisible(showSoftLimits);
+        softLimitLow.setVisible(showSoftLimits);
+        softLimitHigh.setVisible(showSoftLimits);
+        softLimitLowEnabled.setVisible(showSoftLimits);
+        softLimitHighEnabled.setVisible(showSoftLimits);
+        btnCaptureSoftLimitLow.setVisible(showSoftLimits);
+        btnCaptureSoftLimitHigh.setVisible(showSoftLimits);
+        btnPositionSoftLimitLow.setVisible(showSoftLimits);
+        btnPositionSoftLimitHigh.setVisible(showSoftLimits);
 
         lblSafeZoneLow.setVisible(!showRotationSettings);
         lblSafeZoneHigh.setVisible(!showRotationSettings);

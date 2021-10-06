@@ -513,14 +513,14 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                         axesLocation = axesLocation.put(new AxesLocation(refAxis, newAngle));
                     }
                     else if (refAxis.isLimitRotation()) {
-                        // Set the rotation to be within the +/-180 degree range
-                        axesLocation = axesLocation.put(new AxesLocation(refAxis, 
-                                Utils2D.normalizeAngle180(axesLocation.getCoordinate(refAxis))));
+                        double angle = axesLocation.getCoordinate(refAxis);
+                        angle = refAxis.limitedRotationAngle(angle);
+                        axesLocation = axesLocation.put(new AxesLocation(refAxis, angle));
                     } 
                     // Note, the combination isLimitRotation() and isWrapAroundRotation() will be handled
                     // when the motion is complete, i.e. in waitForCompletion().
                 }
-                else { // Never soft-limit a rotation axis, as the config is hidden on the GUI and might contain garbage.
+                else { 
                     Length coordinate = axesLocation.getLengthCoordinate(refAxis).convertToUnits(Configuration.get().getSystemUnits());  
                     if (refAxis.isSoftLimitLowEnabled()) {
                         Length limit = refAxis.getSoftLimitLow().convertToUnits(Configuration.get().getSystemUnits());
@@ -643,7 +643,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 ReferenceControllerAxis refAxis = (ReferenceControllerAxis) axis;
                 if (refAxis.isLimitRotation() && refAxis.isWrapAroundRotation()) {
                     double anglePresent = refAxis.getDriverCoordinate();
-                    double angleWrappedAround = Utils2D.normalizeAngle180(anglePresent);
+                    double angleWrappedAround = refAxis.limitedRotationAngle(anglePresent);
                     if (anglePresent != angleWrappedAround) {
                         refAxis.getDriver().setGlobalOffsets(getMachine(), 
                                 new AxesLocation(refAxis, angleWrappedAround));

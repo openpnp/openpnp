@@ -36,6 +36,7 @@ import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.util.SimpleGraph;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceControllerAxis extends AbstractControllerAxis {
     // The more implementation specific properties are in the ReferenceControllerAxis
@@ -179,6 +180,23 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     private SimpleGraph backlashDistanceTestGraph;
     @Element(required = false)
     private SimpleGraph backlashSpeedTestGraph;
+
+    @Attribute(required = false)
+    private double version;
+
+    @Commit
+    void commit() {
+        if (version < 2.0) {
+            version = 2.0;
+            if (getType() == Type.Rotation) {
+                // Rotational axis limits become enabled in newer versions. Make sure there is no garbage in them.
+                setSoftLimitLowEnabled(false);
+                setSoftLimitHighEnabled(false);
+                setSoftLimitLow(new Length(-180, AxesLocation.getUnits()));
+                setSoftLimitHigh(new Length(180, AxesLocation.getUnits()));
+            }
+        }
+    }
 
     public double getResolution() {
         if (resolution <= 0.0) {
@@ -439,6 +457,40 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         }
         // We're either inside the limits, or the Safe Zone is not enabled.
         return true;
+    }
+
+    /**
+     * Limit the given rotation axis angle to the valid range.
+     * 
+     * @param axis
+     * @param angle
+     * @return
+     */
+    public double limitedRotationAngle(double angle) {
+        if (isLimitRotation()) {
+            double limit0 = -180;
+            double limit1 = 180;
+            if (isSoftLimitLowEnabled()) {
+                // Set the rotation to be within the soft limit range
+                limit0 = getSoftLimitLow().getValue();
+            }
+            if (isSoftLimitHighEnabled()) {
+                // Set the rotation to be within the soft limit range
+                limit1 = getSoftLimitHigh().getValue();
+            }
+            // We support 360° (normal) and 180° (limited articulation) wrapping.
+            double wrap = 360;
+            if (limit1 - limit0 < 360) {
+                wrap = 180;
+            }
+            while (angle > limit1) {
+                angle -= wrap;
+            }
+            while (angle < limit0) {
+                angle += wrap;
+            }
+        }
+        return angle;
     }
 
     @Override
