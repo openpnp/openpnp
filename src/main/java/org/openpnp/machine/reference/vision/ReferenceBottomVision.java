@@ -60,6 +60,9 @@ public class ReferenceBottomVision implements PartAlignment {
     @Attribute(required = false)
     protected double maxAngularOffset = 10;
 
+    @Attribute(required = false)
+    protected double testAlignmentAngle = 0.0;
+
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
@@ -484,7 +487,15 @@ public class ReferenceBottomVision implements PartAlignment {
     public void setMaxAngularOffset(double maxAngularOffset) {
         this.maxAngularOffset = maxAngularOffset;
     }
-    
+
+    public double getTestAlignmentAngle() {
+        return testAlignmentAngle;
+    }
+
+    public void setTestAlignmentAngle(double testAlignmentAngle) {
+        this.testAlignmentAngle = testAlignmentAngle;
+    }
+
     @Override
     public String getPropertySheetHolderTitle() {
         return "Bottom Vision";

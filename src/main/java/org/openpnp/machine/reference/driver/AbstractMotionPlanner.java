@@ -42,6 +42,7 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.model.Motion;
 import org.openpnp.model.Motion.MotionOption;
 import org.openpnp.model.Motion.MoveToCommand;
@@ -133,7 +134,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     @Override
     public void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, MotionOption... options) throws Exception {
         // Handle soft limits and rotation axes limiting and wrap-around.
-        axesLocation = limitAxesLocation(axesLocation, false);
+        axesLocation = limitAxesLocation(hm, axesLocation, false);
 
         // Get current planned location of all the axes.
         AxesLocation currentLocation = new AxesLocation(getMachine()); 
@@ -155,7 +156,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         // rotational axes wrap-around etc.). Therefore we need to determine the coordinates again, same as above.
 
         // Handle soft limits and rotation axes limiting and wrap-around.
-        axesLocation = limitAxesLocation(axesLocation, false);
+        axesLocation = limitAxesLocation(hm, axesLocation, false);
 
         // Get current planned location of all the axes.
         currentLocation = new AxesLocation(getMachine()); 
@@ -492,30 +493,29 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     /**
      * Limits the specified AxesLocation to nominal coordinates. Throws or returns null if a soft limit is 
      * violated. Also limits rotation axes to their limited or wrapped-around coordinates. 
-     * 
+     *
+     * @param hm HeadMountable for which to apply the limits.
      * @param axesLocation
      * @param silent If true, returns null on soft limit violations rather than throwing Exceptions. 
+     * 
      * @return
      * @throws Exception
      */
-    protected AxesLocation limitAxesLocation(AxesLocation axesLocation, boolean silent)
+    protected AxesLocation limitAxesLocation(HeadMountable hm, AxesLocation axesLocation, boolean silent)
             throws Exception {
         for (ControllerAxis axis : axesLocation.getControllerAxes()) {
             if (axis instanceof ReferenceControllerAxis) {
                 ReferenceControllerAxis refAxis = (ReferenceControllerAxis) axis;
                 if (refAxis.getType() == Axis.Type.Rotation) {
-                    // Handle rotation axes.
+                    // Handle rotation axes. 
+                    // TODO: if this will ever be used with multiple source axes "reverse kinematics" style transforms, 
+                    // we would need sorting the axes by dependency.  
                     if (refAxis.isWrapAroundRotation()) {
                         // Set the rotation to be the shortest way around from the current rotation
-                        double currentAngle = refAxis.getCoordinate();
-                        double specifiedAngle = axesLocation.getCoordinate(axis);
-                        double newAngle = currentAngle + Utils2D.normalizeAngle180(specifiedAngle - currentAngle);
-                        axesLocation = axesLocation.put(new AxesLocation(refAxis, newAngle));
+                        axesLocation = wrapRotationAxis(hm, axesLocation, refAxis);
                     }
                     else if (refAxis.isLimitRotation()) {
-                        double angle = axesLocation.getCoordinate(refAxis);
-                        angle = refAxis.limitedRotationAngle(angle);
-                        axesLocation = axesLocation.put(new AxesLocation(refAxis, angle));
+                        axesLocation = limitRotationAxis(hm, axesLocation, refAxis);
                     } 
                     // Note, the combination isLimitRotation() and isWrapAroundRotation() will be handled
                     // when the motion is complete, i.e. in waitForCompletion().
@@ -552,10 +552,114 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         return axesLocation;
     }
 
+    /**
+     * Wrap the given rotation axis around the shorter way.
+     * 
+     * @param hm
+     * @param axesLocation
+     * @param axis
+     * @return
+     * @throws Exception
+     */
+    public AxesLocation wrapRotationAxis(HeadMountable hm, final AxesLocation axesLocation, ReferenceControllerAxis axis) throws Exception {
+        AxesLocation wrappedAxesLocation = axesLocation;
+        if (hm == null) {
+            // If no head-mountable is provided, use the default for this axis.
+            hm = axis.getDefaultHeadMountable();
+            if (hm == null) {
+                throw new Exception("Rotation axis "+axis.getName()+" cannot be wrapped around when no head-mountable is mapped.");
+            }
+        }
+        // We need to transform to HeadMountable coordinates in order to perform the correct angular math, the axis might be transformed. 
+        Location location = hm.toTransformed(axesLocation);
+        location = hm.toHeadMountableLocation(location);
+        double currentAngle = axis.getCoordinate();
+        AxesLocation currentAxesLocation = axesLocation.put(new AxesLocation(axis, currentAngle));
+        Location currentLocation = hm.toTransformed(currentAxesLocation);
+        currentLocation = hm.toHeadMountableLocation(currentLocation);
+        // Wrap around the shorter way.
+        double newRotation = currentLocation.getRotation() + Utils2D.normalizeAngle180(location.getRotation() - currentLocation.getRotation());
+        // Transform back to axes locations
+        Location wrappedLocation = new Location(
+                location.getUnits(), 
+                location.getX(),
+                location.getY(),
+                location.getZ(),
+                newRotation);
+        wrappedLocation = hm.toHeadLocation(wrappedLocation);
+        wrappedAxesLocation = hm.toRaw(wrappedLocation);
+        return wrappedAxesLocation;
+    }
+
+    /**
+     * Limit the given rotation axis to its allowed range.
+     * 
+     * @param hm
+     * @param axesLocation
+     * @param axis
+     * @return
+     * @throws Exception
+     */
+    public AxesLocation limitRotationAxis(HeadMountable hm, final AxesLocation axesLocation, ReferenceControllerAxis axis) throws Exception {
+        AxesLocation limitedAxesLocation = axesLocation;
+        if (hm == null) {
+            hm = axis.getDefaultHeadMountable();
+            if (hm == null) {
+                throw new Exception("Rotation axis "+axis.getName()+" cannot be limited when no head-mountable is mapped.");
+            }
+        }
+        // We need to transform to HeadMountable coordinates in order to perform the correct angular math, the axis might be transformed. 
+        Location location = hm.toTransformed(axesLocation);
+        location = hm.toHeadMountableLocation(location);
+        double limitedRotation = location.getRotation();
+        double limit0 = -180;
+        double limit1 = 180;
+        if (axis.isSoftLimitLowEnabled()) {
+            AxesLocation axesLimit = axesLocation
+                    .put(new AxesLocation(axis, axis.getSoftLimitLow()));
+            Location limit = hm.toTransformed(axesLimit);
+            limit = hm.toHeadMountableLocation(limit);
+            limit0 = limit.getRotation();
+        }
+        if (axis.isSoftLimitHighEnabled()) {
+            AxesLocation axesLimit = axesLocation
+                    .put(new AxesLocation(axis, axis.getSoftLimitHigh()));
+            Location limit = hm.toTransformed(axesLimit);
+            limit = hm.toHeadMountableLocation(limit);
+            limit1 = limit.getRotation();
+        }
+        if (limit0 > limit1) {
+            // Transformation must have negated the coordinates.
+            double swap = limit0;
+            limit0 = limit1;
+            limit1 = swap;
+        }
+        double epsilon = 1e-5;
+        while (limitedRotation > limit1+epsilon) {
+            limitedRotation -= 360;
+        }
+        while (limitedRotation < limit0-epsilon) {
+            limitedRotation += 360;
+        }
+        // Transform back to axes locations
+        Location limitedLocation = new Location(
+                location.getUnits(), 
+                location.getX(),
+                location.getY(),
+                location.getZ(),
+                limitedRotation);
+        limitedLocation = hm.toHeadLocation(limitedLocation);
+        limitedAxesLocation = hm.toRaw(limitedLocation);
+        if (limitedRotation < limit0 - epsilon || limitedRotation > limit1 + epsilon) {
+            throw new Exception("Axis "+axis.getName()+" with limited articulation cannot rotate to "+limitedAxesLocation.getCoordinate(axis)+"°");
+        }
+        return limitedAxesLocation;
+    }
+
     @Override
-    public boolean isValidLocation(AxesLocation axesLocation) {
+    public boolean isValidLocation(HeadMountable hm, AxesLocation axesLocation) {
         try {
-            return limitAxesLocation(axesLocation, true) != null;
+            return limitAxesLocation(hm, axesLocation, true) != null;
         }
         catch (Exception e) {
             // Note this will never happen, as we pass silent=true.
@@ -626,31 +730,45 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             }
         }
         // Apply the rotation axes wrap-around handling.
-        wrapUpCoordinates();
+        wrapUpCoordinates(hm);
         // Remove old stuff.
         clearMotionPlanOlderThan(NanosecondTime.getRuntimeSeconds() - maximumPlanHistory);
     }
 
     /**
      * Apply the rotation axes wrap-around handling.
+     * @param hm 
      * 
      * @throws Exception
      */
-    protected synchronized void wrapUpCoordinates() throws Exception {
-        AxesLocation mappedAxes = new AxesLocation(getMachine()).byType(Type.Rotation);
+    protected synchronized void wrapUpCoordinates(HeadMountable hm) throws Exception {
+        AxesLocation mappedAxes = (hm != null ? 
+                hm.getMappedAxes(machine) 
+                : new AxesLocation(machine)).byType(Type.Rotation);
         for (ControllerAxis axis : mappedAxes.getControllerAxes()) {
             if (axis instanceof ReferenceControllerAxis) {
                 ReferenceControllerAxis refAxis = (ReferenceControllerAxis) axis;
                 if (refAxis.isLimitRotation() && refAxis.isWrapAroundRotation()) {
-                    double anglePresent = refAxis.getDriverCoordinate();
-                    double angleWrappedAround = refAxis.limitedRotationAngle(anglePresent);
-                    if (anglePresent != angleWrappedAround) {
+                    AxesLocation axesLocation = new AxesLocation(mappedAxes.getAxes(), 
+                            (axis1) -> ((axis1 instanceof ControllerAxis) ?
+                                ((ControllerAxis) axis1).getDriverLengthCoordinate() : null));
+                    AxesLocation limitedAxesLocation = limitRotationAxis(hm, axesLocation, refAxis);
+                    AxesLocation changed = axesLocation.motionSegmentTo(limitedAxesLocation);
+                    if (changed.size() > 0) {
+                        if (changed.size() > 1 
+                                || (!changed.getAxes().contains(refAxis))) {
+                            throw new Exception("Rotation axis "+refAxis.getName()+" wrap-around coordinate limiting "
+                                    + "did not transform back to a single axis adjustment.");
+                        }
                         refAxis.getDriver().setGlobalOffsets(getMachine(), 
-                                new AxesLocation(refAxis, angleWrappedAround));
+                                new AxesLocation(refAxis, limitedAxesLocation.getCoordinate(refAxis)));
                         // This also reflects in the motion planner's coordinate, but account for any 
                         // directional backlash offset.
                         refAxis.setLengthCoordinate(refAxis.getDriverLengthCoordinate()
                                 .subtract(lastDirectionalBacklashOffset.getLengthCoordinate(refAxis)));
+                        if (hm != null) {
+                            getMachine().fireMachineHeadActivity(hm.getHead());
+                        }
                     }
                 }
             }

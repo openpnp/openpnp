@@ -993,15 +993,17 @@ public class CalibrationSolutions implements Solutions.Subject {
                 location = location.derive(head.getCalibrationPrimaryFiducialLocation(), false,
                         false, true, false);
                 // Pick the test object at the location.
-                feeder.setLocation(location.derive(null, null, null, angle));
+                Location pickLocation = location.derive(null, null, null, angle);
+                feeder.setLocation(pickLocation);
+               // Place the part 180° rotated. This way we will detect the true nozzle rotation axis, which is 
+                // the true nozzle location, namely in the center of the two detected locations. Note that run-out 
+                // is cancelled out too, so run-out compensation is no prerequisite. 
+                Location placementLocation = location.derive(null, null, null, angle + 180.0);
+                nozzle.prepareForPickAndPlaceArticulation(pickLocation, placementLocation);
                 nozzle.moveToPickLocation(feeder);
                 nozzle.pick(testPart);
                 // Extra wait time.
                 Thread.sleep(extraVacuumDwellMs);
-                // Place the part 180° rotated. This way we will detect the true nozzle rotation axis, which is 
-                // the true nozzle location, namely in the center of the two detected locations. Note that run-out 
-                // is cancelled out too, so run-out compensation is no prerequisite. 
-                Location placementLocation = location.derive(null, null, null, angle + 180.0);
                 nozzle.moveToPlacementLocation(placementLocation, testPart);
                 nozzle.place();
                 // Extra wait time.

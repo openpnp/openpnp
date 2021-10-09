@@ -312,6 +312,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(partSettings, "enabled", enabledCheckbox, "selected");
         addWrappedBinding(partSettings, "checkPartSizeMethod", comboBoxcheckPartSizeMethod, "selectedItem");
@@ -319,6 +320,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
         addWrappedBinding(partSettings, "preRotateUsage", comboBoxPreRotate, "selectedItem");
         addWrappedBinding(partSettings, "maxRotation", comboBoxMaxRotation, "selectedItem");
+        addWrappedBinding(bottomVision, "testAlignmentAngle", testAlignmentAngle, "text", doubleConverter);
         
         
         LengthConverter lengthConverter = new LengthConverter();

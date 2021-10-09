@@ -246,7 +246,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Location oldValue = this.headOffsets;
         this.headOffsets = headOffsets;
         firePropertyChange("headOffsets", oldValue, headOffsets);
-        Location offsetsDiff = headOffsets.subtract(oldValue).convertToUnits(LengthUnit.Millimeters);
         adjustHeadOffsetsDependencies(oldValue, headOffsets);
     }
 
@@ -493,6 +492,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
+        // Apply the rotationModeOffset.
+        if (rotationModeOffset != null) { 
+            location = location.subtractWithRotation(new Location(location.getUnits(), 0, 0, 0, rotationModeOffset));
+            Logger.trace("{}.toHeadLocation({}, ...) rotation mode offset {}", getName(), location, rotationModeOffset);
+        }
         // Apply runout compensation.
         // Check SuppressCompensation, in that case disable nozzle calibration
         if (! Arrays.asList(options).contains(LocationOption.SuppressDynamicCompensation)) {
@@ -518,6 +522,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                         calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
                 location = location.add(offset);
             }
+        }
+        // Unapply the rotationModeOffset.
+        if (rotationModeOffset != null) { 
+            location = location.addWithRotation(new Location(location.getUnits(), 
+                    0, 0, 0, rotationModeOffset));
         }
         return location;
     }
@@ -858,10 +867,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public String toString() {
         return getName() + " " + getId();
-    }
-
-    protected ReferenceMachine getMachine() {
-        return (ReferenceMachine) Configuration.get().getMachine();
     }
 
     protected boolean isVaccumSenseActuatorEnabled() {

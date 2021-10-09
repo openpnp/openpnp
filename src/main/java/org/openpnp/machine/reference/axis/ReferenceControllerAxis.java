@@ -459,40 +459,6 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         return true;
     }
 
-    /**
-     * Limit the given rotation axis angle to the valid range.
-     * 
-     * @param axis
-     * @param angle
-     * @return
-     */
-    public double limitedRotationAngle(double angle) {
-        if (isLimitRotation()) {
-            double limit0 = -180;
-            double limit1 = 180;
-            if (isSoftLimitLowEnabled()) {
-                // Set the rotation to be within the soft limit range
-                limit0 = getSoftLimitLow().getValue();
-            }
-            if (isSoftLimitHighEnabled()) {
-                // Set the rotation to be within the soft limit range
-                limit1 = getSoftLimitHigh().getValue();
-            }
-            // We support 360° (normal) and 180° (limited articulation) wrapping.
-            double wrap = 360;
-            if (limit1 - limit0 < 360) {
-                wrap = 180;
-            }
-            while (angle > limit1) {
-                angle -= wrap;
-            }
-            while (angle < limit0) {
-                angle += wrap;
-            }
-        }
-        return angle;
-    }
-
     @Override
     public Wizard getConfigurationWizard() {
         return new ReferenceControllerAxisConfigurationWizard(this);
