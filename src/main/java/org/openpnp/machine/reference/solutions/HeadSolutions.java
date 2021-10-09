@@ -240,8 +240,8 @@ public class HeadSolutions implements Solutions.Subject {
                                         solutions.add(new Solutions.PlainIssue(
                                                 head, 
                                                 "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Rotation axis assigned.", 
-                                                "Please assign a different Rotation axis.", 
-                                                Severity.Error,
+                                                "It is OK to share rotation axes. If intentional, just dismiss this issue. Otherwise assign a different Rotation axis.", 
+                                                Severity.Information,
                                                 "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
                                     }
                                 }
