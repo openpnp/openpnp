@@ -165,7 +165,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         z = z.convertToUnits(location.getUnits());
         location = location.derive(null, null, z.getValue(), null);
         // Transform to Head coordinates.
-        location = toHeadLocation(location);
+        location = toHeadLocation(location, LocationOption.Quiet);
         // From Head to to raw coordinates.
         AxesLocation rawLocation = toRaw(location);
         return rawLocation.getLengthCoordinate(axisZ);

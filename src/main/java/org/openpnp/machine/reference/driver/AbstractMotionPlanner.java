@@ -54,6 +54,7 @@ import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.MotionPlanner;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.NanosecondTime;
@@ -155,7 +156,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         // Note: the driver/actuator interlock can prompt locations changes (through location confirmation, 
         // rotational axes wrap-around etc.). Therefore we need to determine the coordinates again, same as above.
 
-        // Handle soft limits and rotation axes limiting and wrap-around.
+        // Again, handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
 
         // Get current planned location of all the axes.
@@ -575,8 +576,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         location = hm.toHeadMountableLocation(location);
         double currentAngle = axis.getCoordinate();
         AxesLocation currentAxesLocation = axesLocation.put(new AxesLocation(axis, currentAngle));
-        Location currentLocation = hm.toTransformed(currentAxesLocation);
-        currentLocation = hm.toHeadMountableLocation(currentLocation);
+        Location currentLocation = hm.toTransformed(currentAxesLocation, LocationOption.Quiet);
+        currentLocation = hm.toHeadMountableLocation(currentLocation, LocationOption.Quiet);
         // Wrap around the shorter way.
         double newRotation = currentLocation.getRotation() + Utils2D.normalizeAngle180(location.getRotation() - currentLocation.getRotation());
         // Transform back to axes locations
@@ -586,8 +587,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 location.getY(),
                 location.getZ(),
                 newRotation);
-        wrappedLocation = hm.toHeadLocation(wrappedLocation);
-        wrappedAxesLocation = hm.toRaw(wrappedLocation);
+        wrappedLocation = hm.toHeadLocation(wrappedLocation, LocationOption.Quiet);
+        wrappedAxesLocation = hm.toRaw(wrappedLocation, LocationOption.Quiet);
         return wrappedAxesLocation;
     }
 
@@ -617,15 +618,15 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         if (axis.isSoftLimitLowEnabled()) {
             AxesLocation axesLimit = axesLocation
                     .put(new AxesLocation(axis, axis.getSoftLimitLow()));
-            Location limit = hm.toTransformed(axesLimit);
-            limit = hm.toHeadMountableLocation(limit);
+            Location limit = hm.toTransformed(axesLimit, LocationOption.Quiet);
+            limit = hm.toHeadMountableLocation(limit, LocationOption.Quiet);
             limit0 = limit.getRotation();
         }
         if (axis.isSoftLimitHighEnabled()) {
             AxesLocation axesLimit = axesLocation
                     .put(new AxesLocation(axis, axis.getSoftLimitHigh()));
-            Location limit = hm.toTransformed(axesLimit);
-            limit = hm.toHeadMountableLocation(limit);
+            Location limit = hm.toTransformed(axesLimit, LocationOption.Quiet);
+            limit = hm.toHeadMountableLocation(limit, LocationOption.Quiet);
             limit1 = limit.getRotation();
         }
         if (limit0 > limit1) {
@@ -648,10 +649,16 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 location.getY(),
                 location.getZ(),
                 limitedRotation);
-        limitedLocation = hm.toHeadLocation(limitedLocation);
-        limitedAxesLocation = hm.toRaw(limitedLocation);
+        limitedLocation = hm.toHeadLocation(limitedLocation, LocationOption.Quiet);
+        limitedAxesLocation = hm.toRaw(limitedLocation, LocationOption.Quiet);
         if (limitedRotation < limit0 - epsilon || limitedRotation > limit1 + epsilon) {
-            throw new Exception("Axis "+axis.getName()+" with limited articulation cannot rotate to "+limitedAxesLocation.getCoordinate(axis)+"°");
+            if (axis.isWrapAroundRotation()) {
+                throw new Exception("Axis "+axis.getName()+" with limited articulation must not have Wrap Around option set.");
+            }
+            else {
+                throw new Exception("Axis "+axis.getName()+" with limited articulation cannot rotate to "+
+                        axesLocation.getCoordinate(axis)+" ("+hm.getName()+" at "+location.getRotation()+"°)");
+            }
         }
         return limitedAxesLocation;
     }

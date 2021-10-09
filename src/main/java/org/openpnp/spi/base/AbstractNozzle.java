@@ -116,15 +116,15 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
                 if (refAxis.isSoftLimitLowEnabled()) {
                     AxesLocation axesLimit = getMappedAxes(getMachine())
                             .put(new AxesLocation(refAxis, refAxis.getSoftLimitLow()));
-                    Location limit = toTransformed(axesLimit);
-                    limit = toHeadMountableLocation(limit);
+                    Location limit = toTransformed(axesLimit, LocationOption.Quiet);
+                    limit = toHeadMountableLocation(limit, LocationOption.Quiet);
                     limit0 = limit.getRotation();
                 }
                 if (refAxis.isSoftLimitHighEnabled()) {
                     AxesLocation axesLimit = getMappedAxes(getMachine())
                             .put(new AxesLocation(refAxis, refAxis.getSoftLimitHigh()));
-                    Location limit = toTransformed(axesLimit);
-                    limit = toHeadMountableLocation(limit);
+                    Location limit = toTransformed(axesLimit, LocationOption.Quiet);
+                    limit = toHeadMountableLocation(limit, LocationOption.Quiet);
                     limit1 = limit.getRotation();
                 }
             }
@@ -177,7 +177,8 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
                         // A negative rotation is wanted. Start at the axis higher limit.
                         angleStart = rotationLimits[1];
                     }
-                    newRotationModeOffset = Utils2D.angleNorm(pickLocation.getRotation() - angleStart, 180);
+                    newRotationModeOffset = 
+                            Utils2D.angleNorm(pickLocation.getRotation() - angleStart, 180);
                 }
                 break;
         }

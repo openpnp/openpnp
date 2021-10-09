@@ -492,10 +492,13 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
+        boolean quiet = Arrays.asList(options).contains(LocationOption.Quiet);
         // Apply the rotationModeOffset.
         if (rotationModeOffset != null) { 
             location = location.subtractWithRotation(new Location(location.getUnits(), 0, 0, 0, rotationModeOffset));
-            Logger.trace("{}.toHeadLocation({}, ...) rotation mode offset {}", getName(), location, rotationModeOffset);
+            if (!quiet) {
+                Logger.trace("{}.toHeadLocation({}, ...) rotation mode offset {}", getName(), location, rotationModeOffset);
+            }
         }
         // Apply runout compensation.
         // Check SuppressCompensation, in that case disable nozzle calibration
@@ -504,7 +507,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
                 Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
                 location = location.subtract(correctionOffset);
-                Logger.trace("{}.toHeadLocation({}, ...) runout compensation {}", getName(), location, correctionOffset);
+                if (!quiet) {
+                    Logger.trace("{}.toHeadLocation({}, ...) runout compensation {}", getName(), location, correctionOffset);
+                }
             }
         }
         return super.toHeadLocation(location, currentLocation, options);
