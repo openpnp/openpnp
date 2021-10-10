@@ -509,10 +509,24 @@ public class GcodeServer extends Thread {
                 AxesLocation axesGiven = AxesLocation.zero;
                 for (Axis axis : machine.getAxes()) {
                     if (axis instanceof ControllerAxis) {
-                        if (((ControllerAxis) axis).getDriver() == getDriver()) {
-                            String letter = ((ControllerAxis) axis).getLetter(); 
+                        ControllerAxis controllerAxis = (ControllerAxis) axis;
+                        if (controllerAxis.getDriver() == getDriver()) {
+                            String letter = controllerAxis.getLetter(); 
                             if (letter.isEmpty() || letter.length() > 1) {
-                                throw new Exception("Invalid letter on axis "+axis.getName());
+                                // We're in GcodeServer simulation on this machine. Provide some usual defaults.  
+                                if (axis.getName().equals("x") || axis.getName().equals("y") || axis.getName().equals("z") || axis.getName().equals("Z1")) {
+                                    controllerAxis.setLetter(axis.getName().toUpperCase().substring(0, 1));
+                                }
+                                else if (axis.getName().equals("C") || axis.getName().equals("C1")) {
+                                    controllerAxis.setLetter("A");
+                                }
+                                else if (axis.getName().equals("C2")) {
+                                    controllerAxis.setLetter("B");
+                                }
+                                else {
+                                    throw new Exception("Invalid letter on axis "+axis.getName());
+                                }
+                                letter = controllerAxis.getLetter(); 
                             }
                             GcodeWord axisWord = getLetterWord(letter.toCharArray()[0], commandWords);
                             if (axisWord != null) {
