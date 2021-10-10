@@ -34,7 +34,6 @@ import javax.swing.border.TitledBorder;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.MessageBoxes;
@@ -221,9 +220,6 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
-        DoubleConverter doubleConverter =
-                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-        DoubleConverter doubleConverterFine = new DoubleConverter("%f");
 
         addWrappedBinding(driver, "motionControlType", motionControlType, "selectedItem");
         addWrappedBinding(driver, "units", unitsCb, "selectedItem");

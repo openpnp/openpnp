@@ -513,8 +513,9 @@ public class GcodeServer extends Thread {
                         if (controllerAxis.getDriver() == getDriver()) {
                             String letter = controllerAxis.getLetter(); 
                             if (letter.isEmpty() || letter.length() > 1) {
-                                // We're in GcodeServer simulation on this machine. Provide some usual defaults.  
-                                if (axis.getName().equals("x") || axis.getName().equals("y") || axis.getName().equals("z") || axis.getName().equals("Z1")) {
+                                // We're in GcodeServer simulation on this machine. Provide some useful defaults.  
+                                if (axis.getName().equals("x") || axis.getName().equals("y") 
+                                        || axis.getName().toLowerCase().substring(0, 1).equals("z")) {
                                     controllerAxis.setLetter(axis.getName().toUpperCase().substring(0, 1));
                                 }
                                 else if (axis.getName().equals("C") || axis.getName().equals("C1")) {
