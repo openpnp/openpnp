@@ -515,7 +515,7 @@ public abstract class CalibrateCameraProcess {
                         for (int ptIdx=0; ptIdx<tp.size(); ptIdx++) {
                             double[] pt = tp.get(ptIdx);
                             testPattern3dPointsArray[tpIdx][ptIdx] = new double[] {
-                                    mirrored*pt[0], apparentMotionDirection*pt[1], 
+                                    mirrored * pt[0], apparentMotionDirection * pt[1], 
                                     calibrationHeights.get(tpIdx).
                                     convertToUnits(LengthUnit.Millimeters).getValue()};
                         }

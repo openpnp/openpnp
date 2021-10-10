@@ -329,72 +329,16 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Override
     public Location getHeadOffsets() {
-        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
-                advancedCalibration.isValid()) {
-            Head head = getHead();
-            if (head == null) {
-                //For fixed cameras, the head offset is the horizontal location of the 
-                //associated virtual camera and the vertical location set by auto focus
-                Location uncalibratedHeadOffsets = getUncalibratedHeadOffsets().convertToUnits(LengthUnit.Millimeters);
-                return new Location(LengthUnit.Millimeters, 
-                        advancedCalibration.getVectorFromMachToVirCamInMachRefFrame().get(0, 0)[0],
-                        advancedCalibration.getVectorFromMachToVirCamInMachRefFrame().get(1, 0)[0],
-                        uncalibratedHeadOffsets.getZ(), 0);
-            }
-            else {
-                //For movable cameras, the head offset is the location of the associated virtual
-                //camera relative to the default camera's associated virtual camera plus the default
-                //camera's uncalibrated head offset (which is usually zero)
-                ReferenceCamera defaultCamera = null;
-                try {
-                    defaultCamera = (ReferenceCamera)head.getDefaultCamera();
-                }
-                catch (Exception e) {
-                    if (e instanceof ClassCastException) {
-                        //TODO - need to figure out what to do if the default camera is not a 
-                        //ReferenceCamera - should advancedCalibration be moved to AbstractCamera???
-                    }
-                    Logger.trace(e);
-                }
-                if (defaultCamera != null && defaultCamera.getAdvancedCalibration().isValid()) {
-                    AdvancedCalibration defCameraAdvCal = defaultCamera.getAdvancedCalibration();
-                    Location defCameraUncalibratedHeadOffsets = defaultCamera.
-                            getUncalibratedHeadOffsets().convertToUnits(LengthUnit.Millimeters);
-                    Mat vectorFromDefaultVirCamToVirCamInMachRefFrame = new Mat();
-                    Core.subtract(advancedCalibration.getVectorFromMachToVirCamInMachRefFrame(), 
-                            defCameraAdvCal.getVectorFromMachToVirCamInMachRefFrame(), 
-                            vectorFromDefaultVirCamToVirCamInMachRefFrame);
-                    Location offset = new Location(LengthUnit.Millimeters,
-                            vectorFromDefaultVirCamToVirCamInMachRefFrame.get(0, 0)[0] + 
-                                defCameraUncalibratedHeadOffsets.getX(), 
-                            vectorFromDefaultVirCamToVirCamInMachRefFrame.get(1, 0)[0] + 
-                                defCameraUncalibratedHeadOffsets.getY(), 
-                            vectorFromDefaultVirCamToVirCamInMachRefFrame.get(2, 0)[0] + 
-                                defCameraUncalibratedHeadOffsets.getZ(),
-                            0);
-                    vectorFromDefaultVirCamToVirCamInMachRefFrame.release();
-                    return offset;
-                }
-            }
-        }
-        return headOffsets;
+        return headOffsets.add(advancedCalibration.getCalibratedOffsets());
     }
     
     @Override
     public void setHeadOffsets(Location headOffsets) {
-        this.headOffsets = headOffsets;
+        this.headOffsets = headOffsets.subtract(advancedCalibration.getCalibratedOffsets());
+        firePropertyChange("headOffsets", null, this.headOffsets);
         viewHasChanged();
     }
 
-    public Location getUncalibratedHeadOffsets() {
-        return headOffsets;
-    }
-    
-    public void setUncalibratedHeadOffsets(Location uncalibratedHeadOffsets) {
-        this.headOffsets = uncalibratedHeadOffsets;
-        viewHasChanged();
-    }
-    
     @Override
     public void home() throws Exception {
     }
@@ -627,7 +571,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
                 //Skip all the old style image transforms and distortion corrections except for 
                 //deinterlacing and cropping
-                if (isDeinterlaced() || isCropped() || advancedCalibration.isEnabled()) {
+                if (isDeinterlaced() || isCropped() || isWhiteBalanced() || advancedCalibration.isEnabled()) {
                     Mat mat = OpenCvUtils.toMat(image);
                     mat = deinterlace(mat);
                     mat = crop(mat);

@@ -916,7 +916,8 @@ public class CameraCalibrationUtils {
      * @return the virtual camera's intrinsic camera matrix
      */
     public static Mat computeVirtualCameraMatrix(Mat physicalCameraMatrix,
-            Mat distortionCoefficients, Mat rectification, Size size, double alpha,
+            Mat distortionCoefficients, Mat rectification, Size phyCamSize, Size virCamSize, 
+            double alpha,
             boolean keepPrincipalPoint) {
         Mat principalPoint = null;
         if (keepPrincipalPoint) {
@@ -938,7 +939,7 @@ public class CameraCalibrationUtils {
         }
 
         Mat ret = computeVirtualCameraMatrix(physicalCameraMatrix, distortionCoefficients,
-                rectification, size, alpha, principalPoint);
+                rectification, phyCamSize, virCamSize, alpha, principalPoint);
         principalPoint.release();
 
         return ret;
@@ -952,7 +953,8 @@ public class CameraCalibrationUtils {
      * @param distortionCoefficients - the physical camera's lens distortion coefficients
      * @param rectification - the rectification matrix that takes the physical camera points to the
      *        virtual camera points
-     * @param size - the physical camera's image size
+     * @param phyCamSize - the physical camera's image size
+     * @param virCamSize - (output) the virtual camera's image size
      * @param alpha - a free scaling parameter in the range 0 to 1 inclusive. A value of a zero
      *        ensures only valid image pixels are displayed but may result in the loss of some valid
      *        pixels around the edge of the image. A value of one ensure all valid pixels are
@@ -964,13 +966,13 @@ public class CameraCalibrationUtils {
      * @return the virtual camera's intrinsic camera matrix
      */
     public static Mat computeVirtualCameraMatrix(Mat physicalCameraMatrix,
-            Mat distortionCoefficients, Mat rectification, Size size, double alpha,
-            Mat principalPoint) {
+            Mat distortionCoefficients, Mat rectification, Size phyCamSize, Size virCamSize,
+            double alpha, Mat principalPoint) {
         // Generate a set of points around the outer perimeter of the distorted unrectifed image
         int numberOfPointsPerSide = 250;
         MatOfPoint2f distortedPoints = new MatOfPoint2f();
-        double xStep = (size.width - 1) / (numberOfPointsPerSide - 1);
-        double yStep = (size.height - 1) / (numberOfPointsPerSide - 1);
+        double xStep = (phyCamSize.width - 1) / (numberOfPointsPerSide - 1);
+        double yStep = (phyCamSize.height - 1) / (numberOfPointsPerSide - 1);
         for (int iSidePt = 0; iSidePt < numberOfPointsPerSide - 1; iSidePt++) {
             // down the left side
             distortedPoints.push_back(
@@ -978,10 +980,10 @@ public class CameraCalibrationUtils {
 
             // left-to-right across the bottom
             distortedPoints.push_back(
-                    new MatOfPoint2f(new org.opencv.core.Point(iSidePt * xStep, size.height - 1)));
+                    new MatOfPoint2f(new org.opencv.core.Point(iSidePt * xStep, phyCamSize.height - 1)));
 
             // up the right side
-            distortedPoints.push_back(new MatOfPoint2f(new org.opencv.core.Point(size.width - 1,
+            distortedPoints.push_back(new MatOfPoint2f(new org.opencv.core.Point(phyCamSize.width - 1,
                     (numberOfPointsPerSide - 1 - iSidePt) * yStep)));
 
             // right-to-left across the top
@@ -995,8 +997,6 @@ public class CameraCalibrationUtils {
         Calib3d.undistortPoints(distortedPoints, undistortedPoints, physicalCameraMatrix,
                 distortionCoefficients, rectification);
         distortedPoints.release();
-
-        double aspectRatio = size.height / size.width;
 
         boolean keepPrincipalPoint = false;
         double centerX = 0;
@@ -1016,9 +1016,8 @@ public class CameraCalibrationUtils {
             virCamPrincipalPoint.release();
         }
 
-        // First find the outer bounding rectangle (of the correct aspect ratio) that encloses all
-        // of
-        // the undistorted image. This corresponds to the edge of the image for alpha = 1. If the
+        // First find the outer bounding rectangle that encloses all
+        // of the undistorted image. This corresponds to the edge of the image for alpha = 1. If the
         // principal point was specified, the center of the bounding rectangle is placed at that
         // point and the rectangle is sized so that it just touches the boundary of the undistorted
         // image most distance from the center; otherwise, the center is placed such that the
@@ -1061,210 +1060,270 @@ public class CameraCalibrationUtils {
         double outerCenterX = (outerMaxX + outerMinX) / 2;
         double outerCenterY = (outerMaxY + outerMinY) / 2;
 
+        //Set the size of the virtual camera images to match the aspect ratio of the outer rectangle
+        //while keeping it within the size of the physical camera images
+        Size outerSize = new Size();
+        double outerAspectRatio = (outerMaxY - outerMinY) / (outerMaxX - outerMinX);
+        double maxPhyCamPixels = Math.max(phyCamSize.height, phyCamSize.width);
+        double minPhyCamPixels = Math.min(phyCamSize.height, phyCamSize.width);
+        if (outerAspectRatio >= 1) {
+            outerSize.width = Math.min(minPhyCamPixels, maxPhyCamPixels / outerAspectRatio);
+        }
+        else {
+            outerSize.width = Math.min(maxPhyCamPixels, minPhyCamPixels / outerAspectRatio);
+        }
+        outerSize.height = outerSize.width * outerAspectRatio;
+        
         // Compute the normalized coordinate to pixel scaling (this is the f terms in the intrinsic
         // camera matrix)
         double outerF;
-        if ((outerMaxY - outerMinY) / (outerMaxX - outerMinX) >= aspectRatio) {
+        if ((outerMaxY - outerMinY) / (outerMaxX - outerMinX) >= outerSize.height / outerSize.width) {
             // Constrained by the height
-            outerF = size.height / (outerMaxY - outerMinY);
+            outerF = outerSize.height / (outerMaxY - outerMinY);
         }
         else {
             // Constrained by the width
-            outerF = size.width / (outerMaxX - outerMinX);
+            outerF = outerSize.width / (outerMaxX - outerMinX);
         }
 
         // Compute the location of the normalized camera coordinate (0, 0, 1) in pixels relative to
         // the upper left corner of the image (the c terms in the intrinsic camera matrix)
-        double outerCx = (size.width - 1) / 2 - outerF * outerCenterX;
-        double outerCy = (size.height - 1) / 2 - outerF * outerCenterY;
+        double outerCx = (outerSize.width - 1) / 2 - outerF * outerCenterX;
+        double outerCy = (outerSize.height - 1) / 2 - outerF * outerCenterY;
 
-        // Now find the inscribed rectangle (of the correct aspect ratio) that just fits within the
-        // undistorted image. This corresponds to the edge of the image for alpha = 0. If the
-        // principal point was specified, the center of the rectangle is placed at that point and
-        // the rectangle is sized so that it just touches the edge of the undistorted image nearest 
-        // to the center; otherwise, the center of the rectangle is placed such that the inscribed
-        // rectangle is as large as possible but is still within the bounds of the undistorted
-        // image.
-        double innerMinX = Double.NEGATIVE_INFINITY;
-        double innerMaxX = Double.POSITIVE_INFINITY;
-        double innerMinY = Double.NEGATIVE_INFINITY;
-        double innerMaxY = Double.POSITIVE_INFINITY;
+        final double maxAspectRatio = 10.0;
+        final double minAspectRatio = 1/maxAspectRatio;
+        final int numberOfAspectRatios = 121;
+        final double aspectRatioStep = Math.pow(minAspectRatio, 1.0/(numberOfAspectRatios - 1));
+        
+        double innerAspectRatio;
+        double maxArea = 0;
+        double bestInnerHeight = 0;
+        double bestInnerWidth = 0;
+        Size bestInnerSize = new Size();
+        double bestInnerCenterX = 0;
+        double bestInnerCenterY = 0;
+        Size innerSize;
 
-        // To find the inscribed rectangle, the algorithm needs to start with a point that is
-        // interior to the undistorted and rectified image boundary. With almost any conceivable
-        // amount of distortion and rectification, the point at the intersection of the lines
-        // connecting opposite corners of the distorted image should fall within the interior.
-
-        // Get the four corner points
-        double x[] = new double[4];
-        double y[] = new double[4];
-        for (int i = 0; i < 4; i++) {
-            x[i] = undistortedPoints.get(i * numberOfPointsPerSide, 0)[0];
-            y[i] = undistortedPoints.get(i * numberOfPointsPerSide, 0)[1];
-        }
-
-        // Compute the intersection point of the lines connecting opposite corners and use that as
-        // the starting center point
-        double denom = (x[1] - x[3]) * y[0] - x[0] * (y[1] - y[3]) + x[2] * (y[1] - y[3])
-                - (x[1] - x[3]) * y[2];
-        double innerCenterX = ((x[1] - x[3]) * x[2] * y[0] - x[0] * (x[1] - x[3]) * y[2]
-                - (x[3] * y[1] - x[1] * y[3]) * x[0] + (x[3] * y[1] - x[1] * y[3]) * x[2]) / denom;
-        double innerCenterY = ((x[2] * (y[1] - y[3]) - x[3] * y[1] + x[1] * y[3]) * y[0]
-                - (x[0] * (y[1] - y[3]) - x[3] * y[1] + x[1] * y[3]) * y[2]) / denom;
-
-        // This is the angle from the center of the rectangle to one of its lower right corner
-        double angle = Math.atan2(size.height, size.width);
-
-        boolean fullyConstrained = false;
-        double maxWidth = 0;
-        double maxHeight = 0;
-
-        // Iterate until the rectangle is fully constrained (can't grow any larger)
-        while (!fullyConstrained) {
-            innerMinX = Double.NEGATIVE_INFINITY;
-            innerMaxX = Double.POSITIVE_INFINITY;
-            innerMinY = Double.NEGATIVE_INFINITY;
-            innerMaxY = Double.POSITIVE_INFINITY;
-
-            // Find the constraining point(s) of the rectangle. Note that all points need to be
-            // checked (not just the corners) because a side of the rectangle may be tangent to the
-            // boundary at some point between the corners. To do that, it is necessary to determine
-            // which side of the rectangle each point may constrain by checking the angle from the
-            // center of the rectangle to the point.
-            for (int i = 0; i < undistortedPoints.rows(); i++) {
-                double[] pt = undistortedPoints.get(i, 0);
-
-                // Angle from the center of the rectangle to the point (remember in this context
-                // angles are measured clock-wise since positive X is right and positive Y is down)
-                double ptAngle = Math.atan2(pt[1] - innerCenterY, pt[0] - innerCenterX);
-
-                // Make ptAngle in the range [-angle, 2*PI-angle)
-                if (ptAngle < -angle) {
-                    ptAngle += 2 * Math.PI;
-                }
-
-                if ((ptAngle >= -angle) && (ptAngle < angle)) {
-                    // right side
-                    if (pt[0] < innerMaxX) {
-                        innerMaxX = pt[0];
-                    }
-                }
-                else if ((ptAngle >= angle) && (ptAngle < Math.PI - angle)) {
-                    // bottom side
-                    if (pt[1] < innerMaxY) {
-                        innerMaxY = pt[1];
-                    }
-                }
-                else if ((ptAngle >= Math.PI - angle) && (ptAngle < Math.PI + angle)) {
-                    // left side
-                    if (pt[0] > innerMinX) {
-                        innerMinX = pt[0];
-                    }
-                }
-                else { // if ((ptAngle >= Math.PI + angle) && (ptAngle < 2*Math.PI - angle)) {
-                       // top side
-                    if (pt[1] > innerMinY) {
-                        innerMinY = pt[1];
-                    }
-                }
-            }
-
-            // At this point, if any of the limits are not finite, the assumption that the starting
-            // point was on the interior of the undistorted and rectified image boundary was
-            // invalid.
-            // In that case, just force the limits to valid values.
-            if (!Double.isFinite(innerMaxX) || !Double.isFinite(innerMinX)
-                    || !Double.isFinite(innerMaxY) || !Double.isFinite(innerMinY)) {
-                innerMaxX = innerCenterX + 1;
-                innerMinX = innerCenterX - 1;
-                innerMaxY = innerCenterY + 1;
-                innerMinY = innerCenterY - 1;
-            }
-
-            // If the principal point was specified, force the limits to be centered on that point
-            if (keepPrincipalPoint) {
-                double inner = Math.min(innerMaxX - centerX, centerX - innerMinX);
-                innerMaxX = centerX + inner;
-                innerMinX = centerX - inner;
-                inner = Math.min(innerMaxY - centerY, centerY - innerMinY);
-                innerMaxY = centerY + inner;
-                innerMinY = centerY - inner;
-            }
-
-            // Compute the offsets from the current rectangle center to the limit centers
-            double innerCenterOffsetX = (innerMaxX + innerMinX) / 2 - innerCenterX;
-            double innerCenterOffsetY = (innerMaxY + innerMinY) / 2 - innerCenterY;
-
-            double newHeight;
-            double newWidth;
-
-            // Make adjustments to the limits based on the aspect ratio
-            if ((innerMaxY - innerMinY) / (innerMaxX - innerMinX) >= aspectRatio) {
-                // Constrained by the width, can only move the rectangle up/down so center it
-                // between
-                // the Y limits
-                newWidth = innerMaxX - innerMinX;
-                newHeight = newWidth * aspectRatio;
-                innerMaxY = (innerMaxY + innerMinY) / 2 + newHeight / 2;
-                innerMinY = (innerMaxY + innerMinY) / 2 - newHeight / 2;
+        //Search all the inner aspect ratios from maxAspectRatio to minAspectRatio to find the one
+        //that maximizes the area of the inner rectangle (this is just a brute force search and 
+        //could probably be optimized using a golden section search if it ever becomes too time 
+        //consuming) 
+        for (int iAspectRatio=0; iAspectRatio<numberOfAspectRatios; iAspectRatio++) {
+            innerAspectRatio = maxAspectRatio * Math.pow(aspectRatioStep, 2*iAspectRatio);
+            
+            //Set the size of the virtual camera images to match the aspect ratio of the inner 
+            //rectangle while keeping it within the size of the physical camera images
+            innerSize = new Size();
+            if (innerAspectRatio >= 1) {
+                innerSize.width = Math.min(minPhyCamPixels, maxPhyCamPixels / innerAspectRatio);
             }
             else {
-                // Constrained by the height, can only move the rectangle left/right so center it
-                // between the X limits
-                newHeight = innerMaxY - innerMinY;
-                newWidth = newHeight / aspectRatio;
-                innerMaxX = (innerMaxX + innerMinX) / 2 + newWidth / 2;
-                innerMinX = (innerMaxX + innerMinX) / 2 - newWidth / 2;
+                innerSize.width = Math.min(maxPhyCamPixels, minPhyCamPixels / innerAspectRatio);
             }
-
-            // Move the center for the next possible iteration
-            innerCenterX += innerCenterOffsetX;
-            innerCenterY += innerCenterOffsetY;
-
-            // Check to see if the rectangle is fully constrained
-            fullyConstrained = (Math.abs(innerCenterOffsetX) < 0.0001)
-                    && (Math.abs(innerCenterOffsetY) < 0.0001);
-            if (newWidth > maxWidth) {
-                maxWidth = newWidth;
-                fullyConstrained = false;
+            innerSize.height = innerSize.width * innerAspectRatio;
+            
+            // Now find the inscribed rectangle (of the correct aspect ratio) that just fits within the
+            // undistorted image. This corresponds to the edge of the image for alpha = 0. If the
+            // principal point was specified, the center of the rectangle is placed at that point and
+            // the rectangle is sized so that it just touches the edge of the undistorted image nearest 
+            // to the center; otherwise, the center of the rectangle is placed such that the inscribed
+            // rectangle is as large as possible but is still within the bounds of the undistorted
+            // image.
+            double innerMinX = Double.NEGATIVE_INFINITY;
+            double innerMaxX = Double.POSITIVE_INFINITY;
+            double innerMinY = Double.NEGATIVE_INFINITY;
+            double innerMaxY = Double.POSITIVE_INFINITY;
+    
+            // To find the inscribed rectangle, the algorithm needs to start with a point that is
+            // interior to the undistorted and rectified image boundary. With almost any conceivable
+            // amount of distortion and rectification, the point at the intersection of the lines
+            // connecting opposite corners of the distorted image should fall within the interior.
+    
+            // Get the four corner points
+            double x[] = new double[4];
+            double y[] = new double[4];
+            for (int i = 0; i < 4; i++) {
+                x[i] = undistortedPoints.get(i * numberOfPointsPerSide, 0)[0];
+                y[i] = undistortedPoints.get(i * numberOfPointsPerSide, 0)[1];
             }
-            if (newHeight > maxHeight) {
-                maxHeight = newHeight;
-                fullyConstrained = false;
+    
+            // Compute the intersection point of the lines connecting opposite corners and use that as
+            // the starting center point
+            double denom = (x[1] - x[3]) * y[0] - x[0] * (y[1] - y[3]) + x[2] * (y[1] - y[3])
+                    - (x[1] - x[3]) * y[2];
+            double innerCenterX = ((x[1] - x[3]) * x[2] * y[0] - x[0] * (x[1] - x[3]) * y[2]
+                    - (x[3] * y[1] - x[1] * y[3]) * x[0] + (x[3] * y[1] - x[1] * y[3]) * x[2]) / denom;
+            double innerCenterY = ((x[2] * (y[1] - y[3]) - x[3] * y[1] + x[1] * y[3]) * y[0]
+                    - (x[0] * (y[1] - y[3]) - x[3] * y[1] + x[1] * y[3]) * y[2]) / denom;
+    
+            // This is the angle from the center of the rectangle its lower right corner
+            double angle = Math.atan(innerAspectRatio);
+    
+            boolean fullyConstrained = false;
+            double maxWidth = 0;
+            double maxHeight = 0;
+    
+            // Iterate until the rectangle is fully constrained (can't grow any larger)
+            while (!fullyConstrained) {
+                innerMinX = Double.NEGATIVE_INFINITY;
+                innerMaxX = Double.POSITIVE_INFINITY;
+                innerMinY = Double.NEGATIVE_INFINITY;
+                innerMaxY = Double.POSITIVE_INFINITY;
+    
+                // Find the constraining point(s) of the rectangle. Note that all points need to be
+                // checked (not just the corners) because a side of the rectangle may be tangent to the
+                // boundary at some point between the corners. To do that, it is necessary to determine
+                // which side of the rectangle each point may constrain by checking the angle from the
+                // center of the rectangle to the point.
+                for (int i = 0; i < undistortedPoints.rows(); i++) {
+                    double[] pt = undistortedPoints.get(i, 0);
+    
+                    // Angle from the center of the rectangle to the point (remember in this context
+                    // angles are measured clockwise since positive X is right and positive Y is down)
+                    double ptAngle = Math.atan2(pt[1] - innerCenterY, pt[0] - innerCenterX);
+    
+                    // Make ptAngle in the range [-angle, 2*PI-angle)
+                    if (ptAngle < -angle) {
+                        ptAngle += 2 * Math.PI;
+                    }
+    
+                    if ((ptAngle >= -angle) && (ptAngle < angle)) {
+                        // right side
+                        if (pt[0] < innerMaxX) {
+                            innerMaxX = pt[0];
+                        }
+                    }
+                    else if ((ptAngle >= angle) && (ptAngle < Math.PI - angle)) {
+                        // bottom side
+                        if (pt[1] < innerMaxY) {
+                            innerMaxY = pt[1];
+                        }
+                    }
+                    else if ((ptAngle >= Math.PI - angle) && (ptAngle < Math.PI + angle)) {
+                        // left side
+                        if (pt[0] > innerMinX) {
+                            innerMinX = pt[0];
+                        }
+                    }
+                    else { // if ((ptAngle >= Math.PI + angle) && (ptAngle < 2*Math.PI - angle)) {
+                           // top side
+                        if (pt[1] > innerMinY) {
+                            innerMinY = pt[1];
+                        }
+                    }
+                }
+    
+                // At this point, if any of the limits are not finite, the assumption that the starting
+                // point was on the interior of the undistorted and rectified image boundary was
+                // invalid. In that case, just force the limits to valid values.
+                if (!Double.isFinite(innerMaxX) || !Double.isFinite(innerMinX)
+                        || !Double.isFinite(innerMaxY) || !Double.isFinite(innerMinY)) {
+                    innerMaxX = innerCenterX + 1;
+                    innerMinX = innerCenterX - 1;
+                    innerMaxY = innerCenterY + 1;
+                    innerMinY = innerCenterY - 1;
+                }
+    
+                // If the principal point was specified, force the limits to be centered on that point
+                if (keepPrincipalPoint) {
+                    double inner = Math.min(innerMaxX - centerX, centerX - innerMinX);
+                    innerMaxX = centerX + inner;
+                    innerMinX = centerX - inner;
+                    inner = Math.min(innerMaxY - centerY, centerY - innerMinY);
+                    innerMaxY = centerY + inner;
+                    innerMinY = centerY - inner;
+                }
+    
+                // Compute the offsets from the current rectangle center to the limit centers
+                double innerCenterOffsetX = (innerMaxX + innerMinX) / 2 - innerCenterX;
+                double innerCenterOffsetY = (innerMaxY + innerMinY) / 2 - innerCenterY;
+    
+                double newHeight;
+                double newWidth;
+    
+                // Make adjustments to the limits based on the aspect ratio
+                if ((innerMaxY - innerMinY) / (innerMaxX - innerMinX) >= innerAspectRatio) {
+                    // Constrained by the width, can only move the rectangle up/down so center it
+                    // between
+                    // the Y limits
+                    newWidth = innerMaxX - innerMinX;
+                    newHeight = newWidth * innerAspectRatio;
+                    innerMaxY = (innerMaxY + innerMinY) / 2 + newHeight / 2;
+                    innerMinY = (innerMaxY + innerMinY) / 2 - newHeight / 2;
+                }
+                else {
+                    // Constrained by the height, can only move the rectangle left/right so center it
+                    // between the X limits
+                    newHeight = innerMaxY - innerMinY;
+                    newWidth = newHeight / innerAspectRatio;
+                    innerMaxX = (innerMaxX + innerMinX) / 2 + newWidth / 2;
+                    innerMinX = (innerMaxX + innerMinX) / 2 - newWidth / 2;
+                }
+    
+                // Move the center for the next possible iteration
+                innerCenterX += innerCenterOffsetX;
+                innerCenterY += innerCenterOffsetY;
+    
+                // Check to see if the rectangle is fully constrained
+                fullyConstrained = (Math.abs(innerCenterOffsetX) < 0.0001)
+                        && (Math.abs(innerCenterOffsetY) < 0.0001);
+                if (newWidth > maxWidth) {
+                    maxWidth = newWidth;
+                    fullyConstrained = false;
+                }
+                if (newHeight > maxHeight) {
+                    maxHeight = newHeight;
+                    fullyConstrained = false;
+                }
             }
+            
+            //Of all the aspect ratios, keep the one with the largest area
+            double area = (innerMaxY - innerMinY) * (innerMaxX - innerMinX);
+            if (area > maxArea) {
+                maxArea = area;
+                bestInnerHeight = innerMaxY - innerMinY;
+                bestInnerWidth = innerMaxX - innerMinX;
+                bestInnerSize = innerSize;
+                bestInnerCenterX = innerCenterX;
+                bestInnerCenterY = innerCenterY;
+            }
+    
         }
         undistortedPoints.release();
-
+        
         double innerF;
-
+        
         // Compute the scaling from normalized coordinates to pixels (this is the f terms in the
         // intrinsic camera matrix)
-        if ((innerMaxY - innerMinY) / (innerMaxX - innerMinX) >= aspectRatio) {
+        if (bestInnerHeight / bestInnerWidth >= bestInnerSize.height / bestInnerSize.width) {
             // Constrained by the width
-            innerF = size.width / (innerMaxX - innerMinX);
+            innerF = bestInnerSize.width / bestInnerWidth;
         }
         else {
             // Constrained by the height
-            innerF = size.height / (innerMaxY - innerMinY);
+            innerF = bestInnerSize.height / bestInnerHeight;
         }
 
         // Compute the location of the normalized camera coordinate (0, 0, 1) in pixels relative to
         // the upper left corner of the image (these are the c terms in the intrinsic camera matrix)
-        double innerCx = (size.width - 1) / 2 - innerF * innerCenterX;
-        double innerCy = (size.height - 1) / 2 - innerF * innerCenterY;
+        double innerCx = (bestInnerSize.width - 1) / 2 - innerF * bestInnerCenterX;
+        double innerCy = (bestInnerSize.height - 1) / 2 - innerF * bestInnerCenterY;
 
         // Interpolate to the desired alpha value
         double f = outerF * alpha + innerF * (1 - alpha);
         double cx = outerCx * alpha + innerCx * (1 - alpha);
         double cy = outerCy * alpha + innerCy * (1 - alpha);
-        
+        virCamSize.height = outerSize.height * alpha + bestInnerSize.height * (1 - alpha);
+        virCamSize.width = outerSize.width * alpha + bestInnerSize.width * (1 - alpha);
+
         // Populate the virtual camera matrix
         Mat ret = Mat.eye(3, 3, CvType.CV_64FC1); //needs a 1 in the lower right corner
         ret.put(0, 0, f);
         ret.put(0, 2, cx);
         ret.put(1, 1, f);
         ret.put(1, 2, cy);
-
+        
         return ret;
     }
 

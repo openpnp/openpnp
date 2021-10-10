@@ -34,6 +34,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -129,6 +130,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
 
     @Attribute(required = false)
     private double apparentMotionDirection = 1;
+    
+    @Element(required = false)
+    private Location calibratedOffsets = new Location(LengthUnit.Millimeters);
     
 
     private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
@@ -639,6 +643,25 @@ public class AdvancedCalibration extends LensCalibrationParams {
     }
 
     /**
+     * @return the calibratedOffsets
+     */
+    public Location getCalibratedOffsets() {
+        if (overridingOldTransformsAndDistortionCorrectionSettings && isEnabled()) {
+            return calibratedOffsets;
+        }
+        return new Location(LengthUnit.Millimeters);
+    }
+
+    /**
+     * @param calibratedOffsets the calibratedOffsets to set
+     */
+    public void setCalibratedOffsets(Location calibratedOffsets) {
+        Location oldValue = this.calibratedOffsets;
+        this.calibratedOffsets = calibratedOffsets;
+        firePropertyChange("calibratedOffsets", oldValue, calibratedOffsets);
+    }
+
+    /**
      * @return the trialStep
      */
     public Length getTrialStep() {
@@ -906,6 +929,16 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Logger.trace("transformFromMachToPhyCamRefFrame = " + 
                 transformFromMachToPhyCamRefFrame.dump());
         
+        Mat flipper = Mat.eye(3, 3, CvType.CV_64FC1);
+        flipper.put(0, 0, -mirrored);
+        flipper.put(1, 1, -apparentMotionDirection);
+        Logger.trace("flipper = " + 
+                flipper.dump());
+        Core.gemm(transformFromMachToPhyCamRefFrame, flipper, 1, flipper, 0, transformFromMachToPhyCamRefFrame);
+        flipper.release();
+        Logger.trace("transformFromMachToPhyCamRefFrame = " + 
+                transformFromMachToPhyCamRefFrame.dump());
+        
         //Compute the physical camera's rotational errors WRT the machine axis (ignoring any 
         //multiples of 90 degrees)
         Mat rot90s = Mat.zeros(3, 3, CvType.CV_64FC1);
@@ -949,8 +982,8 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Mat b = Mat.zeros(numberOfTestPatterns, 2, CvType.CV_64FC1);
         for (int i=0; i<numberOfTestPatterns; i++) {
             x.put(i, 0, testPattern3dPoints[i][0][2]);
-            b.put(i, 0, cameraParams[13+2*i]);
-            b.put(i, 1, cameraParams[14+2*i]);
+            b.put(i, 0, mirrored * cameraParams[13+2*i]);
+            b.put(i, 1, apparentMotionDirection * cameraParams[14+2*i]);
         }
         //linearFit: top row slopes, bottom row intercepts,
         //left column x fit, right column y fit
@@ -986,40 +1019,30 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Logger.trace("unitVectorPhyCamZInMachRefFrame = " + 
                 unitVectorPhyCamZInMachRefFrame.dump());
         
-        Mat unitVectorMachZInPhyCamRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
-        Core.gemm(transformFromMachToPhyCamRefFrame, unitZ, 1, unitZ, 0, 
-                unitVectorMachZInPhyCamRefFrame);
-        unitZ.release();
-        Logger.trace("unitVectorMachZInPhyCamRefFrame = " + 
-                unitVectorMachZInPhyCamRefFrame.dump());
-        
         //Compute the Z offset from the camera to the primary Z plane
         double cameraToZPlane = primaryZ - vectorFromMachToPhyCamInMachRefFrame.get(2, 0)[0];
         Logger.trace("cameraToZPlane = " + cameraToZPlane);
         
-        Mat vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
-        Core.multiply(unitVectorMachZInPhyCamRefFrame, 
-                new Scalar(cameraToZPlane/unitVectorMachZInPhyCamRefFrame.get(2, 0)[0]), 
-                vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame);
-        Logger.trace("vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame = " + 
-                vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame.dump());
+        //This is the camera's vertical ray
+        Mat vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
+        Core.multiply(unitZ, new Scalar(cameraToZPlane), 
+                vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame);
+        unitZ.release();
+        Logger.trace("vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame = " + 
+                vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame.dump());
         
-        //Normalize the vector to find the desired principal point
-        Core.multiply(vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame, 
-                new Scalar(1.0/vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame.get(2, 0)[0]), 
+        //Transform to physical camera reference frame and normalize to find the desired principal point
+        Core.gemm(transformFromMachToPhyCamRefFrame, 
+                vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame, 1,
+                vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame, 0,
+                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame);
+        vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame.release();
+        Core.multiply(vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame, 
+                new Scalar(1.0/vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.get(2, 0)[0]), 
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame);
         Logger.trace("vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame = " + 
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.dump());
-
-        Mat vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
-        Core.gemm(transformFromMachToPhyCamRefFrame.t(), 
-                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame, 1, 
-                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame, 0, 
-                vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame);
-        Logger.trace("vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame = " + 
-                vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame.dump());
-        vectorFromPhyCamToDesiredPrincipalPointInMachRefFrame.release();
-
+        
         Mat vectorFromPhyCamToPrimaryZPrincipalPointInMachRefFrame = Mat.zeros(3, 1, 
                 CvType.CV_64FC1);
         Core.multiply(unitVectorPhyCamZInMachRefFrame, 
@@ -1034,21 +1057,19 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Logger.trace("absoluteCameraToPrimaryZPrincipalPointDistance = " +
                 absoluteCameraToPrimaryZPrincipalPointDistance);
         
-        //The virtual camera is centered directly above where the physical camera's Z axis 
-        //intersects the primary Z plane and looks straight down orthogonal to the machine's X-Y 
-        //plane. This may be intuitive for top cameras, but this is also desired for bottom cameras
-        //as this will make the image of the bottom of a part held by the nozzle look as if it were
-        //taken from above through the top of the part by an x-ray camera (which is exactly what is
-        //desired).
-        Core.gemm(transformFromMachToPhyCamRefFrame.t(), 
-                vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame, 1.0, 
-                vectorFromMachToPhyCamInMachRefFrame, 1.0, vectorFromMachToVirCamInMachRefFrame);
-        vectorFromPhyCamToPrimaryZPlaneInPhyCamRefFrame.release();
+        //The virtual camera is centered directly above the physical camera and looks straight
+        //down orthogonal to the machine's X-Y plane. This may be intuitive for top cameras, but 
+        //this is also desired for bottom cameras as this will make the image of the bottom of a 
+        //part held by the nozzle look as if it were taken from above through the top of the part by
+        //an x-ray camera (which is exactly what is desired).
+        vectorFromMachToVirCamInMachRefFrame.release();
+        vectorFromMachToVirCamInMachRefFrame = vectorFromMachToPhyCamInMachRefFrame.clone();
         vectorFromMachToVirCamInMachRefFrame.put(2, 0, 
                 primaryZ + absoluteCameraToPrimaryZPrincipalPointDistance);
         Logger.trace("vectorFromMachToVirCamInMachRefFrame = " + 
                 vectorFromMachToVirCamInMachRefFrame.dump());
         
+
         //The virtual camera is oriented with its X-axis perfectly aligned with the machine's 
         //X-axis and its Y and Z-axis in the exact opposite direction of the machine's respective Y 
         //and Z-axis).
@@ -1065,25 +1086,34 @@ public class AdvancedCalibration extends LensCalibrationParams {
         transformFromMachToPhyCamRefFrame.release();
         transformFromMachToVirCamRefFrame.release();
         Logger.trace("rectification = " + rectificationMatrix.dump());
-
-        virtualCameraMatrix = CameraCalibrationUtils.computeVirtualCameraMatrix(cameraMatrix, 
-                distortionCoefficients, rectificationMatrix, size, alphaPercent / 100.0, 
-                vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame);
     }
     
+    /**
+     * Initializes the tables used to map the pixels from the distorted/rotated images to the 
+     * undistorted images
+     * @param size - size of the physical camera images
+     * @param undistortionMap1 - output X pixel mapping
+     * @param undistortionMap2 - output Y pixel mapping
+     */
     public void initUndistortRectifyMap(Size size, Mat undistortionMap1, Mat undistortionMap2) {
+        Size virCamSize = new Size();
         virtualCameraMatrix = CameraCalibrationUtils.computeVirtualCameraMatrix(cameraMatrix, 
-                distortionCoefficients, rectificationMatrix, size, alphaPercent / 100.0, 
+                distortionCoefficients, rectificationMatrix, size, virCamSize, alphaPercent / 100.0, 
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame);
         Logger.trace("virtualCameraMatrix = " + virtualCameraMatrix.dump());
 
         Calib3d.initUndistortRectifyMap(cameraMatrix,
-            distortionCoefficients, rectificationMatrix,
-            virtualCameraMatrix, size, CvType.CV_32FC1,
-            undistortionMap1, undistortionMap2);
+                distortionCoefficients, rectificationMatrix,
+                virtualCameraMatrix, virCamSize, CvType.CV_32FC1,
+                undistortionMap1, undistortionMap2);
     }
     
-
+    /**
+     * Gets the distance to the camera from the point at the intersection of the camera's principal
+     * axis and the plane at the specified zHeight
+     * @param zHeight - the specified Z height
+     * @return the distance
+     */
     public Length getDistanceToCameraAtZ(Length zHeight) {
         double z = zHeight.convertToUnits(LengthUnit.Millimeters).getValue();
         
@@ -1100,4 +1130,28 @@ public class AdvancedCalibration extends LensCalibrationParams {
         return new Length(distance, LengthUnit.Millimeters).convertToUnits(zHeight.getUnits());
     }
 
+    /**
+     * Gets the offset from the physical camera to the intersection of the camera's Z axis and the 
+     * horizontal plane at zHeight
+     * @param zHeight - the height of the horizontal plane
+     * @return the offset
+     */
+    public Location getCameraOffsetAtZ(Length zHeight) {
+        double z = zHeight.convertToUnits(LengthUnit.Millimeters).getValue();
+        
+        double cameraToZPlane = z - vectorFromMachToPhyCamInMachRefFrame.get(2, 0)[0];
+        
+        Mat vectorPhyCamToPointInMachRefFrame = Mat.zeros(3, 1, CvType.CV_64FC1);
+        Core.multiply(unitVectorPhyCamZInMachRefFrame, 
+                new Scalar(cameraToZPlane/unitVectorPhyCamZInMachRefFrame.get(2, 0)[0]), 
+                vectorPhyCamToPointInMachRefFrame);
+        
+        Location ret = new Location(LengthUnit.Millimeters,
+                vectorPhyCamToPointInMachRefFrame.get(0, 0)[0],
+                vectorPhyCamToPointInMachRefFrame.get(1, 0)[0], 
+                vectorPhyCamToPointInMachRefFrame.get(2, 0)[0], 0);
+        vectorPhyCamToPointInMachRefFrame.release();
+        
+        return ret;
+    }
 }

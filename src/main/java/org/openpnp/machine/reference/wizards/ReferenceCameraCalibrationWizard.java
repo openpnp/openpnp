@@ -158,9 +158,12 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         if (isMovable) {
             primaryZ = ((ReferenceHead) referenceCamera.getHead()).getCalibrationPrimaryFiducialLocation().getLengthZ();
             secondaryZ = ((ReferenceHead) referenceCamera.getHead()).getCalibrationSecondaryFiducialLocation().getLengthZ();
+            if (referenceCamera.getDefaultZ() == null) {
+                referenceCamera.setDefaultZ(primaryZ);
+            }
         }
         else {
-            primaryZ = referenceCamera.getUncalibratedHeadOffsets().getLengthZ();
+            primaryZ = referenceCamera.getHeadOffsets().getLengthZ();
             referenceCamera.setDefaultZ(primaryZ);
             if (advancedCalibration.getSavedTestPattern3dPointsList() != null && advancedCalibration.getSavedTestPattern3dPointsList().length >= 2) {
                 secondaryZ = new Length(advancedCalibration.getSavedTestPattern3dPointsList()[1][0][2], LengthUnit.Millimeters);
@@ -473,6 +476,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "correction settings.  Disable this and no calibration will be applied (raw "
                 + "images will be displayed).");
         chckbxEnable.setEnabled(advancedCalibration.isValid());
+        chckbxEnable.addActionListener(enableAction);
         panelCameraCalibration.add(chckbxEnable, "2, 34");
         
         sliderAlpha = new JSlider();
@@ -851,6 +855,14 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         @Override
         public void actionPerformed(ActionEvent e) {
             enableControls(chckbxAdvancedCalOverride.isSelected());
+            referenceCamera.setHeadOffsets(referenceCamera.getHeadOffsets());
+        }
+    };
+    
+    private Action enableAction = new AbstractAction("Enable Calibration") {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            referenceCamera.setHeadOffsets(referenceCamera.getHeadOffsets());
         }
     };
     
@@ -865,20 +877,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         @Override
         public void actionPerformed(ActionEvent e) {
             Logger.trace("thread = " + Thread.currentThread());
-            
-            ReferenceCamera defaultCamera = null;
-            try {
-                defaultCamera = (ReferenceCamera) referenceCamera.getHead().getDefaultCamera();
-            }
-            catch (Exception ex) {
-                //TODO - what do we do if the default camera is not a ReferenceCamera???
-            }
-            if (isMovable && (referenceCamera != defaultCamera) && 
-                    !defaultCamera.getAdvancedCalibration().isValid()) {
-                MessageBoxes.errorBox(MainFrame.get(), "Default Camera Not Calibrated", 
-                        "The default camera on this head must be calibrated first.");
-                return;
-            }
             
             startCameraCalibrationBtn.setEnabled(false);
 
@@ -938,6 +936,19 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                                 
                                 spinnerModel.setList(calibrationHeightSelections);
                                 
+                                Location calibratedOffsets = new Location(LengthUnit.Millimeters, 
+                                        advancedCalibration.getVectorFromMachToVirCamInMachRefFrame().get(0, 0)[0],
+                                        advancedCalibration.getVectorFromMachToVirCamInMachRefFrame().get(1, 0)[0],
+                                        0, 0);
+                                if (isMovable) {
+                                    calibratedOffsets = calibratedOffsets.subtract(((ReferenceHead) referenceCamera.getHead()).getCalibrationPrimaryFiducialLocation().derive(null, null, 0.0, 0.0));
+                                    calibratedOffsets = calibratedOffsets.subtract(advancedCalibration.getCameraOffsetAtZ(((ReferenceHead) referenceCamera.getHead()).getCalibrationPrimaryFiducialLocation().getLengthZ()).derive(null, null, 0.0, 0.0));
+                                }
+                                else {
+                                    calibratedOffsets = calibratedOffsets.subtract(referenceCamera.getHeadOffsets());
+                                }
+                                advancedCalibration.setCalibratedOffsets(calibratedOffsets);
+                                
                                 advancedCalibration.setValid(true);
                                 advancedCalibration.setEnabled(true);
                                 chckbxEnable.setSelected(true);
@@ -979,9 +990,23 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             }
             else {
                 try {
+                    referenceCamera.captureTransformed(); //force image width and height to be recomputed
                     referenceCamera.getAdvancedCalibration().processRawCalibrationData(
                             new Size(referenceCamera.getWidth(), referenceCamera.getHeight()));
                 
+                    Location calibratedOffsets = new Location(LengthUnit.Millimeters, 
+                            advancedCalibration.getVectorFromMachToVirCamInMachRefFrame().get(0, 0)[0],
+                            advancedCalibration.getVectorFromMachToVirCamInMachRefFrame().get(1, 0)[0],
+                            0, 0);
+                    if (isMovable) {
+                        calibratedOffsets = calibratedOffsets.subtract(((ReferenceHead) referenceCamera.getHead()).getCalibrationPrimaryFiducialLocation().derive(null, null, 0.0, 0.0));
+                        calibratedOffsets = calibratedOffsets.subtract(advancedCalibration.getCameraOffsetAtZ(((ReferenceHead) referenceCamera.getHead()).getCalibrationPrimaryFiducialLocation().getLengthZ()).derive(null, null, 0.0, 0.0));
+                    }
+                    else {
+                        calibratedOffsets = calibratedOffsets.subtract(referenceCamera.getHeadOffsets());
+                    }
+                    advancedCalibration.setCalibratedOffsets(calibratedOffsets);
+                    
                     advancedCalibration.setValid(true);
                     advancedCalibration.setEnabled(true);
                     chckbxEnable.setSelected(true);
@@ -1014,15 +1039,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             if (!sliderAlpha.getValueIsAdjusting()) {
                 int alphaPercent = (int)sliderAlpha.getValue();
                 advancedCalibration.setAlphaPercent(alphaPercent);
-                advancedCalibration.setVirtualCameraMatrix(
-                    CameraCalibrationUtils.computeVirtualCameraMatrix(
-                        advancedCalibration.getCameraMatrixMat(), 
-                        advancedCalibration.getDistortionCoefficientsMat(),
-                        advancedCalibration.getRectificationMatrix(), 
-                        new Size(referenceCamera.getWidth(), referenceCamera.getHeight()), 
-                        alphaPercent / 100.0, 
-                        advancedCalibration.
-                            getVectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame()));
                 referenceCamera.clearCalibrationCache();
                 updateDiagnosticsDisplay();
             }
@@ -1036,6 +1052,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             textFieldXOffset.setText((new LengthCellValue(headOffsets.getLengthX())).toString());
             textFieldYOffset.setText((new LengthCellValue(headOffsets.getLengthY())).toString());
             textFieldZOffset.setText((new LengthCellValue(headOffsets.getLengthZ())).toString());
+            referenceCamera.setHeadOffsets(headOffsets);
             
             Location upp = referenceCamera.getUnitsPerPixel(referenceCamera.getDefaultZ()).
                     convertToUnits(smallDisplayUnits);
