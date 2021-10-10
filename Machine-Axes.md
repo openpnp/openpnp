@@ -67,6 +67,8 @@ The respective Limit is only enforced if **Enabled?** is selected.
 
 ![Position to Axis Limit](https://user-images.githubusercontent.com/9963310/95889714-0e7ecd00-0d83-11eb-8945-e49f43e80d5b.png) Use the **Position** button to move the axis to its current limit. 
 
+**Note:** Soft Limits are enforced before [[Backlash Compensation]], i.e. the controller might still be directed to go slightly beyond the soft limits for the backlash offset. If there are physical limit switches or other means enforcing hard limits, please choose soft limits that allow for the extra offsets. 
+
 Within the soft limits, you can define the **Safe Zone Low** and **Safe Zone High** limits. This is mandatory for the Z axis, to define the so-called **Safe Z**. To avoid collisions with anything on the machine table, Nozzles (and other so-called Head-Mountables) are lifted to **Safe Z** before the Head is allowed to move in X and Y (or C). 
 
 The **Safe Zone** can be the same value for **Low** and **High**, defining a single **Safe Z** height. Or it can be a range, to give OpenPnP more freedom to optimize its operation. 
@@ -75,11 +77,11 @@ Multi-nozzle machines often share one physical Z axis to make two Nozzles move i
 
 If your machine is already setup, you can revisit the Z axis and optimize. The Nozzles may have a lot of Z headroom, i.e. it is quite slow to move them all the way to the balance-point. So you can choose individual **Safe Z** heights for the Nozzles and set them as the **Safe Zone Low** and **High** limits respectively (you will see which is which when you Jog them up and down). OpenPnP is then free to optimize and only lift the nozzle up as far as needed. But be prepared for the laid-back "hang loose" motion style ;-) 
 
-If there is a switch of nozzles (one going up, move in X/Y, the _other_ going down), OpenPnP will even exploit the time in transit to move the Z axis over to the _other_ limit of the Safe Zone, readying the _other_ Nozzle at the exit point for the quickest/shortest descent to the target location.  
+Inside a job, when OpenPnP switches from one nozzle to the next (one nozzle going up, move in X/Y, the _other_ going down), OpenPnP will even exploit the time in transit to move the Z axis over to the _other_ limit of the Safe Zone, readying the _other_ Nozzle at the exit point for the quickest/shortest descent to the target location.  
 
 The other linear axes (X, Y) may also have a limited **Safe Zone**. If you combine the Safe Zone out of all the axes, you get a box in space that is considered safe for any motion (no collisions). Inside that box, OpenPnP is free to do any motion. This is exploited for [[Advanced-Motion-Control]]. 
 
-Note: if a Safe Zone Limit is not defined (**Enabled?** switches off), it is considered unlimited, i.e. _any_ position is considered safe, as long as the other axes are (i.e. at least the Z axis) are in their respective Safe Zones . 
+**Note:** if a Safe Zone Limit is not defined (**Enabled?** switches off), it is considered unlimited, i.e. _any_ position is considered safe, as long as the other axes are (i.e. at least the Z axis) are in their respective Safe Zones. 
 
 ### Kinematic Settings / Rate Limits
 
