@@ -156,30 +156,27 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
             case LimitedArticulation:
                 double [] rotationLimits = getRotationModeLimits();
                 double articulation = rotationLimits[1] - rotationLimits[0];
-                double epsilon = 1e-5;
-                if (articulation < 360.0 - epsilon) {
-                    // Axis has limited articulation. 
-                    double pickToPlaceRotation = Utils2D.angleNorm(placementLocation.getRotation() - pickLocation.getRotation(), 180.0);
-                    // Allow for an additional 45° for alignment on the pick-to-place rotation. 
-                    double maximumRotation = pickToPlaceRotation + Math.signum(pickToPlaceRotation)*45;
-                    double angleStart;
-                    if (Math.abs(maximumRotation) < articulation) {
-                        // The needed rotation is lower than the available articulation, therefore limit it 
-                        // around the mid-point. 
-                        double midPoint = (rotationLimits[0] + rotationLimits[1])*0.5;
-                        angleStart = midPoint - maximumRotation*0.5;
-                    }
-                    else if (pickToPlaceRotation > 0) {
-                        // A positive rotation is wanted. Start at the axis lower limit.
-                        angleStart = rotationLimits[0];
-                    }
-                    else {
-                        // A negative rotation is wanted. Start at the axis higher limit.
-                        angleStart = rotationLimits[1];
-                    }
-                    newRotationModeOffset = 
-                            Utils2D.angleNorm(pickLocation.getRotation() - angleStart, 180);
+                // Axis has limited articulation, rotation is centered around the mid-range. 
+                double pickToPlaceRotation = Utils2D.angleNorm(placementLocation.getRotation() - pickLocation.getRotation(), 180.0);
+                // Allow for an additional 45° for alignment on the pick-to-place rotation. 
+                double maximumRotation = pickToPlaceRotation + Math.signum(pickToPlaceRotation)*45;
+                double angleStart;
+                if (Math.abs(maximumRotation) < articulation) {
+                    // The needed rotation is lower than the available articulation, therefore limit it 
+                    // around the mid-point. 
+                    double midPoint = (rotationLimits[0] + rotationLimits[1])*0.5;
+                    angleStart = midPoint - maximumRotation*0.5;
                 }
+                else if (pickToPlaceRotation > 0) {
+                    // A positive rotation is wanted. Start at the axis lower limit.
+                    angleStart = rotationLimits[0];
+                }
+                else {
+                    // A negative rotation is wanted. Start at the axis higher limit.
+                    angleStart = rotationLimits[1];
+                }
+                newRotationModeOffset = 
+                        Utils2D.angleNorm(pickLocation.getRotation() - angleStart, 180);
                 break;
         }
 
