@@ -1471,7 +1471,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     }
 
     public String getFirmwareConfiguration() {
-        return detectedFirmware+"\n\n"
+        return (detectedFirmware != null ? detectedFirmware : "")+"\n\n"
                 +(reportedAxes != null ? reportedAxes : "")+"\n\n"
                 +(configuredAxes != null ? configuredAxes : "");
     }

@@ -2,11 +2,13 @@ package org.openpnp.machine.reference.driver.wizards;
 
 import java.awt.Cursor;
 import java.awt.FileDialog;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -14,36 +16,43 @@ import java.io.FilenameFilter;
 import java.io.StringReader;
 import java.io.StringWriter;
 
-import javax.swing.*;
-import javax.swing.border.LineBorder;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver.MotionControlType;
-import org.openpnp.util.UiUtils;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.util.UiUtils;
 import org.simpleframework.xml.Serializer;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-
-import java.awt.SystemColor;
-import java.awt.event.ActionListener;
-import java.awt.Font;
 
 public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private final GcodeDriver driver;
@@ -172,9 +181,21 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
             public void actionPerformed(ActionEvent e) {
                 setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 firmwareConfiguration.setText("Detecting...");
-                SwingUtilities.invokeLater(() -> {
-                    UiUtils.messageBoxOnException(() -> driver.detectFirmware(false));
-                    setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
+                UiUtils.messageBoxOnException(() -> {
+                    if (machine.isEnabled()) {
+                        machine.execute(() -> {
+                            driver.detectFirmware(false);
+                            return true;
+                        });
+                    }
+                    else {
+                        // Use an ad hoc connection.
+                        driver.detectFirmware(false);
+                    }
+                    SwingUtilities.invokeLater(() -> {
+                        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                    });
                 });
             }
         });
@@ -199,9 +220,6 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
-        DoubleConverter doubleConverter =
-                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-        DoubleConverter doubleConverterFine = new DoubleConverter("%f");
 
         addWrappedBinding(driver, "motionControlType", motionControlType, "selectedItem");
         addWrappedBinding(driver, "units", unitsCb, "selectedItem");
