@@ -36,7 +36,7 @@ jobs:
       - name: Setup JDK 8 for Deployment
         uses: actions/setup-java@v1
         with:
-          java-version: 8
+          java-version: '8'
 
       - name: Build with Maven
         run: mvn -B package -DskipTests
