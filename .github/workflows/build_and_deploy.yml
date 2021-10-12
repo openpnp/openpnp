@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy
     needs: test
-    if: github.repository == 'openpnp/openpnp' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test')
+    if: github.repository == 'openpnp/openpnp' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test'|| github.ref == 'refs/heads/deploytest')
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
