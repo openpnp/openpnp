@@ -23,9 +23,11 @@ jobs:
 
       - name: Build Package with Maven
         if: ${{ matrix.java == 8 }} 
-        run: |
-          mvn -B package -DskipTests
-          java -jar `pwd -P`/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
+        run: mvn -B package -DskipTests
+        
+        name: Test Package
+        if: ${{ matrix.java == 8 }} 
+        run: java -jar `pwd -P`/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
 
       - name: Perform Tests with Maven
         run: mvn -B test
