@@ -30,7 +30,7 @@ jobs:
         run: |
           jar xf target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar META-INF/MANIFEST.MF
           cat META-INF/MANIFEST.MF
-          java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
+          java -Xdiag -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
 
       - name: Perform Tests with Maven
         run: mvn -B test
