@@ -28,7 +28,8 @@ jobs:
       - name: Test Package
         if: ${{ matrix.java == 8 }} 
         run: |
-          jar tf target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
+          jar xf target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar META-INF/INDEX.LIST
+          cat META-INF/INDEX.LIST
           java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
 
       - name: Perform Tests with Maven
