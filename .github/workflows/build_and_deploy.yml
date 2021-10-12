@@ -5,12 +5,31 @@ on:
   pull_request:
 
 jobs:
+  test8:
+    runs-on: ubuntu-latest
+    name: Test Default Platform
+    if: github.repository == 'openpnp/openpnp' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/test')
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Setup JDK 8 for Deployment
+        uses: actions/setup-java@v1
+        with:
+          java-version: '8'
+
+      - name: Build with Maven
+        run: |
+          mvn -B package
+          java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
+
   test:
     runs-on: ubuntu-latest
     name: Java ${{ matrix.java }}
+    needs: test8
     strategy:
       matrix:
-        java: [8, 9, 10, 11, 12, 13, 14, 15]
+        java: [9, 10, 11, 12, 13, 14, 15]
 
     steps:
       - name: Checkout Repo
