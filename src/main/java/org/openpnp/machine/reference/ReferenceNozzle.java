@@ -600,12 +600,16 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public void loadNozzleTip(NozzleTip nozzleTip) throws Exception {
-        // First of all make sure there is no rotation offset still applied.
-        setRotationModeOffset(null);
-
         if (this.nozzleTip == nozzleTip) {
             return;
         }
+
+        if (getPart() != null) {
+            throw new Exception("Nozzle "+getName()+" still has a part loaded. Please discard first.");
+        }
+
+        // Make sure there is no rotation offset still applied.
+        setRotationModeOffset(null);
 
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
 

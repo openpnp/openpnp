@@ -484,16 +484,20 @@ public class SimulationModeMachine extends ReferenceMachine {
 
                 if (hm instanceof Nozzle
                         && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
+                    // Need to convert to transformed (head) coordinates for real rotation:
+                    Location rotationLocation = hm.toTransformed(axesLocation, 
+                            LocationOption.SuppressStaticCompensation,
+                            LocationOption.SuppressDynamicCompensation);
+                    double rotation = rotationLocation.getRotation();
                     // Add Runout.
                     double runout = machine.getSimulatedRunout()
                             .convertToUnits(AxesLocation.getUnits()).getValue();
                     // Note, positive  phase shift is the positive shift of the curve which means the angle is subtracted,
                     // see: https://en.wikipedia.org/wiki/Phase_(waves)#General_definition  
                     //      ReferenceNozzleTipCalibration.ModelBasedRunoutCompensation.getRunout(double)
-                    double rotation = axesLocation.getCoordinate(mappedAxes.getAxis(Axis.Type.Rotation));
                     Location runoutVector = new Location(AxesLocation.getUnits(),
                             runout, 0, 0, 0)
-                            .rotateXy(rotation-machine.getSimulatedRunoutPhase());
+                            .rotateXy(rotation - machine.getSimulatedRunoutPhase());
                     axesLocation = axesLocation.add(mappedAxes.getTypedLocation(runoutVector)); 
                 }
 
