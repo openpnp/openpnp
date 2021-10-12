@@ -26,7 +26,7 @@ jobs:
         run: |
           mvn -B package -DskipTests
           pwd
-          ls lib
+          ls target/lib
           java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
           mvn -B test
 
