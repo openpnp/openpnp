@@ -21,17 +21,13 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
 
-      - name: Build with Maven
+      - name: Build Package with Maven
         if: ${{ matrix.java == 8 }} 
         run: |
           mvn -B package -DskipTests
-          pwd
-          ls target/lib
-          java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
-          mvn -B test
+          java -jar `pwd -P`/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
 
-      - name: Build with Maven
-        if: ${{ matrix.java != 8 }}
+      - name: Perform Tests with Maven
         run: mvn -B test
 
   deploy:
