@@ -27,7 +27,9 @@ jobs:
         
       - name: Test Package
         if: ${{ matrix.java == 8 }} 
-        run: java -jar `pwd -P`/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
+        run: |
+          jar tf target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
+          java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
 
       - name: Perform Tests with Maven
         run: mvn -B test
