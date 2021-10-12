@@ -84,7 +84,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
@@ -127,7 +127,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
@@ -171,7 +171,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
@@ -215,7 +215,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
@@ -258,7 +258,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
@@ -302,7 +302,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
@@ -346,7 +346,7 @@ public class ReferenceBottomVisionOffsetTest {
         };
         
         machine.setEnabled(true);
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
@@ -394,7 +394,7 @@ public class ReferenceBottomVisionOffsetTest {
         camera.setErrorOffsets(error);
         
         machine.setEnabled(true);
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
@@ -445,7 +445,7 @@ public class ReferenceBottomVisionOffsetTest {
         camera.setErrorOffsets(error);
 
         machine.setEnabled(true);
-        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
+        Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.07);
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
