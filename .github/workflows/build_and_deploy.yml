@@ -5,30 +5,12 @@ on:
   pull_request:
 
 jobs:
-  test8:
-    runs-on: ubuntu-latest
-    name: Test Default Platform
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-
-      - name: Setup JDK 8 for Deployment
-        uses: actions/setup-java@v1
-        with:
-          java-version: '8'
-
-      - name: Build with Maven
-        run: |
-          mvn -B package
-          java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
-
   test:
     runs-on: ubuntu-latest
     name: Java ${{ matrix.java }}
-    needs: test8
     strategy:
       matrix:
-        java: [9, 10, 11, 12, 13, 14, 15]
+        java: [8, 9, 10, 11, 12, 13, 14, 15]
 
     steps:
       - name: Checkout Repo
@@ -40,8 +22,15 @@ jobs:
           java-version: ${{ matrix.java }}
 
       - name: Build with Maven
+        if: ${{ matrix.java }} == 8
+        run: |
+          mvn -B package 
+          java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
+
+      - name: Build with Maven
+        if: ${{ matrix.java }} != 8
         run: mvn -B test
-        
+
   deploy:
     runs-on: ubuntu-latest
     name: Deploy
