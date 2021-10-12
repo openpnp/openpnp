@@ -246,7 +246,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         Location oldValue = this.headOffsets;
         this.headOffsets = headOffsets;
         firePropertyChange("headOffsets", oldValue, headOffsets);
-        Location offsetsDiff = headOffsets.subtract(oldValue).convertToUnits(LengthUnit.Millimeters);
         adjustHeadOffsetsDependencies(oldValue, headOffsets);
     }
 
@@ -493,6 +492,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
+        boolean quiet = Arrays.asList(options).contains(LocationOption.Quiet);
+        // Apply the rotationModeOffset.
+        if (rotationModeOffset != null) { 
+            location = location.subtractWithRotation(new Location(location.getUnits(), 0, 0, 0, rotationModeOffset));
+            if (!quiet) {
+                Logger.trace("{}.toHeadLocation({}, ...) rotation mode offset {}", getName(), location, rotationModeOffset);
+            }
+        }
         // Apply runout compensation.
         // Check SuppressCompensation, in that case disable nozzle calibration
         if (! Arrays.asList(options).contains(LocationOption.SuppressDynamicCompensation)) {
@@ -500,7 +507,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             if (calibrationNozzleTip != null && calibrationNozzleTip.getCalibration().isCalibrated(this)) {
                 Location correctionOffset = calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
                 location = location.subtract(correctionOffset);
-                Logger.trace("{}.toHeadLocation({}, ...) runout compensation {}", getName(), location, correctionOffset);
+                if (!quiet) {
+                    Logger.trace("{}.toHeadLocation({}, ...) runout compensation {}", getName(), location, correctionOffset);
+                }
             }
         }
         return super.toHeadLocation(location, currentLocation, options);
@@ -518,6 +527,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                         calibrationNozzleTip.getCalibration().getCalibratedOffset(this, location.getRotation());
                 location = location.add(offset);
             }
+        }
+        // Unapply the rotationModeOffset.
+        if (rotationModeOffset != null) { 
+            location = location.addWithRotation(new Location(location.getUnits(), 
+                    0, 0, 0, rotationModeOffset));
         }
         return location;
     }
@@ -589,20 +603,24 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (this.nozzleTip == nozzleTip) {
             return;
         }
-        
+
+        if (getPart() != null) {
+            throw new Exception("Nozzle "+getName()+" still has a part loaded. Please discard first.");
+        }
+
+        // Make sure there is no rotation offset still applied.
+        setRotationModeOffset(null);
 
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-       
-        // bert start
+
         Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
         Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
         Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
-        // bert stop
-        
+
         if (!getCompatibleNozzleTips().contains(nt)) {
             throw new Exception("Can't load incompatible nozzle tip.");
         }
-        
+
         if (nt.getNozzleAttachedTo() != null) {
             // Nozzle tip is on different nozzle - unload it from there first.  
             nt.getNozzleAttachedTo().unloadNozzleTip();
@@ -700,16 +718,23 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public void unloadNozzleTip() throws Exception {
+        if (getPart() != null) {
+            throw new Exception("Nozzle "+getName()+" still has a part loaded. Please discard first.");
+        }
+
+        // Make sure there is no rotation offset still applied.
+        setRotationModeOffset(null);
+
         if (nozzleTip == null) {
             return;
         }
 
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-        
+
         Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
         Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
         Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
-        
+
         if (!nt.isUnloadedNozzleTipStandin()) {
             Logger.debug("{}.unloadNozzleTip(): Start", getName());
 
@@ -858,10 +883,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     @Override
     public String toString() {
         return getName() + " " + getId();
-    }
-
-    protected ReferenceMachine getMachine() {
-        return (ReferenceMachine) Configuration.get().getMachine();
     }
 
     protected boolean isVaccumSenseActuatorEnabled() {

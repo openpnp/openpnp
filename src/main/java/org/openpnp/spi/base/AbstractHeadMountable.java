@@ -132,7 +132,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     protected CoordinateAxis getCoordinateAxisZ() {
         AbstractAxis zAxis = getAxisZ();
         if (zAxis != null) {
-            Machine machine = Configuration.get().getMachine();
+            Machine machine = getMachine();
             // Get the raw Z Axis.
             try {
                 return zAxis.getCoordinateAxes(machine).getAxis(Axis.Type.Z);
@@ -150,7 +150,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     protected Length rawToHeadMountableZ(ReferenceControllerAxis rawAxis, Length z) {
         // Get the raw location, and put z in it.
-        AxesLocation rawLocation = getMappedAxes(Configuration.get().getMachine())
+        AxesLocation rawLocation = getMappedAxes(getMachine())
                 .put(new AxesLocation(rawAxis, z));
         // Transform to Head coordinates.
         Location location = toTransformed(rawLocation);
@@ -165,7 +165,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         z = z.convertToUnits(location.getUnits());
         location = location.derive(null, null, z.getValue(), null);
         // Transform to Head coordinates.
-        location = toHeadLocation(location);
+        location = toHeadLocation(location, LocationOption.Quiet);
         // From Head to to raw coordinates.
         AxesLocation rawLocation = toRaw(location);
         return rawLocation.getLengthCoordinate(axisZ);
@@ -266,17 +266,17 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     @Override
     public void moveTo(Location location, MotionOption... options) throws Exception {
-        moveTo(location, getHead().getMachine().getSpeed(), options);
+        moveTo(location, getMachine().getSpeed(), options);
     }
 
     @Override
     public void moveToSafeZ() throws Exception {
-        moveToSafeZ(getHead().getMachine().getSpeed());
+        moveToSafeZ(getMachine().getSpeed());
     }
 
     @Override
     public void waitForCompletion(CompletionType completionType) throws Exception {
-        Machine machine = Configuration.get().getMachine();
+        Machine machine = getMachine();
         if (machine.isEnabled() && machine instanceof ReferenceMachine) {
             ((ReferenceMachine) machine)
                 .getMotionPlanner().waitForCompletion(getHead() == null ? null : this, completionType);
@@ -368,7 +368,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
 
     @Override
     public Location getLocation() {
-        AxesLocation axesLocation = getMappedAxes(Configuration.get().getMachine());
+        AxesLocation axesLocation = getMappedAxes(getMachine());
         Location location = toTransformed(axesLocation);
         // From head to HeadMountable.
         return toHeadMountableLocation(location);
@@ -415,7 +415,11 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
             location = substituteUnchangedCoordinates(location, getLocation());
             Location headLocation = toHeadLocation(location);
             AxesLocation axesLocation = toRaw(headLocation);
-            return (Configuration.get().getMachine().getMotionPlanner().isValidLocation(axesLocation));
+            return getMachine().getMotionPlanner().isValidLocation(this, axesLocation);
+    }
+
+    protected ReferenceMachine getMachine() {
+        return (ReferenceMachine) Configuration.get().getMachine();
     }
 
 }

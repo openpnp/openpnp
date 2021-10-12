@@ -43,7 +43,11 @@ public interface Locatable {
         /**
          * Replaces virtual coordinates with the head offset.
          */
-        ReplaceVirtual
+        ReplaceVirtual, 
+        /**
+         * Be quiet about transforms. 
+         */
+        Quiet
     }
 
     /**

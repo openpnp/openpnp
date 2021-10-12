@@ -21,7 +21,6 @@
 
 package org.openpnp.machine.reference.axis.wizards;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -38,6 +37,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DoubleConverter;
@@ -77,7 +78,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     protected NamedConverter<Driver> driverConverter;
     private JPanel panelKinematics;
     private JLabel lblFeedrates;
-    private JTextField feedratePerSecond;
+    private JTextField feedRatePerSecond;
     private JLabel lblAccelerations;
     private JTextField accelerationPerSecond2;
     private JLabel lblJerks;
@@ -106,7 +107,10 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private JButton btnPositionSafeZoneLow;
     private JButton btnCaptureSafeZoneHigh;
     private JButton btnPositionSafeZoneHigh;
-    private JLabel lblNotMmmin;
+    private JLabel lblFeedRatePerMinText;
+    private JTextField feedRatePerMin;
+
+    private boolean converting = false;
 
     private Action captureSoftLimitLowAction = new AbstractAction(null, Icons.captureAxisLow) {
         {
@@ -324,11 +328,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         panelControllerSettings.add(resolution, "4, 12, fill, default");
         resolution.setColumns(10);
 
-        lblLimitRotation = new JLabel("Limit to ±180°");
-        lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180°. ");
+        lblLimitRotation = new JLabel("Limit to Range");
+        lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180° or the custom Soft-Limits if enabled.");
         panelControllerSettings.add(lblLimitRotation, "2, 14, right, default");
 
         limitRotation = new JCheckBox("");
+        limitRotation.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                adaptDialog();
+            }
+        });
         panelControllerSettings.add(limitRotation, "4, 14");
 
         lblWrapAroundRotation = new JLabel("Wrap Around");
@@ -364,23 +373,23 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblSoftLimitLow = new JLabel("Soft Limit Low");
         panelKinematics.add(lblSoftLimitLow, "2, 2, right, default");
@@ -446,16 +455,81 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnCaptureSoftLimitHigh = new JButton(captureSoftLimitHighAction);
         panelKinematics.add(btnCaptureSoftLimitHigh, "10, 8");
 
-        lblFeedrates = new JLabel("Feedrate [/s]");
+        lblFeedrates = new JLabel("Feed Rate [/s]");
         panelKinematics.add(lblFeedrates, "2, 12, right, default");
 
-        feedratePerSecond = new JTextField();
-        panelKinematics.add(feedratePerSecond, "4, 12, fill, default");
-        feedratePerSecond.setColumns(10);
+        feedRatePerSecond = new JTextField();
+        panelKinematics.add(feedRatePerSecond, "4, 12, fill, default");
+        feedRatePerSecond.setColumns(10);
+        feedRatePerSecond.getDocument().addDocumentListener(new DocumentListener() {
+            LengthConverter lengthConverter = new LengthConverter();
+            public void changedUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                convert();
+            }
 
-        lblNotMmmin = new JLabel("Not [/min]");
-        lblNotMmmin.setForeground(Color.RED);
-        panelKinematics.add(lblNotMmmin, "6, 12");
+            public void convert() {
+                if (converting) { 
+                    return;
+                }
+                converting = true;
+                try {
+                    Length feedRate = lengthConverter.convertReverse(feedRatePerSecond.getText());
+                    feedRate = feedRate.multiply(Math.round(feedRate.getValue()*60)/feedRate.getValue());
+                    String feedRateText = lengthConverter.convertForward(feedRate);
+                    feedRatePerMin.setText(feedRateText);
+                }
+                catch (Exception e) {
+                    // silently ignore?
+                }
+                finally {
+                    converting = false;
+                }
+            }
+        });
+
+        lblFeedRatePerMinText = new JLabel("Feed Rate [/min]");
+        panelKinematics.add(lblFeedRatePerMinText, "6, 12, right, default");
+
+        feedRatePerMin = new JTextField();
+        panelKinematics.add(feedRatePerMin, "8, 12, 3, 1, left, default");
+        feedRatePerMin.setColumns(10);
+        feedRatePerMin.getDocument().addDocumentListener(new DocumentListener() {
+            LengthConverter lengthConverter = new LengthConverter();
+            public void changedUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                convert();
+            }
+
+            public void convert() {
+                if (converting) { 
+                    return;
+                }
+                converting = true;
+                try {
+                    Length feedRate = lengthConverter.convertReverse(feedRatePerMin.getText());
+                    feedRate = feedRate.divide(60);
+                    String feedRateText = lengthConverter.convertForward(feedRate);
+                    feedRatePerSecond.setText(feedRateText);
+                }
+                catch (Exception e) {
+                    // silently ignore?
+                }
+                finally {
+                    converting = false;
+                }
+            }
+        });
 
         lblAccelerations = new JLabel("Acceleration [/s²]");
         panelKinematics.add(lblAccelerations, "2, 14, right, default");
@@ -484,7 +558,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         Driver selectedDriver = driverConverter.convertReverse((String) driver.getSelectedItem());
         boolean showPreMove = (selectedDriver != null && selectedDriver.isSupportingPreMove());
         boolean showRotationSettings = type.getSelectedItem() == Type.Rotation;
-        boolean showCalibration = (type.getSelectedItem() == Type.X || type.getSelectedItem() == Type.Y);
+        boolean showSoftLimits = type.getSelectedItem() != Type.Rotation || limitRotation.isSelected();
         lblPremoveCommand.setVisible(showPreMove);
         scrollPane.setVisible(showPreMove);
 
@@ -493,16 +567,16 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         lblWrapAroundRotation.setVisible(showRotationSettings);
         wrapAroundRotation.setVisible(showRotationSettings);
 
-        lblSoftLimitLow.setVisible(!showRotationSettings);
-        lblSoftLimitHigh.setVisible(!showRotationSettings);
-        softLimitLow.setVisible(!showRotationSettings);
-        softLimitHigh.setVisible(!showRotationSettings);
-        softLimitLowEnabled.setVisible(!showRotationSettings);
-        softLimitHighEnabled.setVisible(!showRotationSettings);
-        btnCaptureSoftLimitLow.setVisible(!showRotationSettings);
-        btnCaptureSoftLimitHigh.setVisible(!showRotationSettings);
-        btnPositionSoftLimitLow.setVisible(!showRotationSettings);
-        btnPositionSoftLimitHigh.setVisible(!showRotationSettings);
+        lblSoftLimitLow.setVisible(showSoftLimits);
+        lblSoftLimitHigh.setVisible(showSoftLimits);
+        softLimitLow.setVisible(showSoftLimits);
+        softLimitHigh.setVisible(showSoftLimits);
+        softLimitLowEnabled.setVisible(showSoftLimits);
+        softLimitHighEnabled.setVisible(showSoftLimits);
+        btnCaptureSoftLimitLow.setVisible(showSoftLimits);
+        btnCaptureSoftLimitHigh.setVisible(showSoftLimits);
+        btnPositionSoftLimitLow.setVisible(showSoftLimits);
+        btnPositionSoftLimitHigh.setVisible(showSoftLimits);
 
         lblSafeZoneLow.setVisible(!showRotationSettings);
         lblSafeZoneHigh.setVisible(!showRotationSettings);
@@ -543,14 +617,14 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         addWrappedBinding(axis, "safeZoneHigh", safeZoneHigh, "text", lengthConverter);
         addWrappedBinding(axis, "safeZoneHighEnabled", safeZoneHighEnabled, "selected");
 
-        addWrappedBinding(axis, "feedratePerSecond", feedratePerSecond, "text", lengthConverter);
+        addWrappedBinding(axis, "feedratePerSecond", feedRatePerSecond, "text", lengthConverter);
         addWrappedBinding(axis, "accelerationPerSecond2", accelerationPerSecond2, "text", lengthConverter);
         addWrappedBinding(axis, "jerkPerSecond3", jerkPerSecond3, "text", lengthConverter);
 
 
         ComponentDecorators.decorateWithAutoSelect(letter);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homeCoordinate);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(feedratePerSecond);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(feedRatePerSecond);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(accelerationPerSecond2);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(jerkPerSecond3);
         ComponentDecorators.decorateWithAutoSelect(resolution);

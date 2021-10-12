@@ -699,7 +699,10 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             try {
                 fireTextStatus("Pick %s from %s for %s.", part.getId(), feeder.getName(),
                         placement.getId());
-                
+
+                // Prepare the Nozzle for pick-to-place articulation.
+                nozzle.prepareForPickAndPlaceArticulation(feeder.getPickLocation(), placement.getLocation());
+
                 // Move to pick location.
                 nozzle.moveToPickLocation(feeder);
 

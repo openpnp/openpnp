@@ -36,6 +36,7 @@ import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.util.SimpleGraph;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceControllerAxis extends AbstractControllerAxis {
     // The more implementation specific properties are in the ReferenceControllerAxis
@@ -179,6 +180,23 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     private SimpleGraph backlashDistanceTestGraph;
     @Element(required = false)
     private SimpleGraph backlashSpeedTestGraph;
+
+    @Attribute(required = false)
+    private double version;
+
+    @Commit
+    void commit() {
+        if (version < 2.0) {
+            version = 2.0;
+            if (getType() == Type.Rotation) {
+                // Rotational axis limits become enabled in newer versions. Make sure there is no garbage in them.
+                setSoftLimitLowEnabled(false);
+                setSoftLimitHighEnabled(false);
+                setSoftLimitLow(new Length(-180, AxesLocation.getUnits()));
+                setSoftLimitHigh(new Length(180, AxesLocation.getUnits()));
+            }
+        }
+    }
 
     public double getResolution() {
         if (resolution <= 0.0) {

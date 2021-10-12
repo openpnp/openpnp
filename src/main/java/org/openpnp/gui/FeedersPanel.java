@@ -67,6 +67,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
@@ -79,7 +80,9 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
+import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -644,6 +647,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         // Do the feed an get the nozzle for the pick.
         Nozzle nozzle = feedFeeder(feeder);
 
+        // Make sure the nozzle can articulate from pick to placement. 
+        Location placementLocation = getTestPlacementLocation(feeder.getPart());
+        nozzle.prepareForPickAndPlaceArticulation(feeder.getPickLocation(), 
+                placementLocation);
+
         // Go to the pick location and pick.
         nozzle.moveToPickLocation(feeder);
         nozzle.pick(feeder.getPart());
@@ -660,6 +668,25 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
         // The part is now on the nozzle.
         MovableUtils.fireTargetedUserAction(nozzle);
+    }
+
+    /**
+     * Create a test placement location from the discard location and the test alignment angle. 
+     * 
+     * @param part
+     * @return
+     */
+    public static Location getTestPlacementLocation(Part part) {
+        PartAlignment aligner = AbstractPnpJobProcessor.findPartAligner(Configuration.get().getMachine(), part);
+        Location placementLocation = Configuration.get().getMachine().getDiscardLocation();
+        placementLocation = new Location(placementLocation.getUnits(),
+                placementLocation.getX(), 
+                placementLocation.getY(), 
+                placementLocation.getZ(), 
+                (aligner instanceof ReferenceBottomVision ? 
+                        ((ReferenceBottomVision)aligner).getTestAlignmentAngle() 
+                        : 0.0));
+        return placementLocation;
     }
 
     protected static Nozzle getCompatibleNozzleAndTip(Feeder feeder, boolean allowNozzleTipChange) throws Exception {

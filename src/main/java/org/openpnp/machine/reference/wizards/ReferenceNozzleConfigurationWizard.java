@@ -39,6 +39,7 @@ import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Nozzle.RotationMode;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractMachine;
 
@@ -76,6 +77,8 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JComboBox axisRotation;
     private JLabel lblAxis;
     private JLabel lblOffset;
+    private JLabel lblRotationMode;
+    private JComboBox rotationMode;
 
     public ReferenceNozzleConfigurationWizard(AbstractMachine machine, ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -85,7 +88,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -104,7 +107,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -114,6 +117,8 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -170,13 +175,19 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         locationRotation = new JTextField();
         panelOffsets.add(locationRotation, "10, 6, fill, default");
         locationRotation.setColumns(10);
+        
+        lblRotationMode = new JLabel("Rotation Mode");
+        panelOffsets.add(lblRotationMode, "2, 10, right, default");
+        
+        rotationMode = new JComboBox(RotationMode.values());
+        panelOffsets.add(rotationMode, "4, 10, fill, default");
 
         JPanel panelSafeZ = new JPanel();
         panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelSafeZ);
         panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
-                ColumnSpec.decode("max(81dlu;default)"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("114px"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -211,7 +222,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 .setLayout(
                         new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -261,6 +272,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(nozzle, "axisY", axisY, "selectedItem", axisConverter);
         addWrappedBinding(nozzle, "axisZ", axisZ, "selectedItem", axisConverter);
         addWrappedBinding(nozzle, "axisRotation", axisRotation, "selectedItem", axisConverter);
+        addWrappedBinding(nozzle, "rotationMode", rotationMode, "selectedItem");
 
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzle, "headOffsets", headOffsets, "location");

@@ -452,13 +452,14 @@ public class GcodeServer extends Thread {
                     regurg.append('$');
                 }
                 regurg.append(word.letter);
-                if (word.signum < 0) {
-                    regurg.append('-');
-                }
-                regurg.append(word.getNumberIntegral());
                 if (word.getNumberFraction() != 0) {
-                    regurg.append('.');
-                    regurg.append(word.getNumberFraction());
+                    regurg.append(word.getNumberDouble());
+                }
+                else {
+                    if (word.signum < 0) {
+                        regurg.append('-');
+                    }
+                    regurg.append(word.getNumberIntegral());
                 }
                 regurg.append(' ');
             }
