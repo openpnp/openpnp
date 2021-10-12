@@ -600,23 +600,23 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public void loadNozzleTip(NozzleTip nozzleTip) throws Exception {
+        // First of all make sure there is no rotation offset still applied.
+        setRotationModeOffset(null);
+
         if (this.nozzleTip == nozzleTip) {
             return;
         }
-        
 
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-       
-        // bert start
+
         Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
         Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
         Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
-        // bert stop
-        
+
         if (!getCompatibleNozzleTips().contains(nt)) {
             throw new Exception("Can't load incompatible nozzle tip.");
         }
-        
+
         if (nt.getNozzleAttachedTo() != null) {
             // Nozzle tip is on different nozzle - unload it from there first.  
             nt.getNozzleAttachedTo().unloadNozzleTip();
@@ -714,16 +714,23 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
     @Override
     public void unloadNozzleTip() throws Exception {
+        if (getPart() != null) {
+            throw new Exception("Nozzle "+getName()+" still has a part loaded. Please discard first.");
+        }
+
+        // Make sure there is no rotation offset still applied.
+        setRotationModeOffset(null);
+
         if (nozzleTip == null) {
             return;
         }
 
         ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzleTip;
-        
+
         Actuator tcPostOneActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepOne());
         Actuator tcPostTwoActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepTwo());
         Actuator tcPostThreeActuator = getMachine().getActuatorByName(nt.getChangerActuatorPostStepThree());
-        
+
         if (!nt.isUnloadedNozzleTipStandin()) {
             Logger.debug("{}.unloadNozzleTip(): Start", getName());
 

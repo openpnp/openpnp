@@ -221,7 +221,7 @@ public class ReferenceBottomVision implements PartAlignment {
             offsets = offsets.subtract(partSettings.getVisionOffset().rotateXy(wantedAngle));
 
             Logger.debug("Final offsets {}", offsets);
-            displayResult(pipeline, part, offsets, camera);
+            displayResult(pipeline, part, offsets, camera, nozzle);
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
     }
@@ -272,7 +272,7 @@ public class ReferenceBottomVision implements PartAlignment {
             
             Logger.debug("Final offsets {}", offsets);
 
-            displayResult(pipeline, part, offsets, camera);
+            displayResult(pipeline, part, offsets, camera, nozzle);
 
             return new PartAlignmentOffset(offsets, false);
         }
@@ -353,7 +353,7 @@ public class ReferenceBottomVision implements PartAlignment {
         return true;
     }
 
-    private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera) {
+    private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera, Nozzle nozzle) {
         MainFrame mainFrame = MainFrame.get();
         if (mainFrame != null) {
             try {
@@ -363,6 +363,8 @@ public class ReferenceBottomVision implements PartAlignment {
                 .getCameraView(camera)
                 .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
                         1500);
+                // Also make sure the right nozzle is selected for correct cross-hair rotation.
+                MovableUtils.fireTargetedUserAction(nozzle);
             }
             catch (Exception e) {
                 // Throw away, just means we're running outside of the UI.

@@ -139,10 +139,10 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
 
     @Override
     public void prepareForPickAndPlaceArticulation(Location pickLocation, Location placementLocation) throws Exception {
-        Double oldRotationModeOffset = rotationModeOffset;
-        Double newRotationModeOffset = null;
         // Reset the current rotationModeOffset so all the calculating transforms are not affected.
-        rotationModeOffset = null;
+        setRotationModeOffset(null);
+
+        Double newRotationModeOffset = null;
         switch (getRotationMode()) {
             case AbsolutePartAngle:
                 newRotationModeOffset = null;
@@ -179,16 +179,8 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
                         Utils2D.angleNorm(pickLocation.getRotation() - angleStart, 180);
                 break;
         }
-
-        if ((newRotationModeOffset == null) != (oldRotationModeOffset == null)
-                || (newRotationModeOffset != null && newRotationModeOffset.compareTo(oldRotationModeOffset) != 0)) {
-            // The rotationModeOffset has changed, this must be reflected in the DRO etc.
-            rotationModeOffset = newRotationModeOffset;
-            getMachine().fireMachineHeadActivity(head);
-        }
-        else {
-            rotationModeOffset = oldRotationModeOffset;
-        }
+        // Establish the new offset.
+        setRotationModeOffset(newRotationModeOffset);
     }
 
     public Double getRotationModeOffset() {
@@ -199,6 +191,9 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         Object oldValue = this.rotationModeOffset;
         this.rotationModeOffset = rotationModeOffset;
         firePropertyChange("rotationModeOffset", oldValue, rotationModeOffset);
+        // Note, we do not 
+        //  fireMachineHeadActivity(head); 
+        // as only the upcoming coordinate changes will really make sense and matter.
     }
 
     @Override
