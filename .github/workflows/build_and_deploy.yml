@@ -22,7 +22,9 @@ jobs:
           java-version: ${{ matrix.java }}
 
       - name: Build with Maven
-        run: mvn -B test
+        run: |
+          mvn -B test
+          java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
         
   deploy:
     runs-on: ubuntu-latest
@@ -39,7 +41,9 @@ jobs:
           java-version: '8'
 
       - name: Build with Maven
-        run: mvn -B package -DskipTests
+        run: |
+          mvn -B package -DskipTests
+          java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar --version
         
       - name: Get Branch Name
         uses: nelonoel/branch-name@v1.0.1
