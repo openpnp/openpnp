@@ -87,6 +87,10 @@ Even though a profile target actuator is driven as a String value, you can still
 
 ## Actuator Control Panel
 
+Open the Actuator Control Panel on the Machine Controls/Actuators tab:
+
+![Actuators Tab](https://user-images.githubusercontent.com/9963310/137530471-1f27138a-5fa1-4f8d-b924-b69fbeb63406.png)
+
 The Actuator Control Panels will now display **Value Type** specific GUI controls:
 
 ![Double Actuator Dialog](https://user-images.githubusercontent.com/9963310/103423809-088dd080-4ba9-11eb-9f71-bd0f0193ca2c.png) 
