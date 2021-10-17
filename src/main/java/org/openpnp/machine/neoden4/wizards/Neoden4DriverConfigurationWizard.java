@@ -20,19 +20,24 @@
 
 package org.openpnp.machine.neoden4.wizards;
 
+import java.awt.Color;
+
+import javax.swing.SwingConstants;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-
-import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.DoubleConverter;
-import org.openpnp.machine.neoden4.NeoDen4Driver;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+
+import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
+import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.machine.neoden4.NeoDen4Driver;
+import javax.swing.JTextField;
 
 @SuppressWarnings("serial")
 public class Neoden4DriverConfigurationWizard extends AbstractConfigurationWizard {
@@ -48,8 +53,8 @@ public class Neoden4DriverConfigurationWizard extends AbstractConfigurationWizar
         this.driver = driver;
 
         JPanel panelMachineDetails = new JPanel();
-        panelMachineDetails.setBorder(new TitledBorder(null,
-                "Machine Details", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelMachineDetails.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+                "Machine Details", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelMachineDetails);
         panelMachineDetails.setLayout(new FormLayout(
                 new ColumnSpec[] { 

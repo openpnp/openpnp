@@ -1,5 +1,7 @@
 package org.openpnp.spi.base;
 
+import org.openpnp.machine.neoden4.Neoden4Feeder;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
@@ -28,6 +30,17 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
     public static void discard(Nozzle nozzle) throws JobProcessorException {
         try {
             Cycles.discard(nozzle);
+        	// Save part reference to find feeder
+            Part part = nozzle.getPart();
+            
+            // If discarded part's feeder is instance of Neoden4Feeder
+            // increment discard count
+            Feeder feeder = findFeeder(Configuration.get().getMachine(), part);
+            if (feeder instanceof Neoden4Feeder) {
+            	int discardCount = ((Neoden4Feeder) feeder).getDiscardCount();
+            	((Neoden4Feeder) feeder).setDiscardCount(discardCount + 1);
+            }
+            
         }
         catch (Exception e) {
             throw new JobProcessorException(nozzle, e);

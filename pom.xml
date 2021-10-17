@@ -19,6 +19,16 @@
 	</properties>
 	<dependencies>
 		<dependency>
+		  <groupId>net.java.dev.jna</groupId>
+		  <artifactId>jna</artifactId>
+		  <version>5.8.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.jfree</groupId>
+		    <artifactId>jfreechart</artifactId>
+		    <version>1.5.3</version>
+		</dependency>
+		<dependency>
 			<groupId>com.github.sarxos</groupId>
 			<artifactId>webcam-capture</artifactId>
 			<version>0.3.10</version>

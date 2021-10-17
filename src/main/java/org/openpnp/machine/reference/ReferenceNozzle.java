@@ -248,6 +248,30 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         firePropertyChange("headOffsets", oldValue, headOffsets);
         adjustHeadOffsetsDependencies(oldValue, headOffsets);
     }
+    
+    public String getVacuumSenseActuatorName() {
+        return vacuumSenseActuatorName;
+    }
+
+    public void setVacuumSenseActuatorName(String vacuumSenseActuatorName) {
+        this.vacuumSenseActuatorName = vacuumSenseActuatorName;
+    }
+
+    public String getVacuumActuatorName() {
+        return vacuumActuatorName;
+    }
+
+    public void setVacuumActuatorName(String vacuumActuatorName) {
+        this.vacuumActuatorName = vacuumActuatorName;
+    }
+
+    public String getBlowOffActuatorName() {
+        return blowOffActuatorName;
+    }
+
+    public void setBlowOffActuatorName(String blowActuatorName) {
+        this.blowOffActuatorName = blowActuatorName;
+    }
 
     /**
      * Adjust any dependent head offsets, e.g. after calibration.
