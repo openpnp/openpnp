@@ -1,6 +1,6 @@
 ## What is it?
 ____
-NOTE: some part of the following are only available in the [Testing Version of OpenPnP](https://openpnp.org/test-downloads/). 
+NOTE: some parts of the following are only available in the [Testing Version of OpenPnP](https://openpnp.org/test-downloads/). 
 ____
 
 OpenPnP is complex to set up and the more flexibility and optimization is added, the more the complexity grows. In the course of developing and community testing the [[Advanced Motion Control]] it became apparent, that it is easier to program an automatism to _propose_ the proper setup than to document or provide support for it.
