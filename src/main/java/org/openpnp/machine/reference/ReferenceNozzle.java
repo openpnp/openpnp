@@ -1365,8 +1365,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         super.findIssues(solutions);
         try {
             if (solutions.isTargeting(Milestone.Basics)) {
-                findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
-                        new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND });
+                if (getVacuumActuator().getValueType() == ActuatorValueType.Double) {
+                    findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
+                        new CommandType[] { CommandType.ACTUATE_DOUBLE_COMMAND });
+                }
+                else {
+                    findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
+                            new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND });
+                }
                 // If at least one nozzle tip uses vacuum sensing, require a sensing actuator.
                 boolean needsSensing = false;
                 for (NozzleTip tip : Configuration.get().getMachine().getNozzleTips()) {
@@ -1382,6 +1388,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 if (needsSensing) {
                     findActuatorIssues(solutions, getVacuumSenseActuator(), "vacuum sensing", 
                         new CommandType[] { CommandType.ACTUATOR_READ_COMMAND, CommandType.ACTUATOR_READ_REGEX });
+                }
+                if (getBlowOffActuator() != null) {
+                    AbstractActuator.suggestValueType(getBlowOffActuator(), ActuatorValueType.Double);
+                    findActuatorIssues(solutions, getBlowOffActuator(), "blow-off", 
+                            new CommandType[] { CommandType.ACTUATE_DOUBLE_COMMAND });
                 }
             }
         }
