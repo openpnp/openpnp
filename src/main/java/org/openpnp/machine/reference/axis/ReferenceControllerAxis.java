@@ -32,7 +32,9 @@ import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Nozzle.RotationMode;
 import org.openpnp.spi.base.AbstractControllerAxis;
+import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.SimpleGraph;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -525,35 +527,104 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
             }
             if (getType() == Type.Rotation) {
-                if (!isWrapAroundRotation()) {
-                    solutions.add(new Solutions.Issue(
-                            this, 
-                            "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
-                            "Enable Wrap Around.", 
-                            Severity.Suggestion,
-                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                boolean isUnlimitedArticulation = true;
+                if (getDefaultHeadMountable() instanceof AbstractNozzle) {
+                    AbstractNozzle nozzle = (AbstractNozzle)getDefaultHeadMountable();
+                    double[] limits = new double[] {-180, 180};
+                    try {
+                        limits = nozzle.getRotationModeLimits();
+                    }
+                    catch (Exception e) {
+                       // ignore this here
+                    }
+                    final double epsilon = 1e-5;
+                    if (nozzle.getRotationMode() == RotationMode.LimitedArticulation) {
+                        isUnlimitedArticulation = false;
+                    }
+                    else if (limits[1] - limits[0] < 360 - epsilon) {
+                        isUnlimitedArticulation = false;
+                        final RotationMode oldRotationMode = nozzle.getRotationMode();
+                        solutions.add(new Solutions.Issue(
+                                nozzle, 
+                                "Rotation axis "+getName()+" is limiting Nozzle "+nozzle.getName()+" to less than 360°. Must use the " + RotationMode.LimitedArticulation + " rotation mode.", 
+                                "Set the " + RotationMode.LimitedArticulation + " rotation mode.", 
+                                Severity.Error,
+                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
-                        @Override
-                        public void setState(Solutions.State state) throws Exception {
-                            setWrapAroundRotation((state == Solutions.State.Solved));
-                            super.setState(state);
-                        }
-                    });
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                    nozzle.setRotationMode((state == Solutions.State.Solved) ?
+                                            RotationMode.LimitedArticulation :
+                                            oldRotationMode);
+                                super.setState(state);
+                            }
+                        });
+                    }
                 }
-                if (!isLimitRotation()) {
-                    solutions.add(new Solutions.Issue(
-                            this, 
-                            "Rotation can be optimized by limiting angles to ±180°. Best combined with Wrap Around.", 
-                            "Enable Limit ±180°.", 
-                            Severity.Suggestion,
-                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                if (isUnlimitedArticulation) {
+                    if (!isWrapAroundRotation()) {
+                        solutions.add(new Solutions.Issue(
+                                this, 
+                                "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
+                                "Enable Wrap Around.", 
+                                Severity.Suggestion,
+                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
-                        @Override
-                        public void setState(Solutions.State state) throws Exception {
-                            setLimitRotation((state == Solutions.State.Solved));
-                            super.setState(state);
-                        }
-                    });
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                setWrapAroundRotation((state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
+                    if (!isLimitRotation()) {
+                        solutions.add(new Solutions.Issue(
+                                this, 
+                                "Rotation can be optimized by limiting angles to ±180°. "
+                                        + "Best combined with Wrap Around.", 
+                                        "Enable Limit to Range.", 
+                                        Severity.Suggestion,
+                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                setLimitRotation((state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
+                }
+                else {
+                    if (isWrapAroundRotation()) {
+                        solutions.add(new Solutions.Issue(
+                                this, 
+                                "Rotation cannot be wrapped-around on a limited articulation axis.", 
+                                "Disable Wrap Around.", 
+                                Severity.Error,
+                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                setWrapAroundRotation(!(state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
+                    if (!isLimitRotation()) {
+                        solutions.add(new Solutions.Issue(
+                                this, 
+                                "Rotation must be limited on a limited articulation axis.", 
+                                "Enable Limit to Range.", 
+                                Severity.Error,
+                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                setLimitRotation((state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
                 }
             }
         }
