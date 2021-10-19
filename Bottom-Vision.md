@@ -32,7 +32,7 @@ To configure Bottom Vision visit Machine Setup -> Vision -> Bottom Vision.
 
 **Pipeline**: Press the `Edit` button to view and edit the default pipeline that will be used to locate parts. The default pipeline is used when no part specific pipeline has been configured. The built-in pipeline is described below. Press `Reset to Default` to reset the pipeline to the OpenPnP default. Press `Reset All Parts` to assign the current pipeline to all parts. 
 
-**Rotate parts prior to vision?**: Will already pre-rotate the part on the nozzle to its final placement angle. This generally improves precision. This option also enables multi-pass vision. This mode must be set with a nozzle that has limited articulation (i.e. less than 360°); see [[Rotation Mode]].
+**Rotate parts prior to vision?**: Will already pre-rotate the part on the nozzle to its final placement angle. This generally improves precision. This option also enables multi-pass vision. This mode must be set with a nozzle that has limited articulation (i.e. less than 360°); see [[Nozzle Rotation Mode]].
 
 ### Multi-pass Vision
 
