@@ -28,11 +28,13 @@ The limits can be captured etc. as with linear axes. If no soft limits are defin
 
 Rotational limits can be used to address these use cases:
 
-1. Define the angular range for machines with limited articulation (< 360°). See the intro section above.
+1. Define the specific angular range for machines with limited articulation (< 360°). See the intro section above. 
 
 2. For machines that can reach 360° and more buts still have restricted rotation (e.g. tubing that is not free-running), a more relaxed custom range can be defined, e.g. -200° ... 200°, avoiding "pirouetting" (rotating the nozzle all the way around), if the placement angle happens to be near the ±180° default wrap-around limit. A shifted custom range, like -160° ... 200° can at least avoid "pirouetting" at the common 180° placement angle, i.e. pirouetting would only occur at the rare 200° angle. 
 
 3. Define the range for axes that are transformed, i.e. where moving 360 axis units does not result in a 360° rotation. See next section.
+
+**Note:** if the articulation is effectively limited to less than 360°, the **Wrap-around** option is not allowed. An error will be reported, when the motion planner attempts to wrap-around into the unreachable range. Issues & Solution will also report this misconfiguration and suggest to switch it off.
 
 ### Rotational Axis Transformations
 
