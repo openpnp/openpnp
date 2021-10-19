@@ -21,18 +21,30 @@
 
 package org.openpnp.machine.reference.axis;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.BacklashCompensationConfigurationWizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigurationWizard;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
+import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle.RotationMode;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.SimpleGraph;
@@ -478,6 +490,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
 
+        Machine machine = Configuration.get().getMachine();
         if (solutions.isTargeting(Milestone.Basics)) {
             if (getDriver() == null) {
                 solutions.add(new Solutions.PlainIssue(
@@ -549,7 +562,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                                 "Rotation axis "+getName()+" is limiting Nozzle "+nozzle.getName()+" to less than 360°. Must use the " + RotationMode.LimitedArticulation + " rotation mode.", 
                                 "Set the " + RotationMode.LimitedArticulation + " rotation mode.", 
                                 Severity.Error,
-                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                                "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode") {
 
                             @Override
                             public void setState(Solutions.State state) throws Exception {
@@ -559,6 +572,69 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                                 super.setState(state);
                             }
                         });
+                    }
+                    if (!isUnlimitedArticulation) {
+                        // Checking that ReferenceBottomVision has pre-rotate enabled. 
+                        for (PartAlignment partAlignment : machine.getPartAlignments()) {
+                            if (partAlignment instanceof ReferenceBottomVision) {
+                                ReferenceBottomVision referenceBottomVision = (ReferenceBottomVision) partAlignment;
+                                if (!referenceBottomVision.isPreRotate()) {
+                                    solutions.add(new Solutions.Issue(
+                                            referenceBottomVision, 
+                                            "Pre-rotate bottom vision must be enabled, because the machine has a limited articulation nozzle.", 
+                                            "Enable Pre-Rotate.", 
+                                            Severity.Error,
+                                            "https://github.com/openpnp/openpnp/wiki/Bottom-Vision#global-configuration") {
+
+                                        @Override
+                                        public void setState(Solutions.State state) throws Exception {
+                                            referenceBottomVision.setPreRotate((state == Solutions.State.Solved));
+                                            super.setState(state);
+                                        }
+                                    });
+                                }
+                                // Check all part setting.
+                                List<PartSettings> partSettings = new ArrayList<>();
+                                List<String> parts = new ArrayList<>();
+                                for (Entry<String, PartSettings> entry : referenceBottomVision.getPartSettingsByPartId().entrySet()) {
+                                    if (entry.getValue().getPreRotateUsage() == PreRotateUsage.AlwaysOff) {
+                                        parts.add(entry.getKey());
+                                        partSettings.add(entry.getValue());
+                                    }
+                                }
+                                parts.sort(null);
+                                if (!partSettings.isEmpty()) {
+                                    solutions.add(new Solutions.Issue(
+                                            referenceBottomVision, 
+                                            "Pre-rotate bottom vision must be allowed on all part settings, because the machine has a "
+                                                    + "limited articulation nozzle.", 
+                                                    "Switch from "+PreRotateUsage.AlwaysOff+" to "+PreRotateUsage.Default, 
+                                                    Severity.Error,
+                                            "https://github.com/openpnp/openpnp/wiki/Bottom-Vision#global-configuration") {
+
+
+                                        @Override 
+                                        public String getExtendedDescription() {
+                                            return "<html><p>Switch part settings pre-rotate usage from <strong>"+PreRotateUsage.AlwaysOff+"</strong> "
+                                                    + "to <strong>"+PreRotateUsage.Default+"</strong> on these parts:</p>"
+                                                    + "<ol><li>"
+                                                    + parts.stream().collect(Collectors.joining("</li><li>"))
+                                                    + "</li><ol>"
+                                                    + "</html>";
+                                        }
+
+                                        @Override
+                                        public void setState(Solutions.State state) throws Exception {
+                                            for (PartSettings partSetting : partSettings) {
+                                                partSetting.setPreRotateUsage((state == State.Solved) ?
+                                                        PreRotateUsage.Default : PreRotateUsage.AlwaysOff);
+                                            }
+                                            super.setState(state);
+                                        }
+                                    });
+                                }
+                            }
+                        }
                     }
                 }
                 if (isUnlimitedArticulation) {
@@ -595,13 +671,14 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                     }
                 }
                 else {
+                    // Limited articulation, we need to treat things differently.
                     if (isWrapAroundRotation()) {
                         solutions.add(new Solutions.Issue(
                                 this, 
                                 "Rotation cannot be wrapped-around on a limited articulation axis.", 
                                 "Disable Wrap Around.", 
                                 Severity.Error,
-                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                                "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode#setting-up-the-nozzle-rotation-axis") {
 
                             @Override
                             public void setState(Solutions.State state) throws Exception {
@@ -616,7 +693,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                                 "Rotation must be limited on a limited articulation axis.", 
                                 "Enable Limit to Range.", 
                                 Severity.Error,
-                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                                "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode#setting-up-the-nozzle-rotation-axis") {
 
                             @Override
                             public void setState(Solutions.State state) throws Exception {

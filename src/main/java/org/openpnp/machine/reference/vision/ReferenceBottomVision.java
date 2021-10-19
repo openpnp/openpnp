@@ -17,6 +17,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
@@ -558,7 +559,7 @@ public class ReferenceBottomVision implements PartAlignment {
     }
     
     @Root
-    public static class PartSettings {
+    public static class PartSettings extends AbstractModelObject {
 
         public enum PartSizeCheckMethod {
             Disabled, BodySize, PadExtents
@@ -612,7 +613,9 @@ public class ReferenceBottomVision implements PartAlignment {
         }
 
         public void setPreRotateUsage(PreRotateUsage preRotateUsage) {
+            Object oldValue = this.preRotateUsage;
             this.preRotateUsage = preRotateUsage;
+            firePropertyChange("preRotateUsage", oldValue, preRotateUsage);
         }
 
         public CvPipeline getPipeline() {
