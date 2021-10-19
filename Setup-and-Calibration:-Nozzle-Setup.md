@@ -24,15 +24,21 @@ OpenPnP's default configuration includes one nozzle. If you have more than one n
 If you have more than one nozzle tip on your machine:
 
 1. Open the Machine Setup Tab.
-2. Find the nozzle you want to add a nozzle tip to and look for the Nozzle Tips item below it. Select it.
+2. Look for the Nozzle Tips item in the setup tree. Select it.
 3. Add the nozzle tip by pressing the add button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg).  
 4. Select the new nozzle tip to open it's properties.
 5. To use the machine with the nozzle tip you just created you need to load it onto the nozzle. Press the load button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to do this.
 
+## Nozzle Mapped Axes
+Map the axes to the nozzle as explained on the [[Mapping Axes]] page.
+
+## Nozzle Rotation Mode
+Set the **Rotation Mode** of the nozzle as explained on the [[Nozzle Rotation Mode]] page.
+
 ## Head Offsets
 Nozzle head offsets tell OpenPnP where the nozzles are in relation to the other objects on your head. In an earlier step we set the Camera Head Offsets to zero, making the top camera the origin of the head. Now we'll tell OpenPnP how far the nozzles are from the camera in real world units. 
 ___
-In newer versions of OpenPnP this can be done automatically, using [Issues & Solutions Calibrations](https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets) in the right order. 
+In newer versions of OpenPnP this can be done automatically, using [Issues & Solutions Calibrations](https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets). The following should only be used, if the automatic method does not work for some reason. 
 ___
 
 The following steps are for a manual setup (with an old OpenPnP version) only. They have to be repeated for each nozzle attached to the head.
