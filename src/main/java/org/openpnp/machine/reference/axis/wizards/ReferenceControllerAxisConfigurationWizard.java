@@ -248,6 +248,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             });
         }
     };    
+    private JLabel lblStepsUnit;
+    private JTextField stepsPerUnit;
 
     public ReferenceControllerAxisConfigurationWizard(ReferenceControllerAxis axis) {
         super(axis);
@@ -264,27 +266,27 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 ColumnSpec.decode("max(50dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("default:grow"),}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),}));
 
         lblDriver = new JLabel("Driver");
         panelControllerSettings.add(lblDriver, "2, 2, right, default");
@@ -321,12 +323,82 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         homeCoordinate.setColumns(10);
 
         lblResolution = new JLabel("Resolution [Driver Units]");
-        lblResolution.setToolTipText("<html>Numeric resolution of this axis. Coordinates will be rounded to the nearest multiple<br/>\r\nwhen comparing them in order to determine whether a move is necessary. <br/>\r\nFor the GcodeDriver, make sure the resolution can be expressed with the format in the <br/>\r\n<code>MOVE_TO_COMMAND</code>. Default is 0.0001 which corresponds to the %.4f <br/>\r\n(four fractional digits) format in the <code>MOVE_TO_COMMAND</code>.<br/>\r\nNote, the resolution is given and applied in driver (not system) units.\r\n</html>");
+        lblResolution.setToolTipText("<html><strong>Resolution</strong> of this axis. Coordinates will be rounded to the nearest multiple when it comes<br/>\r\nto comparing them, i.e. a move is only executed, if they differ after being rounded.<br/>\r\nIdeally, this is set to the micro-step (or similar) physical resolution of the axis, or a practicle  integral<br/>\r\nmultiple thereof. The <strong>Resolution</strong> is the reciprocal of the <strong>Steps / Unit</strong>, that is often configured<br/>\r\nin controllers.<br/>\r\n<br/>\r\nFor the GcodeDriver, make sure the resolution can be expressed with the format in the <br/>\r\n<code>MOVE_TO_COMMAND</code>. Default is 0.0001 which corresponds to the %.4f (four fractional digits)<br/>\r\nformat in the <code>MOVE_TO_COMMAND</code>.<br/>\r\n<br/>\r\nNote, the <strong>Resolution</strong> is given in Driver (not System) units.\r\n</html>");
         panelControllerSettings.add(lblResolution, "2, 12, right, default");
 
         resolution = new JTextField();
         panelControllerSettings.add(resolution, "4, 12, fill, default");
         resolution.setColumns(10);
+        resolution.getDocument().addDocumentListener(new DocumentListener() {
+            DoubleConverter doubleConverter = new DoubleConverter("%.6f");
+            public void changedUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                convert();
+            }
+
+            public void convert() {
+                if (converting) { 
+                    return;
+                }
+                converting = true;
+                try {
+                    double res = doubleConverter.convertReverse(resolution.getText());
+                    double spu = 1/res;
+                    String resolutionText = doubleConverter.convertForward(spu);
+                    stepsPerUnit.setText(resolutionText);
+                }
+                catch (Exception e) {
+                    // silently ignore?
+                }
+                finally {
+                    converting = false;
+                }
+            }
+        });
+        
+        lblStepsUnit = new JLabel("Steps / Unit");
+        lblStepsUnit.setToolTipText("<html><strong>Steps per Unit</strong> are the reciprocal of the <strong>Resolution</strong>.<br/>\r\nThese are often found in the controller configuration, therefore you can enter them here to<br/>\r\nautomatically calculate the <strong>Resolution</strong>.</html>");
+        panelControllerSettings.add(lblStepsUnit, "6, 12, right, default");
+        
+        stepsPerUnit = new JTextField();
+        panelControllerSettings.add(stepsPerUnit, "8, 12, fill, default");
+        stepsPerUnit.setColumns(10);
+        stepsPerUnit.getDocument().addDocumentListener(new DocumentListener() {
+            DoubleConverter doubleConverter = new DoubleConverter("%.6f");
+            public void changedUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                convert();
+            }
+
+            public void convert() {
+                if (converting) { 
+                    return;
+                }
+                converting = true;
+                try {
+                    double spu = doubleConverter.convertReverse(stepsPerUnit.getText());
+                    double res = 1/spu;
+                    String resolutionText = doubleConverter.convertForward(res);
+                    resolution.setText(resolutionText);
+                }
+                catch (Exception e) {
+                    // silently ignore?
+                }
+                finally {
+                    converting = false;
+                }
+            }
+        });
 
         lblLimitRotation = new JLabel("Limit to Range");
         lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180° or the custom Soft-Limits if enabled.");
@@ -351,10 +423,10 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         panelControllerSettings.add(lblPremoveCommand, "2, 20, right, top");
 
         scrollPane = new JScrollPane();
-        panelControllerSettings.add(scrollPane, "4, 20, 3, 1, fill, fill");
+        panelControllerSettings.add(scrollPane, "4, 20, 5, 1, fill, fill");
 
         preMoveCommand = new JTextArea();
-        preMoveCommand.setRows(1);
+        preMoveCommand.setRows(2);
         scrollPane.setViewportView(preMoveCommand);
 
         panelKinematics = new JPanel();
@@ -589,6 +661,14 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnPositionSafeZoneLow.setVisible(!showRotationSettings);
         btnPositionSafeZoneHigh.setVisible(!showRotationSettings);
 
+        if (selectedDriver != null && selectedDriver.getUnits() != null) {
+            lblResolution.setText("Resolution ["+selectedDriver.getUnits()+"]");
+            lblStepsUnit.setText("Steps / "+selectedDriver.getUnits().getSingularName());
+        }
+        else {
+            lblResolution.setText("Resolution [Driver Unit]");
+            lblStepsUnit.setText("Steps / Unit");
+        }
     }
 
     @Override
