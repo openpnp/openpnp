@@ -166,7 +166,7 @@ public abstract class AbstractCoordinateAxis extends AbstractAxis implements Coo
 
     /**
      * @return The first HeadMountable that has this axis assigned. Used to capture and safely position an axis. 
-     * Returns null is the axis is unused.
+     * Returns null if the axis is unused.
      */
     public HeadMountable getDefaultHeadMountable() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
