@@ -1,7 +1,5 @@
 package org.openpnp.spi.base;
 
-import org.openpnp.machine.neoden4.Neoden4Feeder;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
