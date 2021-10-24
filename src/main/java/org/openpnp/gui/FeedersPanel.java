@@ -647,6 +647,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         // Do the feed an get the nozzle for the pick.
         Nozzle nozzle = feedFeeder(feeder);
 
+        // Perform the vacuum check, if enabled.
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.BeforePick)) {
+            // Part-off check can only be done at safe Z. An explicit move to safe Z is needed, because some feeder classes 
+            // may move the nozzle to (near) the pick location i.e. down in Z in feed().
+            nozzle.moveToSafeZ();
+            if(!nozzle.isPartOff()) {
+                throw new JobProcessorException(nozzle, "Part vacuum-detected on nozzle before pick.");
+            }
+        }
+
         // Make sure the nozzle can articulate from pick to placement. 
         Location placementLocation = getTestPlacementLocation(feeder.getPart());
         nozzle.prepareForPickAndPlaceArticulation(feeder.getPickLocation(), 
