@@ -41,9 +41,6 @@ public class Neoden4Feeder extends ReferenceFeeder {
     @Attribute(required = false)
     private int feedCount = 0;
     
-    @Attribute(required = false)
-    private int discardCount = 0;
-    
     @Element(required = false)
     protected Vision vision = new Vision();
 
@@ -271,17 +268,6 @@ public class Neoden4Feeder extends ReferenceFeeder {
         firePropertyChange("feedCount", oldValue, feedCount);
     }
     
-    public int getDiscardCount() {
-        return discardCount;
-    }
-
-    public void setDiscardCount(int discardCount) {
-    	// TODO: Consider reseting value when new part is set
-        int oldValue = this.discardCount;
-        this.discardCount = discardCount;
-        firePropertyChange("discardCount", oldValue, discardCount);
-    }
-
     public Vision getVision() {
         return vision;
     }

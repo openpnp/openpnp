@@ -29,18 +29,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
      */
     public static void discard(Nozzle nozzle) throws JobProcessorException {
         try {
-            Cycles.discard(nozzle);
-        	// Save part reference to find feeder
-            Part part = nozzle.getPart();
-            
-            // If discarded part's feeder is instance of Neoden4Feeder
-            // increment discard count
-            Feeder feeder = findFeeder(Configuration.get().getMachine(), part);
-            if (feeder instanceof Neoden4Feeder) {
-            	int discardCount = ((Neoden4Feeder) feeder).getDiscardCount();
-            	((Neoden4Feeder) feeder).setDiscardCount(discardCount + 1);
-            }
-            
+            Cycles.discard(nozzle);            
         }
         catch (Exception e) {
             throw new JobProcessorException(nozzle, e);

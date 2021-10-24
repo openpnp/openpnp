@@ -387,7 +387,8 @@
 					<linkXRef>false</linkXRef>
 					<includeTestSourceDirectory>true</includeTestSourceDirectory>
 					<!-- Exclude Eagle importer code, which is auto generated -->
-					<excludes>org/openpnp/model/eagle/xml/*</excludes>
+					<!-- Exclude Neoden dll function names we can't modify -->
+					<excludes>org/openpnp/model/eagle/xml/*,org/openpnp/machine/neoden4/Neoden4CamDll*</excludes>
 					<!-- Add any resource files to exclude here -->
 					<resourceExcludes></resourceExcludes>
 				</configuration>
