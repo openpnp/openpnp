@@ -85,7 +85,7 @@ It must be mentioned that InterlockActuators will interrupt continuous [[Motion 
 
 ![Pneumatic Z](https://user-images.githubusercontent.com/9963310/98463670-25b3ad80-21bd-11eb-96bf-3f56d9fab4a1.png)
 
-Use this configuration to create a pneumatic nozzle (formerly known as a "Marek Nozzle"). Create a [[virtual Z axis|Machine-Axes#referencevirtualaxis]] and assign it to the nozzle. Then create the InterlockActuator shown here to actuate ON the pneumatic valve to physically move up the nozzle when the virtual axis is about to move to its Safe Z coordinate (actuation _before_ the move). It will actuate OFF to move the Nozzle down when the virtual Z axis has completed a move that leaves the Safe Z coordinate (actuation _after_ the move). 
+Use this configuration to create a pneumatic nozzle (formerly known as a "Marek Nozzle"). Create a [[virtual Z axis|Machine-Axes#referencevirtualaxis]] and [[map it to the nozzle|Mapping Axes]]. Then create the InterlockActuator shown here to actuate ON the pneumatic valve to physically move up the nozzle when the virtual axis is about to move to its Safe Z coordinate (actuation _before_ the move). It will actuate OFF to move the Nozzle down when the virtual Z axis has completed a move that leaves the Safe Z coordinate (actuation _after_ the move). 
 
 **Notes:** 
 * In case of a  [[virtual axis|Machine-Axes#referencevirtualaxis]] the Safe Z coordinate is the same as the home coordinate. 
