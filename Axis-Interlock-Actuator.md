@@ -85,12 +85,18 @@ It must be mentioned that InterlockActuators will interrupt continuous [[Motion 
 
 ![Pneumatic Z](https://user-images.githubusercontent.com/9963310/98463670-25b3ad80-21bd-11eb-96bf-3f56d9fab4a1.png)
 
-Use this configuration to create a pneumatic nozzle (formerly known as a "Marek Nozzle"). Create a [[virtual Z axis|Machine-Axes#referencevirtualaxis]] (do _not_ re-use the one for the camera, and make a separate one _per nozzle_) and then [[map it to the nozzle|Mapping Axes]]. Then create the InterlockActuator shown here to actuate ON the pneumatic valve to physically move up the nozzle when the virtual axis is about to move to its Safe Z coordinate (actuation _before_ the move). It will actuate OFF to move the Nozzle down when the virtual Z axis has completed a move that leaves the Safe Z coordinate (actuation _after_ the move). 
+Use this configuration to create a pneumatic nozzle (formerly known as a "Marek Nozzle"). 
+
+1. Create a [[virtual Z axis|Machine-Axes#referencevirtualaxis]] dedicated to that nozzle. 
+2. [[Map the virtual Z axis to the nozzle|Mapping Axes]]. 
+3. Create the InterlockActuator shown above with **Signal Axes Inside Safe Zone** logic, to actuate the pneumatic valve **ON** to physically move up the nozzle when the virtual axis is about to move to its Safe Z coordinate (actuation _before_ the move). It will actuate **OFF** to move the Nozzle down when the virtual Z axis has completed a move that leaves the Safe Z coordinate (actuation _after_ the move). 
 
 **Notes:** 
-* In case of a  [[virtual axis|Machine-Axes#referencevirtualaxis]] the Safe Z coordinate is the same as the home coordinate. 
+* If your pneumatic ON/OFF polarity is inverted, just use the **Signal Axes Outside Safe Zone** instead.
+* The [[virtual axis|Machine-Axes#referencevirtualaxis]] Safe Z coordinate is the same as the home coordinate, i.e. if Z is _at_ or _above_ the home coordinate, it will actuate the nozzle.
 * The _before/after_ move characteristic is only relevant if other axes than Z are moved at the same time, for example a diagonal move, in a nozzle tip changing move. You should then of course be aware of the order and timing with which these physical movements happen. 
 * You might want to enable the [Machine Coordination](#machine-coordination) **After Actuation** option, if the pneumatic action takes a considerable amount of time to complete and its completion is acknowledged by the controller's flow-control, `M400` or similar.
+* Make a separate virtual Z _per nozzle_, especially do _not_ re-use the one for the camera. 
 
 ### Safety Confirmation Sensor on a Z Axis
 
