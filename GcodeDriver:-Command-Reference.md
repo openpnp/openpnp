@@ -1,8 +1,8 @@
 This is a list of commands and responses ([regular expressions](https://en.wikipedia.org/wiki/Regular_expression)) available for the GcodeDriver. Despite its name, the GcodeDriver does not only support the common [G-code numerical control (CNC) programming language](https://en.wikipedia.org/wiki/G-code) but _any_ text-line language, provided it uses decimal numbers and is line oriented (single commands and responses ending with carriage-return and/or line-feed). 
 
-When the driver is commanded by OpenPnP to perform an action it looks up the appropriate Gcode, performs variable substitution and then sends it to the controller.
+When the driver is commanded by OpenPnP to perform an action it looks up the appropriate Gcode, performs [variable substitution](https://github.com/openpnp/openpnp/wiki/GcodeDriver#variable-substitution) and then sends it to the controller.
 
-Commands can contain multiple lines to send to the controller. Each line is sent as a command and the driver usually waits for the COMMAND_CONFIRM_REGEX to match before sending the next one. 
+Commands can contain multiple lines to send to the controller. Each line is sent as a command and the driver usually waits for the `COMMAND_CONFIRM_REGEX` to match before sending the next one. 
 
 ___
 **Note**: For [[the most common controller firmwares|Motion-Controller-Firmwares]], OpenPnP can automatically configure many commands and regular expressions for you. It will use the [[axes as configured in your machine|Machine-Axes]] to compose it with the right variables. Use the [[Issues and Solutions]] system to get the proposed codes. You can always dismiss/undo them or change/expand them afterwards. 
