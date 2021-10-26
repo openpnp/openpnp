@@ -26,6 +26,9 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +54,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
@@ -62,11 +67,10 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Pipeline;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
-
-import static javax.swing.SwingConstants.TOP;
 
 @SuppressWarnings("serial")
 public class PartsPanel extends JPanel implements WizardContainer {
@@ -76,8 +80,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
     private Preferences prefs = Preferences.userNodeForPackage(PartsPanel.class);
 
-    private final Configuration configuration;
-    private final Frame frame;
+    final private Configuration configuration;
+    final private Frame frame;
 
     private PartsTableModel tableModel;
     private TableRowSorter<PartsTableModel> tableSorter;
@@ -85,7 +89,6 @@ public class PartsPanel extends JPanel implements WizardContainer {
     private JTable table;
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
-    private JTabbedPane tabbedPane;
 
     public PartsPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
@@ -97,30 +100,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
         multiSelectionActionGroup.setEnabled(false);
 
         setLayout(new BorderLayout(0, 0));
-
-        createAndAddToolbar();
-
         tableModel = new PartsTableModel();
         tableSorter = new TableRowSorter<>(tableModel);
 
-        JSplitPane splitPane = new JSplitPane();
-        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        splitPane.setContinuousLayout(true);
-        splitPane
-                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
-        splitPane.addPropertyChangeListener("dividerLocation",
-                evt -> prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation()));
-        add(splitPane, BorderLayout.CENTER);
-
-        tabbedPane = new JTabbedPane(TOP);
-
-        tableSetup();
-
-        splitPane.setLeftComponent(new JScrollPane(table));
-        splitPane.setRightComponent(tabbedPane);
-    }
-
-    private void createAndAddToolbar() {
         JPanel toolbarAndSearch = new JPanel();
         add(toolbarAndSearch, BorderLayout.NORTH);
         toolbarAndSearch.setLayout(new BorderLayout(0, 0));
@@ -129,11 +111,11 @@ public class PartsPanel extends JPanel implements WizardContainer {
         toolBar.setFloatable(false);
         toolbarAndSearch.add(toolBar);
 
-        JPanel upperPanel = new JPanel();
-        toolbarAndSearch.add(upperPanel, BorderLayout.EAST);
+        JPanel panel_1 = new JPanel();
+        toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
         JLabel lblSearch = new JLabel("Search");
-        upperPanel.add(lblSearch);
+        panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
         searchTextField.getDocument().addDocumentListener(new DocumentListener() {
@@ -152,39 +134,38 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 search();
             }
         });
-        upperPanel.add(searchTextField);
+        panel_1.add(searchTextField);
         searchTextField.setColumns(15);
 
-        toolBar.add(newPartAction);
-        toolBar.add(deletePartAction);
-        toolBar.addSeparator();
-        toolBar.add(pickPartAction);
-
-        toolBar.addSeparator();
-        JButton copyToClipboardButton = new JButton(copyPartToClipboardAction);
-        copyToClipboardButton.setHideActionText(true);
-        toolBar.add(copyToClipboardButton);
-
-        JButton pasteFromClipboardButton = new JButton(pastePartFromClipboardAction);
-        pasteFromClipboardButton.setHideActionText(true);
-        toolBar.add(pasteFromClipboardButton);
-    }
-
-    private void tableSetup() {
-        JComboBox<Package> packagesCombo = new JComboBox<>(new PackagesComboBoxModel());
+        JComboBox packagesCombo = new JComboBox(new PackagesComboBoxModel());
         packagesCombo.setMaximumRowCount(20);
-        packagesCombo.setRenderer(new IdentifiableListCellRenderer<>());
+        packagesCombo.setRenderer(new IdentifiableListCellRenderer<org.openpnp.model.Package>());
+
+        JSplitPane splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setContinuousLayout(true);
+        splitPane
+                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+        splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
+            }
+        });
+        add(splitPane, BorderLayout.CENTER);
+
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+
+        table = new AutoSelectTextTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        table.setDefaultEditor(org.openpnp.model.Package.class,
+                new DefaultCellEditor(packagesCombo));
+        table.setDefaultRenderer(org.openpnp.model.Package.class,
+                new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
 
         JComboBox<Pipeline> pipelinesCombo = new JComboBox<>(new PipelinesComboBoxModel());
         pipelinesCombo.setMaximumRowCount(20);
         pipelinesCombo.setRenderer(new IdentifiableListCellRenderer<>());
-
-        table = new AutoSelectTextTable(tableModel);
-        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        table.setDefaultEditor(Package.class,
-                new DefaultCellEditor(packagesCombo));
-        table.setDefaultRenderer(Package.class,
-                new IdentifiableTableCellRenderer<Package>());
 
         table.setDefaultEditor(Pipeline.class,
                 new DefaultCellEditor(pipelinesCombo));
@@ -193,65 +174,80 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+        splitPane.setLeftComponent(new JScrollPane(table));
+        splitPane.setRightComponent(tabbedPane);
 
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (e.getValueIsAdjusting()) {
-                return;
+        toolBar.add(newPartAction);
+        toolBar.add(deletePartAction);
+        toolBar.addSeparator();
+        toolBar.add(pickPartAction);
+
+        toolBar.addSeparator();
+        JButton btnNewButton = new JButton(copyPartToClipboardAction);
+        btnNewButton.setHideActionText(true);
+        toolBar.add(btnNewButton);
+
+        JButton btnNewButton_1 = new JButton(pastePartToClipboardAction);
+        btnNewButton_1.setHideActionText(true);
+        toolBar.add(btnNewButton_1);
+
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+
+                List<Part> selections = getSelections();
+
+                if (selections.size() > 1) {
+                    singleSelectionActionGroup.setEnabled(false);
+                    multiSelectionActionGroup.setEnabled(true);
+                }
+                else {
+                    multiSelectionActionGroup.setEnabled(false);
+                    singleSelectionActionGroup.setEnabled(!selections.isEmpty());
+                }
+
+                Part part = getSelection();
+
+                int selectedTab = tabbedPane.getSelectedIndex();
+                tabbedPane.removeAll();
+
+                if (part != null) {
+                    tabbedPane.add("Settings", new JScrollPane(new PartSettingsPanel(part)));
+
+                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+                        Wizard wizard = partAlignment.getPartConfigurationWizard(part);
+                        if (wizard != null) {
+                            JPanel panel = new JPanel();
+                            panel.setLayout(new BorderLayout());
+                            panel.add(wizard.getWizardPanel());
+                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                            wizard.setWizardContainer(PartsPanel.this);
+                        }
+                    }
+
+                    FiducialLocator fiducialLocator =
+                            Configuration.get().getMachine().getFiducialLocator();
+                    Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
+                    if (wizard != null) {
+                        JPanel panel = new JPanel();
+                        panel.setLayout(new BorderLayout());
+                        panel.add(wizard.getWizardPanel());
+                        tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                        wizard.setWizardContainer(PartsPanel.this);
+                    }
+                }
+
+                if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
+                    tabbedPane.setSelectedIndex(selectedTab);
+                }
+
+                revalidate();
+                repaint();
             }
-
-            List<Part> selections = getSelections();
-
-            if (selections.size() > 1) {
-                singleSelectionActionGroup.setEnabled(false);
-                multiSelectionActionGroup.setEnabled(true);
-            } else {
-                multiSelectionActionGroup.setEnabled(false);
-                singleSelectionActionGroup.setEnabled(!selections.isEmpty());
-            }
-
-            Part part = getSelection();
-
-            int selectedTab = tabbedPane.getSelectedIndex();
-            tabbedPane.removeAll();
-
-            if (part != null) {
-                partSelectionSetup(part);
-            }
-
-            if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
-                tabbedPane.setSelectedIndex(selectedTab);
-            }
-
-            revalidate();
-            repaint();
         });
-    }
-
-    private void partSelectionSetup(Part part) {
-        tabbedPane.add("Settings", new JScrollPane(new PartSettingsPanel(part)));
-
-        createBottomVisionPanel(part);
-        createFiducialLocatorPanel(part);
-    }
-
-    private void createBottomVisionPanel(Part part) {
-        Configuration.get().getMachine().getPartAlignments().forEach(partAlignment ->
-            addPanelToTabbedPane(partAlignment.getPartConfigurationWizard(part)));
-    }
-
-    private void createFiducialLocatorPanel(Part part) {
-        FiducialLocator fiducialLocator = Configuration.get().getMachine().getFiducialLocator();
-        addPanelToTabbedPane(fiducialLocator.getPartConfigurationWizard(part));
-    }
-
-    private void addPanelToTabbedPane(Wizard wizard) {
-        if (wizard != null) {
-            JPanel panel = new JPanel();
-            panel.setLayout(new BorderLayout());
-            panel.add(wizard.getWizardPanel());
-            tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
-            wizard.setWizardContainer(PartsPanel.this);
-        }
     }
 
     private Part getSelection() {
@@ -276,7 +272,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
         // If current expression doesn't parse, don't update.
         try {
             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
-        } catch (PatternSyntaxException e) {
+        }
+        catch (PatternSyntaxException e) {
             Logger.warn(e, "Search failed");
             return;
         }
@@ -292,7 +289,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            if (Configuration.get().getPackages().isEmpty()) {
+            if (Configuration.get().getPackages().size() == 0) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
                         "There are currently no packages defined in the system. Please create at least one package before creating a part.");
                 return;
@@ -301,18 +298,18 @@ public class PartsPanel extends JPanel implements WizardContainer {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
                     "Please enter an ID for the new part.")) != null) {
-                if (configuration.getPart(id) == null) {
-                    Part part = new Part(id);
-
-                    part.setPackage(Configuration.get().getPackages().get(0));
-
-                    configuration.addPart(part);
-                    tableModel.fireTableDataChanged();
-                    Helpers.selectLastTableRow(table);
-                    break;
+                if (configuration.getPart(id) != null) {
+                    MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
+                    continue;
                 }
+                Part part = new Part(id);
 
-                MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
+                part.setPackage(Configuration.get().getPackages().get(0));
+
+                configuration.addPart(part);
+                tableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(table);
+                break;
             }
         }
     };
@@ -331,7 +328,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
             String formattedIds;
             if (ids.size() <= 3) {
                 formattedIds = String.join(", ", ids);
-            } else {
+            }
+            else {
                 formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
             }
 
@@ -394,13 +392,14 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 StringSelection stringSelection = new StringSelection(w.toString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
             }
         }
     };
 
-    public final Action pastePartFromClipboardAction = new AbstractAction() {
+    public final Action pastePartToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
             putValue(NAME, "Create Part from Clipboard");
@@ -413,8 +412,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 Serializer ser = Configuration.createSerializer();
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                StringReader r = new StringReader(s);
                 Part part = ser.read(Part.class, s);
-                for (int i = 0; ; i++) {
+                for (int i = 0;; i++) {
                     if (Configuration.get().getPart(part.getId() + "-" + i) == null) {
                         part.setId(part.getId() + "-" + i);
                         Configuration.get().addPart(part);
@@ -423,17 +423,16 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 }
                 tableModel.fireTableDataChanged();
                 Helpers.selectLastTableRow(table);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
             }
         }
     };
 
     @Override
-    public void wizardCompleted(Wizard wizard) {
-    }
+    public void wizardCompleted(Wizard wizard) {}
 
     @Override
-    public void wizardCancelled(Wizard wizard) {
-    }
+    public void wizardCancelled(Wizard wizard) {}
 }

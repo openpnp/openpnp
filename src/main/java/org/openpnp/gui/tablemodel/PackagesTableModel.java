@@ -32,14 +32,17 @@ import org.openpnp.model.Pipeline;
 
 @SuppressWarnings("serial")
 public class PackagesTableModel extends AbstractTableModel implements PropertyChangeListener {
+    final private Configuration configuration;
 
     private String[] columnNames = new String[] {"ID", "Description", "Tape Specification", "Pipeline"};
     private Class[] columnTypes = new Class[] {String.class, String.class, String.class, Pipeline.class};
     private List<Package> packages;
 
-    public PackagesTableModel() {
-        Configuration.get().addPropertyChangeListener("packages", this);
-        packages = new ArrayList<>(Configuration.get().getPackages());
+    public PackagesTableModel(Configuration configuration) {
+        this.configuration = configuration;
+        configuration.addPropertyChangeListener("packages", this);
+        packages = new ArrayList<>(configuration.getPackages());
+
     }
 
     @Override
@@ -72,14 +75,15 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            Package pkg = packages.get(rowIndex);
+            Package this_package = packages.get(rowIndex);
             if (columnIndex == 1) {
-                pkg.setDescription((String) aValue);
+                this_package.setDescription((String) aValue);
             }
             else if (columnIndex == 2) {
-                pkg.setTapeSpecification((String) aValue);
-            } else if (columnIndex == 3) {
-                Configuration.get().assignPipelineToPackageUpdateMaps(pkg, (Pipeline) aValue);
+                this_package.setTapeSpecification((String) aValue);
+            }
+            else if (columnIndex == 3) {
+                Configuration.get().assignPipelineToPackageUpdateMaps(this_package, (Pipeline) aValue);
             }
         }
         catch (Exception e) {
@@ -88,16 +92,16 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
     }
 
     public Object getValueAt(int row, int col) {
-        Package pkg = packages.get(row);
+        Package this_package = packages.get(row);
         switch (col) {
             case 0:
-                return pkg.getId();
+                return this_package.getId();
             case 1:
-                return pkg.getDescription();
+                return this_package.getDescription();
             case 2:
-                return pkg.getTapeSpecification();
+                return this_package.getTapeSpecification();
             case 3:
-                return pkg.getPipeline();
+                return this_package.getPipeline();
             default:
                 return null;
         }
@@ -105,7 +109,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
 
     @Override
     public void propertyChange(PropertyChangeEvent arg0) {
-        packages = new ArrayList<>(Configuration.get().getPackages());
+        packages = new ArrayList<>(configuration.getPackages());
         fireTableDataChanged();
 
         if (arg0.getSource() instanceof Package) {

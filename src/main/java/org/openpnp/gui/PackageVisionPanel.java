@@ -26,6 +26,8 @@ import java.awt.event.ActionEvent;
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -60,8 +62,8 @@ public class PackageVisionPanel extends JPanel {
     private FootprintTableModel tableModel;
     private JTable table;
 
-    private final Footprint footprint;
-    private final Package pkg;
+    final private Footprint footprint;
+    final private Package pkg;
 
     public PackageVisionPanel(Package pkg) {
         this.pkg = pkg;
@@ -107,8 +109,6 @@ public class PackageVisionPanel extends JPanel {
         propertiesPanel.add(bodyHeightTf, "4, 6, left, default");
         bodyHeightTf.setColumns(10);
 
-        /////////////////////////////////////////////
-
         JPanel tablePanel = new JPanel();
         add(tablePanel, BorderLayout.CENTER);
         tablePanel.setBorder(
@@ -117,14 +117,17 @@ public class PackageVisionPanel extends JPanel {
         table = new AutoSelectTextTable(tableModel);
         table.setAutoCreateRowSorter(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (e.getValueIsAdjusting()) {
-                return;
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+
+                Pad pad = getSelectedPad();
+
+                deleteAction.setEnabled(pad != null);
             }
-
-            Pad pad = getSelectedPad();
-
-            deleteAction.setEnabled(pad != null);
         });
         tablePanel.setLayout(new BorderLayout(0, 0));
 
@@ -142,8 +145,6 @@ public class PackageVisionPanel extends JPanel {
         JScrollPane tableScrollPane = new JScrollPane(table);
         tableScrollPane.setPreferredSize(new Dimension(454, 100));
         tablePanel.add(tableScrollPane);
-
-        //////////////////////////////////////////////
 
         JPanel bottomVisionPanel = new JPanel();
         add(bottomVisionPanel, BorderLayout.SOUTH);
@@ -202,21 +203,21 @@ public class PackageVisionPanel extends JPanel {
                         footprintBeanProperty, unitsCombo, jComboBoxBeanProperty);
         autoBinding.bind();
         //
-        BeanProperty<Footprint, Double> footprintBeanPropertyWidth = BeanProperty.create("bodyWidth");
+        BeanProperty<Footprint, Double> footprintBeanProperty_1 = BeanProperty.create("bodyWidth");
         BeanProperty<JTextField, String> jTextFieldBeanProperty = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBindingWidth =
+        AutoBinding<Footprint, Double, JTextField, String> autoBinding_1 =
                 Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint,
-                        footprintBeanPropertyWidth, bodyWidthTf, jTextFieldBeanProperty);
-        autoBindingWidth.setConverter(doubleConverter);
-        autoBindingWidth.bind();
+                        footprintBeanProperty_1, bodyWidthTf, jTextFieldBeanProperty);
+        autoBinding_1.setConverter(doubleConverter);
+        autoBinding_1.bind();
         //
-        BeanProperty<Footprint, Double> footprintBeanPropertyHeight = BeanProperty.create("bodyHeight");
+        BeanProperty<Footprint, Double> footprintBeanProperty_2 = BeanProperty.create("bodyHeight");
         BeanProperty<JTextField, String> jTextFieldBeanProperty_1 = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBindingHeight =
+        AutoBinding<Footprint, Double, JTextField, String> autoBinding_2 =
                 Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint,
-                        footprintBeanPropertyHeight, bodyHeightTf, jTextFieldBeanProperty_1);
-        autoBindingHeight.setConverter(doubleConverter);
-        autoBindingHeight.bind();
+                        footprintBeanProperty_2, bodyHeightTf, jTextFieldBeanProperty_1);
+        autoBinding_2.setConverter(doubleConverter);
+        autoBinding_2.bind();
 
         ComponentDecorators.decorateWithAutoSelect(bodyWidthTf);
         ComponentDecorators.decorateWithAutoSelect(bodyHeightTf);
@@ -257,13 +258,14 @@ public class PackageVisionPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             String name;
-            if ((name = JOptionPane.showInputDialog(getTopLevelAncestor(),
+            while ((name = JOptionPane.showInputDialog(getTopLevelAncestor(),
                     "Please enter a name for the new pad.")) != null) {
                 Pad pad = new Pad();
                 pad.setName(name);
                 footprint.addPad(pad);
                 tableModel.fireTableDataChanged();
                 Helpers.selectLastTableRow(table);
+                break;
             }
         }
     };

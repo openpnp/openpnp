@@ -28,6 +28,9 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +41,8 @@ import java.util.stream.Collectors;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
@@ -52,8 +57,6 @@ import org.openpnp.spi.Camera;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
 
-import static javax.swing.SwingConstants.TOP;
-
 @SuppressWarnings("serial")
 public class PackagesPanel extends JPanel {
 
@@ -62,8 +65,8 @@ public class PackagesPanel extends JPanel {
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
     private Preferences prefs = Preferences.userNodeForPackage(PackagesPanel.class);
 
-    private final Configuration configuration;
-    private final Frame frame;
+    final private Configuration configuration;
+    final private Frame frame;
 
     private PackagesTableModel tableModel;
     private TableRowSorter<PackagesTableModel> tableSorter;
@@ -71,7 +74,6 @@ public class PackagesPanel extends JPanel {
     private JTable table;
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
-    private JTabbedPane tabbedPane;
 
     public PackagesPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
@@ -83,46 +85,9 @@ public class PackagesPanel extends JPanel {
         multiSelectionActionGroup.setEnabled(false);
 
         setLayout(new BorderLayout(0, 0));
-
-        createAndAddToolbar();
-
-        tableModel = new PackagesTableModel();
+        tableModel = new PackagesTableModel(configuration);
         tableSorter = new TableRowSorter<>(tableModel);
 
-        JSplitPane splitPane = new JSplitPane();
-        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        splitPane.setContinuousLayout(true);
-        splitPane
-                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
-        splitPane.addPropertyChangeListener("dividerLocation",
-                evt -> prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation()));
-        add(splitPane, BorderLayout.CENTER);
-
-        tabbedPane = new JTabbedPane(TOP);
-
-        tableSetup();
-
-        splitPane.setLeftComponent(new JScrollPane(table));
-        splitPane.setRightComponent(tabbedPane);
-
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentHidden(ComponentEvent e) {
-                try {
-                    Camera camera =
-                            Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-                    CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
-                    if (cameraView == null) {
-                        return;
-                    }
-                    cameraView.removeReticle(PackageVisionPanel.class.getName());
-                } catch (Exception e1) {
-                }
-            }
-        });
-    }
-
-    private void createAndAddToolbar() {
         JPanel toolbarAndSearch = new JPanel();
         add(toolbarAndSearch, BorderLayout.NORTH);
         toolbarAndSearch.setLayout(new BorderLayout(0, 0));
@@ -131,11 +96,11 @@ public class PackagesPanel extends JPanel {
         toolBar.setFloatable(false);
         toolbarAndSearch.add(toolBar);
 
-        JPanel upperPanel = new JPanel();
-        toolbarAndSearch.add(upperPanel, BorderLayout.EAST);
+        JPanel panel_1 = new JPanel();
+        toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
         JLabel lblSearch = new JLabel("Search");
-        upperPanel.add(lblSearch);
+        panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
         searchTextField.getDocument().addDocumentListener(new DocumentListener() {
@@ -154,17 +119,24 @@ public class PackagesPanel extends JPanel {
                 search();
             }
         });
-        upperPanel.add(searchTextField);
+        panel_1.add(searchTextField);
         searchTextField.setColumns(15);
 
-        toolBar.add(newPackageAction);
-        toolBar.add(deletePackageAction);
-        toolBar.addSeparator();
-        toolBar.add(copyPackageToClipboardAction);
-        toolBar.add(pastePackageFromClipboardAction);
-    }
+        JSplitPane splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setContinuousLayout(true);
+        splitPane
+                .setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+        splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
+            }
+        });
+        add(splitPane, BorderLayout.CENTER);
 
-    private void tableSetup() {
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+
         JComboBox<Pipeline> pipelinesCombo = new JComboBox<>(new PipelinesComboBoxModel());
         pipelinesCombo.setMaximumRowCount(20);
         pipelinesCombo.setRenderer(new IdentifiableListCellRenderer<>());
@@ -177,45 +149,70 @@ public class PackagesPanel extends JPanel {
         table.setDefaultRenderer(Pipeline.class,
                 new IdentifiableTableCellRenderer<Pipeline>());
 
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+
+                List<Package> selections = getSelections();
+
+                if (selections.size() > 1) {
+                    singleSelectionActionGroup.setEnabled(false);
+                    multiSelectionActionGroup.setEnabled(true);
+                }
+                else {
+                    multiSelectionActionGroup.setEnabled(false);
+                    singleSelectionActionGroup.setEnabled(!selections.isEmpty());
+                }
+
+                Package pkg = getSelection();
+
+                int selectedTab = tabbedPane.getSelectedIndex();
+                tabbedPane.removeAll();
+                if (pkg != null) {
+                    tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
+                    tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg)));
+                    tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
+                    if (selectedTab != -1) {
+                        tabbedPane.setSelectedIndex(selectedTab);
+                    }
+                }
+
+                revalidate();
+                repaint();
+            }
+        });
+
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
 
-        table.getSelectionModel().addListSelectionListener(e -> {
-            if (e.getValueIsAdjusting()) {
-                return;
+        splitPane.setLeftComponent(new JScrollPane(table));
+        splitPane.setRightComponent(tabbedPane);
+
+        toolBar.add(newPackageAction);
+        toolBar.add(deletePackageAction);
+        toolBar.addSeparator();
+        toolBar.add(copyPackageToClipboardAction);
+        toolBar.add(pastePackageToClipboardAction);
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                try {
+                    Camera camera =
+                            Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+                    CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
+                    if (cameraView == null) {
+                        return;
+                    }
+                    cameraView.removeReticle(PackageVisionPanel.class.getName());
+                }
+                catch (Exception e1) {
+                }
             }
-
-            List<Package> selections = getSelections();
-
-            if (selections.size() > 1) {
-                singleSelectionActionGroup.setEnabled(false);
-                multiSelectionActionGroup.setEnabled(true);
-            } else {
-                multiSelectionActionGroup.setEnabled(false);
-                singleSelectionActionGroup.setEnabled(!selections.isEmpty());
-            }
-
-            Package pkg = getSelection();
-
-            int selectedTab = tabbedPane.getSelectedIndex();
-            tabbedPane.removeAll();
-
-            if (pkg != null) {
-                packageSelectionSetup(pkg, selectedTab);
-            }
-
-            revalidate();
-            repaint();
         });
-    }
-
-    private void packageSelectionSetup(Package pkg, int selectedTab) {
-        tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
-        tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg)));
-        tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
-        if (selectedTab != -1) {
-            tabbedPane.setSelectedIndex(selectedTab);
-        }
     }
 
     private Package getSelection() {
@@ -234,13 +231,13 @@ public class PackagesPanel extends JPanel {
         }
         return selections;
     }
-
     private void search() {
         RowFilter<PackagesTableModel, Object> rf = null;
         // If current expression doesn't parse, don't update.
         try {
             rf = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
-        } catch (PatternSyntaxException e) {
+        }
+        catch (PatternSyntaxException e) {
             Logger.warn(e, "Search failed");
             return;
         }
@@ -259,16 +256,16 @@ public class PackagesPanel extends JPanel {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
                     "Please enter an ID for the new package.")) != null) {
-                if (configuration.getPackage(id) == null) {
-                    Package pkg = new Package(id);
-
-                    configuration.addPackage(pkg);
-                    tableModel.fireTableDataChanged();
-                    Helpers.selectLastTableRow(table);
-                    break;
+                if (configuration.getPackage(id) != null) {
+                    MessageBoxes.errorBox(frame, "Error", "Package ID " + id + " already exists.");
+                    continue;
                 }
+                Package this_package = new Package(id);
 
-                MessageBoxes.errorBox(frame, "Error", "Package ID " + id + " already exists.");
+                configuration.addPackage(this_package);
+                tableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(table);
+                break;
             }
         }
     };
@@ -299,7 +296,8 @@ public class PackagesPanel extends JPanel {
             String formattedIds;
             if (ids.size() <= 3) {
                 formattedIds = String.join(", ", ids);
-            } else {
+            }
+            else {
                 formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
             }
 
@@ -335,13 +333,14 @@ public class PackagesPanel extends JPanel {
                 StringSelection stringSelection = new StringSelection(w.toString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
             }
         }
     };
 
-    public final Action pastePackageFromClipboardAction = new AbstractAction() {
+    public final Action pastePackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
             putValue(NAME, "Create Package from Clipboard");
@@ -354,8 +353,9 @@ public class PackagesPanel extends JPanel {
                 Serializer ser = Configuration.createSerializer();
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                StringReader r = new StringReader(s);
                 Package pkg = ser.read(Package.class, s);
-                for (int i = 0; ; i++) {
+                for (int i = 0;; i++) {
                     if (Configuration.get().getPackage(pkg.getId() + "-" + i) == null) {
                         pkg.setId(pkg.getId() + "-" + i);
                         Configuration.get().addPackage(pkg);
@@ -364,7 +364,8 @@ public class PackagesPanel extends JPanel {
                 }
                 tableModel.fireTableDataChanged();
                 Helpers.selectLastTableRow(table);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
             }
         }
