@@ -73,7 +73,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
+        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
         
         // test data
         Location[][] testData = {
@@ -85,7 +85,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         machine.setEnabled(true);
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
-        for (Location[] testPair: testData)
+        for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
@@ -95,6 +95,7 @@ public class ReferenceBottomVisionOffsetTest {
                 assertMaxDelta(offsets.getRotation(), testPair[1].getRotation(), maxError.getRotation());
                 return true;
             });
+        }
     }
 
     @Test
@@ -115,7 +116,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
+        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
         
         // test data
         Location[][] testData = {
@@ -127,7 +128,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         machine.setEnabled(true);
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
-        for (Location[] testPair: testData)
+        for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
@@ -137,6 +138,7 @@ public class ReferenceBottomVisionOffsetTest {
                 assertMaxDelta(offsets.getRotation(), testPair[1].getRotation(), maxError.getRotation());
                 return true;
             });
+        }
     }
     
     
@@ -158,7 +160,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 1.0, 1.0, 0.0, 0.0));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
+        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
         
         // test data
         Location[][] testData = {
@@ -170,7 +172,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         machine.setEnabled(true);
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
-        for (Location[] testPair: testData)
+        for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
@@ -180,6 +182,7 @@ public class ReferenceBottomVisionOffsetTest {
                 assertMaxDelta(offsets.getRotation(), testPair[1].getRotation(), maxError.getRotation());
                 return true;
             });
+        }
     }
 
    
@@ -201,7 +204,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
+        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
         
         // test data
         Location[][] testData = {
@@ -213,7 +216,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         machine.setEnabled(true);
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
-        for (Location[] testPair: testData)
+        for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
@@ -223,6 +226,7 @@ public class ReferenceBottomVisionOffsetTest {
                 assertMaxDelta(offsets.getRotation(), testPair[1].getRotation(), maxError.getRotation());
                 return true;
             });
+        }
     }
 
     @Test
@@ -243,7 +247,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // With pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
+        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
         
         // test data
         Location[][] testData = {
@@ -255,7 +259,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         machine.setEnabled(true);
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
-        for (Location[] testPair: testData)
+        for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
@@ -265,6 +269,7 @@ public class ReferenceBottomVisionOffsetTest {
                 assertMaxDelta(offsets.getRotation(), testPair[1].getRotation(), maxError.getRotation());
                 return true;
             });
+        }
     }
 
     
@@ -286,7 +291,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
+        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
         
         // test data
         Location[][] testData = {
@@ -298,7 +303,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         machine.setEnabled(true);
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
-        for (Location[] testPair: testData)
+        for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
@@ -308,6 +313,7 @@ public class ReferenceBottomVisionOffsetTest {
                 assertMaxDelta(offsets.getRotation(), testPair[1].getRotation(), maxError.getRotation());
                 return true;
             });
+        }
     }
     
     
@@ -329,7 +335,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // With pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
+        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
         
         // test data
         Location[][] testData = {
@@ -341,7 +347,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         machine.setEnabled(true);
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
-        for (Location[] testPair: testData)
+        for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
@@ -351,6 +357,7 @@ public class ReferenceBottomVisionOffsetTest {
                 assertMaxDelta(offsets.getRotation(), testPair[1].getRotation(), maxError.getRotation());
                 return true;
             });
+        }
     }
     
     @Test
@@ -371,7 +378,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_OFF);
+        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
         
         // test data
         Location error = new Location(LengthUnit.Millimeters, 1.0, -0.5, 0.0, 18.0);
@@ -388,7 +395,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         machine.setEnabled(true);
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
-        for (Location[] testPair: testData)
+        for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
@@ -398,6 +405,7 @@ public class ReferenceBottomVisionOffsetTest {
                 assertMaxDelta(offsets.getRotation(), testPair[1].getRotation(), maxError.getRotation());
                 return true;
             });
+        }
     }
     
     
@@ -420,7 +428,7 @@ public class ReferenceBottomVisionOffsetTest {
         partSettings.setVisionOffset(partVisionOffset);
         
         // With pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.ALWAYS_ON);
+        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
         
         // error of vision
         Location error = new Location(LengthUnit.Millimeters, -0.6, 1.2, 0.0, -12.0);
@@ -438,7 +446,7 @@ public class ReferenceBottomVisionOffsetTest {
 
         machine.setEnabled(true);
         Location maxError = new Location(LengthUnit.Millimeters, 0.1, 0.1, 0, 0.03);
-        for (Location[] testPair: testData)
+        for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
                 PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
@@ -448,6 +456,7 @@ public class ReferenceBottomVisionOffsetTest {
                 assertMaxDelta(offsets.getRotation(), testPair[1].getRotation(), maxError.getRotation());
                 return true;
             });
+        }
     }
 
 

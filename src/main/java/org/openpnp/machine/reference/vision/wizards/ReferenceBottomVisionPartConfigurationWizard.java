@@ -31,6 +31,9 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceBottomVision bottomVision;
     private final Part part;
@@ -126,9 +129,13 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         panel.add(lblPipeline, "2, 8");
 
         JButton editPipelineButton = new JButton("Edit");
-        editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(() -> {
-            editPipeline();
-        }));
+        editPipelineButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.messageBoxOnException(() -> {
+                    editPipeline();
+                });
+            }
+        });
         panel.add(editPipelineButton, "4, 8");
 
         JButton btnLoadDefault = new JButton("Reset to Default");

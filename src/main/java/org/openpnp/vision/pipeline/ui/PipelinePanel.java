@@ -7,8 +7,18 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
-import java.util.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.components.ClassSelectionDialog;
@@ -157,30 +167,45 @@ public class PipelinePanel extends JPanel {
         descriptionTa.setText("");
         descriptionTa.setEditable(false);
 
-        // Listen for changes to the selection of the table and update the properties for the selected stage.
-        stagesTable.getSelectionModel().addListSelectionListener(e -> {
-            if (e.getValueIsAdjusting()) {
-                return;
+        // Listen for changes to the selection of the table and update the properties for the
+        // selected stage.
+        stagesTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+                CvStage stage = getSelectedStage();
+                editor.stageSelected(stage);
+                refreshDescription();
+                refreshProperties();
             }
-            CvStage stage = getSelectedStage();
-            editor.stageSelected(stage);
-            refreshDescription();
-            refreshProperties();
         });
 
         // Listen for changes to the structure of the table (adding or removing rows) and process
         // the pipeline to update the results.
-        stagesTable.getModel().addTableModelListener(e -> editor.process());
-
-        stagesTable.changeSelection(stagesTable.getRowCount()-1,  0,  false, false);
-
-        // Listen for editing events in the stages table and process the pipeline to update the results.
-        stagesTable.addPropertyChangeListener(e -> {
-            if ("tableCellEditor".equals(e.getPropertyName()) && !propertySheetPanel.getTable().isEditing()) {
-                // editing has ended for a cell, save the values
+        stagesTable.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
                 editor.process();
             }
         });
+
+        // Listen for editing events in the stages table and process the pipeline to update the
+        // results.
+        stagesTable.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent e) {
+                if ("tableCellEditor".equals(e.getPropertyName())) {
+                    if (!propertySheetPanel.getTable().isEditing()) {
+                        // editing has ended for a cell, save the values
+                        editor.process();
+                    }
+                }
+            }
+        });
+
+        stagesTable.changeSelection(stagesTable.getRowCount()-1,  0,  false, false);
 
         splitPaneStages.setResizeWeight(0.80);
 
@@ -252,7 +277,7 @@ public class PipelinePanel extends JPanel {
         }
     }
 
-    public void onStagePropertySheetValueChanged(int row) {
+    public void onStagePropertySheetValueChanged(Object aValue, int row, int column) {
         // editing has ended for a cell, save the values
         refreshDescription();
 
@@ -265,7 +290,8 @@ public class PipelinePanel extends JPanel {
 
         editor.process();
     }
-
+    
+   
     private void refreshProperties() {
         CvStage stage = getSelectedStage();
         if (stage == null) {
@@ -284,7 +310,7 @@ public class PipelinePanel extends JPanel {
             }
         }
     }
-
+    
     private void refreshDescription() {
         CvStage stage = getSelectedStage();
         if (stage == null) {
@@ -300,7 +326,7 @@ public class PipelinePanel extends JPanel {
             }
         }
     }
-
+    
     public CvStage getSelectedStage() {
         int index = stagesTable.getSelectedRow();
         if (index == -1) {
@@ -372,7 +398,7 @@ public class PipelinePanel extends JPanel {
                         e);
             }
         }
-    }
+    };
 
     class DeleteStageAction extends Action {
         DeleteStageAction(String name, String description) {
@@ -380,13 +406,13 @@ public class PipelinePanel extends JPanel {
         }
 
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent arg0) {
             CvStage stage = getSelectedStage();
             editor.getPipeline().remove(stage);
             stagesTableModel.refresh();
             editor.process();
         }
-    }
+    };
 
     class CopyPipelineAction extends Action {
         CopyPipelineAction(String name, String description) {
@@ -394,18 +420,18 @@ public class PipelinePanel extends JPanel {
         }
 
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent arg0) {
             try {
                 StringSelection stringSelection =
                         new StringSelection(editor.getPipeline().toXmlString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
             }
-            catch (Exception exception) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy failed", exception);
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy failed", e);
             }
         }
-    }
+    };
 
     class PastePipelineAction extends Action {
         PastePipelineAction(String name, String description) {
@@ -426,7 +452,7 @@ public class PipelinePanel extends JPanel {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste failed", e);
             }
         }
-    }
+    };
 
     class NewPartPackageAction extends Action {
         NewPartPackageAction(String name, String description) {
@@ -448,7 +474,7 @@ public class PipelinePanel extends JPanel {
                 addSelectedPackage(dialog.getSelectedPackage());
             }
         }
-    }
+    };
 
     private void addSelectedPart(Part selected) {
         if (selected == null) {
@@ -544,6 +570,6 @@ public class PipelinePanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             editor.process();
         }
-    }
+    };
     private JEditorPane descriptionTa;
 }

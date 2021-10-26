@@ -360,7 +360,7 @@ public class Configuration extends AbstractModelObject {
         try {
             File file = new File(configurationDirectory, "pipelines.xml");
             if (overrideUserConfig || !file.exists()) {
-//                Logger.info("No pipelines.xml found in configuration directory, loading defaults.");
+                Logger.info("No pipelines.xml found in configuration directory, loading defaults.");
                 file = File.createTempFile("pipelines", "xml");
                 FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/pipelines.xml"), file);
                 forceSave = true;
