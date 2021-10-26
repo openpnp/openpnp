@@ -26,7 +26,9 @@ To configure the GcodeDriver it is necessary to at least set a COMMAND_CONFIRM_R
 
 ## Variable Substitution
 
-All of the commands support variable substitution. Variables are in the form of {VariableName:Format}. The variable names available to each command are listed with the command below. The format is a [Java style format string](https://docs.oracle.com/javase/7/docs/api/java/util/Formatter.html), similar to printf. If no format is specified the format defaults to `%s`, which simply converts the variable's value to a string.
+All of the commands support variable substitution. Variables placeholders are in the form of `{VariableName:Format}`. The variable names available to each command are listed with the command below. The format is a [Java style format string](https://docs.oracle.com/javase/7/docs/api/java/util/Formatter.html), similar to printf. If no format is specified the format defaults to `%s`, which simply converts the variable's value to a string. 
+
+The variable placeholder will only be emitted when the variable is present in the command, otherwise it is simply removed from the text, i.e. from `{` to `}`. Note, the `Format` can also contain fixed text or a combination of fixed text with a format specifier inserted. Therefore you can conditionally emit static text only when the variable is present. This is useful when for instance the axis letter must be emited together with a coordinate or not at all, e.g. `{X:X%.4f}`. 
 
 In the commands below, if a command has variables available they are listed in a table after the command.
 
