@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- *
+ * 
  * This file is package of OpenPnP.
- *
+ * 
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -83,7 +83,7 @@ public class PackagesPanel extends JPanel {
         singleSelectionActionGroup.setEnabled(false);
         multiSelectionActionGroup = new ActionGroup(deletePackageAction);
         multiSelectionActionGroup.setEnabled(false);
-
+        
         setLayout(new BorderLayout(0, 0));
         tableModel = new PackagesTableModel(configuration);
         tableSorter = new TableRowSorter<>(tableModel);
@@ -155,7 +155,7 @@ public class PackagesPanel extends JPanel {
                 if (e.getValueIsAdjusting()) {
                     return;
                 }
-
+                
                 List<Package> selections = getSelections();
 
                 if (selections.size() > 1) {
@@ -291,7 +291,7 @@ public class PackagesPanel extends JPanel {
                     }
                 }
             }
-
+            
             List<String> ids = selections.stream().map(Package::getId).collect(Collectors.toList());
             String formattedIds;
             if (ids.size() <= 3) {
@@ -300,7 +300,7 @@ public class PackagesPanel extends JPanel {
             else {
                 formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
             }
-
+            
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "Are you sure you want to delete " + formattedIds + "?",
                     "Delete " + selections.size() + " packages?", JOptionPane.YES_NO_OPTION);

@@ -62,7 +62,6 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.*;
 import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.Pipeline;
 import org.openpnp.spi.Feeder;
