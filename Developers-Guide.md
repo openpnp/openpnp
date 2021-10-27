@@ -6,17 +6,17 @@ Before starting to develop for OpenPnP you should review the [User Manual](User-
 
 # Contributing
 
-OpenPnP uses a Fork and Pull style of development. If you would like to submit changes you should fork the project, make your changes and submit a pull request. More information about that process is available at https://help.github.com/articles/using-pull-requests. There is also also specific tutorial made for OpenPnP at https://github.com/openpnp/openpnp/wiki/Your-First-Pull-Request.
+OpenPnP uses a Fork and Pull style of development. If you would like to submit changes you should fork the project, make your changes and submit a pull request. More information about that process is available at https://help.github.com/articles/using-pull-requests. There is also also specific tutorial made for OpenPnP at https://github.com/openpnp/openpnp/wiki/Your-First-Pull-Request. 
 
 ## Licensing and Copyright
 
-OpenPnP uses different licenses for different components. Before submitting changes, please review the license for that module by looking at the LICENSE file in the root directory of the module and decide if it is acceptable to you. Changes under a different license will not be accepted for merge into the repository.
+OpenPnP uses different licenses for different components. Before submitting changes, please review the license for that module by looking at the [LICENSE file in the root directory](/openpnp/openpnp/blob/develop/LICENSE.txt) of the module and decide if it is acceptable to you. Changes under a different license will not be accepted for merge into the repository.
 
 Contributors submitting large pieces of functionality, i.e. whole source files, whole part designs, major rewrites, etc. may assign their own copyright to the submission as long as you are willing to license it under the existing license for that module.
 
 ## Discussion First
 
-If you would like to add a new feature to OpenPnP that changes core or reference functionality, please create a topic on the [discussion group](http://groups.google.com/group/openpnp) to discuss the feature first. Also consider if your feature can be implemented as a new subclass of a Reference class, or an entirely new class, instead of changing or adding to the Reference class.
+If you would like to add a new feature to OpenPnP that changes core or reference functionality, please create a topic on the [discussion group](http://groups.google.com/group/openpnp) to discuss the feature first. Also consider if your feature can be implemented as a new subclass of a Reference class, or an entirely new class, instead of changing or adding to the Reference class. 
 
 ## Code Reviews
 
@@ -48,6 +48,9 @@ Code that does not follow these two guidelines (at least) will not be accepted.
 ## Describe Your Work
 
 In the pull request comments, explain what the change does. If it is new functionality, explain why it's useful and how it is to be used. If you are fixing an issue, reference the issue number.
+
+See the Pull request template:
+https://github.com/openpnp/openpnp/blob/develop/PULL_REQUEST_TEMPLATE.md
 
 ## Testing
 
