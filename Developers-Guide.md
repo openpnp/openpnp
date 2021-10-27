@@ -14,6 +14,10 @@ OpenPnP uses different licenses for different components. Before submitting chan
 
 Contributors submitting large pieces of functionality, i.e. whole source files, whole part designs, major rewrites, etc. may assign their own copyright to the submission as long as you are willing to license it under the existing license for that module.
 
+## Discussion First
+
+If you would like to add a new feature to OpenPnP that changes core or reference functionality, please create a topic on the [discussion group](http://groups.google.com/group/openpnp) to discuss the feature first. Also consider if your feature can be implemented as a new subclass of a Reference class, or an entirely new class, instead of changing or adding to the Reference class.
+
 ## Code Reviews
 
 All pull requests will be reviewed by the maintainers and will either be merged or comments will be provided as to why it's not being merged. You can submit new changes to the pull request as needed if the review uncovers issues.
