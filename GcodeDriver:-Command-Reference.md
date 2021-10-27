@@ -48,10 +48,23 @@ M811 ; Turn off LED lighting
 
 Sent in response to the home command. Should home the machine and reset the controller's coordinates to the preferred home location.
 
+**Note**: if you are using the **Axis Letter** mode on the Driver, the variable names/prefixes "X", "Y", "Z" etc. are replaced by the proper controller axis letters. 
+
 | Variable Name  |   Type   | Description |
 | -------------- | -------- | ----------- |
 | Id             | String   | User defined id of the head being homed. |
 | Name           | String   | User defined name of the head being homed. |
+| X              | Double   | The home X coordinate. |
+| Y              | Double   | The home Y coordinate. |
+| Z              | Double   | The home Z coordinate. |
+| Rotation       | Double   | The home C or Rotation coordinate. |
+| XL             | String   | The axis letter for the X coordinate. |
+| YL             | String   | The axis letter for the Y coordinate. |
+| ZL             | String   | The axis letter for the Z coordinate. |
+| RotationL      | String   | The axis letter for the Rotation coordinate. |
+| FeedRate       | Double   | The homing feed-rate in driver units/min. Note: for homing purposes the smallest feed-rate of the axes is taken. |
+| Acceleration   | Double   | The homing acceleration in driver units/s². Note: for homing purposes the smallest acceleration of the axes is taken. |
+| Jerk           | Double   | The homing jerk in driver units/s³. Note: for homing purposes the smallest jerk of the axes is taken. |
 
 Example:
 ```
@@ -66,6 +79,8 @@ G92 X0 Y0 Z0 E0 ; Reset machine coordinates to zero.
 **Note**: For [[the most common controller firmwares|Motion-Controller-Firmwares]], OpenPnP can automatically configure this command for you. Use the [[Issues and Solutions]] system. 
 
 This command has special handling for the X, Y, Z and Rotation variables. If the move does not change one of these variables that variable is replaced with the empty string, removing it from the command. This allows Gcode to be sent containing only the components that are being used which is important for some controllers when moving an "extruder" for the C axis (The current extruder is selected by sending a Gcode tool command like 'T1' in the pre-move-command). The end result is that if a move contains only a change in the C axis only the C axis value will be sent.
+
+**Note**: if you are using the **Axis Letter** mode on the Driver, the X, Y, Z etc. are replaced by the proper controller axis letters. 
 
 | Variable Name  |   Type   | Description |
 | -------------- | -------- | ----------- |
@@ -88,6 +103,13 @@ This command has special handling for the X, Y, Z and Rotation variables. If the
 | ZDecreasing    | Boolean  | Sent only if the move includes an Z component and the value is decreasing. |
 | RotationIncreasing    | Boolean  | Sent only if the move includes an Rotation component and the value is increasing. |
 | RotationDecreasing    | Boolean  | Sent only if the move includes an Rotation component and the value is decreasing. |
+| FeedRate       | Double   | The feed-rate in driver units/min.  |
+| Acceleration   | Double   | The acceleration in driver units/s².  |
+| Jerk           | Double   | The jerk in driver units/s³. |
+| XL             | String   | The axis letter for the logical X coordinate. |
+| YL             | String   | The axis letter for the logical Y coordinate. |
+| ZL             | String   | The axis letter for the logical Z coordinate. |
+| RotationL      | String   | The axis letter for the logical Rotation coordinate. |
 
 Example:
 ```
