@@ -30,7 +30,7 @@ import org.simpleframework.xml.core.Persist;
  * many boards and should generally represent a single part in the real world.
  */
 
-//TODO: NK constructor to initialize cvpipeline
+//TODO: NK add constructor for cvpipeline initializing
 public class Part extends AbstractModelObject implements Identifiable {
     @Attribute
     private String id;
@@ -70,6 +70,10 @@ public class Part extends AbstractModelObject implements Identifiable {
             public void configurationLoaded(Configuration configuration) {
                 partPackage = configuration.getPackage(packageId);
                 pipeline = configuration.getPipeline(pipelineId);
+
+                if (getPackage() == null) {
+                    setPackage(partPackage);
+                }
 
                 if (pipeline == null) {
                     if (partPackage.getPipelineId() == null) {

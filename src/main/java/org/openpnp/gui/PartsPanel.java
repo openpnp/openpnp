@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
- *
+ * 
  * This file is part of OpenPnP.
- *
+ * 
  * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License as published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
  * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
  * <http://www.gnu.org/licenses/>.
- *
+ * 
  * For more information about OpenPnP visit http://openpnp.org
  */
 
@@ -175,17 +175,17 @@ public class PartsPanel extends JPanel implements WizardContainer {
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
-
+        
         toolBar.add(newPartAction);
         toolBar.add(deletePartAction);
         toolBar.addSeparator();
         toolBar.add(pickPartAction);
-
+        
         toolBar.addSeparator();
         JButton btnNewButton = new JButton(copyPartToClipboardAction);
         btnNewButton.setHideActionText(true);
         toolBar.add(btnNewButton);
-
+        
         JButton btnNewButton_1 = new JButton(pastePartToClipboardAction);
         btnNewButton_1.setHideActionText(true);
         toolBar.add(btnNewButton_1);
@@ -226,7 +226,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                             wizard.setWizardContainer(PartsPanel.this);
                         }
                     }
-
+                    
                     FiducialLocator fiducialLocator =
                             Configuration.get().getMachine().getFiducialLocator();
                     Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
@@ -331,7 +331,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
             else {
                 formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
             }
-
+            
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "Are you sure you want to delete " + formattedIds + "?",
                     "Delete " + selections.size() + " parts?", JOptionPane.YES_NO_OPTION);
@@ -428,7 +428,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
             }
         }
     };
-
+    
     @Override
     public void wizardCompleted(Wizard wizard) {}
 
