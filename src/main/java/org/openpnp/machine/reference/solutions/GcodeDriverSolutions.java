@@ -731,17 +731,18 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                             }
                                         }
                                         commandBuilt += "; Home all axes\n";
-                                        commandBuilt += "G28.3 ";
-                                        for (ControllerAxis axis : gcodeDriver.getAxes(machine)) {
-                                            if (!axis.getLetter().isEmpty()) {
-                                                commandBuilt += axis.getLetter()+axis.getHomeCoordinate()+" ";
-                                            }
+                                        commandBuilt += "G28.3";
+                                        for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                                            commandBuilt += " {"+variable+":"+variable+"%.4f}";
                                         }
-                                        commandBuilt += "; Set all axes to home coordinates\n";
+                                        commandBuilt += " ; Set all axes to home coordinates\n";
                                         commandBuilt += "G92.1 ; Reset all offsets\n";
                                     }
                                     else {
-                                        commandBuilt = "G28 ; Home all axes";
+                                        // Reset the acceleration (it is not automatically reset on some controllers). 
+                                        commandBuilt = "{Acceleration:M204 S%.2f} ; Initialize acceleration\n";
+                                        // Home all axes.
+                                        commandBuilt += "G28 ; Home all axes";
                                     }
                                 }
                                 break;
