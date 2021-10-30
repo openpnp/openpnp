@@ -14,7 +14,7 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
 
     public static void discardAll(Head head) throws JobProcessorException {
         for (Nozzle nozzle : head.getNozzles()) {
-            discard(nozzle);            
+            discard(nozzle);
         }
     }
 
