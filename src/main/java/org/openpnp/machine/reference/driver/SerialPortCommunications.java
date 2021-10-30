@@ -137,25 +137,8 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
     }
 
     public int read() throws TimeoutException, IOException {
-    	long start = System.currentTimeMillis();
-    	int l = 0;
-    	byte[] b = new byte[1];
-    	
-    	while(System.currentTimeMillis() - start < 500) {	
-    		if(serialPort.bytesAvailable() > 0) {
-    			l = serialPort.readBytes(b, 1);
-    			break;
-    		}
-    		else {
-    			try {
-					Thread.sleep(1);
-				} catch (InterruptedException e) {
-					continue;
-				}
-    		}
-    	}
-        
-
+        byte[] b = new byte[1];
+        int l = serialPort.readBytes(b, 1);
         if (l == -1) {
             throw new IOException("Read error.");
         }
