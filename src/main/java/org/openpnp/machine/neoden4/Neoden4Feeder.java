@@ -15,6 +15,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.neoden4.wizards.Neoden4FeederConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Rectangle;
@@ -40,6 +41,12 @@ public class Neoden4Feeder extends ReferenceFeeder {
 
     @Attribute(required = false)
     private int feedCount = 0;
+
+    @Element(required = false)
+    private Length partPitchInTape = new Length(4, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private int partRotationInTape = 0;
     
     @Element(required = false)
     protected Vision vision = new Vision();
@@ -52,11 +59,30 @@ public class Neoden4Feeder extends ReferenceFeeder {
      */
     protected Location visionOffset;
 
+    public Length getPartPitchInTape() {
+        return partPitchInTape;
+    }
+
+    public void setPartPitchInTape(Length newPartPitchInTape)
+    {
+        Object oldValue = this.partPitchInTape;
+        this.partPitchInTape = newPartPitchInTape;
+        firePropertyChange("partPitchInTape", oldValue, newPartPitchInTape);
+    }
+
+    public int getPartRotationInTape() {
+        return partRotationInTape;
+    }
+
+    public void setPartRotationInTape(int newPartRotationInTape) {
+        Object oldValue = this.partRotationInTape;
+        this.partRotationInTape = newPartRotationInTape;
+        firePropertyChange("partRotationInTape", oldValue, newPartRotationInTape);
+    }
+
     @Override
     public Location getPickLocation() throws Exception {
-//        if (pickLocation == null) {
-            pickLocation = location.derive(null, null, null, location.getRotation() + getPart().getRotationInTape());
-//        }
+        pickLocation = location.derive(null, null, null, location.getRotation() + partRotationInTape);
 
         if (vision.isEnabled() && visionOffset != null) {
 			return pickLocation.subtract(visionOffset);
@@ -82,7 +108,7 @@ public class Neoden4Feeder extends ReferenceFeeder {
 		}
 
         // Actuate actuator 
-    	actuator.actuate(getPart().getPitchInTape());
+        actuator.actuate(partPitchInTape);
 
     	// Calculate vision offset
     	

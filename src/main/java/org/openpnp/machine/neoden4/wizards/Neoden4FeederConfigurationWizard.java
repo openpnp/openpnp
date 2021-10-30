@@ -33,6 +33,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.BufferedImageIconConverter;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.neoden4.Neoden4Feeder;
 import org.openpnp.machine.reference.feeder.wizards.AbstractReferenceFeederConfigurationWizard;
@@ -52,9 +53,13 @@ import com.jgoodies.forms.layout.RowSpec;
 public class Neoden4FeederConfigurationWizard extends AbstractReferenceFeederConfigurationWizard {
     private final Neoden4Feeder feeder;
 
+    private JLabel lblPartPitchInTape;
+    private JTextField textFieldPartPitchInTape;
+    private JLabel lblPartRotationInTape;
+    private JTextField textFieldPartRotationInTape;
     private JLabel lblActuatorId;
-    private JButton btnActuateFeeder;
     private JTextField textFieldActuatorId;
+    private JButton btnActuateFeeder;
     private JPanel panelOther;
     private JPanel panelVision;
     private JCheckBox chckbxVisionEnabled;
@@ -83,10 +88,8 @@ public class Neoden4FeederConfigurationWizard extends AbstractReferenceFeederCon
     private JButton btnResetVisionOffsets;
     
     public Neoden4FeederConfigurationWizard(Neoden4Feeder feeder) {
-    	super(feeder, true); //JR
+        super(feeder, true);
         this.feeder = feeder;
-
-        
         
         JPanel panelFields = new JPanel();
         panelFields.setLayout(new BoxLayout(panelFields, BoxLayout.Y_AXIS));
@@ -100,31 +103,44 @@ public class Neoden4FeederConfigurationWizard extends AbstractReferenceFeederCon
                 new ColumnSpec[] {
                 		FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        
+        lblPartPitchInTape = new JLabel("Pitch In Tape [mm]");
+        panelOther.add(lblPartPitchInTape, "2, 2, right, default");
+
+        textFieldPartPitchInTape = new JTextField();
+        panelOther.add(textFieldPartPitchInTape, "4, 2");
+        textFieldPartPitchInTape.setColumns(5);
+
+        lblPartRotationInTape = new JLabel("Rotation In Tape [deg]");
+        panelOther.add(lblPartRotationInTape, "6, 2, right, default");
+
+        textFieldPartRotationInTape = new JTextField();
+        panelOther.add(textFieldPartRotationInTape, "8, 2");
+        textFieldPartRotationInTape.setColumns(5);
+
         lblActuatorId = new JLabel("Actuator Name");
-        panelOther.add(lblActuatorId, "2, 2, right, default");
+        panelOther.add(lblActuatorId, "2, 4, right, default");
 
         textFieldActuatorId = new JTextField();
-        panelOther.add(textFieldActuatorId, "4, 2");
+        panelOther.add(textFieldActuatorId, "4, 4");
         textFieldActuatorId.setColumns(5);
-        
+
         btnActuateFeeder = new JButton(actuateFeederAction);
-        panelOther.add(btnActuateFeeder, "6, 2");
+        panelOther.add(btnActuateFeeder, "6, 4");
         btnActuateFeeder.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel lblFeedCount = new JLabel("Feed Count");
-        panelOther.add(lblFeedCount, "2, 4, right, default");
-        
+        panelOther.add(lblFeedCount, "2, 6, right, default");
+
         textFieldFeedCount = new JTextField();
-        panelOther.add(textFieldFeedCount, "4, 4, fill, default");
+        panelOther.add(textFieldFeedCount, "4, 6, fill, default");
         textFieldFeedCount.setColumns(10);
-        
 
         JButton btnResetFeedCount = new JButton(new AbstractAction("Reset") {
             @Override
@@ -133,8 +149,8 @@ public class Neoden4FeederConfigurationWizard extends AbstractReferenceFeederCon
             }
         });
         btnResetFeedCount.setHorizontalAlignment(SwingConstants.LEFT);
-        panelOther.add(btnResetFeedCount, "6, 4, left, default");
-        
+        panelOther.add(btnResetFeedCount, "6, 6, left, default");
+
         //
         panelVision = new JPanel();
         panelVision.setBorder(new TitledBorder(null, "Vision", TitledBorder.LEADING,
@@ -257,11 +273,16 @@ public class Neoden4FeederConfigurationWizard extends AbstractReferenceFeederCon
         super.createBindings();
         
         IntegerConverter intConverter = new IntegerConverter();
+        LengthConverter lengthConverter = new LengthConverter();
+
         BufferedImageIconConverter imageConverter = new BufferedImageIconConverter();
-        
+
         addWrappedBinding(feeder, "actuatorName", textFieldActuatorId, "text");
         addWrappedBinding(feeder, "feedCount", textFieldFeedCount, "text", intConverter);
-        
+
+        addWrappedBinding(feeder, "partPitchInTape", textFieldPartPitchInTape, "text", lengthConverter);
+        addWrappedBinding(feeder, "partRotationInTape", textFieldPartRotationInTape, "text", intConverter);
+
         addWrappedBinding(feeder, "vision.enabled", chckbxVisionEnabled, "selected");
         addWrappedBinding(feeder, "vision.templateImage", labelTemplateImage, "icon", imageConverter);
 
@@ -269,7 +290,7 @@ public class Neoden4FeederConfigurationWizard extends AbstractReferenceFeederCon
         addWrappedBinding(feeder, "vision.areaOfInterest.y", textFieldAoiY, "text", intConverter);
         addWrappedBinding(feeder, "vision.areaOfInterest.width", textFieldAoiWidth, "text", intConverter);
         addWrappedBinding(feeder, "vision.areaOfInterest.height", textFieldAoiHeight, "text", intConverter);
-        
+
         ComponentDecorators.decorateWithAutoSelect(textFieldActuatorId);
         ComponentDecorators.decorateWithAutoSelect(textFieldFeedCount);
         ComponentDecorators.decorateWithAutoSelect(textFieldAoiX);
@@ -345,7 +366,6 @@ public class Neoden4FeederConfigurationWizard extends AbstractReferenceFeederCon
         }
     };
 
-
 	private Action actuateFeederAction = new AbstractAction("Actuate") {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -361,7 +381,7 @@ public class Neoden4FeederConfigurationWizard extends AbstractReferenceFeederCon
 
 					UiUtils.submitUiMachineTask(() -> {
 						// Actuate actuator
-						actuator.actuate(feeder.getPart().getPitchInTape());
+						actuator.actuate(feeder.getPartPitchInTape());
 
 						// Refresh camera after 1s
 						Camera cam = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
