@@ -17,6 +17,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
@@ -59,6 +60,9 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Attribute(required = false)
     protected double maxAngularOffset = 10;
+
+    @Attribute(required = false)
+    protected double testAlignmentAngle = 0.0;
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
@@ -218,7 +222,7 @@ public class ReferenceBottomVision implements PartAlignment {
             offsets = offsets.subtract(partSettings.getVisionOffset().rotateXy(wantedAngle));
 
             Logger.debug("Final offsets {}", offsets);
-            displayResult(pipeline, part, offsets, camera);
+            displayResult(pipeline, part, offsets, camera, nozzle);
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
     }
@@ -269,7 +273,7 @@ public class ReferenceBottomVision implements PartAlignment {
             
             Logger.debug("Final offsets {}", offsets);
 
-            displayResult(pipeline, part, offsets, camera);
+            displayResult(pipeline, part, offsets, camera, nozzle);
 
             return new PartAlignmentOffset(offsets, false);
         }
@@ -350,7 +354,7 @@ public class ReferenceBottomVision implements PartAlignment {
         return true;
     }
 
-    private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera) {
+    private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera, Nozzle nozzle) {
         MainFrame mainFrame = MainFrame.get();
         if (mainFrame != null) {
             try {
@@ -360,6 +364,8 @@ public class ReferenceBottomVision implements PartAlignment {
                 .getCameraView(camera)
                 .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
                         1500);
+                // Also make sure the right nozzle is selected for correct cross-hair rotation.
+                MovableUtils.fireTargetedUserAction(nozzle);
             }
             catch (Exception e) {
                 // Throw away, just means we're running outside of the UI.
@@ -484,7 +490,15 @@ public class ReferenceBottomVision implements PartAlignment {
     public void setMaxAngularOffset(double maxAngularOffset) {
         this.maxAngularOffset = maxAngularOffset;
     }
-    
+
+    public double getTestAlignmentAngle() {
+        return testAlignmentAngle;
+    }
+
+    public void setTestAlignmentAngle(double testAlignmentAngle) {
+        this.testAlignmentAngle = testAlignmentAngle;
+    }
+
     @Override
     public String getPropertySheetHolderTitle() {
         return "Bottom Vision";
@@ -545,7 +559,7 @@ public class ReferenceBottomVision implements PartAlignment {
     }
     
     @Root
-    public static class PartSettings {
+    public static class PartSettings extends AbstractModelObject {
 
         public enum PartSizeCheckMethod {
             Disabled, BodySize, PadExtents
@@ -599,7 +613,9 @@ public class ReferenceBottomVision implements PartAlignment {
         }
 
         public void setPreRotateUsage(PreRotateUsage preRotateUsage) {
+            Object oldValue = this.preRotateUsage;
             this.preRotateUsage = preRotateUsage;
+            firePropertyChange("preRotateUsage", oldValue, preRotateUsage);
         }
 
         public CvPipeline getPipeline() {

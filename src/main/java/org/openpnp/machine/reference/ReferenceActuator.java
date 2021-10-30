@@ -447,10 +447,6 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         return getName();
     }
 
-    ReferenceMachine getMachine() {
-        return (ReferenceMachine) Configuration.get().getMachine();
-    }
-
     public void fireProfilesChanged() {
         firePropertyChange("profileValues", null, getProfileValues());
     }

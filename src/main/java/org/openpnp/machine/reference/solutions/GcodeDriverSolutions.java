@@ -42,6 +42,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
+import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
@@ -50,6 +51,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.GcodeServer;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.XmlSerialize;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
@@ -147,7 +149,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             }
             if (machine.isEnabled() && gcodeDriver.isSpeakingGcode()) {
                 try {
-                    gcodeDriver.detectFirmware(true);
+                    UiUtils.submitUiMachineTask(
+                            () -> gcodeDriver.detectFirmware(true)
+                            ).get();
                 }
                 catch (Exception e) {
                     Logger.warn(e, gcodeDriver.getName()+" failure to detect firmware");
@@ -197,13 +201,35 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     public void setState(Solutions.State state) throws Exception {
                         if (state == Solutions.State.Solved) {
                             if ((Boolean)getChoice()) {
-                                gcodeDriver.detectFirmware(false);
+                                final State oldState = getState();
+                                try {
+                                    if (machine.isEnabled()) {
+                                        machine.execute(() -> {
+                                            gcodeDriver.detectFirmware(false);
+                                            return true;
+                                        });
+                                    }
+                                    else {
+                                        // Use an ad hoc connection.
+                                        gcodeDriver.detectFirmware(false);
+                                    }
+                                    super.setState(state);
+                                }
+                                catch (Exception e) { 
+                                    UiUtils.showError(e);
+                                    // restore old state
+                                    UiUtils.messageBoxOnException(() -> setState(oldState));
+                                }
                             }
                             else {
                                 gcodeDriver.setDetectedFirmware(GcodeServer.getGenericFirmware());
+                                super.setState(state);
                             }
                         }
-                        super.setState(state);
+                        else {
+                            gcodeDriver.setDetectedFirmware(null);
+                            super.setState(state);
+                        }
                     }
                 });
             }
@@ -705,17 +731,18 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                             }
                                         }
                                         commandBuilt += "; Home all axes\n";
-                                        commandBuilt += "G28.3 ";
-                                        for (ControllerAxis axis : gcodeDriver.getAxes(machine)) {
-                                            if (!axis.getLetter().isEmpty()) {
-                                                commandBuilt += axis.getLetter()+axis.getHomeCoordinate()+" ";
-                                            }
+                                        commandBuilt += "G28.3";
+                                        for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                                            commandBuilt += " {"+variable+":"+variable+"%.4f}";
                                         }
-                                        commandBuilt += "; Set all axes to home coordinates\n";
+                                        commandBuilt += " ; Set all axes to home coordinates\n";
                                         commandBuilt += "G92.1 ; Reset all offsets\n";
                                     }
                                     else {
-                                        commandBuilt = "G28 ; Home all axes";
+                                        // Reset the acceleration (it is not automatically reset on some controllers). 
+                                        commandBuilt = "{Acceleration:M204 S%.2f} ; Initialize acceleration\n";
+                                        // Home all axes.
+                                        commandBuilt += "G28 ; Home all axes";
                                     }
                                 }
                                 break;

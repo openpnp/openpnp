@@ -46,7 +46,6 @@ import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ContactProbeNozzle;
 import org.openpnp.machine.reference.ContactProbeNozzle.ContactProbeMethod;
 import org.openpnp.machine.reference.ContactProbeNozzle.ContactProbeTrigger;
-import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.util.UiUtils;
@@ -58,7 +57,7 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
-    private final ReferenceNozzle nozzle;
+    private final ContactProbeNozzle nozzle;
 
     public ContactProbeNozzleWizard(ContactProbeNozzle nozzle) {
         this.nozzle = nozzle;
@@ -282,8 +281,7 @@ public class ContactProbeNozzleWizard extends AbstractConfigurationWizard {
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                ContactProbeNozzle contactProbeNozzle = (ContactProbeNozzle) nozzle;
-                contactProbeNozzle.calibrateZ(contactProbeNozzle.getCalibrationNozzleTip());
+                nozzle.calibrateZ(nozzle.getCalibrationNozzleTip());
             });
         }
     };

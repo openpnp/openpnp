@@ -1263,10 +1263,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         }
     };
 
-    ReferenceMachine getMachine() {
-        return (ReferenceMachine) Configuration.get().getMachine();
-    }
-
     public interface CalibrationCallback {
         public void callback(int progressCurrent, int progressMax, boolean complete);
     }

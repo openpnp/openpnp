@@ -633,12 +633,15 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     @Override
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
+        boolean quiet = Arrays.asList(options).contains(LocationOption.Quiet);
         // Apply the Z calibration.
         // Check SuppressCompensation, in that case disable Z calibration
         if (! Arrays.asList(options).contains(LocationOption.SuppressDynamicCompensation)) {
             if (zCalibratedNozzleTip != null && calibrationOffsetZ != null) {
                 location = location.subtract(new Location(calibrationOffsetZ .getUnits(), 0, 0, calibrationOffsetZ.getValue(), 0));
-                Logger.trace("{}.toHeadLocation({}, ...) Z offset {}", getName(), location, calibrationOffsetZ);
+                if (! quiet) {
+                    Logger.trace("{}.toHeadLocation({}, ...) Z offset {}", getName(), location, calibrationOffsetZ);
+                }
             }
         }
         return super.toHeadLocation(location, currentLocation, options);
