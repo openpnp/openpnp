@@ -329,16 +329,20 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Override
     public Location getHeadOffsets() {
-        return headOffsets.add(advancedCalibration.getCalibratedOffsets());
+        return headOffsets;
     }
-    
+
     @Override
     public void setHeadOffsets(Location headOffsets) {
-        this.headOffsets = headOffsets.subtract(advancedCalibration.getCalibratedOffsets());
-        firePropertyChange("headOffsets", null, this.headOffsets);
+        this.headOffsets = headOffsets;
         viewHasChanged();
     }
 
+    @Override
+    public Location getCalibratedHeadOffsets() {
+        return getHeadOffsets().add(advancedCalibration.getCalibratedOffsets());
+    }
+        
     @Override
     public void home() throws Exception {
     }

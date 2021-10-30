@@ -134,7 +134,25 @@ public class AdvancedCalibration extends LensCalibrationParams {
     @Element(required = false)
     private Location calibratedOffsets = new Location(LengthUnit.Millimeters);
     
+    @Attribute(required = false)
+    private Integer primaryDiameter;
+    
+    @Attribute(required = false)
+    private Integer secondaryDiameter;
+    
+    @Attribute(required = false)
+    private double widthFov;
+    
+    @Attribute(required = false)
+    private double heightFov;
 
+    @Attribute(required = false)
+    private double virtualWidthFov;
+    
+    @Attribute(required = false)
+    private double virtualHeightFov;
+
+    
     private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
     private Mat rectificationMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
     private Mat vectorFromMachToPhyCamInMachRefFrame = 
@@ -149,6 +167,11 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private ArrayList<Integer> outlierPointList = new ArrayList<Integer>();
 
     private int fiducialDiameter;
+    
+    private Location primaryLocation;
+    
+    private Location secondaryLocation;
+    
 
     
     @Commit 
@@ -590,22 +613,6 @@ public class AdvancedCalibration extends LensCalibrationParams {
         this.walkingLoopGain = walkingLoopGain;
     }
 
-    /**
-     * @return the fiducialDiameter
-     */
-    public int getFiducialDiameter() {
-        return fiducialDiameter;
-    }
-
-    /**
-     * @param fiducialDiameter the fiducialDiameter to set
-     */
-    public void setFiducialDiameter(int fiducialDiameter) {
-        int oldSetting = this.fiducialDiameter;
-        this.fiducialDiameter = fiducialDiameter;
-        firePropertyChange("fiducialDiameter", oldSetting, fiducialDiameter);
-    }
-
     public double getApproximateMillimetersPerPixel() {
         return approximateMillimetersPerPixel;
     }
@@ -659,6 +666,150 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Location oldValue = this.calibratedOffsets;
         this.calibratedOffsets = calibratedOffsets;
         firePropertyChange("calibratedOffsets", oldValue, calibratedOffsets);
+    }
+
+    /**
+     * @return the primaryDiameter
+     */
+    public Integer getPrimaryDiameter() {
+        return primaryDiameter;
+    }
+
+    /**
+     * @param primaryDiameter the primaryDiameter to set
+     */
+    public void setPrimaryDiameter(Integer primaryDiameter) {
+        Integer oldSetting = this.primaryDiameter;
+        this.primaryDiameter = primaryDiameter;
+        firePropertyChange("primaryDiameter", oldSetting, primaryDiameter);
+    }
+
+    /**
+     * @return the secondaryDiameter
+     */
+    public Integer getSecondaryDiameter() {
+        return secondaryDiameter;
+    }
+
+    /**
+     * @param secondaryDiameter the secondaryDiameter to set
+     */
+    public void setSecondaryDiameter(Integer secondaryDiameter) {
+        Integer oldSetting = this.secondaryDiameter;
+        this.secondaryDiameter = secondaryDiameter;
+        firePropertyChange("secondaryDiameter", oldSetting, secondaryDiameter);
+    }
+
+    /**
+     * @return the widthFov
+     */
+    public double getWidthFov() {
+        return widthFov;
+    }
+
+    /**
+     * @param widthFov the widthFov to set
+     */
+    public void setWidthFov(double widthFov) {
+        double oldSetting = this.widthFov;
+        this.widthFov = widthFov;
+        firePropertyChange("widthFov", oldSetting, widthFov);
+    }
+
+    /**
+     * @return the heightFov
+     */
+    public double getHeightFov() {
+        return heightFov;
+    }
+
+    /**
+     * @param heightFov the heightFov to set
+     */
+    public void setHeightFov(double heightFov) {
+        double oldSetting = this.heightFov;
+        this.heightFov = heightFov;
+        firePropertyChange("heightFov", oldSetting, heightFov);
+    }
+
+    /**
+     * @return the virtualWidthFov
+     */
+    public double getVirtualWidthFov() {
+        return virtualWidthFov;
+    }
+
+    /**
+     * @param virtualWidthFov the virtualWidthFov to set
+     */
+    public void setVirtualWidthFov(double virtualWidthFov) {
+        double oldSetting = this.virtualWidthFov;
+        this.virtualWidthFov = virtualWidthFov;
+        firePropertyChange("virtualWidthFov", oldSetting, virtualWidthFov);
+    }
+
+    /**
+     * @return the virtualHeightFov
+     */
+    public double getVirtualHeightFov() {
+        return virtualHeightFov;
+    }
+
+    /**
+     * @param heightFov the heightFov to set
+     */
+    public void setVirtualHeightFov(double virtualHeightFov) {
+        double oldSetting = this.virtualHeightFov;
+        this.virtualHeightFov = virtualHeightFov;
+        firePropertyChange("virtualHeightFov", oldSetting, virtualHeightFov);
+    }
+
+    /**
+     * @return the fiducialDiameter
+     */
+    public int getFiducialDiameter() {
+        return fiducialDiameter;
+    }
+
+    /**
+     * @param fiducialDiameter the fiducialDiameter to set
+     */
+    public void setFiducialDiameter(int fiducialDiameter) {
+        int oldSetting = this.fiducialDiameter;
+        this.fiducialDiameter = fiducialDiameter;
+        firePropertyChange("fiducialDiameter", oldSetting, fiducialDiameter);
+    }
+
+    /**
+     * @return the primaryLocation
+     */
+    public Location getPrimaryLocation() {
+        return primaryLocation;
+    }
+
+    /**
+     * @param primaryLocation the primaryLocation to set
+     */
+    public void setPrimaryLocation(Location primaryLocation) {
+        Location oldSetting = this.primaryLocation;
+        this.primaryLocation = primaryLocation;
+        firePropertyChange("primaryLocation", oldSetting, primaryLocation);
+    }
+
+    /**
+     * @return the secondaryLocation
+     */
+    public Location getSecondaryLocation() {
+        return secondaryLocation;
+    }
+
+    /**
+     * @param secondaryLocation the secondaryLocation to set
+     */
+    public void setSecondaryLocation(Location secondaryLocation) {
+        Location oldSetting = this.secondaryLocation;
+        this.secondaryLocation = secondaryLocation;
+        firePropertyChange("secondaryLocation", oldSetting, secondaryLocation);
     }
 
     /**
@@ -911,6 +1062,15 @@ public class AdvancedCalibration extends LensCalibrationParams {
         cameraMatrix.put(1, 2, cameraParams[3]);
         Logger.trace("cameraMatrix = " + cameraMatrix.dump());
         
+        //Compute the field of view of the physical camera
+        double[] fovx = new double[1];
+        double[] fovy = new double[1];
+        Calib3d.calibrationMatrixValues(cameraMatrix, size, 0, 0, fovx, fovy, null, null, null);
+        Logger.trace("width field of view [deg] = " + fovx[0]);
+        Logger.trace("height field of view [deg] = " + fovy[0]);
+        setWidthFov(fovx[0]);
+        setHeightFov(fovy[0]);
+        
         //Use the new estimates for the physical camera's lens distortion coefficients
         distortionCoefficients.put(0, 0, cameraParams[4]);
         distortionCoefficients.put(1, 0, cameraParams[5]);
@@ -926,16 +1086,6 @@ public class AdvancedCalibration extends LensCalibrationParams {
         rvec.put(2,  0, cameraParams[11]);
         Calib3d.Rodrigues(rvec, transformFromMachToPhyCamRefFrame);
         rvec.release();
-        Logger.trace("transformFromMachToPhyCamRefFrame = " + 
-                transformFromMachToPhyCamRefFrame.dump());
-        
-        Mat flipper = Mat.eye(3, 3, CvType.CV_64FC1);
-        flipper.put(0, 0, -mirrored);
-        flipper.put(1, 1, -apparentMotionDirection);
-        Logger.trace("flipper = " + 
-                flipper.dump());
-        Core.gemm(transformFromMachToPhyCamRefFrame, flipper, 1, flipper, 0, transformFromMachToPhyCamRefFrame);
-        flipper.release();
         Logger.trace("transformFromMachToPhyCamRefFrame = " + 
                 transformFromMachToPhyCamRefFrame.dump());
         
@@ -974,6 +1124,15 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Logger.trace("Y axis rotational error = {} degrees", rotationErrorY);
         Logger.trace("X axis rotational error = {} degrees", rotationErrorX);
         
+        //For cameras with a mirror in their optical path, change to a left-handed system
+        Mat flipper = Mat.eye(3, 3, CvType.CV_64FC1);
+        flipper.put(0, 0, mirrored);
+        Logger.trace("flipper = " + flipper.dump());
+        Core.gemm(transformFromMachToPhyCamRefFrame, flipper, 1, flipper, 0, transformFromMachToPhyCamRefFrame);
+        flipper.release();
+        Logger.trace("transformFromMachToPhyCamRefFrame = " + 
+                transformFromMachToPhyCamRefFrame.dump());
+        
         //Fit a least-squared-error line to the camera positions as a function of Z and use it
         //to linearly interpolate the camera X/Y position to that at primary Z.  Note that for
         //bottom cameras, the top row of matrix linearFit is a measure of the non-orthogonality
@@ -982,7 +1141,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Mat b = Mat.zeros(numberOfTestPatterns, 2, CvType.CV_64FC1);
         for (int i=0; i<numberOfTestPatterns; i++) {
             x.put(i, 0, testPattern3dPoints[i][0][2]);
-            b.put(i, 0, mirrored * cameraParams[13+2*i]);
+            b.put(i, 0, mirrored * apparentMotionDirection * cameraParams[13+2*i]);
             b.put(i, 1, apparentMotionDirection * cameraParams[14+2*i]);
         }
         //linearFit: top row slopes, bottom row intercepts,
@@ -1102,6 +1261,13 @@ public class AdvancedCalibration extends LensCalibrationParams {
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame);
         Logger.trace("virtualCameraMatrix = " + virtualCameraMatrix.dump());
 
+        //Compute the field of view of the virtual camera
+        double[] fovx = new double[1];
+        double[] fovy = new double[1];
+        Calib3d.calibrationMatrixValues(virtualCameraMatrix, virCamSize, 0, 0, fovx, fovy, null, null, null);
+        setVirtualWidthFov(fovx[0]);
+        setVirtualHeightFov(fovy[0]);
+        
         Calib3d.initUndistortRectifyMap(cameraMatrix,
                 distortionCoefficients, rectificationMatrix,
                 virtualCameraMatrix, virCamSize, CvType.CV_32FC1,

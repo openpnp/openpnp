@@ -294,8 +294,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
-        // Subtract the Head offset.
-        location = location.subtract(getHeadOffsets());
+        // Subtract the calibrated Head offset.
+        location = location.subtract(getCalibratedHeadOffsets());
         return location;
     }
 
@@ -319,9 +319,13 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         return toHeadLocation(location, getLocation(), options);
     }
 
+    public Location getCalibratedHeadOffsets() {
+        return getHeadOffsets();
+    }
+    
     public Location toHeadMountableLocation(Location location, Location currentLocation, LocationOption... options) {
-        // Add the Head offset.
-        location = location.add(getHeadOffsets());
+        // Add the calibrated Head offset.
+        location = location.add(getCalibratedHeadOffsets());
         return location;
     }
     @Override
