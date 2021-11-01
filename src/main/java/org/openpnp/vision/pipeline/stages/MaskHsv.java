@@ -150,7 +150,6 @@ public class MaskHsv extends CvStage {
         //each maskHsv and converts any that are in the old format (without an invert flag) to the new format (with an
         //invert flag) correcting hue limits if needed.  This will make the new format backward compatible with old format.
         if (invert == null) {
-            Logger.trace( "Old format found in .xml file, converting to new format..." );
             if (hueMin > hueMax) {
                 Logger.trace( "    Swapping hue limits and setting invert to true." );
                 int temp = hueMax;
@@ -164,11 +163,10 @@ public class MaskHsv extends CvStage {
             }
         }
     }
-    
-    
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
+        commit();
         Mat mat = pipeline.getWorkingImage();
         Mat mask = mat.clone();
         Mat masked = mat.clone();

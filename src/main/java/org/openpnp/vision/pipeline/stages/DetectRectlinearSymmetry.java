@@ -20,6 +20,9 @@
 package org.openpnp.vision.pipeline.stages;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
@@ -62,21 +65,25 @@ public class DetectRectlinearSymmetry extends CvStage {
     @Property(description = "Maximum rectangular height of the detected object.")
     private double maxHeight = 100;
 
+    @Attribute(required = false)
+    @Property(description = "Relative margin around the detected object, used to detect the edges.")
+    private double margin = 0.4;
+
     public enum SymmetryFunction {
         Image,
         Constrast;
 
-        double [] getKernel(int superSampling) {
+        double [] getKernel(int size) {
             switch(this) {
                 case Image: {
-                    double [] kernel = new double [superSampling];
-                    Arrays.fill(kernel, 1.0/superSampling);
+                    double [] kernel = new double [size];
+                    Arrays.fill(kernel, 1.0/size);
                     return kernel;
                 }
                 case Constrast: {
-                    double [] kernel = new double [superSampling*2];
-                    Arrays.fill(kernel, 0, superSampling, 1.0/superSampling);
-                    Arrays.fill(kernel, superSampling, superSampling*2, -1.0/superSampling);
+                    double [] kernel = new double [size*2];
+                    Arrays.fill(kernel, 0, size, 1.0/size);
+                    Arrays.fill(kernel, size, size*2, -1.0/size);
                     return kernel;
                 }
             }
@@ -105,8 +112,9 @@ public class DetectRectlinearSymmetry extends CvStage {
     private int subSampling = 8;
 
     @Attribute(required = false)
-    @Property(description = "The superSampling value can be used to achieve sub-pixel final precision: "
-            + "1 means no supersampling, 2 means half sub-pixel precision etc.")
+    @Property(description = "The superSampling value can be used to achieve sub-pixel final precision:<br/>"
+            + "1 means no supersampling, 2 means half sub-pixel precision etc.<br/>"
+            + "Negative values can be used to stop refining subSampling, -2 means it will stop at a 2-pixel resolution.")
     private int superSampling = 1;
 
     @Attribute(required = false)
@@ -116,12 +124,12 @@ public class DetectRectlinearSymmetry extends CvStage {
     private String propertyName = "alignment";
 
     @Attribute(required = false)
-    @Property(description = "Display matches with circle and cross-hairs.")
+    @Property(description = "Display the match with cross-hairs and bounds.")
     private boolean diagnostics = false;
 
     @Attribute(required = false)
-    @Property(description = "Overlay a heat map indicating the local circular symmetry.")
-    private boolean heatMap = false;
+    @Property(description = "Overlay a diagnostic map indicating the angular reclinear contrast and rectlinear cross-section.")
+    private boolean diagnosticsMap = false;
 
     public double getExpectedAngle() {
         return expectedAngle;
@@ -161,6 +169,14 @@ public class DetectRectlinearSymmetry extends CvStage {
 
     public void setMaxHeight(double maxHeight) {
         this.maxHeight = maxHeight;
+    }
+
+    public double getMargin() {
+        return margin;
+    }
+
+    public void setMargin(double margin) {
+        this.margin = margin;
     }
 
     public SymmetryFunction getSymmetryFunction() {
@@ -228,12 +244,12 @@ public class DetectRectlinearSymmetry extends CvStage {
         this.diagnostics = diagnostics;
     }
 
-    public boolean isHeatMap() {
-        return heatMap;
+    public boolean isDiagnosticsMap() {
+        return diagnosticsMap;
     }
 
-    public void setHeatMap(boolean heatMap) {
-        this.heatMap = heatMap;
+    public void setDiagnosticsMap(boolean diagnosticsMap) {
+        this.diagnosticsMap = diagnosticsMap;
     }
 
     @Override
@@ -271,10 +287,10 @@ public class DetectRectlinearSymmetry extends CvStage {
 
         }
 
-        final double margin = 1.2;
-        RotatedRect rect = findReclinearSymmetry(mat, (int)center.x, (int)center.y, expectedAngle, maxWidth*margin, maxHeight*margin, 
+        final double factor = 1 + margin;
+        RotatedRect rect = findReclinearSymmetry(mat, (int)center.x, (int)center.y, expectedAngle, maxWidth*factor, maxHeight*factor, 
                 searchDistance, searchAngle, minSymmetry, symmetryFunction, 
-                subSampling, superSampling, diagnostics, heatMap, new ScoreRange());
+                subSampling, superSampling, diagnostics, diagnosticsMap, new ScoreRange());
         return new Result(null, rect);
     }
 
@@ -310,7 +326,7 @@ public class DetectRectlinearSymmetry extends CvStage {
             double maxWidth, double maxHeight, 
             double searchDistance, double searchAngle, double minSymmetry, SymmetryFunction symmetryFunction,
             int subSampling, int superSampling, boolean diagnostics, boolean heatMap, ScoreRange scoreRange) throws Exception {
-        boolean outermost = !Double.isFinite(scoreRange.finalScore);
+        boolean innermost = subSampling <= Math.max(1, -superSampling);
         // Image properties.
         final int channels = image.channels();
         final int width = image.cols();
@@ -327,7 +343,7 @@ public class DetectRectlinearSymmetry extends CvStage {
         // The maximum diagonal (even value).
         final int maxDiagonal = 2*(int) Math.ceil(Math.sqrt(maxWidth*maxWidth + maxHeight*maxHeight)/2);
         final int subSamplingEff = Math.max(1, Math.min(subSampling, maxDiagonal/8));
-        final int superSamplingEff = (subSamplingEff == 1 ? Math.min(2, superSampling) : 1);
+        final int superSamplingEff = (subSamplingEff == 1 ? Math.max(1, Math.min(maxDiagonal/100, superSampling)) : 1);
         final int searchDiameter = 2*(int) Math.ceil(searchDistance);
 
         // Get the pixels out of the Mat. 
@@ -366,6 +382,10 @@ public class DetectRectlinearSymmetry extends CvStage {
         double angleStep = Math.min(Math.toRadians(searchAngle)/4, subSamplingEff/Math.max(maxWidth,  maxHeight)/superSamplingEff);
         double a0 = Math.toRadians(expectedAngle - searchAngle);
         double a1 = Math.toRadians(expectedAngle + searchAngle)+angleStep/2;
+        TreeMap<Double, Double> angleScore = null;
+        if (heatMap) {
+            angleScore = new TreeMap<>();
+        }
         for (double angle = a0; angle <= a1; angle += angleStep) {
             // Note, this is the reverse rotation, i.e. angle is negative.
             double s = superSamplingEff*Math.sin(-angle)/subSamplingEff;
@@ -441,14 +461,17 @@ public class DetectRectlinearSymmetry extends CvStage {
             double sumContrast = 0;
             int n = 0;
             for (int ch = 0; ch < channels; ch++) {
-                // Scan for contrasts, we're using a 4 bin sum.
+                // Scan for contrasts.
+                // Note, we're using a size 5 gaussian kernel to get rid of interferences 
+                // especially at the 45° step angles.
                 Double v0 = null;
-                for (int x = ch; x < (wCross-3)*channels; x += channels) {
+                for (int x = ch; x <= (wCross-5)*channels; x += channels) {
                     if (xCrossSectionN[x] > 0) {
-                        double v = xCrossSection[x] 
-                                + xCrossSection[x+channels]
-                                        + xCrossSection[x+channels*2]
-                                                + xCrossSection[x+channels*3];
+                        double v = xCrossSection[x] *0.06136
+                                + xCrossSection[x+channels]*0.24477
+                                + xCrossSection[x+channels*2]*0.38774
+                                + xCrossSection[x+channels*3]*0.24477
+                                + xCrossSection[x+channels*4]*0.06136;
                         if (v0 != null) {
                             double dv = v - v0;
                             sumContrast += dv*dv;
@@ -477,6 +500,9 @@ public class DetectRectlinearSymmetry extends CvStage {
             if (DEBUG >= 1) {
                 System.out.print("subSampling "+subSamplingEff+(superSamplingEff > 1 ? " superSampling "+superSamplingEff : "")+" angle "+Math.toDegrees(angle)+"° "+sumContrast + " n="+n);
             }
+            if (angleScore != null) {
+                angleScore.put(angle, sumContrast);
+            }
             // Take the best:
             if (scoreBest < sumContrast) {
                 scoreBest = sumContrast;
@@ -499,7 +525,7 @@ public class DetectRectlinearSymmetry extends CvStage {
         RotatedRect rect = null;
 
         // Find the symmetry in X/Y.
-        double[] kernel = symmetryFunction.getKernel(superSampling);
+        double[] kernel = symmetryFunction.getKernel(superSamplingEff*2);
         double[] xCrossSectionSmoothed =
                 crossSectionWithKernel(channels, wCross, xBestCrossSection, kernel);
         double[] yCrossSectionSmoothed =
@@ -523,7 +549,7 @@ public class DetectRectlinearSymmetry extends CvStage {
             double yBest = yR*subSamplingEff/superSamplingEff + yCenter;
 
             // Find the bounds
-            double[] ckernel = symmetryFunction/*SymmetryFunction.Constrast*/.getKernel(4);
+            double[] ckernel = SymmetryFunction.Image.getKernel(4*superSamplingEff);
             double[] xCrossSectionContrast =
                     crossSectionWithKernel(channels, wCross, xBestCrossSection, ckernel);
             double[] yCrossSectionContrast =
@@ -537,30 +563,106 @@ public class DetectRectlinearSymmetry extends CvStage {
             org.opencv.core.Point pt = new org.opencv.core.Point(xBest, yBest);
             Size sz = new Size(wBest, hBest);
             rect = new RotatedRect(pt, sz, Math.toDegrees(-angleBest)); 
-            if (subSamplingEff > 1) {
+            if (!innermost) {
                 // Recursion into finer subSampling and local search.
                 rect = findReclinearSymmetry(image, (int)xBest, (int)yBest,  Math.toDegrees(angleBest), maxWidth, maxHeight, 
                         subSamplingEff*iterationRadius, Math.toDegrees(angleStep)*iterationRadius, minSymmetry, symmetryFunction, 
                         subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
             }
         }
-        if (outermost && diagnostics && rect != null) {
-            angleBest = -Math.toRadians(rect.angle);
+        if ((innermost && diagnostics) || heatMap) {
+            angleBest = (rect != null ? -Math.toRadians(rect.angle) : expectedAngle);
+            double rxCenter = (rect != null ? rect.center.x : xCenter);
+            double ryCenter = (rect != null ? rect.center.y : yCenter);
+            double rWidth = (rect != null ? rect.size.width : maxWidth);
+            double rHeight= (rect != null ? rect.size.height : maxHeight);
             double s = Math.sin(angleBest);
             double c = Math.cos(angleBest);
+            double r0 = maxDiagonal*0.5;
+            double r1 = maxDiagonal*0.6;
+            double angleScoreMin = angleScore != null ? Collections.min(angleScore.values()) : 0;
+            double angleScoreMax = angleScore != null ? Collections.max(angleScore.values()) : 0;
+            double angleScoreFactor = (r1 - r0)/(angleScoreMax - angleScoreMin);
+            double xsScore = xs != null ? xs : symmetrySearchK/2.0;
+            double ysScore = ys != null ? ys : symmetrySearchK/2.0;
+            double [] xCrossScoreMax = new double [channels];
+            for (int i = kernel.length; i < (wCross - kernel.length)*channels; i++) {
+                int ch = i % channels;
+                xCrossScoreMax[ch] = Math.max(xCrossScoreMax[ch], subSamplingEff*xCrossSectionSmoothed[i]); 
+            }
+            double [] yCrossScoreMax = new double [channels];
+            for (int i = kernel.length; i < (hCross - kernel.length)*channels; i++) {
+                int ch = i % channels;
+                yCrossScoreMax[ch] = Math.max(yCrossScoreMax[ch], subSamplingEff*yCrossSectionSmoothed[i]); 
+            }
+
             // Very slow but simple. 
-            for (int x = x0Pixels; x < x1Pixels; x++) {
-                for (int y = y0Pixels; y < y1Pixels; y++) {
-                    double dx = x - rect.center.x;
-                    double dy = y - rect.center.y;
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    double dx = x - rxCenter;
+                    double dy = y - ryCenter;
                     double dxT = dx*c + dy*-s;
                     double dyT = dx*s + dy*c;
-                    double indicate = Math.max(Math.max(Math.max(
-                            (1 - Math.abs(dxT))*0.5,
-                            (1 - Math.abs(dyT))*0.5),
-                            1 - Math.abs(Math.abs(dxT) - rect.size.width/2.0)),
-                            1 - Math.abs(Math.abs(dyT) - rect.size.height/2.0));
-                    if (indicate > 0) {
+                    double hairsIndicate = 0;
+                    double angleIndicate = 0;
+                    double crossIndicate = 0;
+
+                    double ringRadius = Math.sqrt(dx*dx + dy*dy);
+                    if (ringRadius > r1) {
+                        if (heatMap && innermost) {
+                            double xsT = dxT*superSamplingEff/subSamplingEff + symmetryWidth/2 - kernel.length/2 + xsScore;
+                            double ysT = dyT*superSamplingEff/subSamplingEff + symmetryHeight/2 - kernel.length/2 + ysScore;
+                            int xsi = (int)Math.round(xsT);
+                            int ysi = (int)Math.round(ysT);
+                            double xWeight1 = xsT - xsi + 0.5;
+                            double yWeight1 = ysT - ysi + 0.5;
+                            for (int ch = 0; ch < channels; ch++) {
+                                if (xsi > kernel.length && xsi < wCross - kernel.length) {
+                                    crossIndicate = Math.max(
+                                            (xCrossSectionSmoothed[xsi*channels + ch]*xWeight1 
+                                                    + xCrossSectionSmoothed[(xsi - 1)*channels + ch]*(1 - xWeight1))
+                                            /xCrossScoreMax[ch], crossIndicate);
+                                }
+                                if (ysi > kernel.length && ysi < hCross - kernel.length) {
+                                    crossIndicate = Math.max(
+                                            (yCrossSectionSmoothed[ysi*channels + ch]*yWeight1 
+                                                    + yCrossSectionSmoothed[(ysi - 1)*channels + ch]*(1 - yWeight1))
+                                            /yCrossScoreMax[ch], crossIndicate);
+                                }
+                            }
+                            crossIndicate = Math.pow(crossIndicate, 2);
+                        }
+                    }
+                    else if (ringRadius > r0) {
+                        if (angleScore != null && ringRadius < r1) {
+                            double ringAngle = Math.atan2(-dy, dx);
+                            while (ringAngle < a0) {
+                                ringAngle += 2*Math.PI;
+                            }
+                            while (ringAngle > a1) {
+                                ringAngle -= 2*Math.PI;
+                            }
+                            Entry<Double, Double> entry0 = angleScore.floorEntry(ringAngle);
+                            Entry<Double, Double> entry1 = angleScore.ceilingEntry(ringAngle);
+                            if (entry0 != null && entry1 != null) {
+                                double da = entry1.getKey() - entry0.getKey();
+                                double weight1 = (ringAngle - entry0.getKey())/da;
+                                double weight0 = 1 - weight1;
+                                double score = ((weight0*entry0.getValue() + weight1*entry1.getValue()) - angleScoreMin)*angleScoreFactor;
+                                angleIndicate = Math.max(0, (0.8/Math.log(Math.E*subSamplingEff))*Math.min(1, (r0+score)-ringRadius));
+                            }
+                        }
+                    }
+                    else {
+                        if (innermost && diagnostics) {
+                            hairsIndicate = Math.max(Math.max(Math.max(
+                                    (1 - Math.abs(dxT))*0.9,
+                                    (1 - Math.abs(dyT))*0.9),
+                                    (1 - Math.abs(Math.abs(dxT) - rWidth/2.0))*0.4),
+                                    (1 - Math.abs(Math.abs(dyT) - rHeight/2.0))*0.4);
+                        }
+                    }
+                    if (hairsIndicate > 0 || angleIndicate > 0 || crossIndicate > 0) {
                         double alpha = 0;
                         double alphaCompl = 1-alpha;
                         byte [] pixelData = new byte[channels];
@@ -569,13 +671,24 @@ public class DetectRectlinearSymmetry extends CvStage {
                             int red = 0;
                             int green = 0;
                             int blue = 0;
-                            if (indicate > 0) {
-                                red = 0;
-                                green = 255;
-                                blue = 0;
-                                alpha = indicate;
-                                alphaCompl = 1 - alpha;
+                            if (hairsIndicate > 0) {
+                                if (rect != null) {
+                                    green = 255;
+                                }
+                                else {
+                                    red = 255;
+                                }
                             }
+                            if (angleIndicate > 0) {
+                                red = 255;
+                                green = 255;
+                                blue = 64;
+                            }
+                            if (crossIndicate > 0) {
+                                blue = 255;
+                            }
+                            alpha = Math.max(Math.max(hairsIndicate, angleIndicate), crossIndicate);
+                            alphaCompl = 1 - alpha;
                             if (alpha > 0) {
                                 pixelData[2] = (byte) (alpha*red + alphaCompl*Byte.toUnsignedInt(pixelData[2]));
                                 pixelData[1] = (byte) (alpha*green + alphaCompl*Byte.toUnsignedInt(pixelData[1]));
@@ -583,8 +696,8 @@ public class DetectRectlinearSymmetry extends CvStage {
                             }
                         }
                         else {
-                            if (indicate > 0) {
-                                alpha = indicate;
+                            if (hairsIndicate > 0) {
+                                alpha = hairsIndicate;
                                 alphaCompl = 1 - alpha;
                                 pixelData[0] = (byte) (alpha*255 + alphaCompl*Byte.toUnsignedInt(pixelData[2]));
                             }
@@ -604,7 +717,7 @@ public class DetectRectlinearSymmetry extends CvStage {
             for (int slot = 0; slot < crossSize - kernel.length; slot++) {
                 double v = 0;
                 for (int k = 0; k < kernel.length; k++) {
-                    v += crossSection[(slot + k)*channels + ch];
+                    v += crossSection[(slot + k)*channels + ch]*kernel[k];
                 }
                 crossSectionKernel[slot*channels + ch] = Math.abs(v);
             }
@@ -628,17 +741,17 @@ public class DetectRectlinearSymmetry extends CvStage {
                 for (int ch = 0; ch < channels; ch++) {
                     double vLeft = crossSection[left*channels + ch];
                     double vRight = crossSection[right*channels + ch];
-                    double dv = (vLeft - vRight);
+                    double dv = Math.abs(vLeft - vRight);
                     sum[ch] += vLeft;
-                    sumSq[ch] += vLeft*vLeft;
                     sum[ch] += vRight;
+                    sumSq[ch] += vLeft*vLeft;
                     sumSq[ch] += vRight*vRight;
                     sumSym[ch] += dv;
                     sumSymSq[ch] += dv*dv;
                     n[ch]++;
                 }
             }
-            
+
             double variance = 0;
             double varianceSym = 1e-8;
             for (int ch = 0; ch < channels; ch++) { 
@@ -659,18 +772,18 @@ public class DetectRectlinearSymmetry extends CvStage {
     }
 
     protected static int findCrossSectionBounds(final int channels, double symmetry, int symmetrySize,
-            double[] crossSectionContrast) {
-        double maxStep = 0;
+            double[] crossSection) {
+        double maxSignal = 0;
         int dBest = symmetrySize;
         for (int d = symmetrySize/2-1; d > 0; d--) {
             double i = symmetry + symmetrySize/2 - 1;
-            double step = 0;
+            double signal = 0;
             for (int ch = 0; ch < channels; ch++) {
-                step += crossSectionContrast[(int) ((i - d)*channels + ch)]
-                        + crossSectionContrast[(int) ((i + d)*channels + ch)];
+                signal += crossSection[(int) ((i - d)*channels + ch)]
+                        + crossSection[(int) ((i + d)*channels + ch)];
             }
-            if (step > maxStep*2) {
-                maxStep = step;
+            if (signal > maxSignal*1.8) {
+                maxSignal = signal;
                 dBest = d*2;
             }
         }
