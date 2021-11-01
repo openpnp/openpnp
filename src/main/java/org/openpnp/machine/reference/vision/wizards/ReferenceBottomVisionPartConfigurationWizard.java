@@ -22,9 +22,11 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -297,8 +299,21 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     private void editPipeline() throws Exception {
         CvPipeline pipeline = partSettings.getPipeline();
         pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
-        pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
-
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        pipeline.setProperty("nozzle", nozzle);
+        double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
+                .convertReverse(testAlignmentAngle.getText());
+        pipeline.setProperty("alignment.expectedAngle", angle);
+        Location partSize = partSettings.getPartCheckSize(part);
+        if (partSize != null) {
+            pipeline.setProperty("alignment.maxWidth", partSize.getLengthX());
+            pipeline.setProperty("alignment.maxHeight", partSize.getLengthY());
+        }
+        else if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip){
+            Length maxPartDiameter = ((ReferenceNozzleTip) nozzle.getNozzleTip()).getMaxPartDiameter();
+            pipeline.setProperty("alignment.maxWidth", maxPartDiameter);
+            pipeline.setProperty("alignment.maxHeight", maxPartDiameter);
+        }
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
         dialog.setVisible(true);

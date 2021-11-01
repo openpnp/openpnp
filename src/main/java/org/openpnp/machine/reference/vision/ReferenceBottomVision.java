@@ -1,6 +1,6 @@
 package org.openpnp.machine.reference.vision;
 
-import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -148,7 +148,7 @@ public class ReferenceBottomVision implements PartAlignment {
             Location offsets = new Location(nozzleLocation.getUnits());
             // Try getting a good fix on the part in multiple passes.
             for(int pass = 0;;) {
-                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+                RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle, wantedLocation, partSettings);
                 camera=(Camera)pipeline.getProperty("camera");
 
                 Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
@@ -237,7 +237,7 @@ public class ReferenceBottomVision implements PartAlignment {
         MovableUtils.moveToLocationAtSafeZ(nozzle, wantedLocation);
 
         try (CvPipeline pipeline = partSettings.getPipeline()) {
-            RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle);
+            RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle, wantedLocation, partSettings);
             camera=(Camera)pipeline.getProperty("camera");
 
             Logger.debug("Bottom vision part {} result rect {}", part.getId(), rect);
@@ -282,41 +282,18 @@ public class ReferenceBottomVision implements PartAlignment {
     
     private boolean partSizeCheck(Part part, PartSettings partSettings, RotatedRect partRect, Camera camera) {
         // Check if this test needs to be done
-        PartSettings.PartSizeCheckMethod partSizeCheckMethod = partSettings.getCheckPartSizeMethod();
-
-        double checkWidth = 0.0;
-        double checkHeight = 0.0;
-
-        Footprint footprint = part.getPackage().getFootprint();
-        LengthUnit footprintLengthUnit = footprint.getUnits();
-
-        // Get the part footprint body dimensions to compare to
-        switch (partSizeCheckMethod) {
-        case Disabled:
+        Location partSize = partSettings.getPartCheckSize(part);
+        if (partSize == null) {
             return true;
-        case BodySize:
-            checkWidth = footprint.getBodyWidth();
-            checkHeight = footprint.getBodyHeight();
-            break;
-        case PadExtents:
-            Rectangle bounds = footprint.getPadsShape().getBounds();
-            checkWidth = bounds.getWidth();
-            checkHeight = bounds.getHeight();
-            break;
         }
 
         // Make sure width is the longest dimension
-        if (checkHeight > checkWidth) {
-            double height = checkHeight;
-            double width = checkWidth;
-            checkWidth = height;
-            checkHeight = width;
+        if (partSize.getY() > partSize.getX()) {
+            partSize = new Location(partSize.getUnits(), partSize.getY(), partSize.getX(), 0, 0);
         }
 
-        Length width = new Length(checkWidth, footprintLengthUnit);
-        Length height = new Length(checkHeight, footprintLengthUnit);
-        double pxWidth = VisionUtils.toPixels(width, camera);
-        double pxHeight = VisionUtils.toPixels(height, camera);
+        double pxWidth = VisionUtils.toPixels(partSize.getLengthX(), camera);
+        double pxHeight = VisionUtils.toPixels(partSize.getLengthY(), camera);
 
         // Make sure width is the longest dimension
         Size measuredSize = partRect.size;
@@ -374,10 +351,21 @@ public class ReferenceBottomVision implements PartAlignment {
     }
 
     private static RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
-            Nozzle nozzle) throws Exception {
+            Nozzle nozzle, Location wantedLocation, PartSettings partSettings) throws Exception {
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("part", part);
         pipeline.setProperty("nozzle", nozzle);
+        pipeline.setProperty("alignment.expectedAngle", wantedLocation.getRotation());
+        Location partSize = partSettings.getPartCheckSize(part);
+        if (partSize != null) {
+            pipeline.setProperty("alignment.maxWidth", partSize.getLengthX());
+            pipeline.setProperty("alignment.maxHeight", partSize.getLengthY());
+        }
+        else {
+            Length maxPartDiameter = ((ReferenceNozzleTip) nozzle.getNozzleTip()).getMaxPartDiameter();
+            pipeline.setProperty("alignment.maxWidth", maxPartDiameter);
+            pipeline.setProperty("alignment.maxHeight", maxPartDiameter);
+        }
         pipeline.process();
 
         Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
@@ -637,7 +625,29 @@ public class ReferenceBottomVision implements PartAlignment {
         public PartSizeCheckMethod getCheckPartSizeMethod() {
         	return checkPartSizeMethod;
         }
-        
+
+        public Location getPartCheckSize(Part part) {
+            Footprint footprint = part.getPackage().getFootprint();
+            double checkWidth = 0.0;
+            double checkHeight = 0.0;
+
+            // Get the part footprint body dimensions to compare to
+            switch (checkPartSizeMethod) {
+                case Disabled:
+                    return null;
+                case BodySize:
+                    checkWidth = footprint.getBodyWidth();
+                    checkHeight = footprint.getBodyHeight();
+                    break;
+                case PadExtents:
+                    Rectangle2D bounds = footprint.getPadsShape().getBounds2D();
+                    checkWidth = bounds.getWidth();
+                    checkHeight = bounds.getHeight();
+                    break;
+            }
+            return new Location(footprint.getUnits(), checkWidth, checkHeight, 0, 0);
+        }
+
         public void setCheckPartSizeMethod(PartSizeCheckMethod checkPartSizeMethod) {
             this.checkPartSizeMethod = checkPartSizeMethod;
         }

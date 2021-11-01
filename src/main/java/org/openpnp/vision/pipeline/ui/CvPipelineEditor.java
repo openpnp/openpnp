@@ -35,6 +35,7 @@ import org.openpnp.vision.pipeline.stages.DetectEdgesRobertsCross;
 import org.openpnp.vision.pipeline.stages.DetectFixedCirclesHough;
 import org.openpnp.vision.pipeline.stages.DetectLinesHough;
 import org.openpnp.vision.pipeline.stages.DetectRectangleHough;
+import org.openpnp.vision.pipeline.stages.DetectRectlinearSymmetry;
 import org.openpnp.vision.pipeline.stages.DilateModel;
 import org.openpnp.vision.pipeline.stages.DrawCircles;
 import org.openpnp.vision.pipeline.stages.DrawContours;
@@ -114,6 +115,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(DetectEdgesLaplacian.class);
         registerStageClass(DetectFixedCirclesHough.class);
         registerStageClass(DetectCircularSymmetry.class);
+        registerStageClass(DetectRectlinearSymmetry.class);
         registerStageClass(DilateModel.class);
         registerStageClass(DrawCircles.class);
         registerStageClass(DrawContours.class);
