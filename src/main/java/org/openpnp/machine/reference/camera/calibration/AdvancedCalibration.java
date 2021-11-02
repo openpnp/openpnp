@@ -120,7 +120,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private Length trialStep = new Length(0.5, LengthUnit.Millimeters);
 
     @Element(required = false)
-    private Length approximateCameraZ = new Length(0, LengthUnit.Millimeters);
+    private Length approximateCameraZ = new Length(Double.NaN, LengthUnit.Millimeters);
     
     @Attribute(required = false)
     private double approximateMillimetersPerPixel = 0;

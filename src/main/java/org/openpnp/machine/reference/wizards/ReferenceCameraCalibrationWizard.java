@@ -963,12 +963,14 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private Action startCalibration = new AbstractAction("Start Calibration Data Collection") {
         @Override
         public void actionPerformed(ActionEvent e) {
-            Logger.trace("thread = " + Thread.currentThread());
-            
             //Pre-calibration checks
+            if (!Configuration.get().getMachine().isHomed()) {
+                MessageBoxes.errorBox(MainFrame.get(), "Error", "Machine must be enabled and homed before starting calibration.");
+                return;
+            }
             if (advCal.getPrimaryLocation() == null || advCal.getSecondaryLocation() == null) {
                 if (isMovable) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define primary and secondary fiducial locations before starting calibration.");
+                    MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define Primary and Secondary Calibration Fiducial locations before starting calibration.");
                     return;
                 }
                 else {
@@ -977,11 +979,15 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 }
             }
             if (!Double.isFinite(advCal.getPrimaryLocation().getZ()) || !Double.isFinite(advCal.getSecondaryLocation().getZ())) {
-                MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite primary and secondary calibration Z values before starting calibration.");
+                MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite Primary and Secondary Calibration Z values before starting calibration.");
                 return;
             }
             if (referenceCamera.getDefaultZ() == null || !Double.isFinite(referenceCamera.getDefaultZ().getValue())) {
-                MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite default Z value before starting calibration.");
+                MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite Default Working Plane Z value before starting calibration.");
+                return;
+            }
+            if (!Double.isFinite(advCal.getApproximateCameraZ().getValue())) {
+                MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite Approximate Camera Lens Z value before starting calibration.");
                 return;
             }
             
@@ -1020,8 +1026,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                                 double[][][] testPatternImagePointsList, Size size, double mirrored,
                                 double apparentMotionDirection) throws Exception {
                             
-                            Logger.trace("processing thread = " + Thread.currentThread());
-                            
                             advCal.setPrimaryDiameter(detectionDiameters.get(0));
                             advCal.setSecondaryDiameter(detectionDiameters.get(1));
                             
@@ -1052,8 +1056,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     
                         @Override
                         protected void processCanceled() {
-                            Logger.trace("cancelling thread = " + Thread.currentThread());
-                            
                             advCal.setValid(savedValidState);
                             advCal.setEnabled(savedEnabledState);
                             chckbxEnable.setSelected(savedEnabledState);
@@ -1102,17 +1104,17 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         spinnerModel.setList(calibrationHeightSelections);
         
-        Location camLocation = new Location(LengthUnit.Millimeters, 
-              advCal.getVectorFromMachToVirCamInMachRefFrame().get(0, 0)[0],
-              advCal.getVectorFromMachToVirCamInMachRefFrame().get(1, 0)[0],
-              0, 0);
-        
         Location calibratedOffsets = new Location(LengthUnit.Millimeters);
    
         if (isMovable) {
             calibratedOffsets = calibratedOffsets.subtract(advCal.getCameraOffsetAtZ(referenceHead.getCalibrationPrimaryFiducialLocation().getLengthZ()).derive(null, null, 0.0, 0.0));
         }
         else {
+            Location camLocation = new Location(LengthUnit.Millimeters, 
+                    advCal.getVectorFromMachToVirCamInMachRefFrame().get(0, 0)[0],
+                    advCal.getVectorFromMachToVirCamInMachRefFrame().get(1, 0)[0],
+                    0, 0);
+              
             calibratedOffsets = camLocation.subtract(referenceCamera.getHeadOffsets().derive(null, null, 0.0, 0.0));
         }
         advCal.setCalibratedOffsets(calibratedOffsets);
@@ -1150,6 +1152,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     
     private void updateDiagnosticsDisplay() {
         if (advCal.isValid()) {
+            referenceCamera.captureTransformed(); //make sure the camera is up-to-date
+
             Location headOffsets;
             if (isMovable) {
                 headOffsets = advCal.getCalibratedOffsets().convertToUnits(displayUnits);
@@ -1161,17 +1165,17 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             textFieldYOffset.setText((new LengthCellValue(headOffsets.getLengthY())).toString());
             textFieldZOffset.setText((new LengthCellValue(headOffsets.getLengthZ())).toString());
             
-            Location upp = referenceCamera.getUnitsPerPixel(referenceCamera.getDefaultZ()).
+            Location uppAtDefaultZ = referenceCamera.getUnitsPerPixel(referenceCamera.getDefaultZ()).
                     convertToUnits(smallDisplayUnits);
             textFieldUnitsPerPixel.setText(
-                    (new LengthCellValue(upp.getLengthX(), true)).toString());
+                    (new LengthCellValue(uppAtDefaultZ.getLengthX(), true)).toString());
             
-            textFieldRmsError.setText((new LengthCellValue(upp.getLengthX().
+            textFieldRmsError.setText((new LengthCellValue(uppAtDefaultZ.getLengthX().
                     multiply(advCal.getRmsError()), true)).toString());
 
-            upp = referenceCamera.getUnitsPerPixel(calibrationHeightSelections.get(heightIndex).
+            Location uppAtHeight = referenceCamera.getUnitsPerPixel(calibrationHeightSelections.get(heightIndex).
                     getLength()).convertToUnits(smallDisplayUnits);
-            double smallUnitsPerPixel = upp.getLengthX().getValue();
+            double smallUnitsPerPixel = uppAtHeight.getLengthX().getValue();
             
             List<double[]> residuals = null;
             try {

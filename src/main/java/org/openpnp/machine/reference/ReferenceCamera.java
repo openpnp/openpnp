@@ -640,10 +640,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Override
     public Location getUnitsPerPixel(Length viewingPlaneZ) {
-        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
-            //If using advance calibration but it is not valid, we could just return the upp set 
-            //by the super but it is safer to just return zero as this will keep the operator from
-            //doing a camera drag jog with potentially unexpected results
+        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && advancedCalibration.isEnabled()) {
             double upp = 0;
             if (advancedCalibration.isValid()) {
                 upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
