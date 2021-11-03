@@ -408,7 +408,8 @@ public class CalibrationSolutions implements Solutions.Subject {
         if (! head.getCalibrationPrimaryFiducialLocation().isInitialized()) {
             throw new Exception("Head "+head.getName()+" primary fiducial location must be set for backlash calibration.");
         }
-        if (! head.getCalibrationPrimaryFiducialDiameter().isInitialized()) {
+        if (head.getCalibrationPrimaryFiducialDiameter() == null 
+                || ! head.getCalibrationPrimaryFiducialDiameter().isInitialized()) {
             throw new Exception("Head "+head.getName()+" primary fiducial diameter must be set for backlash calibration.");
         }
         // Make sure to disable any backlash compensation.
