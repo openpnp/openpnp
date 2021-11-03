@@ -17,8 +17,10 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -58,6 +60,12 @@ public class SimulatedUpCamera extends ReferenceCamera {
     @Attribute(required=false)
     private boolean simulatedFlipped;
 
+    @Element(required = false)
+    private Length focalLength = new Length(6, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length sensorDiagonal = new Length(4.4, LengthUnit.Millimeters);
+
     public SimulatedUpCamera() {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.0234375D, 0.0234375D, 0, 0));
         setLooking(Looking.Up);
@@ -88,10 +96,10 @@ public class SimulatedUpCamera extends ReferenceCamera {
         double phyWidth = phySize.getX();
         double phyHeight = phySize.getY();
 
-        // and bounds
+        // and bounds (times two to cover perspective projection)
         Location location = getSimulatedLocation().convertToUnits(LengthUnit.Millimeters);
-        Rectangle2D.Double phyBounds = new Rectangle2D.Double(location.getX() - phyWidth / 2,
-                location.getY() - phyHeight / 2, phyWidth, phyHeight);
+        Rectangle2D.Double phyBounds = new Rectangle2D.Double(location.getX() - phyWidth,
+                location.getY() - phyHeight, phyWidth*2, phyHeight*2);
 
         // determine if there are any nozzles within our bounds and if so render them
         Machine machine = Configuration.get()
@@ -144,48 +152,59 @@ public class SimulatedUpCamera extends ReferenceCamera {
         LengthUnit units = LengthUnit.Millimeters;
         Location unitsPerPixel = getSimulatedUnitsPerPixel().convertToUnits(units);
 
+        boolean hasDrawn;
+
         // Draw the nozzle
         // Get nozzle offsets from camera
         Location offsets = l.subtractWithRotation(getSimulatedLocation());
 
         // Create a nozzle shape
-        fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), new Color(0, 220, 0), unitsPerPixel, offsets, false);
+        if (fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), new Color(0, 220, 0), unitsPerPixel, offsets, false)) {
+            if (frame != null) {
+                blurObjectIntoView(gView, frame, nozzle, l);
 
-        if (frame != null) {
-            blurObjectIntoView(gView, frame, nozzle, l);
+                // Clear with transparent background
+                g.setBackground(new Color(0, 0, 0, 0));
+                g.clearRect(-width/2, -height/2, width, height);
+            }
 
-            // Clear with transparent background
-            g.setBackground(new Color(0, 0, 0, 0));
-            g.clearRect(-width/2, -height/2, width, height);
+            // Draw the part
+            Part part = nozzle.getPart();
+            if (part == null) {
+                return;
+            }
+
+            org.openpnp.model.Package pkg = part.getPackage();
+            Footprint footprint = pkg.getFootprint();
+            if (footprint == null) {
+                return;
+            }
+
+            if (footprint.getUnits() != units) {
+                throw new Error("Not yet supported.");
+            }
+
+            // Account for the patu height.
+            Location partUndersideLocation = l.subtract(new Location(part.getHeight().getUnits(), 0, 0, Math.abs(part.getHeight().getValue()), 0));
+            offsets = partUndersideLocation.subtractWithRotation(getSimulatedLocation());
+
+            // First draw the body in dark grey.
+            fillShape(g, footprint.getBodyShape(), new Color(60, 60, 60), unitsPerPixel, offsets, true);
+
+            // Then draw the pads in white
+            fillShape(g, footprint.getPadsShape(), Color.white, unitsPerPixel, offsets, true);
+
+            if (frame != null) {
+                blurObjectIntoView(gView, frame, nozzle, 
+                        partUndersideLocation);
+
+                g.dispose();
+            }
         }
-
-        // Draw the part
-        Part part = nozzle.getPart();
-        if (part == null) {
-            return;
-        }
-
-        org.openpnp.model.Package pkg = part.getPackage();
-        Footprint footprint = pkg.getFootprint();
-        if (footprint == null) {
-            return;
-        }
-
-        if (footprint.getUnits() != units) {
-            throw new Error("Not yet supported.");
-        }
-
-        // First draw the body in dark grey.
-        fillShape(g, footprint.getBodyShape(), new Color(60, 60, 60), unitsPerPixel, offsets, true);
-
-        // Then draw the pads in white
-        fillShape(g, footprint.getPadsShape(), Color.white, unitsPerPixel, offsets, true);
-
-        if (frame != null) {
-            blurObjectIntoView(gView, frame, nozzle, 
-                l.subtract(new Location(part.getHeight().getUnits(), 0, 0, Math.abs(part.getHeight().getValue()), 0)));
-
-            g.dispose();
+        else {
+            if (frame != null) {
+                g.dispose();
+            }
         }
     }
 
@@ -195,7 +214,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
         gView.setTransform(new AffineTransform());
         double distanceMm = Math.abs(l.subtract(getSimulatedLocation()).convertToUnits(LengthUnit.Millimeters).getZ());
         final double bokeh = 0.01/getSimulatedUnitsPerPixel().convertToUnits(LengthUnit.Millimeters).getX();
-        double radius = distanceMm*bokeh;
+        double radius = Math.min(distanceMm*bokeh, 5); // Be reasonable.
         ConvolveOp op = null;
         if (radius > 0.01) {
             int size = (int)Math.ceil(radius) * 2 + 1;
@@ -227,23 +246,40 @@ public class SimulatedUpCamera extends ReferenceCamera {
         gView.setTransform(tx);
     }
 
-    private void fillShape(Graphics2D g, Shape shape, Color color, Location unitsPerPixel, Location offsets, boolean addError) {
+    private boolean fillShape(Graphics2D g, Shape shape, Color color, Location unitsPerPixel, Location offsets, boolean addError) {
         AffineTransform tx = new AffineTransform();
-        // Scale to pixels
-        tx.scale(1.0 / unitsPerPixel.getX(), 1.0 / unitsPerPixel.getY());
-        // Translate and rotate to offsets
-        tx.translate(offsets.getX(), offsets.getY());
-        tx.rotate(Math.toRadians(Utils2D.normalizeAngle(offsets.getRotation())));
-        if (addError) {
-            // Translate and rotate to error offsets
-            tx.translate(errorOffsets.getX(), errorOffsets.getY());
-            tx.rotate(Math.toRadians(Utils2D.normalizeAngle(errorOffsets.getRotation())));
+        double cameraViewDiagonal = Math.sqrt(Math.pow(unitsPerPixel.getX()*width, 2) + Math.pow(unitsPerPixel.getY()*height, 2));
+        double sensorDiagonal = getSensorDiagonal().convertToUnits(AxesLocation.getUnits()).getValue();
+        double focalLength = getFocalLength().convertToUnits(AxesLocation.getUnits()).getValue();
+        double cameraDistance = focalLength*cameraViewDiagonal/sensorDiagonal;
+        double zDistance = cameraDistance + offsets.getZ();
+        double perspective = zDistance/cameraDistance;
+        if (perspective <= 2) { // Limit the perspective projection "frustrum" to twice the view size. 
+            Location unitsPerPixelAtZ = unitsPerPixel.multiply(perspective);
+                    
+            // Scale to pixels
+            tx.scale(1.0 / unitsPerPixelAtZ.getX(), 1.0 / unitsPerPixelAtZ.getY());
+            // Translate and rotate to offsets
+            tx.translate(offsets.getX(), offsets.getY());
+            tx.rotate(Math.toRadians(Utils2D.normalizeAngle(offsets.getRotation())));
+            if (addError) {
+                // Translate and rotate to error offsets
+                tx.translate(errorOffsets.getX(), errorOffsets.getY());
+                tx.rotate(Math.toRadians(Utils2D.normalizeAngle(errorOffsets.getRotation())));
+            }
+            // Transform
+            shape = tx.createTransformedShape(shape);
+            // Draw
+            double shade = Math.pow(perspective, 2); 
+            Color colorShade = new Color(
+                    (int)Math.min(255, color.getRed()/shade), 
+                    (int)Math.min(255, color.getGreen()/shade), 
+                    (int)Math.min(255, color.getBlue()/shade));
+            g.setColor(colorShade);
+            g.fill(shape);
+            return true;
         }
-        // Transform
-        shape = tx.createTransformedShape(shape);
-        // Draw
-        g.setColor(color);
-        g.fill(shape);
+        return false;
     }
 
     public int getViewWidth() {
@@ -290,6 +326,22 @@ public class SimulatedUpCamera extends ReferenceCamera {
 
     public void setSimulatedFlipped(boolean simulatedFlipped) {
         this.simulatedFlipped = simulatedFlipped;
+    }
+
+    public Length getFocalLength() {
+        return focalLength;
+    }
+
+    public void setFocalLength(Length focalLength) {
+        this.focalLength = focalLength;
+    }
+
+    public Length getSensorDiagonal() {
+        return sensorDiagonal;
+    }
+
+    public void setSensorDiagonal(Length sensorDiagonal) {
+        this.sensorDiagonal = sensorDiagonal;
     }
 
     public boolean isSimulateFocalBlur() {
