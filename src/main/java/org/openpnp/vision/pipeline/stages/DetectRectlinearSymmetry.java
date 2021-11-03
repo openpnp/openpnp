@@ -88,8 +88,8 @@ public class DetectRectlinearSymmetry extends CvStage {
     private int superSampling = 1;
 
     @Attribute(required = false)
-    @Property(description = "Smoothing applied to the sampled cross-sections (Gaussian kernel size).<br/>"
-            + "This is needed to eliminate interferences, when angular sampling coincides with the pixel raster or 45° diagonals.")
+    @Property(description = "Smoothing applied to the sampled cross-sections. Given as the Gaussian kernel size.<br/>"
+            + "This is needed to eliminate interferences, when angular sampling coincides with the pixel raster or its diagonals.")
     private int smoothing = 5;
 
     @Attribute(required = false)
@@ -787,11 +787,9 @@ public class DetectRectlinearSymmetry extends CvStage {
                     double vLeft = crossSection[left*channels + ch];
                     double vRight = crossSection[right*channels + ch];
                     double dv = Math.abs(vLeft - vRight);
-                    sum[ch] += vLeft;
-                    sum[ch] += vRight;
-                    sumSq[ch] += vLeft*vLeft;
-                    sumSq[ch] += vRight*vRight;
-                    sumSym[ch] += dv;
+                    sum[ch] += vLeft + vRight;
+                    sumSq[ch] += vLeft*vLeft + vRight*vRight;
+                    //sumSym[ch] += dv;
                     sumSymSq[ch] += dv*dv;
                     n[ch]++;
                 }
