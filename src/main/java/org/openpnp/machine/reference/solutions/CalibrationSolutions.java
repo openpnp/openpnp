@@ -36,6 +36,7 @@ import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompen
 import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -412,42 +413,6 @@ public class CalibrationSolutions implements Solutions.Subject {
                 || ! head.getCalibrationPrimaryFiducialDiameter().isInitialized()) {
             throw new Exception("Head "+head.getName()+" primary fiducial diameter must be set for backlash calibration.");
         }
-        // Make sure to disable any backlash compensation.
-        axis.setBacklashCompensationMethod(BacklashCompensationMethod.None);
-
-        // Use the primary calibration fiducial for calibration.
-        Location location = head.getCalibrationPrimaryFiducialLocation();
-        Length fiducialDiameter = head.getCalibrationPrimaryFiducialDiameter();
-        MovableUtils.moveToLocationAtSafeZ(movable, location);
-        location = machine.getVisionSolutions()
-                .centerInOnSubjectLocation(camera, movable,
-                        fiducialDiameter, "Backlash Calibration Start Location", false);
-
-        // General note: We always use mm.
-        // Calculate the unit vector for the axis in both logical and axis coordinates. 
-        // If the movable axis has a non-linear transformation applied, this is only an approximation that is valid near the fiducial.
-        Location unit = new Location(LengthUnit.Millimeters, 
-                (axis.getType() == Type.X ? 1 : 0), 
-                (axis.getType() == Type.Y ? 1 : 0),
-                0, 0);
-        String signPositive = axis.getType() == Type.X ? " ►" : " ▲";
-        String signNegative = axis.getType() == Type.X ? " ◄" : " ▼";
-        AxesLocation axesLocation0 = movable.toRaw(location);
-        AxesLocation axesLocation1 = movable.toRaw(location.add(unit));
-        double mmAxis = axesLocation1.getCoordinate(axis) - axesLocation0.getCoordinate(axis); 
-        double minimumSpeed = backlashProbingSpeeds[0];
-        double unitsPerMm = new Length(1, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
-
-        double stepMm = getAxisCalibrationTolerance(camera, axis, false);
-        // Compute the applicable tolerance from axis resolution and vision sub-pixel resolution. 
-        double toleranceMm = getAxisCalibrationTolerance(camera, axis, false);
-        Length acceptableTolerance = axis.getAcceptableTolerance();
-        if (acceptableTolerance != null) {
-            toleranceMm = Math.max(1, Math.round(acceptableTolerance.convertToUnits(LengthUnit.Millimeters).getValue()/toleranceMm))*toleranceMm;
-        }
-        acceptableTolerance = new Length(toleranceMm, LengthUnit.Millimeters);
-        axis.setAcceptableTolerance(acceptableTolerance);
-        double toleranceUnits = acceptableTolerance.convertToUnits(axis.getUnits()).getValue();
 
         // Diagnostics graph.
         final String ERROR = "E";
@@ -542,6 +507,43 @@ public class CalibrationSolutions implements Solutions.Subject {
         speedGraph.getRow(VELOCITY, VELOCITY+1)
         .setMarkerShown(true); 
 
+        // Make sure to disable any backlash compensation.
+        axis.setBacklashCompensationMethod(BacklashCompensationMethod.None);
+
+        // Use the primary calibration fiducial for calibration.
+        Location location = head.getCalibrationPrimaryFiducialLocation();
+        Length fiducialDiameter = head.getCalibrationPrimaryFiducialDiameter();
+        MovableUtils.moveToLocationAtSafeZ(movable, location);
+        location = machine.getVisionSolutions()
+                .centerInOnSubjectLocation(camera, movable,
+                        fiducialDiameter, "Backlash Calibration Speed Control Test", false);
+
+        // General note: We always use mm.
+        // Calculate the unit vector for the axis in both logical and axis coordinates. 
+        // If the movable axis has a non-linear transformation applied, this is only an approximation that is valid near the fiducial.
+        Location unit = new Location(LengthUnit.Millimeters, 
+                (axis.getType() == Type.X ? 1 : 0), 
+                (axis.getType() == Type.Y ? 1 : 0),
+                0, 0);
+        String signPositive = axis.getType() == Type.X ? " ►" : " ▲";
+        String signNegative = axis.getType() == Type.X ? " ◄" : " ▼";
+        AxesLocation axesLocation0 = movable.toRaw(location);
+        AxesLocation axesLocation1 = movable.toRaw(location.add(unit));
+        double mmAxis = axesLocation1.getCoordinate(axis) - axesLocation0.getCoordinate(axis); 
+        double minimumSpeed = backlashProbingSpeeds[0];
+        double unitsPerMm = new Length(1, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
+
+        double stepMm = getAxisCalibrationTolerance(camera, axis, false);
+        // Compute the applicable tolerance from axis resolution and vision sub-pixel resolution. 
+        double toleranceMm = getAxisCalibrationTolerance(camera, axis, false);
+        Length acceptableTolerance = axis.getAcceptableTolerance();
+        if (acceptableTolerance != null) {
+            toleranceMm = Math.max(1, Math.round(acceptableTolerance.convertToUnits(LengthUnit.Millimeters).getValue()/toleranceMm))*toleranceMm;
+        }
+        acceptableTolerance = new Length(toleranceMm, LengthUnit.Millimeters);
+        axis.setAcceptableTolerance(acceptableTolerance);
+        double toleranceUnits = acceptableTolerance.convertToUnits(axis.getUnits()).getValue();
+
         // Measure times used for same distance at different speeds.
         MovableUtils.moveToLocationAtSafeZ(movable, location);
         movable.waitForCompletion(CompletionType.WaitForStillstand);
@@ -576,9 +578,9 @@ public class CalibrationSolutions implements Solutions.Subject {
                 speedGraph.getRow(VELOCITY, VELOCITY+0).recordDataPoint(speed, effSpeed);
                 if (speed == minimumSpeed) {
                     if (effSpeed > Math.sqrt(speed)) {
-                        throw new Exception("Speed factor seems not to be effective. "
-                                + "Should move at "+(int)(speed*100)+"%, moved at "+(int)(effSpeed*100)+"%. "
-                                        + "Check your driver motion control and axis configuration.");
+                        throw new Exception("Speed factor control seems not to be effective: "
+                                + "Should move at "+(int)(speed*100)+"%, but moved at "+(int)(effSpeed*100)+"%. "
+                                        + "Check your driver motion control and axis configuration (must use acceleration control).");
                     }
                 }
             }
@@ -589,16 +591,20 @@ public class CalibrationSolutions implements Solutions.Subject {
         int step = 0;
         Location referenceLocation = location;
         Location stepLocation0 = null;
+        Length absoluteErr = null; 
         for (double stepPos = -stepTestMm/2; stepPos < stepTestMm/2; stepPos += stepMm) {
             step++;
             Location startMoveLocation = displacedAxisLocation(movable, axis, location, (stepPos - stepTestMm)*mmAxis, false);
             movable.moveTo(startMoveLocation);
             Location nominalStepLocation = displacedAxisLocation(movable, axis, location, stepPos*mmAxis, false);
             movable.moveTo(nominalStepLocation, minimumSpeed);
+            // Note: as we are moving the camera (and not the fiducial), the returned location should always be the same, i.e. 
+            // the nominal camera location relative to it is already accounted for. 
+            // If we'd ever use the bottom camera and a movable nozzle instead of the fiducial, we'd have to account for this ourselves.
             Location stepLocation1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
                     location, fiducialDiameter, "Accuracy Test Step "+step, false);
             if (stepLocation0 != null) {
-                Length absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
+                absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
                 double absoluteErrUnits = absoluteErr.convertToUnits(axis.getUnits()).getValue();
                 stepTestGraph.getRow(ERROR, ABSOLUTE)
                         .recordDataPoint(step, absoluteErrUnits);
@@ -616,6 +622,17 @@ public class CalibrationSolutions implements Solutions.Subject {
                         .add(stepLocation1.subtract(referenceLocation));
             }
             stepLocation0 = stepLocation1;
+        }
+        double absoluteErrMm = absoluteErr.convertToUnits(LengthUnit.Millimeters).getValue();
+        if (Math.abs(absoluteErrMm) > toleranceMm*2.0) {
+            LengthConverter lengthConverter = new LengthConverter();
+            Length stepTest = new Length(stepTestMm, LengthUnit.Millimeters);
+            LengthUnit sysUnits = Configuration.get().getSystemUnits();
+            throw new Exception("Large absolute error detected: measured "+lengthConverter.convertForward(
+                    stepTest.subtract(absoluteErr))+sysUnits.getShortName()+", but should be "
+                    +lengthConverter.convertForward(stepTest)+sysUnits.getShortName()+". "
+                    + "Please check camera Units per Pixel and primary calibration fiducial Z. "
+                    + "Revisit Issues & Solutions primary calibration fiducial and camera calibration step, if needed.");
         }
 
         // Perform a backlash test over distances. The distances are a geometric series.   
@@ -907,7 +924,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             movable.moveTo(nominalStepLocation);
             Location stepLocation1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
                     location, fiducialDiameter, "Random Move Accuracy Test Step "+step, false);
-            Length absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
+            absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
             double absoluteErrUnits = absoluteErr.convertToUnits(axis.getUnits()).getValue();
             stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
             .recordDataPoint(2+(step-1)*fraction, absoluteErrUnits);
