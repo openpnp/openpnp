@@ -151,7 +151,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
 
         LengthUnit units = LengthUnit.Millimeters;
         Location unitsPerPixel = getSimulatedUnitsPerPixel().convertToUnits(units);
-        
+
         boolean hasDrawn;
 
         // Draw the nozzle
@@ -162,44 +162,48 @@ public class SimulatedUpCamera extends ReferenceCamera {
         if (fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), new Color(0, 220, 0), unitsPerPixel, offsets, false)) {
             if (frame != null) {
                 blurObjectIntoView(gView, frame, nozzle, l);
-    
+
                 // Clear with transparent background
                 g.setBackground(new Color(0, 0, 0, 0));
                 g.clearRect(-width/2, -height/2, width, height);
             }
-    
+
             // Draw the part
             Part part = nozzle.getPart();
             if (part == null) {
                 return;
             }
-    
+
             org.openpnp.model.Package pkg = part.getPackage();
             Footprint footprint = pkg.getFootprint();
             if (footprint == null) {
                 return;
             }
-    
+
             if (footprint.getUnits() != units) {
                 throw new Error("Not yet supported.");
             }
-    
+
+            // Account for the patu height.
+            Location partUndersideLocation = l.subtract(new Location(part.getHeight().getUnits(), 0, 0, Math.abs(part.getHeight().getValue()), 0));
+            offsets = partUndersideLocation.subtractWithRotation(getSimulatedLocation());
+
             // First draw the body in dark grey.
             fillShape(g, footprint.getBodyShape(), new Color(60, 60, 60), unitsPerPixel, offsets, true);
-    
+
             // Then draw the pads in white
             fillShape(g, footprint.getPadsShape(), Color.white, unitsPerPixel, offsets, true);
-    
+
             if (frame != null) {
                 blurObjectIntoView(gView, frame, nozzle, 
-                    l.subtract(new Location(part.getHeight().getUnits(), 0, 0, Math.abs(part.getHeight().getValue()), 0)));
-    
+                        partUndersideLocation);
+
                 g.dispose();
             }
         }
         else {
             if (frame != null) {
-               g.dispose();
+                g.dispose();
             }
         }
     }
