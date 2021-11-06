@@ -2,6 +2,7 @@
 * [How do I get help?](#how-do-i-get-help)
 * [Where are configuration and log files located?](#where-are-configuration-and-log-files-located)
 * [How do I reset my configuration?](#how-do-i-reset-my-configuration)
+* [How do I start OpenPnP with a JAR File?](#how-do-i-start-openpnp-with-a-jar-file)
 * [How do I use a different config directory](#how-do-i-use-a-different-config-directory)
 * [How do I turn on debug logging?](#how-do-i-turn-on-debug-logging)
 * [How do I troubleshoot GcodeDriver?](#how-do-i-troubleshoot-gcodedriver)
@@ -48,6 +49,13 @@ Some Computer Vision pipelines also write debug images into various subfolders h
 
 Sometimes it's easiest just to completely reset your configuration and start over. To do that, just delete the whole OpenPnP configuration directory. See [Where are configuration and log files located?](#where-are-configuration-and-log-files-located) for it's location.
 
+## How do I start OpenPnP with a JAR File?
+
+There might be situations where you want to start an OpenPnP .jar file directly, use the following command-line:
+
+```
+java -jar target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
+```
 
 ## How do I use a different config directory
 
