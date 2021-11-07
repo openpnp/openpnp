@@ -21,18 +21,36 @@
 
 package org.openpnp.machine.reference.axis;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.axis.wizards.BacklashCompensationConfigurationWizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigurationWizard;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
+import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle.RotationMode;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.base.AbstractControllerAxis;
+import org.openpnp.spi.base.AbstractNozzle;
+import org.openpnp.util.SimpleGraph;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceControllerAxis extends AbstractControllerAxis {
     // The more implementation specific properties are in the ReferenceControllerAxis
@@ -65,12 +83,29 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         OneSidedOptimizedPositioning,
         /**
          * Backlash compensation is applied in the direction of travel. 
-         * Half of the offset is added to the actual target location.    
+         * The offset is added to the actual target location, if its signum point into the direction of travel.
          */
-        DirectionalCompensation;
+        DirectionalCompensation,
+        
+        /**
+         * Same as DirectionalCompensation but this method sneaks up to the target at lower speed for the last part
+         * to prevent overshoot. 
+         * 
+         * The sneaking up length is taken to be the same length as the backlash offset. The justification is that
+         * overshoot can never be more than the backlash, i.e. it will at most take up the slack. 
+         */
+        DirectionalSneakUp;
 
         public boolean isOneSidedPositioningMethod() {
             return this == OneSidedPositioning || this == OneSidedOptimizedPositioning;
+        }
+
+        public boolean isDirectionalMethod() {
+            return this == DirectionalCompensation || this == DirectionalSneakUp;
+        }
+
+        public boolean isSpeedControlledMethod() {
+            return this == OneSidedPositioning || this == OneSidedOptimizedPositioning || this == DirectionalSneakUp;
         }
     }
 
@@ -78,10 +113,16 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     private BacklashCompensationMethod backlashCompensationMethod = BacklashCompensationMethod.None;
 
     @Element(required = false)
+    private Length acceptableTolerance = new Length(0.025, LengthUnit.Millimeters);
+
+    @Element(required = false)
     private Length backlashOffset = new Length(0.0, LengthUnit.Millimeters);
 
+    @Element(required = false)
+    private Length sneakUpOffset = new Length(0.0, LengthUnit.Millimeters);
+
     @Attribute(required = false) 
-    private double backlashSpeedFactor = 0.1; 
+    private double backlashSpeedFactor = 0.25; 
 
     /**
      * If limitRotation is enabled the nozzle will reverse directions when commanded to rotate past
@@ -147,6 +188,29 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     @Element(required = false)
     private double resolution = 0.0001; // 
 
+    @Element(required = false)
+    private SimpleGraph stepTestGraph;
+    @Element(required = false)
+    private SimpleGraph backlashDistanceTestGraph;
+    @Element(required = false)
+    private SimpleGraph backlashSpeedTestGraph;
+
+    @Attribute(required = false)
+    private double version;
+
+    @Commit
+    void commit() {
+        if (version < 2.0) {
+            version = 2.0;
+            if (getType() == Type.Rotation) {
+                // Rotational axis limits become enabled in newer versions. Make sure there is no garbage in them.
+                setSoftLimitLowEnabled(false);
+                setSoftLimitHighEnabled(false);
+                setSoftLimitLow(new Length(-180, AxesLocation.getUnits()));
+                setSoftLimitHigh(new Length(180, AxesLocation.getUnits()));
+            }
+        }
+    }
 
     public double getResolution() {
         if (resolution <= 0.0) {
@@ -170,27 +234,27 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     public Length getFeedratePerSecond() {
-        return convertToSytem(feedratePerSecond);
+        return convertToSystem(feedratePerSecond);
     }
 
     public void setFeedratePerSecond(Length feedratePerSecond) {
-        this.feedratePerSecond = convertFromSytem(feedratePerSecond);
+        this.feedratePerSecond = convertFromSystem(feedratePerSecond);
     }
 
     public Length getAccelerationPerSecond2() {
-        return convertToSytem(accelerationPerSecond2);
+        return convertToSystem(accelerationPerSecond2);
     }
 
     public void setAccelerationPerSecond2(Length accelerationPerSecond2) {
-        this.accelerationPerSecond2 = convertFromSytem(accelerationPerSecond2);
+        this.accelerationPerSecond2 = convertFromSystem(accelerationPerSecond2);
     }
 
     public Length getJerkPerSecond3() {
-        return convertToSytem(jerkPerSecond3);
+        return convertToSystem(jerkPerSecond3);
     }
 
     public void setJerkPerSecond3(Length jerkPerSecond3) {
-        this.jerkPerSecond3 = convertFromSytem(jerkPerSecond3);
+        this.jerkPerSecond3 = convertFromSystem(jerkPerSecond3);
     }
 
     public String getPreMoveCommand() {
@@ -209,12 +273,30 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         this.backlashCompensationMethod = backlashCompensationMethod;
     }
 
+    public Length getAcceptableTolerance() {
+        return acceptableTolerance;
+    }
+
+    public void setAcceptableTolerance(Length acceptableTolerance) {
+        Object oldValue = this.acceptableTolerance;
+        this.acceptableTolerance = acceptableTolerance;
+        firePropertyChange("acceptableTolerance", oldValue, acceptableTolerance);
+    }
+
     public Length getBacklashOffset() {
-        return convertToSytem(backlashOffset);
+        return convertToSystem(backlashOffset);
     }
 
     public void setBacklashOffset(Length backlashOffset) {
-        this.backlashOffset = convertFromSytem(backlashOffset);
+        this.backlashOffset = convertFromSystem(backlashOffset);
+    }
+
+    public Length getSneakUpOffset() {
+        return sneakUpOffset;
+    }
+
+    public void setSneakUpOffset(Length sneakUpOffset) {
+        this.sneakUpOffset = sneakUpOffset;
     }
 
     public double getBacklashSpeedFactor() {
@@ -313,6 +395,36 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         this.invertLinearRotational = invertLinearRotational;
     }
 
+    public SimpleGraph getStepTestGraph() {
+        return stepTestGraph;
+    }
+
+    public void setStepTestGraph(SimpleGraph stepTestGraph) {
+        Object oldValue = this.stepTestGraph;
+        this.stepTestGraph = stepTestGraph;
+        firePropertyChange("stepTestGraph", oldValue, stepTestGraph);
+    }
+
+    public SimpleGraph getBacklashSpeedTestGraph() {
+        return backlashSpeedTestGraph;
+    }
+
+    public void setBacklashSpeedTestGraph(SimpleGraph backlashSpeedTestGraph) {
+        Object oldValue = this.backlashSpeedTestGraph;
+        this.backlashSpeedTestGraph = backlashSpeedTestGraph;
+        firePropertyChange("backlashSpeedTestGraph", oldValue, backlashSpeedTestGraph);
+    }
+
+    public SimpleGraph getBacklashDistanceTestGraph() {
+        return backlashDistanceTestGraph;
+    }
+
+    public void setBacklashDistanceTestGraph(SimpleGraph backlashDistanceTestGraph) {
+        Object oldValue = this.backlashDistanceTestGraph;
+        this.backlashDistanceTestGraph = backlashDistanceTestGraph;
+        firePropertyChange("backlashDistanceTestGraph", oldValue, backlashDistanceTestGraph);
+    }
+
     @Override
     public double getMotionLimit(int order) {
         if (order == 1) {
@@ -367,9 +479,18 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     }
 
     @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard()),
+                new PropertySheetWizardAdapter(new BacklashCompensationConfigurationWizard(this), "Backlash Compensation"),
+        };
+    }
+
+    @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
 
+        Machine machine = Configuration.get().getMachine();
         if (solutions.isTargeting(Milestone.Basics)) {
             if (getDriver() == null) {
                 solutions.add(new Solutions.PlainIssue(
@@ -406,6 +527,8 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                         Severity.Warning,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
             }
+        }
+        if (solutions.isTargeting(Milestone.Kinematics)) {
             if (Math.abs(getMotionLimit(1)*2 - getMotionLimit(2)) < 0.1) {
                 // HACK: migration sets the acceleration to twice the feed-rate, that's our "signal" that the user has not yet
                 // tuned them.
@@ -416,61 +539,169 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                         Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
             }
-        }
-        if (solutions.isTargeting(Milestone.Calibration)) {
-            final BacklashCompensationMethod oldBacklashCompensationMethod = 
-                    getBacklashCompensationMethod();
-            if (oldBacklashCompensationMethod != BacklashCompensationMethod.None
-                    && oldBacklashCompensationMethod != BacklashCompensationMethod.DirectionalCompensation) {
-                solutions.add(new Solutions.Issue(
-                        this, 
-                        "New directonal backlash compensation method improves performance and allows fluid motion.", 
-                        "Set axis to DirectionalCompensation.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Backlash-Compensation") {
-
-                    @Override
-                    public void setState(Solutions.State state) throws Exception {
-                        setBacklashCompensationMethod(
-                                (state == Solutions.State.Solved) ?  
-                                        BacklashCompensationMethod.DirectionalCompensation 
-                                        : oldBacklashCompensationMethod);
-                        super.setState(state);
-                    }
-                });
-            }
-        }
-        if (solutions.isTargeting(Milestone.Advanced)) {
             if (getType() == Type.Rotation) {
-                if (!isWrapAroundRotation()) {
-                    solutions.add(new Solutions.Issue(
-                            this, 
-                            "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
-                            "Enable Wrap Around.", 
-                            Severity.Suggestion,
-                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                boolean isUnlimitedArticulation = true;
+                if (getDefaultHeadMountable() instanceof AbstractNozzle) {
+                    AbstractNozzle nozzle = (AbstractNozzle)getDefaultHeadMountable();
+                    double[] limits = new double[] {-180, 180};
+                    try {
+                        limits = nozzle.getRotationModeLimits();
+                    }
+                    catch (Exception e) {
+                       // ignore this here
+                    }
+                    final double epsilon = 1e-5;
+                    if (nozzle.getRotationMode() == RotationMode.LimitedArticulation) {
+                        isUnlimitedArticulation = false;
+                    }
+                    else if (limits[1] - limits[0] < 360 - epsilon) {
+                        isUnlimitedArticulation = false;
+                        final RotationMode oldRotationMode = nozzle.getRotationMode();
+                        solutions.add(new Solutions.Issue(
+                                nozzle, 
+                                "Rotation axis "+getName()+" is limiting Nozzle "+nozzle.getName()+" to less than 360°. Must use the " + RotationMode.LimitedArticulation + " rotation mode.", 
+                                "Set the " + RotationMode.LimitedArticulation + " rotation mode.", 
+                                Severity.Error,
+                                "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode") {
 
-                        @Override
-                        public void setState(Solutions.State state) throws Exception {
-                            setWrapAroundRotation((state == Solutions.State.Solved));
-                            super.setState(state);
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                    nozzle.setRotationMode((state == Solutions.State.Solved) ?
+                                            RotationMode.LimitedArticulation :
+                                            oldRotationMode);
+                                super.setState(state);
+                            }
+                        });
+                    }
+                    if (!isUnlimitedArticulation) {
+                        // Checking that ReferenceBottomVision has pre-rotate enabled. 
+                        for (PartAlignment partAlignment : machine.getPartAlignments()) {
+                            if (partAlignment instanceof ReferenceBottomVision) {
+                                ReferenceBottomVision referenceBottomVision = (ReferenceBottomVision) partAlignment;
+                                if (!referenceBottomVision.isPreRotate()) {
+                                    solutions.add(new Solutions.Issue(
+                                            referenceBottomVision, 
+                                            "Pre-rotate bottom vision must be enabled, because the machine has a limited articulation nozzle.", 
+                                            "Enable Pre-Rotate.", 
+                                            Severity.Error,
+                                            "https://github.com/openpnp/openpnp/wiki/Bottom-Vision#global-configuration") {
+
+                                        @Override
+                                        public void setState(Solutions.State state) throws Exception {
+                                            referenceBottomVision.setPreRotate((state == Solutions.State.Solved));
+                                            super.setState(state);
+                                        }
+                                    });
+                                }
+                                // Check all part setting.
+                                List<PartSettings> partSettings = new ArrayList<>();
+                                List<String> parts = new ArrayList<>();
+                                for (Entry<String, PartSettings> entry : referenceBottomVision.getPartSettingsByPartId().entrySet()) {
+                                    if (entry.getValue().getPreRotateUsage() == PreRotateUsage.AlwaysOff) {
+                                        parts.add(entry.getKey());
+                                        partSettings.add(entry.getValue());
+                                    }
+                                }
+                                parts.sort(null);
+                                if (!partSettings.isEmpty()) {
+                                    solutions.add(new Solutions.Issue(
+                                            referenceBottomVision, 
+                                            "Pre-rotate bottom vision must be allowed on all part settings, because the machine has a "
+                                                    + "limited articulation nozzle.", 
+                                                    "Switch from "+PreRotateUsage.AlwaysOff+" to "+PreRotateUsage.Default, 
+                                                    Severity.Error,
+                                            "https://github.com/openpnp/openpnp/wiki/Bottom-Vision#global-configuration") {
+
+
+                                        @Override 
+                                        public String getExtendedDescription() {
+                                            return "<html><p>Switch part settings pre-rotate usage from <strong>"+PreRotateUsage.AlwaysOff+"</strong> "
+                                                    + "to <strong>"+PreRotateUsage.Default+"</strong> on these parts:</p>"
+                                                    + "<ol><li>"
+                                                    + parts.stream().collect(Collectors.joining("</li><li>"))
+                                                    + "</li><ol>"
+                                                    + "</html>";
+                                        }
+
+                                        @Override
+                                        public void setState(Solutions.State state) throws Exception {
+                                            for (PartSettings partSetting : partSettings) {
+                                                partSetting.setPreRotateUsage((state == State.Solved) ?
+                                                        PreRotateUsage.Default : PreRotateUsage.AlwaysOff);
+                                            }
+                                            super.setState(state);
+                                        }
+                                    });
+                                }
+                            }
                         }
-                    });
+                    }
                 }
-                if (!isLimitRotation()) {
-                    solutions.add(new Solutions.Issue(
-                            this, 
-                            "Rotation can be optimized by limiting angles to ±180°. Best combined with Wrap Around.", 
-                            "Enable Limit ±180°.", 
-                            Severity.Suggestion,
-                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                if (isUnlimitedArticulation) {
+                    if (!isWrapAroundRotation()) {
+                        solutions.add(new Solutions.Issue(
+                                this, 
+                                "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
+                                "Enable Wrap Around.", 
+                                Severity.Suggestion,
+                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
-                        @Override
-                        public void setState(Solutions.State state) throws Exception {
-                            setLimitRotation((state == Solutions.State.Solved));
-                            super.setState(state);
-                        }
-                    });
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                setWrapAroundRotation((state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
+                    if (!isLimitRotation()) {
+                        solutions.add(new Solutions.Issue(
+                                this, 
+                                "Rotation can be optimized by limiting angles to ±180°. "
+                                        + "Best combined with Wrap Around.", 
+                                        "Enable Limit to Range.", 
+                                        Severity.Suggestion,
+                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                setLimitRotation((state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
+                }
+                else {
+                    // Limited articulation, we need to treat things differently.
+                    if (isWrapAroundRotation()) {
+                        solutions.add(new Solutions.Issue(
+                                this, 
+                                "Rotation cannot be wrapped-around on a limited articulation axis.", 
+                                "Disable Wrap Around.", 
+                                Severity.Error,
+                                "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode#setting-up-the-nozzle-rotation-axis") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                setWrapAroundRotation(!(state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
+                    if (!isLimitRotation()) {
+                        solutions.add(new Solutions.Issue(
+                                this, 
+                                "Rotation must be limited on a limited articulation axis.", 
+                                "Enable Limit to Range.", 
+                                Severity.Error,
+                                "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode#setting-up-the-nozzle-rotation-axis") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                setLimitRotation((state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
                 }
             }
         }

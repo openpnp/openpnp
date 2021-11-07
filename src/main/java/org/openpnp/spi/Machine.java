@@ -217,6 +217,8 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public void removeActuator(Actuator actuator);
 
+    public void permutateActuator(Actuator actuator, int direction);
+
     public PnpJobProcessor getPnpJobProcessor();
     
     public Future<Object> submit(Runnable runnable);

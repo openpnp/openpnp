@@ -17,6 +17,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
+import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
@@ -59,6 +60,9 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Attribute(required = false)
     protected double maxAngularOffset = 10;
+
+    @Attribute(required = false)
+    protected double testAlignmentAngle = 0.0;
 
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
@@ -130,7 +134,7 @@ public class ReferenceBottomVision implements PartAlignment {
             wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
                            .getRotation();
         }
-        wantedAngle = angleNorm(wantedAngle, 180.);
+        wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);
         // Wanted location.
         Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, wantedAngle);
                 
@@ -159,10 +163,10 @@ public class ReferenceBottomVision implements PartAlignment {
                 // is which. We can assume that the part is never picked more than +/-45º rotated.
                 // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
                 if (partSettings.getMaxRotation() == MaxRotation.Adjust ) {
-                    angleOffset = angleNorm(angleOffset);
+                    angleOffset = Utils2D.angleNorm(angleOffset);
                 } else {
                     // turning more than 180° in one direction makes no sense
-                    angleOffset = angleNorm(angleOffset, 180);
+                    angleOffset = Utils2D.angleNorm(angleOffset, 180);
                 }
 
                 // When we rotate the nozzle later to compensate for the angle offset, the X, Y offsets 
@@ -218,7 +222,7 @@ public class ReferenceBottomVision implements PartAlignment {
             offsets = offsets.subtract(partSettings.getVisionOffset().rotateXy(wantedAngle));
 
             Logger.debug("Final offsets {}", offsets);
-            displayResult(pipeline, part, offsets, camera);
+            displayResult(pipeline, part, offsets, camera, nozzle);
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
     }
@@ -248,10 +252,10 @@ public class ReferenceBottomVision implements PartAlignment {
             // is which. We can assume that the part is never picked more than +/-45º rotated.
             // So we change the range wrapping-around to -45° .. +45°. See angleNorm():
             if (partSettings.getMaxRotation() == MaxRotation.Adjust ) {
-                angleOffset = angleNorm(angleOffset);
+                angleOffset = Utils2D.angleNorm(angleOffset);
             } else {
                 // turning more than 180° in one direction makes no sense
-                angleOffset = angleNorm(angleOffset, 180);
+                angleOffset = Utils2D.angleNorm(angleOffset, 180);
             }
             
             if (!partSizeCheck(part, partSettings, rect, camera) ) {
@@ -269,7 +273,7 @@ public class ReferenceBottomVision implements PartAlignment {
             
             Logger.debug("Final offsets {}", offsets);
 
-            displayResult(pipeline, part, offsets, camera);
+            displayResult(pipeline, part, offsets, camera, nozzle);
 
             return new PartAlignmentOffset(offsets, false);
         }
@@ -350,7 +354,7 @@ public class ReferenceBottomVision implements PartAlignment {
         return true;
     }
 
-    private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera) {
+    private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera, Nozzle nozzle) {
         MainFrame mainFrame = MainFrame.get();
         if (mainFrame != null) {
             try {
@@ -360,6 +364,8 @@ public class ReferenceBottomVision implements PartAlignment {
                 .getCameraView(camera)
                 .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), s,
                         1500);
+                // Also make sure the right nozzle is selected for correct cross-hair rotation.
+                MovableUtils.fireTargetedUserAction(nozzle);
             }
             catch (Exception e) {
                 // Throw away, just means we're running outside of the UI.
@@ -420,18 +426,6 @@ public class ReferenceBottomVision implements PartAlignment {
         catch (Exception e) {
             throw new Error(e);
         }
-    }
-
-    private static double angleNorm(double val, double lim) {
-        double clip = lim * 2;
-        while (Math.abs(val) > lim) {
-            val += (val < 0.) ? clip : -clip;
-        }
-        return val;
-    }
-
-    private static double angleNorm(double val) {
-        return angleNorm(val, 45.);
     }
 
     @Override
@@ -496,7 +490,15 @@ public class ReferenceBottomVision implements PartAlignment {
     public void setMaxAngularOffset(double maxAngularOffset) {
         this.maxAngularOffset = maxAngularOffset;
     }
-    
+
+    public double getTestAlignmentAngle() {
+        return testAlignmentAngle;
+    }
+
+    public void setTestAlignmentAngle(double testAlignmentAngle) {
+        this.testAlignmentAngle = testAlignmentAngle;
+    }
+
     @Override
     public String getPropertySheetHolderTitle() {
         return "Bottom Vision";
@@ -557,7 +559,7 @@ public class ReferenceBottomVision implements PartAlignment {
     }
     
     @Root
-    public static class PartSettings {
+    public static class PartSettings extends AbstractModelObject {
 
         public enum PartSizeCheckMethod {
             Disabled, BodySize, PadExtents
@@ -611,7 +613,9 @@ public class ReferenceBottomVision implements PartAlignment {
         }
 
         public void setPreRotateUsage(PreRotateUsage preRotateUsage) {
+            Object oldValue = this.preRotateUsage;
             this.preRotateUsage = preRotateUsage;
+            firePropertyChange("preRotateUsage", oldValue, preRotateUsage);
         }
 
         public CvPipeline getPipeline() {

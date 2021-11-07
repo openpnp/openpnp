@@ -31,6 +31,12 @@ import org.openpnp.model.LengthUnit;
 public class RulerReticle extends CrosshairReticle {
     private LengthUnit units;
     private double unitsPerTick;
+    private boolean drawRulerOnly = true;
+
+    public RulerReticle(boolean drawRulerOnly) {
+        this();
+        this.drawRulerOnly = drawRulerOnly;
+    }
 
     public RulerReticle() {
         super();
@@ -82,11 +88,15 @@ public class RulerReticle extends CrosshairReticle {
                 .convertToUnits(this.units).getValue();
         double pixelsPerTickX = unitsPerTick / uppX;
         double pixelsPerTickY = unitsPerTick / uppY;
-        int tickLength = 3;
-        int fivetickLength = 6;
-        int tentickLength = 12;
-
-        g2d.setColor(color);
+        
+        //If only drawing rulers, use short tick marks; otherwise, make them long to form a grid
+        int tickLength = drawRulerOnly ? 3 : halfDiagonal;
+        int fivetickLength = drawRulerOnly ? 6 : halfDiagonal;
+        int tentickLength = drawRulerOnly ? 12 : halfDiagonal;
+        int alpha = drawRulerOnly ? 255 : 72;
+        Color colorAlpha = new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
+        Color complimentaryColorAlpha = new Color(complimentaryColor.getRed(), complimentaryColor.getGreen(), complimentaryColor.getBlue(), alpha);
+        g2d.setColor(colorAlpha);
         for (int i = 1; i < (halfDiagonal / pixelsPerTickX); i++) {
             int x = (int) (i * pixelsPerTickX);
             
@@ -105,7 +115,7 @@ public class RulerReticle extends CrosshairReticle {
 
         for (int i = 1; i < (halfDiagonal / pixelsPerTickY); i++) {
             int y = (int) (i * pixelsPerTickY);
-            g2d.setColor(color);
+            g2d.setColor(colorAlpha);
             if (i % 10 == 0){
             	g2d.drawLine(-tentickLength, y, tentickLength, y);
             }
@@ -114,7 +124,7 @@ public class RulerReticle extends CrosshairReticle {
             } else { 
             	g2d.drawLine(-tickLength, y, tickLength, y);
             }
-            g2d.setColor(complimentaryColor);
+            g2d.setColor(complimentaryColorAlpha);
             if (i % 10 == 0){
             	g2d.drawLine(-tentickLength, -y, tentickLength, -y);
             }

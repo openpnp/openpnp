@@ -26,6 +26,7 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
@@ -66,6 +67,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
@@ -78,7 +80,9 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
+import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -107,6 +111,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     private JTabbedPane configurationPanel;
     private int priorRowIndex = -1;
     private String priorFeederId;
+    private HashMap<Class, Integer> lastSelectedTabIndex = new HashMap<>();
     
     public FeedersPanel(Configuration configuration, MainFrame mainFrame) {
         this.configuration = configuration;
@@ -246,7 +251,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 if (e.getValueIsAdjusting()) {
                     return;
                 }
-                
                 List<Feeder> selections = getSelections();
                 if (selections.size() == 0) {
                     singleSelectActionGroup.setEnabled(false);
@@ -262,14 +266,14 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 }
 
                 if (table.getSelectedRow() != priorRowIndex) {
-                	if (keepUnAppliedFeederConfigurationChanges()) {
+                    if (keepUnAppliedFeederConfigurationChanges()) {
                         table.setRowSelectionInterval(priorRowIndex, priorRowIndex);
                         return;
-					}
+                    }
                     priorRowIndex = table.getSelectedRow();
-                    
+
                     Feeder feeder = getSelection();
-                    
+
                     configurationPanel.removeAll();
                     if (feeder != null) {
                         priorFeederId = feeder.getId();
@@ -282,11 +286,16 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                             }
                             configurationPanel.addTab(ps.getPropertySheetTitle(), panel);
                         }
+                        // Re-select the last selected tab of that feeder class. 
+                        if (lastSelectedTabIndex.get(feeder.getClass()) != null) {
+                            configurationPanel.setSelectedIndex(Math.max(0, Math.min(configurationPanel.getTabCount()-1, 
+                                    lastSelectedTabIndex.get(feeder.getClass()))));
+                        }
                     }
-                    
+
                     revalidate();
                     repaint();
-                    
+
                     Configuration.get().getBus().post(new FeederSelectedEvent(feeder, FeedersPanel.this));
                 }
             }
@@ -303,9 +312,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         table.setComponentPopupMenu(popupMenu);
     }
-    
+
     private boolean keepUnAppliedFeederConfigurationChanges() {
         Feeder priorFeeder = configuration.getMachine().getFeeder(priorFeederId);
+        if (priorFeeder != null) {
+            // Btw., remember the tab that was selected for this feeder class.
+            lastSelectedTabIndex.put(priorFeeder.getClass(), configurationPanel.getSelectedIndex());
+        }
         boolean feederConfigurationIsDirty = false;
         for (Component component : configurationPanel.getComponents()) {
             if(component instanceof AbstractConfigurationWizard) {
@@ -324,7 +337,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                     null
                     );
             switch (selection) {
-				case JOptionPane.YES_OPTION:
+                case JOptionPane.YES_OPTION:
                     for (Component component : configurationPanel.getComponents()) {
                         if(component instanceof AbstractConfigurationWizard) {
                             AbstractConfigurationWizard wizard = (AbstractConfigurationWizard) component;
@@ -333,18 +346,18 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                             }
                         }
                     }
-				    return false;
-				case JOptionPane.NO_OPTION:
-					return false;
-				case JOptionPane.CANCEL_OPTION:
-				default:
-					return true;
-			}
+                    return false;
+                case JOptionPane.NO_OPTION:
+                    return false;
+                case JOptionPane.CANCEL_OPTION:
+                default:
+                    return true;
+            }
         } else {
             return false;
         }
     }
-    
+
     @Subscribe
     public void feederSelected(FeederSelectedEvent event) {
         if (event.source == this) {
@@ -634,6 +647,21 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         // Do the feed an get the nozzle for the pick.
         Nozzle nozzle = feedFeeder(feeder);
 
+        // Perform the vacuum check, if enabled.
+        if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.BeforePick)) {
+            // Part-off check can only be done at safe Z. An explicit move to safe Z is needed, because some feeder classes 
+            // may move the nozzle to (near) the pick location i.e. down in Z in feed().
+            nozzle.moveToSafeZ();
+            if(!nozzle.isPartOff()) {
+                throw new JobProcessorException(nozzle, "Part vacuum-detected on nozzle before pick.");
+            }
+        }
+
+        // Make sure the nozzle can articulate from pick to placement. 
+        Location placementLocation = getTestPlacementLocation(feeder.getPart());
+        nozzle.prepareForPickAndPlaceArticulation(feeder.getPickLocation(), 
+                placementLocation);
+
         // Go to the pick location and pick.
         nozzle.moveToPickLocation(feeder);
         nozzle.pick(feeder.getPart());
@@ -650,6 +678,25 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
         // The part is now on the nozzle.
         MovableUtils.fireTargetedUserAction(nozzle);
+    }
+
+    /**
+     * Create a test placement location from the discard location and the test alignment angle. 
+     * 
+     * @param part
+     * @return
+     */
+    public static Location getTestPlacementLocation(Part part) {
+        PartAlignment aligner = AbstractPnpJobProcessor.findPartAligner(Configuration.get().getMachine(), part);
+        Location placementLocation = Configuration.get().getMachine().getDiscardLocation();
+        placementLocation = new Location(placementLocation.getUnits(),
+                placementLocation.getX(), 
+                placementLocation.getY(), 
+                placementLocation.getZ(), 
+                (aligner instanceof ReferenceBottomVision ? 
+                        ((ReferenceBottomVision)aligner).getTestAlignmentAngle() 
+                        : 0.0));
+        return placementLocation;
     }
 
     protected static Nozzle getCompatibleNozzleAndTip(Feeder feeder, boolean allowNozzleTipChange) throws Exception {

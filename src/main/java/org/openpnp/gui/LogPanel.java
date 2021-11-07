@@ -25,7 +25,6 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -85,7 +84,7 @@ public class LogPanel extends JPanel {
         // The Global Filter settings
         JPanel settingsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        settingsPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        settingsPanel.setBorder(new TitledBorder(null,
                 "Global Logging Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
 
         settingsPanel.add(createGlobalLogLevelPanel());
@@ -95,7 +94,7 @@ public class LogPanel extends JPanel {
         // The filter settings
         JPanel filterPanel = new JPanel(new BorderLayout(0, 0));
 
-        filterPanel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        filterPanel.setBorder(new TitledBorder(null,
                 "Filter Logging Panel", TitledBorder.LEADING, TitledBorder.TOP, null));
 
         JPanel filterContentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));

@@ -79,6 +79,20 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      */
     public Location getUnitsPerPixel(Length z);
 
+
+    /**
+     * Gets units per pixel for determining the physical size of an object in an image given
+     * its Z is at the (virtual) Z axis of the camera location. If the camera Z is at or above 
+     * Safe Z, meaning the Z is actually not set, it will fall back to the standard units per pixel.
+     * 
+     * This is also the default for cameras that do not have a concept of a location or Z axis.   
+     * 
+     * @return
+     */
+    public default Location getUnitsPerPixelAtZ() {
+        return getUnitsPerPixel();
+    }
+
     /**
      * Gets the Z  height of the default working plane for this camera.  This is the height
      * at which objects are assumed to be if no other information is available.
@@ -86,6 +100,13 @@ public interface Camera extends HeadMountable, WizardConfigurable,
      * @return the Z height of the default working plane
      */
     public Length getDefaultZ();
+
+    /**
+     * @return true, if Z-dependent units per pixel are available and configured. 
+     */
+    default boolean isUnitsPerPixelAtZCalibrated() {
+        return false;
+    }
 
     /**
      * Immediately captures an image from the camera and returns it in it's native format. Fires

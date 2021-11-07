@@ -2156,7 +2156,11 @@ solve(eq, t)            # Solve for t
             // curvature of the path. 
             // These give us interval boundaries, where we can search for the third order roots. 
             // [t == -(a0 + sqrt(a0^2 - 2*j*v0))/j, t == -(a0 - sqrt(a0^2 - 2*j*v0))/j]
-            double sTerm = Math.sqrt(a02 - 2*j*v0);
+            double sqArg = a02 - 2*j*v0;
+            if (sqArg < 0 && sqArg > -eps) {
+                sqArg = 0;
+            }
+            double sTerm = Math.sqrt(sqArg);
             double ti0 = 0;
             double ti1 = Math.max(ti0, Math.min(ti, -(a0 + sTerm)/j));
             double ti2 = Math.max(ti0, Math.min(ti, -(a0 - sTerm)/j));

@@ -62,6 +62,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.Nozzle.RotationMode;
 import org.openpnp.spi.base.AbstractNozzle;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.Cycles;
@@ -234,7 +235,7 @@ public class JogControlsPanel extends JPanel {
 
         tool.moveTo(targetLocation, MotionOption.JogMotion); 
 
-        MovableUtils.fireTargetedUserAction(tool);
+        MovableUtils.fireTargetedUserAction(tool, true);
     }
 
     private boolean nozzleLocationIsSafe(Location origin, Location dimension, Location nozzle,
@@ -605,9 +606,22 @@ public class JogControlsPanel extends JPanel {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable hm = machineControlsPanel.getSelectedTool();
                 Location location = hm.getLocation();
-                location = location.derive(null, null, null, 0.);
+                double parkAngle = 0;
+                if (hm instanceof AbstractNozzle) {
+                    AbstractNozzle nozzle = (AbstractNozzle) hm;
+                    if (nozzle.getRotationMode() == RotationMode.LimitedArticulation) {
+                        // Limited axis, select a 90° step position within the limits.
+                        double [] limits = nozzle.getRotationModeLimits();
+                        parkAngle = Math.round((limits[0]+limits[1])/2/90)*90;
+                        if (parkAngle < limits[0] || parkAngle > limits[1]) {
+                            // Rounded mid-point outside limits? Can this ever happen? If yes, fall back to exact mid-point.
+                            parkAngle = (limits[1] + limits[0])/2;
+                        }
+                    }
+                }
+                location = location.derive(null, null, null, parkAngle);
                 hm.moveTo(location);
-                MovableUtils.fireTargetedUserAction(hm);
+                MovableUtils.fireTargetedUserAction(hm, true);
             });
         }
     };

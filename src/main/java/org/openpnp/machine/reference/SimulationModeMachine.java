@@ -399,20 +399,25 @@ public class SimulationModeMachine extends ReferenceMachine {
      */
     public static Location getSimulatedPhysicalLocation(HeadMountable hm, Looking looking) {
         // Use ideal location as a default, used in case this fails (not a place to throw).
-        Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits()); 
+        Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits());
+        if (Configuration.get().getMachine() == null) {
+            // Uninitialized (Unit Test). 
+            return location;
+        }
         // Try to get a simulated physical location.
         SimulationModeMachine machine = getSimulationModeMachine();
         if (machine == null || machine.getSimulationMode() == SimulationMode.Off) {
-            // Not a simulation machine. Just take the nominal location.
-            double cameraTime = NanosecondTime.getRuntimeSeconds();
-            Motion momentary = ((ReferenceMachine) Configuration.get()
-                    .getMachine()).getMotionPlanner()
-                    .getMomentaryMotion(cameraTime);
-            AxesLocation axesLocation = momentary.getMomentaryLocation(cameraTime - momentary.getPlannedTime0());
-            // NOTE this specifically makes the assumption that the axes transform from raw 1:1
-            location = hm.toTransformed(axesLocation);
-            // Transform back. This bypasses any compensations, such as runout compensation.
-            location = hm.toHeadMountableLocation(location);
+            // Not a simulation machine. Just take the momentary nominal location.
+            if (Configuration.get().getMachine() instanceof ReferenceMachine) {
+                double cameraTime = NanosecondTime.getRuntimeSeconds();
+                Motion momentary = ((ReferenceMachine)Configuration.get()
+                        .getMachine()).getMotionPlanner()
+                        .getMomentaryMotion(cameraTime);
+                AxesLocation axesLocation = momentary.getMomentaryLocation(cameraTime - momentary.getPlannedTime0());
+                location = hm.toTransformed(axesLocation);
+                location = hm.toHeadMountableLocation(location);
+            }
+            // else: Configuration is still being loaded (Unit tests).
         } 
         else {
             try {
@@ -479,16 +484,20 @@ public class SimulationModeMachine extends ReferenceMachine {
 
                 if (hm instanceof Nozzle
                         && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
+                    // Need to convert to transformed (head) coordinates for real rotation:
+                    Location rotationLocation = hm.toTransformed(axesLocation, 
+                            LocationOption.SuppressStaticCompensation,
+                            LocationOption.SuppressDynamicCompensation);
+                    double rotation = rotationLocation.getRotation();
                     // Add Runout.
                     double runout = machine.getSimulatedRunout()
                             .convertToUnits(AxesLocation.getUnits()).getValue();
                     // Note, positive  phase shift is the positive shift of the curve which means the angle is subtracted,
                     // see: https://en.wikipedia.org/wiki/Phase_(waves)#General_definition  
                     //      ReferenceNozzleTipCalibration.ModelBasedRunoutCompensation.getRunout(double)
-                    double rotation = axesLocation.getCoordinate(mappedAxes.getAxis(Axis.Type.Rotation));
                     Location runoutVector = new Location(AxesLocation.getUnits(),
                             runout, 0, 0, 0)
-                            .rotateXy(rotation-machine.getSimulatedRunoutPhase());
+                            .rotateXy(rotation - machine.getSimulatedRunoutPhase());
                     axesLocation = axesLocation.add(mappedAxes.getTypedLocation(runoutVector)); 
                 }
 

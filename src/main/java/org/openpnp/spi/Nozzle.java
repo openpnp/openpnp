@@ -22,6 +22,45 @@ public interface Nozzle
     NozzleTip getNozzleTip();
 
     /**
+     * Nozzle pick-to-place rotation mode. 
+     *
+     */
+    public enum RotationMode {
+        /**
+         * The part is picked so it is at its absolute angle on the nozzle (as drawn in the E-CAD). This is the default.
+         */
+        AbsolutePartAngle,
+        /**
+         * The part is picked so it is rotated for placement, when the nozzle is at 0°.
+         */
+        PlacementAngle,
+        /**
+         * Rotation is minimized by just picking at whatever angle the nozzle happens to be.
+         */
+        MinimalRotation,
+        
+        /**
+         * Mode needed when the nozzle has limited rotation articulation. 
+         */
+        LimitedArticulation
+    }
+
+    /**
+     * @return the RotationMode of the Nozzle. See {@link Nozzle.RotationMode}.
+     */
+    public RotationMode getRotationMode();
+
+    /**
+     * Prepare the Nozzle for the next placement rotation. This will apply a rotation offset to the Nozzle 
+     * that implements the {@link RotationMode} and is subject to articulation limits, if present.
+     * 
+     * @param pickLocation
+     * @param placementLocation
+     * @throws Exception
+     */
+    void prepareForPickAndPlaceArticulation(Location pickLocation, Location placementLocation) throws Exception;
+
+    /**
      * Move the Nozzle to the given feeder pick location. This will move at safe Z and position the Nozzle
      * so it is ready for {@link #pick(Part)}. This might or might not involve offsets and actions for 
      * contact-probing e.g. to determine the feeder's calibrated Z. 

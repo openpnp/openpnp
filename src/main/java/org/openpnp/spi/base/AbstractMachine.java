@@ -407,6 +407,18 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
+    @Override 
+    public void permutateActuator(Actuator actuator, int direction) {
+        int index0 = actuators.indexOf(actuator);
+        int index1 = direction > 0 ? index0+1 : index0-1;
+        if (0 <= index1 && actuators.size() > index1) {
+            actuators.remove(actuator);
+            actuators.add(index1, actuator);
+            fireIndexedPropertyChange("actuators", index0, actuator, actuators.get(index0));
+            fireIndexedPropertyChange("actuators", index1, actuators.get(index0), actuator);
+        }
+    }
+
     @Override
     public void addDriver(Driver driver) throws Exception {
         drivers.add(driver);
@@ -453,9 +465,9 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
         }
     }
 
-    public void fireMachineTargetedUserAction(HeadMountable hm) {
+    public void fireMachineTargetedUserAction(HeadMountable hm, boolean jogging) {
         for (MachineListener listener : listeners) {
-            listener.machineTargetedUserAction(this, hm);
+            listener.machineTargetedUserAction(this, hm, jogging);
         }
     }
 

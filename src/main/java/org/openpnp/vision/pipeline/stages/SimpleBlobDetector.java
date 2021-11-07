@@ -32,6 +32,8 @@ import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.Feature2D;
+import org.openpnp.model.Area;
+import org.openpnp.model.Length;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
@@ -238,8 +240,26 @@ public class SimpleBlobDetector extends CvStage {
         outputStreamWriter.close();
         stream.close();
     }
-
+    
     public Result process(CvPipeline pipeline) throws Exception {
+        //Check for overriding properties on the pipeline
+        double distBetweenBlobs = this.distBetweenBlobs;
+        double overrideArea = Double.NaN; //Nan means no override for area
+        double areaMax = this.areaMax;
+        double areaMin = this.areaMin;
+
+        distBetweenBlobs = getPossiblePipelinePropertyOverride(distBetweenBlobs, pipeline, 
+                "SimpleBlobDetector.distBetweenBlobs", Double.class, Integer.class, Length.class);
+        
+        overrideArea = getPossiblePipelinePropertyOverride(overrideArea, pipeline, 
+                "SimpleBlobDetector.area", Double.class, Integer.class, Area.class);
+        if (Double.isFinite(overrideArea)) {
+            //If the area is specified on the pipeline, use the areaMax and areaMin fields as 
+            //fractional margins above and below the specified area
+            areaMax = overrideArea * (1+Math.max(0, this.areaMax));
+            areaMin = overrideArea * (1-Math.max(0, Math.min(1, this.areaMin)));
+        }
+        
         Mat mat = pipeline.getWorkingImage();
         
         Feature2D blobDetector = org.opencv.features2d.SimpleBlobDetector.create();

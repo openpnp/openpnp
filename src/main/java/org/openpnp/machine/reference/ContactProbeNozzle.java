@@ -29,9 +29,10 @@ import java.util.Map;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
 import org.openpnp.machine.reference.ReferenceNozzleTip.ZCalibrationTrigger;
+import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.driver.GcodeAsyncDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver;
-import org.openpnp.machine.reference.driver.GcodeDriverSolutions;
+import org.openpnp.machine.reference.solutions.GcodeDriverSolutions;
 import org.openpnp.machine.reference.wizards.ContactProbeNozzleWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -63,6 +64,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persist;
 
 public class ContactProbeNozzle extends ReferenceNozzle {
 
@@ -76,7 +78,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     @Element(required = false)
     private String contactProbeActuatorName = "";
-    private boolean isDisabled;
+    private boolean isDisabled; // for scripts: temporarily disable probing 
 
     @Element(required = false)
     private Length contactProbeStartOffsetZ = new Length(1, LengthUnit.Millimeters);
@@ -86,6 +88,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     @Element(required = false)
     private Length sniffleIncrementZ = new Length(0.1, LengthUnit.Millimeters); 
+
+    @Attribute(required=false)
+    private double contactProbeSpeed = 0.05;
 
     @Attribute(required=false)
     private long sniffleDwellTime = 250;
@@ -137,6 +142,8 @@ public class ContactProbeNozzle extends ReferenceNozzle {
     private HashMap<String, Length> probedPartHeightOffsets = new HashMap<>();
 
     private ReferenceNozzleTip zCalibratedNozzleTip;
+
+    private Actuator contactProbeActuator;
 
     @Override
     public PropertySheet[] getPropertySheets() {
@@ -222,6 +229,11 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     @Override
     public void moveToPickLocation(Feeder feeder) throws Exception {
+        if (getFeederHeightProbing() == ContactProbeTrigger.Off) {
+            super.moveToPickLocation(feeder);
+            return;
+        }
+
         Part part = feeder.getPart();
         Location pickLocation = feeder.getPickLocation();
         Location pickLocationPart = pickLocation;
@@ -288,6 +300,11 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     @Override
     public void moveToPlacementLocation(Location placementLocation, Part part) throws Exception {
+        if (getPartHeightProbing() == ContactProbeTrigger.Off) {
+            super.moveToPlacementLocation(placementLocation, part);
+            return;
+        }
+
         // Calculate the probe starting location.
         Length partHeight = ((part == null && nozzleTip != null) ? 
                 nozzleTip.getMaxPartHeight() // for discard 
@@ -354,28 +371,41 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         }
     }
 
-    protected Actuator getContactProbeActuator() throws Exception {
-        Actuator actuator = getHead().getActuatorByName(contactProbeActuatorName);
-        if (actuator == null) {
-            throw new Exception(String.format("Can't find contact probe actuator %s", contactProbeActuatorName));
+    @Persist
+    private void persist() {
+        // Make sure the latest actuator name is persisted.
+        try {
+            setContactProbeActuator(getContactProbeActuator());
         }
-        return actuator;
+        catch (Exception e) {
+        }
+    }
+
+    /**
+     * Set the actuator used to contact probe with the Nozzle.
+     * @param actuator
+     */
+    public void setContactProbeActuator(Actuator actuator) {
+        contactProbeActuator = actuator;
+        contactProbeActuatorName = (actuator != null ? actuator.getName() : null);
+    }
+
+    /**
+     * @return The actuator used to contact probe with the Nozzle. 
+     * @throws Exception when the actuator name cannot be resolved (dangling reference).
+     */
+    public Actuator getContactProbeActuator() throws Exception {
+        if (contactProbeActuator == null && contactProbeActuatorName != null && !contactProbeActuatorName.isEmpty()) {
+            contactProbeActuator = getHead().getActuatorByName(contactProbeActuatorName);
+            if (contactProbeActuator == null) {
+                throw new Exception(String.format("Can't find contact probe actuator %s", contactProbeActuatorName));
+            }
+        }
+        return contactProbeActuator;
     }
 
     public void disableContactProbeActuator(boolean set) {
         isDisabled = set;
-    }
-
-    public String getContactProbeActuatorName() {
-        return contactProbeActuatorName;
-    }
-
-    public void setContactProbeActuatorName(String contactProbeActuatorName) {
-        String oldValue = this.contactProbeActuatorName;
-        this.contactProbeActuatorName = contactProbeActuatorName;
-        if (oldValue != contactProbeActuatorName) {
-            firePropertyChange("contactProbeActuatorName", oldValue, contactProbeActuatorName);
-        }
     }
 
     public Length getContactProbeStartOffsetZ() {
@@ -392,6 +422,14 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     public void setContactProbeDepthZ(Length contactProbeDepthZ) {
         this.contactProbeDepthZ = contactProbeDepthZ;
+    }
+
+    public double getContactProbeSpeed() {
+        return contactProbeSpeed;
+    }
+
+    public void setContactProbeSpeed(double contactProbeSpeed) {
+        this.contactProbeSpeed = contactProbeSpeed;
     }
 
     public Length getSniffleIncrementZ() {
@@ -566,13 +604,13 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         if (assumeNozzleTipLoaded 
                 || !nt.getzCalibrationTrigger().isPerNozzleTip()) {
             // We assume the nozzle tip is (in the course of being) loaded or we don't have per nozzle tip calibration.
-            if (zCalibratedNozzleTip == nt 
-                    || (zCalibratedNozzleTip != null && nt.getzCalibrationTrigger() == ZCalibrationTrigger.MachineHome)) {
-                // Already calibrated.
-                return;
-            }
-            calibrateZ(nt);
+        if (zCalibratedNozzleTip == nt 
+                || (zCalibratedNozzleTip != null && nt.getzCalibrationTrigger() == ZCalibrationTrigger.MachineHome)) {
+            // Already calibrated.
+            return;
         }
+        calibrateZ(nt);
+    }
         else {
             // We assume the nozzle tip is (in the course of being) unloaded and this is per nozzle tip calibration.
             // Take the "naked" nozzle Z offset for the unloading process.
@@ -595,12 +633,15 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     @Override
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
+        boolean quiet = Arrays.asList(options).contains(LocationOption.Quiet);
         // Apply the Z calibration.
         // Check SuppressCompensation, in that case disable Z calibration
         if (! Arrays.asList(options).contains(LocationOption.SuppressDynamicCompensation)) {
             if (zCalibratedNozzleTip != null && calibrationOffsetZ != null) {
                 location = location.subtract(new Location(calibrationOffsetZ .getUnits(), 0, 0, calibrationOffsetZ.getValue(), 0));
-                Logger.trace("{}.toHeadLocation({}, ...) Z offset {}", getName(), location, calibrationOffsetZ);
+                if (! quiet) {
+                    Logger.trace("{}.toHeadLocation({}, ...) Z offset {}", getName(), location, calibrationOffsetZ);
+                }
             }
         }
         return super.toHeadLocation(location, currentLocation, options);
@@ -655,8 +696,11 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         if (nt == null) {
             throw new Exception("Nozzle " + getName() + " has no nozzle tip loaded.");
         }
-        resetZCalibration();
         Location nominalLocation = nt.getTouchLocation();
+        if (!nominalLocation.isInitialized()) {
+            throw new Exception("Nozzle tip " + nt.getName() + " has no touch location configured.");
+        }
+        resetZCalibration();
         Location probedLocation = contactProbeCycle(nominalLocation);
         Length offsetZ = nominalLocation.getLengthZ().subtract(probedLocation.getLengthZ());
         Logger.debug("Nozzle "+getName()+" nozzle tip "+nt.getName()+" Z calibration offset "+offsetZ);
@@ -670,7 +714,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         if (getNozzleTip() == null) {
             // Store the special "naked" nozzle Z offset. 
             setUnloadedCalibrationOffsetZ(calibrationOffsetZ);
-        }
+    }
     }
 
     public void resetZCalibration() {
@@ -678,7 +722,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         zCalibratedNozzleTip = null;
         if (getNozzleTip() == null) {
             setUnloadedCalibrationOffsetZ(null);
-        }
+    }
     }
 
     public static void referenceAllTouchLocationsZ() throws Exception {
@@ -765,9 +809,18 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
-        if (solutions.isTargeting(Milestone.Advanced)) {
-            try {
-                if (getContactProbeActuator() instanceof AbstractActuator) {
+        try {
+            if (solutions.isTargeting(Milestone.Basics)) {
+                if (getContactProbeMethod() == ContactProbeMethod.ContactSenseActuator
+                    && getContactProbeActuator() == null) {
+                    solutions.add(new Solutions.PlainIssue(
+                            this, 
+                            "ContactProbeNozzle "+getName()+" has no contact probing actuator.", 
+                            "Create a contact probing actuator and assign it to the nozzle "+getName()+".", 
+                            Severity.Error,
+                            "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#contact-sense-method"));
+                }
+                else if (getContactProbeActuator() instanceof AbstractActuator) {
                     AbstractActuator contactProbeActuator = (AbstractActuator) getContactProbeActuator();
                     if (!contactProbeActuator.isCoordinatedAfterActuate()) {
                         solutions.add(new Solutions.Issue(
@@ -784,8 +837,8 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                             }
                         });
                     }
-                    if (getAxisZ() instanceof ControllerAxis) {
-                        Driver driver = ((ControllerAxis) getAxisZ()).getDriver();
+                    if (getCoordinateAxisZ() instanceof ControllerAxis) {
+                        Driver driver = ((ControllerAxis) getCoordinateAxisZ()).getDriver();
                         Driver oldDriver = contactProbeActuator.getDriver();
                         if (driver != null && driver != oldDriver) {
                             solutions.add(new Solutions.Issue(
@@ -825,23 +878,57 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                             solutions.add(new Solutions.PlainIssue(
                                     this, 
                                     "Z driver "+driver.getName()+" must support Location Confirmation for the Z probe actuator to work.", 
-                                    "Only the GcodeAsyncDriver currently supports it.", 
+                                    "Only the GcodeAsyncDriver currently supports it. Advanced milestone required.", 
                                     Severity.Error,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings"));
                         }
                     }
                     if (contactProbeActuator.getDriver() instanceof GcodeDriver) {
                         GcodeDriver gcodeDriver = (GcodeDriver) contactProbeActuator.getDriver();
-                        String suggestedCommand = null; 
+                        String suggestedCommand = null;
+                        String letter = "Z";
+                        boolean negatedAxis = false;
+                        double relativeProbe = -42;
+                        double absoluteProbe = -42;
+                        double feedRate = 800;
+                        if (getCoordinateAxisZ() instanceof ReferenceControllerAxis) {
+                            ReferenceControllerAxis axis = (ReferenceControllerAxis) getCoordinateAxisZ();
+                            if (!axis.getLetter().isEmpty()) {
+                                letter = axis.getLetter();
+                            }
+                            if (axis.isSoftLimitLowEnabled()) {
+                                Length overshoot = contactProbeDepthZ.subtract(contactProbeStartOffsetZ);
+                                if (axis.isSoftLimitHighEnabled()) {
+                                    negatedAxis = (0 < rawToHeadMountableZ(axis, axis.getSoftLimitLow()).compareTo(
+                                            rawToHeadMountableZ(axis, axis.getSoftLimitHigh())));
+                                    relativeProbe = axis.getSoftLimitLow().subtract(axis.getSoftLimitHigh())
+                                            .subtract(overshoot).convertToUnits(axis.getUnits()).getValue();
+                                }
+                                if (negatedAxis) {
+                                    relativeProbe = -relativeProbe;
+                                    absoluteProbe = axis.getSoftLimitHigh()
+                                            .add(overshoot).convertToUnits(axis.getUnits()).getValue();
+                                }
+                                else {
+                                    absoluteProbe = axis.getSoftLimitLow()
+                                            .subtract(overshoot).convertToUnits(axis.getUnits()).getValue();
+                                }
+                            }
+                            if (axis.getMotionLimit(1) > 0) {
+                                feedRate = Math.ceil(axis.getMotionLimit(1)*contactProbeSpeed)*60;
+                            }
+                        }
+
                         if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Smoothieware")) {
                             suggestedCommand = 
-                                    "{True:G38.2 Z-42 F800 ; probe down max. range for contact with picked/placed part }\n" + 
-                                            "{True:M400            ; wait until machine has stopped }";
+                                    "{True:G38.2 "+letter+relativeProbe+" F"+feedRate+" ; probe down in relative coordinates until limit switch is hit}\n"
+                                            + "{True:M400            ; wait until machine has stopped}";
                         }
-                        else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("TinyG")) {
+                        else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("TinyG")
+                                || gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("GcodeServer")) {
                             suggestedCommand = 
-                                    "{True:G38.2 Z-42 F800 ; probe down in absolute coordinates until zmin switch is hit}\n" + 
-                                            "{True:M400            ; wait for motion to stop}";
+                                    "{True:G38.2 "+letter+absoluteProbe+" F"+feedRate+" ; probe down in absolute coordinates until limit switch is hit}\n" 
+                                            + "{True:M400            ; wait until machine has stopped}";
                         }
                         if (suggestedCommand != null) {
                             GcodeDriverSolutions.suggestGcodeCommand(gcodeDriver, contactProbeActuator, solutions, 
@@ -852,7 +939,8 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                             if (currentCommand == null || currentCommand.isEmpty()) {
                                 solutions.add(new Solutions.PlainIssue(
                                         this, 
-                                        "Missing ACTUATE_BOOLEAN_COMMAND for actuator "+contactProbeActuator.getName()+" on driver "+gcodeDriver.getName()+" (no suggestion available for detected firmware).", 
+                                        "Missing ACTUATE_BOOLEAN_COMMAND for actuator "+contactProbeActuator.getName()+" on driver "+gcodeDriver.getName()
+                                        +" (no suggestion available for detected firmware).", 
                                         "Please add the command manually.",
                                         Severity.Error,
                                         "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#setting-up-the-g-code"));
@@ -861,9 +949,9 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                     }
                 }
             }
-            catch (Exception e) {
-                // Ignore a stale Actuator name here.
-            }
+        }
+        catch (Exception e) {
+            // Ignore a stale Actuator name here.
         }
     }
 
@@ -899,8 +987,21 @@ public class ContactProbeNozzle extends ReferenceNozzle {
                         nozzle, 
                         "Converting the ContactProbeNozzle back to a plain ReferenceNozzle may simplify the machine setup.", 
                         "Replace with ReferenceNozzle.", 
-                        Severity.Fundamental,
+                        Severity.Information,
                         "https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle") {
+
+                    @Override
+                    public boolean isUnhandled( ) {
+                        // Never handle a conservative solution as unhandled.
+                        return false;
+                    }
+
+                    @Override 
+                    public String getExtendedDescription() {
+                        return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option offered to remove the ContactProbeNozzle "
+                                + "if it causes problems, or if you don't want it after all. Going back to the plain ReferenceNozzle will lose you all the "
+                                + "configuration for contact and Z probing and calibration.</html>";
+                    }
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
@@ -942,6 +1043,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         ContactProbeNozzle contactProbeNozzle = serIn.read(ContactProbeNozzle.class, sr);
         contactProbeNozzle.applyConfiguration(Configuration.get());
         contactProbeNozzle.setHead(nozzle.getHead());
+        contactProbeNozzle.setNozzleTip(nozzle.nozzleTip);
         return contactProbeNozzle;
     }
 
@@ -970,6 +1072,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         ReferenceNozzle referenceNozzle = serIn.read(ReferenceNozzle.class, sr);
         referenceNozzle.applyConfiguration(Configuration.get());
         referenceNozzle.setHead(nozzle.getHead());
+        referenceNozzle.setNozzleTip(nozzle.nozzleTip);
         return referenceNozzle;
     }
 

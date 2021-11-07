@@ -103,7 +103,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
         double [] junctionCosineFromPrev = new double[size];
         int [] colinearWithPrev = new int[size];
         boolean[] simplified = new boolean[size];
-
+        MotionProfile [] prevProfiles0 = null;
         for (int i = 0; i <= last; i++) {
             MotionProfile [] profiles = get(i);
             if (profiles.length == 0) {
@@ -121,8 +121,12 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
             if (i > 0) {
                 junctionCosineFromPrev[i] = MotionProfile.dotProduct(unitVector[i-1], unitVector[i]);
                 colinearWithPrev[i] = 0;
-                if (leadAxis[i] == leadAxis[i-1]
-                        && simplified[i] == simplified[i-1]) {
+                int lead = leadAxis[i];
+                if (lead == leadAxis[i-1]
+                        && simplified[i] == simplified[i-1]
+                                && (Math.abs(profiles[lead].getVelocityMax() - prevProfiles0[lead].getVelocityMax()) < MotionProfile.vtol) 
+                                && (Math.abs(profiles[lead].getEntryAccelerationMax() - prevProfiles0[lead].getEntryAccelerationMax()) < MotionProfile.atol) 
+                                && (Math.abs(profiles[lead].getExitAccelerationMax() - prevProfiles0[lead].getExitAccelerationMax()) < MotionProfile.atol) ) {
                     colinearWithPrev[i] = ((junctionCosineFromPrev[i] >= 1.0 - MotionProfile.eps) ? 1 
                             : (junctionCosineFromPrev[i] <= -1.0 + MotionProfile.eps) ? -1 
                                     : 0);
@@ -148,6 +152,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
             for (int axis = 0; axis < profiles.length; axis++) {
                 profiles[axis].initialTime = profiles[axis].time; 
             }
+            prevProfiles0 = profiles;
         }
         int dimensions = unitVector[0].length;
 
@@ -176,15 +181,6 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
                             // Sequence ended.
                             break;
                         }
-                        if (solverProfile.getVelocityMax() < seqProfiles[lead].getVelocityMax()) {
-                            solverProfile.setVelocityMax(seqProfiles[lead].getVelocityMax());
-                        }
-                        if (solverProfile.getEntryAccelerationMax() < seqProfiles[lead].getEntryAccelerationMax()) {
-                            solverProfile.setEntryAccelerationMax(seqProfiles[lead].getEntryAccelerationMax());
-                        }
-                        if (solverProfile.getExitAccelerationMax() < seqProfiles[lead].getExitAccelerationMax()) {
-                            solverProfile.setExitAccelerationMax(seqProfiles[lead].getExitAccelerationMax());
-                        }
                         // Extend to include this move.
                         solverProfile.s[segments] = seqProfiles[lead].s[segments];
                         // Also take the exit constraints (in case it's the's path exit condition). 
@@ -205,8 +201,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
                         boolean expandExit = false;
                         if (prevProfiles != null) {
                             if (MotionProfile.isCoordinated(prevProfiles)) { 
-                                // If the previous profiles are coordinated they cannot be positively co-linear, otherwise they would be in the sequence.
-                                assert(colinearWithPrev[i] != 1);
+                                // If the previous profiles are coordinated they cannot be positively co-linear/same speed, otherwise they would be in the sequence.
                                 // This means we have a corner. Start from zero velocity/acceleration. 
                             }
                             else { // Uncoordinated previous.
@@ -234,8 +229,7 @@ public abstract class AbstractMotionPath implements Iterable<MotionProfile []> {
                         }
                         if (nextProfiles != null) {
                             if (MotionProfile.isCoordinated(nextProfiles)) { 
-                                // If the next profiles are coordinated they cannot be positively co-linear, otherwise they would be in the sequence.
-                                assert(colinearWithPrev[iNext] != 1);
+                                // If the next profiles are coordinated they cannot be positively co-linear/same speed, otherwise they would be in the sequence.
                                 // This means we have a corner. Stop to zero velocity/acceleration. 
                             }
                             else { // Uncoordinated next.

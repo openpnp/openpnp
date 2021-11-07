@@ -292,13 +292,13 @@ public class Location {
     }
 
     /**
-     * Returns the unit vector of the vector between this and l. 
+     * Returns the unit vector of the vector between this and location l in units of this. 
      * 
      * @param l
      * @return
      */
     public Location unitVectorTo(Location l) {
-        Location vector = l.subtract(this);
+        Location vector = l.convertToUnits(units).subtract(this);
         double norm = 1/this.getXyzDistanceTo(l);
         return vector.multiply(norm, norm, norm, 0.0);
     }
@@ -331,6 +331,29 @@ public class Location {
     public Location derive(Double x, Double y, Double z, Double rotation) {
         return new Location(units, x == null ? this.x : x, y == null ? this.y : y,
                 z == null ? this.z : z, rotation == null ? this.rotation : rotation);
+    }
+
+    /**
+     * Returns a new Location with the same units as this one but with values updated to the passed
+     * in Lengths. A caveat is that if a specified value is null, the new Location will contain the
+     * value from this object instead of the new value. The Lengths will automatically be converted 
+     * to this locations's units.
+     * 
+     * This is intended as a utility method, useful for creating new Locations based on existing
+     * ones with one or more values changed.
+     * 
+     * @param x
+     * @param y
+     * @param z
+     * @param rotation
+     * @return
+     */
+    public Location deriveLengths(Length x, Length y, Length z, Double rotation) {
+        return new Location(units, 
+                (x == null ? this.x : x.convertToUnits(units).getValue()), 
+                (y == null ? this.y : y.convertToUnits(units).getValue()),
+                (z == null ? this.z : z.convertToUnits(units).getValue()), 
+                (rotation == null ? this.rotation : rotation));
     }
 
     /**
@@ -454,5 +477,12 @@ public class Location {
         temp = Double.doubleToLongBits(this.rotation);
         result = 31 * result + (int) (temp ^ temp >>> 32);
         return result;
+    }
+
+    /**
+     * @return true if at least one of the coordinates are non-zero, assuming the location is therefore initialized.
+     */
+    public boolean isInitialized() {
+        return !this.equals(origin);
     }
 }

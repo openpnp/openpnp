@@ -366,7 +366,16 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 adaptDialog();
             }
         });
-        panelVision.add(visionCalibration, "4, 2, 3, 1");
+        panelVision.add(visionCalibration, "4, 2");
+        
+        lblAdjustZ = new JLabel("Adjust Z");
+        lblAdjustZ.setToolTipText("<html>\r\nAdjust the Z coordinate of the Vision Location by this offset. Set it to the Z distance between <br/>\r\nthe template subject that you are detecting with Vision Calibration, e.g. the visible surface of <br/>\r\nthe changer slot, and the (imaginary) underside of the nozzle tip when at that location. Positive <br/>\r\nadjustment when the nozzle tip is below, negative when it is above that surface.<br/> \r\nThe setting can overcome scaling errors in the camera view, especially when things are much <br/>\r\ncloser to the camera than usual.<br/>\r\n<strong>3D Units per Pixel must be configured on the camera.</strong> \r\n</html>");
+        panelVision.add(lblAdjustZ, "6, 2, right, default");
+        
+        visionCalibrationZAdjust = new JTextField();
+        visionCalibrationZAdjust.setToolTipText("");
+        panelVision.add(visionCalibrationZAdjust, "8, 2, fill, default");
+        visionCalibrationZAdjust.setColumns(10);
         
         lblVisionCalibrationHelp = new JLabel("<html>\r\nCapture two template images of your nozzle tip changer slot<br/>\r\nboth in empty and occupied state.<br/>\r\nUsing the templates, vision calibration will then calibrate the<br/>\r\nchanger locations in X/Y and also make sure the slot is empty<br/>\r\nor occupied as expected.\r\n</html>");
         panelVision.add(lblVisionCalibrationHelp, "10, 2, 1, 10, default, top");
@@ -375,7 +384,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         panelVision.add(lblCalibrationTrigger, "2, 5, right, default");
         
         visionCalibrationTrigger = new JComboBox(VisionCalibrationTrigger.values());
-        panelVision.add(visionCalibrationTrigger, "4, 5, 3, 1, fill, default");
+        panelVision.add(visionCalibrationTrigger, "4, 5, fill, default");
         
         lblTemplateDimX = new JLabel("Template Width");
         lblTemplateDimX.setToolTipText("<html>\r\nTemplate image width (X). The template is centered around the selected Vision Location.<br/>\r\nChoose dimensions as small as possible, but the templates should include tell-tale horizontal and vertical<br/>\r\nedges. Furthermore, the nozzle tip should be visible when it occupies the changer slot.\r\n</html>");
@@ -596,6 +605,8 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         cloneZCalibration.setVisible(zProbing);
 
         boolean visionCalib = visionCalibration.getSelectedItem() != VisionCalibration.None;
+        lblAdjustZ.setVisible(visionCalib);
+        visionCalibrationZAdjust.setVisible(visionCalib);
         lblCalibrationTrigger.setVisible(visionCalib);
         visionCalibrationTrigger.setVisible(visionCalib);
         lblVisionCalibrationHelp.setVisible(visionCalib);
@@ -690,6 +701,9 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         addWrappedBinding(nozzleTip, "changerActuatorPostStepTwo", tcPostTwoComboBoxActuator, "selectedItem");
         addWrappedBinding(nozzleTip, "changerActuatorPostStepThree", tcPostThreeComboBoxActuator, "selectedItem");
 
+        addWrappedBinding(nozzleTip, "visionCalibrationZAdjust", visionCalibrationZAdjust, "text",
+                lengthConverter);
+
         addWrappedBinding(nozzleTip, "visionCalibration", visionCalibration, "selectedItem");
         addWrappedBinding(nozzleTip, "visionCalibrationTrigger", visionCalibrationTrigger, "selectedItem");
         addWrappedBinding(nozzleTip, "visionTemplateDimensionX", visionTemplateDimensionX, "text",
@@ -742,6 +756,8 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(touchLocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(touchLocationZ);
 
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(visionCalibrationZAdjust);
+
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(visionTemplateDimensionX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(visionTemplateDimensionY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(visionTemplateTolerance);
@@ -756,13 +772,15 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         if (location == null) {
             throw new Exception("Select a vision calibration location first.");
         }
+        location = location.add(new Location(nozzleTip.getVisionCalibrationZAdjust().getUnits(), 
+                0, 0, nozzleTip.getVisionCalibrationZAdjust().getValue(), 0));
         Camera camera = getCamera();
         if (camera == null) {
             throw new Exception("No down-looking camera found.");
         }
         MovableUtils.moveToLocationAtSafeZ(camera, location);
         BufferedImage image = camera.lightSettleAndCapture();
-        Location upp = camera.getUnitsPerPixel();
+        Location upp = camera.getUnitsPerPixelAtZ();
         int width = ((int) Math.ceil(nozzleTip.getVisionTemplateDimensionX().divide(upp.getLengthX()))) & ~1; // divisible by 2
         int height = ((int) Math.ceil(nozzleTip.getVisionTemplateDimensionY().divide(upp.getLengthY()))) & ~1; // divisible by 2
         int x = (image.getWidth() - width)/2;
@@ -833,6 +851,10 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.messageBoxOnException(() -> {
+                if (!nozzleTip.getChangerStartLocation().isInitialized()) {
+                    throw new Exception("Nozzle tip "+nozzleTip.getName()+" must at least have the First Location defined, "
+                            + "before it can clone from the template. The displacement between the two changer slots must be known.");
+                }
                 ReferenceNozzleTip templateNozzleTip = ReferenceNozzleTip.getTemplateNozzleTip();
                 nozzleTip.assignNozzleTipChangerSettings(templateNozzleTip, 
                         cloneLocations.isSelected(), cloneZCalibration.isSelected(), cloneVisionCalibration.isSelected());
@@ -1044,4 +1066,6 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
     private JRadioButton templateClone;
     private JRadioButton templateLocked;
     private final ButtonGroup behaviorButtonGroup = new ButtonGroup();
+    private JTextField visionCalibrationZAdjust;
+    private JLabel lblAdjustZ;
 }

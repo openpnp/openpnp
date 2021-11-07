@@ -20,6 +20,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
@@ -577,13 +578,23 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         if (nozzle == null) {
             throw new Exception("Nozzle to nozzle tip mismatch.");
         }
+
+        // Make sure to set start and end rotation to the limits.
+        double [] rotationModeLimits = nozzle.getRotationModeLimits();
+        angleStart = rotationModeLimits[0];
+        angleStop = rotationModeLimits[1];
+        // Make sure no rotation mode offset is currently applied.
+        nozzle.setRotationModeOffset(null);
+
         Camera camera = VisionUtils.getBottomVisionCamera();
         ReferenceCamera referenceCamera = null;
         if (camera instanceof ReferenceCamera) {
             referenceCamera = (ReferenceCamera)camera;
         }
 
-        Location measureBaseLocation = getCalibrationLocation(camera);
+        // Note: we do not apply the tool specific calibration offset here
+        // as this would defy the very purpose of finding a new one here. Pass null.  
+        Location measureBaseLocation = getCalibrationLocation(camera, null);
 
         try {
             calibrating = true;
@@ -748,10 +759,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
     }
 
-    public Location getCalibrationLocation(Camera camera) {
-        // This is our baseline location. Note: we do not apply the tool specific calibration offset here
-        // as this would defy the very purpose of finding a new one here.  
-        Location cameraLocation = camera.getLocation();
+    public Location getCalibrationLocation(Camera camera, HeadMountable nozzle) {
+        // This is our baseline location. 
+        Location cameraLocation = camera.getLocation(nozzle);
         Location measureBaseLocation = cameraLocation.derive(null, null, null, 0d)
                 .add(new Location(this.calibrationZOffset.getUnits(), 0, 0, this.calibrationZOffset.getValue(), 0));
         return measureBaseLocation;

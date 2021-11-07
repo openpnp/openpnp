@@ -37,6 +37,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DoubleConverter;
@@ -45,10 +47,8 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
-import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
-import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.base.AbstractControllerAxis;
@@ -59,7 +59,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import java.awt.Color;
 
 @SuppressWarnings("serial")
 public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConfigurationWizard {
@@ -77,11 +76,9 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private JTextArea preMoveCommand;
     private JScrollPane scrollPane;
     protected NamedConverter<Driver> driverConverter;
-    private JLabel lblBacklashOffset;
-    private JTextField backlashOffset;
     private JPanel panelKinematics;
     private JLabel lblFeedrates;
-    private JTextField feedratePerSecond;
+    private JTextField feedRatePerSecond;
     private JLabel lblAccelerations;
     private JTextField accelerationPerSecond2;
     private JLabel lblJerks;
@@ -100,10 +97,6 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private JButton btnCaptureSoftLimitHigh;
     private JButton btnPositionSoftLimitLow;
     private JButton btnPositionSoftLimitHigh;
-    private JLabel lblBacklashCompensation;
-    private JComboBox backlashCompensationMethod;
-    private JLabel lblBacklashSpeedFactor;
-    private JTextField backlashSpeedFactor;
     private JLabel lblSafeZoneLow;
     private JLabel lblSafeZoneHigh;
     private JTextField safeZoneLow;
@@ -114,6 +107,10 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
     private JButton btnPositionSafeZoneLow;
     private JButton btnCaptureSafeZoneHigh;
     private JButton btnPositionSafeZoneHigh;
+    private JLabel lblFeedRatePerMinText;
+    private JTextField feedRatePerMin;
+
+    private boolean converting = false;
 
     private Action captureSoftLimitLowAction = new AbstractAction(null, Icons.captureAxisLow) {
         {
@@ -182,7 +179,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             });
         }
     };
-    
+
 
     private Action captureSafeZoneLowAction = new AbstractAction(null, Icons.captureAxisLow) {
         {
@@ -251,7 +248,8 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
             });
         }
     };    
-    private JLabel lblNotMmmin;
+    private JLabel lblStepsUnit;
+    private JTextField stepsPerUnit;
 
     public ReferenceControllerAxisConfigurationWizard(ReferenceControllerAxis axis) {
         super(axis);
@@ -261,22 +259,14 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         contentPanel.add(panelControllerSettings);
         panelControllerSettings.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(50dlu;default):grow"),
+                ColumnSpec.decode("max(50dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -316,11 +306,11 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         letter = new JTextField();
         panelControllerSettings.add(letter, "4, 4, fill, default");
         letter.setColumns(10);
-        
+
         lblInvertLinearrotational = new JLabel("Switch Linear ↔ Rotational?");
         lblInvertLinearrotational.setToolTipText("<html>\r\n<p>It is important that OpenPnP understands whether an Axis is linear or rotational in <br/>\r\nthe controller. </p> \r\n<p>Most of the times this is already determined by the Axis Type, i.e. X, Y, Z are linear <br/>\r\nand Rotation is rotational. But sometimes you may run out of proper axes on the <br/>\r\ncontroller and then have to use a linear controller axis for a rotational OpenPnP axis <br/>\r\nor vice versa.</p>\r\n<p>If you cannot configure your controller to switch this meaning, it is important to enable <br/>\r\nthe Switch Linear ↔ Rotational checkbox.</p>\r\n<p>This is relevant in computing proper limits for feed-rate, acceleration and jerk in mixed<br/>\r\naxes moves, as only the motion of linear axes is taken into consideration for the limts in \\br/>\r\nstandard G-Code.</p>\r\n</html>");
         panelControllerSettings.add(lblInvertLinearrotational, "2, 6, right, default");
-        
+
         invertLinearRotational = new JCheckBox("");
         invertLinearRotational.setToolTipText("");
         panelControllerSettings.add(invertLinearRotational, "4, 6");
@@ -331,63 +321,112 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         homeCoordinate = new JTextField();
         panelControllerSettings.add(homeCoordinate, "4, 8, fill, default");
         homeCoordinate.setColumns(10);
+
+        lblResolution = new JLabel("Resolution [Driver Units]");
+        lblResolution.setToolTipText("<html><strong>Resolution</strong> of this axis. Coordinates will be rounded to the nearest multiple when it comes<br/>\r\nto comparing them, i.e. a move is only executed, if they differ after being rounded.<br/>\r\nIdeally, this is set to the micro-step (or similar) physical resolution of the axis, or a practicle  integral<br/>\r\nmultiple thereof. The <strong>Resolution</strong> is the reciprocal of the <strong>Steps / Unit</strong>, that is often configured<br/>\r\nin controllers.<br/>\r\n<br/>\r\nFor the GcodeDriver, make sure the resolution can be expressed with the format in the <br/>\r\n<code>MOVE_TO_COMMAND</code>. Default is 0.0001 which corresponds to the %.4f (four fractional digits)<br/>\r\nformat in the <code>MOVE_TO_COMMAND</code>.<br/>\r\n<br/>\r\nNote, the <strong>Resolution</strong> is given in Driver (not System) units.\r\n</html>");
+        panelControllerSettings.add(lblResolution, "2, 12, right, default");
+
+        resolution = new JTextField();
+        panelControllerSettings.add(resolution, "4, 12, fill, default");
+        resolution.setColumns(10);
+        resolution.getDocument().addDocumentListener(new DocumentListener() {
+            DoubleConverter doubleConverter = new DoubleConverter("%.6f");
+            public void changedUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                convert();
+            }
+
+            public void convert() {
+                if (converting) { 
+                    return;
+                }
+                converting = true;
+                try {
+                    double res = doubleConverter.convertReverse(resolution.getText());
+                    double spu = 1/res;
+                    String resolutionText = doubleConverter.convertForward(spu);
+                    stepsPerUnit.setText(resolutionText);
+                }
+                catch (Exception e) {
+                    // silently ignore?
+                }
+                finally {
+                    converting = false;
+                }
+            }
+        });
         
-        lblBacklashCompensation = new JLabel("Backlash Compensation");
-        lblBacklashCompensation.setToolTipText("<html>\r\n<p>Backlash compensation is used to avoid the effects of any looseness or play in the <br/>\r\nmechanical linkages of the given axis.  When the actuator reverses the direction of travel, <br/>\r\nthere is often a moment where nothing happens, because the slack from a belt or play <br/>\r\nfrom a screw or rack and pinion etc. needs to be bridged, before mechanical force can again <br/>\r\nbe transmitted.</p>\r\n\r\n<ul>\r\n<li>\r\n<strong>None:</strong>\r\nNo backlash compensation is performed. </li>\r\n<li>\r\n<strong>OneSidedPositioning:</strong><br/>\r\nBacklash compensation is applied by always moving to the end position from one side.<br/>\r\nThe backlash offset does not need to be very precise, i.e. it can be larger than the actual<br/> \r\nbacklash and the machine will still end up in the correct precise position.<br/>\r\nThe machine always needs to perform an extra move and it will force a complete machine<br/>\r\n still-stand between motion segments.</li>\r\n<li>\r\n<strong>OneSidedOptimizedPositioning:</strong><br/>\r\nWorks like OneSidedPositioning except it will only perform an extra move when moving <br/>\r\nfrom the wrong side. Only half of the extra moves are needed.</li>\r\n<li>\r\n<strong>DirectionalCompensation (Experimental!):</strong><br/>\r\nBacklash compensation is applied in the direction of travel. The offset is added to the <br/>\r\nactual target coordinate, if moving in the direction of the offset (which can be positive <br/>\r\nor negative), no offset is added if moving against the offset.<br/>\r\nNo extra moves are needed. The machine can also move more fluidly, as there is no <br/>\r\ndirection change needed.<br/>\r\nHowever: the offset needs to precisely match the physical backlash.</li>\r\n</ul>\r\n</html>");
-        panelControllerSettings.add(lblBacklashCompensation, "2, 12, right, default");
+        lblStepsUnit = new JLabel("Steps / Unit");
+        lblStepsUnit.setToolTipText("<html><strong>Steps per Unit</strong> are the reciprocal of the <strong>Resolution</strong>.<br/>\r\nThese are often found in the controller configuration, therefore you can enter them here to<br/>\r\nautomatically calculate the <strong>Resolution</strong>.</html>");
+        panelControllerSettings.add(lblStepsUnit, "6, 12, right, default");
         
-        backlashCompensationMethod = new JComboBox(BacklashCompensationMethod.values());
-        panelControllerSettings.add(backlashCompensationMethod, "4, 12, fill, default");
-        backlashCompensationMethod.addItemListener(new ItemListener() {
+        stepsPerUnit = new JTextField();
+        panelControllerSettings.add(stepsPerUnit, "8, 12, fill, default");
+        stepsPerUnit.setColumns(10);
+        stepsPerUnit.getDocument().addDocumentListener(new DocumentListener() {
+            DoubleConverter doubleConverter = new DoubleConverter("%.6f");
+            public void changedUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                convert();
+            }
+
+            public void convert() {
+                if (converting) { 
+                    return;
+                }
+                converting = true;
+                try {
+                    double spu = doubleConverter.convertReverse(stepsPerUnit.getText());
+                    double res = 1/spu;
+                    String resolutionText = doubleConverter.convertForward(res);
+                    resolution.setText(resolutionText);
+                }
+                catch (Exception e) {
+                    // silently ignore?
+                }
+                finally {
+                    converting = false;
+                }
+            }
+        });
+
+        lblLimitRotation = new JLabel("Limit to Range");
+        lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180° or the custom Soft-Limits if enabled.");
+        panelControllerSettings.add(lblLimitRotation, "2, 14, right, default");
+
+        limitRotation = new JCheckBox("");
+        limitRotation.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 adaptDialog();
             }
         });
-        
-        lblBacklashOffset = new JLabel("Backlash Offset");
-        panelControllerSettings.add(lblBacklashOffset, "2, 14, right, default");
-
-        backlashOffset = new JTextField();
-        panelControllerSettings.add(backlashOffset, "4, 14, fill, default");
-        backlashOffset.setColumns(10);
-        
-        lblBacklashSpeedFactor = new JLabel("Backlash Speed Factor");
-        panelControllerSettings.add(lblBacklashSpeedFactor, "2, 16, right, default");
-        
-        backlashSpeedFactor = new JTextField();
-        panelControllerSettings.add(backlashSpeedFactor, "4, 16, fill, default");
-        backlashSpeedFactor.setColumns(10);
-
-        lblResolution = new JLabel("Resolution [Driver Units]");
-        lblResolution.setToolTipText("<html>Numeric resolution of this axis. Coordinates will be rounded to the nearest multiple<br/>\r\nwhen comparing them in order to determine whether a move is necessary. <br/>\r\nFor the GcodeDriver, make sure the resolution can be expressed with the format in the <br/>\r\n<code>MOVE_TO_COMMAND</code>. Default is 0.0001 which corresponds to the %.4f <br/>\r\n(four fractional digits) format in the <code>MOVE_TO_COMMAND</code>.<br/>\r\nNote, the resolution is given and applied in driver (not system) units.\r\n</html>");
-        panelControllerSettings.add(lblResolution, "2, 20, right, default");
-
-        resolution = new JTextField();
-        panelControllerSettings.add(resolution, "4, 20, fill, default");
-        resolution.setColumns(10);
-
-        lblLimitRotation = new JLabel("Limit to ±180°");
-        lblLimitRotation.setToolTipText("Limit the rotation to -180° ... +180°. ");
-        panelControllerSettings.add(lblLimitRotation, "2, 22, right, default");
-
-        limitRotation = new JCheckBox("");
-        panelControllerSettings.add(limitRotation, "4, 22");
+        panelControllerSettings.add(limitRotation, "4, 14");
 
         lblWrapAroundRotation = new JLabel("Wrap Around");
         lblWrapAroundRotation.setToolTipText("<html>Always rotate the axis the shorter way around. E.g. if it is at 270° and is commanded <br/>\r\nto go to 0° it will instead go to 360°.<br/>\r\nIf this is combined with Limit to ±180°, the axis is reset to its wrap-around coordinate <br/>\r\nusing a driver Global Offset command. With the GcodeDriver you must configure the<br/> <code>SET_GLOBAL_OFFSETS_COMMAND</code> or this will not work.\r\n</html>\r\n");
-        panelControllerSettings.add(lblWrapAroundRotation, "2, 24, right, default");
+        panelControllerSettings.add(lblWrapAroundRotation, "2, 16, right, default");
 
         wrapAroundRotation = new JCheckBox("");
-        panelControllerSettings.add(wrapAroundRotation, "4, 24");
+        panelControllerSettings.add(wrapAroundRotation, "4, 16");
 
         lblPremoveCommand = new JLabel("Pre-Move Command");
-        panelControllerSettings.add(lblPremoveCommand, "2, 28, right, top");
+        panelControllerSettings.add(lblPremoveCommand, "2, 20, right, top");
 
         scrollPane = new JScrollPane();
-        panelControllerSettings.add(scrollPane, "4, 28, 3, 1, fill, fill");
+        panelControllerSettings.add(scrollPane, "4, 20, 5, 1, fill, fill");
 
         preMoveCommand = new JTextArea();
-        preMoveCommand.setRows(1);
+        preMoveCommand.setRows(2);
         scrollPane.setViewportView(preMoveCommand);
 
         panelKinematics = new JPanel();
@@ -395,7 +434,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         contentPanel.add(panelKinematics);
         panelKinematics.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -433,42 +472,42 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
         softLimitLowEnabled = new JCheckBox("Enabled?");
         panelKinematics.add(softLimitLowEnabled, "6, 2");
-        
-                btnPositionSoftLimitLow = new JButton(positionSoftLimitLowAction);
-                panelKinematics.add(btnPositionSoftLimitLow, "8, 2");
+
+        btnPositionSoftLimitLow = new JButton(positionSoftLimitLowAction);
+        panelKinematics.add(btnPositionSoftLimitLow, "8, 2");
 
         btnCaptureSoftLimitLow = new JButton(captureSoftLimitLowAction);
         panelKinematics.add(btnCaptureSoftLimitLow, "10, 2");
-        
+
         lblSafeZoneLow = new JLabel("Safe Zone Low");
         panelKinematics.add(lblSafeZoneLow, "2, 4, right, default");
-        
+
         safeZoneLow = new JTextField();
         panelKinematics.add(safeZoneLow, "4, 4, fill, default");
         safeZoneLow.setColumns(10);
-        
+
         safeZoneLowEnabled = new JCheckBox("Enabled?");
         panelKinematics.add(safeZoneLowEnabled, "6, 4");
-        
+
         btnPositionSafeZoneLow = new JButton(positionSafeZoneLowAction);
         panelKinematics.add(btnPositionSafeZoneLow, "8, 4");
-        
+
         btnCaptureSafeZoneLow = new JButton(captureSafeZoneLowAction);
         panelKinematics.add(btnCaptureSafeZoneLow, "10, 4");
-        
+
         lblSafeZoneHigh = new JLabel("Safe Zone High");
         panelKinematics.add(lblSafeZoneHigh, "2, 6, right, default");
-        
+
         safeZoneHigh = new JTextField();
         panelKinematics.add(safeZoneHigh, "4, 6, fill, default");
         safeZoneHigh.setColumns(10);
-        
+
         safeZoneHighEnabled = new JCheckBox("Enabled?");
         panelKinematics.add(safeZoneHighEnabled, "6, 6");
-        
+
         btnPositionSafeZoneHigh = new JButton(positionSafeZoneHighAction);
         panelKinematics.add(btnPositionSafeZoneHigh, "8, 6");
-        
+
         btnCaptureSafeZoneHigh = new JButton(captureSafeZoneHighAction);
         panelKinematics.add(btnCaptureSafeZoneHigh, "10, 6");
 
@@ -481,23 +520,88 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
         softLimitHighEnabled = new JCheckBox("Enabled?");
         panelKinematics.add(softLimitHighEnabled, "6, 8");
-        
-                btnPositionSoftLimitHigh = new JButton(positionSoftLimitHighAction);
-                panelKinematics.add(btnPositionSoftLimitHigh, "8, 8");
+
+        btnPositionSoftLimitHigh = new JButton(positionSoftLimitHighAction);
+        panelKinematics.add(btnPositionSoftLimitHigh, "8, 8");
 
         btnCaptureSoftLimitHigh = new JButton(captureSoftLimitHighAction);
         panelKinematics.add(btnCaptureSoftLimitHigh, "10, 8");
 
-        lblFeedrates = new JLabel("Feedrate [/s]");
+        lblFeedrates = new JLabel("Feed Rate [/s]");
         panelKinematics.add(lblFeedrates, "2, 12, right, default");
 
-        feedratePerSecond = new JTextField();
-        panelKinematics.add(feedratePerSecond, "4, 12, fill, default");
-        feedratePerSecond.setColumns(10);
-        
-        lblNotMmmin = new JLabel("Not [/min]");
-        lblNotMmmin.setForeground(Color.RED);
-        panelKinematics.add(lblNotMmmin, "6, 12");
+        feedRatePerSecond = new JTextField();
+        panelKinematics.add(feedRatePerSecond, "4, 12, fill, default");
+        feedRatePerSecond.setColumns(10);
+        feedRatePerSecond.getDocument().addDocumentListener(new DocumentListener() {
+            LengthConverter lengthConverter = new LengthConverter();
+            public void changedUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                convert();
+            }
+
+            public void convert() {
+                if (converting) { 
+                    return;
+                }
+                converting = true;
+                try {
+                    Length feedRate = lengthConverter.convertReverse(feedRatePerSecond.getText());
+                    feedRate = feedRate.multiply(Math.round(feedRate.getValue()*60)/feedRate.getValue());
+                    String feedRateText = lengthConverter.convertForward(feedRate);
+                    feedRatePerMin.setText(feedRateText);
+                }
+                catch (Exception e) {
+                    // silently ignore?
+                }
+                finally {
+                    converting = false;
+                }
+            }
+        });
+
+        lblFeedRatePerMinText = new JLabel("Feed Rate [/min]");
+        panelKinematics.add(lblFeedRatePerMinText, "6, 12, right, default");
+
+        feedRatePerMin = new JTextField();
+        panelKinematics.add(feedRatePerMin, "8, 12, 3, 1, left, default");
+        feedRatePerMin.setColumns(10);
+        feedRatePerMin.getDocument().addDocumentListener(new DocumentListener() {
+            LengthConverter lengthConverter = new LengthConverter();
+            public void changedUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                convert();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                convert();
+            }
+
+            public void convert() {
+                if (converting) { 
+                    return;
+                }
+                converting = true;
+                try {
+                    Length feedRate = lengthConverter.convertReverse(feedRatePerMin.getText());
+                    feedRate = feedRate.divide(60);
+                    String feedRateText = lengthConverter.convertForward(feedRate);
+                    feedRatePerSecond.setText(feedRateText);
+                }
+                catch (Exception e) {
+                    // silently ignore?
+                }
+                finally {
+                    converting = false;
+                }
+            }
+        });
 
         lblAccelerations = new JLabel("Acceleration [/s²]");
         panelKinematics.add(lblAccelerations, "2, 14, right, default");
@@ -524,32 +628,27 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
 
     protected void adaptDialog() {
         Driver selectedDriver = driverConverter.convertReverse((String) driver.getSelectedItem());
-        BacklashCompensationMethod backlashMethod = (BacklashCompensationMethod) backlashCompensationMethod.getSelectedItem();
         boolean showPreMove = (selectedDriver != null && selectedDriver.isSupportingPreMove());
-        boolean showRotationSettings = (Axis.Type)type.getSelectedItem() == Type.Rotation;
+        boolean showRotationSettings = type.getSelectedItem() == Type.Rotation;
+        boolean showSoftLimits = type.getSelectedItem() != Type.Rotation || limitRotation.isSelected();
         lblPremoveCommand.setVisible(showPreMove);
         scrollPane.setVisible(showPreMove);
-
-        lblBacklashOffset.setVisible(backlashMethod != BacklashCompensationMethod.None);
-        backlashOffset.setVisible(backlashMethod != BacklashCompensationMethod.None);
-        lblBacklashSpeedFactor.setVisible(backlashMethod.isOneSidedPositioningMethod());
-        backlashSpeedFactor.setVisible(backlashMethod.isOneSidedPositioningMethod());
 
         lblLimitRotation.setVisible(showRotationSettings);
         limitRotation.setVisible(showRotationSettings);
         lblWrapAroundRotation.setVisible(showRotationSettings);
         wrapAroundRotation.setVisible(showRotationSettings);
 
-        lblSoftLimitLow.setVisible(!showRotationSettings);
-        lblSoftLimitHigh.setVisible(!showRotationSettings);
-        softLimitLow.setVisible(!showRotationSettings);
-        softLimitHigh.setVisible(!showRotationSettings);
-        softLimitLowEnabled.setVisible(!showRotationSettings);
-        softLimitHighEnabled.setVisible(!showRotationSettings);
-        btnCaptureSoftLimitLow.setVisible(!showRotationSettings);
-        btnCaptureSoftLimitHigh.setVisible(!showRotationSettings);
-        btnPositionSoftLimitLow.setVisible(!showRotationSettings);
-        btnPositionSoftLimitHigh.setVisible(!showRotationSettings);
+        lblSoftLimitLow.setVisible(showSoftLimits);
+        lblSoftLimitHigh.setVisible(showSoftLimits);
+        softLimitLow.setVisible(showSoftLimits);
+        softLimitHigh.setVisible(showSoftLimits);
+        softLimitLowEnabled.setVisible(showSoftLimits);
+        softLimitHighEnabled.setVisible(showSoftLimits);
+        btnCaptureSoftLimitLow.setVisible(showSoftLimits);
+        btnCaptureSoftLimitHigh.setVisible(showSoftLimits);
+        btnPositionSoftLimitLow.setVisible(showSoftLimits);
+        btnPositionSoftLimitHigh.setVisible(showSoftLimits);
 
         lblSafeZoneLow.setVisible(!showRotationSettings);
         lblSafeZoneHigh.setVisible(!showRotationSettings);
@@ -561,6 +660,15 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         btnCaptureSafeZoneHigh.setVisible(!showRotationSettings);
         btnPositionSafeZoneLow.setVisible(!showRotationSettings);
         btnPositionSafeZoneHigh.setVisible(!showRotationSettings);
+
+        if (selectedDriver != null && selectedDriver.getUnits() != null) {
+            lblResolution.setText("Resolution ["+selectedDriver.getUnits()+"]");
+            lblStepsUnit.setText("Steps / "+selectedDriver.getUnits().getSingularName());
+        }
+        else {
+            lblResolution.setText("Resolution [Driver Unit]");
+            lblStepsUnit.setText("Steps / Unit");
+        }
     }
 
     @Override
@@ -573,9 +681,6 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         addWrappedBinding(axis, "letter", letter, "text");
         addWrappedBinding(axis, "invertLinearRotational", invertLinearRotational, "selected");
         addWrappedBinding(axis, "homeCoordinate", homeCoordinate, "text", lengthConverter);
-        addWrappedBinding(axis, "backlashCompensationMethod", backlashCompensationMethod, "selectedItem");
-        addWrappedBinding(axis, "backlashOffset", backlashOffset, "text", lengthConverter);
-        addWrappedBinding(axis, "backlashSpeedFactor", backlashSpeedFactor, "text", doubleConverter);
         addWrappedBinding(axis, "resolution", resolution, "text", doubleConverter);
         addWrappedBinding(axis, "preMoveCommand", preMoveCommand, "text");
 
@@ -592,14 +697,14 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
         addWrappedBinding(axis, "safeZoneHigh", safeZoneHigh, "text", lengthConverter);
         addWrappedBinding(axis, "safeZoneHighEnabled", safeZoneHighEnabled, "selected");
 
-        addWrappedBinding(axis, "feedratePerSecond", feedratePerSecond, "text", lengthConverter);
+        addWrappedBinding(axis, "feedratePerSecond", feedRatePerSecond, "text", lengthConverter);
         addWrappedBinding(axis, "accelerationPerSecond2", accelerationPerSecond2, "text", lengthConverter);
         addWrappedBinding(axis, "jerkPerSecond3", jerkPerSecond3, "text", lengthConverter);
 
+
         ComponentDecorators.decorateWithAutoSelect(letter);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homeCoordinate);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(backlashOffset);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(feedratePerSecond);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(feedRatePerSecond);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(accelerationPerSecond2);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(jerkPerSecond3);
         ComponentDecorators.decorateWithAutoSelect(resolution);

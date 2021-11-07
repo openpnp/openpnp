@@ -37,6 +37,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView.RenderingQuality;
 import org.openpnp.gui.components.reticle.CrosshairReticle;
 import org.openpnp.gui.components.reticle.FiducialReticle;
+import org.openpnp.gui.components.reticle.GridReticle;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.components.reticle.RulerReticle;
 import org.openpnp.gui.processes.EstimateObjectZCoordinateProcess;
@@ -62,15 +63,6 @@ public class CameraViewPopupMenu extends JPopupMenu {
         // For cameras that have been calibrated at two different heights, add menu options to reset
         // the viewing plane and for estimating an object's height
         if (cameraView.isViewingPlaneChangable()) {
-            JMenuItem mntmResetReticleHeight = new JMenuItem("Reset Viewing Plane Z to Default");
-            mntmResetReticleHeight.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    cameraView.resetViewingPlaneZ();
-                }
-            });
-            add(mntmResetReticleHeight);
-
             JMenuItem mntmEstimateZCoordinate = new JMenuItem("Estimate Z Coordinate of Object");
             mntmEstimateZCoordinate.addActionListener(estimateZCoordinateAction);
             add(mntmEstimateZCoordinate);
@@ -104,6 +96,10 @@ public class CameraViewPopupMenu extends JPopupMenu {
             if (cameraView.getDefaultReticle() instanceof RulerReticle) {
                 setReticleOptionsMenu(createRulerReticleOptionsMenu(
                         (RulerReticle) cameraView.getDefaultReticle()));
+            }
+            else if (cameraView.getDefaultReticle() instanceof GridReticle) {
+                setReticleOptionsMenu(createRulerReticleOptionsMenu(
+                        (GridReticle) cameraView.getDefaultReticle()));
             }
             else if (cameraView.getDefaultReticle() instanceof FiducialReticle) {
                 setReticleOptionsMenu(createFiducialReticleOptionsMenu(
@@ -248,6 +244,13 @@ public class CameraViewPopupMenu extends JPopupMenu {
 
         menuItem = new JRadioButtonMenuItem(crosshairReticleAction);
         if (reticle != null && reticle.getClass() == CrosshairReticle.class) {
+            menuItem.setSelected(true);
+        }
+        buttonGroup.add(menuItem);
+        menu.add(menuItem);
+
+        menuItem = new JRadioButtonMenuItem(gridReticleAction);
+        if (reticle != null && reticle.getClass() == GridReticle.class) {
             menuItem.setSelected(true);
         }
         buttonGroup.add(menuItem);
@@ -586,6 +589,16 @@ public class CameraViewPopupMenu extends JPopupMenu {
         public void actionPerformed(ActionEvent arg0) {
             CrosshairReticle reticle = new CrosshairReticle();
             JMenu optionsMenu = createCrosshairReticleOptionsMenu(reticle);
+            setReticleOptionsMenu(optionsMenu);
+            cameraView.setDefaultReticle(reticle);
+        }
+    };
+
+    private Action gridReticleAction = new AbstractAction("Grid") {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            GridReticle reticle = new GridReticle();
+            JMenu optionsMenu = createRulerReticleOptionsMenu(reticle);
             setReticleOptionsMenu(optionsMenu);
             cameraView.setDefaultReticle(reticle);
         }

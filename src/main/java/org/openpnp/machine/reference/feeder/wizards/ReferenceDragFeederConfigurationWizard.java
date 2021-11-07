@@ -276,7 +276,7 @@ public class ReferenceDragFeederConfigurationWizard
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         panelTemplate = new JPanel();
-        panelTemplate.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        panelTemplate.setBorder(new TitledBorder(null,
                 "Template Image", TitledBorder.LEADING, TitledBorder.TOP, null));
         panelVisionTemplateAndAoe.add(panelTemplate, "2, 2, center, fill");
         panelTemplate.setLayout(new BoxLayout(panelTemplate, BoxLayout.Y_AXIS));

@@ -19,7 +19,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference.driver;
+package org.openpnp.machine.reference.solutions;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -31,14 +31,18 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver.CommunicationsType;
+import org.openpnp.machine.reference.driver.GcodeAsyncDriver;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.Command;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
+import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
+import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
@@ -47,6 +51,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.GcodeServer;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.XmlSerialize;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
@@ -59,7 +64,7 @@ import org.simpleframework.xml.Serializer;
 public class GcodeDriverSolutions implements Solutions.Subject {
     private final GcodeDriver gcodeDriver;
 
-    GcodeDriverSolutions(GcodeDriver gcodeDriver) {
+    public GcodeDriverSolutions(GcodeDriver gcodeDriver) {
         this.gcodeDriver = gcodeDriver;
     }
 
@@ -101,8 +106,21 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         gcodeDriver, 
                         "Use the GcodeDriver for simpler setup. Accept or Dismiss to continue.", 
                         "Convert to GcodeDriver.", 
-                        Severity.Fundamental,
+                        Severity.Information,
                         "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver") {
+
+                    @Override
+                    public boolean isUnhandled( ) {
+                        // Never handle a conservative solution as unhandled.
+                        return false;
+                    }
+
+                    @Override 
+                    public String getExtendedDescription() {
+                        return "<html><span color=\"red\">CAUTION:</span>  This is a troubleshooting option offered to remove the GcodeAsyncDriver "
+                                + "if it causes problems, or if you don't want it after all. Going back to the plain GcodeDriver will lose you all the "
+                                + "advanced configuration.</html>";
+                    }
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
@@ -117,9 +135,6 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     }
                 };
                 solutions.add(issue);
-                if (!solutions.isSolutionsIssueDismissed(issue)) {
-                    return; // No further troubleshooting until this is decided.
-                }
             }
         }
         if (solutions.isTargeting(Milestone.Connect)) {
@@ -134,7 +149,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             }
             if (machine.isEnabled() && gcodeDriver.isSpeakingGcode()) {
                 try {
-                    gcodeDriver.detectFirmware(true);
+                    UiUtils.submitUiMachineTask(
+                            () -> gcodeDriver.detectFirmware(true)
+                            ).get();
                 }
                 catch (Exception e) {
                     Logger.warn(e, gcodeDriver.getName()+" failure to detect firmware");
@@ -184,13 +201,35 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     public void setState(Solutions.State state) throws Exception {
                         if (state == Solutions.State.Solved) {
                             if ((Boolean)getChoice()) {
-                                gcodeDriver.detectFirmware(false);
+                                final State oldState = getState();
+                                try {
+                                    if (machine.isEnabled()) {
+                                        machine.execute(() -> {
+                                            gcodeDriver.detectFirmware(false);
+                                            return true;
+                                        });
+                                    }
+                                    else {
+                                        // Use an ad hoc connection.
+                                        gcodeDriver.detectFirmware(false);
+                                    }
+                                    super.setState(state);
+                                }
+                                catch (Exception e) { 
+                                    UiUtils.showError(e);
+                                    // restore old state
+                                    UiUtils.messageBoxOnException(() -> setState(oldState));
+                                }
                             }
                             else {
                                 gcodeDriver.setDetectedFirmware(GcodeServer.getGenericFirmware());
+                                super.setState(state);
                             }
                         }
-                        super.setState(state);
+                        else {
+                            gcodeDriver.setDetectedFirmware(null);
+                            super.setState(state);
+                        }
                     }
                 });
             }
@@ -290,20 +329,21 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares"));
                 }
 
-                if (gcodeDriver.communicationsType == CommunicationsType.serial && gcodeDriver.serial != null) {
-                    final FlowControl oldFlowControl = gcodeDriver.serial.getFlowControl();
+                if (gcodeDriver.getCommunicationsType() == CommunicationsType.serial 
+                        && gcodeDriver.getSerial() != null) {
+                    final FlowControl oldFlowControl = gcodeDriver.getSerial().getFlowControl();
                     final FlowControl newFlowControl = isTinyG ? FlowControl.XonXoff : FlowControl.RtsCts;
                     if (oldFlowControl != newFlowControl) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
                                 "Change of serial port Flow Control recommended.",
                                 "Set "+newFlowControl.name()+" on serial port.",
-                                (gcodeDriver.serial.getFlowControl() == FlowControl.Off || isTinyG ? Severity.Warning : Severity.Suggestion),
+                                (gcodeDriver.getSerial().getFlowControl() == FlowControl.Off || isTinyG ? Severity.Warning : Severity.Suggestion),
                                 "https://en.wikipedia.org/wiki/Flow_control_(data)#Hardware_flow_control") {
 
                             @Override
                             public void setState(Solutions.State state) throws Exception {
-                                gcodeDriver.serial.setFlowControl((state == Solutions.State.Solved) ? 
+                                gcodeDriver.getSerial().setFlowControl((state == Solutions.State.Solved) ? 
                                         newFlowControl : oldFlowControl);
                                 super.setState(state);
                             }
@@ -407,7 +447,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         });
                     }
 
-                    if (solutions.isTargeting(Milestone.Advanced)) {
+                    if (solutions.isTargeting(Milestone.Kinematics)) {
                         final MotionControlType oldMotionControlType = gcodeDriver.getMotionControlType();
                         final MotionControlType newMotionControlType = isTinyG ?
                                 MotionControlType.SimpleSCurve : MotionControlType.ModeratedConstantAcceleration;
@@ -457,6 +497,19 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     "Set to "+newMotionControlType.name()+".", 
                                     Severity.Suggestion,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
+
+                                @Override
+                                public boolean isUnhandled( ) {
+                                    // Never handle a conservative solution as unhandled.
+                                    return false;
+                                }
+
+                                @Override 
+                                public String getExtendedDescription() {
+                                    return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, you should only choose "
+                                            + newMotionControlType.name()+" if the current "+oldMotionControlType.name()+" causes problems and you "
+                                            + "want to try a simpler setting.</html>";
+                                }
 
                                 @Override
                                 public void setState(Solutions.State state) throws Exception {
@@ -509,8 +562,20 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     gcodeDriver, 
                                     "Disable G-code compression for trouble-free operation with incompatible controllers.", 
                                     "Disable Compress G-code.", 
-                                    Severity.Suggestion,
+                                    Severity.Information,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
+
+                                @Override
+                                public boolean isUnhandled( ) {
+                                    // Never handle a conservative solution as unhandled.
+                                    return false;
+                                }
+
+                                @Override 
+                                public String getExtendedDescription() {
+                                    return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, you should "
+                                            + "only disable G-code compression if it causes problems.</html>";
+                                }
 
                                 @Override
                                 public void setState(Solutions.State state) throws Exception {
@@ -524,8 +589,20 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     gcodeDriver, 
                                     "Keep G-code comments for better debugging.", 
                                     "Disable Remove Comments.", 
-                                    Severity.Suggestion,
+                                    Severity.Information,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
+
+                                @Override
+                                public boolean isUnhandled( ) {
+                                    // Never handle a conservative solution as unhandled.
+                                    return false;
+                                }
+
+                                @Override 
+                                public String getExtendedDescription() {
+                                    return "<html><span color=\"red\">CAUTION:</span> This is a troubleshooting option, you should "
+                                            + "only keep G-code comments if removing them causes problems.</html>";
+                                }
 
                                 @Override
                                 public void setState(Solutions.State state) throws Exception {
@@ -603,8 +680,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                                     +"G90 ; Set absolute positioning mode";
                                     if (isTinyG) {
                                         commandBuilt = 
-                                                "$ex=1\n" // XonXoff
-                                                +"$sv=0\n" // Non-verbose
+                                                // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
+                                                //"$ex=1\n" // XonXoff
+                                                "$sv=0\n" // Non-verbose
                                                 +commandBuilt;
                                     }
                                 }
@@ -616,10 +694,11 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     else if (command.contains("$ex=0")) {
                                         commandBuilt = command.replace("$ex=0", "$ex=1");
                                     }
-                                    else if (!command.contains("$ex=1")){
-                                        commandBuilt = "$ex=1\n"
-                                                +command;
-                                    }
+                                    // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
+//                                    else if (!command.contains("$ex=1")){
+//                                        commandBuilt = "$ex=1\n"
+//                                                +command;
+//                                    }
                                 }
                                 break;
                             case COMMAND_CONFIRM_REGEX:
@@ -647,13 +726,23 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                         commandBuilt = "G28.2 ";
                                         for (String variable : gcodeDriver.getAxisVariables(machine)) {
                                             if ("XYZ".indexOf(variable) >= 0) {
-                                                commandBuilt += variable+"0 "; // In TinyG you need to indicate the axis and only 0 is possible. 
+                                                // In TinyG you need to indicate the axis and only 0 is possible as coordinate.
+                                                commandBuilt += variable+"0 ";  
                                             }
                                         }
-                                        commandBuilt += "; Home all axes";
+                                        commandBuilt += "; Home all axes\n";
+                                        commandBuilt += "G28.3";
+                                        for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                                            commandBuilt += " {"+variable+":"+variable+"%.4f}";
+                                        }
+                                        commandBuilt += " ; Set all axes to home coordinates\n";
+                                        commandBuilt += "G92.1 ; Reset all offsets\n";
                                     }
                                     else {
-                                        commandBuilt = "G28 ; Home all axes";
+                                        // Reset the acceleration (it is not automatically reset on some controllers). 
+                                        commandBuilt = "{Acceleration:M204 S%.2f} ; Initialize acceleration\n";
+                                        // Home all axes.
+                                        commandBuilt += "G28 ; Home all axes";
                                     }
                                 }
                                 break;

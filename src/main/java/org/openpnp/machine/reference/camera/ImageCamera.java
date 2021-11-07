@@ -24,7 +24,10 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
@@ -38,7 +41,9 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Footprint;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -48,6 +53,7 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.VisionProvider.TemplateMatch;
+import org.openpnp.util.ImageUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.FluentCv;
 import org.pmw.tinylog.Logger;
@@ -63,6 +69,36 @@ public class ImageCamera extends ReferenceCamera {
 
     @Attribute(required = false)
     private int height = 480;
+
+    @Element(required = false)
+    private Location imageUnitsPerPixel;
+
+    @Attribute(required = false)
+    private double simulatedRotation = 0;
+
+    @Attribute(required = false)
+    private double simulatedScale = 1.0;
+
+    @Attribute(required = false)
+    private double simulatedDistortion = 0.0;
+
+    @Attribute(required = false)
+    private double simulatedYRotation = 0.0;
+
+    @Attribute(required = false)
+    private boolean simulatedFlipped = false;
+
+    @Element(required = false)
+    private Length focalLength = new Length(6, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Length sensorDiagonal = new Length(4.4, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Location primaryFiducial = new Location(LengthUnit.Millimeters);
+
+    @Element(required = false)
+    private Location secondaryFiducial = new Location(LengthUnit.Millimeters);
 
     private BufferedImage source;
 
@@ -84,6 +120,7 @@ public class ImageCamera extends ReferenceCamera {
     @Attribute(required = false)
     boolean filterTestImageVision = true;
 
+    @Deprecated
     @Attribute(required = false)
     private boolean subPixelRendering = true;
 
@@ -91,20 +128,71 @@ public class ImageCamera extends ReferenceCamera {
         setUnitsPerPixel(new Location(LengthUnit.Millimeters, 0.04233, 0.04233, 0, 0));
     }
 
-    public int getWidth() {
+    public int getViewWidth() {
         return width;
     }
 
-    public void setWidth(int width) {
+    public void setViewWidth(int width) {
         this.width = width;
     }
 
-    public int getHeight() {
+    public int getViewHeight() {
         return height;
     }
 
-    public void setHeight(int height) {
+    public void setViewHeight(int height) {
         this.height = height;
+    }
+
+    public double getSimulatedRotation() {
+        return simulatedRotation;
+    }
+
+    public void setSimulatedRotation(double simulatedRotation) {
+        this.simulatedRotation = simulatedRotation;
+    }
+
+    public double getSimulatedScale() {
+        return simulatedScale;
+    }
+
+    public void setSimulatedScale(double simulatedScale) {
+        this.simulatedScale = simulatedScale;
+    }
+
+    public double getSimulatedDistortion() {
+        return simulatedDistortion;
+    }
+
+    public void setSimulatedDistortion(double simulatedDistortion) {
+        this.simulatedDistortion = simulatedDistortion;
+    }
+
+    public double getSimulatedYRotation() {
+        return simulatedYRotation;
+    }
+
+    public void setSimulatedYRotation(double simulatedYRotation) {
+        this.simulatedYRotation = simulatedYRotation;
+    }
+
+    public boolean isSimulatedFlipped() {
+        return simulatedFlipped;
+    }
+
+    public void setSimulatedFlipped(boolean simulatedFlipped) {
+        this.simulatedFlipped = simulatedFlipped;
+    }
+
+    public Location getImageUnitsPerPixel() {
+        if (imageUnitsPerPixel == null) {
+            imageUnitsPerPixel = getUnitsPerPixel();
+        }
+        return imageUnitsPerPixel;
+    }
+
+    public void setImageUnitsPerPixel(Location imageUnitsPerPixel) {
+        this.imageUnitsPerPixel = imageUnitsPerPixel;
     }
 
     public String getSourceUri() {
@@ -115,6 +203,38 @@ public class ImageCamera extends ReferenceCamera {
         String oldValue = this.sourceUri;
         this.sourceUri = sourceUri;
         firePropertyChange("sourceUri", oldValue, sourceUri);
+    }
+
+    public Length getFocalLength() {
+        return focalLength;
+    }
+
+    public void setFocalLength(Length focalLength) {
+        this.focalLength = focalLength;
+    }
+
+    public Length getSensorDiagonal() {
+        return sensorDiagonal;
+    }
+
+    public void setSensorDiagonal(Length sensorDiagonal) {
+        this.sensorDiagonal = sensorDiagonal;
+    }
+
+    public Location getPrimaryFiducial() {
+        return primaryFiducial;
+    }
+
+    public void setPrimaryFiducial(Location primaryFiducial) {
+        this.primaryFiducial = primaryFiducial;
+    }
+
+    public Location getSecondaryFiducial() {
+        return secondaryFiducial;
+    }
+
+    public void setSecondaryFiducial(Location secondaryFiducial) {
+        this.secondaryFiducial = secondaryFiducial;
     }
 
     @Override 
@@ -151,52 +271,264 @@ public class ImageCamera extends ReferenceCamera {
         double locationX = location.getX();
         double locationY = location.getY();
 
-        double pixelX = locationX / getUnitsPerPixel().getX();
-        double pixelY = locationY / getUnitsPerPixel().getY();
+        Location upp = getImageUnitsPerPixel().convertToUnits(AxesLocation.getUnits());
+        double pixelX = locationX / upp.getX();
+        double pixelY = locationY / upp.getY();
 
-        
-        if (subPixelRendering ) {
-            // Sub-pixel rendering.
-            double dx = (pixelX - (width / 2.0));
-            double dy = (source.getHeight() - (pixelY + (height / 2.0)));
-            gFrame.clearRect(0, 0, width, height);
-            gFrame.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            gFrame.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            gFrame.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            AffineTransform t = new AffineTransform();
-            t.translate(-dx, -dy); // x/y set here
-            t.scale(1.0, 1.0);
-            gFrame.drawImage(source, t, null);
+        // Draw the image with sub-pixel rendering.
+        double dx = (pixelX - (width / 2.0));
+        double dy = (source.getHeight() - (pixelY + (height / 2.0)));
+        gFrame.clearRect(0, 0, width, height);
+        gFrame.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);//VALUE_INTERPOLATION_BILINEAR);
+        gFrame.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        gFrame.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        double zRotRad = Math.toRadians(getSimulatedRotation());
+        if (simulation) {
+            AffineTransform tg = new AffineTransform();
+            tg.translate(width/2, height/2);
+            tg.scale(isSimulatedFlipped() ? -getSimulatedScale() : getSimulatedScale(), getSimulatedScale());
+            tg.rotate(-zRotRad);
+            tg.translate(- width/2, - height/2);
+            gFrame.setTransform(tg);
         }
-        else {
-            int dx = (int) (pixelX - (width / 2));
-            int dy = (int) (source.getHeight() - (pixelY + (height / 2)));
-            int dx1 = dx;
-            int dy1 = dy;
-            int w1 = width;
-            int h1 = height;
-    
-            if (dx < 0 || dy < 0 || dx+w1 > source.getWidth() || dy+h1 > source.getHeight()) {
-                // crop to source area
-                w1 += Math.min(0, dx);
-                h1 += Math.min(0, dy);
-                dx1 = Math.max(0, dx);
-                dy1 = Math.max(0, dy);
-                w1 = Math.min(w1, source.getWidth() - dx1);
-                h1 = Math.min(h1, source.getHeight() - dy1);
-                // paint the rest black
-                gFrame.setColor(Color.black);
-                gFrame.fillRect(0, 0, width, height);
+        AffineTransform t = new AffineTransform();
+        t.translate(-dx, -dy); // x/y set here
+        gFrame.drawImage(source, t, null);
+
+        double cameraViewDiagonal = Math.sqrt(Math.pow(upp.getX()*width, 2) + Math.pow(upp.getY()*height, 2));
+        double sensorDiagonal = getSensorDiagonal().convertToUnits(AxesLocation.getUnits()).getValue();
+        double focalLength = getFocalLength().convertToUnits(AxesLocation.getUnits()).getValue();
+        double cameraDistance = focalLength*cameraViewDiagonal/sensorDiagonal;
+        // Draw the calibration fiducials. 
+        Location fiducial1 = getPrimaryFiducial();
+        if (fiducial1.isInitialized()) {
+            fiducial1 = fiducial1.convertToUnits(AxesLocation.getUnits()).subtract(location);
+            drawFiducial(gFrame, width, height, upp, upp, fiducial1);
+        }
+        Location fiducial2 = getSecondaryFiducial();
+        if (fiducial2.isInitialized()) {
+            fiducial2 = fiducial2.convertToUnits(AxesLocation.getUnits()).subtract(location);
+            double secondaryDistance = cameraDistance + fiducial1.getZ() - fiducial2.getZ();
+            double xYRotOffset = Math.tan(Math.toRadians(getSimulatedYRotation()))*(fiducial1.getZ() - fiducial2.getZ());
+            fiducial2 = fiducial2.add(new Location(AxesLocation.getUnits(), xYRotOffset, 0, 0, 0));
+            Location upp2 = upp.multiply(secondaryDistance/cameraDistance);
+            drawFiducial(gFrame, width, height, upp, upp2, fiducial2);
+        }
+
+        if (getSimulatedDistortion() != 0.0 || getSimulatedYRotation() != 0.0) {
+            // Simulate camera lens distortion and mounting y rotation.
+            BufferedImage undistorted  = ImageUtils.clone(frame);
+            double xo = 0.5 - width/2;
+            double yo = 0.5 - height/2;
+            double radius = Math.sqrt(width*width+height*height)/2;
+            double dist = cameraDistance/(upp.getX()*radius);
+            double factor = 1.0/radius;
+            double zFactor = 1.0/dist;
+            double yRotRad = Math.toRadians(getSimulatedYRotation());
+            double sinYaw = Math.sin(yRotRad);
+            double cosYaw = Math.cos(yRotRad);
+            double tanYaw = sinYaw/cosYaw;
+            double zFactorYaw = zFactor*sinYaw;
+            double distort = 0.01*getSimulatedDistortion();
+            double projectionFactor = radius;
+            double zRotSin = Math.sin(zRotRad);
+            double zRotCos = Math.cos(zRotRad);
+            final int kernel_r = 1;
+            // First pass: stake out the projection by 9 points and calculate the projectionFactor.
+            for (int x = 0; x <= width; x += width/2) {
+                for (int y = 0; y <= height; y += height/2) {
+                    // NOTE: as this cannot be refactored without performance penalty,
+                    // the following code block is an exact duplicate in both passes.
+                    // BEGIN:-------------------------------------- //
+                    // Normed to ±1.0
+                    double xN = (x + xo)*factor; 
+                    double yN = (y + yo)*factor;
+                    // Distortion
+                    double vect = Math.sqrt(xN*xN + yN*yN);
+                    double distortion = vect*distort + (1.0-distort);
+                    double xD = xN*distortion;
+                    double yD = yN*distortion;
+                    // Rotate back in Z 
+                    double xR = xD*zRotCos + yD*zRotSin;
+                    double yR = - xD*zRotSin + yD*zRotCos;
+                    // Reverse perspective transform
+                    double alpha = Math.atan2(xR, dist)-yRotRad;
+                    double xY = (Math.tan(alpha)+tanYaw)*dist;
+                    double zT = 1.0 - xY*zFactorYaw;
+                    double yY = yR*zT;
+                    // Rotate back in Z 
+                    double xT = xY*zRotCos - yY*zRotSin;
+                    double yT = xY*zRotSin + yY*zRotCos;
+                    // Pixel coordinates
+                    double xP = (xT*projectionFactor - xo);
+                    double yP = (yT*projectionFactor - yo);
+                    // END:---------------------------------------- //
+
+                    // Minimize the projectionFactor.
+                    if (xP < kernel_r) {
+                        projectionFactor = (kernel_r + xo)/xT;
+                    }
+                    else if (xP > width-kernel_r) {
+                        projectionFactor = (-kernel_r + width + xo)/xT;
+                    }
+                    else if (yP < kernel_r) {
+                        projectionFactor = (kernel_r + yo)/yT;
+                    }
+                    else if (yP > height-kernel_r) {
+                        projectionFactor = (-kernel_r + height + yo)/yT;
+                    }
+                }
             }
-            gFrame.drawImage(source, dx1-dx, dy1-dy, dx1-dx+w1 - 1, dy1-dy+h1 - 1, dx1, dy1, dx1 + w1 - 1, dy1 + h1 - 1, null);
-        }
+            // Second pass: transform the image.
+            int grayRGB = new Color(128, 128, 128).getRGB();
+            int baseRGB = new Color(0, 0, 0).getRGB();
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    // NOTE: as this cannot be refactored without performance penalty,
+                    // the following code block is an exact duplicate in both passes.
+                    // BEGIN:-------------------------------------- //
+                    // Normed to ±1.0
+                    double xN = (x + xo)*factor; 
+                    double yN = (y + yo)*factor;
+                    // Distortion
+                    double vect = Math.sqrt(xN*xN + yN*yN);
+                    double distortion = vect*distort + (1.0-distort);
+                    double xD = xN*distortion;
+                    double yD = yN*distortion;
+                    // Rotate back in Z 
+                    double xR = xD*zRotCos - yD*zRotSin;
+                    double yR = + xD*zRotSin + yD*zRotCos;
+                    // Reverse perspective transform
+                    double alpha = Math.atan2(xR, dist)-yRotRad;
+                    double xY = (Math.tan(alpha)+tanYaw)*dist;
+                    double zT = 1.0 - xY*zFactorYaw;
+                    double yY = yR*zT;
+                    // Rotate back in Z 
+                    double xT = xY*zRotCos + yY*zRotSin;
+                    double yT = -xY*zRotSin + yY*zRotCos;
+                    // Pixel coordinates
+                    double xP = (xT*projectionFactor - xo);
+                    double yP = (yT*projectionFactor - yo);
+                    // END:---------------------------------------- //
 
+                    // Set the pixel.
+                    int x0 = (int)(xP);
+                    int y0 = (int)(yP);
+                    if (x0 >= 0 && x0+kernel_r < width && y0 >= 0 && y0+kernel_r < height) {
+                        double red = 0;
+                        double green = 0;
+                        double blue = 0;
+                        double norm = 0;
+                        for (int ix = x0; ix <= x0+kernel_r; ix++) {
+                            for (int iy = y0; iy <= y0+kernel_r; iy++) {
+                                int rgb = undistorted.getRGB(ix, iy);
+                                int r = (rgb >> 16) & 0xff;
+                                int g = (rgb >> 8) & 0xff;
+                                int b = (rgb >> 0) & 0xff;
+                                double dix = ix - xP;
+                                double diy = iy - yP;
+                                double di = (dix*dix + diy*diy);
+                                double weight = Math.max(0, 1.0 - di);
+                                norm += weight;
+                                red += weight*r;
+                                green += weight*g;
+                                blue += weight*b;
+                            }
+                        }
+                        int r = Math.max(0, Math.min(255, (int)(red/norm)));
+                        int g = Math.max(0, Math.min(255, (int)(green/norm)));
+                        int b = Math.max(0, Math.min(255, (int)(blue/norm)));
+                        int newRGB = baseRGB|(r<<16)|(g<<8)|(b<<0);
+                        frame.setRGB(x, y, newRGB);
+                    }
+                    else {
+                        frame.setRGB(x, y, grayRGB);
+                    }
+                }
+            }
+        }
         if (simulation) {
             SimulationModeMachine.simulateCameraExposure(this, gFrame, width, height);
         }
 
         gFrame.dispose();
         return frame;
+    }
+
+    protected void blurObjectIntoView(Graphics2D gView, BufferedImage frame) {
+        AffineTransform tx = gView.getTransform();
+        gView.setTransform(new AffineTransform());
+        double radius = 0.2/getImageUnitsPerPixel().convertToUnits(LengthUnit.Millimeters).getX();
+        ConvolveOp op = null;
+        if (radius > 0.01) {
+            int size = (int)Math.ceil(radius) * 2 + 1;
+            float[] data = new float[size * size];
+            double sum = 0;
+            int num = 0;
+            for (int i = 0; i < data.length; i++) {
+                double x = i/size - size/2.0 + 0.5;
+                double y = i%size - size/2.0 + 0.5;
+                double r = Math.sqrt(x*x+y*y);
+                // rough approximation
+                float weight = (float) Math.max(0, Math.min(1, radius + 1 - r));
+                data[i] = weight;
+                sum += weight;
+                if (weight > 0) {
+                    num++;
+                }
+            }
+            if (num > 1) {
+                for (int i = 0; i < data.length; i++) {
+                    data[i] /= sum;
+                }
+
+                Kernel kernel = new Kernel(size, size, data);
+                op = new ConvolveOp(kernel, ConvolveOp.EDGE_NO_OP, null);
+            }
+        }
+        gView.drawImage(frame, op, 0, 0);
+        gView.setTransform(tx);
+    }
+
+    protected void drawFiducial(Graphics2D gFrame, int cameraWidth, int cameraHeight, Location uppDefault,
+            Location upp, Location fiducial) {
+        // Coordinates
+        double xc = (cameraWidth / 2.0) + fiducial.getX()/upp.getX();
+        double yc = (cameraHeight / 2.0) - fiducial.getY()/upp.getY();
+        double w = 1.0/upp.getX();
+        double h = 1.0/upp.getY();
+        AffineTransform oldTx = gFrame.getTransform();
+        Point2D pt0 = new Point2D.Double(xc, yc);
+        Point2D pt1 = new Point2D.Double(xc+w, yc+h);
+        oldTx.transform(pt0, pt0);
+        oldTx.transform(pt1, pt1);
+        double dia = Math.sqrt(Math.pow(pt1.getX() - pt0.getX(), 2)
+                + Math.pow(pt1.getY() - pt0.getY(), 2));
+        if (pt0.getX() + dia < 0 || pt1.getX() - dia > cameraWidth || pt0.getY() + dia < 0 || pt1.getY() - dia > cameraHeight) { 
+            return;
+        }
+
+        AffineTransform tx = new AffineTransform(oldTx);
+        tx.translate(xc - w/2, yc - h/2);
+
+        if (upp == uppDefault) {
+            gFrame.setTransform(tx);
+            gFrame.setColor(Color.WHITE);
+            gFrame.fillOval(0, 0, (int)w, (int)h);
+        }
+        else {
+            // Simulate focal blur
+            BufferedImage frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = frame.createGraphics();
+            g.setTransform(tx);
+            // Clear with transparent background
+            g.setBackground(new Color(0, 0, 0, 0));
+            g.clearRect(-width/2, -height/2, width, height);
+            g.fillOval(0, 0, (int)w, (int)h);
+            blurObjectIntoView(gFrame, frame); 
+        }
+
+        gFrame.setTransform(oldTx);
     }
 
     /**
@@ -281,7 +613,7 @@ public class ImageCamera extends ReferenceCamera {
             // Find the best match
             TemplateMatch bestMatch = null;
             double bestDistance = Double.MAX_VALUE;
-            Location unitsPerPixel = getUnitsPerPixel();
+            Location unitsPerPixel = getImageUnitsPerPixel();
             Location center = new Location(LengthUnit.Millimeters);
             // CV operations are always rounded to the nearest pixel, giving at most an error of 0.5 x pixel diameter. 
             // The same is true for CV operation that sets up and adjust the StripFeeder. Test have shown, that the test image has 
@@ -297,7 +629,7 @@ public class ImageCamera extends ReferenceCamera {
                 double offsetY = (dimension / 2.0) - (y + template.getHeight()/2.0);
                 offsetX *= unitsPerPixel.getX();
                 offsetY *= unitsPerPixel.getY();
-                Location offsets = new Location(getUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
+                Location offsets = new Location(getImageUnitsPerPixel().getUnits(), offsetX, offsetY, 0, 0);
                 double distance = center.getLinearDistanceTo(offsets);
                 double score = resultMat.get(y, x)[0];
                 if (bestMatch == null || (bestDistance > distance && bestMatch.score*0.85 < score)) {

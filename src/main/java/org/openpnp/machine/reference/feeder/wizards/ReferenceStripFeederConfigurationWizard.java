@@ -142,7 +142,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         this.feeder = feeder;
 
         panelPart = new JPanel();
-        panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        panelPart.setBorder(new TitledBorder(null,
                 "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
@@ -211,7 +211,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelTapeSettings = new JPanel();
         contentPanel.add(panelTapeSettings);
         panelTapeSettings.setBorder(new TitledBorder(
-                new EtchedBorder(EtchedBorder.LOWERED, null, null), "Tape Settings",
+                null, "Tape Settings",
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         panelTapeSettings.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -376,12 +376,13 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelLocations.add(textFieldFeedEndY, "6, 6");
         textFieldFeedEndY.setColumns(8);
 
-        textFieldFeedEndZ = new JTextField();
-        panelLocations.add(textFieldFeedEndZ, "8, 6");
-        textFieldFeedEndZ.setColumns(8);
+//        textFieldFeedEndZ = new JTextField();
+//        panelLocations.add(textFieldFeedEndZ, "8, 6");
+//        textFieldFeedEndZ.setColumns(8);
 
         locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY,
-                textFieldFeedEndZ, null);
+                null, //textFieldFeedEndZ, 
+                null);
         panelLocations.add(locationButtonsPanelFeedEnd, "10, 6");
     }
 
@@ -420,7 +421,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         bind(UpdateStrategy.READ_WRITE, feeder, "lastHoleLocation", feedEndLocation, "location");
         addWrappedBinding(feedEndLocation, "lengthX", textFieldFeedEndX, "text", lengthConverter);
         addWrappedBinding(feedEndLocation, "lengthY", textFieldFeedEndY, "text", lengthConverter);
-        addWrappedBinding(feedEndLocation, "lengthZ", textFieldFeedEndZ, "text", lengthConverter);
+//        addWrappedBinding(feedEndLocation, "lengthZ", textFieldFeedEndZ, "text", lengthConverter);
 
         addWrappedBinding(feeder, "visionEnabled", chckbxUseVision, "selected");
 
@@ -436,7 +437,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedStartZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndY);
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
+//        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedEndZ);
     }
 
     private void updatePartInfo(ActionEvent e)
@@ -472,6 +473,16 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                                                .getMachine()
                                                .getDefaultHead()
                                                .getDefaultCamera();
+                if (autoSetupCamera.isUnitsPerPixelAtZCalibrated()) {
+                    // We need 3D units per pixel, make sure the Z is set first.
+                    LengthConverter lengthConverter = new LengthConverter();
+                    Length z = lengthConverter.convertReverse(textFieldFeedStartZ.getText());
+                    if (!z.isInitialized()) {
+                        throw new Exception("Please set the Reference Hole Location Z coordinate first.");
+                    }
+                    autoSetupCamera.moveTo(autoSetupCamera.getLocation()
+                            .deriveLengths(null, null, z, null));
+                }
             }
             catch (Exception ex) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Auto Setup Failure", ex);
@@ -788,7 +799,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 // Checks the distance to the line *segment*, as we expect the line to have the maximum extents that
                 // encompass all points (circles) that meet the criteria.
                 Double distance = camera.getLocation().getLinearDistanceToLineSegment(aLocation, bLocation);
-                Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getUnitsPerPixel().getUnits()), camera);
+                Double distancePx = VisionUtils.toPixels(new Length(distance, camera.getLocation().getUnits()), camera);
                 // Min distance is because we're centered at the part, not the hole - so we need to ignore
                 // circles found in the part
                 if ((distancePx >= minDistancePx) && (distancePx <= maxDistancePx)) {
@@ -1008,8 +1019,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             pipeline.setProperty("sprocketHole.diameter", feeder.getHoleDiameter());
             // Search Range is half camera. 
             Length range = camera.getWidth() > camera.getHeight() ? 
-                    camera.getUnitsPerPixel().getLengthY().multiply(camera.getHeight()/2)
-                    : camera.getUnitsPerPixel().getLengthX().multiply(camera.getWidth()/2);
+                    camera.getUnitsPerPixelAtZ().getLengthY().multiply(camera.getHeight()/2)
+                    : camera.getUnitsPerPixelAtZ().getLengthX().multiply(camera.getWidth()/2);
             pipeline.setProperty("sprocketHole.maxDistance", range);
             return pipeline;
         }

@@ -121,7 +121,9 @@ public class SampleJobTest {
         machine.execute(() -> {
             machine.home();
             jobProcessor.initialize(job);
-            while (jobProcessor.next());
+            while (jobProcessor.next()) {
+                //spin
+            };
             return null;
         });
         // camera.stopContinuousCapture(encoder);
