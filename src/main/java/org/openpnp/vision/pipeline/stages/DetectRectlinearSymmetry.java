@@ -424,6 +424,34 @@ public class DetectRectlinearSymmetry extends CvStage {
      */
     static final int DEBUG = 0;
 
+    /**
+     * Find the angle, location and bounds of the subject with largest rectlinear symmetry. 
+     * 
+     * @param image                 The image to be searched.
+     * @param xCenter               Center, around which the search is to be performed.
+     * @param yCenter
+     * @param expectedAngle         Expected angle of the subject.
+     * @param maxWidth              Maximum width and height of the searched subject. Must include a margin around it, to detect edges. 
+     * @param maxHeight
+     * @param searchDistance        Maximum search distance around the center.
+     * @param searchAngle           Maximum search angle on both sides of the expected angle.
+     * @param minSymmetry           Minimum symmetry for a successful detection. Values higher than 1.0 mean symmetry is present.
+     * @param xSymmetryFunction     The symmetry function determines, how the cross-section is interpreted to find symmetry. See {@link SymmetryFunction} 
+     * @param ySymmetryFunction
+     * @param minFeatureSize        Minimum feature size in pixels, if the {@link SymmetryFunction.OutlineSymmetryMasked} is used. 
+     * @param subSampling           To speed up things, the image is first sub-sampled, i.e. only every subSampling × subSampling pixel is analyzed.
+     *                              Once a preliminary match is obtained, recursion is used to refine it.  
+     * @param superSampling         In the final recursion, superSampling is applied, i.e. the sampled pixels are binned into a finder cross-section, 
+     *                              allowing for sub-pixel precision. 
+     * @param gaussianSmoothing     Cross-sections are subject to pixel grid interferences if the sampling angle is at 45° multiples. Using Gaussian
+     *                              smoothing with a kernel of this size, this is remedied. 
+     * @param gamma                 Pixel luminance is raised to the power of gamma. Choosing > 1 gammas allows for boosting bright areas.
+     * @param diagnostics           Overlay diagnostic cross-hairs and bounds on top of the image.
+     * @param diagnosticMap         Overlay diagnostic maps for angular contrast and cross-section profiles on top of the image.
+     * @param scoreRange            Returns symmetry score ranges.
+     * @return
+     * @throws Exception
+     */
     public static RotatedRect findReclinearSymmetry(Mat image, int xCenter, int yCenter, double expectedAngle,
             double maxWidth, double maxHeight, double searchDistance, double searchAngle,  
             double minSymmetry, SymmetryFunction xSymmetryFunction, SymmetryFunction ySymmetryFunction, double minFeatureSize,
@@ -463,7 +491,6 @@ public class DetectRectlinearSymmetry extends CvStage {
         byte[] pixelSamples = new byte[width*hPixels*channels]; 
         image.get(y0Pixels, 0, pixelSamples);
 
-        // First phase: determine the angle with the largest rectlinear cross-section contrast.
         int symmetrySearch = (superSamplingEff*searchDiameter/subSamplingEff/2)*2;
         int symmetryWidth= superSamplingEff*(int)maxWidth/subSamplingEff;
         int symmetryHeight = superSamplingEff*(int)maxHeight/subSamplingEff;
@@ -497,11 +524,12 @@ public class DetectRectlinearSymmetry extends CvStage {
         }
         double[] kernel = KernelUtils.getGaussianKernel(superSamplingEff, 0, (gaussianSmoothing*superSamplingEff)|1);
 
+        // Determine the angle with the largest rectlinear cross-section contrast.
         for (double angle = a0; angle <= a1; angle += angleStep) {
             // Note, this is the reverse rotation, i.e. angle is negative.
             double s = superSamplingEff*Math.sin(-angle)/subSamplingEff;
             double c = superSamplingEff*Math.cos(-angle)/subSamplingEff;
-            // Reset cross-section- 
+            // Reset cross-sections. 
             Arrays.fill(xCrossSection, 0);
             Arrays.fill(yCrossSection, 0);
             Arrays.fill(xCrossSectionN, 0);
@@ -582,7 +610,7 @@ public class DetectRectlinearSymmetry extends CvStage {
                     }
                 }
             }
-            // Note, we're using a gaussian kernel to get rid of sampling interferences especially at the 45° step angles.
+            // We're using a gaussian kernel to get rid of sampling interferences especially at the 45° step angles.
             KernelUtils.applyKernel(channels, wCross, xCrossSection, kernel, xCrossSectionFiltered); 
             KernelUtils.applyKernel(channels, hCross, yCrossSection, kernel, yCrossSectionFiltered); 
             // Analyze cross-sections contrast.
@@ -636,11 +664,11 @@ public class DetectRectlinearSymmetry extends CvStage {
                 xCrossSectionSymmetry, xScoreRange);
         Double ys = findCrossSectionSymmetry(channels, hCross, symmetrySearch, symmetryHeight, ySymmetryFunction, 
                 yCrossSectionSymmetry, yScoreRange);
-        // The final score is reset here so it will reflect the last pass' maximum score. 
+        // The final score is reset here so in recursion, it will reflect the last pass' maximum score. 
         scoreRange.finalScore = 0;
         // Score is the worse of x, y symmetry.
         scoreRange.add(Math.min(xScoreRange.maxScore, yScoreRange.maxScore));
-
+        // Process the results of the symmetry search.
         RotatedRect rect = null;
         if (xs != null && ys != null) {
             // Translate to image coordinates.
@@ -678,6 +706,7 @@ public class DetectRectlinearSymmetry extends CvStage {
                         diagnostics, diagnosticMap, scoreRange);
             }
         }
+        // Draw the diagnostic info onto the working image.
         if ((innermost && diagnostics) || diagnosticMap) {
             angleBest = (rect != null ? -Math.toRadians(rect.angle) : expectedAngle);
             double rxCenter = (rect != null ? rect.center.x : xCenter);
@@ -712,7 +741,7 @@ public class DetectRectlinearSymmetry extends CvStage {
                 yCrossScoreMax[ch] = Math.max(yCrossScoreMax[ch], yCrossSectionSymmetry[i]); 
             }
 
-            // Slow but simple. 
+            // Slow but simple: render for each pixel.
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
                     double dx = x - rxCenter;
@@ -726,6 +755,7 @@ public class DetectRectlinearSymmetry extends CvStage {
 
                     double ringRadius = Math.sqrt(dx*dx + dy*dy);
                     if (ringRadius > r1) {
+                        // Overlay a cross-section map.
                         if (diagnosticMap && innermost) {
                             double xsT = dxT*superSamplingEff/subSamplingEff + symmetryWidth/2 + xsScore;
                             double ysT = dyT*superSamplingEff/subSamplingEff + symmetryHeight/2 + ysScore;
@@ -751,6 +781,7 @@ public class DetectRectlinearSymmetry extends CvStage {
                         }
                     }
                     else if (ringRadius > r0) {
+                        // Overlay an angular contrast graph.
                         if (angleScore != null && ringRadius < r1) {
                             // Note, in the tradition of the OpenPnP cross-hairs, 0° point is indicated at "north", not "east",
                             // Therefore rotate be +90° i.e. swap dx, dy and revert sign of dx (we're in the left-handed system where y points down). 
@@ -773,6 +804,7 @@ public class DetectRectlinearSymmetry extends CvStage {
                         }
                     }
                     else {
+                        // Overlay cross-hairs.
                         if (innermost && diagnostics) {
                             hairsIndicate = Math.max(Math.max(Math.max(
                                     (1 - Math.abs(dxT))*0.9,
@@ -783,11 +815,13 @@ public class DetectRectlinearSymmetry extends CvStage {
                         }
                     }
                     if (hairsIndicate > 0 || angleIndicate > 0 || crossIndicate > 0) {
+                        // Something to draw on that pixel.
                         double alpha = 0;
                         double alphaCompl = 1-alpha;
                         byte [] pixelData = new byte[channels];
                         image.get(y, x, pixelData);
                         if (channels == 3) {
+                            // RGB.
                             int red = 0;
                             int green = 0;
                             int blue = 0;
@@ -819,6 +853,7 @@ public class DetectRectlinearSymmetry extends CvStage {
                             }
                         }
                         else {
+                            // Gray (or other). 
                             alpha = Math.max(Math.max(hairsIndicate, angleIndicate), crossIndicate*0.5);
                             alphaCompl = 1 - alpha;
                             if (alpha > 0) {
@@ -836,12 +871,19 @@ public class DetectRectlinearSymmetry extends CvStage {
         return rect;
     }
 
-
+    /**
+     * Sum the contrast across the cross-section (sum of squares).
+     * 
+     * @param channels
+     * @param size
+     * @param crossSection
+     * @param crossSectionN
+     * @return
+     */
     protected static double sumContrast(final int channels, final int size,
             double[] crossSection, double[] crossSectionN) {
         double sumContrast = 0;
         for (int ch = 0; ch < channels; ch++) {
-            // Scan for contrasts.
             Double v0 = null;
             for (int x = ch; x < size; x++) {
                 if (crossSectionN[x] > 0) {
@@ -857,6 +899,20 @@ public class DetectRectlinearSymmetry extends CvStage {
         return sumContrast;
     }
 
+    /**
+     * Instead of taking the cross-section cumulative brightness, compare the number of non.zero pixels against 
+     * the minFeatureSize and apply a step function. The signal is essentially deciding whether something significant 
+     * is present or not.  
+     * 
+     * @param channels
+     * @param size
+     * @param minFeatureSize
+     * @param subSampling
+     * @param superSampling
+     * @param crossSectionMasked
+     * @param kernel
+     * @param crossSection
+     */
     protected static void applyMasked(final int channels, final int size, double minFeatureSize, int subSampling, 
             int superSampling, double[] crossSectionMasked, double [] kernel, double[] crossSection) {
         KernelUtils.applyKernel(1, size, crossSection, kernel);
@@ -868,6 +924,15 @@ public class DetectRectlinearSymmetry extends CvStage {
         }
     }
 
+    /**
+     * Create the contour of the cross-section signal from both sides, meeting at the symmetry point s. 
+     * 
+     * @param channels
+     * @param s
+     * @param symmetryWidth
+     * @param size
+     * @param crossSection
+     */
     protected static void applyCrossSectionContour(final int channels, double s, int symmetryWidth,
             final int size, double[] crossSection) {
         double [] xLeftMax = new double [channels];
@@ -887,25 +952,22 @@ public class DetectRectlinearSymmetry extends CvStage {
         }
     }
 
+    /**
+     * Find the best symmetry in the cross-section. Winner is the maximum rate of left/right-sided variance, 
+     * divided by the sum of squares of the left vs. right differences.   
+     * 
+     * @param channels
+     * @param size
+     * @param symmetrySearch
+     * @param symmetrySize
+     * @param symmetryFunction
+     * @param crossSection
+     * @param scoreRange
+     * @return
+     */
     protected static Double findCrossSectionSymmetry(final int channels, final int size,
             int symmetrySearch, int symmetrySize, SymmetryFunction symmetryFunction, 
             double[] crossSection, ScoreRange scoreRange) {
-        //        // Baseline variance.
-        //        double [] sumBase = new double[channels];
-        //        double [] sumBaseSq = new double[channels];
-        //        int [] nBase = new int [channels];
-        //        for (int i = 0; i < size; i++) {
-        //            for (int ch = 0; ch < channels; ch++) {
-        //                double v = crossSection[i*channels + ch];
-        //                sumBase[ch] += v;
-        //                sumBaseSq[ch] += v*v;
-        //                nBase[ch]++;
-        //            }
-        //        }
-        //        double varianceBase = 0;
-        //        for (int ch = 0; ch < channels; ch++) { 
-        //            varianceBase += (sumBaseSq[ch] - sumBase[ch]*sumBase[ch]/nBase[ch])/nBase[ch];
-        //        }
         // Find the best symmetry.
         Double coordBest = null;
         double scoreBest = 0;
@@ -970,6 +1032,16 @@ public class DetectRectlinearSymmetry extends CvStage {
         return coordBest;
     }
 
+    /**
+     * Find the bounds of the symmetry in the cross-section. Looks for the largest symmetric jump in the cross-section
+     * signal outline.
+     * 
+     * @param channels
+     * @param symmetry
+     * @param symmetrySize
+     * @param crossSection
+     * @return
+     */
     protected static int findCrossSectionBounds(final int channels, double symmetry, int symmetrySize,
             double[] crossSection) {
         double sumpBest = 0;
