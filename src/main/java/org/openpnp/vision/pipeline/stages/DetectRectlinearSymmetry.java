@@ -35,6 +35,7 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
+import org.openpnp.vision.pipeline.stages.DetectRectlinearSymmetry.SymmetryFunction;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -515,7 +516,7 @@ public class DetectRectlinearSymmetry extends CvStage {
         double [] xBestCrossSectionMasked = new double[wCross];
         double [] yBestCrossSectionMasked = new double[hCross];
         // Note, the step angle depends on size of subject.
-        double angleStep = Math.min(Math.toRadians(searchAngle)/4, subSamplingEff/maxSpan/superSamplingEff);
+        double angleStep = Math.max(0.0001, Math.min(Math.toRadians(searchAngle)/4, subSamplingEff/maxSpan/superSamplingEff));
         double a0 = Math.toRadians(expectedAngle - searchAngle);
         double a1 = Math.toRadians(expectedAngle + searchAngle)+angleStep/2;
         TreeMap<Double, Double> angleScore = null;
