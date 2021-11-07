@@ -64,6 +64,9 @@ public class ReferenceBottomVision implements PartAlignment {
     @Attribute(required = false)
     protected double testAlignmentAngle = 0.0;
 
+    @Element(required = false)
+    protected Length maxSearchDistance = new Length(2, LengthUnit.Millimeters);
+
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
 
@@ -485,6 +488,14 @@ public class ReferenceBottomVision implements PartAlignment {
 
     public void setTestAlignmentAngle(double testAlignmentAngle) {
         this.testAlignmentAngle = testAlignmentAngle;
+    }
+
+    public Length getMaxSearchDistance() {
+        return maxSearchDistance;
+    }
+
+    public void setMaxSearchDistance(Length maxSearchDistance) {
+        this.maxSearchDistance = maxSearchDistance;
     }
 
     @Override

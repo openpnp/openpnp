@@ -25,6 +25,7 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -303,7 +304,13 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         pipeline.setProperty("nozzle", nozzle);
         double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
                 .convertReverse(testAlignmentAngle.getText());
-        pipeline.setProperty("alignment.expectedAngle", angle);
+        if (partSettings.getPreRotateUsage() == PreRotateUsage.Default && bottomVision.isPreRotate()) {
+            pipeline.setProperty("alignment.expectedAngle", angle);
+        }
+        else {
+            pipeline.setProperty("alignment.expectedAngle", 0);
+        }
+        pipeline.setProperty("alignment.searchDistance", bottomVision.getMaxSearchDistance());
         Location partSize = partSettings.getPartCheckSize(part);
         if (partSize != null) {
             pipeline.setProperty("alignment.maxWidth", partSize.getLengthX());
