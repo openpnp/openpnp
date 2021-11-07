@@ -20,7 +20,6 @@
 package org.openpnp.machine.reference.wizards;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
@@ -65,8 +64,6 @@ import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.SimpleGraph.DataRow;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.ui.MatView;
-import org.pmw.tinylog.Logger;
-
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;

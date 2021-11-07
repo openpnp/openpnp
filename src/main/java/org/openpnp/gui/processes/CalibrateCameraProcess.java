@@ -41,7 +41,6 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraViewFilter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.ReferenceCamera;
-import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
