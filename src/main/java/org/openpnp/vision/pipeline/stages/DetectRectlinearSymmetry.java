@@ -35,7 +35,6 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
-import org.openpnp.vision.pipeline.stages.DetectRectlinearSymmetry.SymmetryFunction;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -716,8 +715,8 @@ public class DetectRectlinearSymmetry extends CvStage {
             double rHeight= (rect != null ? rect.size.height : maxHeight);
             double s = Math.sin(angleBest);
             double c = Math.cos(angleBest);
-            double r0 = Math.sqrt(rWidth*rWidth + rHeight*rHeight)*0.7;
-            double r1 = r0*1.2;
+            double r0 = Math.sqrt(rWidth*rWidth + rHeight*rHeight)*0.5+20;
+            double r1 = r0*1.05 + 40;
             double angleScoreMin = angleScore != null ? Collections.min(angleScore.values()) : 0;
             double angleScoreMax = angleScore != null ? Collections.max(angleScore.values()) : 0;
             double angleScoreFactor = (r1 - r0)/(angleScoreMax - angleScoreMin);
