@@ -108,7 +108,7 @@ public class Neoden4Feeder extends ReferenceFeeder {
 		}
 
         // Actuate actuator 
-        actuator.actuate(partPitchInTape);
+        actuator.actuate(partPitchInTape.getValue());
 
     	// Calculate vision offset
     	

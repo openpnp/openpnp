@@ -38,6 +38,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.neoden4.Neoden4Feeder;
 import org.openpnp.machine.reference.feeder.wizards.AbstractReferenceFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
@@ -381,7 +382,7 @@ public class Neoden4FeederConfigurationWizard extends AbstractReferenceFeederCon
 
 					UiUtils.submitUiMachineTask(() -> {
 						// Actuate actuator
-						actuator.actuate(feeder.getPartPitchInTape());
+						actuator.actuate(feeder.getPartPitchInTape().getValue());
 
 						// Refresh camera after 1s
 						Camera cam = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
