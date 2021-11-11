@@ -1,13 +1,10 @@
 ## What is it?
-____
-NOTE: some parts of the following are only available in the [Testing Version of OpenPnP](https://openpnp.org/test-downloads/). 
-____
 
-OpenPnP is complex to set up and the more flexibility and optimization is added, the more the complexity grows. In the course of developing and community testing the [[Advanced Motion Control]] it became apparent, that it is easier to program an automatism to _propose_ the proper setup than to document or provide support for it.
+OpenPnP is complex to set up and the more flexibility and optimization is added, the more the complexity grows. Over time it became apparent, that it is easier to _program_ an automatism to _propose_ the proper setup than to document or provide support for it.
 
 Hence, the Issues & Solutions system was born. It has these features:
 
-1. Tracks and structures your progress in the machine setup process (Milestones).
+1. Tracks your progress in the machine setup process (Milestones).
 2. Detects issues and (most of the time) proposes a solution.
 3. Lists issues from outright mistakes to suggestions for optimization.
 4. The user is the boss: proposed solutions can be accepted or dismissed.
