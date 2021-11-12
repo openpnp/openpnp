@@ -20,320 +20,221 @@
 package org.openpnp.machine.neoden4;
 
 import java.awt.image.BufferedImage;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 
-import javax.imageio.ImageIO;
-
-import org.apache.http.client.utils.URIBuilder;
+import org.opencv.core.Mat;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.neoden4.wizards.Neoden4CameraConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.util.OpenCvUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
-
-import com.mashape.unirest.http.Unirest;
 
 /**
  * A Camera implementation for ONVIF compatible IP cameras.
  */
-public class Neoden4Camera extends ReferenceCamera implements Runnable {
-    @Attribute(required = true)
-    private String hostIP = "127.0.0.1";
-    @Attribute(required = true)
-    private int cameraId = 1;
-    @Attribute(required = true)
-    private int hostPort = 8080;
+public class Neoden4Camera extends ReferenceCamera {
+	@Attribute(required = true)
+	private int cameraId = 1;
 
-    @Attribute(required = false)
-    private int width = 1024;
-    @Attribute(required = false)
-    private int height = 1024;
-    @Attribute(required = false)
-    private int timeout = 1000;
+	@Attribute(required = false)
+	private int width = 1024;
+	@Attribute(required = false)
+	private int height = 1024;
+	@Attribute(required = false)
+	private int timeout = 1000;
 
-    @Attribute(required = false)
-    private int exposure = 25;
-    @Attribute(required = false)
-    private int gain = 8;
-    @Attribute(required = false)
-    private int shiftX = 0;
-    @Attribute(required = false)
-    private int shiftY = 0;
+	@Attribute(required = false)
+	private int shiftX = 0;
+	@Attribute(required = false)
+	private int shiftY = 0;
 
-    private boolean dirty = false;
+	private boolean dirty = false;
+	private int lastExposure = 0;
+	private int lastGain = 0;
 
-    //private String baseURL = "http://{hostname}:{hostport}/cameras/{cameraid}/{func}";
-    private URL snapshotURI;
-    private java.net.URI baseURI;
+	public Neoden4Camera() {
+	}
 
-    public Neoden4Camera() {
-    }
+	private BufferedImage convertToRgb(BufferedImage image) {
+		Mat mat = OpenCvUtils.toMat(image);
+		return OpenCvUtils.toBufferedImage(OpenCvUtils.toRGB(mat));
+	}
 
-    @Override
-    public BufferedImage internalCapture() {
-        //Logger.trace(String.format("internalCapture() [cameraId:%d]", cameraId));
-        if (!ensureOpen()) {
-            return null;
-        }
-        try {
-            if (snapshotURI == null) {
-                return null;
-            }
-            BufferedImage img = ImageIO.read(snapshotURI);
-            return img;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+	@Override
+	public synchronized BufferedImage internalCapture() {
+		Logger.debug(String.format("internalCapture() [cameraId:%d]", cameraId));
 
-     private URL getImageReadAsyURL() throws MalformedURLException, URISyntaxException {
-        Logger.trace(String.format("getImageReadAsyURL() [cameraId:%d, width:%d, height:%d, timeout:%d]", 
-            cameraId, width, height, timeout));
-        return new URIBuilder(baseURI)
-            .setPath(baseURI.getPath() + "imgReadAsy")
-            .setParameter("width", String.valueOf(width))
-            .setParameter("height", String.valueOf(height))
-            .setParameter("timeout", String.valueOf(timeout))
-            .build()
-            .toURL();
-    }
+		long tStart = System.currentTimeMillis();
 
-    private void setCameraWidthHeight() {
-        Logger.trace(String.format("setCameraWidthHeight() [cameraId:%d, width:%d, height:%d]", cameraId, width, height));
-        URL funcUrl;
-        try {
-            funcUrl = new URIBuilder(baseURI)
-                .setPath(baseURI.getPath() + "imgSetWidthHeight")
-                .setParameter("width", String.valueOf(width))
-                .setParameter("height", String.valueOf(height))
-                .build()
-                .toURL();
-        } catch (MalformedURLException | URISyntaxException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return;
-        }
-        Unirest.get(funcUrl.toString());
-    }
+		if (!ensureOpen()) {
+			Logger.trace(String.format("ensureOpen [cameraId:%d] failed", cameraId));
+			return null;
+		}
 
-    private void setCameraExposure() {
-        Logger.trace(String.format("imgSetExposure() [cameraId:%d]", cameraId, exposure));
-        URL funcUrl;
-        try {
-            funcUrl = new URIBuilder(baseURI)
-                .setPath(baseURI.getPath() + "imgSetExposure")
-                .setParameter("exposure", String.valueOf(exposure))
-                .build()
-                .toURL();
-        } catch (MalformedURLException | URISyntaxException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return;
-        }
-        Unirest.get(funcUrl.toString());
-    }
+		try {
+			byte[] data = new byte[width * height];
 
-    private void setCameraGain() {
-        Logger.trace(String.format("imgSetGain() [cameraId:%d, gain:%d]", cameraId, gain));
-        URL funcUrl;
-        try {
-            funcUrl = new URIBuilder(baseURI)
-                .setPath(baseURI.getPath() + "imgSetGain")
-                .setParameter("gain", String.valueOf(gain))
-                .build()
-                .toURL();
-        } catch (MalformedURLException | URISyntaxException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return;
-        }
-        Unirest.get(funcUrl.toString());
-    }
+			Thread.sleep(10);
+			int ret = Neoden4CameraHandler.getInstance().img_readAsy(cameraId, data, data.length, timeout);
+			if (ret != 1) {
+				Logger.error(String.format("img_readAsy() ret = %d, [cameraId:%d]", ret, cameraId));
+				resetCamera();
+				return null;
+			}
+			BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+			img.getRaster().setDataElements(0, 0, width, height, data);
+			BufferedImage imgRGB = convertToRgb(img);
 
-    private void setCameraLt() {
-        Logger.trace(String.format("imgSetLt() [cameraId:%d, shiftX:%d, shiftY:%d]", cameraId, shiftX, shiftY));
-        URL funcUrl;
-        try {
-            funcUrl = new URIBuilder(baseURI)
-                .setPath(baseURI.getPath() + "imgSetLt")
-                .setParameter("a2", String.valueOf(shiftX))
-                .setParameter("a3", String.valueOf(shiftY))
-                .build()
-                .toURL();
-        } catch (MalformedURLException | URISyntaxException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return;
-        }
-        Unirest.get(funcUrl.toString());
-    }
+			Logger.debug(String.format("internalCapture() done in: %d", System.currentTimeMillis() - tStart));
+			return imgRGB;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
-    private void cameraReset() {
-        Logger.trace(String.format("imgReset() [cameraId:%d]", cameraId));
-        URL funcUrl;
-        try {
-            funcUrl = new URIBuilder(baseURI)
-                .setPath(baseURI.getPath() + "imgReset")
-                .build()
-                .toURL();
-        } catch (MalformedURLException | URISyntaxException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return;
-        }
-        Unirest.get(funcUrl.toString());
-    }
+	private void resetCamera() {
+		Logger.trace(String.format("Resetting camera [cameraId:%d]", cameraId));
+		try {
+			Thread.sleep(100);
+			cameraReset();
+			setCameraExposure(lastExposure);
+			setCameraGain(lastGain);
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 
-    @Override
-    public void open() throws Exception {
-        stop();
+	private synchronized void cameraReset() {
+		Logger.trace(String.format("imgReset() [cameraId:%d]", cameraId));
+		try {
+			Thread.sleep(10);
+			Neoden4CameraHandler.getInstance().img_reset(cameraId);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 
-        Logger.trace(String.format("open() [cameraId:%d, width: %d, height: %d]", cameraId, width, height));
-        
-        try {
-            setDirty(false);
-            snapshotURI = null;
-            if ((hostIP != null) && (!hostIP.isEmpty())) {
-                try {
-                    baseURI = new URIBuilder()
-                        .setScheme("http")
-                        .setHost(hostIP)
-                        .setPort(hostPort)
-                        .setPath("/cameras/" + String.valueOf(cameraId) + "/")
-                        .build();
-                    snapshotURI = getImageReadAsyURL();
-                    System.out.println("Snapshot URI: " + snapshotURI.toString());
-                }
-                catch (MalformedURLException e) {
-                    System.err.println("Malformed URL for IP camera at " + hostIP + ": " + e.toString());
-                    e.printStackTrace();
-                }
-                catch (Exception e) {
-                    System.err.println("Unknown error initializing IP camera at " + hostIP + ": " + e.toString());
-                    e.printStackTrace();
-                }
+	private synchronized void setCameraExposure(int exposure) {
+		Logger.trace(String.format("imgSetExposure() [cameraId:%d]", cameraId, exposure));
+		try {
+			Thread.sleep(10);
+			Neoden4CameraHandler.getInstance().img_set_exp(cameraId, (short) exposure);
+			lastExposure = exposure;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 
-                /* Configure the camera */
-                cameraReset();
-                setCameraWidthHeight();
-                setCameraGain();
-                setCameraLt();
-                setCameraExposure();
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
+	private synchronized void setCameraGain(int gain) {
+		Logger.trace(String.format("imgSetGain() [cameraId:%d, gain:%d]", cameraId, gain));
+		try {
+			Thread.sleep(10);
+			Neoden4CameraHandler.getInstance().img_set_gain(cameraId, (short) gain);
+			lastGain = gain;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 
-        super.open();
-    }
+	public synchronized void setCameraExposureAndGain(int exposure, int gain) {
+		boolean reset = false;
+		if (gain != lastGain) {
+			lastGain = gain;
+			reset = true;
+		}
 
-    public String getHostIP() {
-        return hostIP;
-    }
+		if (exposure != lastExposure) {
+			lastExposure = exposure;
+			reset = true;
+		}
 
-    public void setHostIP(String hostIP) {
-        this.hostIP = hostIP;
-        setDirty(true);
-    }
+		if (reset) {
+			resetCamera();
+		}
+	}
 
-    public int getCameraId() {
-        return cameraId;
-    }
+	@Override
+	public synchronized void open() throws Exception {
+		stop();
+		Logger.trace(String.format("open() [cameraId:%d, width: %d, height: %d]", cameraId, width, height));
+		resetCamera();
+		super.open();
+	}
 
-    public void setCameraId(int cameraId) {
-        this.cameraId = cameraId;
-    }
+	public int getCameraId() {
+		return cameraId;
+	}
 
-    public int getHostPort() {
-        return this.hostPort;
-    }
+	public synchronized void setCameraId(int cameraId) {
+		synchronized (Neoden4Camera.class) {
+			this.cameraId = cameraId;
+		}
+	}
 
-    public void setHostPort(int hostPort) {
-        this.hostPort = hostPort;
-    }
+	public int getWidth() {
+		return this.width;
+	}
 
-    public int getWidth() {
-        return this.width;
-    }
+	public void setWidth(int width) {
+		this.width = width;
+	}
 
-    public void setWidth(int width) {
-        this.width = width;
-    }
+	public int getHeight() {
+		return this.height;
+	}
 
-    public int getHeight() {
-        return this.height;
-    }
+	public void setHeight(int height) {
+		this.height = height;
+	}
 
-    public void setHeight(int height) {
-        this.height = height;
-    }
+	public int getTimeout() {
+		return this.timeout;
+	}
 
-    public int getTimeout() {
-        return this.timeout;
-    }
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
+	}
 
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
-    }
+	public int getShiftX() {
+		return this.shiftX;
+	}
 
-    public int getExposure() {
-        return this.exposure;
-    }
+	public void setShiftX(int shiftX) {
+		this.shiftX = shiftX;
+	}
 
-    public void setExposure(int exposure) {
-        this.exposure = exposure;
-    }
+	public int getShiftY() {
+		return this.shiftY;
+	}
 
-    public int getGain() {
-        return this.gain;
-    }
+	public void setShiftY(int shiftY) {
+		this.shiftY = shiftY;
+	}
 
-    public void setGain(int gain) {
-        this.gain = gain;
-    }
+	public boolean isDirty() {
+		return dirty;
+	}
 
-    public int getShiftX() {
-        return this.shiftX;
-    }
+	public void setDirty(boolean dirty) {
+		this.dirty = dirty;
+	}
 
-    public void setShiftX(int shiftX) {
-        this.shiftX = shiftX;
-    }
+	@Override
+	public Wizard getConfigurationWizard() {
+		return new Neoden4CameraConfigurationWizard(this);
+	}
 
-    public int getShiftY() {
-        return this.shiftY;
-    }
+	@Override
+	public String getPropertySheetHolderTitle() {
+		return getClass().getSimpleName() + " " + getName();
+	}
 
-    public void setShiftY(int shiftY) {
-        this.shiftY = shiftY;
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
-    }
-
-    @Override
-    public Wizard getConfigurationWizard() {
-        return new Neoden4CameraConfigurationWizard(this);
-    }
-
-    @Override
-    public String getPropertySheetHolderTitle() {
-        return getClass().getSimpleName() + " " + getName();
-    }
-
-    @Override
-    public PropertySheetHolder[] getChildPropertySheetHolders() {
-        return null;
-    }
+	@Override
+	public PropertySheetHolder[] getChildPropertySheetHolders() {
+		return null;
+	}
 }

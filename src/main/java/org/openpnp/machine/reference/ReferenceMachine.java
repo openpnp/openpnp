@@ -32,7 +32,11 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
+import org.openpnp.machine.neoden4.NeoDen4FeederActuator;
 import org.openpnp.machine.neoden4.Neoden4Camera;
+import org.openpnp.machine.neoden4.Neoden4Feeder;
+import org.openpnp.machine.neoden4.Neoden4Signaler;
+import org.openpnp.machine.neoden4.Neoden4SwitcherCamera;
 import org.openpnp.machine.rapidplacer.RapidFeeder;
 import org.openpnp.machine.reference.actuator.ThermistorToLinearSensorActuator;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
@@ -346,6 +350,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(SchultzFeeder.class);
         l.add(SlotSchultzFeeder.class);
         l.add(RapidFeeder.class);
+        l.add(Neoden4Feeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
@@ -356,6 +361,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(OpenPnpCaptureCamera.class);
         l.add(OpenCvCamera.class);
         l.add(Neoden4Camera.class);
+        l.add(Neoden4SwitcherCamera.class);
         l.add(Webcams.class);
         l.add(OnvifIPCamera.class);
         l.add(ImageCamera.class);
@@ -388,6 +394,7 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Signaler>> l = new ArrayList<>();
         l.add(SoundSignaler.class);
         l.add(ActuatorSignaler.class);
+        l.add(Neoden4Signaler.class);
         return l;
     }
 
