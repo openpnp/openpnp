@@ -26,7 +26,6 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
@@ -52,7 +51,7 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
 
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
-        panelGeneral.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        panelGeneral.setBorder(new TitledBorder(null,
                 "General", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -88,7 +87,7 @@ public class Neoden4CameraConfigurationWizard extends AbstractConfigurationWizar
                 
         panelImage = new JPanel();
         contentPanel.add(panelImage);
-        panelImage.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), 
+        panelImage.setBorder(new TitledBorder(null, 
         		"Image settings", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelImage.setLayout(new FormLayout(new ColumnSpec[] {
         		FormSpecs.RELATED_GAP_COLSPEC,

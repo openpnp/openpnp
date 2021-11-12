@@ -25,7 +25,6 @@ import java.awt.Color;
 import javax.swing.SwingConstants;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -53,7 +52,7 @@ public class Neoden4DriverConfigurationWizard extends AbstractConfigurationWizar
         this.driver = driver;
 
         JPanel panelMachineDetails = new JPanel();
-        panelMachineDetails.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        panelMachineDetails.setBorder(new TitledBorder(null,
                 "Machine Details", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelMachineDetails);
         panelMachineDetails.setLayout(new FormLayout(

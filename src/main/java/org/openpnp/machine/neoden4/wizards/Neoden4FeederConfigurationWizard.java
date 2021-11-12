@@ -23,7 +23,6 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.BevelBorder;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -178,7 +177,7 @@ public class Neoden4FeederConfigurationWizard extends AbstractReferenceFeederCon
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         panelTemplate = new JPanel();
-        panelTemplate.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+        panelTemplate.setBorder(new TitledBorder(null,
                 "Template Image", TitledBorder.LEADING, TitledBorder.TOP, null,
                 new Color(0, 0, 0)));
         panelVisionTemplateAndAoe.add(panelTemplate, "2, 2, center, fill");
