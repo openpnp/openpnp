@@ -72,6 +72,10 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
     private JTextField simulatedLocationRotation;
     private JLabel lblCameraFlipped;
     private JCheckBox simulatedFlipped;
+    private JLabel lblFocalLength;
+    private JTextField focalLength;
+    private JLabel lblSensorDiagonal;
+    private JTextField sensorDiagonal;
 
     public SimulatedUpCameraConfigurationWizard(SimulatedUpCamera camera) {
         this.camera = camera;
@@ -92,6 +96,10 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -167,39 +175,53 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(simulatedUnitsPerPixelY, "6, 8, fill, default");
         simulatedUnitsPerPixelY.setColumns(10);
         
+        lblFocalLength = new JLabel("Focal Length");
+        panelGeneral.add(lblFocalLength, "2, 10, right, default");
+        
+        focalLength = new JTextField();
+        panelGeneral.add(focalLength, "4, 10, fill, default");
+        focalLength.setColumns(10);
+        
+        lblSensorDiagonal = new JLabel("Sensor Diagonal");
+        panelGeneral.add(lblSensorDiagonal, "2, 12, right, default");
+        
+        sensorDiagonal = new JTextField();
+        panelGeneral.add(sensorDiagonal, "4, 12, fill, default");
+        sensorDiagonal.setColumns(10);
+        
         lblErrorOffsets = new JLabel("Pick Error Offsets");
         lblErrorOffsets.setToolTipText("Picked part on nozzle error offsets in simulation.");
-        panelGeneral.add(lblErrorOffsets, "2, 12, right, default");
+        panelGeneral.add(lblErrorOffsets, "2, 16, right, default");
         
         errorOffsetsX = new JTextField();
-        panelGeneral.add(errorOffsetsX, "4, 12, fill, default");
+        panelGeneral.add(errorOffsetsX, "4, 16, fill, default");
         errorOffsetsX.setColumns(10);
         
         errorOffsetsY = new JTextField();
-        panelGeneral.add(errorOffsetsY, "6, 12, fill, default");
+        panelGeneral.add(errorOffsetsY, "6, 16, fill, default");
         errorOffsetsY.setColumns(10);
         
         errorOffsetsZ = new JTextField();
-        panelGeneral.add(errorOffsetsZ, "8, 12, fill, default");
+        panelGeneral.add(errorOffsetsZ, "8, 16, fill, default");
         errorOffsetsZ.setColumns(10);
         
         errorOffsetsRotation = new JTextField();
-        panelGeneral.add(errorOffsetsRotation, "10, 12, fill, default");
+        panelGeneral.add(errorOffsetsRotation, "10, 16, fill, default");
         errorOffsetsRotation.setColumns(10);
         
         lblCameraFlipped = new JLabel("View mirrored?");
         lblCameraFlipped.setToolTipText("Simulate the camera as showing a mirrored view");
-        panelGeneral.add(lblCameraFlipped, "2, 16, right, default");
+        panelGeneral.add(lblCameraFlipped, "2, 20, right, default");
         
         simulatedFlipped = new JCheckBox("");
-        panelGeneral.add(simulatedFlipped, "4, 16");
+        panelGeneral.add(simulatedFlipped, "4, 20");
         
         lblFocalBlur = new JLabel("Simulate Focal Blur?");
         lblFocalBlur.setToolTipText("Simulate focal blur in order to test Auto Focus. This is very slow!");
-        panelGeneral.add(lblFocalBlur, "2, 18, right, default");
+        panelGeneral.add(lblFocalBlur, "2, 22, right, default");
         
         simulateFocalBlur = new JCheckBox("");
-        panelGeneral.add(simulateFocalBlur, "4, 18");
+        panelGeneral.add(simulateFocalBlur, "4, 22");
     }
 
     @Override
@@ -239,6 +261,9 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         addWrappedBinding(simulatedUnitsPerPixel, "lengthX", simulatedUnitsPerPixelX, "text", uppConverter);
         addWrappedBinding(simulatedUnitsPerPixel, "lengthY", simulatedUnitsPerPixelY, "text", uppConverter);
 
+        addWrappedBinding(camera, "focalLength", focalLength, "text", lengthConverter);
+        addWrappedBinding(camera, "sensorDiagonal", sensorDiagonal, "text", lengthConverter);
+
         ComponentDecorators.decorateWithAutoSelect(width);
         ComponentDecorators.decorateWithAutoSelect(height);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(errorOffsetsX);
@@ -250,6 +275,9 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedLocationY);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(simulatedLocationZ);
         ComponentDecorators.decorateWithAutoSelect(simulatedLocationRotation);
+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(focalLength);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(sensorDiagonal);
 
         //ComponentDecorators.decorateWithAutoSelect(simulatedUnitsPerPixelX);
         //ComponentDecorators.decorateWithAutoSelect(simulatedUnitsPerPixelY);
