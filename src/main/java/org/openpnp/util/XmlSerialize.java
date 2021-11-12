@@ -72,6 +72,75 @@ public class XmlSerialize {
     }
 
     /**
+     * Crude Markup to HTML conversion.
+     * 
+     * @param s
+     * @return
+     */
+    public static String convertMarkupToHtml(String s) {
+        StringBuilder out = new StringBuilder();
+        out.append("<html>\n");
+        int header = 0;
+        int lineBegin = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (lineBegin == i) { 
+                header = 0;
+                if (c == '#' && i+1 < s.length()) {
+                    do {
+                        i++;
+                        c = s.charAt(i);
+                        header++;
+                    }
+                    while (c == '#' && i+1 < s.length());
+                    out.append("<h"+header+">");
+                }
+                else {
+                    out.append("<p>");   
+                }
+            }
+            if (c > 127 || c == '"' || c == '\'' || c == '<' || c == '>' || c == '&') {
+                out.append("&#");
+                out.append((int) c);
+                out.append(';');
+            } 
+            else if (c == '\n' 
+                    && (i+1 == s.length() || s.charAt(i+1) == '\n')) {
+                if (header == 0) {
+                    out.append("</p><br/>");
+                }
+                else {
+                    out.append("</h"+header+">");
+                }
+                lineBegin = i+2;
+            }
+            else if (c == '[') {
+                int len = s.indexOf("]", i) - i;
+                if (len < 0 || s.charAt(i+len+1) != '(') {
+                    out.append(c);
+                }
+                else {
+                    int len2 = s.indexOf(")", i + len) - i - len;
+                    if (len < 0) {
+                        out.append(c);
+                    }
+                    else {  
+                        String text = s.substring(i+1, i+len);
+                        String url = s.substring(i + len + 2, i + len + len2);
+                        out.append("<a href=\""+url+"\">"+escapeXml(text)+"</a>");
+                        i += len + len2;
+                    }
+                }
+            }
+            else {
+                out.append(c);
+            }
+        }
+        out.append("</html>\n");
+        return out.toString();
+    }
+
+    /**
      * Create a standard OpenPnP Configuration serializer.
      * 
      * @return

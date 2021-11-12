@@ -21,12 +21,16 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
+import java.net.URI;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -34,23 +38,30 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.Main;
+import org.openpnp.util.XmlSerialize;
+
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
+import com.jgoodies.forms.layout.Sizes;
 
 @SuppressWarnings("serial")
 public class Welcome2_0Dialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
-    private JTextPane textPane;
+    private JLabel textPane;
+    private JPanel textSizer;
 
     public Welcome2_0Dialog(Frame frame) {
         super(frame, true);
         setTitle("Welcome to OpenPnP 2.0");
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        setBounds(100, 100, 347, 360);
+        setBounds(100, 100, 648, 434);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -68,14 +79,32 @@ public class Welcome2_0Dialog extends JDialog {
         lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblVersion);
 
-        textPane = new JTextPane();
-        textPane.setEditable(false);
-        contentPanel.add(new JScrollPane(textPane));
+        textSizer = new JPanel();
+        textSizer.setLayout(new FormLayout(new ColumnSpec[] {
+                new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("70dlu", true), Sizes.constant("150dlu", true)), 1),},
+                new RowSpec[] {
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+        textPane = new JLabel();
+        textPane.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Desktop desk = Desktop.getDesktop();
+                try {
+                    // HACK: can't truly pinpoint hyperlinks in the text, so open the original. 
+                    desk.browse(new URI("https://github.com/openpnp/openpnp/blob/develop/OPENPNP_2_0.md"));
+                }
+                catch (Exception e1) {
+                }
+            }
+        });
+        textSizer.add(textPane, "1, 1");
+        contentPanel.add(new JScrollPane(textSizer));
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
         JButton okButton = new JButton("OK");
         okButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent arg0) {
                 setVisible(false);
             }
@@ -86,11 +115,11 @@ public class Welcome2_0Dialog extends JDialog {
 
         try {
             String s = FileUtils.readFileToString(new File("OPENPNP_2_0.md"));
+            s = XmlSerialize.convertMarkupToHtml(s);
             textPane.setText(s);
-            textPane.setCaretPosition(0);
         }
         catch (Exception e) {
-
+            textPane.setText(e.toString());
         }
     }
 }
