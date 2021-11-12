@@ -248,30 +248,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         firePropertyChange("headOffsets", oldValue, headOffsets);
         adjustHeadOffsetsDependencies(oldValue, headOffsets);
     }
-    
-    public String getVacuumSenseActuatorName() {
-        return vacuumSenseActuatorName;
-    }
-
-    public void setVacuumSenseActuatorName(String vacuumSenseActuatorName) {
-        this.vacuumSenseActuatorName = vacuumSenseActuatorName;
-    }
-
-    public String getVacuumActuatorName() {
-        return vacuumActuatorName;
-    }
-
-    public void setVacuumActuatorName(String vacuumActuatorName) {
-        this.vacuumActuatorName = vacuumActuatorName;
-    }
-
-    public String getBlowOffActuatorName() {
-        return blowOffActuatorName;
-    }
-
-    public void setBlowOffActuatorName(String blowActuatorName) {
-        this.blowOffActuatorName = blowActuatorName;
-    }
 
     /**
      * Adjust any dependent head offsets, e.g. after calibration.
@@ -1389,8 +1365,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         super.findIssues(solutions);
         try {
             if (solutions.isTargeting(Milestone.Basics)) {
-                findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
-                        new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND });
+                if (getVacuumActuator().getValueType() == ActuatorValueType.Double) {
+                    findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
+                        new CommandType[] { CommandType.ACTUATE_DOUBLE_COMMAND });
+                }
+                else {
+                    findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
+                            new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND });
+                }
                 // If at least one nozzle tip uses vacuum sensing, require a sensing actuator.
                 boolean needsSensing = false;
                 for (NozzleTip tip : Configuration.get().getMachine().getNozzleTips()) {
@@ -1406,6 +1388,11 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 if (needsSensing) {
                     findActuatorIssues(solutions, getVacuumSenseActuator(), "vacuum sensing", 
                         new CommandType[] { CommandType.ACTUATOR_READ_COMMAND, CommandType.ACTUATOR_READ_REGEX });
+                }
+                if (getBlowOffActuator() != null) {
+                    AbstractActuator.suggestValueType(getBlowOffActuator(), ActuatorValueType.Double);
+                    findActuatorIssues(solutions, getBlowOffActuator(), "blow-off", 
+                            new CommandType[] { CommandType.ACTUATE_DOUBLE_COMMAND });
                 }
             }
         }
