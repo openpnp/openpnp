@@ -11,10 +11,16 @@ Some notes to help get started with a Neoden4 machine and Openpnp
 
 5) Install java 
 
-### Building Openpnp application
+### Downloading pre-built package
 
-Get Eclipse, pull the neoden4camera_jna branch from
-https://github.com/MatSpy/openpnp/commits/neoden4camera_jna . 
+Support has been added to the test branch currently, there are pre-built binaries to download here:
+
+https://openpnp.org/test-downloads/
+
+### Building Openpnp application from source
+
+Get Eclipse, pull the test branch from
+https://github.com/openpnp/openpnp/tree/test
 
 Some other notes in this one on importing the maven project
 https://firepickdelta.dozuki.com/Guide/Installing+Eclipse+IDE+and+Running+OpenPnP/35
