@@ -11,13 +11,15 @@ Some notes to help get started with a Neoden4 machine and Openpnp
 
 5) Install java 
 
-### Downloading pre-built package
+6) Install OpenPNP either pre-built or from source
+
+### 6a) Downloading pre-built package
 
 Support has been added to the test branch currently, there are pre-built binaries to download here:
 
 https://openpnp.org/test-downloads/
 
-### Building Openpnp application from source
+### 6b Building Openpnp application from source
 
 Get Eclipse, pull the test branch from
 https://github.com/openpnp/openpnp/tree/test
