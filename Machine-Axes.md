@@ -1,11 +1,29 @@
 ## The OpenPnP Coordinate System
-OpenPnP conceptually uses a [Cartesian Coordinate System](https://en.wikipedia.org/wiki/Cartesian_coordinate_system). Assuming you stand in front of the machine, the X axis points to the right, Y away from you and Z up. The rotational axis C rotates around Z. When looking down on the machine table, this is counter-clockwise.
+OpenPnP conceptually uses a [right-handed Cartesian Coordinate System](https://en.wikipedia.org/wiki/Cartesian_coordinate_system). Assuming you stand in front of the machine, the X axis points to the right, Y away from you and Z up. The rotational axis C rotates around Z. When looking down on the machine table, this is counter-clockwise.
 
 ![Axis Coordinate System](https://user-images.githubusercontent.com/9963310/95686141-663efc00-0bfc-11eb-8a7a-153ab472f871.png)
 
-The coordinate system now needs to be defined in OpenPnP. 
+## A Word about Z Coordinates
 
-In the Machine Setup tab's hierarchical view, expand the Axes branch. Most likely you will already see defined axes, either migrated from an earlier version of OpenPnP or the default set. 
+OpenPnP typically uses Z coordinates that have Z = 0 where the nozzle is retracted, i.e. at a safe height. When the nozzle reaches down to the PCB, or to the feeders, it is in the _negative_ Z range. E.g. your PCB might be at Z = -25mm. 
+
+This might sound strange at first, but there are good technical reasons behind that choice. If you have a dual nozzle head with _shared Z axis_, one nozzle goes up when the other goes down. It is therefore a natural choice to have the two nozzles at the same coordinate value, one negative, one positive. To keep the coordinate system right-handed (Z axis must point up), the nozzle that is reaching down must have negative Z coordinates. Furthermore, most Z axes are _homed_ at the top (single nozzle) or midpoint (dual shared Z nozzles), i.e. where the nozzles are retracted or balanced. It is the default for any controller to home an axis to zero, i.e. you have _another_ reason why the top Z is 0 while the reach below is negative. 
+
+Theoretically, the software should support machines with all-positive Z. However there are some caveats:
+
+1. Locations are initialized to all zero, including Z. Sometimes the X, Y and Z are treated separately, i.e. you setup the X, Y with the camera and the Z with the nozzle (typical for feeders, nozzle changer locations etc.). If you forget to setup the Z and leave it at 0 it's possibly dangerous, as it may crash the nozzle into the feeder/nozzle changer etc. when you try. Nothing bad happens, if the uninitialized Z=0 is the safe height.
+2. Z=0 as the highest/balanced, safe Z point, is the established default for OpenPnP. Most users (including developers!) use it that way. While the software clearly is supposed to support all-positive Z coordinates, I believe this has hardly ever been tested. There is just a higher chance that there could be code that initializes Z to 0 and forgets to set the proper Safe Z coordinate. On a "vanilla" machine, this won't even be noticeable. On an all-positive Z machine, it will crash the nozzle.
+3. The automatic [calibration of Nozzle Offsets](https://github.com/openpnp/openpnp/wiki/Vision-Solutions#nozzle-offsets) performed by [[Issues and Solutions]] currently assumes you are using the default Z=0 as the highest/balanced, safe Z point.
+
+If somebody still wants to set it up with all-positive Z, please ask [the discussion group](http://groups.google.com/group/openpnp) for a how-to. If you managed to pull this off by yourself, please report it!
+
+## Defining Axes in OpenPnP
+
+In the Machine Setup tab's hierarchical view, expand the Axes branch. Most likely you will already see defined axes, either migrated from an earlier version of OpenPnP or the default set. You can also let the [[Issues and Solutions]] system create a whole [Nozzle Solution with all the proper axes wired up](https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions#welcome-milestone). Unless you have the most exotic machine, you should always start there. 
+
+## Creating Axes manually
+
+This should only be necessary for exotic axis configurations, and/or after you have used the [Nozzle Solution](https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions#welcome-milestone).
 
 Click on one of the existing axes or create a new one using the 
 ![Plus](https://user-images.githubusercontent.com/9963310/95689795-9f369b00-0c13-11eb-8347-7d4645776a0f.png) button and selecting the class:
