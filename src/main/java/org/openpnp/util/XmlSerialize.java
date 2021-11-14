@@ -78,43 +78,145 @@ public class XmlSerialize {
      * @return
      */
     public static String convertMarkupToHtml(String s) {
+        final char EOF = '\u001a'; // Add EOF guard
+        s += EOF;
         StringBuilder out = new StringBuilder();
         out.append("<html>\n");
+        boolean paragraph = false;
         int header = 0;
+        boolean code = false;
+        boolean list = false;
+        boolean listItem = false;
         int lineBegin = 0;
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
-            if (lineBegin == i) { 
-                header = 0;
-                if (c == '#' && i+1 < s.length()) {
+
+            if (c == EOF || lineBegin == i) { 
+                if (paragraph) {
+                    out.append("</p><br/>");
+                    paragraph = false;
+                }
+                else if (header > 0){
+                    out.append("</h"+header+">");
+                    header = 0;
+                }
+                if (i+2 < s.length() && c == '`' && s.charAt(i+1) == '`' && s.charAt(i+2) == '`') {
+                    if (listItem) {
+                        out.append("</li>");
+                        listItem = false;
+                    }
+                    if (list) {
+                        out.append("</ul>");
+                        list = false;
+                    }
                     do {
                         i++;
                         c = s.charAt(i);
-                        header++;
                     }
-                    while (c == '#' && i+1 < s.length());
-                    out.append("<h"+header+">");
+                    while ((c == '`' || c == '\n')&& i+1 < s.length());
+                    if (code) {
+                        out.append("</code></pre>\n");
+                        code = false;
+                    }
+                    else {
+                        out.append("\n<pre><code>");
+                        code = true;
+                    }
                 }
-                else {
-                    out.append("<p>");   
+                else if (code) {
+                   // out.append("<br/>\n");
+                }
+                else if ((c == '*' || c == '-') && i+2 < s.length() && s.charAt(i+1) == ' ') {
+                    if (!list) {
+                        list = true;
+                        out.append("\n<ul>");
+                    }
+                    if (listItem) {
+                        out.append("</li>");
+                    }
+                    listItem = true;
+                    out.append("\n<li>");
+                    i += 2;
+                    c = s.charAt(i);
+                }
+                else  {
+                    if (listItem) {
+                        out.append("</li>");
+                        listItem = false;
+                    }
+                    if (list) {
+                        out.append("</ul>");
+                        list = false;
+                    }
+
+                    if (c == '#' && i+1 < s.length()) {
+                        do {
+                            i++;
+                            c = s.charAt(i);
+                            header++;
+                        }
+                        while (c == '#' && i+1 < s.length());
+                        out.append("\n<h"+header+">");
+                    }
+                    else {
+                        out.append("\n<p>");
+                        paragraph = true;
+                    }
+                }
+                if (c == EOF) {
+                    break;
                 }
             }
+
             if (c > 127 || c == '"' || c == '\'' || c == '<' || c == '>' || c == '&') {
+                // Escape.
                 out.append("&#");
                 out.append((int) c);
                 out.append(';');
             } 
-            else if (c == '\n' 
-                    && (i+1 == s.length() || s.charAt(i+1) == '\n')) {
-                if (header == 0) {
-                    out.append("</p><br/>");
+            else if (c == '`') {
+                if (i+2 < s.length() && s.charAt(i+1) == '`' && s.charAt(i+2) == '`') {
+                    // New code section beginning/ending next.
+                    lineBegin = i+1; 
                 }
-                else {
-                    out.append("</h"+header+">");
+            }
+            else if (c == '\n' && i+1 < s.length()) {
+                // Skip over whitespace.
+                int skip = 1;
+                int lf = 0;
+                while (i+skip+1 < s.length() 
+                        && (s.charAt(i+skip) == ' ' 
+                        || s.charAt(i+skip) == '\t'
+                        || s.charAt(i+skip) == '\n')) {
+                    if (s.charAt(i+skip) == '\n') {
+                        lf++;
+                    }
+                    skip++;
                 }
-                lineBegin = i+2;
+                // Look for new line characters.
+                if (lf > 0
+                        || code
+                        || s.charAt(i+skip) == '#' 
+                        || s.charAt(i+skip) == '*' 
+                        || s.charAt(i+skip) == '-') {
+                    // Skip whitespace
+                    while (skip > 0) {
+                        if (s.charAt(i) == '\t') {
+                            out.append("  ");
+                        }
+                        else {
+                            out.append(s.charAt(i));
+                        }
+                        i++;
+                        skip--;
+                    }
+                    i--;
+                    // New line starting next.
+                    lineBegin = i + 1;
+                }
             }
             else if (c == '[') {
+                // Potential link.
                 int len = s.indexOf("]", i) - i;
                 if (len < 0 || s.charAt(i+len+1) != '(') {
                     out.append(c);
@@ -132,11 +234,41 @@ public class XmlSerialize {
                     }
                 }
             }
+            else if (c == 'h' && i+10 < s.length() 
+                    && (s.substring(i, i+8).equals("https://")
+                            || s.substring(i, i+7).equals("http://"))) {
+                // Potential link.
+                int i1 = i;
+                do {
+                    i1++;
+                    c = s.charAt(i1);
+                    if (c == ' ' || c == '\n') {
+                        break;
+                    }
+                }
+                while (i1+1 < s.length());
+                String uri =  s.substring(i, i1);
+                String text = uri.length() > 60 ? 
+                        uri.substring(0, 27)+"..."+uri.substring(uri.length()-30, uri.length()) 
+                        : uri;
+                out.append("<a href=\""+uri+"\">"+escapeXml(text)+"</a>");
+                i = i1-1;
+            }
+            else if (code && c == ' ' && i - lineBegin > 40) {
+                out.append("\n                ");
+                lineBegin = i;
+            }
+            else if (code && c == '\t') {
+                out.append("  ");
+            }
             else {
+                // Vanilla character.
                 out.append(c);
             }
         }
+
         out.append("</html>\n");
+        //System.out.println(out);
         return out.toString();
     }
 

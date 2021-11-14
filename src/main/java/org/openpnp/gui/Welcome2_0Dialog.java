@@ -21,14 +21,11 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.net.URI;
 
@@ -37,25 +34,17 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.Main;
-import org.openpnp.util.XmlSerialize;
-
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
-import com.jgoodies.forms.layout.Sizes;
+import org.openpnp.gui.components.MarkupTextPane;
 
 @SuppressWarnings("serial")
 public class Welcome2_0Dialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
-    private JLabel textPane;
-    private JPanel textSizer;
+    private MarkupTextPane markupTextPane;
 
     public Welcome2_0Dialog(Frame frame) {
         super(frame, true);
@@ -79,26 +68,9 @@ public class Welcome2_0Dialog extends JDialog {
         lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblVersion);
 
-        textSizer = new JPanel();
-        textSizer.setLayout(new FormLayout(new ColumnSpec[] {
-                new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.PREFERRED, Sizes.constant("70dlu", true), Sizes.constant("150dlu", true)), 1),},
-                new RowSpec[] {
-                        FormSpecs.DEFAULT_ROWSPEC,}));
-        textPane = new JLabel();
-        textPane.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Desktop desk = Desktop.getDesktop();
-                try {
-                    // HACK: can't truly pinpoint hyperlinks in the text, so open the original. 
-                    desk.browse(new URI("https://github.com/openpnp/openpnp/blob/develop/OPENPNP_2_0.md"));
-                }
-                catch (Exception e1) {
-                }
-            }
-        });
-        textSizer.add(textPane, "1, 1");
-        contentPanel.add(new JScrollPane(textSizer));
+        markupTextPane = new MarkupTextPane();
+        contentPanel.add(markupTextPane);
+
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -115,11 +87,12 @@ public class Welcome2_0Dialog extends JDialog {
 
         try {
             String s = FileUtils.readFileToString(new File("OPENPNP_2_0.md"));
-            s = XmlSerialize.convertMarkupToHtml(s);
-            textPane.setText(s);
+            markupTextPane.setText(s);
+            // HACK: can't truly pinpoint hyperlinks in the text, so point it to the original.
+            markupTextPane.setUri(new URI(Main.getSourceUri()+"OPENPNP_2_0.md"));
         }
         catch (Exception e) {
-            textPane.setText(e.toString());
+            markupTextPane.setPlainText(e.toString());
         }
     }
 }
