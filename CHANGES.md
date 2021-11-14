@@ -1,6 +1,30 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2021-11-07
+
+## Machine Calibration with Issues & Solutions 
+
+The Issues & Solutions system has been substantially expanded to cover automatic 
+machine calibration. See the Wiki:
+
+* https://github.com/openpnp/openpnp/wiki/Vision-Solutions
+* https://github.com/openpnp/openpnp/wiki/Calibration-Solutions
+
+## Rotation Mode / Support for Limited Articulation Nozzles
+
+The new Rotation Mode on Nozzles can optimize rotation for different machine types
+including those with limited (< 360°) articulation. See the Wiki:
+
+* https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode
+
+## BlindsFeeder OCR and QR Code 
+
+The BlindFeeder now supports OCR or QR code automatic part discovery. As a side effect,
+the ReferencePushPullFeeder now also supports QR Codes. See the Wiki:
+
+* https://github.com/openpnp/openpnp/wiki/BlindsFeeder#ocr--qr-code
+
 # 2021-05-03 
 
 ## Better Issues & Solutions 
