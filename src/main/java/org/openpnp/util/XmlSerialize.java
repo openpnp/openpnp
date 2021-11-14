@@ -72,7 +72,7 @@ public class XmlSerialize {
     }
 
     /**
-     * Crude Markup to HTML conversion.
+     * Simple Markup to HTML conversion.
      * 
      * @param s
      * @return
@@ -92,6 +92,7 @@ public class XmlSerialize {
             char c = s.charAt(i);
 
             if (c == EOF || lineBegin == i) { 
+                // Handle the beginning of lines.
                 if (paragraph) {
                     out.append("</p><br/>");
                     paragraph = false;
@@ -124,7 +125,7 @@ public class XmlSerialize {
                     }
                 }
                 else if (code) {
-                   // out.append("<br/>\n");
+                   // no action.
                 }
                 else if ((c == '*' || c == '-') && i+2 < s.length() && s.charAt(i+1) == ' ') {
                     if (!list) {
@@ -174,12 +175,6 @@ public class XmlSerialize {
                 out.append((int) c);
                 out.append(';');
             } 
-            else if (c == '`') {
-                if (i+2 < s.length() && s.charAt(i+1) == '`' && s.charAt(i+2) == '`') {
-                    // New code section beginning/ending next.
-                    lineBegin = i+1; 
-                }
-            }
             else if (c == '\n' && i+1 < s.length()) {
                 // Skip over whitespace.
                 int skip = 1;
@@ -196,6 +191,7 @@ public class XmlSerialize {
                 // Look for new line characters.
                 if (lf > 0
                         || code
+                        || s.charAt(i+skip) == '`' 
                         || s.charAt(i+skip) == '#' 
                         || s.charAt(i+skip) == '*' 
                         || s.charAt(i+skip) == '-') {
@@ -237,7 +233,7 @@ public class XmlSerialize {
             else if (c == 'h' && i+10 < s.length() 
                     && (s.substring(i, i+8).equals("https://")
                             || s.substring(i, i+7).equals("http://"))) {
-                // Potential link.
+                // Potential plain link.
                 int i1 = i;
                 do {
                     i1++;
@@ -268,7 +264,6 @@ public class XmlSerialize {
         }
 
         out.append("</html>\n");
-        //System.out.println(out);
         return out.toString();
     }
 
