@@ -63,6 +63,10 @@ public class Main {
         if (version == null) {
             version = "-"; // default branch is selected
         }
+        else {
+            // Take the hash.
+            version = version.substring(version.indexOf(".")+1);
+        }
         return "https://github.com/openpnp/openpnp/blob/"+version+"/";
     }
 
