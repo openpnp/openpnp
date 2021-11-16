@@ -75,6 +75,7 @@ public class Configuration extends AbstractModelObject {
 
     private static final String PREF_THEME_INFO = "Configuration.theme.info";
     private static final String PREF_THEME_FONT_SIZE = "Configuration.theme.fontSize";
+    private static final String PREF_THEME_ALTERNATE_ROWS = "Configuration.theme.alternateRows";
 
     private static final String PREF_LENGTH_DISPLAY_FORMAT = "Configuration.lengthDisplayFormat";
     private static final String PREF_LENGTH_DISPLAY_FORMAT_DEF = "%.3f";
@@ -211,8 +212,8 @@ public class Configuration extends AbstractModelObject {
         byte[] serializedSettings = prefs.getByteArray(PREF_THEME_FONT_SIZE, null);
         if (serializedSettings != null) {
             try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
-                ThemeSettingsPanel.FontSize theme = (ThemeSettingsPanel.FontSize) in.readObject();
-                return theme;
+                ThemeSettingsPanel.FontSize fontSize = (ThemeSettingsPanel.FontSize) in.readObject();
+                return fontSize;
             } catch (IOException | ClassNotFoundException ignore) {
             }
         }
@@ -225,6 +226,28 @@ public class Configuration extends AbstractModelObject {
             out.writeObject(fontSize);
             out.flush();
             prefs.putByteArray(PREF_THEME_FONT_SIZE, bos.toByteArray());
+        } catch (IOException ignore) {
+        }
+    }
+
+    public Boolean isAlternateRows() {
+        byte[] serializedSettings = prefs.getByteArray(PREF_THEME_ALTERNATE_ROWS, null);
+        if (serializedSettings != null) {
+            try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
+                Boolean alternateRows = (Boolean) in.readObject();
+                return alternateRows;
+            } catch (IOException | ClassNotFoundException ignore) {
+            }
+        }
+        return null;
+    }
+
+    public void setAlternateRows(Boolean alternateRows) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(alternateRows);
+            out.flush();
+            prefs.putByteArray(PREF_THEME_ALTERNATE_ROWS, bos.toByteArray());
         } catch (IOException ignore) {
         }
     }
