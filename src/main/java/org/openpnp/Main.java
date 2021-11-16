@@ -163,7 +163,7 @@ public class Main {
         Locale.setDefault(Configuration.get().getLocale());
 
         ThemeInfo theme = configuration.getThemeInfo();
-        new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize());
+        new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize(), configuration.isAlternateRows());
         ThemeDialog.getInstance().setOldTheme(theme);
 
         EventQueue.invokeLater(new Runnable() {
