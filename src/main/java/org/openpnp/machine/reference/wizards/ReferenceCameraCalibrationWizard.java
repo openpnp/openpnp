@@ -97,7 +97,16 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private LengthUnit displayUnits;
     private LengthUnit smallDisplayUnits;
     private Location secondaryLocation;
+    private double primaryDiameter;
+    private double secondaryDiameter;
 
+
+    /**
+     * @return the referenceCamera
+     */
+    public ReferenceCamera getReferenceCamera() {
+        return referenceCamera;
+    }
 
     /**
      * @return the calibrationLocations
@@ -141,11 +150,14 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
 
     public ReferenceCameraCalibrationWizard(ReferenceCamera referenceCamera) {
         this.referenceCamera = referenceCamera;
+        setName(referenceCamera.getName());
         referenceHead = (ReferenceHead) referenceCamera.getHead();
         isMovable = referenceHead != null;
         advCal = referenceCamera.getAdvancedCalibration();
         calibrationHeightSelections = new ArrayList<>();
         Location primaryLocation;
+        primaryDiameter = Double.NaN;
+        secondaryDiameter = Double.NaN;
         if (isMovable) {
             if (referenceCamera instanceof ImageCamera) {
                 primaryLocation = ((ImageCamera) referenceCamera).getPrimaryFiducial();
@@ -160,6 +172,15 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             }
             if (secondaryLocation == null) {
                 secondaryLocation = new Location(LengthUnit.Millimeters, Double.NaN, Double.NaN, Double.NaN, 0);
+            }
+            try {
+                primaryDiameter = referenceHead.getCalibrationPrimaryFiducialDiameter().divide(
+                        referenceCamera.getUnitsPerPixel(primaryLocation.getLengthZ()).getLengthX());
+                secondaryDiameter = referenceHead.getCalibrationSecondaryFiducialDiameter().divide(
+                        referenceCamera.getUnitsPerPixel(secondaryLocation.getLengthZ()).getLengthX());
+            }
+            catch (Exception e) {
+                //Ok - will handle the NaNs later
             }
             if (referenceCamera.getDefaultZ() == null) {
                 referenceCamera.setDefaultZ(primaryLocation.getLengthZ());
@@ -181,6 +202,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 secondaryZ = primaryLocation.getLengthZ().multiply(0.5); //default to half-way between primaryZ and 0
             }
             secondaryLocation = primaryLocation.deriveLengths(null, null, secondaryZ, null);
+            
+            //Primary and secondary diameters can't be known until a nozzle tip is selected
         }
         advCal.setPrimaryLocation(primaryLocation);
         advCal.setSecondaryLocation(secondaryLocation);
@@ -452,20 +475,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "the collection will take longer.</p></html>");
         panelCameraCalibration.add(textFieldDesiredNumberOfRadialLines, "4, 26, fill, default");
         textFieldDesiredNumberOfRadialLines.setColumns(10);
-        
-        lblNewLabel_38 = new JLabel("Approximate Camera Lens Z");
-        lblNewLabel_38.setHorizontalAlignment(SwingConstants.TRAILING);
-        panelCameraCalibration.add(lblNewLabel_38, "2, 28, right, default");
-        
-        textFieldApproximateCameraZ = new JTextField();
-        textFieldApproximateCameraZ.setToolTipText("<html><p width=\"500\">"
-                + "Enter the approximate (+/-20%) Z coordinate of the camera lens here. Use a "
-                + "ruler to measure vertically from an object of known Z to the camera lens and "
-                + "add/subtract the ruler measurment to/from the object's known Z."
-                + "</p></html>");
-        panelCameraCalibration.add(textFieldApproximateCameraZ, "4, 28, fill, default");
-        textFieldApproximateCameraZ.setColumns(10);
-        
         
         startCameraCalibrationBtn = new JButton(startCalibration);
         startCameraCalibrationBtn.setForeground(Color.RED);
@@ -870,10 +879,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         bind(UpdateStrategy.READ_WRITE, referenceCamera, "deinterlace", 
                 checkboxDeinterlace, "selected");
         
-        bind(UpdateStrategy.READ_WRITE, advCal, "approximateCameraZ", 
-                textFieldApproximateCameraZ, "text", lengthConverter);
-        
-
         bind(UpdateStrategy.READ_WRITE, advCal, "desiredRadialLinesPerTestPattern",
                 textFieldDesiredNumberOfRadialLines, "text", intConverter );
         bind(UpdateStrategy.READ, advCal, "widthFov",
@@ -891,7 +896,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         bind(UpdateStrategy.READ, advCal, "rotationErrorX",
                 textFieldXRotationError, "text", doubleConverter);
 
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldApproximateCameraZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldDefaultZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPrimaryCalZ);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldSecondaryCalZ);
@@ -911,7 +915,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             textFieldDefaultZ.setEnabled(isMovable);
             textFieldSecondaryCalZ.setEnabled(!isMovable);
             textFieldDesiredNumberOfRadialLines.setEnabled(true);
-            textFieldApproximateCameraZ.setEnabled(true);
             startCameraCalibrationBtn.setEnabled(true);
             chckbxUseSavedData.setEnabled(advCal.isDataAvailable());
             sliderAlpha.setEnabled(true);
@@ -926,7 +929,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
             textFieldDefaultZ.setEnabled(false);
             textFieldSecondaryCalZ.setEnabled(false);
             textFieldDesiredNumberOfRadialLines.setEnabled(false);
-            textFieldApproximateCameraZ.setEnabled(false);
             startCameraCalibrationBtn.setEnabled(false);
             chckbxUseSavedData.setEnabled(false);
             sliderAlpha.setEnabled(false);
@@ -983,106 +985,123 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite Default Working Plane Z value before starting calibration.");
                 return;
             }
-            if (!Double.isFinite(advCal.getApproximateCameraZ().getValue())) {
-                MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite Approximate Camera Lens Z value before starting calibration.");
-                return;
-            }
             
-            startCameraCalibrationBtn.setEnabled(false);
-
-            MainFrame.get().getCameraViews().setSelectedCamera(referenceCamera);
-
-            calibrationLocations = new ArrayList<>();
-            calibrationLocations.add(advCal.getPrimaryLocation());
-            calibrationLocations.add(advCal.getSecondaryLocation());
-            
-            ArrayList<Integer> detectionDiameters = new ArrayList<>();
-            detectionDiameters.add(advCal.getPrimaryDiameter());
-            detectionDiameters.add(advCal.getSecondaryDiameter());
-            
-            boolean savedEnabledState = advCal.isEnabled();
-            boolean savedValidState = advCal.isValid();
-            advCal.setEnabled(false);
-            advCal.setValid(false);
-            chckbxEnable.setSelected(false);
-            referenceCamera.clearCalibrationCache();
-            referenceCamera.captureTransformed(); //force image width and height to be recomputed
-            
-            if (!chckbxUseSavedData.isSelected()) {
-                spinnerDiameter.setEnabled(true);
+            try {
+                processStarting();
                 
-                CameraView cameraView = MainFrame.get().getCameraViews().
-                        getCameraView(referenceCamera);
+                startCameraCalibrationBtn.setEnabled(false);
     
-                UiUtils.messageBoxOnException(() -> {
-                    new CalibrateCameraProcess(MainFrame.get(), cameraView, 
-                            calibrationLocations, detectionDiameters) {
+                MainFrame.get().getCameraViews().setSelectedCamera(referenceCamera);
     
-                        @Override 
-                        public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
-                                double[][][] testPatternImagePointsList, Size size, double mirrored,
-                                double apparentMotionDirection) throws Exception {
-                            
-                            advCal.setPrimaryDiameter(detectionDiameters.get(0));
-                            advCal.setSecondaryDiameter(detectionDiameters.get(1));
-                            
-                            advCal.setDataAvailable(true);
-                            chckbxUseSavedData.setEnabled(true);
-                            
-                            try {
-                                advCal.processRawCalibrationData(
-                                        testPattern3dPointsList, testPatternImagePointsList, 
-                                        size, mirrored, apparentMotionDirection);
+                calibrationLocations = new ArrayList<>();
+                calibrationLocations.add(advCal.getPrimaryLocation());
+                calibrationLocations.add(advCal.getSecondaryLocation());
+                
+                ArrayList<Integer> detectionDiameters = new ArrayList<>();
+                if (Double.isFinite(primaryDiameter)) {
+                    detectionDiameters.add((int) Math.round(primaryDiameter));
+                }
+                else {
+                    detectionDiameters.add(null);
+                }
+                if (Double.isFinite(secondaryDiameter)) {
+                    detectionDiameters.add((int) Math.round(secondaryDiameter));
+                }
+                else {
+                    detectionDiameters.add(null);
+                }
+                
+                boolean savedEnabledState = advCal.isEnabled();
+                boolean savedValidState = advCal.isValid();
+                advCal.setEnabled(false);
+                advCal.setValid(false);
+                chckbxEnable.setSelected(false);
+                referenceCamera.clearCalibrationCache();
+                referenceCamera.captureTransformed(); //force image width and height to be recomputed
+                
+                if (!chckbxUseSavedData.isSelected()) {
+                    spinnerDiameter.setEnabled(true);
+                    
+                    CameraView cameraView = MainFrame.get().getCameraViews().
+                            getCameraView(referenceCamera);
+        
+                    UiUtils.messageBoxOnException(() -> {
+                        new CalibrateCameraProcess(MainFrame.get(), cameraView, 
+                                calibrationLocations, detectionDiameters) {
+        
+                            @Override 
+                            public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
+                                    double[][][] testPatternImagePointsList, Size size, double mirrored,
+                                    double apparentMotionDirection) throws Exception {
                                 
-                                postCalibrationProcessing();
+                                advCal.setDataAvailable(true);
+                                chckbxUseSavedData.setEnabled(true);
+                                
+                                try {
+                                    advCal.processRawCalibrationData(
+                                            testPattern3dPointsList, testPatternImagePointsList, 
+                                            size, mirrored, apparentMotionDirection);
+                                    
+                                    postCalibrationProcessing();
+                                }
+                                catch (Exception e) {
+                                    MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                                    advCal.setValid(false);
+                                    advCal.setEnabled(false);
+                                    chckbxEnable.setSelected(false);
+                                    chckbxEnable.setEnabled(false);
+                                    chckbxUseSavedData.setEnabled(false);
+                                    spinnerIndex.setEnabled(false);
+                                    chckbxShowOutliers.setEnabled(false);
+                                }
+                                
+                                startCameraCalibrationBtn.setEnabled(true);
+                                spinnerDiameter.setEnabled(false);
+                                
+                                processCompleted();
                             }
-                            catch (Exception e) {
-                                MessageBoxes.errorBox(MainFrame.get(), "Error", e);
-                                advCal.setValid(false);
-                                advCal.setEnabled(false);
-                                chckbxEnable.setSelected(false);
-                                chckbxEnable.setEnabled(false);
-                                chckbxUseSavedData.setEnabled(false);
-                                spinnerIndex.setEnabled(false);
-                                chckbxShowOutliers.setEnabled(false);
-                            }
-                            
-                            startCameraCalibrationBtn.setEnabled(true);
-                            spinnerDiameter.setEnabled(false);
-                        }
+        
+                            @Override
+                            protected void processCanceled() {
+                                advCal.setValid(savedValidState);
+                                advCal.setEnabled(savedEnabledState);
+                                chckbxEnable.setSelected(savedEnabledState);
+                                chckbxEnable.setEnabled(savedValidState);
+                                
+                                startCameraCalibrationBtn.setEnabled(true);
+                                spinnerDiameter.setEnabled(false);
     
-                        @Override
-                        protected void processCanceled() {
-                            advCal.setValid(savedValidState);
-                            advCal.setEnabled(savedEnabledState);
-                            chckbxEnable.setSelected(savedEnabledState);
-                            chckbxEnable.setEnabled(savedValidState);
-                            
-                            startCameraCalibrationBtn.setEnabled(true);
-                            spinnerDiameter.setEnabled(false);
-                        }
-                    };
-                });
+                                processCompleted();
+                            }
+                        };
+                    });
+                }
+                else {
+                    try {
+                        referenceCamera.getAdvancedCalibration().processRawCalibrationData(
+                                new Size(referenceCamera.getWidth(), referenceCamera.getHeight()));
+                    
+                        postCalibrationProcessing();
+                    }
+                    catch (Exception ex) {
+                        MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                        advCal.setValid(false);
+                        advCal.setEnabled(false);
+                        chckbxEnable.setSelected(false);
+                        chckbxEnable.setEnabled(false);
+                        spinnerIndex.setEnabled(false);
+                        chckbxShowOutliers.setEnabled(false);
+                    }
+                    
+                    startCameraCalibrationBtn.setEnabled(true);
+                    spinnerDiameter.setEnabled(false);
+                    
+                    processCompleted();
+                }
             }
-            else {
-                try {
-                    referenceCamera.getAdvancedCalibration().processRawCalibrationData(
-                            new Size(referenceCamera.getWidth(), referenceCamera.getHeight()));
-                
-                    postCalibrationProcessing();
-                }
-                catch (Exception ex) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
-                    advCal.setValid(false);
-                    advCal.setEnabled(false);
-                    chckbxEnable.setSelected(false);
-                    chckbxEnable.setEnabled(false);
-                    spinnerIndex.setEnabled(false);
-                    chckbxShowOutliers.setEnabled(false);
-                }
-                
-                startCameraCalibrationBtn.setEnabled(true);
-                spinnerDiameter.setEnabled(false);
+            catch (IllegalStateException ex) {
+                MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                return;
             }
         }
     };
@@ -1350,8 +1369,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private JLabel lblNewLabel_36;
     private JCheckBox chckbxShowOutliers;
     private JLabel lblNewLabel_37;
-    private JLabel lblNewLabel_38;
-    private JTextField textFieldApproximateCameraZ;
     private JLabel lblNewLabel_39;
     private JTextField textFieldWidthFov;
     private JTextField textFieldHeightFov;

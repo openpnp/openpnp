@@ -71,6 +71,7 @@ public abstract class CalibrateCameraProcess {
     private static final double initialMaskDiameterFraction = 1/4.0;
     private static final double centeringDiameterFraction = 0.5;
     private static final int maxErrorCount = 3;
+    private static final int defaultDetectionDiameter = 25; //pixels
     
     private final int numberOfCalibrationHeights;
     private final MainFrame mainFrame;
@@ -213,6 +214,7 @@ public abstract class CalibrateCameraProcess {
      * @return true when completed
      */
     private boolean initialAction() {
+        advCal.initializeApproximateCameraF();
         testPatternZ = calibrationLocations.get(calibrationHeightIndex).
                 convertToUnits(LengthUnit.Millimeters).getZ();
 
@@ -271,13 +273,35 @@ public abstract class CalibrateCameraProcess {
             advCal.setFiducialDiameter(detectionDiameters.get(calibrationHeightIndex));
         }
         else {
-            advCal.setFiducialDiameter(20);
+            if (isHeadMountedCamera) {
+                advCal.setFiducialDiameter(defaultDetectionDiameter);
+            }
+            else {
+                double diameter = Double.NaN;
+                try {
+                    
+                    diameter = ((ReferenceNozzleTip) nozzle.getNozzleTip()).getCalibration().
+                            getCalibrationTipDiameter().divide(camera.getUnitsPerPixel(
+                                    calibrationLocations.get(calibrationHeightIndex).
+                                    getLengthZ()).getLengthX());
+                }
+                catch (Exception e) {
+                    //Ok - we handle NaNs below
+                }
+                if (Double.isFinite(diameter)) {
+                    advCal.setFiducialDiameter((int) Math.round(diameter));
+                }
+                else {
+                    advCal.setFiducialDiameter(defaultDetectionDiameter);
+                }
+            }
         }
         
         maskDiameter = 2*(int)Math.min(expectedPoint.getX(), 
                 Math.min(pixelsX-expectedPoint.getX(),
                 Math.min(expectedPoint.getY(),
-                Math.min(pixelsY-expectedPoint.getY(), maskDiameter/2))));
+                Math.min(pixelsY-expectedPoint.getY(),
+                Math.max(maskDiameter/2, advCal.getFiducialDiameter())))));
         
         swingWorker = new SwingWorker<Void, String>() {
 
@@ -393,10 +417,8 @@ public abstract class CalibrateCameraProcess {
                     return null;
                 }
                 
-                if (calibrationHeightIndex == 0) {
-                    advCal.setApproximateMillimetersPerPixel(
-                            cameraWalker.getEstimatedMillimetersPerPixel());
-                }
+                advCal.updateApproximateCameraF(cameraWalker.getEstimatedMillimetersPerPixel(),
+                        testPatternZ);
                 
                 //Walk the fiducial/nozzle tip to the center of the image
                 publish("Finding image center.");
@@ -462,8 +484,8 @@ public abstract class CalibrateCameraProcess {
             double lineAngle = i * 2 * Math.PI / numberOfLines;
             double[] unitVector = new double[] {Math.cos(lineAngle), Math.sin(lineAngle)};
             double scaling = advCal.getTestPatternFillFraction()*
-                    Math.min(pixelsX / (2*Math.abs(unitVector[0])),
-                    pixelsY / (2*Math.abs(unitVector[1])));
+                    Math.min((pixelsX - detectionDiameters.get(calibrationHeightIndex)) / (2*Math.abs(unitVector[0])),
+                            (pixelsY - detectionDiameters.get(calibrationHeightIndex)) / (2*Math.abs(unitVector[1])));
             desiredEndPoints.add(new Point(scaling*unitVector[0] + pixelsX/2, 
                     scaling*unitVector[1] + pixelsY/2));
         }

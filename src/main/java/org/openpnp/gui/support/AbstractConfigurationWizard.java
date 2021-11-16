@@ -29,20 +29,19 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.jdesktop.beansbinding.BeanProperty;
-import org.jdesktop.beansbinding.Bindings;
 import org.jdesktop.beansbinding.Converter;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Identifiable;
 import org.openpnp.util.BeanUtils;
 
-public abstract class AbstractConfigurationWizard extends JPanel implements Wizard {
+public abstract class AbstractConfigurationWizard extends JPanel implements Wizard, Identifiable {
     protected WizardContainer wizardContainer;
     private JButton btnApply;
     private JButton btnReset;
@@ -51,6 +50,9 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
 
     private List<WrappedBinding> wrappedBindings = new ArrayList<>();
     private ApplyResetBindingListener listener;
+    
+    protected String id;
+    
 
     public AbstractConfigurationWizard() {
         setLayout(new BorderLayout());
@@ -160,6 +162,10 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         }
     }
 
+    public WizardContainer getWizardContainer() {
+        return wizardContainer;
+    }
+    
     @Override
     public JPanel getWizardPanel() {
         return this;
@@ -191,5 +197,24 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
 
     public void apply() {
         applyAction.actionPerformed(null);
+    }
+    
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Registers the wizard as having an active process.
+     */
+    public void processStarting() {
+        MainFrame.get().setWizardWithActiveProcess(this);
+    }
+    
+    /**
+     * Unregisters the wizard as having an active process.
+     */
+    public void processCompleted() {
+        MainFrame.get().clearWizardWithActiveProcess(this);
     }
 }

@@ -119,12 +119,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
     @Element(required = false)
     private Length trialStep = new Length(0.5, LengthUnit.Millimeters);
 
-    @Element(required = false)
-    private Length approximateCameraZ = new Length(Double.NaN, LengthUnit.Millimeters);
-    
     @Attribute(required = false)
-    private double approximateMillimetersPerPixel = 0;
-
+    private double approximateCameraF = 1000;
+    
     @Attribute(required = false)
     private double mirrored = 1;
 
@@ -133,12 +130,6 @@ public class AdvancedCalibration extends LensCalibrationParams {
     
     @Element(required = false)
     private Location calibratedOffsets = new Location(LengthUnit.Millimeters);
-    
-    @Attribute(required = false)
-    private Integer primaryDiameter;
-    
-    @Attribute(required = false)
-    private Integer secondaryDiameter;
     
     @Attribute(required = false)
     private double widthFov;
@@ -172,6 +163,11 @@ public class AdvancedCalibration extends LensCalibrationParams {
     
     private Location secondaryLocation;
     
+    private double sumUpp = 0;
+    private double sumUpp2 = 0;
+    private double sumUppZ = 0;
+    private double sumUppUppZ = 0;
+    private int sumCount = 0;
 
     
     @Commit 
@@ -613,14 +609,6 @@ public class AdvancedCalibration extends LensCalibrationParams {
         this.walkingLoopGain = walkingLoopGain;
     }
 
-    public double getApproximateMillimetersPerPixel() {
-        return approximateMillimetersPerPixel;
-    }
-
-    public void setApproximateMillimetersPerPixel(double approximateMillimetersPerPixel) {
-        this.approximateMillimetersPerPixel = approximateMillimetersPerPixel;
-    }
-
     /**
      * @return the mirrored
      */
@@ -666,38 +654,6 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Location oldValue = this.calibratedOffsets;
         this.calibratedOffsets = calibratedOffsets;
         firePropertyChange("calibratedOffsets", oldValue, calibratedOffsets);
-    }
-
-    /**
-     * @return the primaryDiameter
-     */
-    public Integer getPrimaryDiameter() {
-        return primaryDiameter;
-    }
-
-    /**
-     * @param primaryDiameter the primaryDiameter to set
-     */
-    public void setPrimaryDiameter(Integer primaryDiameter) {
-        Integer oldSetting = this.primaryDiameter;
-        this.primaryDiameter = primaryDiameter;
-        firePropertyChange("primaryDiameter", oldSetting, primaryDiameter);
-    }
-
-    /**
-     * @return the secondaryDiameter
-     */
-    public Integer getSecondaryDiameter() {
-        return secondaryDiameter;
-    }
-
-    /**
-     * @param secondaryDiameter the secondaryDiameter to set
-     */
-    public void setSecondaryDiameter(Integer secondaryDiameter) {
-        Integer oldSetting = this.secondaryDiameter;
-        this.secondaryDiameter = secondaryDiameter;
-        firePropertyChange("secondaryDiameter", oldSetting, secondaryDiameter);
     }
 
     /**
@@ -826,20 +782,34 @@ public class AdvancedCalibration extends LensCalibrationParams {
         this.trialStep = trialStep;
     }
 
-    /**
-     * @return the approximateCameraZ
-     */
-    public Length getApproximateCameraZ() {
-        return approximateCameraZ;
+    public void initializeApproximateCameraF() {
+        sumUpp = 0;
+        sumUpp2 = 0;
+        sumUppZ = 0;
+        sumUppUppZ = 0;
+        sumCount = 0;
     }
-
-    /**
-     * @param approximateCameraZ the approximateCameraZ to set
-     */
-    public void setApproximateCameraZ(Length approximateCameraZ) {
-        this.approximateCameraZ = approximateCameraZ;
+    
+    public void updateApproximateCameraF(double upp, double uppZ) {
+        sumUpp += upp;
+        sumUpp2 += upp*upp;
+        sumUppZ += uppZ;
+        sumUppUppZ += upp*uppZ;
+        sumCount++;
     }
-
+    
+    public double getApproximateCameraF() {
+        if (sumCount > 1) {
+            setApproximateCameraF(Math.abs((sumCount*sumUppUppZ - sumUpp*sumUppZ)/(sumCount*sumUpp2 - sumUpp*sumUpp)));
+        }
+        Logger.trace("approximateCameraF = " + approximateCameraF);
+        return approximateCameraF;
+    }
+    
+    public void setApproximateCameraF(double approximateCameraF) {
+        this.approximateCameraF = approximateCameraF;
+    }
+    
     public void processRawCalibrationData(Size size) throws Exception {
         processRawCalibrationData(savedTestPattern3dPointsList, 
                 savedTestPatternImagePointsList, size, mirrored, apparentMotionDirection);
@@ -898,12 +868,10 @@ public class AdvancedCalibration extends LensCalibrationParams {
         List<Mat> rvecs = new ArrayList<>();
         List<Mat> tvecs = new ArrayList<>();
         
-        double approximateF = Math.abs(approximateCameraZ.
-                convertToUnits(LengthUnit.Millimeters).getValue() - primaryZ) / approximateMillimetersPerPixel;
         cameraMatrix.release();
         cameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
-        cameraMatrix.put(0, 0, approximateF);
-        cameraMatrix.put(1, 1, approximateF);
+        cameraMatrix.put(0, 0, getApproximateCameraF());
+        cameraMatrix.put(1, 1, getApproximateCameraF());
         cameraMatrix.put(0, 2, (size.width - 1.0)/2.0);
         cameraMatrix.put(1, 2, (size.height - 1.0)/2.0);
         Logger.trace("cameraMatrix = " + cameraMatrix.dump());

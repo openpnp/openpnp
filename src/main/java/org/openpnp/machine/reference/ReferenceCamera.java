@@ -47,6 +47,7 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraView.RenderingQuality;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.support.WizardUtils;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
@@ -1208,14 +1209,14 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Override
     public PropertySheet[] getPropertySheets() {
         PropertySheet[] sheets = new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
-                new PropertySheetWizardAdapter(new CameraVisionConfigurationWizard(this), "Camera Settling"),
+                new PropertySheetWizardAdapter(WizardUtils.ConfigurationWizardFactory(CameraConfigurationWizard.class, this.getId(), this), "General Configuration"),
+                new PropertySheetWizardAdapter(WizardUtils.ConfigurationWizardFactory(CameraVisionConfigurationWizard.class, this.getId(), this), "Camera Settling"),
                 new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
-                new PropertySheetWizardAdapter(new ReferenceCameraWhiteBalanceConfigurationWizard(this), "White Balance"),
-                new PropertySheetWizardAdapter(new ReferenceCameraPositionConfigurationWizard(getMachine(), this), "Position"),
-                new PropertySheetWizardAdapter(new ReferenceCameraCalibrationConfigurationWizard(this), "Lens Calibration"),
-                new PropertySheetWizardAdapter(new ReferenceCameraTransformsConfigurationWizard(this), "Image Transforms"),
-                new PropertySheetWizardAdapter(new ReferenceCameraCalibrationWizard(this), "Experimental Calibration"),
+                new PropertySheetWizardAdapter(WizardUtils.ConfigurationWizardFactory(ReferenceCameraWhiteBalanceConfigurationWizard.class, this.getId(), this), "White Balance"),
+                new PropertySheetWizardAdapter(WizardUtils.ConfigurationWizardFactory(ReferenceCameraPositionConfigurationWizard.class, this.getId(), getMachine(), this), "Position"),
+                new PropertySheetWizardAdapter(WizardUtils.ConfigurationWizardFactory(ReferenceCameraCalibrationConfigurationWizard.class, this.getId(), this), "Lens Calibration"),
+                new PropertySheetWizardAdapter(WizardUtils.ConfigurationWizardFactory(ReferenceCameraTransformsConfigurationWizard.class, this.getId(), this), "Image Transforms"),
+                new PropertySheetWizardAdapter(WizardUtils.ConfigurationWizardFactory(ReferenceCameraCalibrationWizard.class, this.getId(), this), "Experimental Calibration")
         };
         if (getFocusSensingMethod() != FocusSensingMethod.None) {
                 sheets = Collect.concat(sheets, new PropertySheet[] {
