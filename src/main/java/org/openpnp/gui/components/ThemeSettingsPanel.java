@@ -1,29 +1,65 @@
 package org.openpnp.gui.components;
 
-import com.formdev.flatlaf.*;
-import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
-import com.formdev.flatlaf.util.StringUtils;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import javax.swing.AbstractListModel;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JSlider;
+import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
+
 import org.openpnp.Translations;
 import org.openpnp.gui.support.FlexibleColor;
 import org.openpnp.model.Configuration;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.List;
-import java.util.*;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.FlatPropertiesLaf;
+import com.formdev.flatlaf.IntelliJTheme;
+import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+import com.formdev.flatlaf.util.StringUtils;
 
 public class ThemeSettingsPanel extends JPanel {
     public enum FontSize {
         SMALLEST(10, 0),
+        BELOW_SMALLER(11, 05),
         SMALLER(12, 10),
+        BELOW_SMALL(13, 15),
         SMALL(14, 20),
+        BELOW_DEFAULT(15, 25),
         DEFAULT(16, 30),
+        BELOW_LARGE(17, 35),
         LARGE(18, 40),
+        BELOW_LARGER(19, 45),
         LARGER(20, 50),
+        BELOW_HUGE(22, 55),
         HUGE(24, 60),
+        BELOW_LARGEST(26, 65),
         LARGEST(28, 70);
 
         private final int size;
@@ -74,6 +110,8 @@ public class ThemeSettingsPanel extends JPanel {
 
     private JList<ThemeInfo> themesList;
     private JSlider fontSizeSlider;
+
+    private JCheckBox chckbxAlternatingRows;
 
     public ThemeSettingsPanel() {
         initComponents();
@@ -136,6 +174,11 @@ public class ThemeSettingsPanel extends JPanel {
         separator.setMaximumSize(new Dimension(99999999, 5));
         separator.setMinimumSize(new Dimension(0, 5));
         add(separator);
+
+        chckbxAlternatingRows = new JCheckBox(Translations.getString("ThemeSettingsPanel.chckbxAlternatingRows.text"));
+        add(chckbxAlternatingRows);
+        chckbxAlternatingRows.setSelected(UIManager.getColor("Table.alternateRowColor") != null); 
+
         add(fontLabel);
         createFontSlider();
     }
@@ -171,7 +214,7 @@ public class ThemeSettingsPanel extends JPanel {
         fontSizeSlider.setPaintTicks(true);
         fontSizeSlider.setMinimum(FontSize.SMALLEST.getPercent());
         fontSizeSlider.setMaximum(FontSize.LARGEST.getPercent());
-        int tickSpacing = 10;
+        int tickSpacing = 5;
         @SuppressWarnings("unchecked")
         Dictionary<Integer, JComponent> dict = fontSizeSlider.createStandardLabels(tickSpacing);
 
@@ -209,7 +252,7 @@ public class ThemeSettingsPanel extends JPanel {
         for (UIManager.LookAndFeelInfo lookAndFeel : lookAndFeels) {
             String name = lookAndFeel.getName();
             if (lookAndFeel.getClassName().equals(UIManager.getSystemLookAndFeelClassName())){
-                name += " - " + Translations.getString("Theme.Default");
+                name += " " + Translations.getString("Theme.Default");
             }
             String className = lookAndFeel.getClassName();
             themes.add(new ThemeInfo(name, null, false, null, className));
@@ -277,7 +320,7 @@ public class ThemeSettingsPanel extends JPanel {
         }
     }
 
-    public void setTheme(ThemeInfo themeInfo, FontSize fontSize) {
+    public void setTheme(ThemeInfo themeInfo, FontSize fontSize, Boolean alternateRow) {
         if (themeInfo == null) {
             return;
         }
@@ -315,10 +358,15 @@ public class ThemeSettingsPanel extends JPanel {
             }
         }
         FlexibleColor defaultRowColor = new FlexibleColor(UIManager.getColor("Table.background").getRGB());
-        if (FlatLaf.isLafDark()) {
-            UIManager.put("Table.alternateRowColor", defaultRowColor.brighter(30));
-        } else {
-            UIManager.put("Table.alternateRowColor", defaultRowColor.darker(30));
+        if (alternateRow == null || alternateRow) {
+            if (FlatLaf.isLafDark()) {
+                UIManager.put("Table.alternateRowColor", defaultRowColor.brighter(30));
+            } else {
+                UIManager.put("Table.alternateRowColor", defaultRowColor.darker(30));
+            }
+        }
+        else {
+            UIManager.put("Table.alternateRowColor", null);
         }
         FlatLaf.updateUI();
         removeAll();
@@ -329,7 +377,7 @@ public class ThemeSettingsPanel extends JPanel {
 
     public ThemeInfo setTheme() {
         ThemeInfo themeInfo = themesList.getSelectedValue();
-        EventQueue.invokeLater(() -> setTheme(themeInfo, getFontSize()));
+        EventQueue.invokeLater(() -> setTheme(themeInfo, getFontSize(), isAlternateRows()));
         return themeInfo;
     }
 
@@ -339,5 +387,9 @@ public class ThemeSettingsPanel extends JPanel {
             return null;
         }
         return FontSize.fromPercent(fontSizeSlider.getValue());
+    }
+
+    public Boolean isAlternateRows() {
+        return chckbxAlternatingRows.isSelected();
     }
 }

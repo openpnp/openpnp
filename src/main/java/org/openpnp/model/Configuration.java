@@ -19,15 +19,18 @@
 
 package org.openpnp.model;
 
-import java.io.*;
-import java.nio.file.CopyOption;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -72,6 +75,7 @@ public class Configuration extends AbstractModelObject {
 
     private static final String PREF_THEME_INFO = "Configuration.theme.info";
     private static final String PREF_THEME_FONT_SIZE = "Configuration.theme.fontSize";
+    private static final String PREF_THEME_ALTERNATE_ROWS = "Configuration.theme.alternateRows";
 
     private static final String PREF_LENGTH_DISPLAY_FORMAT = "Configuration.lengthDisplayFormat";
     private static final String PREF_LENGTH_DISPLAY_FORMAT_DEF = "%.3f";
@@ -208,8 +212,8 @@ public class Configuration extends AbstractModelObject {
         byte[] serializedSettings = prefs.getByteArray(PREF_THEME_FONT_SIZE, null);
         if (serializedSettings != null) {
             try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
-                ThemeSettingsPanel.FontSize theme = (ThemeSettingsPanel.FontSize) in.readObject();
-                return theme;
+                ThemeSettingsPanel.FontSize fontSize = (ThemeSettingsPanel.FontSize) in.readObject();
+                return fontSize;
             } catch (IOException | ClassNotFoundException ignore) {
             }
         }
@@ -222,6 +226,28 @@ public class Configuration extends AbstractModelObject {
             out.writeObject(fontSize);
             out.flush();
             prefs.putByteArray(PREF_THEME_FONT_SIZE, bos.toByteArray());
+        } catch (IOException ignore) {
+        }
+    }
+
+    public Boolean isAlternateRows() {
+        byte[] serializedSettings = prefs.getByteArray(PREF_THEME_ALTERNATE_ROWS, null);
+        if (serializedSettings != null) {
+            try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
+                Boolean alternateRows = (Boolean) in.readObject();
+                return alternateRows;
+            } catch (IOException | ClassNotFoundException ignore) {
+            }
+        }
+        return null;
+    }
+
+    public void setAlternateRows(Boolean alternateRows) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(alternateRows);
+            out.flush();
+            prefs.putByteArray(PREF_THEME_ALTERNATE_ROWS, bos.toByteArray());
         } catch (IOException ignore) {
         }
     }
@@ -285,8 +311,8 @@ public class Configuration extends AbstractModelObject {
      * uniquely identify the file within the application and a unique name is generated within that
      * namespace. suffix is appended to the unique part of the filename. The result of calling
      * File.getName() on the returned file can be used to load the same file in the future by
-     * calling getResourceFile(). This method uses File.createTemporaryFile() and so the rules for
-     * that method must be followed when calling this one.
+     * calling getResourceFile(). This method uses NanosecondTime.get() so the files names
+     * will be unique and ordered.
      * 
      * @param forClass
      * @param suffix
@@ -299,7 +325,7 @@ public class Configuration extends AbstractModelObject {
         if (!directory.exists()) {
             directory.mkdirs();
         }
-        File file = File.createTempFile(prefix, suffix, directory);
+        File file = new File(directory, prefix+NanosecondTime.get()+suffix);
         return file;
     }
 
