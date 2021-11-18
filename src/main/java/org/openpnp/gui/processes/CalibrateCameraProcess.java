@@ -70,7 +70,7 @@ public abstract class CalibrateCameraProcess {
     private static final int changeMaskThreshold = 3;
     private static final double initialMaskDiameterFraction = 1/4.0;
     private static final double centeringDiameterFraction = 0.5;
-    private static final int maxErrorCount = 3;
+    private static final int maxErrorCount = 15;
     private static final int defaultDetectionDiameter = 25; //pixels
     
     private final int numberOfCalibrationHeights;
@@ -279,7 +279,6 @@ public abstract class CalibrateCameraProcess {
             else {
                 double diameter = Double.NaN;
                 try {
-                    
                     diameter = ((ReferenceNozzleTip) nozzle.getNozzleTip()).getCalibration().
                             getCalibrationTipDiameter().divide(camera.getUnitsPerPixel(
                                     calibrationLocations.get(calibrationHeightIndex).
@@ -345,7 +344,7 @@ public abstract class CalibrateCameraProcess {
                             showPointAndCircle(bestKeyPoint.pt, bestKeyPoint.pt, (int)(bestKeyPoint.size/2), circleColor);
                         }
                         else {
-                            //Show an red circle centered on where the fiducial was expected
+                            //Show a red circle centered on where the fiducial was expected
                             Color circleColor = Color.RED;
                             showCircle(new org.opencv.core.Point((pixelsX-1)/2.0, (pixelsY-1)/2.0), 
                                     advCal.getFiducialDiameter()/2, circleColor);
@@ -425,7 +424,6 @@ public abstract class CalibrateCameraProcess {
                 Logger.trace("Finding image center.");
                 cameraWalker.setLoopGain(advCal.getWalkingLoopGain());
                 centralLocation = cameraWalker.walkToPoint(imageCenterPoint);
-                cameraWalker.setLoopGain(advCal.getWalkingLoopGain());
                 
                 return null;
             } 
@@ -476,20 +474,22 @@ public abstract class CalibrateCameraProcess {
         cameraWalker.setMaxAllowedPixelStep(Math.min(pixelsX, pixelsY)/12.0);
         cameraWalker.setMinAllowedPixelStep(Math.min(pixelsX, pixelsY)/60.0);
         
-        List<Point> desiredEndPoints = new ArrayList<>();
-        
         int numberOfLines = 4 * (int)Math.ceil(advCal.getDesiredRadialLinesPerTestPattern()/4.0);
 
+        List<CameraWalker> lineWalkers = new ArrayList<>();
+        
         for (int i=0; i<numberOfLines; i++) {
-            double lineAngle = i * 2 * Math.PI / numberOfLines;
-            double[] unitVector = new double[] {Math.cos(lineAngle), Math.sin(lineAngle)};
-            double scaling = advCal.getTestPatternFillFraction()*
-                    Math.min((pixelsX - detectionDiameters.get(calibrationHeightIndex)) / (2*Math.abs(unitVector[0])),
-                            (pixelsY - detectionDiameters.get(calibrationHeightIndex)) / (2*Math.abs(unitVector[1])));
-            desiredEndPoints.add(new Point(scaling*unitVector[0] + pixelsX/2, 
-                    scaling*unitVector[1] + pixelsY/2));
+            CameraWalker lineWalker = new CameraWalker(movable, (Point p)->findAveragedFiducialPoint(p));
+            lineWalker.setLoopGain(advCal.getWalkingLoopGain());
+            lineWalker.setSingleStep(true);
+            lineWalker.setScalingMat(cameraWalker.getScalingMat());
+            lineWalker.setOnlySafeZMovesAllowed(isHeadMountedCamera);
+            lineWalker.setSaveCoordinates(testPattern3dPoints, testPatternImagePoints);
+            lineWalker.setMaxAllowedPixelStep(Math.min(pixelsX, pixelsY)/12.0);
+            lineWalker.setMinAllowedPixelStep(Math.min(pixelsX, pixelsY)/60.0);
+            
+            lineWalkers.add(lineWalker);
         }
-        Collections.shuffle(desiredEndPoints, new Random(calibrationHeightIndex+1));
         
         swingWorker = new SwingWorker<Void, String>() {
             
@@ -497,19 +497,43 @@ public abstract class CalibrateCameraProcess {
             
             @Override
             protected Void doInBackground() throws Exception {
+                maskDiameter = Math.max(initialMaskDiameter, 3*detectionDiameters.get(calibrationHeightIndex)/2);
+                List<Integer> randomIdx = new ArrayList<>();
                 for (int iLine=0; iLine<numberOfLines; iLine++) {
-                    maskDiameter = initialMaskDiameter;
-                    publish(String.format("Collecting calibration points along radial line %d of %d at calibration Z coordinate %d of %d", 
-                            iLine+1, numberOfLines, 
-                            calibrationHeightIndex+1, numberOfCalibrationHeights));
+                    publish(String.format("Initializing radial line %d of %d at calibration Z coordinate %d of %d", 
+                        iLine+1, numberOfLines, 
+                        calibrationHeightIndex+1, numberOfCalibrationHeights));
+                    
+                    randomIdx.add(iLine);
+                    double lineAngle = iLine * 2 * Math.PI / numberOfLines;
+                    double[] unitVector = new double[] {Math.cos(lineAngle), Math.sin(lineAngle)};
+                    double scaling = advCal.getTestPatternFillFraction()*
+                            Math.min((pixelsX - detectionDiameters.get(calibrationHeightIndex)) / (2*Math.abs(unitVector[0])),
+                                    (pixelsY - detectionDiameters.get(calibrationHeightIndex)) / (2*Math.abs(unitVector[1])));
+                    Location startLocation = centralLocation.derive(null, null, movable.getLocation().getLengthZ().convertToUnits(LengthUnit.Millimeters).getValue(), movable.getLocation().getRotation()).subtract(new Location(LengthUnit.Millimeters,
+                            5*advCal.getTrialStep().multiply(unitVector[0]).convertToUnits(LengthUnit.Millimeters).getValue(),
+                            5*advCal.getTrialStep().multiply(unitVector[1]).convertToUnits(LengthUnit.Millimeters).getValue(),
+                            0, 0));
+                    Future<Void> future = UiUtils.submitUiMachineTask(() -> {
+                        movable.moveTo(startLocation);
+                    });
                     try {
-                        cameraWalker.walkToPoint(centralLocation.derive(null, null, null, movable.getLocation().convertToUnits(centralLocation.getUnits()).getRotation()), imageCenterPoint, 
-                            desiredEndPoints.get(iLine));
+                        future.get();
+                    }
+                    catch (Exception ex) {
+                        MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                        cleanUpWhenCancelled();
+                    }
+                    
+                    try {
+                        lineWalkers.get(iLine).walkToPoint(centralLocation.derive(null, null, null, movable.getLocation().convertToUnits(centralLocation.getUnits()).getRotation()), imageCenterPoint, 
+                                new Point(scaling*unitVector[0] + pixelsX/2, scaling*unitVector[1] + pixelsY/2));
                     }
                     catch (InterruptedException ie) {
                         return null;
                     }
                     catch (Exception e) {
+                        Logger.trace(e);
                         errorCount++;
                         if (errorCount > maxErrorCount) {
                             return null;
@@ -518,6 +542,26 @@ public abstract class CalibrateCameraProcess {
                     if (isCancelled()) {
                         return null;
                     }
+                }
+                boolean done = false;
+                int loopCount = 0;
+                while (!done) {
+                    Collections.shuffle(randomIdx, new Random(loopCount*numberOfCalibrationHeights + calibrationHeightIndex));
+                    done = true;
+                    for (int iLine=0; iLine<numberOfLines; iLine++) {
+                        publish(String.format("Collecting calibration points along radial line %d of %d, radial step %d, at calibration Z coordinate %d of %d", 
+                                iLine+1, numberOfLines,
+                                loopCount+1,
+                                calibrationHeightIndex+1, numberOfCalibrationHeights));
+                        if (lineWalkers.get(randomIdx.get(iLine)).step()) {
+                            done = false;
+                        }
+                        Logger.trace("angle = " + angle);
+                        if (isCancelled()) {
+                            return null;
+                        }
+                    }
+                    loopCount++;
                 }
                 
                 testPattern3dPointsList.add(testPattern3dPoints);
@@ -552,6 +596,10 @@ public abstract class CalibrateCameraProcess {
                 
                 calibrationHeightIndex++;
                 if (calibrationHeightIndex >= numberOfCalibrationHeights) {
+                    mainFrame.showInstructions("Camera Calibration Instructions/Status", 
+                            "<html><body>" + "Processing calibration data - this may take a few seconds." + "</body></html>", 
+                            true, false,  "Next", cancelActionListener, proceedActionListener);
+
                     double[][][] testPattern3dPointsArray = 
                             new double[testPattern3dPointsList.size()][][];
                     for (int tpIdx=0; tpIdx<testPattern3dPointsList.size(); tpIdx++) {
@@ -770,6 +818,7 @@ public abstract class CalibrateCameraProcess {
             observedPoint = findCalibrationRigFiducialPoint(expectedPoint);
             
             if (observedPoint == null) {
+                Logger.trace("Couldn't find fiducial/nozzle tip in image");
                 return null;
             }
             
@@ -788,7 +837,7 @@ public abstract class CalibrateCameraProcess {
                 
                 //Move the machine to the new angle
                 final Location moveLocation = movable.getLocation().
-                        derive(null, null, null, (double) angle);
+                        derive(null, null, null, movable.getLocation().getRotation() + angleIncrement);
                 Future<Void> future = UiUtils.submitUiMachineTask(() -> {
                     Logger.trace("rotating to angle = " + angle);
                     movable.moveTo(moveLocation);
@@ -814,7 +863,7 @@ public abstract class CalibrateCameraProcess {
      */
     private Point findCalibrationRigFiducialPoint(Point expectedPoint) {
         //Mask off everything that is not near the expected location
-        pipeline.setProperty("MaskCircle.center", expectedPoint.getX());
+        pipeline.setProperty("MaskCircle.center", expectedPoint);
         pipeline.setProperty("DetectCircularSymmetry.center", expectedPoint);
         
         //Restrict the mask diameter so as to not extend beyond the edge of  the image

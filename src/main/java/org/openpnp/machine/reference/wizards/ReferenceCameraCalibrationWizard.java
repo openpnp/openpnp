@@ -1014,7 +1014,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 boolean savedEnabledState = advCal.isEnabled();
                 boolean savedValidState = advCal.isValid();
                 advCal.setEnabled(false);
-                advCal.setValid(false);
                 chckbxEnable.setSelected(false);
                 referenceCamera.clearCalibrationCache();
                 referenceCamera.captureTransformed(); //force image width and height to be recomputed
@@ -1035,6 +1034,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                                     double apparentMotionDirection) throws Exception {
                                 
                                 advCal.setDataAvailable(true);
+                                advCal.setValid(false);
+
                                 chckbxUseSavedData.setEnabled(true);
                                 
                                 try {

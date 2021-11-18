@@ -641,14 +641,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Override
     public Location getUnitsPerPixel(Length viewingPlaneZ) {
-        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && advancedCalibration.isEnabled()) {
-            double upp = 0;
-            if (advancedCalibration.isValid()) {
-                upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
-                            convertToUnits(LengthUnit.Millimeters).getValue() / 
-                            advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
-                upp = Double.isFinite(upp) ? upp : 0;
-            }
+        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
+                advancedCalibration.isValid()) {
+            double upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
+                        convertToUnits(LengthUnit.Millimeters).getValue() / 
+                        advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
+            upp = Double.isFinite(upp) ? upp : 0;
             return new Location(LengthUnit.Millimeters, upp, upp, 0, 0);
         }
         return super.getUnitsPerPixel(viewingPlaneZ);
