@@ -39,7 +39,7 @@ public class WizardUtils {
      * @return the wizard
      */
     @SuppressWarnings("unchecked")
-    public static <T extends AbstractConfigurationWizard> T ConfigurationWizardFactory(
+    public static <T extends AbstractConfigurationWizard> T configurationWizardFactory(
             Class<T> wizardToConstruct, String id, Object... parameters ) {
         if (MainFrame.get().getWizardWithActiveProcess() != null && 
                 MainFrame.get().getWizardWithActiveProcess().getClass() ==  wizardToConstruct &&
