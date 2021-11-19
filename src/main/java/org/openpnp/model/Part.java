@@ -72,10 +72,10 @@ public class Part extends AbstractModelObject implements Identifiable {
                 pipeline = configuration.getPipeline(pipelineId);
 
                 if (pipeline == null) {
-                    if (partPackage.getPipelineId() == null) {
-                        pipeline = configuration.getDefaultPipeline();
-                    } else {
+                    if (partPackage != null && partPackage.getPipelineId() != null) {
                         pipeline = configuration.getPipeline(partPackage.getPipelineId());
+                    } else {
+                        pipeline = configuration.getDefaultPipeline();
                     }
                 }
             }
