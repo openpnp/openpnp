@@ -26,6 +26,7 @@ org.openpnp.machine.reference.actuator.wizards
 org.openpnp.machine.reference.axis
 org.openpnp.machine.reference.axis.wizards
 org.openpnp.machine.reference.camera
+org.openpnp.machine.reference.camera.calibration
 org.openpnp.machine.reference.camera.wizards
 org.openpnp.machine.reference.driver
 org.openpnp.machine.reference.driver.wizards
