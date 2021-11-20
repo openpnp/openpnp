@@ -26,6 +26,7 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.math3.linear.CholeskyDecomposition;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -663,5 +664,128 @@ public class Utils2D {
 
     public static double angleNorm(double val) {
         return angleNorm(val, 45.);
+    }
+    
+    /**
+     * Computes the X-axis and Y-axis scaling and non-squareness correction factor based on a series
+     * of ruler measurements
+     * @param compensation - a 3 element array containing the X-axis scaling, Y-axis scaling, and 
+     * non-squareness correction factor in that order. This array should be initialized with the 
+     * values that were in effect when the ruler locations were captured and will be updated with 
+     * the new values when the call to this method returns. 
+     * @param rulerLocations - a list of collected ruler locations in the order they were 
+     * collected.  This should always contain two locations from each ruler placement and must 
+     * contain locations from at least three different ruler placements.
+     * @param rulerMultiple - the distance between the locations captured for each ruler placement 
+     * is expected to be an exact integer multiple of this length.  Larger values here help reduce
+     * any ambiguity in the actual distance between the locations.
+     * @param residualDistanceError - optional output parameter that contains the residual distance
+     * error for each ruler placement (pass null if not needed)
+     * @return the overall distance RMS error
+     * @throws Exception if the inputs violate any of the above restrictions
+     */
+    public static Length computeAxesScalingAndNonSquarenessCorrection(double[] compensation, List<Location> rulerLocations, Length rulerMultiple, double[] residualDistanceError) throws Exception {
+        //Validate inputs
+        if (compensation.length != 3) {
+            throw new Exception("The array passed for compensation must have exactly 3 elements.");
+        }
+        if (rulerLocations.size() < 6) {
+            throw new Exception("Must have 2 locations from at least 3 ruler placements.");
+        }
+        if (rulerLocations.size() % 2 != 0) {
+            throw new Exception("Each ruler placement must have exactly 2 locations captured.");
+        }
+        int n = rulerLocations.size() / 2;
+        
+        if (rulerMultiple.getValue() <= 0) {
+            throw new Exception("The ruler length multiple must be greater than zero.");
+        }
+        
+        if (residualDistanceError != null && residualDistanceError.length != n) {
+            throw new Exception(String.format("The array passed for residualDistanceError must have exactly %d elements.", n));
+        }
+        
+        //Decide which data to use
+        int nUsed = 0;
+        LengthUnit units = rulerMultiple.getUnits();
+        double[][] m = new double[n][3];
+        double[] d2 = new double[n];
+        RealMatrix uncompensatedDeltas = MatrixUtils.createRealMatrix(2, n);
+        RealMatrix actualDistanceMat = MatrixUtils.createRealMatrix(1, n);
+        for (int i=0; i<n; i++) {
+            Location delta = rulerLocations.get(2*i+1).subtract(rulerLocations.get(2*i)).convertToUnits(units);
+            uncompensatedDeltas.setEntry(0, i, delta.getX());
+            uncompensatedDeltas.setEntry(1, i, delta.getY());
+
+            double dxHat2 = delta.getX() * delta.getX(); 
+            double dyHat2 = delta.getY() * delta.getY();
+            double approximateDist = Math.sqrt(dxHat2 + dyHat2);
+            double actualDistance = rulerMultiple.getValue() * Math.round(approximateDist / rulerMultiple.getValue());
+            actualDistanceMat.setEntry(0, i, actualDistance);
+            
+            //Only keep data from ruler placements that have distances that are close 
+            //to an integer multiple of the specified ruler multiple
+            if (Math.abs(actualDistance - approximateDist) < rulerMultiple.getValue()/4) {
+                m[nUsed][0] = dxHat2;
+                m[nUsed][1] = dyHat2;
+                m[nUsed][2] = 2 * delta.getX() * delta.getY();
+                d2[nUsed] = actualDistance * actualDistance;
+                nUsed++;
+            }
+            else {
+                Logger.info("Distance between locations captured for ruler placement {} ({} and {}} appears to not be a multiple of {}, discarding the data for that ruler placement.", i, rulerLocations.get(2*i), rulerLocations.get(2*i+1), rulerMultiple);
+            }
+        }
+        if (nUsed < 3) {
+            throw new Exception("Data for too many ruler placements has been discarded, increase the ruler multiple being used and re-collect the data.");
+        }
+        
+        //Solve for a, b, and c
+        RealMatrix mMat = MatrixUtils.createRealMatrix(nUsed, 3);
+        RealMatrix bMat = MatrixUtils.createRealMatrix(nUsed, 1);
+        for (int i=0; i<nUsed; i++) {
+            mMat.setRow(i, m[i]);
+            bMat.setEntry(i, 0, d2[i]);
+        }
+        RealMatrix invMb = new SingularValueDecomposition(mMat).getSolver().solve(bMat);
+        
+        //Construct matrix P
+        RealMatrix pMat = MatrixUtils.createRealMatrix(2, 2);
+        pMat.setEntry(0, 0, invMb.getEntry(0, 0));
+        pMat.setEntry(0, 1, invMb.getEntry(2, 0));
+        pMat.setEntry(1, 0, invMb.getEntry(2, 0));
+        pMat.setEntry(1, 1, invMb.getEntry(1, 0));
+        
+        //Solve for matrix A
+        RealMatrix aMat = new CholeskyDecomposition(pMat).getLT();
+        
+        //Compute the residual distance error for each ruler placement as well as the overall RMS error
+        RealMatrix compensatedDeltas = aMat.multiply(uncompensatedDeltas);
+        RealMatrix bigC = compensatedDeltas.transpose().multiply(compensatedDeltas);
+        double drms = 0;
+        for (int i=0; i<n; i++) {
+            double rde = Math.sqrt(bigC.getEntry(i, i)) - actualDistanceMat.getEntry(0, i);
+            drms += rde * rde;
+            if (residualDistanceError != null) {
+                residualDistanceError[i] = rde;
+            }
+        }
+        drms = Math.sqrt(drms/n);
+        
+        //Construct the current A matrix
+        RealMatrix aMatOld = MatrixUtils.createRealMatrix(2, 2);
+        aMatOld.setEntry(0, 0, compensation[0]);
+        aMatOld.setEntry(1, 1, compensation[1]);
+        aMatOld.setEntry(0, 1, compensation[2]);
+        
+        //Compute the new A matrix
+        aMat = aMat.multiply(aMatOld);
+        
+        //Assign the axes scaling and non-squareness correction factors to the output array
+        compensation[0] = aMat.getEntry(0, 0); //scx
+        compensation[1] = aMat.getEntry(1, 1); //scy
+        compensation[2] = aMat.getEntry(0, 1); //ns
+        
+        return new Length(drms, units);
     }
 }
