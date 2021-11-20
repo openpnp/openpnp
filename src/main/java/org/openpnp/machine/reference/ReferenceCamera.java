@@ -47,16 +47,19 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraView.RenderingQuality;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
+import org.openpnp.gui.support.WizardUtils;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
+import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
+import org.openpnp.machine.reference.camera.calibration.LensCalibrationParams;
 import org.openpnp.machine.reference.camera.wizards.ReferenceCameraWhiteBalanceConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
+import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraTransformsConfigurationWizard;
-import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -80,8 +83,6 @@ import org.openpnp.vision.LensCalibration.Pattern;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
-import org.simpleframework.xml.core.Persist;
 
 public abstract class ReferenceCamera extends AbstractBroadcastingCamera implements ReferenceHeadMountable {
     static {
@@ -151,6 +152,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     @Element(required = false)
     private LensCalibrationParams calibration = new LensCalibrationParams();
+
+    @Element(required = false)
+    private AdvancedCalibration advancedCalibration = new AdvancedCalibration();
 
     @Attribute(required = false)
     private String lightActuatorId; 
@@ -335,6 +339,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         viewHasChanged();
     }
 
+    @Override
+    public Location getCalibratedHeadOffsets() {
+        return getHeadOffsets().add(advancedCalibration.getCalibratedOffsets());
+    }
+        
     @Override
     public void home() throws Exception {
     }
@@ -564,11 +573,27 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 return null;
             }
 
+            if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+                //Skip all the old style image transforms and distortion corrections except for 
+                //deinterlacing and cropping
+                if (isDeinterlaced() || isCropped() || isWhiteBalanced() || advancedCalibration.isEnabled()) {
+                    Mat mat = OpenCvUtils.toMat(image);
+                    mat = deinterlace(mat);
+                    mat = crop(mat);
+                    if (advancedCalibration.isEnabled()) {
+                        //Use the new advanced image transformation and distortion correction
+                        mat = advancedUndistort(mat);
+                    }
+                    mat = whiteBalance(mat);
+                    image = OpenCvUtils.toBufferedImage(mat);
+                    mat.release();
+                }
+            }
+            // Old style of image transforms and distortion correction
             // We do skip the convert to and from Mat if no transforms are needed.
-            // But we must enter while calibrating. 
-            if (isDeinterlaced()
-                || isCropped()
-                || isWhiteBalanced() 
+            // But we must enter while performing original calibration.
+            else if (isDeinterlaced()
+                || isCropped() 
                 || isCalibrating()
                 || isUndistorted()
                 || isScaled()
@@ -612,6 +637,34 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             Logger.error(e);
         }
         return image;
+    }
+
+    @Override
+    public Location getUnitsPerPixel(Length viewingPlaneZ) {
+        if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
+                advancedCalibration.isValid()) {
+            double upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
+                        convertToUnits(LengthUnit.Millimeters).getValue() / 
+                        advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
+            upp = Double.isFinite(upp) ? upp : 0;
+            return new Location(LengthUnit.Millimeters, upp, upp, 0, 0);
+        }
+        return super.getUnitsPerPixel(viewingPlaneZ);
+    }
+
+    private Mat advancedUndistort(Mat mat) {
+        if (undistortionMap1 == null || undistortionMap2 == null) {
+            undistortionMap1 = new Mat();
+            undistortionMap2 = new Mat();
+            advancedCalibration.initUndistortRectifyMap(mat.size(), 
+                    undistortionMap1, undistortionMap2);
+        }
+        
+        Mat dst = mat.clone();
+        Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
+        mat.release();
+
+        return dst;
     }
 
     private Mat whiteBalance(Mat mat) {
@@ -1041,6 +1094,13 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return dst;
     }
 
+    public void setUndistorted(boolean undistorted) {
+        if (!undistorted) {
+            clearCalibrationCache();
+        }
+        calibration.setEnabled(undistorted);
+    }
+
     protected boolean isUndistorted() {
         return calibration.isEnabled();
     }
@@ -1109,7 +1169,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return calibrating;
     }
 
-    protected void clearCalibrationCache() {
+    public synchronized void clearCalibrationCache() {
         // Clear the calibration cache
         if (undistortionMap1 != null) {
             undistortionMap1.release();
@@ -1140,16 +1200,21 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return calibration;
     }
 
+    public AdvancedCalibration getAdvancedCalibration() {
+        return advancedCalibration;
+    }
+
     @Override
     public PropertySheet[] getPropertySheets() {
         PropertySheet[] sheets = new PropertySheet[] {
-                new PropertySheetWizardAdapter(new CameraConfigurationWizard(this), "General Configuration"),
-                new PropertySheetWizardAdapter(new CameraVisionConfigurationWizard(this), "Camera Settling"),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraConfigurationWizard.class, this.getId(), this), "General Configuration"),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraVisionConfigurationWizard.class, this.getId(), this), "Camera Settling"),
                 new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
-                new PropertySheetWizardAdapter(new ReferenceCameraWhiteBalanceConfigurationWizard(this), "White Balance"),
-                new PropertySheetWizardAdapter(new ReferenceCameraPositionConfigurationWizard(getMachine(), this), "Position"),
-                new PropertySheetWizardAdapter(new ReferenceCameraCalibrationConfigurationWizard(this), "Lens Calibration"),
-                new PropertySheetWizardAdapter(new ReferenceCameraTransformsConfigurationWizard(this), "Image Transforms")
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraWhiteBalanceConfigurationWizard.class, this.getId(), this), "White Balance"),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraPositionConfigurationWizard.class, this.getId(), getMachine(), this), "Position"),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraCalibrationConfigurationWizard.class, this.getId(), this), "Lens Calibration"),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraTransformsConfigurationWizard.class, this.getId(), this), "Image Transforms"),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraCalibrationWizard.class, this.getId(), this), "Experimental Calibration")
         };
         if (getFocusSensingMethod() != FocusSensingMethod.None) {
                 sheets = Collect.concat(sheets, new PropertySheet[] {
@@ -1196,58 +1261,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     public interface CalibrationCallback {
         public void callback(int progressCurrent, int progressMax, boolean complete);
-    }
-
-    public static class LensCalibrationParams extends AbstractModelObject {
-        @Attribute(required = false)
-        private boolean enabled = false;
-
-        @Element(name = "cameraMatrix", required = false)
-        private double[] cameraMatrixArr = new double[9];
-
-        @Element(name = "distortionCoefficients", required = false)
-        private double[] distortionCoefficientsArr = new double[5];
-
-        private Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
-        private Mat distortionCoefficients = new Mat(5, 1, CvType.CV_64FC1);
-
-        @Commit
-        private void commit() {
-            cameraMatrix.put(0, 0, cameraMatrixArr);
-            distortionCoefficients.put(0, 0, distortionCoefficientsArr);
-        }
-
-        @Persist
-        private void persist() {
-            cameraMatrix.get(0, 0, cameraMatrixArr);
-            distortionCoefficients.get(0, 0, distortionCoefficientsArr);
-        }
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            Object oldValue = this.isEnabled();
-            this.enabled = enabled;
-            firePropertyChange("enabled", oldValue, enabled);
-        }
-
-        public Mat getCameraMatrixMat() {
-            return cameraMatrix;
-        }
-
-        public void setCameraMatrixMat(Mat cameraMatrix) {
-            this.cameraMatrix = cameraMatrix.clone();
-        }
-
-        public Mat getDistortionCoefficientsMat() {
-            return distortionCoefficients;
-        }
-
-        public void setDistortionCoefficientsMat(Mat distortionCoefficients) {
-            this.distortionCoefficients = distortionCoefficients.clone();
-        }
     }
 
     @Override
