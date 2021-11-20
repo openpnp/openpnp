@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -340,10 +341,15 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     @Override
-    public Location getCalibratedHeadOffsets() {
-        return getHeadOffsets().add(advancedCalibration.getCalibratedOffsets());
+    public Location getCalibratedHeadOffsets(LocationOption... options) {
+        if (! Arrays.asList(options).contains(LocationOption.SuppressCameraCalibration)) {
+            return getHeadOffsets().add(advancedCalibration.getCalibratedOffsets());
+        }
+        else {
+            return getHeadOffsets();
+        }
     }
-        
+
     @Override
     public void home() throws Exception {
     }
