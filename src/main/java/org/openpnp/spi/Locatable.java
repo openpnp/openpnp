@@ -32,6 +32,11 @@ public interface Locatable {
          */
         KeepRotation, 
         /**
+         * Suppress camera calibration, such as advanced camera calibration head offsets, 
+         * i.e. tilt compensation.
+         */
+        SuppressCameraCalibration, 
+        /**
          * Suppress static compensations, such as non-squareness compensation.
          */
         SuppressStaticCompensation, 
