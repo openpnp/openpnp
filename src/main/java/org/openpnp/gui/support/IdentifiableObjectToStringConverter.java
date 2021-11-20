@@ -29,6 +29,6 @@ public class IdentifiableObjectToStringConverter<T extends Identifiable>
             return null;
         }
         T t = (T) o;
-        return (t.getId() == null || t.getId().equals("CVP_DEF")) ? " " : t.getId();
+        return (t.getId() == null || t.getId().equals("CVP_DEF")) ? "Default" : t.getId();
     }
 }

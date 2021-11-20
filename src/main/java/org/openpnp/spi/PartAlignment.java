@@ -1,7 +1,11 @@
 package org.openpnp.spi;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.model.*;
+import org.openpnp.model.BoardLocation;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
+import org.openpnp.model.Named;
+import org.openpnp.model.Identifiable;
 
 /**
  * A method to allow after-pick, pre-place alignment of parts on the nozzle. Bottom vision
