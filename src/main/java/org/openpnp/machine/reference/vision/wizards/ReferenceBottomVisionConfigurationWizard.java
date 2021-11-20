@@ -23,6 +23,7 @@ import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -111,16 +112,11 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                     "This will replace all custom part pipelines with the current pipeline. Are you sure?",
                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
-                //TODO: NK change using parts configuration
-//                UiUtils.messageBoxOnException(() -> {
-//                    for (PartSettings partSettings : bottomVision.getPartSettingsByPartId()
-//                                                                 .values()) {
-//                        partSettings.setPipeline(bottomVision.getPipeline()
-//                                                             .clone());
-//                    }
-//                    MessageBoxes.infoBox("Parts Reset",
-//                            "All custom part pipelines have been reset.");
-//                });
+                UiUtils.messageBoxOnException(() -> {
+                    Configuration.get().getParts().forEach(Part::resetVisionSettingsToDefault);
+                    MessageBoxes.infoBox("Parts Reset",
+                            "All custom part pipelines have been reset.");
+                });
             }
         });
         panel.add(btnResetAllTo, "8, 4");

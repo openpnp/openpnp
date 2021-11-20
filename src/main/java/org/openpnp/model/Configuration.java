@@ -570,11 +570,11 @@ public class Configuration extends AbstractModelObject {
     }
 
     public void assignVisionSettingsToPart(Part part, AbstractVisionSettings visionSettings) {
-        parts.get(part.getId()).setVisionSettings(visionSettings);
+        parts.get(part.getId().toUpperCase()).setVisionSettings(visionSettings);
     }
 
     public void assignVisionSettingsToPartUpdateMaps(Part part, AbstractVisionSettings visionSettings) {
-        parts.get(part.getId()).setVisionSettings(visionSettings);
+        parts.get(part.getId().toUpperCase()).setVisionSettings(visionSettings);
         visionSettingsByPartId.put(part.getId(), visionSettings);
     }
 

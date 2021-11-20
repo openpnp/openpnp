@@ -33,7 +33,7 @@ import org.simpleframework.xml.Root;
 public class ReferenceBottomVision implements PartAlignment {
     
     @Element(required = false)
-    protected CvPipeline pipeline = createDefaultPipeline();
+    protected CvPipeline pipeline;
 
     @Attribute(required = false)
     protected boolean enabled = false;
@@ -402,7 +402,7 @@ public class ReferenceBottomVision implements PartAlignment {
     }
 
     public static CvPipeline createDefaultPipeline() {
-        return new CvPipeline();
+        return Configuration.get().getDefaultVisionSettings().getCvPipeline();
     }
 
     private static double angleNorm(double val, double lim) {

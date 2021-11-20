@@ -53,6 +53,4 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     public String toString() {
         return String.format("id %s", id);
     }
-
-    //TODO: NK constructor for creation of a new pipeline
 }

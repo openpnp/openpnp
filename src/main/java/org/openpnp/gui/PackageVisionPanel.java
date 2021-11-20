@@ -161,10 +161,11 @@ public class PackageVisionPanel extends JPanel {
         JLabel lblPipeline = new JLabel("Pipeline");
         JButton editPipelineBtn = new JButton("Edit");
         editPipelineBtn.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
+        
         JButton resetPipelineBtn = new JButton("Reset to Default");
         resetPipelineBtn.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current package's and all its parts' pipeline with the default pipeline. Are you sure?", null,
+                    "This will replace the current package's pipeline with the default pipeline. Parts will not be affected. Are you sure?", null,
                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
@@ -174,9 +175,23 @@ public class PackageVisionPanel extends JPanel {
             }
         });
 
+        JButton resetPartsBtn = new JButton("Update all Parts");
+        resetPartsBtn.addActionListener((e) -> {
+            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                    "This will replace the pipeline for all parts under the package with the package's pipeline. Are you sure?", null,
+                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (result == JOptionPane.YES_OPTION) {
+                UiUtils.messageBoxOnException(() -> {
+                    pkg.updateParts();
+                    editPipeline();
+                });
+            }
+        });
+
         bottomVisionPanel.add(lblPipeline, "2, 2, right, default");
         bottomVisionPanel.add(editPipelineBtn, "4, 2, left, default");
         bottomVisionPanel.add(resetPipelineBtn, "4, 4, left, default");
+        bottomVisionPanel.add(resetPartsBtn, "4, 6, left, default");
 
         showReticle();
         initDataBindings();

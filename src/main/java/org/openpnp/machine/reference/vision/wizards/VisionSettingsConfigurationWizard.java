@@ -22,8 +22,7 @@ public class VisionSettingsConfigurationWizard extends AbstractConfigurationWiza
     private JTextField nameEntry;
 
     JPanel panel;
-
-    //TODO: NK May need also ReferenceBottomVision or parts/packages settings
+    
     public VisionSettingsConfigurationWizard(AbstractVisionSettings visionSettings) {
         this.visionSettings = visionSettings;
         createUi();

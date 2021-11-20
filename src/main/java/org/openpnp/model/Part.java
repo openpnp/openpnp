@@ -30,7 +30,6 @@ import org.simpleframework.xml.core.Persist;
  * many boards and should generally represent a single part in the real world.
  */
 
-//TODO: NK add constructor for cvpipeline initializing
 public class Part extends AbstractModelObject implements Identifiable {
     @Attribute
     private String id;
@@ -183,7 +182,7 @@ public class Part extends AbstractModelObject implements Identifiable {
 
     public void setVisionSettings(AbstractVisionSettings visionSettings) {
         this.visionSettings = visionSettings;
-        //TODO NK: should not be needed
+        //TODO NK: may not be needed, check, test !!! 
         this.bottomVisionId = visionSettings.getId();
     }
 

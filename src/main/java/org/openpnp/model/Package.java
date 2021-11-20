@@ -213,11 +213,10 @@ public class Package extends AbstractModelObject implements Identifiable {
     public void setVisionSettings(AbstractVisionSettings visionSettings) {
         AbstractVisionSettings odlValue = this.visionSettings;
         this.visionSettings = visionSettings;
-        updateParts();
         firePropertyChange("vision-settings", odlValue, visionSettings);
     }
 
-    private void updateParts() {
+    public void updateParts() {
         Configuration.get().getParts().forEach(part -> {
             if (part.getPackage().getId().equals(id)) {
                 Configuration.get().assignVisionSettingsToPartUpdateMaps(part, visionSettings);
