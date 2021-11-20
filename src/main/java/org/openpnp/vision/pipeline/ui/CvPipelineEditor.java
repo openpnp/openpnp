@@ -169,7 +169,9 @@ public class CvPipelineEditor extends JPanel {
 
     private final static Set<Class<? extends CvStage>> stageClasses;
 
-    private final Pipeline pipeline;
+    private final AbstractVisionSettings visionSettings;
+    private final CvPipeline pipeline;
+    
     private PipelinePanel pipelinePanel;
     private ResultsPanel resultsPanel;
     
@@ -181,21 +183,25 @@ public class CvPipelineEditor extends JPanel {
         this(null, pipeline, false);
     }
 
-    public CvPipelineEditor(Pipeline pipeline, boolean tabs) {
-        this(pipeline, pipeline.getCvPipeline(), tabs);
+    public CvPipelineEditor(AbstractVisionSettings visionSettings) {
+        this(visionSettings, visionSettings.getCvPipeline(), false);
     }
 
-    public CvPipelineEditor(Pipeline pipeline, CvPipeline cvPipeline, boolean tabs) {
-        if (pipeline == null) {
-            //TODO NK: investigate where is this coming from and avoid it
-            this.pipeline = new Pipeline("To be deleted");
-            this.pipeline.setCvPipeline(cvPipeline);
+    public CvPipelineEditor(AbstractVisionSettings visionSettings, boolean tabs) {
+        this(visionSettings, visionSettings.getCvPipeline(), tabs);
+    }
+
+    public CvPipelineEditor(AbstractVisionSettings visionSettings, CvPipeline cvPipeline, boolean tabs) {
+        if (visionSettings == null) {
+            this.visionSettings = new BottomVisionSettings("To be deleted");
         } else {
-            this.pipeline = pipeline;
+            this.visionSettings = visionSettings;
         }
+        
+        this.pipeline = cvPipeline;
 
         try {
-            originalVersion = this.pipeline.getCvPipeline().toXmlString();
+            originalVersion = this.pipeline.toXmlString();
             partsOriginal = getAssignedPartIds();
             packagesOriginal = getAssignedPackagesIds();
         }
@@ -228,16 +234,16 @@ public class CvPipelineEditor extends JPanel {
         pipelinePanel.initializeFocus();    	
     }
     
-    public Pipeline getUpperPipeline() {
-        return pipeline;
+    public AbstractVisionSettings getVisionSettings() {
+        return visionSettings;
     }
 
     public CvPipeline getPipeline() {
-        return pipeline.getCvPipeline();
+        return pipeline;
     }
 
     public void process() {
-        UiUtils.messageBoxOnException(() -> pipeline.getCvPipeline().process());
+        UiUtils.messageBoxOnException(pipeline::process);
         resultsPanel.refresh();
     }
 
@@ -246,13 +252,13 @@ public class CvPipelineEditor extends JPanel {
     }
 
     private Set<String> getAssignedPartIds() {
-        return Configuration.get().getParts(pipeline.getId()).stream()
+        return Configuration.get().getParts(visionSettings.getId()).stream()
                 .map(Part::getId)
                 .collect(Collectors.toSet());
     }
 
     private Set<String> getAssignedPackagesIds() {
-        return Configuration.get().getPackages(pipeline.getId()).stream()
+        return Configuration.get().getPackages(visionSettings.getId()).stream()
                 .map(Package::getId)
                 .collect(Collectors.toSet());
     }
@@ -262,7 +268,7 @@ public class CvPipelineEditor extends JPanel {
         Set<String> partsEdited = new HashSet<>();
         Set<String> packagesEdited = new HashSet<>();
         try {
-            editedVersion = pipeline.getCvPipeline().toXmlString();
+            editedVersion = pipeline.toXmlString();
             partsEdited = getAssignedPartIds();
             packagesEdited = getAssignedPackagesIds();
         }
@@ -276,8 +282,8 @@ public class CvPipelineEditor extends JPanel {
     
     public void undoEdits() {
         try {
-            pipeline.getCvPipeline().fromXmlString(originalVersion);
-            Configuration.get().restorePipelines();
+            pipeline.fromXmlString(originalVersion);
+            Configuration.get().restoreVisionSettings();
         }
         catch (Exception e) {
             // Do nothing

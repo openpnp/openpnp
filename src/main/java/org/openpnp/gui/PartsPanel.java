@@ -63,7 +63,7 @@ import org.openpnp.gui.support.*;
 import org.openpnp.gui.tablemodel.PartsTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
-import org.openpnp.model.Pipeline;
+import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PartAlignment;
@@ -162,14 +162,14 @@ public class PartsPanel extends JPanel implements WizardContainer {
         table.setDefaultRenderer(org.openpnp.model.Package.class,
                 new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
 
-        JComboBox<Pipeline> pipelinesCombo = new JComboBox<>(new PipelinesComboBoxModel());
-        pipelinesCombo.setMaximumRowCount(20);
-        pipelinesCombo.setRenderer(new IdentifiableListCellRenderer<>());
+        JComboBox<AbstractVisionSettings> bottomVisionCombo = new JComboBox<>(new VisionSettingsComboBoxModel());
+        bottomVisionCombo.setMaximumRowCount(20);
+        bottomVisionCombo.setRenderer(new IdentifiableListCellRenderer<>());
 
-        table.setDefaultEditor(Pipeline.class,
-                new DefaultCellEditor(pipelinesCombo));
-        table.setDefaultRenderer(Pipeline.class,
-                new IdentifiableTableCellRenderer<Pipeline>());
+        table.setDefaultEditor(AbstractVisionSettings.class,
+                new DefaultCellEditor(bottomVisionCombo));
+        table.setDefaultRenderer(AbstractVisionSettings.class,
+                new IdentifiableTableCellRenderer<AbstractVisionSettings>());
 
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());

@@ -168,7 +168,7 @@ public class PackageVisionPanel extends JPanel {
                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
-                    pkg.setPipeline(Configuration.get().getDefaultPipeline());
+                    pkg.setVisionSettings(Configuration.get().getDefaultVisionSettings());
                     editPipeline();
                 });
             }
@@ -187,7 +187,7 @@ public class PackageVisionPanel extends JPanel {
         pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
         pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
 
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        CvPipelineEditor editor = new CvPipelineEditor(pkg.getVisionSettings());
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
         dialog.setVisible(true);
     }

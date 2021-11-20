@@ -2,9 +2,10 @@ package org.openpnp.gui;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.*;
-import org.openpnp.gui.tablemodel.PipelinesTableModel;
+import org.openpnp.gui.tablemodel.VisionSettingsModel;
+import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Pipeline;
+import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.spi.PartAlignment;
 
 import javax.swing.*;
@@ -16,33 +17,33 @@ import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
-public class PipelinesPanel extends JPanel implements WizardContainer {
+public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
-    private static final String PREF_DIVIDER_POSITION = "PackagesPanel.dividerPosition";
+    private static final String PREF_DIVIDER_POSITION = "VisionSettingsPanel.dividerPosition";
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
-    private Preferences prefs = Preferences.userNodeForPackage(PipelinesPanel.class);
+    private Preferences prefs = Preferences.userNodeForPackage(VisionSettingsPanel.class);
 
     private final Frame frame;
 
-    private PipelinesTableModel tableModel;
-    private TableRowSorter<PipelinesTableModel> tableSorter;
+    private VisionSettingsModel tableModel;
+    private TableRowSorter<VisionSettingsModel> tableSorter;
     private JTable table;
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
 
-    public PipelinesPanel(Configuration configuration, Frame frame) {
+    public VisionSettingsPanel(Frame frame) {
         this.frame = frame;
 
-        singleSelectionActionGroup = new ActionGroup(deletePipelineAction, pastePipelineFromClipboardAction, copyPipelineToClipboardAction);
+        singleSelectionActionGroup = new ActionGroup(deleteSettingsAction, pasteSettingsFromClipboardAction, copySettingsToClipboardAction);
         singleSelectionActionGroup.setEnabled(false);
-        multiSelectionActionGroup = new ActionGroup(deletePipelineAction);
+        multiSelectionActionGroup = new ActionGroup(deleteSettingsAction);
         multiSelectionActionGroup.setEnabled(false);
 
         setLayout(new BorderLayout(0, 0));
 
         createAndAddToolbar();
 
-        tableModel = new PipelinesTableModel();
+        tableModel = new VisionSettingsModel();
         tableSorter = new TableRowSorter<>(tableModel);
 
         JSplitPane splitPane = new JSplitPane();
@@ -65,7 +66,7 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
                 return;
             }
 
-            List<Pipeline> selections = getSelections();
+            List<AbstractVisionSettings> selections = getSelections();
 
             if (selections.size() > 1) {
                 singleSelectionActionGroup.setEnabled(false);
@@ -75,20 +76,19 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
                 singleSelectionActionGroup.setEnabled(!selections.isEmpty());
             }
 
-            Pipeline pipeline = getSelection();
+            AbstractVisionSettings visionSettings = getSelection();
 
             int selectedTab = tabbedPane.getSelectedIndex();
             tabbedPane.removeAll();
 
-            if (pipeline != null) {
-                PartAlignment vision = Configuration.get().getMachine().getPartAlignments().get(0);
-                Wizard wizard = vision.getPipelineConfigurationWizard(pipeline);
+            if (visionSettings != null) {
+                Wizard wizard = visionSettings.getConfigurationWizard();
                 if (wizard != null) {
                     JPanel panel = new JPanel();
                     panel.setLayout(new BorderLayout());
                     panel.add(wizard.getWizardPanel());
                     tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
-                    wizard.setWizardContainer(PipelinesPanel.this);
+                    wizard.setWizardContainer(VisionSettingsPanel.this);
                 }
             }
 
@@ -116,74 +116,74 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
         JPanel upperPanel = new JPanel();
         toolbarPanel.add(upperPanel, BorderLayout.EAST);
 
-        toolBar.add(newPipelineAction);
-        toolBar.add(deletePipelineAction);
+        toolBar.add(newSettingsAction);
+        toolBar.add(deleteSettingsAction);
 
         toolBar.addSeparator();
 
-        JButton copyToClipboardButton = new JButton(copyPipelineToClipboardAction);
+        JButton copyToClipboardButton = new JButton(copySettingsToClipboardAction);
         copyToClipboardButton.setHideActionText(true);
         toolBar.add(copyToClipboardButton);
 
-        JButton pasteFromClipboardButton = new JButton(pastePipelineFromClipboardAction);
+        JButton pasteFromClipboardButton = new JButton(pasteSettingsFromClipboardAction);
         pasteFromClipboardButton.setHideActionText(true);
         toolBar.add(pasteFromClipboardButton);
     }
 
-    private Pipeline getSelection() {
-        List<Pipeline> selections = getSelections();
+    private AbstractVisionSettings getSelection() {
+        List<AbstractVisionSettings> selections = getSelections();
         if (selections.size() != 1) {
             return null;
         }
         return selections.get(0);
     }
 
-    private List<Pipeline> getSelections() {
-        List<Pipeline> selections = new ArrayList<>();
+    private List<AbstractVisionSettings> getSelections() {
+        List<AbstractVisionSettings> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getPipeline(selectedRow));
+            selections.add(tableModel.getVisionSettings(selectedRow));
         }
         return selections;
     }
 
-    public final Action newPipelineAction = new AbstractAction() {
+    public final Action newSettingsAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Pipeline...");
-            putValue(SHORT_DESCRIPTION, "Create a new pipeline, specifying it's ID.");
+            putValue(NAME, "New Settings...");
+            putValue(SHORT_DESCRIPTION, "Create a new settings, specifying it's ID.");
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
-                    "Please enter an ID for the new pipeline.")) != null) {
-                if (Configuration.get().getPipeline(id) == null) {
-                    Pipeline pipeline = new Pipeline(id);
+                    "Please enter an ID for the new settings.")) != null) {
+                if (Configuration.get().getVisionSettings(id) == null) {
+                    AbstractVisionSettings visionSettings = new BottomVisionSettings(id);
 
-                    Configuration.get().addPipeline(pipeline);
+                    Configuration.get().addVisionSettings(visionSettings);
                     tableModel.fireTableDataChanged();
                     Helpers.selectLastTableRow(table);
                     break;
                 }
 
-                MessageBoxes.errorBox(frame, "Error", "Pipeline ID " + id + " already exists.");
+                MessageBoxes.errorBox(frame, "Error", "VisionSettings ID " + id + " already exists.");
             }
         }
     };
 
-    public final Action deletePipelineAction = new AbstractAction() {
+    public final Action deleteSettingsAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Pipeline");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected pipeline.");
+            putValue(NAME, "Delete Settings");
+            putValue(SHORT_DESCRIPTION, "Delete the currently selected settings.");
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            List<Pipeline> selections = getSelections();
-            List<String> ids = selections.stream().map(Pipeline::getId).collect(Collectors.toList());
+            List<AbstractVisionSettings> selections = getSelections();
+            List<String> ids = selections.stream().map(AbstractVisionSettings::getId).collect(Collectors.toList());
 
             String formattedIds;
             if (ids.size() <= 3) {
@@ -194,21 +194,21 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
 
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "Are you sure you want to delete " + formattedIds + "?",
-                    "Delete " + selections.size() + " pipelines?", JOptionPane.YES_NO_OPTION);
+                    "Delete " + selections.size() + " vision settings?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
-                for (Pipeline pipeline : selections) {
-                    Configuration.get().removePipeline(pipeline);
+                for (AbstractVisionSettings visionSettings : selections) {
+                    Configuration.get().removeVisionSettings(visionSettings);
                 }
             }
         }
     };
 
-    public final Action copyPipelineToClipboardAction = new AbstractAction() {
+    public final Action copySettingsToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Pipeline to Clipboard");
+            putValue(NAME, "Copy Settings to Clipboard");
             putValue(SHORT_DESCRIPTION,
-                    "Copy the currently selected pipeline to the clipboard in text format.");
+                    "Copy the currently selected settings to the clipboard in text format.");
         }
 
         @Override
@@ -217,11 +217,11 @@ public class PipelinesPanel extends JPanel implements WizardContainer {
         }
     };
 
-    public final Action pastePipelineFromClipboardAction = new AbstractAction() {
+    public final Action pasteSettingsFromClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create Pipeline from Clipboard");
-            putValue(SHORT_DESCRIPTION, "Create a new pipeline from a definition on the clipboard.");
+            putValue(NAME, "Create Settings from Clipboard");
+            putValue(SHORT_DESCRIPTION, "Create a new settings from a definition on the clipboard.");
         }
 
         @Override

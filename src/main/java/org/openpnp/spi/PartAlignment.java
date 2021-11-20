@@ -57,7 +57,5 @@ public interface PartAlignment extends Identifiable, Named, PropertySheetHolder 
      */
     Wizard getPartConfigurationWizard(Part part);
 
-    Wizard getPipelineConfigurationWizard(Pipeline pipeline);
-
     public boolean canHandle(Part part);
 }

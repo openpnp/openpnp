@@ -2,10 +2,8 @@ package org.openpnp.vision.pipeline.ui;
 
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
-import org.openpnp.model.Pipeline;
 
 import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
 import java.util.List;
 
 public class PipelineEditorPartsTableModel extends AbstractTableModel implements Reorderable {
@@ -14,11 +12,9 @@ public class PipelineEditorPartsTableModel extends AbstractTableModel implements
     private static Class<?>[] columnClasses = {String.class};
 
     private final List<Part> parts;
-    private final Pipeline pipeline;
 
-    public PipelineEditorPartsTableModel(Pipeline pipeline) {
-        this.pipeline = pipeline;
-        parts = getParts();
+    public PipelineEditorPartsTableModel(String visionSettingsId) {
+        parts = getParts(visionSettingsId);
     }
 
     public void refresh() {
@@ -72,7 +68,7 @@ public class PipelineEditorPartsTableModel extends AbstractTableModel implements
         return parts.get(index);
     }
 
-    private List<Part> getParts() {
-        return Configuration.get().getParts(pipeline.getId());
+    private List<Part> getParts(String visionSettingsId) {
+        return Configuration.get().getParts(visionSettingsId);
     }
 }

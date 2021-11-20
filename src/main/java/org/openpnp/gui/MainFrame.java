@@ -151,7 +151,7 @@ public class MainFrame extends JFrame {
     private JPanel panelMachine;
     private MachineSetupPanel machineSetupPanel;
     private IssuesAndSolutionsPanel issuesAndSolutionsPanel;
-    private PipelinesPanel pipelinesPanel;
+    private VisionSettingsPanel visionSettingsPanel;
     private JDialog frameCamera;
     private JDialog frameMachineControls;
     private Map<KeyStroke, Action> hotkeyActionMap;
@@ -267,7 +267,7 @@ public class MainFrame extends JFrame {
         feedersPanel = new FeedersPanel(configuration, this);
         machineSetupPanel = new MachineSetupPanel();
         issuesAndSolutionsPanel = new IssuesAndSolutionsPanel(configuration, this);
-        pipelinesPanel = new PipelinesPanel(configuration, this);
+        visionSettingsPanel = new VisionSettingsPanel(this);
 
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -617,7 +617,7 @@ public class MainFrame extends JFrame {
         tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
         tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
         tabs.addTab("Issues & Solutions", null, issuesAndSolutionsPanel, null); //$NON-NLS-1$
-        tabs.addTab("Vision", null, pipelinesPanel, null);
+        tabs.addTab("Vision", null, visionSettingsPanel, null);
 
         LogPanel logPanel = new LogPanel();
         tabs.addTab("Log", null, logPanel, null); //$NON-NLS-1$

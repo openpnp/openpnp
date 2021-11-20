@@ -79,9 +79,9 @@ public class Configuration extends AbstractModelObject {
 
     private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
-    private LinkedHashMap<String, Pipeline> pipelines = new LinkedHashMap<>();
-    private HashMap<String, Pipeline> partsPipelines = new HashMap<>();
-    private HashMap<String, Pipeline> packagesPipelines = new HashMap<>();
+    private LinkedHashMap<String, AbstractVisionSettings> visionSettingsMap = new LinkedHashMap<>();
+    private HashMap<String, AbstractVisionSettings> visionSettingsByPartId = new HashMap<>();
+    private HashMap<String, AbstractVisionSettings> visionSettingsByPackageId = new HashMap<>();
     private Machine machine;
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
     private boolean loaded;
@@ -358,21 +358,21 @@ public class Configuration extends AbstractModelObject {
         }
 
         try {
-            File file = new File(configurationDirectory, "pipelines.xml");
+            File file = new File(configurationDirectory, "vision-settings.xml");
             if (overrideUserConfig || !file.exists()) {
-                Logger.info("No pipelines.xml found in configuration directory, loading defaults.");
-                file = File.createTempFile("pipelines", "xml");
-                FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/pipelines.xml"), file);
+                Logger.info("No vision-settings.xml found in configuration directory, loading defaults.");
+                file = File.createTempFile("vision-settings", "xml");
+                FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/vision-settings.xml"), file);
                 forceSave = true;
             }
-            loadPipelines(file);
+            loadVisionSettings(file);
         }
         catch (Exception e) {
             String message = e.getMessage();
             if (e.getCause() != null && e.getCause().getMessage() != null) {
                 message = e.getCause().getMessage();
             }
-            throw new Exception("Error while reading pipelines.xml (" + message + ")", e);
+            throw new Exception("Error while reading vision-settings.xml (" + message + ")", e);
         }
 
 
@@ -402,7 +402,7 @@ public class Configuration extends AbstractModelObject {
             listener.configurationLoaded(this);
         }
 
-        loadPipelinesMaps();
+        loadVisionSettingsMaps();
 
         if (forceSave) {
             Logger.info("Defaults were loaded. Saving to configuration directory.");
@@ -436,10 +436,10 @@ public class Configuration extends AbstractModelObject {
             throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
         }
         try {
-            savePipelines(createBackedUpFile("pipelines.xml", now));
+            saveVisionSettings(createBackedUpFile("vision-settings.xml", now));
         }
         catch (Exception e) {
-            throw new Exception("Error while saving pipelines.xml (" + e.getMessage() + ")", e);
+            throw new Exception("Error while saving vision-settings.xml (" + e.getMessage() + ")", e);
         }
     }
 
@@ -508,29 +508,29 @@ public class Configuration extends AbstractModelObject {
         firePropertyChange("parts", null, parts);
     }
 
-    public void addPipeline(Pipeline pipeline) {
-        if (null == pipeline.getId()) {
-            throw new Error("pipeline with null Id cannot be added to Configuration.");
+    public void addVisionSettings(AbstractVisionSettings visionSettings) {
+        if (null == visionSettings.getId()) {
+            throw new Error("Vision Settings with null Id cannot be added to Configuration.");
         }
-        pipelines.put(pipeline.getId().toUpperCase(), pipeline);
-        firePropertyChange("pipelines", null, pipelines);
+        this.visionSettingsMap.put(visionSettings.getId().toUpperCase(), visionSettings);
+        firePropertyChange("vision-settings", null, this.visionSettingsMap);
     }
 
-    public List<Pipeline> getPipelines() {
-        return Collections.unmodifiableList(new ArrayList<>(pipelines.values()));
+    public List<AbstractVisionSettings> getVisionSettingsList() {
+        return Collections.unmodifiableList(new ArrayList<>(visionSettingsMap.values()));
     }
 
-    public Pipeline getPipeline(String pipelineId) {
-        if (pipelineId == null) {
+    public AbstractVisionSettings getVisionSettings(String visionSettingsId) {
+        if (visionSettingsId == null) {
             return null;
         }
 
-        return pipelines.get(pipelineId.toUpperCase());
+        return visionSettingsMap.get(visionSettingsId.toUpperCase());
     }
 
-    public void removePipeline(Pipeline pipeline) {
-        pipelines.remove(pipeline.getId().toUpperCase());
-        firePropertyChange("pipelines", null, pipelines);
+    public void removeVisionSettings(AbstractVisionSettings visionSettings) {
+        this.visionSettingsMap.remove(visionSettings.getId().toUpperCase());
+        firePropertyChange("vision-settings", null, this.visionSettingsMap);
     }
 
     public List<Board> getBoards() {
@@ -558,47 +558,47 @@ public class Configuration extends AbstractModelObject {
         return board;
     }
 
-    public void loadPipelinesMaps() {
-        parts.values().forEach(part -> partsPipelines.put(part.getId(), part.getPipeline()));
-        packages.values().forEach(pkg -> packagesPipelines.put(pkg.getId(), pkg.getPipeline()));
+    public void loadVisionSettingsMaps() {
+        parts.values().forEach(part -> visionSettingsByPartId.put(part.getId(), part.getVisionSettings()));
+        packages.values().forEach(pkg -> visionSettingsByPackageId.put(pkg.getId(), pkg.getVisionSettings()));
     }
 
-    public List<Part> getParts(String pipelineId) {
+    public List<Part> getParts(String VisionSettingsId) {
         return parts.values().stream()
-                .filter(part -> part.getPipeline().getId().equals(pipelineId))
+                .filter(part -> part.getVisionSettings().getId().equals(VisionSettingsId))
                 .collect(Collectors.toList());
     }
 
-    public void assignPipelineToPart(Part part, Pipeline pipeline) {
-        parts.get(part.getId()).setPipeline(pipeline);
+    public void assignVisionSettingsToPart(Part part, AbstractVisionSettings visionSettings) {
+        parts.get(part.getId()).setVisionSettings(visionSettings);
     }
 
-    public void assignPipelineToPartUpdateMaps(Part part, Pipeline pipeline) {
-        parts.get(part.getId()).setPipeline(pipeline);
-        partsPipelines.put(part.getId(), pipeline);
+    public void assignVisionSettingsToPartUpdateMaps(Part part, AbstractVisionSettings visionSettings) {
+        parts.get(part.getId()).setVisionSettings(visionSettings);
+        visionSettingsByPartId.put(part.getId(), visionSettings);
     }
 
-    public List<Package> getPackages(String pipelineId) {
+    public List<Package> getPackages(String visionsettingsId) {
         return packages.values().stream()
-                .filter(pkg -> pkg.getPipeline().getId().equals(pipelineId))
+                .filter(pkg -> pkg.getVisionSettings().getId().equals(visionsettingsId))
                 .collect(Collectors.toList());
     }
 
-    public void assignPipelineToPackage(Package pkg, Pipeline pipeline) {
-        packages.get(pkg.getId()).setPipeline(pipeline);
+    public void assignVisionSettingsToPackage(Package pkg, AbstractVisionSettings visionSettings) {
+        packages.get(pkg.getId()).setVisionSettings(visionSettings);
     }
 
-    public void assignPipelineToPackageUpdateMaps(Package pkg, Pipeline pipeline) {
-        packages.get(pkg.getId()).setPipeline(pipeline);
-        partsPipelines.put(pkg.getId(), pipeline);
+    public void assignVisionSettingsToPackageUpdateMaps(Package pkg, AbstractVisionSettings visionSettings) {
+        packages.get(pkg.getId()).setVisionSettings(visionSettings);
+        visionSettingsByPartId.put(pkg.getId(), visionSettings);
     }
 
-    public void restorePipelines() {
-        partsPipelines.forEach((partId, pipeline) -> {
-            getPart(partId).setPipeline(pipeline);
+    public void restoreVisionSettings() {
+        visionSettingsByPartId.forEach((partId, visionSettings) -> {
+            getPart(partId).setVisionSettings(visionSettings);
         });
-        packagesPipelines.forEach((packageId, pipeline) -> {
-            getPackage(packageId).setPipeline(pipeline);
+        visionSettingsByPackageId.forEach((packageId, visionSettings) -> {
+            getPackage(packageId).setVisionSettings(visionSettings);
         });
     }
     
@@ -654,23 +654,23 @@ public class Configuration extends AbstractModelObject {
         serializeObject(holder, file);
     }
 
-    private void loadPipelines(File file) throws Exception {
+    private void loadVisionSettings(File file) throws Exception {
         Serializer serializer = createSerializer();
-        PipelinesConfigurationHolder holder =
-                serializer.read(PipelinesConfigurationHolder.class, file);
-        for (Pipeline pipeline : holder.pipelines) {
-            addPipeline(pipeline);
+        VisionSettingsConfigurationHolder holder =
+                serializer.read(VisionSettingsConfigurationHolder.class, file);
+        for (AbstractVisionSettings visionSettings : holder.visionSettings) {
+            addVisionSettings(visionSettings);
         }
     }
 
-    private void savePipelines(File file) throws Exception {
-        PipelinesConfigurationHolder holder = new PipelinesConfigurationHolder();
-        holder.pipelines = new ArrayList<>(pipelines.values());
+    private void saveVisionSettings(File file) throws Exception {
+        VisionSettingsConfigurationHolder holder = new VisionSettingsConfigurationHolder();
+        holder.visionSettings = new ArrayList<>(visionSettingsMap.values());
         serializeObject(holder, file);
     }
 
-    public Pipeline getDefaultPipeline() {
-        return pipelines.get("CVP_DEF");
+    public AbstractVisionSettings getDefaultVisionSettings() {
+        return visionSettingsMap.get("CVP_DEF");
     }
 
     public Job loadJob(File file) throws Exception {
@@ -790,11 +790,11 @@ public class Configuration extends AbstractModelObject {
     }
 
     /**
-     * Used to provide a fixed root for the Pipelines when serializing.
+     * Used to provide a fixed root for the VisionSettings when serializing.
      */
-    @Root(name = "openpnp-pipelines")
-    public static class PipelinesConfigurationHolder {
-        @ElementList(inline = true, entry = "pipeline", required = false)
-        private ArrayList<Pipeline> pipelines = new ArrayList<>();
+    @Root(name = "openpnp-vision-settings")
+    public static class VisionSettingsConfigurationHolder {
+        @ElementList(inline = true, entry = "vision-settings", required = false)
+        private ArrayList<AbstractVisionSettings> visionSettings = new ArrayList<>();
     }
 }

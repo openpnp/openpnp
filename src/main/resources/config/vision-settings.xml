@@ -1,5 +1,5 @@
-<openpnp-pipelines>
-    <pipeline id="CVP_DEF" name="ReferenceBottomDefaultPipeline">
+<openpnp-vision-settings>
+    <vision-settings class="org.openpnp.model.BottomVisionSettings" id="CVP_DEF" name="ReferenceBottomDefaultPipeline">
         <cv_pipeline>
             <stages>
                 <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" settle-first="true" />
@@ -25,8 +25,8 @@
                 <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="15" enabled="true" prefix="bv_result_" suffix=".png" />
             </stages>
         </cv_pipeline>
-    </pipeline>
-    <pipeline id="CVP01" name="ReferenceBottomTestPipeline">
+    </vision-settings>
+    <vision-settings class="org.openpnp.model.BottomVisionSettings" id="CVP01" name="ReferenceBottomTestPipeline">
         <cv_pipeline>
             <stages>
                 <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" settle-first="true" />
@@ -42,11 +42,11 @@
                 <!--        </cv-stage>&ndash;&gt;-->
             </stages>
         </cv_pipeline>
-    </pipeline>
-    <pipeline id="CVP02" name="ReferenceBottomTestPipeline">
+    </vision-settings>
+    <vision-settings class="org.openpnp.model.BottomVisionSettings" id="CVP02" name="ReferenceBottomTestPipeline">
         <cv_pipeline>
             <stages>
             </stages>
         </cv_pipeline>
-    </pipeline>
-</openpnp-pipelines>
+    </vision-settings>
+</openpnp-vision-settings>

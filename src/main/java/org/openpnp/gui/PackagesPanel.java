@@ -52,7 +52,7 @@ import org.openpnp.gui.tablemodel.PackagesTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
-import org.openpnp.model.Pipeline;
+import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.spi.Camera;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
@@ -137,17 +137,17 @@ public class PackagesPanel extends JPanel {
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
-        JComboBox<Pipeline> pipelinesCombo = new JComboBox<>(new PipelinesComboBoxModel());
-        pipelinesCombo.setMaximumRowCount(20);
-        pipelinesCombo.setRenderer(new IdentifiableListCellRenderer<>());
+        JComboBox<AbstractVisionSettings> bottomVisionCombo = new JComboBox<>(new VisionSettingsComboBoxModel());
+        bottomVisionCombo.setMaximumRowCount(20);
+        bottomVisionCombo.setRenderer(new IdentifiableListCellRenderer<>());
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        table.setDefaultEditor(Pipeline.class,
-                new DefaultCellEditor(pipelinesCombo));
-        table.setDefaultRenderer(Pipeline.class,
-                new IdentifiableTableCellRenderer<Pipeline>());
+        table.setDefaultEditor(AbstractVisionSettings.class,
+                new DefaultCellEditor(bottomVisionCombo));
+        table.setDefaultRenderer(AbstractVisionSettings.class,
+                new IdentifiableTableCellRenderer<AbstractVisionSettings>());
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override

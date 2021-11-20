@@ -48,7 +48,7 @@ public class Part extends AbstractModelObject implements Identifiable {
     private String packageId;
 
     @Attribute(required = false)
-    protected String pipelineId;
+    protected String bottomVisionId;
 
     @Attribute(required = false)
     private double speed = 1.0;
@@ -56,7 +56,7 @@ public class Part extends AbstractModelObject implements Identifiable {
     @Attribute(required = false)
     private int pickRetryCount = 0;
 
-    protected Pipeline pipeline;
+    protected AbstractVisionSettings visionSettings;
 
     @SuppressWarnings("unused")
     private Part() {
@@ -69,17 +69,17 @@ public class Part extends AbstractModelObject implements Identifiable {
             @Override
             public void configurationLoaded(Configuration configuration) {
                 partPackage = configuration.getPackage(packageId);
-                pipeline = configuration.getPipeline(pipelineId);
+                visionSettings = configuration.getVisionSettings(bottomVisionId);
 
                 if (getPackage() == null) {
                     setPackage(partPackage);
                 }
 
-                if (pipeline == null) {
-                    if (partPackage != null && partPackage.getPipelineId() != null) {
-                        pipeline = configuration.getPipeline(partPackage.getPipelineId());
+                if (visionSettings == null) {
+                    if (partPackage != null && partPackage.getBottomVisionId() != null) {
+                        visionSettings = configuration.getVisionSettings(partPackage.getBottomVisionId());
                     } else {
-                        pipeline = configuration.getDefaultPipeline();
+                        visionSettings = configuration.getDefaultVisionSettings();
                     }
                 }
             }
@@ -89,7 +89,7 @@ public class Part extends AbstractModelObject implements Identifiable {
     @Persist
     private void persist() {
         packageId = (partPackage == null ? null : partPackage.getId());
-        pipelineId = (pipeline == null ? null : pipeline.getId());
+        bottomVisionId = (visionSettings == null ? null : visionSettings.getId());
     }
 
     @Override
@@ -173,28 +173,28 @@ public class Part extends AbstractModelObject implements Identifiable {
         return getHeight().getValue() <= 0.0;
     }
 
-    public Pipeline getPipeline() {
-        return pipeline;
+    public AbstractVisionSettings getVisionSettings() {
+        return visionSettings;
     }
 
     public CvPipeline getCvPipeline() {
-        return pipeline.getCvPipeline();
+        return visionSettings.getCvPipeline();
     }
 
-    public void setPipeline(Pipeline pipeline) {
-        this.pipeline = pipeline;
+    public void setVisionSettings(AbstractVisionSettings visionSettings) {
+        this.visionSettings = visionSettings;
         //TODO NK: should not be needed
-        this.pipelineId = pipeline.getId();
+        this.bottomVisionId = visionSettings.getId();
     }
 
-    public void resetPipelineToDefault() {
-        Pipeline oldValue = pipeline;
-        if (partPackage.getPipeline() == null) {
-            pipeline = Configuration.get().getDefaultPipeline();
+    public void resetVisionSettingsToDefault() {
+        AbstractVisionSettings oldValue = visionSettings;
+        if (partPackage.getVisionSettings() == null) {
+            visionSettings = Configuration.get().getDefaultVisionSettings();
         } else {
-            pipeline = partPackage.getPipeline();
+            visionSettings = partPackage.getVisionSettings();
         }
 
-        firePropertyChange("pipeline", oldValue, this.pipeline);
+        firePropertyChange("vision-settings", oldValue, this.visionSettings);
     }
 }

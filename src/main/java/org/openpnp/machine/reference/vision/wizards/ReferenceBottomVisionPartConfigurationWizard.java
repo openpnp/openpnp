@@ -145,7 +145,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
-                    part.resetPipelineToDefault();
+                    part.resetVisionSettingsToDefault();
                     editPipeline();
                 });
             }

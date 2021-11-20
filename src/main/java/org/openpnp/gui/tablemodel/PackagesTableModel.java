@@ -28,14 +28,14 @@ import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
-import org.openpnp.model.Pipeline;
+import org.openpnp.model.AbstractVisionSettings;
 
 @SuppressWarnings("serial")
 public class PackagesTableModel extends AbstractTableModel implements PropertyChangeListener {
     final private Configuration configuration;
 
     private String[] columnNames = new String[] {"ID", "Description", "Tape Specification", "Pipeline"};
-    private Class[] columnTypes = new Class[] {String.class, String.class, String.class, Pipeline.class};
+    private Class[] columnTypes = new Class[] {String.class, String.class, String.class, AbstractVisionSettings.class};
     private List<Package> packages;
 
     public PackagesTableModel(Configuration configuration) {
@@ -83,7 +83,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
                 this_package.setTapeSpecification((String) aValue);
             }
             else if (columnIndex == 3) {
-                Configuration.get().assignPipelineToPackageUpdateMaps(this_package, (Pipeline) aValue);
+                Configuration.get().assignVisionSettingsToPackageUpdateMaps(this_package, (AbstractVisionSettings) aValue);
             }
         }
         catch (Exception e) {
@@ -101,7 +101,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
             case 2:
                 return this_package.getTapeSpecification();
             case 3:
-                return this_package.getPipeline();
+                return this_package.getVisionSettings();
             default:
                 return null;
         }

@@ -30,7 +30,7 @@ public class CvPipelineEditorDialog extends JDialog {
                             );
                     switch (selection) {
                         case JOptionPane.YES_OPTION:
-                            Configuration.get().loadPipelinesMaps();
+                            Configuration.get().loadVisionSettingsMaps();
                             super.windowClosing(e);
                             CvPipelineEditorDialog.this.dispose();
                             return;

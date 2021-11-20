@@ -6,7 +6,7 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.model.Pipeline;
+import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
@@ -15,8 +15,8 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
 @SuppressWarnings("serial")
-public class VisionConfigurationWizard extends AbstractConfigurationWizard {
-    private Pipeline pipeline;
+public class VisionSettingsConfigurationWizard extends AbstractConfigurationWizard {
+    private AbstractVisionSettings visionSettings;
 
     private JTextField idEntry;
     private JTextField nameEntry;
@@ -24,8 +24,8 @@ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
     JPanel panel;
 
     //TODO: NK May need also ReferenceBottomVision or parts/packages settings
-    public VisionConfigurationWizard(Pipeline pipeline) {
-        this.pipeline = pipeline;
+    public VisionSettingsConfigurationWizard(AbstractVisionSettings visionSettings) {
+        this.visionSettings = visionSettings;
         createUi();
     }
 
@@ -36,11 +36,11 @@ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
         JLabel lblName = new JLabel("Name");
 
         idEntry = new JTextField();
-        idEntry.setText(pipeline.getId());
+        idEntry.setText(visionSettings.getId());
         idEntry.setColumns(10);
 
         nameEntry = new JTextField();
-        nameEntry.setText(pipeline.getName());
+        nameEntry.setText(visionSettings.getName());
         nameEntry.setColumns(20);
 
         panel.add(lblId, "2, 2, right, default");
@@ -94,14 +94,14 @@ public class VisionConfigurationWizard extends AbstractConfigurationWizard {
     }
 
     private void editPipeline() {
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline, true);
+        CvPipelineEditor editor = new CvPipelineEditor(visionSettings, true);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Vision Pipeline", editor);
         dialog.setVisible(true);
     }
 
     @Override
     public void createBindings() {
-        addWrappedBinding(pipeline, "id", idEntry, "text");
-        addWrappedBinding(pipeline, "name", nameEntry, "text");
+        addWrappedBinding(visionSettings, "id", idEntry, "text");
+        addWrappedBinding(visionSettings, "name", nameEntry, "text");
     }
 }

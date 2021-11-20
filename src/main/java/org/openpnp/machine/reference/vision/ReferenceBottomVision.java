@@ -16,12 +16,8 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
-import org.openpnp.machine.reference.vision.wizards.VisionConfigurationWizard;
 import org.openpnp.model.*;
-import org.openpnp.spi.Camera;
-import org.openpnp.spi.Nozzle;
-import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.*;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
@@ -35,8 +31,7 @@ import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 
 public class ReferenceBottomVision implements PartAlignment {
-
-    //TODO NK: remove?
+    
     @Element(required = false)
     protected CvPipeline pipeline = createDefaultPipeline();
 
@@ -532,11 +527,6 @@ public class ReferenceBottomVision implements PartAlignment {
         catch (Exception e) {
         }
         return new ReferenceBottomVisionPartConfigurationWizard(this, part);
-    }
-
-    @Override
-    public Wizard getPipelineConfigurationWizard(Pipeline pipeline) {
-        return new VisionConfigurationWizard(pipeline);
     }
 
     public enum PreRotateUsage {

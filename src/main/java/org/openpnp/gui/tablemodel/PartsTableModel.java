@@ -36,7 +36,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
     private String[] columnNames =
             new String[] {"ID", "Description", "Height", "Package", "Speed %", "Pipeline"};
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
-            Package.class, String.class, Pipeline.class};
+            Package.class, String.class, AbstractVisionSettings.class};
     private List<Part> parts;
     private PercentConverter percentConverter = new PercentConverter();
 
@@ -101,7 +101,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
                 part.setSpeed(percentConverter.convertReverse(aValue.toString()));
             }
             else if (columnIndex == 5) {
-                Configuration.get().assignPipelineToPartUpdateMaps(part, (Pipeline) aValue);
+                Configuration.get().assignVisionSettingsToPartUpdateMaps(part, (AbstractVisionSettings) aValue);
             }
         }
         catch (Exception e) {
@@ -123,7 +123,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
             case 4:
                 return percentConverter.convertForward(part.getSpeed());
             case 5:
-                return part.getPipeline();
+                return part.getVisionSettings();
             default:
                 return null;
         }

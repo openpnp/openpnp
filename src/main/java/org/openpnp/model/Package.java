@@ -25,9 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.openpnp.ConfigurationListener;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
@@ -44,7 +42,7 @@ public class Package extends AbstractModelObject implements Identifiable {
     private String id;
 
     @Attribute(required = false)
-    protected String pipelineId;
+    protected String bottomVisionId;
 
     @Attribute(required = false)
     private String description;
@@ -70,7 +68,7 @@ public class Package extends AbstractModelObject implements Identifiable {
         this(null);
     }
 
-    private Pipeline pipeline;
+    private AbstractVisionSettings visionSettings;
 
     public Package(String id) {
         this.id = id;
@@ -79,10 +77,10 @@ public class Package extends AbstractModelObject implements Identifiable {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) {
-                pipeline = configuration.getPipeline(pipelineId);
+                visionSettings = configuration.getVisionSettings(bottomVisionId);
 
-                if (pipeline == null) {
-                    pipeline = configuration.getDefaultPipeline();
+                if (visionSettings == null) {
+                    visionSettings = configuration.getDefaultVisionSettings();
                 }
             }
         });
@@ -90,7 +88,7 @@ public class Package extends AbstractModelObject implements Identifiable {
 
     @Persist
     private void persist() {
-        pipelineId = (pipeline == null ? null : pipeline.getId());
+        bottomVisionId = (visionSettings == null ? null : visionSettings.getId());
     }
 
     @Override
@@ -201,28 +199,28 @@ public class Package extends AbstractModelObject implements Identifiable {
         firePropertyChange("compatibleNozzleTips", null, getCompatibleNozzleTips());
     }
 
-    public String getPipelineId() {
-        return pipelineId;
+    public String getBottomVisionId() {
+        return bottomVisionId;
     }
-    public Pipeline getPipeline() {
-        return pipeline;
+    public AbstractVisionSettings getVisionSettings() {
+        return visionSettings;
     }
 
     public CvPipeline getCvPipeline() {
-        return pipeline.getCvPipeline();
+        return visionSettings.getCvPipeline();
     }
 
-    public void setPipeline(Pipeline pipeline) {
-        Pipeline odlValue = this.pipeline;
-        this.pipeline = pipeline;
+    public void setVisionSettings(AbstractVisionSettings visionSettings) {
+        AbstractVisionSettings odlValue = this.visionSettings;
+        this.visionSettings = visionSettings;
         updateParts();
-        firePropertyChange("pipeline", odlValue, pipeline);
+        firePropertyChange("vision-settings", odlValue, visionSettings);
     }
 
     private void updateParts() {
         Configuration.get().getParts().forEach(part -> {
             if (part.getPackage().getId().equals(id)) {
-                Configuration.get().assignPipelineToPartUpdateMaps(part, pipeline);
+                Configuration.get().assignVisionSettingsToPartUpdateMaps(part, visionSettings);
             }
         });
     }

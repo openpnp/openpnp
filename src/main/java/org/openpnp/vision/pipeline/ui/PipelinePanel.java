@@ -239,14 +239,14 @@ public class PipelinePanel extends JPanel {
     }
 
     private JScrollPane preparePartsPane() {
-        partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
+        partsTableModel = new PipelineEditorPartsTableModel(editor.getVisionSettings().getId());
         partsTable = preparePartsPackagesTable(partsTableModel);
 
         return new JScrollPane(partsTable);
     }
 
     private JScrollPane preparePackagesPane() {
-        packagesTableModel = new PipelineEditorPackagesTableModel(editor.getUpperPipeline());
+        packagesTableModel = new PipelineEditorPackagesTableModel(editor.getVisionSettings().getId());
         packagesTable = preparePartsPackagesTable(packagesTableModel);
 
         return new JScrollPane(packagesTable);
@@ -356,7 +356,7 @@ public class PipelinePanel extends JPanel {
         }
     }
 
-    class Action extends AbstractAction {
+    abstract class Action extends AbstractAction {
         Action(Icon icon, String name, String description) {
             putValue(SMALL_ICON, icon);
             putValue(NAME, name);
@@ -365,7 +365,6 @@ public class PipelinePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            //TODO NK: throw an exception
         }
     }
 
@@ -463,7 +462,7 @@ public class PipelinePanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             List<Part> parts = Configuration.get().getParts();
             List<Package> packages = Configuration.get().getPackages();
-            //TODO NK: unmodifiable list, cannot sort
+            
             PartPackageSelectionDialog dialog = new PartPackageSelectionDialog(JOptionPane.getFrameForComponent(PipelinePanel.this), "New Part",
                     "Please select a part/package from the lists below.", parts, packages);
             dialog.setVisible(true);
@@ -481,7 +480,7 @@ public class PipelinePanel extends JPanel {
             return;
         }
 
-        if (!selected.getPipeline().getId().equals("CVP_DEF")) {
+        if (!selected.getVisionSettings().getId().equals("CVP_DEF")) {
             int selection = JOptionPane.showConfirmDialog(editor,
                     "Part already has a pipeline assigned, do you want to rewrite it?",
                     "Rewrite pipeline",
@@ -495,8 +494,8 @@ public class PipelinePanel extends JPanel {
         }
 
         try {
-            Configuration.get().assignPipelineToPart(selected, editor.getUpperPipeline());
-            partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
+            Configuration.get().assignVisionSettingsToPart(selected, editor.getVisionSettings());
+            partsTableModel = new PipelineEditorPartsTableModel(editor.getVisionSettings().getId());
             partsTable.setModel(partsTableModel);
         }
         catch (Exception e) {
@@ -510,7 +509,7 @@ public class PipelinePanel extends JPanel {
             return;
         }
 
-        if (!selected.getPipeline().getId().equals("CVP_DEF")) {
+        if (!selected.getVisionSettings().getId().equals("CVP_DEF")) {
             int selection = JOptionPane.showConfirmDialog(editor,
                     "Package already has a pipeline assigned, its and all its parts' pipeline will be set to default. Do you want to proceed?",
                     "Rewrite pipeline",
@@ -524,9 +523,9 @@ public class PipelinePanel extends JPanel {
         }
 
         try {
-            Configuration.get().assignPipelineToPackage(selected, editor.getUpperPipeline());
-            partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
-            packagesTableModel = new PipelineEditorPackagesTableModel(editor.getUpperPipeline());
+            Configuration.get().assignVisionSettingsToPackage(selected, editor.getVisionSettings());
+            partsTableModel = new PipelineEditorPartsTableModel(editor.getVisionSettings().getId());
+            packagesTableModel = new PipelineEditorPackagesTableModel(editor.getVisionSettings().getId());
             partsTable.setModel(partsTableModel);
             packagesTable.setModel(packagesTableModel);
         }
@@ -545,17 +544,17 @@ public class PipelinePanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             Part selectedPart = getSelectedPart();
             if (selectedPart != null) {
-                Configuration.get().assignPipelineToPart(selectedPart, Configuration.get().getDefaultPipeline());
+                Configuration.get().assignVisionSettingsToPart(selectedPart, Configuration.get().getDefaultVisionSettings());
             } else {
                 Package selectedPackage = getSelectedPackage();
                 if (selectedPackage == null) {
                     return;
                 }
-                Configuration.get().assignPipelineToPackage(selectedPackage, Configuration.get().getDefaultPipeline());
+                Configuration.get().assignVisionSettingsToPackage(selectedPackage, Configuration.get().getDefaultVisionSettings());
             }
 
-            partsTableModel = new PipelineEditorPartsTableModel(editor.getUpperPipeline());
-            packagesTableModel = new PipelineEditorPackagesTableModel(editor.getUpperPipeline());
+            partsTableModel = new PipelineEditorPartsTableModel(editor.getVisionSettings().getId());
+            packagesTableModel = new PipelineEditorPackagesTableModel(editor.getVisionSettings().getId());
             partsTable.setModel(partsTableModel);
             packagesTable.setModel(packagesTableModel);
         }

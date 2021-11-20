@@ -1,10 +1,12 @@
 package org.openpnp.model;
 
+import org.openpnp.spi.PartAlignment;
+import org.openpnp.spi.VisionSettings;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-public class Pipeline extends AbstractModelObject implements Identifiable {
+public abstract class AbstractVisionSettings extends AbstractModelObject implements VisionSettings {
     @Attribute()
     private String id;
 
@@ -14,9 +16,9 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
     @Element()
     private CvPipeline cvPipeline;
 
-    public Pipeline(){}
+    public AbstractVisionSettings(){}
 
-    public Pipeline(String id) {
+    public AbstractVisionSettings(String id) {
         this.id = id;
         this.cvPipeline = new CvPipeline();
     }
@@ -25,7 +27,8 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
     public String getId() {
         return id;
     }
-
+    
+    @Override
     public String getName() {
         return name;
     }
@@ -34,6 +37,7 @@ public class Pipeline extends AbstractModelObject implements Identifiable {
         this.name = name;
     }
 
+    @Override
     public CvPipeline getCvPipeline() {
         if(cvPipeline == null) {
             cvPipeline = new CvPipeline();
