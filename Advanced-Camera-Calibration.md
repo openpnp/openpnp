@@ -1,5 +1,3 @@
-**This page is under construction**
-
 # Purpose
 The purpose of advanced camera calibration is to:
 1. Determine the head offset (or absolute location for bottom cameras) and orientation of the camera;
@@ -65,7 +63,7 @@ Upon clicking the **Start Calibration** button, the calibration proceeds as foll
 # Results/Diagnostics
 ![Results/Diagnostics](https://user-images.githubusercontent.com/50550971/142743235-727d22b7-29f0-4c87-a18b-fc6ad4f25971.png)
 
-The first item displayed here is the **Calibrate Head Offsets** (for top cameras) or the **Camera Location** (for bottom cameras). For the default top camera, the calibrated offsets displayed here are just a mirror of what was entered on the Position tab. If multiple top cameras are mounted on a head, the default top camera must be calibrated first as the head offsets of all other top cameras are calculated relative to the default camera's head offsets. For bottom cameras, the location displayed here is the X-Y coordinates of the physical camera and Z is the Z coordinate determined by auto focus.
+The first item displayed here is the **Calibrated Head Offsets** (for top cameras) or the **Camera Location** (for bottom cameras). For top cameras, this is the horizontal offset compensation needed due to the optical axis of the physical camera not being perfectly vertical. This keeps coordinates captured with the top camera at the height of the primary calibration fiducial prior to this calibration consistent with coordinates captured after this calibration. For bottom cameras, this is the X-Y coordinates of the physical camera and Z is the Z coordinate determined by auto focus.
 
 **Units Per Pixel** displays the computed units per pixel at default Z for this camera. Note that images are scaled such that the units per pixel is the same in both the X and Y directions.
 
@@ -73,7 +71,7 @@ The first item displayed here is the **Calibrate Head Offsets** (for top cameras
 
 **Physical Field-Of-View** displays the estimated angular field-of-view for the physical camera. Note that width and height here refer to the camera's raw images without regard to how it may be mounted to the machine.
 
-**Effective Field-Of-View** displays the estimated angular field-of-view for the calibrated images.
+**Effective Field-Of-View** displays the estimated angular field-of-view for the camera after all corrections are applied.
 
 **Camera Mounting Error** shows the estimated mounting errors of the camera as measured by the right hand rule about each machine axis. See [here](https://github.com/openpnp/openpnp/wiki/Advance-Camera-Calibration---Camera-Mounting-Errors#camera-mounting-errors) for how mounting errors effect the images as seen in the camera view pane.  
 
@@ -83,13 +81,13 @@ The **Show Outliers** checkbox enables data points that were judged to be bad me
 
 The three plots at the bottom of this section all display the residual errors of the calibration data although in different ways. Residual error is defined as the difference between where the fitted model predicts where the detected fiducial/nozzle tip should have appeared in the image and where it actually appeared in the image. To be more meaningful to the operator, the residual errors are converted from differences in pixels to differences in machine units at the Z level at which the calibration data was collected.
 
-The **Residual Errors In Collection Order** plot shows the individual X and Y components of residual error as a time ordered sequence. The residual errors should have zero mean and appear as random noise. If there are significant steps in the mean level or trends in the errors; depending on their magnitude, there may be a problem with the calibration. Some possible causes are: calibration rig movement/slippage during the collection; camera or lens moving in its mount; motors missing steps; belt/cog slippage; thermal expansion/contraction; etcetera.
+The **Residual Errors In Collection Order** plot shows the individual X and Y components of residual error as a time ordered sequence. The residual errors should have zero mean and appear as random noise. If there are significant steps in the mean level or trends in the errors; depending on their magnitude, there may be a problem with the calibration. Some possible causes are: calibration fiducial/nozzle tip movement/slippage during the collection; camera or lens moving in its mount; motors missing steps; belt/cog slippage; thermal expansion/contraction; etcetera.
 
-The **Residual Error X-Y Scatter Plot** shows the residual error for each collected data point as a dot on a scatter plot where the magnitude of the residual error is the distance of the dot from the origin. A green circle marks the approximate boundary at which points are considered to be outliers and are not used for determining the fit of the camera model. The residual errors should form a single circular cluster centered at (0, 0) and should appear randomly distributed. If two or more distinct clusters are present or the cluster is significantly non-circular; depending on the magnitude of the errors, there may be a problem with the calibration. Some possible causes are: bad vision detection of the calibration fiducial, calibration rig movement/slippage during the collection; camera or lens moving in its mount; under or over compensated backlash; motors missing steps; belt/cog slippage; etcetera.   
+The **Residual Error X-Y Scatter Plot** shows the residual error for each collected data point as a dot on a scatter plot where the magnitude of the residual error is the distance of the dot from the origin. A green circle marks the approximate boundary at which points are considered to be outliers and are not used for determining the fit of the camera model. The residual errors should form a single circular cluster centered at (0, 0) and should appear randomly distributed. If two or more distinct clusters are present or the cluster is significantly non-circular; depending on the magnitude of the errors, there may be a problem with the calibration. Some possible causes are: bad vision detection of the calibration fiducial/nozzle tip, calibration fiducial/nozzle tip movement/slippage during the collection; camera or lens moving in its mount; under or over compensated backlash; motors missing steps; belt/cog slippage; etcetera.   
 
 The **Residual Error Map** shows how the residual errors are distributed across the camera image. Dark blue areas have very low errors while dark red areas have the highest errors.  Note that the color range is always scaled so that zero error is the darkest blue and the maximum magnitude error is the darkest red. Therefore, this plot cannot be used to judge the magnitude of the error but only its distribution about the image. This distribution should look more or less random with no discernible patterns. If patterns such as rings or stripes are clearly visible and the residual errors observed in the other plots are larger than expected, the mathematical model of the camera does not fit very well with the physics of the camera and may indicate something is wrong with the camera and/or lens.
 
 # Comparison of Uncalibrated to Calibrated Images
-The animated gif below shows a piece of 2 millimeter graph paper face up on the machine table and imaged by the top camera. The camera's virtual Z axis was jogged to match the Z height of the graph paper and a Grid Reticle was selected. The gif alternates between uncorrected raw images and corrected images (note the state of the Apply Calibration checkbox):
+The animated gif below shows a piece of 2 millimeter graph paper face up on the machine table and imaged by the top camera. The camera's virtual Z axis was jogged to match the Z height of the graph paper and a Grid Reticle with 2 Units per Tick was selected. The gif alternates between uncorrected raw images and corrected images (note the state of the Apply Calibration checkbox):
 
 ![Before And After Calibration Image](https://user-images.githubusercontent.com/50550971/135157358-ad63e034-a3d5-4f7c-8605-800b5185cdc2.gif)
