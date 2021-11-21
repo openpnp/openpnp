@@ -1,12 +1,15 @@
 package org.openpnp.machine.reference.vision;
 
 import java.awt.Rectangle;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
@@ -18,17 +21,12 @@ import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigu
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionPartConfigurationWizard;
 import org.openpnp.model.*;
 import org.openpnp.spi.*;
-import org.openpnp.util.MovableUtils;
-import org.openpnp.util.OpenCvUtils;
-import org.openpnp.util.Utils2D;
-import org.openpnp.util.VisionUtils;
+import org.openpnp.util.*;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementMap;
-import org.simpleframework.xml.Root;
+import org.simpleframework.xml.*;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceBottomVision implements PartAlignment {
     
@@ -49,9 +47,71 @@ public class ReferenceBottomVision implements PartAlignment {
 
     @Attribute(required = false)
     protected double maxAngularOffset = 10;
-
+    
     @ElementMap(required = false)
-    protected Map<String, PartSettings> partSettingsByPartId = new HashMap<>();
+    protected Map<String, PartSettings> partSettingsByPartId = null;
+    
+    @Commit
+    public void migratePartSettings() {
+        HashMap<String, BottomVisionSettings> bottomVisionSettingsHashMap = new HashMap<>();
+        Configuration configuration = Configuration.get();
+
+        partSettingsByPartId.forEach((partId, partSettings) -> {
+            if (pipelineIsDefault(partSettings.getPipeline())) {
+                partSettings.pipeline = null;
+            }
+
+            if (partSettings.pipeline == null) {
+                return;
+            }
+
+            try {
+                Serializer serOut = XmlSerialize.createSerializer();
+                StringWriter sw = new StringWriter();
+                serOut.write(partSettings, sw);
+                String partSettingsSerializedHash = DigestUtils.shaHex(sw.toString());
+
+                BottomVisionSettings bottomVisionSettings;
+                
+                if (bottomVisionSettingsHashMap.get(partSettingsSerializedHash) != null) {
+                    bottomVisionSettings = bottomVisionSettingsHashMap.get(partSettingsSerializedHash);
+                    bottomVisionSettings.setName(bottomVisionSettings.getName() + ";" + partId);
+                } else {
+                    bottomVisionSettings = new BottomVisionSettings("BVS_migration_" + UUID.randomUUID().toString().split("-")[0]);
+                    bottomVisionSettings.setName(partId);
+                    bottomVisionSettings.setCvPipeline(partSettings.pipeline);
+                    bottomVisionSettingsHashMap.put(partSettingsSerializedHash, bottomVisionSettings);
+
+                    configuration.addVisionSettings(bottomVisionSettings);
+                }
+
+                configuration.assignVisionSettingsToPartUpdateMaps(partId, bottomVisionSettings);
+                partSettings.pipeline = null;
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+    
+    public boolean pipelineIsDefault(CvPipeline pipeline) {
+        Serializer serOut = XmlSerialize.createSerializer();
+        CvPipeline defaultPipeline = Configuration.get().getDefaultVisionSettings().getCvPipeline();
+        try {
+            StringWriter sw = new StringWriter();
+            serOut.write(pipeline, sw);
+            String pipelineHash = DigestUtils.shaHex(sw.toString());
+
+            StringWriter defaultSw = new StringWriter();
+            serOut.write(defaultPipeline, defaultSw);
+            String defaultPipelineHash = DigestUtils.shaHex(defaultSw.toString());
+            
+            return pipelineHash.equals(defaultPipelineHash);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
@@ -561,12 +621,22 @@ public class ReferenceBottomVision implements PartAlignment {
         @Element(required = false)
         protected Location visionOffset = new Location(LengthUnit.Millimeters);
 
+        @Element(required = false)
+        protected CvPipeline pipeline = null;
+
         public PartSettings() {
 
         }
 
         public PartSettings(ReferenceBottomVision bottomVision) {
             setEnabled(bottomVision.isEnabled());
+            try {
+                setPipeline(bottomVision.getPipeline()
+                        .clone());
+            }
+            catch (Exception e) {
+                throw new Error(e);
+            }
         }
 
         public boolean isEnabled() {
@@ -583,6 +653,14 @@ public class ReferenceBottomVision implements PartAlignment {
 
         public void setPreRotateUsage(PreRotateUsage preRotateUsage) {
             this.preRotateUsage = preRotateUsage;
+        }
+
+        public CvPipeline getPipeline() {
+            return pipeline;
+        }
+
+        public void setPipeline(CvPipeline pipeline) {
+            this.pipeline = pipeline;
         }
         
         public MaxRotation getMaxRotation() {
