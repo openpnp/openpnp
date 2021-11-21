@@ -52,10 +52,6 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import org.openpnp.util.UiUtils;
-import org.openpnp.util.VisionUtils;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 @SuppressWarnings("serial")
 public class PackageVisionPanel extends JPanel {
@@ -63,15 +59,10 @@ public class PackageVisionPanel extends JPanel {
     private JTable table;
 
     final private Footprint footprint;
-    final private Package pkg;
 
     public PackageVisionPanel(Package pkg) {
-        this.pkg = pkg;
         this.footprint = pkg.getFootprint();
-        initialize();
-    }
-
-    private void initialize() {
+        
         setLayout(new BorderLayout(0, 0));
         tableModel = new FootprintTableModel(footprint);
 
@@ -82,12 +73,6 @@ public class PackageVisionPanel extends JPanel {
         propertiesPanel.setBorder(
                 new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Settings",
                         TitledBorder.LEADING, TitledBorder.TOP, null));
-        propertiesPanel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblUnits = new JLabel("Units");
         propertiesPanel.add(lblUnits, "2, 2, right, default");
@@ -157,54 +142,24 @@ public class PackageVisionPanel extends JPanel {
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-
-        JLabel lblPipeline = new JLabel("Pipeline");
-        JButton editPipelineBtn = new JButton("Edit");
-        editPipelineBtn.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
         
-        JButton resetPipelineBtn = new JButton("Reset to Default");
-        resetPipelineBtn.addActionListener((e) -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current package's pipeline with the default pipeline. Parts will not be affected. Are you sure?", null,
-                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    pkg.setVisionSettings(Configuration.get().getDefaultVisionSettings());
-                    editPipeline();
-                });
-            }
-        });
 
-        JButton resetPartsBtn = new JButton("Update all Parts");
+        JButton resetPartsBtn = new JButton("Reset Parts");
         resetPartsBtn.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
                     "This will replace the pipeline for all parts under the package with the package's pipeline. Are you sure?", null,
                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
-                    pkg.updateParts();
-                    editPipeline();
+                    pkg.resetParts();
                 });
             }
         });
-
-        bottomVisionPanel.add(lblPipeline, "2, 2, right, default");
-        bottomVisionPanel.add(editPipelineBtn, "4, 2, left, default");
-        bottomVisionPanel.add(resetPipelineBtn, "4, 4, left, default");
-        bottomVisionPanel.add(resetPartsBtn, "4, 6, left, default");
+        
+        bottomVisionPanel.add(resetPartsBtn, "2, 2, left, default");
 
         showReticle();
         initDataBindings();
-    }
-
-    private void editPipeline() throws Exception {
-        CvPipeline pipeline = pkg.getCvPipeline();
-        pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
-        pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
-
-        CvPipelineEditor editor = new CvPipelineEditor(pkg.getVisionSettings());
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
-        dialog.setVisible(true);
     }
 
     protected void initDataBindings() {

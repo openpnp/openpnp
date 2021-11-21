@@ -26,6 +26,7 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
 import org.openpnp.model.AbstractVisionSettings;
@@ -34,7 +35,7 @@ import org.openpnp.model.AbstractVisionSettings;
 public class PackagesTableModel extends AbstractTableModel implements PropertyChangeListener {
     final private Configuration configuration;
 
-    private String[] columnNames = new String[] {"ID", "Description", "Tape Specification", "Pipeline"};
+    private String[] columnNames = new String[] {"ID", "Description", "Tape Specification", "BottomVision"};
     private Class[] columnTypes = new Class[] {String.class, String.class, String.class, AbstractVisionSettings.class};
     private List<Package> packages;
 
@@ -83,7 +84,7 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
                 this_package.setTapeSpecification((String) aValue);
             }
             else if (columnIndex == 3) {
-                Configuration.get().assignVisionSettingsToPackageUpdateMaps(this_package, (AbstractVisionSettings) aValue);
+                this_package.setVisionSettings((BottomVisionSettings) aValue);
             }
         }
         catch (Exception e) {
@@ -111,23 +112,5 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
     public void propertyChange(PropertyChangeEvent arg0) {
         packages = new ArrayList<>(configuration.getPackages());
         fireTableDataChanged();
-
-        if (arg0.getSource() instanceof Package) {
-            // Only single package data changed, but sort order might change, so still need fireTableDataChanged().
-            fireTableDataChanged();
-        }
-        else  {
-            // Parts list itself changes.
-            if (packages != null) {
-                for (Package pkg : packages) {
-                    pkg.removePropertyChangeListener(this);
-                }
-            }
-            packages = new ArrayList<>(Configuration.get().getPackages());
-            fireTableDataChanged();
-            for (Package pkg : packages) {
-                pkg.addPropertyChangeListener(this);
-            }
-        }
     }
 }

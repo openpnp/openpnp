@@ -7,7 +7,7 @@ import java.awt.Rectangle;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 
-import org.openpnp.model.Configuration;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -30,7 +30,6 @@ public class CvPipelineEditorDialog extends JDialog {
                             );
                     switch (selection) {
                         case JOptionPane.YES_OPTION:
-                            Configuration.get().loadVisionSettingsMaps();
                             super.windowClosing(e);
                             CvPipelineEditorDialog.this.dispose();
                             return;

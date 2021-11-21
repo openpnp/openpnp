@@ -5,30 +5,22 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.util.UiUtils;
-import org.openpnp.util.VisionUtils;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -79,47 +71,24 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
 
-        JLabel lblPipeline = new JLabel("Pipeline");
+        JLabel lblPipeline = new JLabel("Bottom Vision Settings");
         panel.add(lblPipeline, "2, 4");
 
-        JButton editPipelineButton = new JButton("Edit");
-        editPipelineButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-                    editPipeline();
-                });
-            }
-        });
-        panel.add(editPipelineButton, "4, 4");
-
-        JButton btnResetToDefault = new JButton("Reset to Default");
-        btnResetToDefault.addActionListener((e) -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current pipeline with the built in default pipeline. Are you sure?",
-                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    bottomVision.setPipeline(ReferenceBottomVision.createDefaultPipeline());
-                    editPipeline();
-                });
-            }
-        });
-        panel.add(btnResetToDefault, "6, 4");
-
-        JButton btnResetAllTo = new JButton("Reset All Parts");
+        JButton btnResetAllTo = new JButton("Reset All Packages/Parts");
         btnResetAllTo.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace all custom part pipelines with the current pipeline. Are you sure?",
+                    "This will replace all custom package and part pipelines with the built-in default pipeline. Are you sure?",
                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
-                    Configuration.get().getParts().forEach(Part::resetVisionSettingsToDefault);
-                    MessageBoxes.infoBox("Parts Reset",
-                            "All custom part pipelines have been reset.");
+                    Configuration.get().getPackages().forEach(Package::resetVisionSettings);
+                    Configuration.get().getParts().forEach(Part::resetVisionSettings);
+                    MessageBoxes.infoBox("Parts and Packages Reset",
+                            "All custom package or part pipelines have been reset.");
                 });
             }
         });
-        panel.add(btnResetAllTo, "8, 4");
+        panel.add(btnResetAllTo, "4, 4");
 
         JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
         lblPreRot.setToolTipText("Pre-rotate default setting for bottom vision. Can be overridden on individual parts.");
@@ -171,15 +140,6 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         textFieldMaxAngularOffset.setEnabled(enabled);
         */
     }
-    
-    private void editPipeline() throws Exception {
-        CvPipeline pipeline = bottomVision.getPipeline();
-        pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
-		pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
-        dialog.setVisible(true);
-}
 
     @Override
     public String getWizardName() {

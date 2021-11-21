@@ -17,7 +17,7 @@ public class TableComboBoxModel<T extends Identifiable> extends DefaultComboBoxM
     }
 
     protected void addAllElements() {
-        throw new UnsupportedOperationException("Calling this function from GeneralTableComboBoxModel is not supported");
+        throw new UnsupportedOperationException("Calling this function from general TableComboBoxModel is not supported");
     }
 
     @Override

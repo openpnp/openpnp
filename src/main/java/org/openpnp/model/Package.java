@@ -27,7 +27,6 @@ import java.util.Set;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.spi.NozzleTip;
-import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -68,7 +67,7 @@ public class Package extends AbstractModelObject implements Identifiable {
         this(null);
     }
 
-    private AbstractVisionSettings visionSettings;
+    private BottomVisionSettings visionSettings;
 
     public Package(String id) {
         this.id = id;
@@ -77,11 +76,7 @@ public class Package extends AbstractModelObject implements Identifiable {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) {
-                visionSettings = configuration.getVisionSettings(bottomVisionId);
-
-                if (visionSettings == null) {
-                    visionSettings = configuration.getDefaultVisionSettings();
-                }
+                visionSettings = configuration.getBottomVisionSettings(bottomVisionId);
             }
         });
     }
@@ -198,28 +193,25 @@ public class Package extends AbstractModelObject implements Identifiable {
         syncCompatibleNozzleTipIds();
         firePropertyChange("compatibleNozzleTips", null, getCompatibleNozzleTips());
     }
-
-    public String getBottomVisionId() {
-        return bottomVisionId;
-    }
-    public AbstractVisionSettings getVisionSettings() {
+    
+    public BottomVisionSettings getVisionSettings() {
         return visionSettings;
     }
-
-    public CvPipeline getCvPipeline() {
-        return visionSettings.getCvPipeline();
-    }
-
-    public void setVisionSettings(AbstractVisionSettings visionSettings) {
-        AbstractVisionSettings odlValue = this.visionSettings;
+    
+    public void setVisionSettings(BottomVisionSettings visionSettings) {
+        BottomVisionSettings odlValue = this.visionSettings;
         this.visionSettings = visionSettings;
         firePropertyChange("vision-settings", odlValue, visionSettings);
     }
 
-    public void updateParts() {
+    public void resetVisionSettings() {
+        setVisionSettings(null);
+    }
+    
+    public void resetParts() {
         Configuration.get().getParts().forEach(part -> {
             if (part.getPackage().getId().equals(id)) {
-                Configuration.get().assignVisionSettingsToPartUpdateMaps(part, visionSettings);
+                part.resetVisionSettings();
             }
         });
     }

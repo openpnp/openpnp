@@ -6,13 +6,10 @@ import java.awt.event.HierarchyListener;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
-import org.openpnp.model.*;
-import org.openpnp.model.Package;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -169,41 +166,16 @@ public class CvPipelineEditor extends JPanel {
 
     private final static Set<Class<? extends CvStage>> stageClasses;
 
-    private final AbstractVisionSettings visionSettings;
     private final CvPipeline pipeline;
-    
     private PipelinePanel pipelinePanel;
     private ResultsPanel resultsPanel;
     
     private String originalVersion = "";
-    private Set<String> partsOriginal;
-    private Set<String> packagesOriginal;
 
     public CvPipelineEditor(CvPipeline pipeline) {
-        this(null, pipeline, false);
-    }
-
-    public CvPipelineEditor(AbstractVisionSettings visionSettings) {
-        this(visionSettings, visionSettings.getCvPipeline(), false);
-    }
-
-    public CvPipelineEditor(AbstractVisionSettings visionSettings, boolean tabs) {
-        this(visionSettings, visionSettings.getCvPipeline(), tabs);
-    }
-
-    public CvPipelineEditor(AbstractVisionSettings visionSettings, CvPipeline cvPipeline, boolean tabs) {
-        if (visionSettings == null) {
-            this.visionSettings = new BottomVisionSettings("To be deleted");
-        } else {
-            this.visionSettings = visionSettings;
-        }
-        
-        this.pipeline = cvPipeline;
-
+        this.pipeline = pipeline;
         try {
-            originalVersion = this.pipeline.toXmlString();
-            partsOriginal = getAssignedPartIds();
-            packagesOriginal = getAssignedPackagesIds();
+            originalVersion = pipeline.toXmlString();
         }
         catch (Exception e1) {
             // Do nothing
@@ -217,7 +189,7 @@ public class CvPipelineEditor extends JPanel {
 
         resultsPanel = new ResultsPanel(this);
         inputAndOutputSplitPane.setRightComponent(resultsPanel);
-        pipelinePanel = new PipelinePanel(this, tabs);
+        pipelinePanel = new PipelinePanel(this);
         inputAndOutputSplitPane.setLeftComponent(pipelinePanel);
         
         addHierarchyListener(new HierarchyListener() {
@@ -234,16 +206,12 @@ public class CvPipelineEditor extends JPanel {
         pipelinePanel.initializeFocus();    	
     }
     
-    public AbstractVisionSettings getVisionSettings() {
-        return visionSettings;
-    }
-
     public CvPipeline getPipeline() {
         return pipeline;
     }
 
     public void process() {
-        UiUtils.messageBoxOnException(pipeline::process);
+        UiUtils.messageBoxOnException(() -> getPipeline().process());
         resultsPanel.refresh();
     }
 
@@ -251,39 +219,20 @@ public class CvPipelineEditor extends JPanel {
         resultsPanel.setSelectedStage(stage);
     }
 
-    private Set<String> getAssignedPartIds() {
-        return Configuration.get().getParts(visionSettings.getId()).stream()
-                .map(Part::getId)
-                .collect(Collectors.toSet());
-    }
-
-    private Set<String> getAssignedPackagesIds() {
-        return Configuration.get().getPackages(visionSettings.getId()).stream()
-                .map(Package::getId)
-                .collect(Collectors.toSet());
-    }
-
     public boolean isDirty( ) {
         String editedVersion = "";
-        Set<String> partsEdited = new HashSet<>();
-        Set<String> packagesEdited = new HashSet<>();
         try {
             editedVersion = pipeline.toXmlString();
-            partsEdited = getAssignedPartIds();
-            packagesEdited = getAssignedPackagesIds();
         }
         catch (Exception e) {
             // Do nothing
         }
-        return !editedVersion.equals(originalVersion) ||
-                !partsEdited.equals(partsOriginal) ||
-                !packagesEdited.equals(packagesOriginal);
+        return !editedVersion.equals(originalVersion);
     }
     
     public void undoEdits() {
         try {
             pipeline.fromXmlString(originalVersion);
-            Configuration.get().restoreVisionSettings();
         }
         catch (Exception e) {
             // Do nothing

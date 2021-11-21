@@ -6,21 +6,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage;
-import org.openpnp.model.Board;
+import org.openpnp.model.*;
 import org.openpnp.model.Board.Side;
-import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.openpnp.util.VisionUtils;
 
 import com.google.common.io.Files;
+
+import static org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage.AlwaysOff;
+import static org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage.AlwaysOn;
 
 public class ReferenceBottomVisionOffsetTest {
     static File workingDirectory;
@@ -62,18 +58,18 @@ public class ReferenceBottomVisionOffsetTest {
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
        
-        Part part = Configuration.get().getPart("R0805-1K"); 
-        PartSettings partSettings = bottomVision.getPartSettings(part);
+        Part part = Configuration.get().getPart("R0805-1K");
+        BottomVisionSettings bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
         // no offset
-        partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
+        part.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
+        bottomVisionSettings.setPreRotateUsage(AlwaysOff);
         
         // test data
         Location[][] testData = {
@@ -104,18 +100,18 @@ public class ReferenceBottomVisionOffsetTest {
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
        
-        Part part = Configuration.get().getPart("R0805-1K"); 
-        PartSettings partSettings = bottomVision.getPartSettings(part);
+        Part part = Configuration.get().getPart("R0805-1K");
+        BottomVisionSettings bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
         // no offset
-        partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
+        part.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
+        bottomVisionSettings.setPreRotateUsage(AlwaysOn);
         
         // test data
         Location[][] testData = {
@@ -147,18 +143,18 @@ public class ReferenceBottomVisionOffsetTest {
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
        
-        Part part = Configuration.get().getPart("R0805-1K"); 
-        PartSettings partSettings = bottomVision.getPartSettings(part);
+        Part part = Configuration.get().getPart("R0805-1K");
+        BottomVisionSettings bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
         // 1mm offset in both directions
-        partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 1.0, 1.0, 0.0, 0.0));
+        part.setVisionOffset(new Location(LengthUnit.Millimeters, 1.0, 1.0, 0.0, 0.0));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
+        bottomVisionSettings.setPreRotateUsage(AlwaysOn);
         
         // test data
         Location[][] testData = {
@@ -190,18 +186,18 @@ public class ReferenceBottomVisionOffsetTest {
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
        
-        Part part = Configuration.get().getPart("DoubleAsymPart"); 
-        PartSettings partSettings = bottomVision.getPartSettings(part);
+        Part part = Configuration.get().getPart("DoubleAsymPart");
+        BottomVisionSettings bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
         // no offset
-        partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
+        part.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
+        bottomVisionSettings.setPreRotateUsage(AlwaysOff);
         
         // test data
         Location[][] testData = {
@@ -232,18 +228,18 @@ public class ReferenceBottomVisionOffsetTest {
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
        
-        Part part = Configuration.get().getPart("DoubleAsymPart"); 
-        PartSettings partSettings = bottomVision.getPartSettings(part);
+        Part part = Configuration.get().getPart("DoubleAsymPart");
+        BottomVisionSettings bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
         // no offset
-        partSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
+        part.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // With pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
+        bottomVisionSettings.setPreRotateUsage(AlwaysOn);
         
         // test data
         Location[][] testData = {
@@ -275,18 +271,18 @@ public class ReferenceBottomVisionOffsetTest {
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
        
-        Part part = Configuration.get().getPart("DoubleAsymPart"); 
-        PartSettings partSettings = bottomVision.getPartSettings(part);
+        Part part = Configuration.get().getPart("DoubleAsymPart");
+        BottomVisionSettings bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
         // no offset
-        partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+        part.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
+        bottomVisionSettings.setPreRotateUsage(AlwaysOff);
         
         // test data
         Location[][] testData = {
@@ -318,18 +314,18 @@ public class ReferenceBottomVisionOffsetTest {
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
        
-        Part part = Configuration.get().getPart("DoubleAsymPart"); 
-        PartSettings partSettings = bottomVision.getPartSettings(part);
+        Part part = Configuration.get().getPart("DoubleAsymPart");
+        BottomVisionSettings bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
         // 1mm offset in both directions
-        partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+        part.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // With pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
+        bottomVisionSettings.setPreRotateUsage(AlwaysOn);
         
         // test data
         Location[][] testData = {
@@ -360,18 +356,18 @@ public class ReferenceBottomVisionOffsetTest {
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
        
-        Part part = Configuration.get().getPart("DoubleAsymPart"); 
-        PartSettings partSettings = bottomVision.getPartSettings(part);
+        Part part = Configuration.get().getPart("DoubleAsymPart");
+        BottomVisionSettings bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
         // no offset
-        partSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+        part.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // No pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOff);
+        bottomVisionSettings.setPreRotateUsage(AlwaysOff);
         
         // test data
         Location error = new Location(LengthUnit.Millimeters, 1.0, -0.5, 0.0, 18.0);
@@ -408,8 +404,8 @@ public class ReferenceBottomVisionOffsetTest {
         ReferenceBottomVision bottomVision = (ReferenceBottomVision) machine.getPartAlignments().get(0);
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
        
-        Part part = Configuration.get().getPart("DoubleAsymPart"); 
-        PartSettings partSettings = bottomVision.getPartSettings(part);
+        Part part = Configuration.get().getPart("DoubleAsymPart");
+        BottomVisionSettings bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
@@ -417,10 +413,10 @@ public class ReferenceBottomVisionOffsetTest {
 
         // 0.5mm offset in both directions
         Location partVisionOffset = new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0);
-        partSettings.setVisionOffset(partVisionOffset);
+        part.setVisionOffset(partVisionOffset);
         
         // With pre rotate
-        partSettings.setPreRotateUsage(PreRotateUsage.AlwaysOn);
+        bottomVisionSettings.setPreRotateUsage(AlwaysOn);
         
         // error of vision
         Location error = new Location(LengthUnit.Millimeters, -0.6, 1.2, 0.0, -12.0);

@@ -27,12 +27,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.ThemeInfo;
 import org.openpnp.gui.components.ThemeSettingsPanel;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.NanosecondTime;
@@ -79,9 +80,7 @@ public class Configuration extends AbstractModelObject {
 
     private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
-    private LinkedHashMap<String, AbstractVisionSettings> visionSettingsMap = new LinkedHashMap<>();
-    private HashMap<String, AbstractVisionSettings> visionSettingsByPartId = new HashMap<>();
-    private HashMap<String, AbstractVisionSettings> visionSettingsByPackageId = new HashMap<>();
+    private LinkedHashMap<String, AbstractVisionSettings> visionSettings = new LinkedHashMap<>();
     private Machine machine;
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
     private boolean loaded;
@@ -402,8 +401,6 @@ public class Configuration extends AbstractModelObject {
             listener.configurationLoaded(this);
         }
 
-        loadVisionSettingsMaps();
-
         if (forceSave) {
             Logger.info("Defaults were loaded. Saving to configuration directory.");
             configurationDirectory.mkdirs();
@@ -512,25 +509,26 @@ public class Configuration extends AbstractModelObject {
         if (null == visionSettings.getId()) {
             throw new Error("Vision Settings with null Id cannot be added to Configuration.");
         }
-        this.visionSettingsMap.put(visionSettings.getId().toUpperCase(), visionSettings);
-        firePropertyChange("vision-settings", null, this.visionSettingsMap);
+        this.visionSettings.put(visionSettings.getId().toUpperCase(), visionSettings);
+        firePropertyChange("vision-settings", null, this.visionSettings);
     }
 
-    public List<AbstractVisionSettings> getVisionSettingsList() {
-        return Collections.unmodifiableList(new ArrayList<>(visionSettingsMap.values()));
+    public List<AbstractVisionSettings> getVisionSettings() {
+        return Collections.unmodifiableList(new ArrayList<>(visionSettings.values()));
     }
 
-    public AbstractVisionSettings getVisionSettings(String visionSettingsId) {
+    public BottomVisionSettings getBottomVisionSettings(String visionSettingsId) {
         if (visionSettingsId == null) {
             return null;
         }
-
-        return visionSettingsMap.get(visionSettingsId.toUpperCase());
+        
+        AbstractVisionSettings visionSettings = this.visionSettings.get(visionSettingsId.toUpperCase());
+        return visionSettings instanceof BottomVisionSettings ? (BottomVisionSettings)visionSettings : null;
     }
 
     public void removeVisionSettings(AbstractVisionSettings visionSettings) {
-        this.visionSettingsMap.remove(visionSettings.getId().toUpperCase());
-        firePropertyChange("vision-settings", null, this.visionSettingsMap);
+        this.visionSettings.remove(visionSettings.getId().toUpperCase());
+        firePropertyChange("vision-settings", null, this.visionSettings);
     }
 
     public List<Board> getBoards() {
@@ -556,54 +554,6 @@ public class Configuration extends AbstractModelObject {
         boards.put(file, board);
         firePropertyChange("boards", null, boards);
         return board;
-    }
-
-    public void loadVisionSettingsMaps() {
-        parts.values().forEach(part -> visionSettingsByPartId.put(part.getId(), part.getVisionSettings()));
-        packages.values().forEach(pkg -> visionSettingsByPackageId.put(pkg.getId(), pkg.getVisionSettings()));
-    }
-
-    public List<Part> getParts(String VisionSettingsId) {
-        return parts.values().stream()
-                .filter(part -> part.getVisionSettings().getId().equals(VisionSettingsId))
-                .collect(Collectors.toList());
-    }
-
-    public void assignVisionSettingsToPart(Part part, AbstractVisionSettings visionSettings) {
-        parts.get(part.getId().toUpperCase()).setVisionSettings(visionSettings);
-    }
-
-    public void assignVisionSettingsToPartUpdateMaps(String partId, AbstractVisionSettings visionSettings) {
-        assignVisionSettingsToPartUpdateMaps(parts.get(partId.toUpperCase()), visionSettings);
-    }
-
-    public void assignVisionSettingsToPartUpdateMaps(Part part, AbstractVisionSettings visionSettings) {
-        parts.get(part.getId().toUpperCase()).setVisionSettings(visionSettings);
-        visionSettingsByPartId.put(part.getId(), visionSettings);
-    }
-
-    public List<Package> getPackages(String visionsettingsId) {
-        return packages.values().stream()
-                .filter(pkg -> pkg.getVisionSettings().getId().equals(visionsettingsId))
-                .collect(Collectors.toList());
-    }
-
-    public void assignVisionSettingsToPackage(Package pkg, AbstractVisionSettings visionSettings) {
-        packages.get(pkg.getId()).setVisionSettings(visionSettings);
-    }
-
-    public void assignVisionSettingsToPackageUpdateMaps(Package pkg, AbstractVisionSettings visionSettings) {
-        packages.get(pkg.getId()).setVisionSettings(visionSettings);
-        visionSettingsByPartId.put(pkg.getId(), visionSettings);
-    }
-
-    public void restoreVisionSettings() {
-        visionSettingsByPartId.forEach((partId, visionSettings) -> {
-            getPart(partId).setVisionSettings(visionSettings);
-        });
-        visionSettingsByPackageId.forEach((packageId, visionSettings) -> {
-            getPackage(packageId).setVisionSettings(visionSettings);
-        });
     }
     
     private static void serializeObject(Object o, File file) throws Exception {
@@ -669,12 +619,8 @@ public class Configuration extends AbstractModelObject {
 
     private void saveVisionSettings(File file) throws Exception {
         VisionSettingsConfigurationHolder holder = new VisionSettingsConfigurationHolder();
-        holder.visionSettings = new ArrayList<>(visionSettingsMap.values());
+        holder.visionSettings = new ArrayList<>(visionSettings.values());
         serializeObject(holder, file);
-    }
-
-    public AbstractVisionSettings getDefaultVisionSettings() {
-        return visionSettingsMap.get("CVP_DEF");
     }
 
     public Job loadJob(File file) throws Exception {
@@ -764,6 +710,16 @@ public class Configuration extends AbstractModelObject {
     public static String createId(String prefix) {
         // NanosecondTime guarantees unique Ids, even if created in rapid succession such as in migration code.
         return prefix + NanosecondTime.get().toString(16);
+    }
+    
+    public static BottomVisionSettings getDefaultBottomVisionSettings() throws Exception {
+        String xml = IOUtils.toString(ReferenceBottomVision.class.getResource(
+            "ReferenceBottomVision-DefaultBottomVisionSettings.xml"));
+        
+        Serializer serializer = createSerializer();
+        VisionSettingsConfigurationHolder holder =
+                serializer.read(VisionSettingsConfigurationHolder.class, new StringReader(xml));
+        return (BottomVisionSettings) holder.visionSettings.get(0);
     }
 
     /**

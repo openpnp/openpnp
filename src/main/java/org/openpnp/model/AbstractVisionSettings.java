@@ -1,6 +1,5 @@
 package org.openpnp.model;
 
-import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.VisionSettings;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
@@ -13,12 +12,16 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     @Attribute(required = false)
     private String name;
 
+    @Attribute
+    protected boolean enabled;
+
     @Element()
     private CvPipeline cvPipeline;
 
-    public AbstractVisionSettings(){}
+    protected AbstractVisionSettings() {
+    }
 
-    public AbstractVisionSettings(String id) {
+    protected AbstractVisionSettings(String id) {
         this.id = id;
         this.cvPipeline = new CvPipeline();
     }
@@ -39,7 +42,7 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
 
     @Override
     public CvPipeline getCvPipeline() {
-        if(cvPipeline == null) {
+        if (cvPipeline == null) {
             cvPipeline = new CvPipeline();
         }
 

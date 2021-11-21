@@ -11,27 +11,31 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.DropMode;
+import javax.swing.JButton;
+import javax.swing.JEditorPane;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.components.ClassSelectionDialog;
-import org.openpnp.gui.components.PartPackageSelectionDialog;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Package;
-import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.PairKey;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 
@@ -40,34 +44,16 @@ import com.l2fprod.common.propertysheet.PropertySheetPanel;
 import com.l2fprod.common.propertysheet.PropertySheetTableModel;
 import com.l2fprod.common.swing.renderer.DefaultCellRenderer;
 
-import static javax.swing.SwingConstants.TOP;
-
 public class PipelinePanel extends JPanel {
-    public static final String ADD = "add";
-    public static final String DELETE = "delete";
-    public static final int STAGES = 0;
-    public static final int PARTS_PACKAGES = 1;
-
-    public final CvPipelineEditor editor;
+    private final CvPipelineEditor editor;
 
     private JTable stagesTable;
-    private JTable partsTable;
-    private JTable packagesTable;
-    private JButton btnAdd;
-    private JButton btnRemove;
-
     private StagesTableModel stagesTableModel;
-    private PipelineEditorPartsTableModel partsTableModel;
-    private PipelineEditorPackagesTableModel packagesTableModel;
     private PropertySheetPanel propertySheetPanel;
     private PipelinePropertySheetTable pipelinePropertySheetTable;
 
-    HashMap<PairKey<String, Integer>, Action> toolbarActionMap = new HashMap<>();
-
-    public PipelinePanel(CvPipelineEditor editor, boolean tabs) {
+    public PipelinePanel(CvPipelineEditor editor) {
         this.editor = editor;
-
-        initializeToolbarActionMap();
 
         pipelinePropertySheetTable = new PipelinePropertySheetTable(this);
         propertySheetPanel = new PropertySheetPanel(pipelinePropertySheetTable);
@@ -75,87 +61,47 @@ public class PipelinePanel extends JPanel {
 
         setLayout(new BorderLayout(0, 0));
 
-        prepareToolbar();
-
-        if (tabs) {
-            add(prepareTabView());
-        } else {
-            add(prepareStagesSplitView(), BorderLayout.CENTER);
-        }
-    }
-
-    private void initializeToolbarActionMap() {
-        toolbarActionMap.put(new PairKey<>(ADD, STAGES), new NewStageAction("New stage...", "Create a new stage."));
-        toolbarActionMap.put(new PairKey<>(DELETE, STAGES), new DeleteStageAction("Delete Stage...", "Delete the selected stage."));
-        toolbarActionMap.put(new PairKey<>(ADD, PARTS_PACKAGES), new NewPartPackageAction("New part/package", "Add new part of package"));
-        toolbarActionMap.put(new PairKey<>(DELETE, PARTS_PACKAGES), new DeletePartPackageAction("Delete Part/Package...", "Delete the selected Part or Package."));
-    }
-
-    private void prepareToolbar() {
-        JToolBar toolbar = new JToolBar();
-        add(toolbar, BorderLayout.NORTH);
-
-        JButton refreshButton = new JButton(new RefreshAction(Icons.refresh, "Update picture from current view.", "Update picture from current view."));
-        refreshButton.setHideActionText(true);
-        toolbar.add(refreshButton);
-
-        btnAdd = new JButton("Add new ...");
-        toolbar.add(btnAdd);
-        btnAdd.setHideActionText(true);
-
-        btnRemove = new JButton("Delete ...");
-        toolbar.add(btnRemove);
-        btnRemove.setHideActionText(true);
-
-        toolbar.addSeparator();
-
-        JButton copyButton = new JButton(new CopyPipelineAction("Copy pipeline to clipboard", "Copy the pipeline to the clipboard in text format."));
-        toolbar.add(copyButton);
-        copyButton.setHideActionText(true);
-
-        JButton pasteButton = new JButton(new PastePipelineAction("Paste pipeline from clipboard", "Paste new pipeline from a definition on the clipboard."));
-        toolbar.add(pasteButton);
-        pasteButton.setHideActionText(true);
-
-        setToolbarButtonsActions(STAGES);
-    }
-
-    private JTabbedPane prepareTabView() {
-        JTabbedPane tabs = new JTabbedPane(TOP);
-
-        tabs.addTab("Stages", null, prepareStagesSplitView(), null);
-        tabs.addTab("Parts/Packages", null, preparePartsPackagesSplitView(), null);
-
-        tabs.addChangeListener(e -> setToolbarButtonsActions(tabs.getSelectedIndex()));
-
-        return tabs;
-    }
-
-    private void setToolbarButtonsActions(int selectedPane) {
-        btnAdd.setAction(toolbarActionMap.get(new PairKey<>(ADD, selectedPane)));
-        btnRemove.setAction(toolbarActionMap.get(new PairKey<>(DELETE, selectedPane)));
-    }
-
-    private JSplitPane prepareStagesSplitView() {
         JSplitPane splitPaneMain = new JSplitPane();
+        add(splitPaneMain, BorderLayout.CENTER);
         splitPaneMain.setContinuousLayout(true);
         splitPaneMain.setOrientation(JSplitPane.VERTICAL_SPLIT);
 
-        splitPaneMain.setLeftComponent(prepareSplitPaneStages());
-        splitPaneMain.setRightComponent(propertySheetPanel);
+        JToolBar toolbar = new JToolBar();
+        add(toolbar, BorderLayout.NORTH);
 
-        splitPaneMain.setResizeWeight(0.5);
+        JButton refreshButton = new JButton(refreshAction);
+        refreshButton.setHideActionText(true);
+        toolbar.add(refreshButton);
 
-        return splitPaneMain;
-    }
+        JButton btnAdd = new JButton(newStageAction);
+        btnAdd.setHideActionText(true);
+        toolbar.add(btnAdd);
 
-    private JSplitPane prepareSplitPaneStages() {
+        JButton btnRemove = new JButton(deleteStageAction);
+        btnRemove.setHideActionText(true);
+        toolbar.add(btnRemove);
+
+        toolbar.addSeparator();
+
+        JButton copyButton = new JButton(copyAction);
+        copyButton.setHideActionText(true);
+        toolbar.add(copyButton);
+
+        JButton pasteButton = new JButton(pasteAction);
+        pasteButton.setHideActionText(true);
+        toolbar.add(pasteButton);
+
         JSplitPane splitPaneStages = new JSplitPane();
         splitPaneStages.setOrientation(JSplitPane.VERTICAL_SPLIT);
 
-        stagesTableModel = new StagesTableModel(editor.getPipeline());
-        stagesTable = prepareTable(stagesTableModel);
-
+        stagesTable = new JTable(stagesTableModel = new StagesTableModel(editor.getPipeline()));
+        stagesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        stagesTable.setDragEnabled(true);
+        stagesTable.setDropMode(DropMode.INSERT_ROWS);
+        stagesTable.setTransferHandler(new TableRowTransferHandler(stagesTable));
+        stagesTable.getColumnModel().getColumn(0).setPreferredWidth(50);
+        stagesTable.getColumnModel().getColumn(1).setPreferredWidth(50);
+        stagesTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         JScrollPane scrollPaneStages = new JScrollPane(stagesTable);
         splitPaneStages.setLeftComponent(scrollPaneStages);
 
@@ -204,66 +150,15 @@ public class PipelinePanel extends JPanel {
                 }
             }
         });
-
         stagesTable.changeSelection(stagesTable.getRowCount()-1,  0,  false, false);
-
+          
+        splitPaneMain.setLeftComponent(splitPaneStages);
+        splitPaneMain.setRightComponent(propertySheetPanel);
+        
+        splitPaneMain.setResizeWeight(0.5);
         splitPaneStages.setResizeWeight(0.80);
-
-        return splitPaneStages;
     }
-
-    private JTable prepareTable(AbstractTableModel tableModel) {
-        JTable table = new JTable(tableModel);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setDragEnabled(true);
-        table.setDropMode(DropMode.INSERT_ROWS);
-        table.setTransferHandler(new TableRowTransferHandler(table));
-        table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        table.getColumnModel().getColumn(1).setPreferredWidth(50);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-
-        return table;
-    }
-
-    private JSplitPane preparePartsPackagesSplitView() {
-        JSplitPane splitPanePartsPackages = new JSplitPane();
-        splitPanePartsPackages.setContinuousLayout(true);
-        splitPanePartsPackages.setOrientation(JSplitPane.VERTICAL_SPLIT);
-
-        splitPanePartsPackages.setLeftComponent(preparePartsPane());
-        splitPanePartsPackages.setRightComponent(preparePackagesPane());
-
-        splitPanePartsPackages.setResizeWeight(0.4);
-
-        return splitPanePartsPackages;
-    }
-
-    private JScrollPane preparePartsPane() {
-        partsTableModel = new PipelineEditorPartsTableModel(editor.getVisionSettings().getId());
-        partsTable = preparePartsPackagesTable(partsTableModel);
-
-        return new JScrollPane(partsTable);
-    }
-
-    private JScrollPane preparePackagesPane() {
-        packagesTableModel = new PipelineEditorPackagesTableModel(editor.getVisionSettings().getId());
-        packagesTable = preparePartsPackagesTable(packagesTableModel);
-
-        return new JScrollPane(packagesTable);
-    }
-
-    private JTable preparePartsPackagesTable(AbstractTableModel tableModel) {
-        JTable table = new JTable(tableModel);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setDragEnabled(true);
-        table.setDropMode(DropMode.INSERT_ROWS);
-        table.setTransferHandler(new TableRowTransferHandler(table));
-        table.getColumnModel().getColumn(0).setPreferredWidth(100);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
-
-        return table;
-    }
-
+    
     public void initializeFocus() {
         stagesTable.grabFocus();
         try {
@@ -338,45 +233,23 @@ public class PipelinePanel extends JPanel {
         }
     }
 
-    public Part getSelectedPart() {
-        int index = partsTable.getSelectedRow();
-        if (index == -1) {
-            return null;
-        } else {
-            return partsTableModel.getPart(partsTable.convertRowIndexToModel(index));
-        }
-    }
-
-    public Package getSelectedPackage() {
-        int index = packagesTable.getSelectedRow();
-        if (index == -1) {
-            return null;
-        } else {
-            return packagesTableModel.getPackage(packagesTable.convertRowIndexToModel(index));
-        }
-    }
-
-    abstract class Action extends AbstractAction {
-        Action(Icon icon, String name, String description) {
-            putValue(SMALL_ICON, icon);
-            putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, description);
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-        }
-    }
-
-    class NewStageAction extends Action {
-        NewStageAction(String name, String description) {
-            super(Icons.add, name, description);
+    public Action newStageAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.add);
+            putValue(NAME, "New stage...");
+            putValue(SHORT_DESCRIPTION, "Create a new stage.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            List<Class<? extends CvStage>> stageClasses = new ArrayList<>(CvPipelineEditor.getStageClasses());
-            stageClasses.sort(Comparator.comparing(o -> o.getSimpleName().toLowerCase()));
+            List<Class<? extends CvStage>> stageClasses = new ArrayList<>(editor.getStageClasses());
+            stageClasses.sort(new Comparator<Class<? extends CvStage>>() {
+                @Override
+                public int compare(Class<? extends CvStage> o1, Class<? extends CvStage> o2) {
+                    return o1.getSimpleName().toLowerCase()
+                            .compareTo(o2.getSimpleName().toLowerCase());
+                }
+            });
             ClassSelectionDialog<CvStage> dialog = new ClassSelectionDialog<>(
                     JOptionPane.getFrameForComponent(PipelinePanel.this), "New stage",
                     "Please select a stage implemention from the list below.", stageClasses);
@@ -399,9 +272,11 @@ public class PipelinePanel extends JPanel {
         }
     };
 
-    class DeleteStageAction extends Action {
-        DeleteStageAction(String name, String description) {
-            super(Icons.delete, name, description);
+    public Action deleteStageAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Delete Stage...");
+            putValue(SHORT_DESCRIPTION, "Delete the selected stage.");
         }
 
         @Override
@@ -413,9 +288,11 @@ public class PipelinePanel extends JPanel {
         }
     };
 
-    class CopyPipelineAction extends Action {
-        CopyPipelineAction(String name, String description) {
-            super(Icons.copy, name, description);
+    public final Action copyAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.copy);
+            putValue(NAME, "Copy pipeline to clipboard");
+            putValue(SHORT_DESCRIPTION, "Copy the pipeline to the clipboard in text format.");
         }
 
         @Override
@@ -432,9 +309,12 @@ public class PipelinePanel extends JPanel {
         }
     };
 
-    class PastePipelineAction extends Action {
-        PastePipelineAction(String name, String description) {
-            super(Icons.paste, name, description);
+    public final Action pasteAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.paste);
+            putValue(NAME, "Create pipeline from clipboard");
+            putValue(SHORT_DESCRIPTION,
+                    "Create a new pipeline from a definition on the clipboard.");
         }
 
         @Override
@@ -453,116 +333,11 @@ public class PipelinePanel extends JPanel {
         }
     };
 
-    class NewPartPackageAction extends Action {
-        NewPartPackageAction(String name, String description) {
-            super(Icons.add, name, description);
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            List<Part> parts = Configuration.get().getParts();
-            List<Package> packages = Configuration.get().getPackages();
-            
-            PartPackageSelectionDialog dialog = new PartPackageSelectionDialog(JOptionPane.getFrameForComponent(PipelinePanel.this), "New Part",
-                    "Please select a part/package from the lists below.", parts, packages);
-            dialog.setVisible(true);
-
-            if (dialog.getSelectedPane() == 0) {
-                addSelectedPart(dialog.getSelectedPart());
-            } else {
-                addSelectedPackage(dialog.getSelectedPackage());
-            }
-        }
-    };
-
-    private void addSelectedPart(Part selected) {
-        if (selected == null) {
-            return;
-        }
-
-        if (!selected.getVisionSettings().getId().equals("CVP_DEF")) {
-            int selection = JOptionPane.showConfirmDialog(editor,
-                    "Part already has a pipeline assigned, do you want to rewrite it?",
-                    "Rewrite pipeline",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null
-            );
-            if (selection == JOptionPane.NO_OPTION) {
-                return;
-            }
-        }
-
-        try {
-            Configuration.get().assignVisionSettingsToPart(selected, editor.getVisionSettings());
-            partsTableModel = new PipelineEditorPartsTableModel(editor.getVisionSettings().getId());
-            partsTable.setModel(partsTableModel);
-        }
-        catch (Exception e) {
-            MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this), "Error",
-                    e);
-        }
-    }
-
-    private void addSelectedPackage(Package selected) {
-        if (selected == null) {
-            return;
-        }
-
-        if (!selected.getVisionSettings().getId().equals("CVP_DEF")) {
-            int selection = JOptionPane.showConfirmDialog(editor,
-                    "Package already has a pipeline assigned, its and all its parts' pipeline will be set to default. Do you want to proceed?",
-                    "Rewrite pipeline",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null
-            );
-            if (selection == JOptionPane.NO_OPTION) {
-                return;
-            }
-        }
-
-        try {
-            Configuration.get().assignVisionSettingsToPackage(selected, editor.getVisionSettings());
-            partsTableModel = new PipelineEditorPartsTableModel(editor.getVisionSettings().getId());
-            packagesTableModel = new PipelineEditorPackagesTableModel(editor.getVisionSettings().getId());
-            partsTable.setModel(partsTableModel);
-            packagesTable.setModel(packagesTableModel);
-        }
-        catch (Exception e) {
-            MessageBoxes.errorBox(JOptionPane.getFrameForComponent(PipelinePanel.this), "Error",
-                    e);
-        }
-    }
-
-    class DeletePartPackageAction extends Action {
-        DeletePartPackageAction(String name, String description) {
-            super(Icons.delete, name, description);
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            Part selectedPart = getSelectedPart();
-            if (selectedPart != null) {
-                Configuration.get().assignVisionSettingsToPart(selectedPart, Configuration.get().getDefaultVisionSettings());
-            } else {
-                Package selectedPackage = getSelectedPackage();
-                if (selectedPackage == null) {
-                    return;
-                }
-                Configuration.get().assignVisionSettingsToPackage(selectedPackage, Configuration.get().getDefaultVisionSettings());
-            }
-
-            partsTableModel = new PipelineEditorPartsTableModel(editor.getVisionSettings().getId());
-            packagesTableModel = new PipelineEditorPackagesTableModel(editor.getVisionSettings().getId());
-            partsTable.setModel(partsTableModel);
-            packagesTable.setModel(packagesTableModel);
-        }
-    }
-
-    class RefreshAction extends Action {
-        RefreshAction(Icon icon, String name, String description) {
-            super(icon, name, description);
+    public final Action refreshAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.refresh);
+            putValue(NAME, "Update picture from current view.");
+            putValue(SHORT_DESCRIPTION, "Update picture from current view.");
         }
 
         @Override

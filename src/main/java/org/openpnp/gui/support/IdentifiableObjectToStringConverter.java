@@ -25,10 +25,7 @@ import org.openpnp.model.Identifiable;
 public class IdentifiableObjectToStringConverter<T extends Identifiable>
         extends ObjectToStringConverter {
     public String getPreferredStringForItem(Object o) {
-        if (o == null) {
-            return null;
-        }
         T t = (T) o;
-        return (t.getId() == null || t.getId().equals("CVP_DEF")) ? "Default" : t.getId();
+        return t == null || t.getId() == null ? " " : t.getId();
     }
 }

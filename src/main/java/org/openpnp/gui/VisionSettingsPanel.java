@@ -3,10 +3,8 @@ package org.openpnp.gui;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.*;
 import org.openpnp.gui.tablemodel.VisionSettingsModel;
-import org.openpnp.model.BottomVisionSettings;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.AbstractVisionSettings;
-import org.openpnp.spi.PartAlignment;
+import org.openpnp.model.*;
+import org.openpnp.model.Package;
 
 import javax.swing.*;
 import javax.swing.table.TableRowSorter;
@@ -28,16 +26,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     private VisionSettingsModel tableModel;
     private TableRowSorter<VisionSettingsModel> tableSorter;
     private JTable table;
-    private ActionGroup singleSelectionActionGroup;
-    private ActionGroup multiSelectionActionGroup;
 
     public VisionSettingsPanel(Frame frame) {
         this.frame = frame;
-
-        singleSelectionActionGroup = new ActionGroup(deleteSettingsAction, pasteSettingsFromClipboardAction, copySettingsToClipboardAction);
-        singleSelectionActionGroup.setEnabled(false);
-        multiSelectionActionGroup = new ActionGroup(deleteSettingsAction);
-        multiSelectionActionGroup.setEnabled(false);
 
         setLayout(new BorderLayout(0, 0));
 
@@ -53,8 +44,6 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         splitPane.addPropertyChangeListener("dividerLocation", evt -> prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation()));
         add(splitPane, BorderLayout.CENTER);
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
@@ -66,20 +55,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
                 return;
             }
 
-            List<AbstractVisionSettings> selections = getSelections();
-
-            if (selections.size() > 1) {
-                singleSelectionActionGroup.setEnabled(false);
-                multiSelectionActionGroup.setEnabled(true);
-            } else {
-                multiSelectionActionGroup.setEnabled(false);
-                singleSelectionActionGroup.setEnabled(!selections.isEmpty());
-            }
-
             AbstractVisionSettings visionSettings = getSelection();
-
-            int selectedTab = tabbedPane.getSelectedIndex();
-            tabbedPane.removeAll();
 
             if (visionSettings != null) {
                 Wizard wizard = visionSettings.getConfigurationWizard();
@@ -87,13 +63,11 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
                     JPanel panel = new JPanel();
                     panel.setLayout(new BorderLayout());
                     panel.add(wizard.getWizardPanel());
-                    tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                    splitPane.setRightComponent(new JScrollPane(panel));
                     wizard.setWizardContainer(VisionSettingsPanel.this);
                 }
-            }
-
-            if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
-                tabbedPane.setSelectedIndex(selectedTab);
+            } else {
+                splitPane.setRightComponent(new JPanel());
             }
 
             revalidate();
@@ -101,7 +75,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         });
 
         splitPane.setLeftComponent(new JScrollPane(table));
-        splitPane.setRightComponent(tabbedPane);
+        splitPane.setRightComponent(new JPanel());
     }
 
     private void createAndAddToolbar() {
@@ -120,14 +94,6 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         toolBar.add(deleteSettingsAction);
 
         toolBar.addSeparator();
-
-        JButton copyToClipboardButton = new JButton(copySettingsToClipboardAction);
-        copyToClipboardButton.setHideActionText(true);
-        toolBar.add(copyToClipboardButton);
-
-        JButton pasteFromClipboardButton = new JButton(pasteSettingsFromClipboardAction);
-        pasteFromClipboardButton.setHideActionText(true);
-        toolBar.add(pasteFromClipboardButton);
     }
 
     private AbstractVisionSettings getSelection() {
@@ -159,7 +125,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
             String id;
             while ((id = JOptionPane.showInputDialog(frame,
                     "Please enter an ID for the new settings.")) != null) {
-                if (Configuration.get().getVisionSettings(id) == null) {
+                if (Configuration.get().getBottomVisionSettings(id) == null) {
                     AbstractVisionSettings visionSettings = new BottomVisionSettings(id);
 
                     Configuration.get().addVisionSettings(visionSettings);
@@ -183,8 +149,30 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         @Override
         public void actionPerformed(ActionEvent e) {
             List<AbstractVisionSettings> selections = getSelections();
-            List<String> ids = selections.stream().map(AbstractVisionSettings::getId).collect(Collectors.toList());
 
+            List<String> usedIn = new ArrayList<>();
+            for (AbstractVisionSettings settings : selections) {
+                for (Package pkg : Configuration.get().getPackages()) {
+                    if (pkg.getVisionSettings() == settings) {
+                        usedIn.add(pkg.getId());
+                    }
+                }
+
+                for (Part part : Configuration.get().getParts()) {
+                    if (part.getVisionSettings() == settings) {
+                        usedIn.add(part.getId());
+                    }
+                }
+            }
+
+            if (!usedIn.isEmpty()) {
+                String errorIds = String.join(", ", usedIn);
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                        "The selection cannot be deleted. It is used by " + errorIds);
+                return;
+            }
+
+            List<String> ids = selections.stream().map(AbstractVisionSettings::getId).collect(Collectors.toList());
             String formattedIds;
             if (ids.size() <= 3) {
                 formattedIds = String.join(", ", ids);
@@ -200,33 +188,6 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
                     Configuration.get().removeVisionSettings(visionSettings);
                 }
             }
-        }
-    };
-
-    public final Action copySettingsToClipboardAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Settings to Clipboard");
-            putValue(SHORT_DESCRIPTION,
-                    "Copy the currently selected settings to the clipboard in text format.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-
-        }
-    };
-
-    public final Action pasteSettingsFromClipboardAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create Settings from Clipboard");
-            putValue(SHORT_DESCRIPTION, "Create a new settings from a definition on the clipboard.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-
         }
     };
 

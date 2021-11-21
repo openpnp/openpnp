@@ -20,8 +20,8 @@
 package org.openpnp.model;
 
 import org.openpnp.ConfigurationListener;
-import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
 
 /**
@@ -29,7 +29,6 @@ import org.simpleframework.xml.core.Persist;
  * from one or more Feeders and is placed at a Placement as part of a Job. Parts can be used across
  * many boards and should generally represent a single part in the real world.
  */
-
 public class Part extends AbstractModelObject implements Identifiable {
     @Attribute
     private String id;
@@ -41,7 +40,7 @@ public class Part extends AbstractModelObject implements Identifiable {
     @Attribute
     private double height;
 
-    private Package partPackage;
+    private Package packag;
 
     @Attribute
     private String packageId;
@@ -55,7 +54,10 @@ public class Part extends AbstractModelObject implements Identifiable {
     @Attribute(required = false)
     private int pickRetryCount = 0;
 
-    protected AbstractVisionSettings visionSettings;
+    @Element(required = false)
+    protected Location visionOffset = new Location(LengthUnit.Millimeters);
+
+    private BottomVisionSettings visionSettings;
 
     @SuppressWarnings("unused")
     private Part() {
@@ -67,27 +69,15 @@ public class Part extends AbstractModelObject implements Identifiable {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationLoaded(Configuration configuration) {
-                partPackage = configuration.getPackage(packageId);
-                visionSettings = configuration.getVisionSettings(bottomVisionId);
-
-                if (getPackage() == null) {
-                    setPackage(partPackage);
-                }
-
-                if (visionSettings == null) {
-                    if (partPackage != null && partPackage.getBottomVisionId() != null) {
-                        visionSettings = configuration.getVisionSettings(partPackage.getBottomVisionId());
-                    } else {
-                        visionSettings = configuration.getDefaultVisionSettings();
-                    }
-                }
+                packag = configuration.getPackage(packageId);
+                visionSettings = configuration.getBottomVisionSettings(bottomVisionId);
             }
         });
     }
 
     @Persist
     private void persist() {
-        packageId = (partPackage == null ? null : partPackage.getId());
+        packageId = (packag == null ? null : packag.getId());
         bottomVisionId = (visionSettings == null ? null : visionSettings.getId());
     }
 
@@ -144,12 +134,12 @@ public class Part extends AbstractModelObject implements Identifiable {
     }
 
     public Package getPackage() {
-        return partPackage;
+        return packag;
     }
 
     public void setPackage(Package packag) {
-        Object oldValue = this.partPackage;
-        this.partPackage = packag;
+        Object oldValue = this.packag;
+        this.packag = packag;
         firePropertyChange("package", oldValue, packag);
     }
     
@@ -160,6 +150,14 @@ public class Part extends AbstractModelObject implements Identifiable {
     public void setPickRetryCount(int pickRetryCount) {
         this.pickRetryCount = pickRetryCount;
         firePropertyChange("pickRetryCount", null, pickRetryCount);
+    }
+    
+    public Location getVisionOffset() {
+        return visionOffset;
+    }
+
+    public void setVisionOffset(Location visionOffset) {
+        this.visionOffset = visionOffset.derive(null, null, 0.0, 0.0);
     }
 
     @Override
@@ -172,28 +170,19 @@ public class Part extends AbstractModelObject implements Identifiable {
         return getHeight().getValue() <= 0.0;
     }
 
-    public AbstractVisionSettings getVisionSettings() {
+    public BottomVisionSettings getVisionSettings() {
         return visionSettings;
     }
 
-    public CvPipeline getCvPipeline() {
-        return visionSettings.getCvPipeline();
-    }
-
-    public void setVisionSettings(AbstractVisionSettings visionSettings) {
+    public void setVisionSettings(BottomVisionSettings visionSettings) {
+        BottomVisionSettings oldValue = visionSettings;
         this.visionSettings = visionSettings;
-        //TODO NK: may not be needed, check, test !!! 
-        this.bottomVisionId = visionSettings.getId();
+
+        //TODO NK check if has any effect
+        firePropertyChange("vision-settings", oldValue, visionSettings);
     }
 
-    public void resetVisionSettingsToDefault() {
-        AbstractVisionSettings oldValue = visionSettings;
-        if (partPackage.getVisionSettings() == null) {
-            visionSettings = Configuration.get().getDefaultVisionSettings();
-        } else {
-            visionSettings = partPackage.getVisionSettings();
-        }
-
-        firePropertyChange("vision-settings", oldValue, this.visionSettings);
+    public void resetVisionSettings() {
+        setVisionSettings(null);
     }
 }

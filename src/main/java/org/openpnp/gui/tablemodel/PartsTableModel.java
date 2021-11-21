@@ -34,7 +34,7 @@ import org.openpnp.model.Package;
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
     private String[] columnNames =
-            new String[] {"ID", "Description", "Height", "Package", "Speed %", "Pipeline"};
+            new String[] {"ID", "Description", "Height", "Package", "Speed %", "BottomVision"};
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
             Package.class, String.class, AbstractVisionSettings.class};
     private List<Part> parts;
@@ -101,7 +101,7 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
                 part.setSpeed(percentConverter.convertReverse(aValue.toString()));
             }
             else if (columnIndex == 5) {
-                Configuration.get().assignVisionSettingsToPartUpdateMaps(part, (AbstractVisionSettings) aValue);
+                part.setVisionSettings((BottomVisionSettings) aValue);
             }
         }
         catch (Exception e) {

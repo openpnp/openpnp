@@ -137,12 +137,12 @@ public class PackagesPanel extends JPanel {
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
+        table = new AutoSelectTextTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+
         JComboBox<AbstractVisionSettings> bottomVisionCombo = new JComboBox<>(new VisionSettingsComboBoxModel());
         bottomVisionCombo.setMaximumRowCount(20);
         bottomVisionCombo.setRenderer(new IdentifiableListCellRenderer<>());
-
-        table = new AutoSelectTextTable(tableModel);
-        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         table.setDefaultEditor(AbstractVisionSettings.class,
                 new DefaultCellEditor(bottomVisionCombo));

@@ -345,41 +345,7 @@
          </actuator>
       </actuators>
       <part-alignments>
-         <part-alignment class="org.openpnp.machine.reference.vision.ReferenceBottomVision" enabled="true" pre-rotate="true" max-vision-passes="3" max-angular-offset="10.0">
-            <max-linear-offset value="1.0" units="Millimeters"/>
-            <part-settings-by-part-id class="java.util.HashMap">
-               <entry>
-                  <string>R0805-1K</string>
-                  <part-settings enabled="true" pre-rotate-usage="Default" max-rotation="Adjust">
-                  </part-settings>
-               </entry>
-               <entry>
-                  <string>R0603-1K</string>
-                  <part-settings enabled="true" pre-rotate-usage="Default" max-rotation="Adjust">
-                  </part-settings>
-               </entry>
-               <entry>
-                  <string>FIDUCIAL-HOME</string>
-                  <part-settings enabled="true" pre-rotate-usage="Default" max-rotation="Adjust">
-                  </part-settings>
-               </entry>
-               <entry>
-                  <string>R0201-1K</string>
-                  <part-settings enabled="true" pre-rotate-usage="Default" max-rotation="Adjust">
-                  </part-settings>
-               </entry>
-               <entry>
-                  <string>R0402-1K</string>
-                  <part-settings enabled="true" pre-rotate-usage="Default" max-rotation="Adjust">
-                  </part-settings>
-               </entry>
-               <entry>
-                  <string>FIDUCIAL-1X2-FIDUCIAL1X2</string>
-                  <part-settings enabled="true" pre-rotate-usage="Default" max-rotation="Adjust">
-                  </part-settings>
-               </entry>
-            </part-settings-by-part-id>
-         </part-alignment>
+         <part-alignment class="org.openpnp.machine.reference.vision.ReferenceBottomVision" enabled="true" pre-rotate="true" max-vision-passes="3" max-angular-offset="10.0"/>
       </part-alignments>
       <drivers>
          <driver class="org.openpnp.machine.reference.driver.GcodeAsyncDriver" id="DRV165852d288e966d4" name="GcodeAsyncDriver" motion-control-type="ModeratedConstantAcceleration" communications="tcp" connection-keep-alive="false" units="Millimeters" max-feed-rate="0" backlash-offset-x="-1.0" backlash-offset-y="-1.0" backlash-offset-z="0.0" backlash-offset-r="0.0" non-squareness-factor="0.0" backlash-feed-rate-factor="0.1" timeout-milliseconds="5000" connect-wait-time-milliseconds="3000" visual-homing-enabled="true" backslash-escaped-characters-enabled="false" remove-comments="true" compress-gcode="true" logging-gcode="false" supporting-pre-move="false" using-letter-variables="true" infinity-timeout-milliseconds="60000" writer-polling-interval="100" writer-queue-timeout="60000" max-commands-queued="1000" confirmation-flow-control="true" reported-location-confirmation="true" interpolation-max-steps="32" interpolation-jerk-steps="4" interpolation-time-step="0.001" interpolation-min-step="16">

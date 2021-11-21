@@ -19,7 +19,7 @@ public class VisionSettingsModel extends AbstractTableModel implements PropertyC
 
     public VisionSettingsModel() {
         Configuration.get().addPropertyChangeListener("vision-settings", this);
-        visionSettings = new ArrayList<>(Configuration.get().getVisionSettingsList());
+        visionSettings = new ArrayList<>(Configuration.get().getVisionSettings());
     }
 
     @Override
@@ -32,7 +32,7 @@ public class VisionSettingsModel extends AbstractTableModel implements PropertyC
                     visionSettings.removePropertyChangeListener(this);
                 }
             }
-            visionSettings = new ArrayList<>(Configuration.get().getVisionSettingsList());
+            visionSettings = new ArrayList<>(Configuration.get().getVisionSettings());
             fireTableDataChanged();
             for (AbstractVisionSettings visionSettings : this.visionSettings) {
                 visionSettings.addPropertyChangeListener(this);

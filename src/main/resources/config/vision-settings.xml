@@ -1,8 +1,8 @@
 <openpnp-vision-settings>
-    <vision-settings class="org.openpnp.model.BottomVisionSettings" id="CVP_DEF" name="ReferenceBottomDefaultPipeline">
+    <vision-settings class="org.openpnp.model.BottomVisionSettings" id="BVS_TEST" name="Test Bottom Vision Settings" enabled="true">
         <cv_pipeline>
             <stages>
-                <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" settle-first="true" />
+                <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRead" name="0" enabled="true" file="..\images\TestImage262887643904749591.jpe_0000_0000.png" color-space="Bgr"/>
                 <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="13" enabled="true" prefix="bv_source_" suffix=".png" />
                 <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="10" enabled="true" kernel-size="9" />
                 <cv-stage class="org.openpnp.vision.pipeline.stages.MaskCircle" name="4" enabled="true" diameter="525" />

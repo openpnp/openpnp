@@ -14,9 +14,10 @@ public class VisionSettingsComboBoxModel extends TableComboBoxModel<AbstractVisi
 
     @Override
     protected void addAllElements() {
-        Configuration.get().getVisionSettingsList().stream()
+        Configuration.get().getVisionSettings().stream()
                 .filter(BottomVisionSettings.class::isInstance)
                 .sorted(comparator)
                 .forEach(this::addElement);
+        addElement(null);
     }
 }
