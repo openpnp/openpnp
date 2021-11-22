@@ -96,7 +96,11 @@ The **Calibration** milestone brings Kinematics and Vision together to calibrate
 The **Production** milestone handles recurrent configuration tasks such as feeder setup as well as production issues such as board, placement and job handling.  
 
 ### Advanced Milestone
-The **Advanced** milestone, while also serving as a production milestone, finally exposes all the advanced features, such as advanced driver settings, motion planner, asynchronous driver, contact probing nozzle etc. For the most problematic of these settings, Issues & Solutions will propose taking them back when going back to earlier milestones.
+The **Advanced** milestone, while also serving as a production milestone, finally exposes all the advanced features, such as advanced driver settings, motion planner, asynchronous driver, contact probing nozzle etc. 
+
+![Replace GcodeDriver](https://user-images.githubusercontent.com/9963310/142825950-bfe141c9-d069-42e8-9da2-b8fff827139e.png)
+
+For the most problematic of these settings, Issues & Solutions will propose taking them back when going back to earlier milestones.
 
 
 ## Video
