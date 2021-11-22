@@ -102,7 +102,7 @@ There are several options for the CompletionType:
 
 ### Motion Blending 
 ___
-This is still **EXPERIMENTAL**! There is currently no controller that has proven powerful enough for practical use with this. Smoothieware can demonstrate the principle at reduced speed or for small paths, but its internal move queue turns out too small for complex and fast moves. I have high hopes for the [Duet3D 3 controller](https://www.duet3d.com/Duet3Mainboard6HC) that has a much more powerful MCU with plenty of RAM. Duet3D kindly donated a controller to me, I will now explore this feature further. Many others have announced more powerful controllers in the OpenPnP user group, so this feature is now ready for _your_ experiments! 
+This is still **EXPERIMENTAL**! There is currently no controller that has proven powerful enough for practical use with this. Smoothieware can demonstrate the principle at reduced speed or for small paths, but its internal move queue turns out too small for complex and fast moves. Duet 3D is limited by serial over USB speed. Many others have announced more powerful controllers in the OpenPnP user group, so this feature is now ready for _your_ experiments! 
 ___
 
 Having recorded a sequence of moves, the ReferenceAdvancedMotionPlanner is now free to optimize and plan its execution, rearranging and even modiyfing moves within the machine constraints. 
