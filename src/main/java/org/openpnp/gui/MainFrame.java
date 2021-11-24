@@ -877,8 +877,10 @@ public class MainFrame extends JFrame {
     }
 
     public void hideInstructions() {
-        scheduledExecutor.shutdown();
-        scheduledExecutor = null;
+        if (scheduledExecutor != null) {
+            scheduledExecutor.shutdown();
+            scheduledExecutor = null;
+        }
         panelInstructions.setVisible(false);
         doLayout();
     }
