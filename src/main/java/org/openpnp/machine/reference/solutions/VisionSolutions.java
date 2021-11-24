@@ -959,6 +959,10 @@ public class VisionSolutions implements Solutions.Subject {
      */
     public Length autoCalibrateCamera(ReferenceCamera camera, HeadMountable movable, Double expectedDiameter, String diagnostics, boolean secondary) 
             throws Exception {
+        if (camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+            throw new Exception("Preliminary camera "+camera.getName()+" calibration cannot be performed, "
+                    + "because the Advanced Camera Calibration is already active.");
+        }
         Location initialLocation = movable.getLocation();
         try {
             if (!secondary) {

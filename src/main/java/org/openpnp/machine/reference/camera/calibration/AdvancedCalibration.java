@@ -22,6 +22,7 @@ package org.openpnp.machine.reference.camera.calibration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -32,6 +33,8 @@ import org.opencv.core.Point;
 import org.opencv.core.Point3;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -1287,5 +1290,32 @@ public class AdvancedCalibration extends LensCalibrationParams {
         vectorPhyCamToPointInMachRefFrame.release();
         
         return ret;
+    }
+
+    /**
+     * Apply the calibration results to the machine.
+     * 
+     * @param head
+     * @param camera
+     */
+    public void applyCalibrationToMachine(ReferenceHead head, ReferenceCamera camera) {
+        camera.setDefaultZ(getPrimaryLocation().getLengthZ());
+        Location calibratedOffsets = new Location(LengthUnit.Millimeters);
+        if (head != null) {
+            calibratedOffsets = calibratedOffsets
+                    .subtract(getCameraOffsetAtZ(camera.getDefaultZ())
+                            .derive(null, null, 0.0, 0.0));
+        }
+        else {
+            Location camLocation = new Location(LengthUnit.Millimeters, 
+                    getVectorFromMachToVirCamInMachRefFrame().get(0, 0)[0],
+                    getVectorFromMachToVirCamInMachRefFrame().get(1, 0)[0],
+                    0, 0);
+
+            calibratedOffsets = camLocation.subtract(camera.getHeadOffsets().derive(null, null, 0.0, 0.0));
+        }
+        setCalibratedOffsets(calibratedOffsets);
+        setValid(true);
+        setEnabled(true);
     }
 }
