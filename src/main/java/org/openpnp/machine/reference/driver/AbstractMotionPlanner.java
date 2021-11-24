@@ -683,17 +683,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             return motion;
         }
         else {
-            // Plan empty or machine stopped before this time.  
-            entry1 = motionPlan.lastEntry();
-            AxesLocation currentLocation; 
-            if (entry1 != null) {
-                // Machine stopped before this time, take the last exit location.
-                currentLocation = entry1.getValue().getLocation1();
-            }
-            else {
-                // Nothing in the plan (yet), just get the current axes location.
-                currentLocation = new AxesLocation(getMachine());
-            }
+            // Plan empty or machine stopped before this time, just get the current axes location.
+            AxesLocation currentLocation = new AxesLocation(getMachine());
             // Mark it as Stillstand, so callers can wait for it. 
             Motion motion = new Motion( 
                     null, 

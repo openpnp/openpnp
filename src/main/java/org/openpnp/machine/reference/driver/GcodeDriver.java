@@ -403,6 +403,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         if (connected) {
             if (enabled) {
+                // Assume a freshly re-enabled machine has no pending moves anymore.
+                motionPending = false;
                 sendGcode(getCommand(null, CommandType.ENABLE_COMMAND));
             }
             else {
@@ -423,6 +425,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 disconnect();
             }
         }
+        super.setEnabled(enabled);
     }
 
     @Override
