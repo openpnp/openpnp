@@ -61,6 +61,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
@@ -293,9 +294,14 @@ public class MachineControlsPanel extends JPanel {
                     Configuration.get().getMachine().setEnabled(enable);
                     // TODO STOPSHIP move setEnabled into a binding.
                     setEnabled(true);
-                    if (machine.getHomeAfterEnabled() && machine.isEnabled()) {
+                    if (machine.isEnabled()) {
                         UiUtils.submitUiMachineTask(() -> {
-                            machine.home();
+                            // We wait for still-stand, because as a side-effect, it will allow OpenPnP to sync its
+                            // position to the initial reported location (see AbstractReferenceDriver.isSyncInitialLocation()).
+                            machine.getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
+                            if (machine.getHomeAfterEnabled()) {
+                                machine.home();
+                            }
                         });
                     }
                 }
