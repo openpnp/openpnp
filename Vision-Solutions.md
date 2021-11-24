@@ -16,7 +16,7 @@ In order to perform Visual Calibration, a certain calibration rig is needed. The
 
 ## Calibration Primary Fiducial
 
-Camera calibration can be performed automatically by looking at a [fiducial](https://en.wikipedia.org/wiki/Fiducial_marker#Printed_circuit_boards) while moving the camera around in a certain pattern. 
+Preliminary camera calibration can be performed automatically by looking at a [fiducial](https://en.wikipedia.org/wiki/Fiducial_marker#Printed_circuit_boards) while moving the camera around in a certain pattern. 
 
 The fiducial must be round, high contrast, sharp and flat. The standard fiducial (the same type is used for [[Visual Homing]]) is just any bright 1mm diameter round mark on dark ground. You can simply print the linked PDF. It is recommended to use a high quality matte photo paper or similar: 
 
@@ -40,7 +40,7 @@ For manual settings, use the spin control. On new machines/cameras, nothing is y
 
 ## Calibration Secondary Fiducial
 
-Camera calibration also requires looking at a secondary fiducial at different height (Z level). This will provide the calibration algorithm with the needed 3D/spacial information to determine the true focal length of the lens and the optical position of the camera in space. 
+Preliminary camera calibration also requires looking at a secondary fiducial at different height (Z level). This will provide the calibration algorithm with the needed 3D/spacial information to determine the true focal length of the lens and the optical position of the camera in space. 
 
 The secondary fiducial should be placed close to the primary fiducial (see previous section), but on an elevated (or lowered) level in Z. The fiducial may be out of focus, but the blur should not go all the way across. In the illustration below the middle one is still good, the right one not.
 
