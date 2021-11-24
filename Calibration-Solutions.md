@@ -101,3 +101,11 @@ To calibrate precision camera ↔ nozzle offsets, we let the nozzle pick, rotate
 The test object should be circular and flat on the top. The nozzle must be able to pick and place it precisely. There must be good contrast between test objects and background. As you are likely to lose or damage these little test objects, make many. They can be as simple as punched out "confetti" from a hole punch, used on matte card stock. Press them flat. Don't worry if they are not perfect, this will all be cancelled-out through symmetry. 
 
 ![Hole Punch Confetti](https://user-images.githubusercontent.com/9963310/119668622-a1aed380-be37-11eb-97cc-a99f7220ea04.jpg)
+
+# Advanced Camera Calibration
+
+You already performed the [preliminary camera calibration](https://github.com/openpnp/openpnp/wiki/Vision-Solutions#calibration-primary-fiducial) earlier, but now it is time for the advanced calibration that includes compensating lens distortion and camera mounting tilt. A more profound and precise [[3D Units per Pixel]] calibration is also applied. 
+
+The calibration must be performed with the [same calibration rig, that you used for the preliminary calibration](https://github.com/openpnp/openpnp/wiki/Vision-Solutions#calibration-rig), make sure it is ready, and locations (including Z) heights are still valid. If not, please revisit the [Calibration Primary Fiducial](https://github.com/openpnp/openpnp/wiki/Vision-Solutions#calibration-primary-fiducial) and [Calibration Secondary Fiducial](https://github.com/openpnp/openpnp/wiki/Vision-Solutions#calibration-secondary-fiducial) steps first: enable the **Include Solved?** checkbox on the Issues & Solutions tab, to see revisitable solutions.
+
+See the [[Advanced Camera Calibration]] page for more information. Note, that Issues & Solutions will perform an automated calibration, with the calibration fiducials predefined.
