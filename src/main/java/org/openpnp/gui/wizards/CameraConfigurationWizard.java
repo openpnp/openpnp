@@ -19,6 +19,8 @@
 
 package org.openpnp.gui.wizards;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
@@ -50,6 +52,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.AbstractBroadcastingCamera;
+import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceCamera.FocusSensingMethod;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.Configuration;
@@ -355,6 +358,10 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
             }
         });
         panelUpp.add(enableUnitsPerPixel3D, "4, 2");
+        
+        advancedCalWarning = new JLabel("Advanced Calibration Active");
+        advancedCalWarning.setForeground(Color.RED);
+        panelUpp.add(advancedCalWarning, "6, 2, 9, 1, right, default");
 
         lblX = new JLabel("X");
         panelUpp.add(lblX, "4, 4, center, default");
@@ -531,8 +538,29 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         focusSensingMethod.setVisible(camera.getHead() == null);
     };
 
+    public boolean isOverriddenClassicTransforms() {
+        return enableUnitsPerPixel3D.isEnabled();
+    }
+
+    public void setOverriddenClassicTransforms(boolean overriddenClassicTransforms) {
+        for (Component comp : panelUpp.getComponents()) {
+            comp.setEnabled(!overriddenClassicTransforms);
+        }
+        for (Component comp : panelCal.getComponents()) {
+            comp.setEnabled(!overriddenClassicTransforms);
+        }
+        advancedCalWarning.setVisible(overriddenClassicTransforms);
+        advancedCalWarning.setEnabled(overriddenClassicTransforms);
+    }
+
     @Override
     public void createBindings() {
+        if (camera instanceof ReferenceCamera) {
+            addWrappedBinding(((ReferenceCamera) camera).getAdvancedCalibration(), 
+                    "overridingOldTransformsAndDistortionCorrectionSettings", 
+                this, "overriddenClassicTransforms");
+        }
+
         AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         LengthConverter uppLengthConverter = new LengthConverter(uppFormat);
         LengthConverter lengthConverter = new LengthConverter();
@@ -905,4 +933,5 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
     private JLabel lblFocusSensing;
     private JComboBox focusSensingMethod;
     private boolean reloadWizard;
+    private JLabel advancedCalWarning;
 }

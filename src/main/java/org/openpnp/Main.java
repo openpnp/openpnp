@@ -19,13 +19,12 @@
 
 package org.openpnp;
 
-import java.awt.*;
+import java.awt.EventQueue;
 import java.io.File;
 import java.util.Locale;
 
-import javax.swing.*;
+import javax.swing.UIManager;
 
-import com.formdev.flatlaf.FlatLightLaf;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ThemeDialog;
 import org.openpnp.gui.components.ThemeInfo;
@@ -57,6 +56,18 @@ public class Main {
             version = "INTERNAL BUILD";
         }
         return version;
+    }
+
+    public static String getSourceUri() {
+        String version = Main.class.getPackage().getImplementationVersion();
+        if (version == null) {
+            version = "-"; // default branch is selected
+        }
+        else {
+            // Take the hash.
+            version = version.substring(version.indexOf(".")+1);
+        }
+        return "https://github.com/openpnp/openpnp/blob/"+version+"/";
     }
 
     private static void configureLogging(File configurationDirectory) {
@@ -152,7 +163,7 @@ public class Main {
         Locale.setDefault(Configuration.get().getLocale());
 
         ThemeInfo theme = configuration.getThemeInfo();
-        new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize());
+        new ThemeSettingsPanel().setTheme(theme, configuration.getFontSize(), configuration.isAlternateRows());
         ThemeDialog.getInstance().setOldTheme(theme);
 
         EventQueue.invokeLater(new Runnable() {

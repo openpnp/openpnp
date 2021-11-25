@@ -41,6 +41,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -85,11 +86,13 @@ import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.importer.KicadPosImporter;
 import org.openpnp.gui.importer.LabcenterProteusImporter; //
 import org.openpnp.gui.importer.NamedCSVImporter;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -154,13 +157,43 @@ public class MainFrame extends JFrame {
     private JDialog frameCamera;
     private JDialog frameMachineControls;
     private Map<KeyStroke, Action> hotkeyActionMap;
-    
+    private AbstractConfigurationWizard wizardWithActiveProcess = null;
     private UndoManager undoManager = new UndoManager();
 
     public static MainFrame get() {
         return mainFrame;
     }
     
+    /**
+     * @return the wizardWithActiveProcess
+     */
+    public synchronized AbstractConfigurationWizard getWizardWithActiveProcess() {
+        return wizardWithActiveProcess;
+    }
+
+    /**
+     * @param wizardWithActiveProcess the wizardWithActiveProcess to set
+     */
+    public synchronized void setWizardWithActiveProcess(AbstractConfigurationWizard wizardWithActiveProcess) {
+        if (this.wizardWithActiveProcess == null) {
+            if (wizardWithActiveProcess.getId() != null) {
+                this.wizardWithActiveProcess = wizardWithActiveProcess;
+            }
+            else {
+                throw new InvalidParameterException("Wizard does not have a valid Id.");
+            }
+        }
+        else {
+            throw new IllegalStateException(String.format("Another wizard (%s - %s) already has an active process, it must complete or be cancelled before this wizard can start another process.", this.wizardWithActiveProcess.getName(), ((PropertySheetWizardAdapter) (this.wizardWithActiveProcess.getWizardContainer())).getPropertySheetTitle()));
+        }
+    }
+    
+    public synchronized void clearWizardWithActiveProcess(AbstractConfigurationWizard wizardWithActiveProcess) {
+        if (this.wizardWithActiveProcess == wizardWithActiveProcess) {
+            this.wizardWithActiveProcess = null;
+        }
+    }
+
     public UndoManager getUndoManager() {
         return undoManager;
     }
@@ -844,8 +877,10 @@ public class MainFrame extends JFrame {
     }
 
     public void hideInstructions() {
-        scheduledExecutor.shutdown();
-        scheduledExecutor = null;
+        if (scheduledExecutor != null) {
+            scheduledExecutor.shutdown();
+            scheduledExecutor = null;
+        }
         panelInstructions.setVisible(false);
         doLayout();
     }

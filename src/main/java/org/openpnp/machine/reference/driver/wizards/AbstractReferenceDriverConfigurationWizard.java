@@ -1,6 +1,5 @@
 package org.openpnp.machine.reference.driver.wizards;
 
-import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
@@ -20,6 +19,7 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver.CommunicationsType;
+import org.openpnp.machine.reference.driver.ReferenceDriverCommunications.LineEndingType;
 import org.openpnp.machine.reference.driver.SerialPortCommunications;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -48,6 +48,10 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
     private JTextField driverName;
     private JComboBox communicationsType;
     private JLabel lblCommunicationsType;
+    private JLabel lblSyncInitialLocation;
+    private JCheckBox syncInitialLocation;
+    private JLabel lblLineendings;
+    private JComboBox lineEndingType;
 
     public AbstractReferenceDriverConfigurationWizard(AbstractReferenceDriver driver) {
         this.driver = driver;
@@ -64,6 +68,8 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         lblName = new JLabel("Name");
@@ -72,6 +78,13 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         driverName = new JTextField();
         panelController.add(driverName, "4, 2, fill, default");
         driverName.setColumns(20);
+        
+        lblSyncInitialLocation = new JLabel("Sync Initial Location");
+        panelController.add(lblSyncInitialLocation, "2, 4, right, default");
+        lblSyncInitialLocation.setToolTipText("<html>\nAfter enabling the driver, get the initial location from the controller.<br/>\nIt allows you to safely jog an unhomed machine.\n</html>");
+        
+        syncInitialLocation = new JCheckBox("");
+        panelController.add(syncInitialLocation, "4, 4");
 
         //Selector code
         JPanel panelComms = new JPanel();
@@ -83,6 +96,8 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -112,6 +127,13 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         
         connectionKeepAlive = new JCheckBox("");
         panelComms.add(connectionKeepAlive, "4, 4");
+        
+        lblLineendings = new JLabel("Line-Endings");
+        lblLineendings.setToolTipText("<html>\nLine-endings used in commands and responses (if the driver uses them).<br/>\n<ul>\n<li>LF = Line Feed</li>\n<li>CR = Carriage Return</li>\n<li>CRLF = Line Feed & Carriage Return</li>\n</ul>\n</html>\n");
+        panelComms.add(lblLineendings, "2, 6, right, default");
+        
+        lineEndingType = new JComboBox(LineEndingType.values());
+        panelComms.add(lineEndingType, "4, 6, fill, default");
 
         //Serial config code
         panelSerial = new JPanel();
@@ -258,11 +280,11 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
     }
 
     private void setPanelEnabled(JPanel panel, Boolean isEnabled) {
-        panel.setEnabled(isEnabled);
+        panel.setVisible(isEnabled);
 
-        for (Component cp : panel.getComponents()) {
-            cp.setEnabled(isEnabled);
-        }
+//        for (Component cp : panel.getComponents()) {
+//            cp.setEnabled(isEnabled);
+//        }
     }
 
     private void refreshPortList() {
@@ -287,9 +309,11 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         IntegerConverter integerConverter = new IntegerConverter();
 
         addWrappedBinding(driver, "name", driverName, "text");
+        addWrappedBinding(driver, "syncInitialLocation", syncInitialLocation, "selected");
 
         addWrappedBinding(driver, "communicationsType", communicationsType, "selectedItem");
         addWrappedBinding(driver, "connectionKeepAlive", connectionKeepAlive, "selected");
+        addWrappedBinding(driver, "lineEndingType", lineEndingType, "selectedItem");
         
         addWrappedBinding(driver, "portName", comboBoxPort, "selectedItem");
         addWrappedBinding(driver, "baud", comboBoxBaud, "selectedItem");

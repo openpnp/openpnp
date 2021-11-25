@@ -565,7 +565,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
 
     /**
-     * 
+     * Rebuild the UI as needed, when solutions have changed state, perhaps asynchronously.
      */
     public void solutionChanged() {
         SwingUtilities.invokeLater(() -> {

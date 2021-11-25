@@ -25,8 +25,12 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.opencv.core.Size;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.processes.CalibrateCameraProcess;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -34,6 +38,7 @@ import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
 import org.openpnp.machine.reference.camera.ImageCamera;
+import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
@@ -104,13 +109,15 @@ public class CalibrationSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private long machineSettleMs = 500;
 
+    @Attribute(required=false)
+    private double upLookingSecondaryOffsetZMm = 2;
+
     public CalibrationSolutions setMachine(ReferenceMachine machine) {
         this.machine = machine;
         return this;
     }
 
     private ReferenceMachine machine;
-
 
     @Override
     public void findIssues(Solutions solutions) {
@@ -295,6 +302,46 @@ public class CalibrationSolutions implements Solutions.Subject {
                     }
                 }
             }
+            if (!camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+                solutions.add(new Solutions.Issue(
+                        camera, 
+                        "Advanced camera "+camera.getName()+" calibration.", 
+                        "Automatically calibrates the camera "+camera.getName()+" using the primary and secondary calibration fiducials.", 
+                        Solutions.Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration") {
+
+                    @Override 
+                    public void activate() throws Exception {
+                        MainFrame.get().getMachineControls().setSelectedTool(camera);
+                        camera.ensureCameraVisible();
+                    }
+
+                    @Override 
+                    public String getExtendedDescription() {
+                        return "<html>"
+                                + "<p>You already performed the preliminary camera calibration earlier, now it is time for the "
+                                + "<strong>Advanced Camera Calibration</strong> that includes compensating lens distortion and camera mounting tilt. "
+                                + "A more profound and precise 3D Units per Pixel calibration is also applied.</p><br/>"
+                                + "<p>More information can be found in the Wiki (press the blue Info button below).</p><br/>"
+                                + "<p>The calibration must be performed with the same calibration rig, that you used for the "
+                                + "preliminary calibration. Make sure it is ready, and locations (including Z) are still valid.</p><br/>"
+                                + "<p>If not, please revisit the <strong>Primary calibration fiducial position</strong> and "
+                                + "<strong>Secondary calibration fiducial position</strong> steps first (Enable the "
+                                + "<strong>Include Solved?</strong> checkbox above, to see revisitable solutions).</p><br/>"
+                                + "<p><span color=\"red\">CAUTION</span>: The camera "+camera.getName()+" will move over the "
+                                + "calibration rig and perform a length calibration motion pattern.</p><br/>" 
+                                + "</html>";
+                    }
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (state == State.Solved) {
+                            advancedCameraCalibration(camera, defaultNozzle, head, this);
+                        }
+                        super.setState(state);
+                    }
+                });
+            }
         }
     }
 
@@ -397,7 +444,46 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     private void perUpLookingCameraSolutions(Solutions solutions, Camera defaultCamera,
             Nozzle defaultNozzle, ReferenceCamera camera) {
+        if (!camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+            solutions.add(new Solutions.Issue(
+                    camera, 
+                    "Advanced camera "+camera.getName()+" calibration.", 
+                    "Automatically calibrates the camera "+camera.getName()+" using the nozzle "+defaultNozzle.getName()+".", 
+                    Solutions.Severity.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration") {
 
+                @Override 
+                public void activate() throws Exception {
+                    MainFrame.get().getMachineControls().setSelectedTool(camera);
+                    camera.ensureCameraVisible();
+                }
+
+                @Override 
+                public String getExtendedDescription() {
+                    return "<html>"
+                            + "<p>You already performed the preliminary camera calibration earlier, now it is time for the "
+                            + "<strong>Advanced Camera Calibration</strong> that includes compensating lens distortion and camera mounting tilt. "
+                            + "A more profound and precise 3D Units per Pixel calibration is also applied.</p><br/>"
+                            + "<p>More information can be found in the Wiki (press the blue Info button below).</p><br/>"
+                            + "<p>The calibration must be performed with the same nozzle tip, that you used for the "
+                            + "preliminary calibration. Make sure it is loaded and its <strong>Vision Diameter</strong> is "
+                            + "still valid. Furthermore the camera "+camera.getName()+" position (including Z) must still be valid.</p><br/>"
+                            + "<p>If not, please revisit the <strong>Determine up-looking camera "+camera.getName()+" position</strong> step first "
+                            + "(Enable the <strong>Include Solved?</strong> checkbox above, to see revisitable solutions).</p><br/>"
+                            + "<p><span color=\"red\">CAUTION</span>: The nozzle "+defaultNozzle.getName()+" will automatically "
+                            + "move over the camera "+camera.getName()+" and perform a lengthy calibration motion pattern.</p><br/>" 
+                            + "</html>";
+                }
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (state == State.Solved) {
+                        advancedCameraCalibration(camera, defaultNozzle, null, this);
+                    }
+                    super.setState(state);
+                }
+            });
+        }
     }
 
     public void calibrateAxisBacklash(ReferenceHead head, ReferenceCamera camera,
@@ -1056,5 +1142,123 @@ public class CalibrationSolutions implements Solutions.Subject {
             MovableUtils.moveToLocationAtSafeZ(nozzle, nozzle.getLocation()
                     .deriveLengths(null, null, nozzle.getSafeZ(), 0.0));
         }
+    }
+
+    private void advancedCameraCalibration(ReferenceCamera camera, HeadMountable movable, ReferenceHead head, Solutions.Issue issue)
+            throws Exception {
+        if (!Configuration.get().getMachine().isHomed()) {
+            throw new Exception("Machine is not enabled and homed.");
+        }
+        AdvancedCalibration advCal = camera.getAdvancedCalibration();
+        // Switch on the override but disable the calibration, get some frames to make sure the camera is now
+        // in the raw format.
+        advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
+        advCal.setEnabled(false);
+        camera.lightSettleAndCapture();
+        camera.lightSettleAndCapture();
+
+        Location primaryLocation;
+        Location secondaryLocation;
+        Integer primaryDiameter;
+        Integer secondaryDiameter;
+        if (head != null) {
+            // Down-looking camera uses the calibration rig:
+            primaryLocation = head.getCalibrationPrimaryFiducialLocation();
+            secondaryLocation = head.getCalibrationSecondaryFiducialLocation();
+            primaryDiameter = (int) Math.round(head.getCalibrationPrimaryFiducialDiameter().divide(
+                    camera.getUnitsPerPixel(primaryLocation.getLengthZ()).getLengthX()));
+            secondaryDiameter = (int) Math.round(head.getCalibrationSecondaryFiducialDiameter().divide(
+                    camera.getUnitsPerPixel(secondaryLocation.getLengthZ()).getLengthX()));
+        }
+        else {
+            // Up-looking camera uses the nozzle.
+            ReferenceNozzle nozzle = (ReferenceNozzle) movable;
+            primaryLocation = camera.getHeadOffsets();
+            camera.setDefaultZ(primaryLocation.getLengthZ());
+            // Default to just arbitrary difference: 
+            Length secondaryZ = primaryLocation.getLengthZ()
+                    .add(new Length(upLookingSecondaryOffsetZMm, LengthUnit.Millimeters)); 
+            secondaryLocation = primaryLocation.deriveLengths(null, null, secondaryZ, null);
+            // Encapsulated CalibrateCameraProcess
+            Length calibrationTipDiameter = nozzle.getNozzleTip().getCalibration().
+                    getCalibrationTipDiameter();
+            primaryDiameter = (int) Math.round(calibrationTipDiameter.divide(
+                    camera.getUnitsPerPixel(primaryLocation.getLengthZ())
+                    .getLengthX()));
+            // This will not be accurate on the first go (no 3D UPP present). We just hope the diameter 
+            // margin will still cover it.
+            secondaryDiameter =  (int) Math.round(calibrationTipDiameter.divide(
+                    camera.getUnitsPerPixel(secondaryLocation.getLengthZ())
+                    .getLengthX()));
+        }
+        advCal.setPrimaryLocation(primaryLocation);
+        advCal.setSecondaryLocation(secondaryLocation);
+        ArrayList<Location>calibrationLocations = new ArrayList<>();
+        calibrationLocations.add(primaryLocation);
+        calibrationLocations.add(secondaryLocation);
+
+        advCal.setFiducialDiameter(primaryDiameter);
+        ArrayList<Integer> detectionDiameters = new ArrayList<>();
+        detectionDiameters.add(primaryDiameter);
+        detectionDiameters.add(secondaryDiameter);
+
+        CameraView cameraView = MainFrame.get().getCameraViews().
+                getCameraView(camera);
+
+        // Encapsulated CalibrateCameraProcess
+        new CalibrateCameraProcess(MainFrame.get(), cameraView, 
+                calibrationLocations, detectionDiameters, true) {
+
+            @Override 
+            public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
+                    double[][][] testPatternImagePointsList, Size size, double mirrored,
+                    double apparentMotionDirection) throws Exception {
+
+                advCal.setDataAvailable(true);
+                advCal.setValid(false);
+
+                try {
+                    advCal.processRawCalibrationData(
+                            testPattern3dPointsList, testPatternImagePointsList, 
+                            size, mirrored, apparentMotionDirection);
+
+                    advCal.applyCalibrationToMachine(head, camera);
+
+                    // Tidy up.
+                    UiUtils.submitUiMachineTask(() -> {
+                        if (head != null 
+                                && head.getDefaultCamera() == camera
+                                && head.getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
+                            head.visualHome(machine, true);
+                        }
+                        else {
+                            MovableUtils.moveToLocationAtSafeZ(movable, primaryLocation);
+                        }
+                    });
+                }
+                catch (Exception e) {
+                    MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                    advCal.setValid(false);
+                    advCal.setEnabled(false);
+                    advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
+                    issue.setState(State.Open);
+                }
+                MainFrame.get().getIssuesAndSolutionsTab().solutionChanged();
+            }
+
+            @Override
+            protected void processCanceled() {
+                advCal.setValid(false);
+                advCal.setEnabled(false);
+                advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
+
+                try {
+                    issue.setState(State.Open);
+                }
+                catch (Exception e) {
+                }
+                MainFrame.get().getIssuesAndSolutionsTab().solutionChanged();
+            }
+        };
     }
 }

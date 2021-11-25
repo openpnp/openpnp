@@ -27,26 +27,26 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.net.URI;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.Main;
+import org.openpnp.gui.components.MarkupTextPane;
 
 @SuppressWarnings("serial")
 public class AboutDialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
-    private JTextPane releaseNotes;
-    private JTextPane credits;
+    private MarkupTextPane releaseNotes;
+    private MarkupTextPane credits;
 
     public AboutDialog(Frame frame) {
         super(frame, true);
@@ -55,19 +55,16 @@ public class AboutDialog extends JDialog {
         try {
             String s = FileUtils.readFileToString(new File("CHANGES.md"));
             releaseNotes.setText(s);
-            releaseNotes.setCaretPosition(0);
+            releaseNotes.setUri(new URI(Main.getSourceUri()+"CHANGES.md"));
         }
         catch (Exception e) {
-
         }
-        
         try {
             String s = FileUtils.readFileToString(new File("SPONSORS.md"));
             credits.setText(s);
-            credits.setCaretPosition(0);
+            credits.setUri(new URI(Main.getSourceUri()+"SPONSORS.md"));
         }
         catch (Exception e) {
-
         }
     }
 
@@ -108,12 +105,10 @@ public class AboutDialog extends JDialog {
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         contentPanel.add(tabbedPane);
 
-        releaseNotes = new JTextPane();
-        releaseNotes.setEditable(false);
-        tabbedPane.addTab("Release Notes", null, new JScrollPane(releaseNotes), null);
+        releaseNotes = new MarkupTextPane();
+        tabbedPane.addTab("Release Notes", null, releaseNotes, null);
 
-        credits = new JTextPane();
-        credits.setEditable(false);
-        tabbedPane.addTab("Credits", null, new JScrollPane(credits), null);
+        credits = new MarkupTextPane();
+        tabbedPane.addTab("Credits", null, credits, null);
     }
 }

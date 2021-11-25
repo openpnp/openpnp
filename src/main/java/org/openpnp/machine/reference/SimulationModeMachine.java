@@ -415,7 +415,8 @@ public class SimulationModeMachine extends ReferenceMachine {
                         .getMomentaryMotion(cameraTime);
                 AxesLocation axesLocation = momentary.getMomentaryLocation(cameraTime - momentary.getPlannedTime0());
                 location = hm.toTransformed(axesLocation);
-                location = hm.toHeadMountableLocation(location);
+                location = hm.toHeadMountableLocation(location, 
+                        LocationOption.SuppressCameraCalibration);
             }
             // else: Configuration is still being loaded (Unit tests).
         } 
@@ -486,6 +487,7 @@ public class SimulationModeMachine extends ReferenceMachine {
                         && machine.getSimulationMode().isDynamicallyImperfectMachine()) {
                     // Need to convert to transformed (head) coordinates for real rotation:
                     Location rotationLocation = hm.toTransformed(axesLocation, 
+                            LocationOption.SuppressCameraCalibration,
                             LocationOption.SuppressStaticCompensation,
                             LocationOption.SuppressDynamicCompensation);
                     double rotation = rotationLocation.getRotation();
@@ -510,10 +512,12 @@ public class SimulationModeMachine extends ReferenceMachine {
 
                 // NOTE this specifically makes the assumption that the axes transform from raw 1:1
                 location = hm.toTransformed(axesLocation, 
+                        LocationOption.SuppressCameraCalibration,
                         LocationOption.SuppressStaticCompensation,
                         LocationOption.SuppressDynamicCompensation);
                 // Transform back. This bypasses any compensations, such as runout compensation.
                 location = hm.toHeadMountableLocation(location, 
+                        LocationOption.SuppressCameraCalibration,
                         LocationOption.SuppressStaticCompensation,
                         LocationOption.SuppressDynamicCompensation);
             }

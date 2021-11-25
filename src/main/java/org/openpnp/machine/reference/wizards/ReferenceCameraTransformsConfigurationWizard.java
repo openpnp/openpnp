@@ -1,5 +1,8 @@
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.Color;
+import java.awt.Component;
+
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -82,6 +85,10 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         textFieldRotation = new JTextField();
         panelTransforms.add(textFieldRotation, "4, 2");
         textFieldRotation.setColumns(10);
+        
+        advancedCalWarning = new JLabel("Advanced Calibration Active");
+        advancedCalWarning.setForeground(Color.RED);
+        panelTransforms.add(advancedCalWarning, "7, 2, right, default");
 
         lblOffsetX = new JLabel("Offset X");
         panelTransforms.add(lblOffsetX, "2, 4, right, default");
@@ -159,8 +166,23 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         panelTransforms.add(lblremovesInterlacingFrom, "7, 20");
     }
 
+    public boolean isOverriddenClassicTransforms() {
+        return textFieldRotation.isEnabled();
+    }
+
+    public void setOverriddenClassicTransforms(boolean overriddenClassicTransforms) {
+        for (Component comp : panelTransforms.getComponents()) {
+            comp.setEnabled(!overriddenClassicTransforms);
+        }
+        advancedCalWarning.setVisible(overriddenClassicTransforms);
+        advancedCalWarning.setEnabled(overriddenClassicTransforms);
+    }
+
     @Override
     public void createBindings() {
+        addWrappedBinding(referenceCamera.getAdvancedCalibration(), "overridingOldTransformsAndDistortionCorrectionSettings", 
+                this, "overriddenClassicTransforms");
+
         IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
@@ -175,7 +197,6 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
         addWrappedBinding(referenceCamera, "scaleWidth", scaleWidthTf, "text", intConverter);
         addWrappedBinding(referenceCamera, "scaleHeight", scaleHeightTf, "text", intConverter);
         addWrappedBinding(referenceCamera, "deinterlace", deinterlaceChk, "selected");
-
 
         ComponentDecorators.decorateWithAutoSelect(textFieldRotation);
         ComponentDecorators.decorateWithAutoSelect(textFieldOffsetX);
@@ -202,5 +223,6 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
     private JCheckBox deinterlaceChk;
     private JLabel lblDeinterlace;
     private JLabel lblremovesInterlacingFrom;
+    private JLabel advancedCalWarning;
 
 }
