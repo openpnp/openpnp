@@ -349,11 +349,14 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
     // method, we provide a format setter/getter by Name.
 
     public String getFormatName() {
-        return format.toString();
+        return format != null ? format.toString() : null;
     }
 
     public void setFormatName(String formatName) {
-        if (device != null) {
+        if (formatName == null) {
+            format = null;
+        }
+        else if (device != null) {
             for (CaptureFormat format : device.getFormats()) {
                 if (format.toString().equals(formatName)) {
                     setFormat(format);
