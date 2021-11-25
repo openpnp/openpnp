@@ -157,9 +157,13 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             if (uniqueId == null) {
                 return;
             }
+            int n = 0;
             for (CaptureDevice device : capture.getDevices()) {
                 if (device.getUniqueId().equals(uniqueId)) {
                     this.device = device;
+                    if (++n > 1) {
+                        Logger.warn("Multiple cameras found with ID {} for camera {}", uniqueId, getName());
+                    }
                 }
             }
             if (device == null) {
@@ -338,6 +342,28 @@ public class OpenPnpCaptureCamera extends ReferenceCamera implements Runnable {
             this.formatId = format.getFormatId();
         }
         firePropertyChange("format", null, format);
+        firePropertyChange("formatName", null, format.toString());
+    }
+
+    // Note: due to an instability of the CaptureFormat.equals() 
+    // method, we provide a format setter/getter by Name.
+
+    public String getFormatName() {
+        return format != null ? format.toString() : null;
+    }
+
+    public void setFormatName(String formatName) {
+        if (formatName == null) {
+            format = null;
+        }
+        else if (device != null) {
+            for (CaptureFormat format : device.getFormats()) {
+                if (format.toString().equals(formatName)) {
+                    setFormat(format);
+                    break;
+                }
+            }
+        }
     }
 
     public CapturePropertyHolder getBackLightCompensation() {
