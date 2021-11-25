@@ -38,58 +38,74 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     private void createUi() {
         createPanel();
 
-        JLabel lblEnabled = new JLabel("Enabled?");
-        panel.add(lblEnabled, "2, 2");
-
-        enabledCheckbox = new JCheckBox("");
-        panel.add(enabledCheckbox, "4, 2");
-
-        JLabel lblPrerotate = new JLabel("Pre-rotate");
-        panel.add(lblPrerotate, "2, 4, right, default");
-
-        comboBoxPreRotate = new JComboBox(ReferenceBottomVision.PreRotateUsage.values());
-        panel.add(comboBoxPreRotate, "4, 4");
-
-        JLabel lblMaxRotation = new JLabel("Rotation");
-        panel.add(lblMaxRotation, "2, 6, right, default");
-
-        comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
-        comboBoxMaxRotation.setToolTipText(
-                "Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1");
-        panel.add(comboBoxMaxRotation, "4, 6, fill, default");
-        
-        JLabel lblPartCheckType = new JLabel("Part size check");
-        panel.add(lblPartCheckType, "2, 8");
-
-        comboBoxCheckPartSizeMethod = new JComboBox(ReferenceBottomVision.PartSizeCheckMethod.values());
-        panel.add(comboBoxCheckPartSizeMethod, "4, 8, fill, default");
-
-        JLabel lblPartSizeTolerance = new JLabel("Size tolerance (%)");
-        panel.add(lblPartSizeTolerance, "2, 12");
-
-        textPartSizeTolerance = new JTextField();
-        panel.add(textPartSizeTolerance, "4, 12, fill, default");
-        
-        JLabel lblPipeline = new JLabel("Pipeline");
-        panel.add(lblPipeline, "2, 14, right, default");
-
-        JButton editPipelineButton = new JButton("Edit");
-        editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
-        panel.add(editPipelineButton, "4, 14");
-        
-        JButton resetPipelineButton = new JButton("Reset to Default");
-        resetPipelineButton.addActionListener(e -> {
+        JButton resetButton = new JButton("Reset to Default");
+        resetButton.addActionListener(e -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the bottom vision settings with the default settings. Are you sure??", null,
+                    "This will reset the bottom vision settings with to the default settings. Are you sure??", null,
                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
                     ReferenceBottomVision bottomVision = (ReferenceBottomVision) Configuration.get().getMachine().getPartAlignments().get(0);
                     visionSettings.setValues(bottomVision.getBottomVisionSettings());
+                    firePropertyChange("vision-settings", null, this.visionSettings);
                 });
             }
         });
-        panel.add(resetPipelineButton, "6, 14");
+        panel.add(resetButton, "4, 2");
+
+        JLabel lblEnabled = new JLabel("Enabled?");
+        panel.add(lblEnabled, "2, 6");
+
+        enabledCheckbox = new JCheckBox("");
+        panel.add(enabledCheckbox, "4, 6");
+
+        JLabel lblPrerotate = new JLabel("Pre-rotate");
+        panel.add(lblPrerotate, "2, 8, right, default");
+
+        comboBoxPreRotate = new JComboBox(ReferenceBottomVision.PreRotateUsage.values());
+        panel.add(comboBoxPreRotate, "4, 8");
+
+        JLabel lblMaxRotation = new JLabel("Rotation");
+        panel.add(lblMaxRotation, "2, 10, right, default");
+
+        comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
+        comboBoxMaxRotation.setToolTipText(
+                "Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1");
+        panel.add(comboBoxMaxRotation, "4, 10, fill, default");
+        
+        JLabel lblPartCheckType = new JLabel("Part size check");
+        panel.add(lblPartCheckType, "2, 12");
+
+        comboBoxCheckPartSizeMethod = new JComboBox(ReferenceBottomVision.PartSizeCheckMethod.values());
+        panel.add(comboBoxCheckPartSizeMethod, "4, 12, fill, default");
+
+        JLabel lblPartSizeTolerance = new JLabel("Size tolerance (%)");
+        panel.add(lblPartSizeTolerance, "2, 14");
+
+        textPartSizeTolerance = new JTextField();
+        panel.add(textPartSizeTolerance, "4, 14, fill, default");
+        
+        JLabel lblPipeline = new JLabel("Pipeline");
+        panel.add(lblPipeline, "2, 16, right, default");
+
+        JButton editPipelineButton = new JButton("Edit");
+        editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
+        panel.add(editPipelineButton, "4, 16");
+        
+        JButton resetPipelineButton = new JButton("Reset Pipeline to Default");
+        resetPipelineButton.addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                    "This will replace the Pipeline with the built-in default. Are you sure??", null,
+                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (result == JOptionPane.YES_OPTION) {
+                UiUtils.messageBoxOnException(() -> {
+                    ReferenceBottomVision bottomVision = (ReferenceBottomVision) Configuration.get().getMachine().getPartAlignments().get(0);
+                    visionSettings.setCvPipeline(bottomVision.getBottomVisionSettings().getCvPipeline().clone());
+                    editPipeline();
+                });
+            }
+        });
+        panel.add(resetPipelineButton, "6, 16");
     }
 
     private void createPanel() {

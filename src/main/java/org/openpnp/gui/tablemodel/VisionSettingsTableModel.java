@@ -9,7 +9,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VisionSettingsModel extends AbstractTableModel implements PropertyChangeListener {
+public class VisionSettingsTableModel extends AbstractTableModel implements PropertyChangeListener {
 
     private String[] columnNames =
             new String[]{"ID", "Name"};
@@ -17,7 +17,7 @@ public class VisionSettingsModel extends AbstractTableModel implements PropertyC
 
     private List<AbstractVisionSettings> visionSettings;
 
-    public VisionSettingsModel() {
+    public VisionSettingsTableModel() {
         Configuration.get().addPropertyChangeListener("vision-settings", this);
         visionSettings = new ArrayList<>(Configuration.get().getVisionSettings());
     }

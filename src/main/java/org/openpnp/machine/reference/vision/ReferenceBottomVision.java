@@ -243,7 +243,7 @@ public class ReferenceBottomVision implements PartAlignment {
             offsets = wantedLocation.subtractWithRotation(nozzleLocation);
             
             // subtract visionCenterOffset
-            offsets = offsets.subtract(part.getVisionOffset().rotateXy(wantedAngle));
+            offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngle));
 
             Logger.debug("Final offsets {}", offsets);
             displayResult(pipeline, part, offsets, camera);
@@ -293,7 +293,7 @@ public class ReferenceBottomVision implements PartAlignment {
             offsets = offsets.derive(null, null, null, angleOffset);
             
             // subtract visionCenterOffset
-            offsets = offsets.subtract(part.getVisionOffset().rotateXy(offsets.getRotation()));
+            offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(offsets.getRotation()));
             
             Logger.debug("Final offsets {}", offsets);
 

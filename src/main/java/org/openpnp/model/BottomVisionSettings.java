@@ -4,6 +4,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.*;
 import org.openpnp.machine.reference.vision.wizards.BottomVisionSettingsConfigurationWizard;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.Element;
 
 import java.util.UUID;
 
@@ -20,6 +21,9 @@ public class BottomVisionSettings extends AbstractVisionSettings {
 
     @Attribute(required = false)
     protected MaxRotation maxRotation = MaxRotation.Adjust;
+
+    @Element(required = false)
+    protected Location visionOffset = new Location(LengthUnit.Millimeters);
 
     @Override
     public Wizard getConfigurationWizard() {
@@ -82,14 +86,25 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     public void setMaxRotation(MaxRotation maxRotation) {
         this.maxRotation = maxRotation;
     }
+
+    public Location getVisionOffset() {
+        return visionOffset;
+    }
+
+    public void setVisionOffset(Location visionOffset) {
+        this.visionOffset = visionOffset.derive(null, null, 0.0, 0.0);
+        firePropertyChange("visionOffset", null, this.visionOffset);
+    }
     
-    public void setValues(BottomVisionSettings another) {
+    public void setValues(BottomVisionSettings another) throws CloneNotSupportedException {
         setEnabled(another.isEnabled());
-        setCvPipeline(another.getCvPipeline());
+        setCvPipeline(another.getCvPipeline().clone());
         setPreRotateUsage(another.getPreRotateUsage());
         setCheckPartSizeMethod(another.checkPartSizeMethod);
         setMaxRotation(another.getMaxRotation());
         setCheckSizeTolerancePercent(another.getCheckSizeTolerancePercent());
+
+        firePropertyChange("vision-settings", null, this);
     }
 
 }

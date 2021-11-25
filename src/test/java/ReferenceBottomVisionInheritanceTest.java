@@ -60,7 +60,7 @@ public class ReferenceBottomVisionInheritanceTest {
     }
 
     @Test
-    public void testBottomVisionSettingsInheritance() throws Exception {
+    public void testBottomVisionSettingsInheritance() {
         Part part = Configuration.get().getPart("R0805-1K");
         Package pkg = part.getPackage();
         assertNull(part.getVisionSettings(), "Part Bottom Vision should be null");
@@ -87,7 +87,7 @@ public class ReferenceBottomVisionInheritanceTest {
     }
     
     @Test
-    public void testBottomVisionReset() {
+    public void testBottomVisionReset() throws CloneNotSupportedException {
         Part part1 = Configuration.get().getPart("R0805-1K");
         Part part2 = Configuration.get().getPart("R0805-2K");
         Package pkg = part1.getPackage();

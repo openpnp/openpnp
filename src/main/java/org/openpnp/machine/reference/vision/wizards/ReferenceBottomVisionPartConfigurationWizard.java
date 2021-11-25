@@ -26,6 +26,7 @@ import com.jgoodies.forms.layout.RowSpec;
 public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceBottomVision bottomVision;
     private final Part part;
+    private final BottomVisionSettings bottomVisionSettings;
     
     private JCheckBox chckbxCenterAfterTest;
     private JTextField tfBottomVisionOffsetX;
@@ -35,6 +36,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     public ReferenceBottomVisionPartConfigurationWizard(ReferenceBottomVision bottomVision, Part part) {
         this.bottomVision = bottomVision;
         this.part = part;
+        this.bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
 
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -75,7 +77,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblTestAngle = new JLabel("Test Placement Angle");
-        panel.add(lblTestAngle, "2, 6, right, default");
+        panel.add(lblTestAngle, "2, 4, right, default");
 
         JButton btnTestAlighment = new JButton("Test Alignment");
         btnTestAlighment.addActionListener((e) -> {
@@ -86,36 +88,36 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
 
         testAlignmentAngle = new JTextField();
         testAlignmentAngle.setText("0.000");
-        panel.add(testAlignmentAngle, "4, 6, right, default");
+        panel.add(testAlignmentAngle, "4, 4, right, default");
         testAlignmentAngle.setColumns(10);
-        panel.add(btnTestAlighment, "6, 6");
+        panel.add(btnTestAlighment, "6, 4");
 
         chckbxCenterAfterTest = new JCheckBox("Center After Test");
         chckbxCenterAfterTest.setToolTipText("Center and rotate the part after the test.");
         chckbxCenterAfterTest.setSelected(true);
-        panel.add(chckbxCenterAfterTest, "8, 6");
+        panel.add(chckbxCenterAfterTest, "8, 4");
         
         JLabel lblBottomVisionX = new JLabel("X");
-        panel.add(lblBottomVisionX, "4, 16");
+        panel.add(lblBottomVisionX, "4, 8");
         
         JLabel lblBottomVisionY = new JLabel("Y");
-        panel.add(lblBottomVisionY, "6, 16");
+        panel.add(lblBottomVisionY, "6, 8");
         
         JLabel lblVisionCenterOffset = new JLabel("Vision center offset");
         lblVisionCenterOffset.setToolTipText("Offset relative to the pick location/center of the part to the center of the rectangle detected by the bottom vision");
-        panel.add(lblVisionCenterOffset, "2, 18");
+        panel.add(lblVisionCenterOffset, "2, 10");
         
         tfBottomVisionOffsetX = new JTextField();
-        panel.add(tfBottomVisionOffsetX, "4, 18, fill, default");
+        panel.add(tfBottomVisionOffsetX, "4, 10, fill, default");
         tfBottomVisionOffsetX.setColumns(10);
         
         tfBottomVisionOffsetY = new JTextField();
-        panel.add(tfBottomVisionOffsetY, "6, 18, fill, default");
+        panel.add(tfBottomVisionOffsetY, "6, 10, fill, default");
         tfBottomVisionOffsetY.setColumns(10);
         
         JButton btnAutoVisionCenterOffset = new JButton("Detect");
         btnAutoVisionCenterOffset.setToolTipText("Center part over bottom vision camera. Button will run bottom vision and calculates the offset.");
-        panel.add(btnAutoVisionCenterOffset, "8, 18");
+        panel.add(btnAutoVisionCenterOffset, "8, 10");
         btnAutoVisionCenterOffset.addActionListener((e) -> {
             UiUtils.submitUiMachineTask(() -> {
                 determineVisionOffset();
@@ -194,7 +196,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
         // perform the alignment
         testAlignment(true);
         
-        Location visionOffset = center.subtract(nozzle.getLocation()).add(part.getVisionOffset());
+        Location visionOffset = center.subtract(nozzle.getLocation()).add(bottomVisionSettings.getVisionOffset());
         tfBottomVisionOffsetX.setText(Double.toString(visionOffset.getX()));
         tfBottomVisionOffsetY.setText(Double.toString(visionOffset.getY()));
     }
@@ -208,7 +210,7 @@ public class ReferenceBottomVisionPartConfigurationWizard extends AbstractConfig
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
         MutableLocationProxy bottomVisionOffsetProxy = new MutableLocationProxy();
-        addWrappedBinding(part, "visionOffset", bottomVisionOffsetProxy, "location");
+        addWrappedBinding(bottomVisionSettings, "visionOffset", bottomVisionOffsetProxy, "location");
         bind(UpdateStrategy.READ_WRITE, bottomVisionOffsetProxy, "lengthX", tfBottomVisionOffsetX, "text", lengthConverter);
         bind(UpdateStrategy.READ_WRITE, bottomVisionOffsetProxy, "lengthY", tfBottomVisionOffsetY, "text", lengthConverter);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(tfBottomVisionOffsetX);

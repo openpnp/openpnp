@@ -66,7 +66,7 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setSide(Side.Top);
 
         // no offset
-        part.setVisionOffset(new Location(LengthUnit.Millimeters));
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOff);
@@ -108,7 +108,7 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setSide(Side.Top);
 
         // no offset
-        part.setVisionOffset(new Location(LengthUnit.Millimeters));
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOn);
@@ -151,7 +151,7 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setSide(Side.Top);
 
         // 1mm offset in both directions
-        part.setVisionOffset(new Location(LengthUnit.Millimeters, 1.0, 1.0, 0.0, 0.0));
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 1.0, 1.0, 0.0, 0.0));
         
         // No pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOn);
@@ -194,7 +194,7 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setSide(Side.Top);
 
         // no offset
-        part.setVisionOffset(new Location(LengthUnit.Millimeters));
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // No pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOff);
@@ -236,7 +236,7 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setSide(Side.Top);
 
         // no offset
-        part.setVisionOffset(new Location(LengthUnit.Millimeters));
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
         
         // With pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOn);
@@ -279,7 +279,7 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setSide(Side.Top);
 
         // no offset
-        part.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // No pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOff);
@@ -322,7 +322,7 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setSide(Side.Top);
 
         // 1mm offset in both directions
-        part.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // With pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOn);
@@ -364,7 +364,7 @@ public class ReferenceBottomVisionOffsetTest {
         boardLocation.setSide(Side.Top);
 
         // no offset
-        part.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
+        bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
         
         // No pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOff);
@@ -413,7 +413,7 @@ public class ReferenceBottomVisionOffsetTest {
 
         // 0.5mm offset in both directions
         Location partVisionOffset = new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0);
-        part.setVisionOffset(partVisionOffset);
+        bottomVisionSettings.setVisionOffset(partVisionOffset);
         
         // With pre rotate
         bottomVisionSettings.setPreRotateUsage(AlwaysOn);

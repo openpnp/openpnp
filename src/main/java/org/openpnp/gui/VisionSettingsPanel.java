@@ -2,7 +2,7 @@ package org.openpnp.gui;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.*;
-import org.openpnp.gui.tablemodel.VisionSettingsModel;
+import org.openpnp.gui.tablemodel.VisionSettingsTableModel;
 import org.openpnp.model.*;
 import org.openpnp.model.Package;
 
@@ -23,8 +23,8 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
     private final Frame frame;
 
-    private VisionSettingsModel tableModel;
-    private TableRowSorter<VisionSettingsModel> tableSorter;
+    private VisionSettingsTableModel tableModel;
+    private TableRowSorter<VisionSettingsTableModel> tableSorter;
     private JTable table;
 
     public VisionSettingsPanel(Frame frame) {
@@ -34,7 +34,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
         createAndAddToolbar();
 
-        tableModel = new VisionSettingsModel();
+        tableModel = new VisionSettingsTableModel();
         tableSorter = new TableRowSorter<>(tableModel);
 
         JSplitPane splitPane = new JSplitPane();

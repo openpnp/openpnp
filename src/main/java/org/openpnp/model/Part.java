@@ -21,7 +21,6 @@ package org.openpnp.model;
 
 import org.openpnp.ConfigurationListener;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Persist;
 
 /**
@@ -53,9 +52,6 @@ public class Part extends AbstractModelObject implements Identifiable {
     
     @Attribute(required = false)
     private int pickRetryCount = 0;
-
-    @Element(required = false)
-    protected Location visionOffset = new Location(LengthUnit.Millimeters);
 
     private BottomVisionSettings visionSettings;
 
@@ -151,14 +147,6 @@ public class Part extends AbstractModelObject implements Identifiable {
         this.pickRetryCount = pickRetryCount;
         firePropertyChange("pickRetryCount", null, pickRetryCount);
     }
-    
-    public Location getVisionOffset() {
-        return visionOffset;
-    }
-
-    public void setVisionOffset(Location visionOffset) {
-        this.visionOffset = visionOffset.derive(null, null, 0.0, 0.0);
-    }
 
     @Override
     public String toString() {
@@ -177,8 +165,6 @@ public class Part extends AbstractModelObject implements Identifiable {
     public void setVisionSettings(BottomVisionSettings visionSettings) {
         BottomVisionSettings oldValue = visionSettings;
         this.visionSettings = visionSettings;
-
-        //TODO NK check if has any effect
         firePropertyChange("vision-settings", oldValue, visionSettings);
     }
 
