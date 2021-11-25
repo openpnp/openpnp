@@ -741,8 +741,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
      */
     protected synchronized void wrapUpCoordinates(HeadMountable hm) throws Exception {
         AxesLocation mappedAxes = (hm != null ? 
-                hm.getMappedAxes(machine) 
-                : new AxesLocation(machine)).byType(Type.Rotation);
+                hm.getMappedAxes(getMachine()) 
+                : new AxesLocation(getMachine())).byType(Type.Rotation);
         for (ControllerAxis axis : mappedAxes.getControllerAxes()) {
             if (axis instanceof ReferenceControllerAxis) {
                 ReferenceControllerAxis refAxis = (ReferenceControllerAxis) axis;
