@@ -1156,7 +1156,6 @@ public class CalibrationSolutions implements Solutions.Subject {
         advCal.setEnabled(false);
         camera.clearCalibrationCache();
         camera.captureTransformed(); //force image width and height to be recomputed
-        
 
         Location primaryLocation;
         Location secondaryLocation;
@@ -1235,7 +1234,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                             head.visualHome(machine, true);
                         }
                         else {
-                            MovableUtils.moveToLocationAtSafeZ(movable, primaryLocation);
+                            MovableUtils.moveToLocationAtSafeZ(movable, camera.getLocation(movable));
                         }
                     });
                 }

@@ -1316,6 +1316,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
         }
         setCalibratedOffsets(calibratedOffsets);
         setValid(true);
+        // Make sure the camera undistort and virtual matrix are updated.
+        camera.clearCalibrationCache();
         setEnabled(true);
+        camera.captureTransformed();
     }
 }
