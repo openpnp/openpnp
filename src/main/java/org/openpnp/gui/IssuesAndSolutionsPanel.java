@@ -259,7 +259,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                                 findIssuesAndSolutions(); 
                             }
                         },
-                        2500
+                        5000
                 );
             }
         });
