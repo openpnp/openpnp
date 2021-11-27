@@ -250,9 +250,17 @@ public class IssuesAndSolutionsPanel extends JPanel {
                     }
                 });
 
-                SwingUtilities.invokeLater(() -> {
-                    findIssuesAndSolutions(); 
-                });
+                // Execute the first issue search after a delay (the delay prevents a
+                // race condition with configuration loading and camera startup).
+                new java.util.Timer().schedule( 
+                        new java.util.TimerTask() {
+                            @Override
+                            public void run() {
+                                findIssuesAndSolutions(); 
+                            }
+                        },
+                        2500
+                );
             }
         });
 
