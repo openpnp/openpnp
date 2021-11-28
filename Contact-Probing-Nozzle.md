@@ -3,6 +3,13 @@ Some machines (e.g. the Liteplacer) have a nozzle that can sense when the nozzle
 
 What is it used for?
 
+- Nozzle/Nozzle Tip Z Calibration
+- Part Height Auto-Learning
+- Feeder Z Auto-Learning
+- Placement Z Auto Learning
+
+These uses are explained in the following sections.
+
 ### Nozzle/Nozzle Tip Z Calibration
 
 Machines that home the Z axis with easily shifted Zmax switches ([e.g.](https://liteplacer.com/the-machine/assembly-instructions/pnp-head-step-11-attach-z-high-limit-switch/) Liteplacer), hard to balance dual-nozzle mid-axis sensors or even by just letting springs retract unpowered Z motors, may not provide a precise and repeatable Z reference.  
