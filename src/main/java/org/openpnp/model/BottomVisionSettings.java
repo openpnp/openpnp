@@ -47,14 +47,6 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         this.maxRotation = partSettings.getMaxRotation();
     }
 
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
     public PreRotateUsage getPreRotateUsage() {
         return preRotateUsage;
     }

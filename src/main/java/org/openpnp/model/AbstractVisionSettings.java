@@ -31,7 +31,6 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
         return id;
     }
     
-    @Override
     public String getName() {
         return name;
     }
@@ -40,7 +39,6 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
         this.name = name;
     }
 
-    @Override
     public CvPipeline getCvPipeline() {
         if (cvPipeline == null) {
             cvPipeline = new CvPipeline();
@@ -51,6 +49,14 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
 
     public void setCvPipeline(CvPipeline cvPipeline) {
         this.cvPipeline = cvPipeline;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public String toString() {
