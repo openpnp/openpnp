@@ -11,7 +11,7 @@ A ContactProbeNozzle can then be used to calibrate the Nozzle in Z, more specifi
 
 For multi-nozzle machines, the nozzles can therefore be perfectly harmonized in Z. This can (optionally) be extended to individual nozzle tips if these have varying heights, or if the coupling to the nozzle is not very consistent. 
 
-Having a calibrated Z not only establishes precision in movements, but also in capturing or probing other locations. 
+Having a calibrated Z not only establishes precision in movements, but also in capturing or probing other Z locations. 
 
 ### Part Height Auto-Learning
 
