@@ -62,7 +62,7 @@ public class PackageVisionPanel extends JPanel {
 
     public PackageVisionPanel(Package pkg) {
         this.footprint = pkg.getFootprint();
-        
+
         setLayout(new BorderLayout(0, 0));
         tableModel = new FootprintTableModel(footprint);
 

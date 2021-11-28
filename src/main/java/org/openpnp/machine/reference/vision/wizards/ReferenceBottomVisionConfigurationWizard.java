@@ -71,20 +71,20 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
 
-        JLabel lblPipeline = new JLabel("Bottom Vision Settings");
-        panel.add(lblPipeline, "2, 4");
+        JLabel lblBottomVision = new JLabel("Bottom Vision Settings");
+        panel.add(lblBottomVision, "2, 4");
 
         JButton btnResetAllTo = new JButton("Reset All Packages/Parts");
         btnResetAllTo.addActionListener((e) -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace all custom package and part pipelines with the built-in default pipeline. Are you sure?",
+                    "This will replace all custom package and part pipelines with the built-in default Bottom Vision Settings. Are you sure?",
                     null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
                     Configuration.get().getPackages().forEach(Package::resetVisionSettings);
                     Configuration.get().getParts().forEach(Part::resetVisionSettings);
                     MessageBoxes.infoBox("Parts and Packages Reset",
-                            "All custom package or part pipelines have been reset.");
+                            "All custom package or part Bottom Vision Settings have been reset.");
                 });
             }
         });
