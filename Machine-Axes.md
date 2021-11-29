@@ -165,6 +165,12 @@ The ReferenceVirtualAxis is a virtual stand-in for a real machine axis. There is
 
 Aside from the basic Type and Name (explained for the [ReferenceControllerAxis](#reference-controller-axis)), only the **Home Coordinate** needs to be set as the initial position of the axis. This also doubles as Safe Z for this axis, i.e. if you press the Z axis **P** button in the Machine Controls it goes to this coordinate. 
 
+### Assigning Virtual Axes to the Camera
+
+Assign the Z and Rotation virtual axes to the camera (see also the [[Mapping Axes]] page):
+
+![Assigning Virtual Axes](https://user-images.githubusercontent.com/9963310/96020598-8f56cb00-0e4e-11eb-9b67-dabd73a5f2cf.png)
+
 ### 3D Units per Pixel
 
 Among other things, the virtual Z axis is used to set the correct viewing plane, see the separate [[3D Units per Pixel]] page.
