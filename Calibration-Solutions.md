@@ -104,7 +104,7 @@ The test object should be circular and flat on the top. The nozzle must be able 
 
 # Advanced Camera Calibration
 
-You already performed the [preliminary camera calibration](https://github.com/openpnp/openpnp/wiki/Vision-Solutions#calibration-primary-fiducial) earlier, but now it is time for the advanced calibration that includes compensating lens distortion and camera mounting tilt. A more profound and precise [[3D Units per Pixel]] calibration is also applied. 
+You already performed the [preliminary camera calibration](https://github.com/openpnp/openpnp/wiki/Vision-Solutions#calibration-primary-fiducial) earlier, but now it is time for the advanced calibration that includes compensating lens distortion and camera mounting tilt. A more profound and precise [[3D Units per Pixel]] calibration is also included. 
 
 ![Issues & Solutions](https://user-images.githubusercontent.com/9963310/143315874-10847d34-a86f-4f55-9cc4-60e0414c9656.png)
 
