@@ -437,61 +437,69 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         Head head = machine.getDefaultHead();
         command = substituteVariable(command, "Id", head.getId()); 
         command = substituteVariable(command, "Name", head.getName());
-        AxesLocation axesHomeLocation =  new AxesLocation(machine, 
-                (axis) -> (axis.getHomeCoordinate())); 
-        Double feedrate = null;
-        Double acceleration = null;
-        Double jerk = null;
-        for (String variable : getAxisVariables((ReferenceMachine) machine)) {
-            ControllerAxis axis = axesHomeLocation.getAxisByVariable(this, variable);
-            if (axis != null) {
-                double coordinate;
-                if (axis.getType() == Type.Rotation) {
-                    // Never convert rotation to driver units.
-                    coordinate = axesHomeLocation.getCoordinate(axis);
+        if (isUsingLetterVariables()) {
+            AxesLocation axesHomeLocation =  new AxesLocation(machine, 
+                    (axis) -> (axis.getHomeCoordinate())); 
+            Double feedrate = null;
+            Double acceleration = null;
+            Double jerk = null;
+            for (String variable : getAxisVariables((ReferenceMachine) machine)) {
+                ControllerAxis axis = axesHomeLocation.getAxisByVariable(this, variable);
+                if (axis != null) {
+                    double coordinate;
+                    if (axis.getType() == Type.Rotation) {
+                        // Never convert rotation to driver units.
+                        coordinate = axesHomeLocation.getCoordinate(axis);
+                    }
+                    else {
+                        coordinate = axesHomeLocation.getCoordinate(axis, getUnits());
+                    }
+                    command = substituteVariable(command, variable, coordinate);
+                    command = substituteVariable(command, variable+"L", 
+                            axis.getLetter());
+
+                    // Because in homing we don't know which axis is moved when and in what combination, 
+                    // we need to find the lowest rates of any axis.
+                    if (axis.getMotionLimit(1) != 0.0) {
+                        if (feedrate == null || feedrate > axis.getMotionLimit(1)) {
+                            feedrate = axis.getMotionLimit(1);
+                        }
+                    }
+                    if (axis.getMotionLimit(2) != 0.0) {
+                        if (acceleration == null || acceleration > axis.getMotionLimit(2)) {
+                            acceleration = axis.getMotionLimit(2);
+                        }
+                    }
+                    if (axis.getMotionLimit(3) != 0.0) {
+                        if (jerk == null || jerk > axis.getMotionLimit(3)) {
+                            feedrate = axis.getMotionLimit(3);
+                        }
+                    }
                 }
                 else {
-                    coordinate = axesHomeLocation.getCoordinate(axis, getUnits());
+                    command = substituteVariable(command, variable, null);
+                    command = substituteVariable(command, variable+"L", null); 
                 }
-                command = substituteVariable(command, variable, coordinate);
-                command = substituteVariable(command, variable+"L", 
-                        axis.getLetter());
+            }
 
-                // Because in homing we don't know which axis is moved when and in what combination, 
-                // we need to find the lowest rates of any axis.
-                if (axis.getMotionLimit(1) != 0.0) {
-                    if (feedrate == null || feedrate > axis.getMotionLimit(1)) {
-                        feedrate = axis.getMotionLimit(1);
-                    }
-                }
-                if (axis.getMotionLimit(2) != 0.0) {
-                    if (acceleration == null || acceleration > axis.getMotionLimit(2)) {
-                        acceleration = axis.getMotionLimit(2);
-                    }
-                }
-                if (axis.getMotionLimit(3) != 0.0) {
-                    if (jerk == null || jerk > axis.getMotionLimit(3)) {
-                        feedrate = axis.getMotionLimit(3);
-                    }
-                }
+            if (getMotionControlType().isUnpredictable()) {
+                // Do not initialize rates, as the motion control is unpredictable, i.e. not controlled by us.  
+                command = substituteVariable(command, "FeedRate", null);
+                command = substituteVariable(command, "Acceleration", null);
+                command = substituteVariable(command, "Jerk", null);
             }
             else {
-                command = substituteVariable(command, variable, null);
-                command = substituteVariable(command, variable+"L", null); 
+                // For the purpose of homing, initialize the rates to the lowest of any axis. 
+                command = substituteVariable(command, "FeedRate", feedrate);
+                command = substituteVariable(command, "Acceleration", acceleration);
+                command = substituteVariable(command, "Jerk", jerk);
             }
         }
-
-        if (getMotionControlType().isUnpredictable()) {
-            // Do not initialize rates, as the motion control is unpredictable, i.e. not controlled by us.  
+        else {
+            // Do not initialize rates in legacy mode.  
             command = substituteVariable(command, "FeedRate", null);
             command = substituteVariable(command, "Acceleration", null);
             command = substituteVariable(command, "Jerk", null);
-        }
-        else {
-            // For the purpose of homing, initialize the rates to the lowest of any axis. 
-            command = substituteVariable(command, "FeedRate", feedrate);
-            command = substituteVariable(command, "Acceleration", acceleration);
-            command = substituteVariable(command, "Jerk", jerk);
         }
 
         long timeout = -1;
