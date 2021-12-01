@@ -48,7 +48,7 @@ M811 ; Turn off LED lighting
 
 Sent in response to the home command. Should home the machine and reset the controller's coordinates to the preferred home location.
 
-**Note**: if you are using the **Axis Letter** mode on the Driver, the variable names/prefixes "X", "Y", "Z" etc. are replaced by the proper controller axis letters. 
+**Note**: if you are not using the **Axis Letter** mode on the Driver, the axis and rate variables are not available. 
 
 | Variable Name  |   Type   | Description |
 | -------------- | -------- | ----------- |
@@ -56,12 +56,10 @@ Sent in response to the home command. Should home the machine and reset the cont
 | Name           | String   | User defined name of the head being homed. |
 | X              | Double   | The home X coordinate. |
 | Y              | Double   | The home Y coordinate. |
-| Z              | Double   | The home Z coordinate. |
-| Rotation       | Double   | The home C or Rotation coordinate. |
+| etc.           |          |   |
 | XL             | String   | The axis letter for the X coordinate. |
 | YL             | String   | The axis letter for the Y coordinate. |
-| ZL             | String   | The axis letter for the Z coordinate. |
-| RotationL      | String   | The axis letter for the Rotation coordinate. |
+| etc.           |          |  |
 | FeedRate       | Double   | The homing feed-rate in driver units/min. Note: for homing purposes the smallest feed-rate of the axes is taken. |
 | Acceleration   | Double   | The homing acceleration in driver units/s². Note: for homing purposes the smallest acceleration of the axes is taken. |
 | Jerk           | Double   | The homing jerk in driver units/s³. Note: for homing purposes the smallest jerk of the axes is taken. |
