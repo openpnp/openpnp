@@ -21,7 +21,7 @@ If you are adding a new driver, just press the **+** button and select the Gcode
 
 ### For existing GcodeDrivers 
 
-Use the [[Issues and Solutions]] system. It will suggest the replacement of the driver for you. If you accept, all the work is done. 
+Use the [[Issues and Solutions]] system. It will suggest the replacement of the driver for you. You need to progress to the **Advanced** Milestone, for Issues & Solutions to suggest the conversion. If you accept, all the work is done, i.e. you won't lose any existing G-code, or Axis and Actuator assignments.
 
 If for some reason you still need to do it manually, and you are migrating an existing `machine.xml`, and you want to keep the settings and the G-code setup of your existing GcodeDriver, you need to change its class _in place_. 
 
