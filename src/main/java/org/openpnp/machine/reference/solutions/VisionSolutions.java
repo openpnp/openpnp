@@ -45,6 +45,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
+import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
@@ -568,7 +569,7 @@ public class VisionSolutions implements Solutions.Subject {
     private void perUpLookingCameraSolutions(Solutions solutions, ReferenceHead head, 
             Camera defaultCamera, ReferenceNozzle defaultNozzle, ReferenceCamera camera) {
         if (isSolvedPrimaryXY(head) && isSolvedPrimaryZ(head)
-                && defaultNozzle.getHeadOffsets().isInitialized()) {
+                && (defaultNozzle.getHeadOffsets().isInitialized() || camera instanceof SimulatedUpCamera)) {
             final Location oldCameraOffsets = camera.getHeadOffsets();
             final CameraCalibrationState cameraCalibrationState = new CameraCalibrationState(camera); 
             final ReferenceNozzleTip referenceNozzleTip = ((defaultNozzle.getNozzleTip() instanceof ReferenceNozzleTip) ?
@@ -621,7 +622,7 @@ public class VisionSolutions implements Solutions.Subject {
                 @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
-                        if (! defaultNozzle.getHeadOffsets().isInitialized()) {
+                        if (! (defaultNozzle.getHeadOffsets().isInitialized() || camera instanceof SimulatedUpCamera)) {
                             throw new Exception("The nozzle "+defaultNozzle.getName()+" head offsets are not yet set. "
                                     + "You need to perform the \"Nozzle "+defaultNozzle.getName()+" offsets for the primary fiducial\" calibration first.");
                         }
@@ -675,7 +676,7 @@ public class VisionSolutions implements Solutions.Subject {
         if (isSolvedPrimaryXY(head) 
                 && (isSolvedPrimaryZ(head) || defaultNozzle == nozzle)) {
             final Location oldPrimaryFiducialLocation = head.getCalibrationPrimaryFiducialLocation();
-            final Location oldSecondaryFiducialLocation = head.getCalibrationPrimaryFiducialLocation();
+            final Location oldSecondaryFiducialLocation = head.getCalibrationSecondaryFiducialLocation();
             final Location oldPrimaryUpp = defaultCamera.getUnitsPerPixelPrimary();
             final Location oldSecondaryUpp = defaultCamera.getUnitsPerPixelSecondary();
             
@@ -958,6 +959,10 @@ public class VisionSolutions implements Solutions.Subject {
      */
     public Length autoCalibrateCamera(ReferenceCamera camera, HeadMountable movable, Double expectedDiameter, String diagnostics, boolean secondary) 
             throws Exception {
+        if (camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+            throw new Exception("Preliminary camera "+camera.getName()+" calibration cannot be performed, "
+                    + "because the Advanced Camera Calibration is already active.");
+        }
         Location initialLocation = movable.getLocation();
         try {
             if (!secondary) {

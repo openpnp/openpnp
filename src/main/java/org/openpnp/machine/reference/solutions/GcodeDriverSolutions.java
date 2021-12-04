@@ -42,6 +42,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
+import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.Driver;
@@ -50,6 +51,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.GcodeServer;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.XmlSerialize;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
@@ -64,6 +66,20 @@ public class GcodeDriverSolutions implements Solutions.Subject {
 
     public GcodeDriverSolutions(GcodeDriver gcodeDriver) {
         this.gcodeDriver = gcodeDriver;
+    }
+
+    protected enum FirmwareType {
+        Generic,
+        Smoothie,
+        SmoothieWithGrblSyntax,
+        Duet,
+        TinyG,
+        Marlin,
+        Grbl;
+
+        boolean isSmoothie() {
+            return this == Smoothie || this == SmoothieWithGrblSyntax;
+        }
     }
 
     @Override
@@ -147,7 +163,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             }
             if (machine.isEnabled() && gcodeDriver.isSpeakingGcode()) {
                 try {
-                    gcodeDriver.detectFirmware(true);
+                    UiUtils.submitUiMachineTask(
+                            () -> gcodeDriver.detectFirmware(true)
+                            ).get();
                 }
                 catch (Exception e) {
                     Logger.warn(e, gcodeDriver.getName()+" failure to detect firmware");
@@ -155,11 +173,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             }
             Integer firmwareAxesCount = null;
             Integer firmwarePrimaryAxesCount = null;
-            boolean isSmoothie = false;
-            boolean isGrblSyntax = false;
-            boolean isTinyG = false;
-            boolean isMarlin = false;
-            boolean isDuet = false;
+            FirmwareType firmware = FirmwareType.Generic;
             if (gcodeDriver.getDetectedFirmware() == null) {
                 solutions.add(new Solutions.Issue(
                         gcodeDriver, 
@@ -197,20 +211,42 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     public void setState(Solutions.State state) throws Exception {
                         if (state == Solutions.State.Solved) {
                             if ((Boolean)getChoice()) {
-                                gcodeDriver.detectFirmware(false);
+                                final State oldState = getState();
+                                try {
+                                    if (machine.isEnabled()) {
+                                        machine.execute(() -> {
+                                            gcodeDriver.detectFirmware(false);
+                                            return true;
+                                        });
+                                    }
+                                    else {
+                                        // Use an ad hoc connection.
+                                        gcodeDriver.detectFirmware(false);
+                                    }
+                                    super.setState(state);
+                                }
+                                catch (Exception e) { 
+                                    UiUtils.showError(e);
+                                    // restore old state
+                                    UiUtils.messageBoxOnException(() -> setState(oldState));
+                                }
                             }
                             else {
                                 gcodeDriver.setDetectedFirmware(GcodeServer.getGenericFirmware());
+                                super.setState(state);
                             }
                         }
-                        super.setState(state);
+                        else {
+                            gcodeDriver.setDetectedFirmware(null);
+                            super.setState(state);
+                        }
                     }
                 });
             }
             else {
                 if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Smoothieware")) {
-                    isSmoothie = true;
-                    isGrblSyntax = (gcodeDriver.getFirmwareProperty("X-GRBL_MODE", "").contentEquals("1"));
+                    firmware = (gcodeDriver.getFirmwareProperty("X-GRBL_MODE", "").contentEquals("1"))
+                            ? FirmwareType.SmoothieWithGrblSyntax : FirmwareType.Smoothie;
                     firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-AXES", "0"));
                     firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "3"));
                     if (firmwarePrimaryAxesCount == firmwareAxesCount) {
@@ -226,7 +262,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     }
                 }
                 else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
-                    isDuet = true;
+                    firmware = FirmwareType.Duet;
                     String firmwareVersion = gcodeDriver.getFirmwareProperty("FIRMWARE_VERSION", "0.0");
                     Integer major = null;
                     Integer minor = null;
@@ -273,7 +309,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     }
                 }
                 else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Marlin")) {
-                    isMarlin = true;
+                    firmware = FirmwareType.Marlin;
                     firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("AXIS_COUNT", "0"));
                     if (firmwareAxesCount > 3) { 
                         firmwarePrimaryAxesCount = firmwareAxesCount;
@@ -289,10 +325,13 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 }
                 else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("TinyG")) {
                     // Having a response already means we have a new firmware.
-                    isTinyG = true;
+                    firmware = FirmwareType.TinyG;
+                }
+                else if (gcodeDriver.getDetectedFirmware().contains("Grbl")) {
+                    firmware = FirmwareType.Grbl;
                 }
                 else if (gcodeDriver.getDetectedFirmware().contains("GcodeServer")) {
-                    // Built-in.
+                    firmware = FirmwareType.Generic;
                 }
                 else { 
                     solutions.add(new Solutions.PlainIssue(
@@ -306,13 +345,13 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 if (gcodeDriver.getCommunicationsType() == CommunicationsType.serial 
                         && gcodeDriver.getSerial() != null) {
                     final FlowControl oldFlowControl = gcodeDriver.getSerial().getFlowControl();
-                    final FlowControl newFlowControl = isTinyG ? FlowControl.XonXoff : FlowControl.RtsCts;
+                    final FlowControl newFlowControl = (firmware == FirmwareType.TinyG || firmware == FirmwareType.Grbl) ? FlowControl.XonXoff : FlowControl.RtsCts;
                     if (oldFlowControl != newFlowControl) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
                                 "Change of serial port Flow Control recommended.",
                                 "Set "+newFlowControl.name()+" on serial port.",
-                                (gcodeDriver.getSerial().getFlowControl() == FlowControl.Off || isTinyG ? Severity.Warning : Severity.Suggestion),
+                                (gcodeDriver.getSerial().getFlowControl() == FlowControl.Off || (firmware == FirmwareType.TinyG) ? Severity.Warning : Severity.Suggestion),
                                 "https://en.wikipedia.org/wiki/Flow_control_(data)#Hardware_flow_control") {
 
                             @Override
@@ -352,7 +391,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 (locationConfirmationRecommended
                                         ? (confirmationFlowControl
                                                 ? "Location Confirmation recommended for extra features in homing, contact probing, etc."
-                                                        : "Location Confirmation required when Confirmation Flow Control is off. Supports extra features in homing, contact probing, etc.")
+                                                        : "Location Confirmation required when Confirmation Flow Control is off. "
+                                                                + "Supports extra features in homing, contact probing, etc.")
                                                 : "Location Confirmation usually not available when no axes present."),
                                 (locationConfirmationRecommended ? "Enable Location Confirmation" : "Disable Location Confirmation"),
                                 (confirmationFlowControl ? Severity.Suggestion : Severity.Error),
@@ -366,13 +406,15 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             }
                         });
                     }
-                    boolean confirmationFlowControlRecommended = isTinyG || ! hasAxes;
+                    boolean confirmationFlowControlRecommended = (firmware == FirmwareType.TinyG || firmware == FirmwareType.Grbl) || ! hasAxes;
                     if (confirmationFlowControlRecommended != confirmationFlowControl) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver,
                                 (confirmationFlowControl ?
                                         "Disable Confirmation Flow Control for full asynchronous operation."
-                                        : "Enable Confirmation Flow Control" + (hasAxes ? "" : ", controller has no axes") + (isTinyG ? ", TinyG detected" : "") + "."),
+                                        : "Enable Confirmation Flow Control" + (hasAxes ? "" : ", controller has no axes") 
+                                            + ((firmware == FirmwareType.TinyG) ? ", TinyG detected" : "")
+                                            + ((firmware == FirmwareType.Grbl) ? ", Grbl detected" : "") + "."),
                                 (confirmationFlowControl ?
                                         "Disable Confirmation Flow Control."
                                         :"Enable Confirmation Flow Control."),
@@ -423,16 +465,16 @@ public class GcodeDriverSolutions implements Solutions.Subject {
 
                     if (solutions.isTargeting(Milestone.Kinematics)) {
                         final MotionControlType oldMotionControlType = gcodeDriver.getMotionControlType();
-                        final MotionControlType newMotionControlType = isTinyG ?
+                        final MotionControlType newMotionControlType = (firmware == FirmwareType.TinyG) ?
                                 MotionControlType.SimpleSCurve : MotionControlType.ModeratedConstantAcceleration;
                         if (gcodeDriver.getMotionControlType().isUnpredictable() 
-                                || (isTinyG && newMotionControlType != oldMotionControlType)) {
+                                || ((firmware == FirmwareType.TinyG) && newMotionControlType != oldMotionControlType)) {
                             solutions.add(new Solutions.Issue(
                                     gcodeDriver, 
-                                    (isTinyG ? "Choose "+newMotionControlType.name()+" for proper TinyG operation." :
+                                    ((firmware == FirmwareType.TinyG) ? "Choose "+newMotionControlType.name()+" for proper TinyG operation." :
                                             "Choose an advanced Motion Control Type for your controller type."), 
                                     "Set to "+newMotionControlType.name()+".", 
-                                    (isTinyG ? Severity.Error : Severity.Suggestion),
+                                    ((firmware == FirmwareType.TinyG) ? Severity.Error : Severity.Suggestion),
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
                                 @Override
@@ -639,195 +681,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     }
                 }
                 if (lettersOk) { 
-                    for (CommandType commandType : gcodeDriver.isSpeakingGcode() ?
-                            CommandType.values() 
-                            : new CommandType[] { CommandType.CONNECT_COMMAND }) {
-                        String command = gcodeDriver.getCommand(null, commandType);
-                        String commandBuilt = null;
-                        boolean disallowHeadMountables = false;
-                        boolean commandModified = false;
-                        switch (commandType) {
-                            case CONNECT_COMMAND:
-                                if (command == null) {
-                                    commandBuilt = 
-                                            "G21 ; Set millimeters mode \n"
-                                                    +"G90 ; Set absolute positioning mode";
-                                    if (isTinyG) {
-                                        commandBuilt = 
-                                                // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
-                                                //"$ex=1\n" // XonXoff
-                                                "$sv=0\n" // Non-verbose
-                                                +commandBuilt;
-                                    }
-                                }
-                                else if (isTinyG) {
-                                    commandModified = true;
-                                    if (command.contains("$ex=2")) {
-                                        commandBuilt = command.replace("$ex=2", "$ex=1");
-                                    }
-                                    else if (command.contains("$ex=0")) {
-                                        commandBuilt = command.replace("$ex=0", "$ex=1");
-                                    }
-                                    // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
-//                                    else if (!command.contains("$ex=1")){
-//                                        commandBuilt = "$ex=1\n"
-//                                                +command;
-//                                    }
-                                }
-                                break;
-                            case COMMAND_CONFIRM_REGEX:
-                                if (isTinyG) {
-                                    commandBuilt = "^tinyg .* ok.*";
-                                }
-                                else {
-                                    commandBuilt = "^ok.*";
-                                }
-                                break;
-                            case COMMAND_ERROR_REGEX:
-                                if (isTinyG) {
-                                    commandBuilt = "^tinyg .* err:.*";
-                                }
-                                else {
-                                    //commandBuilt = "^!!*";
-                                }
-                                break;
-                            case HOME_COMMAND:
-                                if (command == null) {
-                                    if (isGrblSyntax) {
-                                        commandBuilt = "$H ; Home all axes";
-                                    }
-                                    else if (isTinyG) {
-                                        commandBuilt = "G28.2 ";
-                                        for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                            if ("XYZ".indexOf(variable) >= 0) {
-                                                commandBuilt += variable+"0 "; // In TinyG you need to indicate the axis and only 0 is possible. 
-                                            }
-                                        }
-                                        commandBuilt += "; Home all axes";
-                                    }
-                                    else {
-                                        commandBuilt = "G28 ; Home all axes";
-                                    }
-                                }
-                                break;
-                            case MOVE_TO_COMMAND:
-                                if (hasAxes) {
-                                    if (isTinyG) {
-                                        // Apply jerk limits per axis. 
-                                        commandBuilt = "M201.3 ";
-                                        for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                            commandBuilt += "{"+variable+"Jerk:"+variable+"%.0f} ";
-                                        }
-                                        // This needs a new-line: "It is an error to put a G-code from group 1 and a G-code from group 0 on the same line if both of
-                                        // them use axis words." (RS274/NGC Interpreter - Version 3, §3.4)
-                                        commandBuilt += "\n";
-                                    }
-                                    else {
-                                        // Apply acceleration limit.
-                                        commandBuilt = "{Acceleration:M204 S%.2f} ";
-                                        if (isMarlin) {
-                                            // Non-conformant G-code parser, needs newline.
-                                            commandBuilt += "\n";
-                                        }
-                                    }
-                                    commandBuilt += "G1 ";
-                                    for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                        commandBuilt += "{"+variable+":"+variable+"%.4f} ";
-                                    }
-                                    commandBuilt += "{FeedRate:F%.2f} ; move to target";
-                                }
-                                else if (command != null) {
-                                    commandBuilt = "";
-                                }
-                                disallowHeadMountables = true;
-                                break;
-                            case MOVE_TO_COMPLETE_COMMAND:
-                                // This is provided even if there are no axes on the driver. M400 may still be useful for actuator coordination.
-                                if (command == null 
-                                && gcodeDriver.getCommand(null, CommandType.MOVE_TO_COMPLETE_REGEX) == null) {
-                                    commandBuilt = "M400 ; Wait for moves to complete before returning";
-                                }
-                                break;
-                            case MOVE_TO_COMPLETE_REGEX:
-                                if (command != null) {
-                                    // Make it obsolete with the new (detected) firmware.
-                                    commandBuilt = "";
-                                }
-                                break;
-                            case SET_GLOBAL_OFFSETS_COMMAND:
-                                if (hasAxes) {
-                                    if (isTinyG) {
-                                        commandBuilt = "G28.3 ";
-                                    }
-                                    else {
-                                        commandBuilt = "G92 ";
-                                    }
-                                    for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                        commandBuilt += "{"+variable+":"+variable+"%.4f} ";
-                                    }
-                                    commandBuilt += "; reset coordinates";
-                                }
-                                else if (command != null) {
-                                    commandBuilt = "";
-                                }
-                                break;
-                            case POST_VISION_HOME_COMMAND:
-                                if (command != null) {
-                                    commandBuilt = "";
-                                }
-                                break;
-                            case GET_POSITION_COMMAND:
-                                if (hasAxes) {
-                                    commandBuilt = "M114 ; get position"; 
-                                }
-                                else if (command != null) {
-                                    commandBuilt = "";
-                                }
-                                break;
-                            case POSITION_REPORT_REGEX:
-                                if (hasAxes) {
-                                    // We need to parse the report in standard Gcode axis order. This might not cover all the controllers, but it's what we can do.
-                                    final String[] cgodeAxisLetters = new String[] { "X", "Y", "Z", "U", "V", "W", "A", "B", "C", "D", "E" };
-                                    commandBuilt = "^.*";
-                                    int axisIndex = 0;
-                                    int lastAxisIndex = 26;
-                                    String pattern = "";
-                                    for (String axisLetter: cgodeAxisLetters) {
-                                        for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                            if (variable.equals(axisLetter)) {
-                                                if (lastAxisIndex < axisIndex-1) {
-                                                    // Skipped some axes, add a wild.card.
-                                                    commandBuilt += ".*";
-                                                }
-                                                commandBuilt += variable+":(?<"+variable+">-?\\d+\\.\\d+) ";
-                                                pattern += variable+" ";
-                                                lastAxisIndex = axisIndex;
-                                            }
-                                        }
-                                        axisIndex++;
-                                    }
-                                    commandBuilt = commandBuilt.trim();
-                                    commandBuilt += ".*";
-                                    if (gcodeDriver.getReportedAxes() != null 
-                                            && !gcodeDriver.getReportedAxes().matches(commandBuilt)) {
-                                        solutions.add(new Solutions.PlainIssue(
-                                                gcodeDriver, 
-                                                "The driver does not report axes in the expected "+pattern+" pattern: "+gcodeDriver.getReportedAxes(), 
-                                                (isSmoothie ? "Check axis letters and make sure use a proper 6-axis configuration without extruders."
-                                                        : "Check axis letters and make sure the controller is capable to use extra axes (i.e. not extruders)."), 
-                                                Severity.Error,
-                                                (isSmoothie ? "http://smoothieware.org/6axis"
-                                                        : "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares")));
-                                    }
-                                }
-                                else if (command != null) {
-                                    commandBuilt = "";
-                                }
-                                break;
-                        }
-                        suggestGcodeCommand(gcodeDriver, null, solutions, commandType, commandBuilt, commandModified,
-                                disallowHeadMountables);
-                    }
+                    suggestGcodeCommands(solutions, machine, firmware, hasAxes);
                 }
 
                 for (Command command : gcodeDriver.commands) {
@@ -875,6 +729,216 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     });
                 }
             }
+        }
+    }
+
+    private void suggestGcodeCommands(Solutions solutions, ReferenceMachine machine, FirmwareType dialect,
+            boolean hasAxes) {
+        for (CommandType commandType : gcodeDriver.isSpeakingGcode() ?
+                CommandType.values() 
+                : new CommandType[] { CommandType.CONNECT_COMMAND }) {
+            String command = gcodeDriver.getCommand(null, commandType);
+            String commandBuilt = null;
+            boolean disallowHeadMountables = false;
+            boolean commandModified = false;
+            switch (commandType) {
+                case CONNECT_COMMAND:
+                    if (command == null) {
+                        commandBuilt = 
+                                "G21 ; Set millimeters mode \n"
+                                        +"G90 ; Set absolute positioning mode";
+                        if (dialect == FirmwareType.TinyG) {
+                            commandBuilt = 
+                                    // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
+                                    //"$ex=1\n" // XonXoff
+                                    "$sv=0\n" // Non-verbose
+                                    +commandBuilt;
+                        }
+                    }
+                    else if (dialect == FirmwareType.TinyG) {
+                        commandModified = true;
+                        if (command.contains("$ex=2")) {
+                            commandBuilt = command.replace("$ex=2", "$ex=1");
+                        }
+                        else if (command.contains("$ex=0")) {
+                            commandBuilt = command.replace("$ex=0", "$ex=1");
+                        }
+                        // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
+//                                    else if (!command.contains("$ex=1")){
+//                                        commandBuilt = "$ex=1\n"
+//                                                +command;
+//                                    }
+                    }
+                    break;
+                case COMMAND_CONFIRM_REGEX:
+                    if (dialect == FirmwareType.TinyG) {
+                        commandBuilt = "^tinyg .* ok.*";
+                    }
+                    else {
+                        commandBuilt = "^ok.*";
+                    }
+                    break;
+                case COMMAND_ERROR_REGEX:
+                    if (dialect == FirmwareType.TinyG) {
+                        commandBuilt = "^tinyg .* err:.*";
+                    }
+                    else {
+                        //commandBuilt = "^!!*";
+                    }
+                    break;
+                case HOME_COMMAND:
+                    if (command == null) {
+                        if (dialect == FirmwareType.SmoothieWithGrblSyntax || dialect == FirmwareType.Grbl) {
+                            commandBuilt = "$H ; Home all axes";
+                        }
+                        else if (dialect == FirmwareType.TinyG) {
+                            commandBuilt = "G28.2 ";
+                            for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                                if ("XYZ".indexOf(variable) >= 0) {
+                                    // In TinyG you need to indicate the axis and only 0 is possible as coordinate.
+                                    commandBuilt += variable+"0 ";  
+                                }
+                            }
+                            commandBuilt += "; Home all axes\n";
+                            commandBuilt += "G28.3";
+                            for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                                commandBuilt += " {"+variable+":"+variable+"%.4f}";
+                            }
+                            commandBuilt += " ; Set all axes to home coordinates\n";
+                            commandBuilt += "G92.1 ; Reset all offsets\n";
+                        }
+                        else {
+                            // Reset the acceleration (it is not automatically reset on some controllers). 
+                            commandBuilt = "{Acceleration:M204 S%.2f} ; Initialize acceleration\n";
+                            // Home all axes.
+                            commandBuilt += "G28 ; Home all axes";
+                        }
+                    }
+                    break;
+                case MOVE_TO_COMMAND:
+                    if (hasAxes) {
+                        if (dialect == FirmwareType.TinyG) {
+                            // Apply jerk limits per axis. 
+                            commandBuilt = "M201.3 ";
+                            for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                                commandBuilt += "{"+variable+"Jerk:"+variable+"%.0f} ";
+                            }
+                            // This needs a new-line: "It is an error to put a G-code from group 1 
+                            // and a G-code from group 0 on the same line if both of
+                            // them use axis words." (RS274/NGC Interpreter - Version 3, §3.4)
+                            commandBuilt += "\n";
+                        }
+                        else {
+                            // Apply acceleration limit.
+                            commandBuilt = "{Acceleration:M204 S%.2f} ";
+                            if (dialect == FirmwareType.Marlin) {
+                                // Non-conformant G-code parser, needs newline.
+                                commandBuilt += "\n";
+                            }
+                        }
+                        commandBuilt += "G1 ";
+                        for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                            commandBuilt += "{"+variable+":"+variable+"%.4f} ";
+                        }
+                        commandBuilt += "{FeedRate:F%.2f} ; move to target";
+                    }
+                    else if (command != null) {
+                        commandBuilt = "";
+                    }
+                    disallowHeadMountables = true;
+                    break;
+                case MOVE_TO_COMPLETE_COMMAND:
+                    // This is provided even if there are no axes on the driver. M400 may still be useful for actuator coordination.
+                    if (command == null 
+                    && gcodeDriver.getCommand(null, CommandType.MOVE_TO_COMPLETE_REGEX) == null) {
+                        if (dialect == FirmwareType.Grbl) {
+                            commandBuilt = "G4 P0 ; Wait for moves to complete before returning";
+                        }
+                        else {
+                            commandBuilt = "M400 ; Wait for moves to complete before returning";
+                        }
+                    }
+                    break;
+                case MOVE_TO_COMPLETE_REGEX:
+                    if (command != null) {
+                        // Make it obsolete with the new (detected) firmware.
+                        commandBuilt = "";
+                    }
+                    break;
+                case SET_GLOBAL_OFFSETS_COMMAND:
+                    if (hasAxes) {
+                        if (dialect == FirmwareType.TinyG) {
+                            commandBuilt = "G28.3 ";
+                        }
+                        else {
+                            commandBuilt = "G92 ";
+                        }
+                        for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                            commandBuilt += "{"+variable+":"+variable+"%.4f} ";
+                        }
+                        commandBuilt += "; reset coordinates";
+                    }
+                    else if (command != null) {
+                        commandBuilt = "";
+                    }
+                    break;
+                case POST_VISION_HOME_COMMAND:
+                    if (command != null) {
+                        commandBuilt = "";
+                    }
+                    break;
+                case GET_POSITION_COMMAND:
+                    if (hasAxes) {
+                        commandBuilt = "M114 ; get position"; 
+                    }
+                    else if (command != null) {
+                        commandBuilt = "";
+                    }
+                    break;
+                case POSITION_REPORT_REGEX:
+                    if (hasAxes) {
+                        // We need to parse the report in standard Gcode axis order. This might not cover all the controllers, 
+                        // but it's what we can do.
+                        final String[] cgodeAxisLetters = new String[] { "X", "Y", "Z", "U", "V", "W", "A", "B", "C", "D", "E" };
+                        commandBuilt = "^.*";
+                        int axisIndex = 0;
+                        int lastAxisIndex = 26;
+                        String pattern = "";
+                        for (String axisLetter: cgodeAxisLetters) {
+                            for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                                if (variable.equals(axisLetter)) {
+                                    if (lastAxisIndex < axisIndex-1) {
+                                        // Skipped some axes, add a wild.card.
+                                        commandBuilt += ".*";
+                                    }
+                                    commandBuilt += variable+":(?<"+variable+">-?\\d+\\.\\d+) ";
+                                    pattern += variable+" ";
+                                    lastAxisIndex = axisIndex;
+                                }
+                            }
+                            axisIndex++;
+                        }
+                        commandBuilt = commandBuilt.trim();
+                        commandBuilt += ".*";
+                        if (gcodeDriver.getReportedAxes() != null 
+                                && !gcodeDriver.getReportedAxes().matches(commandBuilt)) {
+                            solutions.add(new Solutions.PlainIssue(
+                                    gcodeDriver, 
+                                    "The driver does not report axes in the expected "+pattern+" pattern: "+gcodeDriver.getReportedAxes(), 
+                                    (dialect.isSmoothie() ? "Check axis letters and make sure use a proper 6-axis configuration without extruders."
+                                            : "Check axis letters and make sure the controller is capable to use extra axes (i.e. not extruders)."), 
+                                    Severity.Error,
+                                    (dialect.isSmoothie() ? "http://smoothieware.org/6axis"
+                                            : "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares")));
+                        }
+                    }
+                    else if (command != null) {
+                        commandBuilt = "";
+                    }
+                    break;
+            }
+            suggestGcodeCommand(gcodeDriver, null, solutions, commandType, commandBuilt, commandModified,
+                    disallowHeadMountables);
         }
     }
 

@@ -32,6 +32,11 @@ public interface Locatable {
          */
         KeepRotation, 
         /**
+         * Suppress camera calibration, such as advanced camera calibration head offsets, 
+         * i.e. tilt compensation.
+         */
+        SuppressCameraCalibration, 
+        /**
          * Suppress static compensations, such as non-squareness compensation.
          */
         SuppressStaticCompensation, 
@@ -43,7 +48,11 @@ public interface Locatable {
         /**
          * Replaces virtual coordinates with the head offset.
          */
-        ReplaceVirtual
+        ReplaceVirtual, 
+        /**
+         * Be quiet about transforms. 
+         */
+        Quiet
     }
 
     /**

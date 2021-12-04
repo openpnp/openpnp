@@ -25,16 +25,23 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.opencv.core.Size;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView;
+import org.openpnp.gui.processes.CalibrateCameraProcess;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis.BacklashCompensationMethod;
+import org.openpnp.machine.reference.camera.ImageCamera;
+import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.model.AxesLocation;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -50,6 +57,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.SimpleGraph;
@@ -98,6 +106,11 @@ public class CalibrationSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private long extraVacuumDwellMs = 300;
 
+    @Attribute(required = false)
+    private long machineSettleMs = 500;
+
+    @Attribute(required=false)
+    private double upLookingSecondaryOffsetZMm = 2;
 
     public CalibrationSolutions setMachine(ReferenceMachine machine) {
         this.machine = machine;
@@ -105,7 +118,6 @@ public class CalibrationSolutions implements Solutions.Subject {
     }
 
     private ReferenceMachine machine;
-
 
     @Override
     public void findIssues(Solutions solutions) {
@@ -261,7 +273,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                     UiUtils.submitUiMachineTask(
                                             () -> {
                                                 axis.setAcceptableTolerance(tolerance);
-                                                calibrateAxisBacklash(head, camera, camera, axis, tolerance);
+                                                calibrateAxisBacklash(head, camera, camera, axis);
                                                 return true;
                                             },
                                             (result) -> {
@@ -290,14 +302,56 @@ public class CalibrationSolutions implements Solutions.Subject {
                     }
                 }
             }
+            if (!camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+                solutions.add(new Solutions.Issue(
+                        camera, 
+                        "Advanced camera "+camera.getName()+" calibration.", 
+                        "Automatically calibrates the camera "+camera.getName()+" using the primary and secondary calibration fiducials.", 
+                        Solutions.Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration") {
+
+                    @Override 
+                    public void activate() throws Exception {
+                        MainFrame.get().getMachineControls().setSelectedTool(camera);
+                        camera.ensureCameraVisible();
+                    }
+
+                    @Override 
+                    public String getExtendedDescription() {
+                        return "<html>"
+                                + "<p>You already performed the preliminary camera calibration earlier, now it is time for the "
+                                + "<strong>Advanced Camera Calibration</strong> that includes compensating lens distortion and camera mounting tilt. "
+                                + "A more profound and precise 3D Units per Pixel calibration is also applied.</p><br/>"
+                                + "<p>More information can be found in the Wiki (press the blue Info button below).</p><br/>"
+                                + "<p>The calibration must be performed with the same calibration rig, that you used for the "
+                                + "preliminary calibration. Make sure it is ready, and locations (including Z) are still valid.</p><br/>"
+                                + "<p>If not, please revisit the <strong>Primary calibration fiducial position</strong> and "
+                                + "<strong>Secondary calibration fiducial position</strong> steps first (Enable the "
+                                + "<strong>Include Solved?</strong> checkbox above, to see revisitable solutions).</p><br/>"
+                                + "<p><span color=\"red\">CAUTION</span>: The camera "+camera.getName()+" will move over the "
+                                + "calibration rig and perform a length calibration motion pattern.</p><br/>" 
+                                + "</html>";
+                    }
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (state == State.Solved) {
+                            advancedCameraCalibration(camera, defaultNozzle, head, this);
+                        }
+                        super.setState(state);
+                    }
+                });
+            }
         }
     }
 
     private void perNozzleSolutions(Solutions solutions, ReferenceHead head, ReferenceCamera defaultCamera,
             Nozzle defaultNozzle, ReferenceNozzle nozzle) {
         VisionSolutions visualSolutions = machine.getVisionSolutions();
+        // Allow zero offsets on the simulated default nozzle.
+        boolean isSimulatedNozzle = (nozzle == defaultNozzle && defaultCamera instanceof ImageCamera);
         if (visualSolutions.isSolvedPrimaryXY(head) && visualSolutions.isSolvedPrimaryZ(head) 
-                && (nozzle == defaultNozzle || nozzle.getHeadOffsets().isInitialized())) {
+                && (nozzle.getHeadOffsets().isInitialized() || isSimulatedNozzle)) {
             final Location oldNozzleOffsets = nozzle.getHeadOffsets();
             final Length oldTestObjectDiameter = head.getCalibrationTestObjectDiameter(); 
             // Get the test subject diameter.
@@ -390,11 +444,50 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     private void perUpLookingCameraSolutions(Solutions solutions, Camera defaultCamera,
             Nozzle defaultNozzle, ReferenceCamera camera) {
+        if (!camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+            solutions.add(new Solutions.Issue(
+                    camera, 
+                    "Advanced camera "+camera.getName()+" calibration.", 
+                    "Automatically calibrates the camera "+camera.getName()+" using the nozzle "+defaultNozzle.getName()+".", 
+                    Solutions.Severity.Suggestion,
+                    "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#advanced-camera-calibration") {
 
+                @Override 
+                public void activate() throws Exception {
+                    MainFrame.get().getMachineControls().setSelectedTool(camera);
+                    camera.ensureCameraVisible();
+                }
+
+                @Override 
+                public String getExtendedDescription() {
+                    return "<html>"
+                            + "<p>You already performed the preliminary camera calibration earlier, now it is time for the "
+                            + "<strong>Advanced Camera Calibration</strong> that includes compensating lens distortion and camera mounting tilt. "
+                            + "A more profound and precise 3D Units per Pixel calibration is also applied.</p><br/>"
+                            + "<p>More information can be found in the Wiki (press the blue Info button below).</p><br/>"
+                            + "<p>The calibration must be performed with the same nozzle tip, that you used for the "
+                            + "preliminary calibration. Make sure it is loaded and its <strong>Vision Diameter</strong> is "
+                            + "still valid. Furthermore the camera "+camera.getName()+" position (including Z) must still be valid.</p><br/>"
+                            + "<p>If not, please revisit the <strong>Determine up-looking camera "+camera.getName()+" position</strong> step first "
+                            + "(Enable the <strong>Include Solved?</strong> checkbox above, to see revisitable solutions).</p><br/>"
+                            + "<p><span color=\"red\">CAUTION</span>: The nozzle "+defaultNozzle.getName()+" will automatically "
+                            + "move over the camera "+camera.getName()+" and perform a lengthy calibration motion pattern.</p><br/>" 
+                            + "</html>";
+                }
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (state == State.Solved) {
+                        advancedCameraCalibration(camera, defaultNozzle, null, this);
+                    }
+                    super.setState(state);
+                }
+            });
+        }
     }
 
     public void calibrateAxisBacklash(ReferenceHead head, ReferenceCamera camera,
-            HeadMountable movable, ReferenceControllerAxis axis, Length acceptableTolerance) throws Exception {
+            HeadMountable movable, ReferenceControllerAxis axis) throws Exception {
         // Check pre-conditions (this method can be called from outside Issues & Solutions).
         if (!(axis.isSoftLimitLowEnabled() && axis.isSoftLimitHighEnabled())) {
             throw new Exception("Axis "+axis.getName()+" must have soft limits enabled for backlash calibration.");
@@ -402,37 +495,10 @@ public class CalibrationSolutions implements Solutions.Subject {
         if (! head.getCalibrationPrimaryFiducialLocation().isInitialized()) {
             throw new Exception("Head "+head.getName()+" primary fiducial location must be set for backlash calibration.");
         }
-        if (! head.getCalibrationPrimaryFiducialDiameter().isInitialized()) {
+        if (head.getCalibrationPrimaryFiducialDiameter() == null 
+                || ! head.getCalibrationPrimaryFiducialDiameter().isInitialized()) {
             throw new Exception("Head "+head.getName()+" primary fiducial diameter must be set for backlash calibration.");
         }
-        // Make sure to disable any backlash compensation.
-        axis.setBacklashCompensationMethod(BacklashCompensationMethod.None);
-
-        // Use the primary calibration fiducial for calibration.
-        Location location = head.getCalibrationPrimaryFiducialLocation();
-        Length fiducialDiameter = head.getCalibrationPrimaryFiducialDiameter();
-        MovableUtils.moveToLocationAtSafeZ(movable, location);
-        location = machine.getVisionSolutions()
-                .centerInOnSubjectLocation(camera, movable,
-                        fiducialDiameter, "Backlash Calibration Start Location", false);
-
-        // General note: We always use mm.
-        // Calculate the unit vector for the axis in both logical and axis coordinates. 
-        Location unit = new Location(LengthUnit.Millimeters, 
-                (axis.getType() == Type.X ? 1 : 0), 
-                (axis.getType() == Type.Y ? 1 : 0),
-                0, 0);
-        AxesLocation axesLocation0 = movable.toRaw(location);
-        AxesLocation axesLocation1 = movable.toRaw(location.add(unit));
-        double mmAxis = axesLocation1.getCoordinate(axis) - axesLocation0.getCoordinate(axis); 
-
-        double stepMm = getAxisCalibrationTolerance(camera, axis, false);
-        Length stepLength = new Length(stepMm, LengthUnit.Millimeters);
-        double toleranceMm = getAxisCalibrationTolerance(camera, axis, false);
-        if (acceptableTolerance != null) {
-            toleranceMm = Math.ceil(acceptableTolerance.convertToUnits(LengthUnit.Millimeters).getValue()/toleranceMm)*toleranceMm;
-        }
-        double toleranceUnits = new Length(toleranceMm, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
 
         // Diagnostics graph.
         final String ERROR = "E";
@@ -441,11 +507,11 @@ public class CalibrationSolutions implements Solutions.Subject {
         final String RELATIVE = "R";
         final String SCALE = "S";
         final String TIME = "T";
+        final String VELOCITY = "V";
         final String BACKLASH = "B";
         final String OVERSHOOT = "O";
-        final String LIMIT0 = "L0";
-        final String LIMIT1 = "L1";
-
+        final String LIMIT = "L";
+        
         SimpleGraph stepTestGraph = new SimpleGraph();
         stepTestGraph.setRelativePaddingLeft(0.05);
         SimpleGraph.DataScale errorScale =  stepTestGraph.getScale(ERROR);
@@ -466,10 +532,10 @@ public class CalibrationSolutions implements Solutions.Subject {
         .setMarkerShown(true);
         stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
         .setLineShown(false);
-        stepTestGraph.getRow(ERROR, LIMIT0)
-        .setColor(new Color(0, 0x80, 0)); 
-        stepTestGraph.getRow(ERROR, LIMIT1)
-        .setColor(new Color(0, 0x80, 0));
+        stepTestGraph.getRow(ERROR, LIMIT+0)
+        .setColor(new Color(0, 0, 0x77)); 
+        stepTestGraph.getRow(ERROR, LIMIT+1)
+        .setColor(new Color(0, 0, 0x77));
 
         SimpleGraph distanceGraph = new SimpleGraph();
         distanceGraph.setLogarithmic(true);
@@ -485,6 +551,10 @@ public class CalibrationSolutions implements Solutions.Subject {
         .setColor(new Color(00, 0x5B, 0xD9, 128)); // the OpenPNP blue
         distanceGraph.getRow(SCALE, OVERSHOOT+1)
         .setColor(new Color(0xFF, 0, 0, 128)); 
+        distanceGraph.getRow(SCALE, LIMIT+0)
+        .setColor(new Color(0, 0, 0x77)); 
+        distanceGraph.getRow(SCALE, LIMIT+1)
+        .setColor(new Color(0, 0, 0x77));
         distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
         .setColor(new Color(0xBB, 0x77, 0));
         distanceGraph.getRow(SCALE, ABSOLUTE_RANDOM)
@@ -508,23 +578,119 @@ public class CalibrationSolutions implements Solutions.Subject {
         speedScale.setColor(SimpleGraph.getDefaultGridColor());
         speedGraph.getRow(SCALE, BACKLASH)
         .setColor(new Color(0xFF, 0, 0));
+        speedGraph.getRow(SCALE, BACKLASH)
+        .setMarkerShown(true); 
+        SimpleGraph.DataScale velocityScale = speedGraph.getScale(VELOCITY);
+        velocityScale.setRelativePaddingTop(0.1);
+        velocityScale.setRelativePaddingBottom(0.2);
+        //timeAtSpeedScale.setColor(SimpleGraph.getDefaultGridColor());
+        speedGraph.getRow(VELOCITY, VELOCITY+0)
+        .setColor(new Color(0, 0x80, 0)); 
+        speedGraph.getRow(VELOCITY, VELOCITY+0)
+        .setMarkerShown(true); 
+        speedGraph.getRow(VELOCITY, VELOCITY+1)
+        .setColor(new Color(0, 0x80, 0, 128)); 
+        speedGraph.getRow(VELOCITY, VELOCITY+1)
+        .setMarkerShown(true); 
+
+        // Make sure to disable any backlash compensation.
+        axis.setBacklashCompensationMethod(BacklashCompensationMethod.None);
+
+        // Use the primary calibration fiducial for calibration.
+        Location location = head.getCalibrationPrimaryFiducialLocation();
+        Length fiducialDiameter = head.getCalibrationPrimaryFiducialDiameter();
+        MovableUtils.moveToLocationAtSafeZ(movable, location);
+        location = machine.getVisionSolutions()
+                .centerInOnSubjectLocation(camera, movable,
+                        fiducialDiameter, "Backlash Calibration Speed Control Test", false);
+
+        // General note: We always use mm.
+        // Calculate the unit vector for the axis in both logical and axis coordinates. 
+        // If the movable axis has a non-linear transformation applied, this is only an approximation that is valid near the fiducial.
+        Location unit = new Location(LengthUnit.Millimeters, 
+                (axis.getType() == Type.X ? 1 : 0), 
+                (axis.getType() == Type.Y ? 1 : 0),
+                0, 0);
+        String signPositive = axis.getType() == Type.X ? " ►" : " ▲";
+        String signNegative = axis.getType() == Type.X ? " ◄" : " ▼";
+        AxesLocation axesLocation0 = movable.toRaw(location);
+        AxesLocation axesLocation1 = movable.toRaw(location.add(unit));
+        double mmAxis = axesLocation1.getCoordinate(axis) - axesLocation0.getCoordinate(axis); 
+        double minimumSpeed = backlashProbingSpeeds[0];
+        double unitsPerMm = new Length(1, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
+
+        double stepMm = getAxisCalibrationTolerance(camera, axis, false);
+        // Compute the applicable tolerance from axis resolution and vision sub-pixel resolution. 
+        double toleranceMm = getAxisCalibrationTolerance(camera, axis, false);
+        Length acceptableTolerance = axis.getAcceptableTolerance();
+        if (acceptableTolerance != null) {
+            toleranceMm = Math.max(1, Math.round(acceptableTolerance.convertToUnits(LengthUnit.Millimeters).getValue()/toleranceMm))*toleranceMm;
+        }
+        acceptableTolerance = new Length(toleranceMm, LengthUnit.Millimeters);
+        axis.setAcceptableTolerance(acceptableTolerance);
+        double toleranceUnits = acceptableTolerance.convertToUnits(axis.getUnits()).getValue();
+
+        // Measure times used for same distance at different speeds.
+        MovableUtils.moveToLocationAtSafeZ(movable, location);
+        movable.waitForCompletion(CompletionType.WaitForStillstand);
+        Location timedLocation = displacedAxisLocation(movable, axis, location, -backlashTestMoveMm*mmAxis, false);
+        double dtBaseline;
+        { 
+            Thread.sleep(machineSettleMs);
+            double t0 = NanosecondTime.getRuntimeSeconds();
+            movable.moveTo(timedLocation, 1.0);
+            movable.waitForCompletion(CompletionType.WaitForStillstand);
+            movable.moveTo(location, 1.0);
+            movable.waitForCompletion(CompletionType.WaitForStillstand);
+            double t1 = NanosecondTime.getRuntimeSeconds();
+            dtBaseline = (t1-t0)/2;
+        }
+        for (double speed : backlashProbingSpeeds) {
+            { 
+                Thread.sleep(machineSettleMs);
+                double t0 = NanosecondTime.getRuntimeSeconds();
+                movable.moveTo(timedLocation, speed);
+                movable.waitForCompletion(CompletionType.WaitForStillstand);
+                double t1 = NanosecondTime.getRuntimeSeconds();
+                speedGraph.getRow(VELOCITY, VELOCITY+1).recordDataPoint(speed, dtBaseline/(t1-t0));
+            }
+            {
+                Thread.sleep(machineSettleMs);
+                double t0 = NanosecondTime.getRuntimeSeconds();
+                movable.moveTo(location, speed);
+                movable.waitForCompletion(CompletionType.WaitForStillstand);
+                double t1 = NanosecondTime.getRuntimeSeconds();
+                double effSpeed = dtBaseline/(t1-t0);
+                speedGraph.getRow(VELOCITY, VELOCITY+0).recordDataPoint(speed, effSpeed);
+                if (speed == minimumSpeed) {
+                    if (effSpeed > Math.sqrt(speed)) {
+                        throw new Exception("Speed factor control seems not to be effective: "
+                                + "Should move at "+(int)(speed*100)+"%, but moved at "+(int)(effSpeed*100)+"%. "
+                                        + "Check your driver motion control and axis configuration (must use acceleration control).");
+                    }
+                }
+            }
+        }
 
         // Perform a step test over a small distance.
         MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveLargeMm*mmAxis, false));
-        double minimumSpeed = backlashProbingSpeeds[0];
         int step = 0;
         Location referenceLocation = location;
         Location stepLocation0 = null;
+        Length absoluteErr = null; 
         for (double stepPos = -stepTestMm/2; stepPos < stepTestMm/2; stepPos += stepMm) {
             step++;
             Location startMoveLocation = displacedAxisLocation(movable, axis, location, (stepPos - stepTestMm)*mmAxis, false);
             movable.moveTo(startMoveLocation);
             Location nominalStepLocation = displacedAxisLocation(movable, axis, location, stepPos*mmAxis, false);
             movable.moveTo(nominalStepLocation, minimumSpeed);
+            // Note: as we are moving the camera (and not the fiducial), the returned location should always be the same, i.e. 
+            // the nominal camera location relative to it is already accounted for. 
+            // If we'd ever use the bottom camera and a movable nozzle instead of the fiducial, we'd have to account for this ourselves.
             Location stepLocation1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
                     location, fiducialDiameter, "Accuracy Test Step "+step, false);
             if (stepLocation0 != null) {
-                Length absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
+                absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
                 double absoluteErrUnits = absoluteErr.convertToUnits(axis.getUnits()).getValue();
                 stepTestGraph.getRow(ERROR, ABSOLUTE)
                         .recordDataPoint(step, absoluteErrUnits);
@@ -532,9 +698,9 @@ public class CalibrationSolutions implements Solutions.Subject {
                 double relativeErrorUnits = relativeErr.convertToUnits(axis.getUnits()).getValue();
                 stepTestGraph.getRow(ERROR, RELATIVE)
                     .recordDataPoint(step, relativeErrorUnits);
-                stepTestGraph.getRow(ERROR, LIMIT0)
+                stepTestGraph.getRow(ERROR, LIMIT+0)
                     .recordDataPoint(step, -toleranceUnits);
-                stepTestGraph.getRow(ERROR, LIMIT1)
+                stepTestGraph.getRow(ERROR, LIMIT+1)
                     .recordDataPoint(step, toleranceUnits);
             }
             else {
@@ -542,6 +708,17 @@ public class CalibrationSolutions implements Solutions.Subject {
                         .add(stepLocation1.subtract(referenceLocation));
             }
             stepLocation0 = stepLocation1;
+        }
+        double absoluteErrMm = absoluteErr.convertToUnits(LengthUnit.Millimeters).getValue();
+        if (Math.abs(absoluteErrMm) > toleranceMm*2.0) {
+            LengthConverter lengthConverter = new LengthConverter();
+            Length stepTest = new Length(stepTestMm, LengthUnit.Millimeters);
+            LengthUnit sysUnits = Configuration.get().getSystemUnits();
+            throw new Exception("Large absolute error detected: measured "+lengthConverter.convertForward(
+                    stepTest.subtract(absoluteErr))+sysUnits.getShortName()+", but should be "
+                    +lengthConverter.convertForward(stepTest)+sysUnits.getShortName()+". "
+                    + "Please check camera Units per Pixel and primary calibration fiducial Z. "
+                    + "Revisit Issues & Solutions primary calibration fiducial and camera calibration step, if needed.");
         }
 
         // Perform a backlash test over distances. The distances are a geometric series.   
@@ -569,17 +746,19 @@ public class CalibrationSolutions implements Solutions.Subject {
         for (int pass = 0; pass < 2; pass++) {
             for (double distance : backlashProbingDistances) {
                 // measure the backlash offset over distance.
-                for (int reverse = 0; reverse <= 1; reverse++) {
+                for (int reverse = 1; reverse >= 0; reverse--) {
                     if (reverse == 1 && distance > backlashTestMoveMm) {
                         continue;
                     }
                     // Approach from minus.
+                    Location displacedAxisLocation = displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm);
+                    Length effectiveDistance0 = location.getLinearLengthTo(displacedAxisLocation);
                     if (pass == 0) {
                         // Sneak-up
                         if (reverse == 0) {
                             MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveLargeMm*mmAxis, distance > backlashTestMoveMm));
                         }
-                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm));
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation);
                         movable.moveTo(location, minimumSpeed);
                     }
                     else {
@@ -587,28 +766,32 @@ public class CalibrationSolutions implements Solutions.Subject {
                         if (reverse == 0) {
                             MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveMm*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
                         }
-                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -distance*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation, minimumSpeed);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
-                        Thread.sleep(500);
+                        Thread.sleep(machineSettleMs);
                         double t0 = NanosecondTime.getRuntimeSeconds();
                         movable.moveTo(location);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
                         double t1 = NanosecondTime.getRuntimeSeconds();
-                        distanceGraph.getRow(TIME, TIME+reverse).recordDataPoint(distance, 
+                        if (reverse == 0) {
+                            distanceGraph.getRow(TIME, TIME+0).recordDataPoint(effectiveDistance0.convertToUnits(axis.getUnits()).getValue(), 
                                 t1-t0);
+                        }
                     }
                     String passTitle = pass == 0 ? "Backlash at Sneak-up Distance " : "Overshoot at Distance ";
-                    String distanceOutput = distance > backlashTestMoveMm ? "∞" : lengthConverter.convertForward(new Length(distance, LengthUnit.Millimeters));
+                    String distanceOutput = lengthConverter.convertForward(effectiveDistance0);
                     Location effective0 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
-                            location, fiducialDiameter, passTitle+distanceOutput+" ►", false);
+                            location, fiducialDiameter, passTitle+distanceOutput+signPositive, false);
 
                     // Approach from plus.
+                    displacedAxisLocation = displacedAxisLocation(movable, axis, location, distance*mmAxis, distance > backlashTestMoveMm);
+                    Length effectiveDistance1 = location.getLinearLengthTo(displacedAxisLocation);
                     if (pass == 0) {
                         // Sneak-up
                         if (reverse == 0) {
                             MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveLargeMm*mmAxis, distance > backlashTestMoveMm));
                         }
-                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, distance*mmAxis, distance > backlashTestMoveMm));
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation);
                         movable.moveTo(location, minimumSpeed);
                     }
                     else {
@@ -616,13 +799,21 @@ public class CalibrationSolutions implements Solutions.Subject {
                         if (reverse == 0) {
                             MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveMm*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
                         }
-                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, distance*mmAxis, distance > backlashTestMoveMm), minimumSpeed);
+                        MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation, minimumSpeed);
                         movable.waitForCompletion(CompletionType.WaitForStillstand);
-                        Thread.sleep(500);
+                        Thread.sleep(machineSettleMs);
+                        double t0 = NanosecondTime.getRuntimeSeconds();
                         movable.moveTo(location);
+                        movable.waitForCompletion(CompletionType.WaitForStillstand);
+                        double t1 = NanosecondTime.getRuntimeSeconds();
+                        if (reverse == 0) {
+                            distanceGraph.getRow(TIME, TIME+1).recordDataPoint(effectiveDistance1.convertToUnits(axis.getUnits()).getValue(), 
+                                t1-t0);
+                        }
                     }
+                    distanceOutput = lengthConverter.convertForward(effectiveDistance1);
                     Location effective1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
-                            location, fiducialDiameter, passTitle+distanceOutput+" ◄", false);
+                            location, fiducialDiameter, passTitle+distanceOutput+signNegative, false);
 
                     double mmError = effective1.subtract(effective0).dotProduct(unit).getValue();
                     if (movable == camera) {
@@ -631,17 +822,18 @@ public class CalibrationSolutions implements Solutions.Subject {
                         mmError = -mmError;
                     }
 
-                    // Record this for the distance. 
+                    // Record this for the distance, all in axis units. 
                     if (pass == 0 && reverse == 0) {
                         backlashOffsetByDistance[iDistance++] = mmError;
                     }
-                    double errorUnits = new Length(mmError, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
+                    double errorUnits = mmError*unitsPerMm;
+                    double effectiveDistance = effectiveDistance0.add(effectiveDistance1).multiply(0.5).convertToUnits(axis.getUnits()).getValue();
                     if (pass == 0) {
-                        distanceGraph.getRow(SCALE, BACKLASH+reverse).recordDataPoint(distance, 
+                        distanceGraph.getRow(SCALE, BACKLASH+reverse).recordDataPoint(effectiveDistance, 
                                 errorUnits);
                     }
                     else {
-                        distanceGraph.getRow(SCALE, OVERSHOOT+reverse).recordDataPoint(distance, 
+                        distanceGraph.getRow(SCALE, OVERSHOOT+reverse).recordDataPoint(effectiveDistance, 
                                 (maxBacklash-errorUnits)/2);
                     }
 
@@ -661,7 +853,23 @@ public class CalibrationSolutions implements Solutions.Subject {
                         }
                         else {
                             // Once it dips under the maximum minus tolerance, its not eligible.
-                            maxBacklashOpen = false;
+                            if (maxBacklashOpen) {
+                                double minBacklashByTolerance = maxBacklash - 2*toleranceMm;
+                                distanceGraph.getRow(SCALE, LIMIT+0)
+                                .recordDataPoint(maxBacklashDistance*unitsPerMm, 0);
+                                distanceGraph.getRow(SCALE, LIMIT+0)
+                                .recordDataPoint(maxBacklashDistance*unitsPerMm+1e-8, minBacklashByTolerance*unitsPerMm);
+                                distanceGraph.getRow(SCALE, LIMIT+0)
+                                .recordDataPoint(maxSneakUpOffsetMm*unitsPerMm, minBacklashByTolerance*unitsPerMm);
+                                distanceGraph.getRow(SCALE, LIMIT+1)
+                                .recordDataPoint(maxBacklashDistance*unitsPerMm, minBacklashByTolerance*unitsPerMm);
+                                distanceGraph.getRow(SCALE, LIMIT+1)
+                                .recordDataPoint(maxBacklashDistance*unitsPerMm+1e-8, maxBacklash*unitsPerMm);
+                                distanceGraph.getRow(SCALE, LIMIT+1)
+                                .recordDataPoint(maxSneakUpOffsetMm*unitsPerMm, maxBacklash*unitsPerMm);
+                                // remember
+                                maxBacklashOpen = false;
+                            }
                         }
                     }
                 }
@@ -683,13 +891,13 @@ public class CalibrationSolutions implements Solutions.Subject {
                 MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, -backlashTestMoveLargeMm*mmAxis, false));
                 movable.moveTo(location);
                 Location effective0 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
-                        location, fiducialDiameter, "Backlash at Speed "+speed+"× ►", false);
+                        location, fiducialDiameter, "Backlash at Speed "+speed+"×"+signPositive, false);
 
                 // Approach from plus.
                 MovableUtils.moveToLocationAtSafeZ(movable, displacedAxisLocation(movable, axis, location, backlashTestMoveLargeMm*mmAxis, false));
                 movable.moveTo(location);
                 Location effective1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
-                        location, fiducialDiameter, "Backlash at Speed "+speed+"× ◄", false);
+                        location, fiducialDiameter, "Backlash at Speed "+speed+"×"+signNegative, false);
 
                 double mmError = effective1.subtract(effective0).dotProduct(unit).getValue();
                 if (movable == camera) {
@@ -708,7 +916,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                     break;
                 }
             }
-            // Record this for the speed. 
+            // Record this for the speed, all in axis units. 
             backlashOffsetBySpeed[iSpeed++] = offsetMm;
             double offsetUnits = new Length(offsetMm, LengthUnit.Millimeters).convertToUnits(axis.getUnits()).getValue();
             speedGraph.getRow(SCALE, BACKLASH).recordDataPoint(speed, 
@@ -778,7 +986,9 @@ public class CalibrationSolutions implements Solutions.Subject {
                     + "Automatic compensation not possible.");
         }
         // Because this change may affect the coordinate system, perform a (visual) homing cycle.
-        head.visualHome(machine, true);
+        if (head.getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
+            head.visualHome(machine, true);
+        }
         // Go back to the fiducial.
         MovableUtils.moveToLocationAtSafeZ(movable, location);
         // Test the new settings with random moves.
@@ -800,7 +1010,7 @@ public class CalibrationSolutions implements Solutions.Subject {
             movable.moveTo(nominalStepLocation);
             Location stepLocation1 = machine.getVisionSolutions().getDetectedLocation(camera, movable, 
                     location, fiducialDiameter, "Random Move Accuracy Test Step "+step, false);
-            Length absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
+            absoluteErr = stepLocation1.subtract(referenceLocation).dotProduct(unit);
             double absoluteErrUnits = absoluteErr.convertToUnits(axis.getUnits()).getValue();
             stepTestGraph.getRow(ERROR, ABSOLUTE_RANDOM)
             .recordDataPoint(2+(step-1)*fraction, absoluteErrUnits);
@@ -826,7 +1036,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         : camera.getUnitsPerPixelPrimary().getLengthY())
                 .multiply(1.0/machine.getVisionSolutions().getSuperSampling());
         if (tolerance) {
-            // Round up to the next full sub-pixel (Note, this also covers the case where the axis resolution is not yet set).
+            // Round up to the next full sub-pixel.
             resolution = subPixelUnit.multiply(Math.ceil(resolution.divide(subPixelUnit)))
                     .convertToUnits(LengthUnit.Millimeters);
             // Add 1% for safe double comparison.
@@ -851,7 +1061,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                         new AxesLocation(axis, axis.getSoftLimitHigh()));
         }
         else {
-            axesLocation = axesLocation.add(new AxesLocation(axis, displacement));
+            axesLocation = axesLocation.put(new AxesLocation(axis, 
+                    Math.max(axis.getSoftLimitLow().convertToUnits(axis.getUnits()).getValue(),
+                            Math.min(axis.getSoftLimitHigh().convertToUnits(axis.getUnits()).getValue(),
+                                    axesLocation.getCoordinate(axis) + displacement))));
         }
         Location newLocation = movable.toTransformed(axesLocation);
         newLocation = movable.toHeadMountableLocation(newLocation);
@@ -884,15 +1097,17 @@ public class CalibrationSolutions implements Solutions.Subject {
                 location = location.derive(head.getCalibrationPrimaryFiducialLocation(), false,
                         false, true, false);
                 // Pick the test object at the location.
-                feeder.setLocation(location.derive(null, null, null, angle));
+                Location pickLocation = location.derive(null, null, null, angle);
+                feeder.setLocation(pickLocation);
+               // Place the part 180° rotated. This way we will detect the true nozzle rotation axis, which is 
+                // the true nozzle location, namely in the center of the two detected locations. Note that run-out 
+                // is cancelled out too, so run-out compensation is no prerequisite. 
+                Location placementLocation = location.derive(null, null, null, angle + 180.0);
+                nozzle.prepareForPickAndPlaceArticulation(pickLocation, placementLocation);
                 nozzle.moveToPickLocation(feeder);
                 nozzle.pick(testPart);
                 // Extra wait time.
                 Thread.sleep(extraVacuumDwellMs);
-                // Place the part 180° rotated. This way we will detect the true nozzle rotation axis, which is 
-                // the true nozzle location, namely in the center of the two detected locations. Note that run-out 
-                // is cancelled out too, so run-out compensation is no prerequisite. 
-                Location placementLocation = location.derive(null, null, null, angle + 180.0);
                 nozzle.moveToPlacementLocation(placementLocation, testPart);
                 nozzle.place();
                 // Extra wait time.
@@ -927,5 +1142,127 @@ public class CalibrationSolutions implements Solutions.Subject {
             MovableUtils.moveToLocationAtSafeZ(nozzle, nozzle.getLocation()
                     .deriveLengths(null, null, nozzle.getSafeZ(), 0.0));
         }
+    }
+
+    private void advancedCameraCalibration(ReferenceCamera camera, HeadMountable movable, ReferenceHead head, Solutions.Issue issue)
+            throws Exception {
+        if (!Configuration.get().getMachine().isHomed()) {
+            throw new Exception("Machine is not enabled and homed.");
+        }
+        AdvancedCalibration advCal = camera.getAdvancedCalibration();
+        // Switch on the override but disable the calibration, get some frames to make sure the camera is now
+        // in the raw format.
+        advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
+        advCal.setEnabled(false);
+        camera.clearCalibrationCache();
+        camera.captureTransformed(); //force image width and height to be recomputed
+
+        Location primaryLocation;
+        Location secondaryLocation;
+        Integer primaryDiameter;
+        Integer secondaryDiameter;
+        if (head != null) {
+            // Down-looking camera uses the calibration rig:
+            primaryLocation = head.getCalibrationPrimaryFiducialLocation();
+            secondaryLocation = head.getCalibrationSecondaryFiducialLocation();
+            primaryDiameter = (int) Math.round(head.getCalibrationPrimaryFiducialDiameter().divide(
+                    camera.getUnitsPerPixel(primaryLocation.getLengthZ()).getLengthX()));
+            secondaryDiameter = (int) Math.round(head.getCalibrationSecondaryFiducialDiameter().divide(
+                    camera.getUnitsPerPixel(secondaryLocation.getLengthZ()).getLengthX()));
+        }
+        else {
+            // Up-looking camera uses the nozzle.
+            ReferenceNozzle nozzle = (ReferenceNozzle) movable;
+            primaryLocation = camera.getHeadOffsets();
+            camera.setDefaultZ(primaryLocation.getLengthZ());
+            // Default to just arbitrary difference: 
+            Length secondaryZ = primaryLocation.getLengthZ()
+                    .add(new Length(upLookingSecondaryOffsetZMm, LengthUnit.Millimeters)); 
+            secondaryLocation = primaryLocation.deriveLengths(null, null, secondaryZ, null);
+            // Encapsulated CalibrateCameraProcess
+            Length calibrationTipDiameter = nozzle.getNozzleTip().getCalibration().
+                    getCalibrationTipDiameter();
+            primaryDiameter = (int) Math.round(calibrationTipDiameter.divide(
+                    camera.getUnitsPerPixel(primaryLocation.getLengthZ())
+                    .getLengthX()));
+            // This will not be accurate on the first go (no 3D UPP present). We just hope the diameter 
+            // margin will still cover it.
+            secondaryDiameter =  (int) Math.round(calibrationTipDiameter.divide(
+                    camera.getUnitsPerPixel(secondaryLocation.getLengthZ())
+                    .getLengthX()));
+        }
+        advCal.setPrimaryLocation(primaryLocation);
+        advCal.setSecondaryLocation(secondaryLocation);
+        ArrayList<Location>calibrationLocations = new ArrayList<>();
+        calibrationLocations.add(primaryLocation);
+        calibrationLocations.add(secondaryLocation);
+
+        advCal.setFiducialDiameter(primaryDiameter);
+        ArrayList<Integer> detectionDiameters = new ArrayList<>();
+        detectionDiameters.add(primaryDiameter);
+        detectionDiameters.add(secondaryDiameter);
+        Length oldDefaultZ = camera.getDefaultZ();
+        camera.setDefaultZ(primaryLocation.getLengthZ());
+
+        CameraView cameraView = MainFrame.get().getCameraViews().
+                getCameraView(camera);
+
+        // Encapsulated CalibrateCameraProcess
+        new CalibrateCameraProcess(MainFrame.get(), cameraView, 
+                calibrationLocations, detectionDiameters, true) {
+
+            @Override 
+            public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
+                    double[][][] testPatternImagePointsList, Size size, double mirrored,
+                    double apparentMotionDirection) throws Exception {
+
+                advCal.setDataAvailable(true);
+                advCal.setValid(false);
+
+                try {
+                    advCal.processRawCalibrationData(
+                            testPattern3dPointsList, testPatternImagePointsList, 
+                            size, mirrored, apparentMotionDirection);
+
+                    advCal.applyCalibrationToMachine(head, camera);
+
+                    // Tidy up.
+                    UiUtils.submitUiMachineTask(() -> {
+                        if (head != null 
+                                && head.getDefaultCamera() == camera
+                                && head.getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
+                            head.visualHome(machine, true);
+                        }
+                        else {
+                            MovableUtils.moveToLocationAtSafeZ(movable, camera.getLocation(movable));
+                        }
+                    });
+                }
+                catch (Exception e) {
+                    MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                    advCal.setValid(false);
+                    advCal.setEnabled(false);
+                    advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
+                    issue.setState(State.Open);
+                    camera.setDefaultZ(oldDefaultZ);
+                }
+                MainFrame.get().getIssuesAndSolutionsTab().solutionChanged();
+            }
+
+            @Override
+            protected void processCanceled() {
+                advCal.setValid(false);
+                advCal.setEnabled(false);
+                advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
+                camera.setDefaultZ(oldDefaultZ);
+
+                try {
+                    issue.setState(State.Open);
+                }
+                catch (Exception e) {
+                }
+                MainFrame.get().getIssuesAndSolutionsTab().solutionChanged();
+            }
+        };
     }
 }

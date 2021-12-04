@@ -578,6 +578,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         if (nozzle == null) {
             throw new Exception("Nozzle to nozzle tip mismatch.");
         }
+
+        // Make sure to set start and end rotation to the limits.
+        double [] rotationModeLimits = nozzle.getRotationModeLimits();
+        angleStart = rotationModeLimits[0];
+        angleStop = rotationModeLimits[1];
+        // Make sure no rotation mode offset is currently applied.
+        nozzle.setRotationModeOffset(null);
+
         Camera camera = VisionUtils.getBottomVisionCamera();
         ReferenceCamera referenceCamera = null;
         if (camera instanceof ReferenceCamera) {

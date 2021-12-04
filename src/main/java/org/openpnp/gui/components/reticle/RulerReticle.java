@@ -93,8 +93,10 @@ public class RulerReticle extends CrosshairReticle {
         int tickLength = drawRulerOnly ? 3 : halfDiagonal;
         int fivetickLength = drawRulerOnly ? 6 : halfDiagonal;
         int tentickLength = drawRulerOnly ? 12 : halfDiagonal;
-
-        g2d.setColor(color);
+        int alpha = drawRulerOnly ? 255 : 72;
+        Color colorAlpha = new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
+        Color complimentaryColorAlpha = new Color(complimentaryColor.getRed(), complimentaryColor.getGreen(), complimentaryColor.getBlue(), alpha);
+        g2d.setColor(colorAlpha);
         for (int i = 1; i < (halfDiagonal / pixelsPerTickX); i++) {
             int x = (int) (i * pixelsPerTickX);
             
@@ -113,7 +115,7 @@ public class RulerReticle extends CrosshairReticle {
 
         for (int i = 1; i < (halfDiagonal / pixelsPerTickY); i++) {
             int y = (int) (i * pixelsPerTickY);
-            g2d.setColor(color);
+            g2d.setColor(colorAlpha);
             if (i % 10 == 0){
             	g2d.drawLine(-tentickLength, y, tentickLength, y);
             }
@@ -122,7 +124,7 @@ public class RulerReticle extends CrosshairReticle {
             } else { 
             	g2d.drawLine(-tickLength, y, tickLength, y);
             }
-            g2d.setColor(complimentaryColor);
+            g2d.setColor(complimentaryColorAlpha);
             if (i % 10 == 0){
             	g2d.drawLine(-tentickLength, -y, tentickLength, -y);
             }

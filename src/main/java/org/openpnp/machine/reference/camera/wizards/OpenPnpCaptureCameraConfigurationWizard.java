@@ -223,7 +223,9 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                                         return;
                                     }
                                     for (CaptureFormat format : dev.getFormats()) {
-                                        formatCb.addItem(format);
+                                        // Note: due to an instability of the CaptureFormat.equals() 
+                                        // method, we use the String representation as selection.
+                                        formatCb.addItem(format.toString());
                                     }
                                 });
 
@@ -634,7 +636,9 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
 
         addWrappedBinding(camera, "device", deviceCb, "selectedItem");
-        addWrappedBinding(camera, "format", formatCb, "selectedItem");
+        // Note: due to an instability of the CaptureFormat.equals() 
+        // method, we use the String representation (Name) as selection.
+        addWrappedBinding(camera, "formatName", formatCb, "selectedItem");
 
         bindProperty("backLightCompensation", backLightCompensationAuto, backLightCompensationMin, 
                 backLightCompensationMax, backLightCompensationSlider,

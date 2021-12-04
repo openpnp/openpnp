@@ -8,6 +8,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.Nozzle.RotationMode;
 
 public class Cycles {
     /**
@@ -69,8 +70,14 @@ public class Cycles {
         globals.put("nozzle", nozzle);
         Configuration.get().getScripting().on("Job.BeforeDiscard", globals);
 
+        Location discardLocation = Configuration.get().getMachine().getDiscardLocation();
+        if (nozzle.getRotationMode() == RotationMode.LimitedArticulation) {
+            // On a limited articulation nozzle, keep the rotation.
+            discardLocation = discardLocation.derive(nozzle.getLocation(),
+                    false, false, false, true);
+        }
         // move to the discard location
-        nozzle.moveToPlacementLocation(Configuration.get().getMachine().getDiscardLocation(), null);
+        nozzle.moveToPlacementLocation(discardLocation, null);
         // discard the part
         nozzle.place();
         nozzle.moveToSafeZ();

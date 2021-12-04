@@ -1,5 +1,7 @@
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
@@ -36,19 +38,37 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         panelLensCalibration.setBorder(new TitledBorder(null, "Lens Calibration",
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelLensCalibration);
-        panelLensCalibration.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelLensCalibration.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         startLensCalibrationBtn = new JButton(startCalibration);
         panelLensCalibration.add(startLensCalibrationBtn, "2, 2, 3, 1");
+        
+        advancedCalWarning = new JLabel("Advanced Calibration Active");
+        advancedCalWarning.setForeground(Color.RED);
+        panelLensCalibration.add(advancedCalWarning, "8, 2, left, default");
 
         lblApplyCalibration = new JLabel("Apply Calibration?");
         panelLensCalibration.add(lblApplyCalibration, "2, 4, right, default");
@@ -57,8 +77,23 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         panelLensCalibration.add(calibrationEnabledChk, "4, 4");
     }
 
+    public boolean isOverriddenClassicTransforms() {
+        return calibrationEnabledChk.isEnabled();
+    }
+
+    public void setOverriddenClassicTransforms(boolean overriddenClassicTransforms) {
+        for (Component comp : panelLensCalibration.getComponents()) {
+            comp.setEnabled(!overriddenClassicTransforms);
+        }
+        advancedCalWarning.setVisible(overriddenClassicTransforms);
+        advancedCalWarning.setEnabled(overriddenClassicTransforms);
+    }
+
     @Override
     public void createBindings() {
+        addWrappedBinding(referenceCamera.getAdvancedCalibration(), "overridingOldTransformsAndDistortionCorrectionSettings", 
+                this, "overriddenClassicTransforms");
+
         bind(UpdateStrategy.READ_WRITE, referenceCamera.getCalibration(), "enabled",
                 calibrationEnabledChk, "selected");
         // addWrappedBinding(referenceCamera.getCalibration(), "enabled", calibrationEnabledChk,
@@ -108,4 +143,5 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         }
     };
     private JButton startLensCalibrationBtn;
+    private JLabel advancedCalWarning;
 }

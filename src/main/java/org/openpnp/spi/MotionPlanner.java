@@ -198,8 +198,9 @@ public interface MotionPlanner extends PropertySheetHolder, Solutions.Subject {
     void clearMotionPlanOlderThan(double time);
 
     /**
+     * @param hm 
      * @param axesLocation
      * @return true if the location is valid, i.e. inside soft limits etc.
      */
-    public boolean isValidLocation(AxesLocation axesLocation);
+    public boolean isValidLocation(HeadMountable hm, AxesLocation axesLocation);
 }

@@ -157,7 +157,7 @@ public class Solutions extends AbstractTableModel {
         }
         public default String getSubjectText() {
             if (this instanceof Named) {
-                return (this.getClass().getSimpleName()+" "+((Named) this).getName());
+                return (this.getClass().getSimpleName()+(((Named) this).getName() != null ? " "+((Named) this).getName() : ""));
             }
             else if (this instanceof Identifiable) {
                 return (this.getClass().getSimpleName()+" "+((Identifiable) this).getId());
@@ -642,6 +642,14 @@ public class Solutions extends AbstractTableModel {
      * @return true if the issue was already marked as solved.  
      */
     public synchronized boolean add(Issue issue) {
+        // Do not allow duplicates. These will sometimes be generated when multiple machine objects 
+        // check the same issue that is relevant to them. 
+        String fingerprint = issue.getFingerprint();
+        for (Issue duplicate : pendingIssues) {
+            if (duplicate.getFingerprint().equals(fingerprint)) {
+                return true;
+            }
+        }
         pendingIssues.add(issue);
         return isSolutionsIssueSolved(issue);
     }

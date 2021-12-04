@@ -189,6 +189,21 @@ public class OpenCvUtils {
         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
         return mat;
     }
+    
+    /**
+     * Convert the given Mat to RGB. Conversion is done in place and if the Mat is already
+     * RGB nothing is done.
+     * 
+     * @param mat
+     * @return
+     */
+    public static Mat toRGB(Mat mat) {
+        if (mat.channels() == 3) {
+            return mat;
+        }
+        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_GRAY2RGB);
+        return mat;
+    }
 
     /**
      * Perform an in place gaussian blur on the given Mat with a kernel of size kernel x kernel.
