@@ -1,7 +1,7 @@
 # Charmhigh Conversion Page
 
 ___
-**This Wiki is outdated.** Some conversion steps are no longer strictly needed (you can keep the original cameras), others have changed. This Wiki pages should be updated by someone who owns such a machine and is on top of things. 
+**This Wiki page is outdated.** Some conversion steps are no longer strictly needed (you can keep the original cameras), others have changed. This Wiki page should be updated by someone who owns such a machine and is on top of things. 
 
 **HELP WANTED!**
 
