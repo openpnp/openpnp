@@ -1039,7 +1039,7 @@ public class Motion {
             // When the candidate segment is added, we need to repeat the analysis, with the new origin.
             while(true) {
                 AxesLocation segment = location0.motionSegmentTo(location2).drivenBy(driver);
-                boolean isTooSmall = segment.multiply(1.0/distStep).matches(AxesLocation.zero);  
+                boolean isTooSmall = segment.isEmpty() || segment.multiply(1.0/distStep).matches(AxesLocation.zero);  
                 if (special && isTooSmall) {
                     // Last step distance lower than distStep resolution ticks, merge with previous segment.
                     if (command1 != null) {
@@ -1057,8 +1057,9 @@ public class Motion {
                         t0 = tS;
                         command0 = commandS;
                         segment = location0.motionSegmentTo(location2).drivenBy(driver);
+                        // It may still be too small.
+                        isTooSmall = segment.isEmpty() || segment.multiply(1.0/distStep).matches(AxesLocation.zero);
                     }
-                    isTooSmall = false;
                 }
                 if (isTooSmall) {
                     break;

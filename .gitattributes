@@ -1,0 +1,10 @@
+# .gitatributes file for the OpenPnP repository
+
+# Force line ending conversions to LF
+*               text=auto eol=lf
+
+# Binary files should never be converted nor diff'ed
+*.icns          binary
+*.png           binary
+*.pxm           binary
+*.wav           binary

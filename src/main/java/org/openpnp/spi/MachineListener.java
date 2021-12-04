@@ -28,7 +28,7 @@ package org.openpnp.spi;
 public interface MachineListener {
     void machineHeadActivity(Machine machine, Head head);
 
-    void machineTargetedUserAction(Machine abstractMachine, HeadMountable hm);
+    void machineTargetedUserAction(Machine abstractMachine, HeadMountable hm, boolean jogging);
 
     void machineActuatorActivity(Machine machine, Actuator actuator);
 
@@ -52,7 +52,7 @@ public interface MachineListener {
         public void machineHeadActivity(Machine machine, Head head) {}
 
         @Override
-        public void machineTargetedUserAction(Machine machine, HeadMountable hm) {}
+        public void machineTargetedUserAction(Machine machine, HeadMountable hm, boolean jogging) {}
 
         @Override
         public void machineActuatorActivity(Machine machine, Actuator actuator) {}

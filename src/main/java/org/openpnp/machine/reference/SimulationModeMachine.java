@@ -399,20 +399,25 @@ public class SimulationModeMachine extends ReferenceMachine {
      */
     public static Location getSimulatedPhysicalLocation(HeadMountable hm, Looking looking) {
         // Use ideal location as a default, used in case this fails (not a place to throw).
-        Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits()); 
+        Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits());
+        if (Configuration.get().getMachine() == null) {
+            // Uninitialized (Unit Test). 
+            return location;
+        }
         // Try to get a simulated physical location.
         SimulationModeMachine machine = getSimulationModeMachine();
         if (machine == null || machine.getSimulationMode() == SimulationMode.Off) {
-            // Not a simulation machine. Just take the nominal location.
-            double cameraTime = NanosecondTime.getRuntimeSeconds();
-            Motion momentary = ((ReferenceMachine) Configuration.get()
-                    .getMachine()).getMotionPlanner()
-                    .getMomentaryMotion(cameraTime);
-            AxesLocation axesLocation = momentary.getMomentaryLocation(cameraTime - momentary.getPlannedTime0());
-            // NOTE this specifically makes the assumption that the axes transform from raw 1:1
-            location = hm.toTransformed(axesLocation);
-            // Transform back. This bypasses any compensations, such as runout compensation.
-            location = hm.toHeadMountableLocation(location);
+            // Not a simulation machine. Just take the momentary nominal location.
+            if (Configuration.get().getMachine() instanceof ReferenceMachine) {
+                double cameraTime = NanosecondTime.getRuntimeSeconds();
+                Motion momentary = ((ReferenceMachine)Configuration.get()
+                        .getMachine()).getMotionPlanner()
+                        .getMomentaryMotion(cameraTime);
+                AxesLocation axesLocation = momentary.getMomentaryLocation(cameraTime - momentary.getPlannedTime0());
+                location = hm.toTransformed(axesLocation);
+                location = hm.toHeadMountableLocation(location);
+            }
+            // else: Configuration is still being loaded (Unit tests).
         } 
         else {
             try {

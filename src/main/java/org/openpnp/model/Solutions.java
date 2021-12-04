@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
 import javax.swing.border.LineBorder;
@@ -60,8 +61,35 @@ public class Solutions extends AbstractTableModel {
     @ElementList(required = false)
     private Set<String> dismissedSolutions = new HashSet<>();
 
+    @ElementList(required = false)
+    private Set<String> solvedSolutions = new HashSet<>();
+
+    @Attribute(required = false)
+    private boolean showIndicator = true;
+
+    private boolean showSolved;
+
+    private boolean showDismissed;
+
     public enum Milestone implements Subject, Named {
-        Welcome, Connect, Basics, Vision, Calibration, Production, Advanced;
+        Welcome     ("Welcome",     "welcome",      "Get to know OpenPnP by using the demo simulation machine. Choose your nozzle configuration."), 
+        Connect     ("Connect",     "connect",      "Connect OpenPnP to real controllers and cameras."),
+        Basics      ("Basics",      "basics",       "Configure basic machine axes, motion, vacuum switching, light switching."),
+        Kinematics  ("Kinematics",  "kinematics",   "Define machine kinematics: Safe Z, soft limits, motion control model, feed-rates, accelerations etc."),
+        Vision      ("Vision",      "vision",       "Setup cameras and computer vision."),
+        Calibration ("Calibration", "calibration",  "Calibrate the machine for precision motion and vision."),
+        Production  ("Production",  "production",   "Configure feeders and solve other production related issues."), 
+        Advanced    ("Advanced",    "advanced",     "Enable more advanced features for a faster and more automatic machine.");
+
+        final private String name;
+        final private String tag;
+        final private String description;
+
+        private Milestone(String name, String tag, String description) {
+            this.name = name;
+            this.tag = tag;
+            this.description = description;
+        }
 
         public Milestone getPrevious() {
             if (ordinal()-1 >= 0) {
@@ -69,42 +97,33 @@ public class Solutions extends AbstractTableModel {
             }
             return null;
         }
+
         public Milestone getNext() {
             if (ordinal()+1 < values().length) {
                 return values()[ordinal() + 1];
             }
             return null;
         }
+
         @Override
         public String getName() {
-            return toString();
+            return name;
         }
+
+        @Override
+        public void setName(String name) {}
+
         @Override
         public Icon getSubjectIcon() {
             return Icons.solutions;
         }
-        @Override
-        public void setName(String name) {
-        }
+
         public String getDescription() {
-            switch (this) {
-                case Welcome:
-                    return "Get to know OpenPnP by using the demo simulation machine. Choose your nozzle configuration.";
-                case Connect:
-                    return "Connect OpenPnP to real controllers and cameras.";
-                case Basics:
-                    return "Configure basic machine motion, vacuum switching, light switching.";
-                case Vision: 
-                    return "Setup cameras and computer vision.";
-                case Calibration:
-                    return "Calibrate the machine for precision motion and vision.";
-                case Production:
-                    return "Configure feeders and solve other production related issues.";
-                case Advanced:
-                    return "Enable more advanced features for a faster and more automatic machine.";
-                default:
-                    return null;
-            }
+            return description;
+        }
+
+        public String getAnchor() {
+            return "#"+tag+"-milestone";
         }
     }
     @Attribute(required = false)
@@ -169,6 +188,30 @@ public class Solutions extends AbstractTableModel {
         Object oldValue = this.targetMilestone;
         this.targetMilestone = targetMilestone;
         propertyChangeSupport.firePropertyChange("targetMilestone", oldValue, targetMilestone);
+    }
+
+    public boolean isShowIndicator() {
+        return showIndicator;
+    }
+
+    public void setShowIndicator(boolean showIndicator) {
+        this.showIndicator = showIndicator;
+    }
+
+    public boolean isShowSolved() {
+        return showSolved;
+    }
+
+    public void setShowSolved(boolean showSolved) {
+        this.showSolved = showSolved;
+    }
+
+    public boolean isShowDismissed() {
+        return showDismissed;
+    }
+
+    public void setShowDismissed(boolean showDismissed) {
+        this.showDismissed = showDismissed;
     }
 
     public boolean isTargeting(Milestone targetMilestone) {
@@ -246,9 +289,6 @@ public class Solutions extends AbstractTableModel {
             return solution;
         }
         public Severity getSeverity() {
-            if (state == State.Dismissed) {
-                return Severity.None;
-            }
             return severity;
         }
         public String getFingerprint() {
@@ -265,6 +305,10 @@ public class Solutions extends AbstractTableModel {
             firePropertyChange("state", oldValue, state);
         }
 
+        public boolean isUnhandled() {
+            return state == State.Open;
+        }
+
         public Object getChoice() {
             return choice;
         }
@@ -272,8 +316,16 @@ public class Solutions extends AbstractTableModel {
             this.choice = choice;
         }
 
-        public void setInitiallyDismissed() {
-            this.state = State.Dismissed;
+        /**
+         * @return true if this solution is triggered by a machine condition that absolutely needs to be 
+         * addressed. This will force a solution to be unsolved, even is marked as "solved". Note, it will not
+         * force open a solution that is marked as "dismissed".
+         */
+        public boolean isForcedUnsolved() {
+            return false;
+        }
+        void setInitialState(State state) {
+            this.state = state;
         }
         public String getUri() {
             return uri;
@@ -324,6 +376,37 @@ public class Solutions extends AbstractTableModel {
             public abstract int get();
             public abstract void set(int value);
         }
+        public abstract class DoubleProperty extends CustomProperty {
+            private final double min;
+            private final double max;
+
+            public DoubleProperty(String label, String toolTip, double min, double max) {
+                super(label, toolTip);
+                this.min = min;
+                this.max = max;
+            }
+            public double getMin() {
+                return min;
+            }
+            public double getMax() {
+                return max;
+            }
+            public abstract double get();
+            public abstract void set(double value);
+        }
+        public abstract class LengthProperty extends CustomProperty {
+            public LengthProperty(String label, String toolTip) {
+                super(label, toolTip);
+            }
+            public abstract Length get();
+            public abstract void set(Length value);
+        }
+        public abstract class ActionProperty extends CustomProperty {
+            public ActionProperty(String label, String toolTip) {
+                super(label, toolTip);
+            }
+            public abstract Action get();
+        }
 
         public CustomProperty [] getProperties() {
             return new CustomProperty[] {};
@@ -358,6 +441,17 @@ public class Solutions extends AbstractTableModel {
         public Choice [] getChoices() {
             return new Choice[] {};
         }
+
+        public void activate() throws Exception {
+        }
+
+        public String getExtendedDescription() {
+            return null;
+        }
+
+        public Icon getExtendedIcon() {
+            return null;
+        }
     }
 
     public static class PlainIssue extends Issue {
@@ -388,10 +482,25 @@ public class Solutions extends AbstractTableModel {
     }
     public void setSolutionsIssueDismissed(Issue issue, boolean dismissed) {
         if (dismissed) {
+            solvedSolutions.remove(issue.getFingerprint());
             dismissedSolutions.add(issue.getFingerprint()); 
         }
         else {
             dismissedSolutions.remove(issue.getFingerprint());
+        }
+    }
+
+    public boolean isSolutionsIssueSolved(Issue issue) {
+        return solvedSolutions.contains(issue.getFingerprint());
+    }
+
+    public void setSolutionsIssueSolved(Issue issue, boolean solved) {
+        if (solved) {
+            dismissedSolutions.remove(issue.getFingerprint());
+            solvedSolutions.add(issue.getFingerprint()); 
+        }
+        else {
+            solvedSolutions.remove(issue.getFingerprint());
         }
     }
 
@@ -404,6 +513,11 @@ public class Solutions extends AbstractTableModel {
         return machine;
     }
 
+    /**
+     * Perform the Issues & Solutions search. This opens a list of pending issues, i.e. it does not
+     * directly affect the table model. Pending issues will only be made visible when 
+     * {@link #publishIssues()} is called.    
+     */
     public synchronized void findIssues() {
         pendingIssues = new ArrayList<>();
         Machine machine = getMachine();
@@ -415,7 +529,7 @@ public class Solutions extends AbstractTableModel {
                 "Complete milestone "+targetMilestone.getName(), 
                 targetMilestone.getDescription(), 
                 Solutions.Severity.Information,
-                "https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions") {
+                "https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions"+targetMilestone.getAnchor()) {
             {
                 setChoice(targetMilestone.getNext());
             }
@@ -430,7 +544,7 @@ public class Solutions extends AbstractTableModel {
                         StringBuilder str = new StringBuilder();
                         str.append("<ul>");
                         for (Issue issue : pendingIssues) {
-                            if (issue.getState() == State.Open 
+                            if (issue.isUnhandled() 
                                     && !issue.getFingerprint().equals(getFingerprint())) {
                                 // There is still an open issue.
                                 ok = false;
@@ -491,24 +605,51 @@ public class Solutions extends AbstractTableModel {
                                             + "<blockquote>"+XmlSerialize.escapeXml(targetMilestone.getPrevious().getDescription())+"</blockquote><br/>"
                                             + "<p>Note: Most Issues & Solutions from previous milestones are also reported on subsequent milestones. "
                                             + "But in earlier target milestones some solutions proposed are simpler, more conservative. "
-                                            + "For troubleshooting, it can therfore be beneficial to go back and try getting it to work there.</p><br/>"
-                                            + "<p>To change your nozzle configuration, you have to go back all the way to "+Milestone.Welcome.getName()+".</p>"
+                                            + "For troubleshooting, it can therfore be beneficial to go back and try getting it to work there.</p>"
                                             + "</html>",
                                             Icons.milestone)),
                 };
             }
         });
-        for (Issue issue : pendingIssues) {
+        for (Issue issue : new ArrayList<>(pendingIssues)) {
             if (isSolutionsIssueDismissed(issue)) {
-                issue.setInitiallyDismissed();
+                if (isShowDismissed()) {
+                    issue.setInitialState(State.Dismissed);
+                }
+                else {
+                    pendingIssues.remove(issue);
+                }
+            }
+            else if (isSolutionsIssueSolved(issue)) {
+                if (issue.isForcedUnsolved()) {
+                    setSolutionsIssueSolved(issue, false);
+                }
+                else if (isShowSolved()) {
+                    issue.setInitialState(State.Solved);
+                }
+                else {
+                    pendingIssues.remove(issue);
+                }
             }
         }
     }
 
-    public synchronized void add(Issue issue) {
+    /**
+     * Adds the issue to the list of pending issues that {@link #findIssues()} has opened.
+     * This should only be called from inside {@link #Subject.findIssues(Solutions)}
+     * 
+     * @param issue
+     * @return true if the issue was already marked as solved.  
+     */
+    public synchronized boolean add(Issue issue) {
         pendingIssues.add(issue);
+        return isSolutionsIssueSolved(issue);
     }
 
+    /**
+     * Publish the pending issues that {@link #findIssues()} has found i.e. that were added using {@link #add(Issue)}.
+     * This makes them visible trough the TableModel of this.
+     */
     public synchronized void publishIssues() {
         // Go through the issues and install listeners to update the dismissedTroubleshooting.
         for (Issue issue : pendingIssues) {
@@ -527,10 +668,6 @@ public class Solutions extends AbstractTableModel {
         pendingIssues.sort(new Comparator<Issue>() {
             @Override
             public int compare(Issue o1, Issue o2) {
-                int d = o1.getState().ordinal() - o2.getState().ordinal();
-                if (d != 0) {
-                    return d;
-                }
                 if (o1.getSeverity() == Severity.Fundamental && o2.getSeverity() != Severity.Fundamental) {
                     return -1;
                 }

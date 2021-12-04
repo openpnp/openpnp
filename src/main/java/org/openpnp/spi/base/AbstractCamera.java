@@ -13,7 +13,6 @@ import java.util.TreeMap;
 
 import javax.swing.Icon;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 
 import org.opencv.core.Core;
 import org.opencv.core.Core.MinMaxLocResult;
@@ -33,9 +32,6 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.Solutions;
-import org.openpnp.model.Solutions.Milestone;
-import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -119,9 +115,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     @Attribute(required = false)
     boolean enableUnitsPerPixel3D = false;
 
-    /**
-     * Automatically set the CameraView viewing plane Z according to taregeted user action.  
-     */
+    @Deprecated
     @Attribute(required = false)
     boolean autoViewPlaneZ = false;
 
@@ -383,14 +377,6 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         this.enableUnitsPerPixel3D = enableUnitsPerPixel3D;
     }
 
-    public boolean isAutoViewPlaneZ() {
-        return autoViewPlaneZ;
-    }
-
-    public void setAutoViewPlaneZ(boolean autoViewPlaneZ) {
-        this.autoViewPlaneZ = autoViewPlaneZ;
-    }
-
     @Override
     public Location getUnitsPerPixel() {
         return getUnitsPerPixel(defaultZ);
@@ -398,7 +384,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     @Override
     public Location getUnitsPerPixel(Length viewingPlaneZ) {
-        if (!isSecondaryUnitsPerPixelCalibrated()) {
+        if (!isUnitsPerPixelAtZCalibrated()) {
             return unitsPerPixel;
         }
         if (viewingPlaneZ == null) {
@@ -423,7 +409,22 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                 k * (uppCal1.getY() - uppCal2.getY()) + uppCal2.getY(), cameraRelZ, 0.0);
     }
 
-    public boolean isSecondaryUnitsPerPixelCalibrated() {
+    @Override
+    public Location getUnitsPerPixelAtZ() {
+        if (getAxisZ() != null) {
+            // Camera has an axis (virtual or physical), so it may set the viewing plane. Note, this automatically 
+            // also excludes the bottom camera.
+            Length viewingPlaneZ = getLocation().getLengthZ();
+            if (viewingPlaneZ.compareTo(getSafeZ()) < 0 ) {
+                // Z is below Safe Z, so this is a purposefully set viewingPlaneZ.
+                return getUnitsPerPixel(viewingPlaneZ);
+            }
+        }
+        return Camera.super.getUnitsPerPixelAtZ();
+    }
+
+    @Override
+    public boolean isUnitsPerPixelAtZCalibrated() {
         return (enableUnitsPerPixel3D
                 && unitsPerPixelSecondary != null 
                 && unitsPerPixelSecondary.getX() != 0 
@@ -522,7 +523,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
      * @return - the estimated Z height of the object
      */
     public Length estimateZCoordinateOfObject(Location observedUnitsPerPixel) throws Exception {
-        if (!isSecondaryUnitsPerPixelCalibrated()) {
+        if (!isUnitsPerPixelAtZCalibrated()) {
             throw new Exception("Secondary Camera Units Per Pixel have not been calibrated.");
         }
         LengthUnit units = observedUnitsPerPixel.getUnits();
@@ -641,19 +642,13 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     private SimpleGraph startDiagnostics() {
         if (settleDiagnostics) {
-            Color gridColor = UIManager.getColor ( "PasswordField.capsLockIconColor" );
-            if (gridColor == null) {
-                gridColor = new Color(0, 0, 0, 64);
-            } else {
-                gridColor = new Color(gridColor.getRed(), gridColor.getGreen(), gridColor.getBlue(), 64);
-            }
             // Diagnostics wanted, create the simple graph.
             SimpleGraph settleGraph = new SimpleGraph();
             settleGraph.setRelativePaddingLeft(0.05);
             // init difference scale
             SimpleGraph.DataScale settleScale =  settleGraph.getScale(DIFFERENCE);
             settleScale.setRelativePaddingBottom(0.3);
-            settleScale.setColor(gridColor);
+            settleScale.setColor(SimpleGraph.getDefaultGridColor());
             SimpleGraph.DataScale captureScale =  settleGraph.getScale(BOOLEAN);
             captureScale.setRelativePaddingTop(0.8);
             captureScale.setRelativePaddingBottom(0.1);
@@ -1316,31 +1311,6 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
         @Override
         public boolean equals(Object obj) {
             return obj.equals(listener);
-        }
-    }
-
-    @Override
-    public void findIssues(Solutions solutions) {
-        super.findIssues(solutions);
-        if (solutions.isTargeting(Milestone.Vision)) {
-
-            if ((unitsPerPixel.getX() == 0) || (unitsPerPixel.getY() == 0)) {
-                solutions.add(new Solutions.PlainIssue(
-                        this, 
-                        "Camera units per pixel has not been calibrated.", 
-                        "Calibrate the camera's units per pixel.", 
-                        Severity.Warning,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
-            }
-            else if (solutions.isTargeting(Milestone.Advanced) 
-                    && !isSecondaryUnitsPerPixelCalibrated()) {
-                solutions.add(new Solutions.PlainIssue(
-                        this, 
-                        "Camera units per pixel can be calibrated for 3D scale estimation.", 
-                        "Calibrate the camera's units per pixel at two different heights.", 
-                        Severity.Suggestion,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel"));
-            }
         }
     }
 }

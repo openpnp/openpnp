@@ -19,12 +19,12 @@
 
 package org.openpnp.machine.reference.camera.wizards;
 
-import java.awt.Color;
 import java.awt.Cursor;
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Locale;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -32,7 +32,6 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -43,7 +42,6 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.machine.reference.camera.OpenCvCamera.OpenCvCapturePropertyValue;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.util.UiUtils;
@@ -52,9 +50,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JButton;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 @SuppressWarnings("serial")
 public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurationWizard {
@@ -233,7 +228,7 @@ public class OpenPnpCaptureCameraConfigurationWizard extends AbstractConfigurati
                                 });
 
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Properties", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,

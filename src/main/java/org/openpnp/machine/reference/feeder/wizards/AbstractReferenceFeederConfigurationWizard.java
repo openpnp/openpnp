@@ -19,13 +19,10 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import java.awt.Color;
-
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -87,7 +84,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
 
         panelPart = new JPanel();
         panelPart.setBorder(
-                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+                new TitledBorder(null, "General Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPart);
         panelPart.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -138,7 +135,7 @@ public abstract class AbstractReferenceFeederConfigurationWizard
         if (includePickLocation) {
             panelLocation = new JPanel();
             panelLocation.setBorder(new TitledBorder(
-                    new EtchedBorder(EtchedBorder.LOWERED, null, null), "Pick Location",
+                    null, "Pick Location",
                     TitledBorder.LEADING, TitledBorder.TOP, null));
             contentPanel.add(panelLocation);
             panelLocation

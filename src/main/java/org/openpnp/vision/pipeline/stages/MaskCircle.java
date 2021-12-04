@@ -7,6 +7,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.model.Length;
+import org.openpnp.model.Location;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -36,12 +38,20 @@ public class MaskCircle extends CvStage {
         Scalar color = FluentCv.colorToScalar(Color.black);
         mask.setTo(color);
         masked.setTo(color);
-        Point center = (Point) pipeline.getProperty("MaskCircle.center");
-        if (center == null) {
-            center = new Point(mat.cols() / 2, mat.rows() / 2);
-        }
-        Imgproc.circle(mask, center,  Math.abs(diameter) / 2, new Scalar(255, 255, 255), -1);
-        if(diameter < 0) {
+
+        //Check for overriding properties
+        int diameter = this.diameter;
+        Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
+        
+        diameter = getPossiblePipelinePropertyOverride(diameter, pipeline, "MaskCircle.diameter", 
+                Double.class, Integer.class, Length.class);
+        
+        center = getPossiblePipelinePropertyOverride(center, pipeline, "MaskCircle.center", 
+                Point.class, org.openpnp.model.Point.class, Location.class);
+
+        Imgproc.circle(mask, center,  Math.abs(diameter) / 2, 
+                new Scalar(255, 255, 255), -1);
+        if (diameter < 0) {
             Core.bitwise_not(mask,mask);
         }
         mat.copyTo(masked, mask);

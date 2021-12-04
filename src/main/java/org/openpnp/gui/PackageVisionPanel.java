@@ -23,8 +23,17 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 
-import javax.swing.*;
-import javax.swing.border.EtchedBorder;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -71,8 +80,14 @@ public class PackageVisionPanel extends JPanel {
         JPanel propertiesPanel = new JPanel();
         add(propertiesPanel, BorderLayout.NORTH);
         propertiesPanel.setBorder(
-                new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Settings",
+                new TitledBorder(null, "Settings",
                         TitledBorder.LEADING, TitledBorder.TOP, null));
+        propertiesPanel.setLayout(new FormLayout(
+                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
+                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblUnits = new JLabel("Units");
         propertiesPanel.add(lblUnits, "2, 2, right, default");

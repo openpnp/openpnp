@@ -124,7 +124,9 @@ public class BasicJobTest {
                 System.out.println(text);
             });
             jobProcessor.initialize(job);
-            while (jobProcessor.next());
+            while (jobProcessor.next()) {
+                //spin
+            };
             return true;
         });
     }

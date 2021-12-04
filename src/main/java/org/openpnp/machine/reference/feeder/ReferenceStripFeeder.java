@@ -204,6 +204,13 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         return l;
     }
 
+    public void ensureFeederZ(Camera camera) throws Exception {
+        if (camera.isUnitsPerPixelAtZCalibrated()
+                && !getReferenceHoleLocation().getLengthZ().isInitialized()) {
+            throw new Exception("Feeder "+getName()+": please set the Reference Hole Location Z coordinate first.");
+        }
+    }
+
     public Location[] getIdealLineLocations() {
         if (visionLocation == null) {
             return new Location[] {referenceHoleLocation, lastHoleLocation};
@@ -237,6 +244,7 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         }
         // go to where we expect to find the next reference hole
         Camera camera = nozzle.getHead().getDefaultCamera();
+        ensureFeederZ(camera);
         Location expectedLocation = null;
         Location[] lineLocations = getIdealLineLocations();
 

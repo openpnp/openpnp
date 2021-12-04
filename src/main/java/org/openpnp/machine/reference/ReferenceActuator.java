@@ -378,7 +378,7 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
 
     @Override
     public Action[] getPropertySheetHolderActions() {
-        return new Action[] { deleteAction };
+        return new Action[] { deleteAction, permutateUpAction, permutateDownAction };
     }
     
     public Action deleteAction = new AbstractAction("Delete Actuator") {
@@ -400,6 +400,44 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
                 else {
                     Configuration.get().getMachine().removeActuator(ReferenceActuator.this);
                 }
+            }
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action permutateUpAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.arrowUp);
+            putValue(NAME, "Permutate Up");
+            putValue(SHORT_DESCRIPTION, "Move the currently selected actuator one position up.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (getHead() == null) {
+                Configuration.get().getMachine().permutateActuator(ReferenceActuator.this, -1);
+            }
+            else {
+                getHead().permutateActuator(ReferenceActuator.this, -1);
+            }
+        }
+    };
+
+    @SuppressWarnings("serial")
+    public Action permutateDownAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.arrowDown);
+            putValue(NAME, "Permutate Down");
+            putValue(SHORT_DESCRIPTION, "Move the currently selected actuator one position down.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            if (getHead() == null) {
+                Configuration.get().getMachine().permutateActuator(ReferenceActuator.this, +1);
+            }
+            else {
+                getHead().permutateActuator(ReferenceActuator.this, +1);
             }
         }
     };

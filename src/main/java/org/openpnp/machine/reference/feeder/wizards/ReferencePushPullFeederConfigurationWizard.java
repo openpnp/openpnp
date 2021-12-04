@@ -21,15 +21,11 @@
 
 package org.openpnp.machine.reference.feeder.wizards;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -67,11 +63,12 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
-import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.OcrUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -383,24 +380,16 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVisionEnabled.add(btnResetStatistics, "12, 4, 3, 1");
 
         lblOcrWrongPart = new JLabel("OCR Wrong Part Action");
-        lblOcrWrongPart.setToolTipText("<html>Determines what action should be taken when OCR detects the wrong Part ID in the feeder.<br/> \r\n<ul>\r\n<li><strong>None</strong>: no OCR is performed.</li>\r\n<li><strong>Stop</strong>: the error is indicated, the current process stopped.</li>\r\n<li><strong>Change Part & Stop</strong>: the part in the feeder is exchanged, error and stop.</li>\r\n<li><strong>Change Part & Continue</strong>: the part in the feeder is exchanged silently.</li>\r\n</ul>\r\n</html>\r\n");
+        lblOcrWrongPart.setToolTipText("<html>Determines what action should be taken when OCR detects the wrong Part ID in the feeder.<br/> \r\n<ul>\r\n<li>\r\n<strong>None</strong>: Use this setting if you don't want to use OCR.</li>\r\n<li>\r\n<strong>SwapFeeders</strong>: If a wrong part is detected but the right part is selected<br/>\r\nin a different ReferencePushPullFeeder, the locations of the two feeders are swapped. The<br/>\r\nswapped-in feeder will be enabled. This will happen, if you unload/reload/rearrange your<br/>\r\nfeeders on the machine.</li>\r\n<li>\r\n<strong>SwapOrCreate</strong>: Works like <strong>SwapFeeders</strong>, but if no<br/>\r\nother feeder with the right part is found, a new one will be created and swapped-in at the<br/>\r\ncurrent feeder's location. The current feeder is then disabled in turn (they are now sitting at<br/>\r\nthe same location and only one must be enabled).</li>\r\n<li>\r\n<strong>ChangePart</strong>: The part in the current feeder is changed. This will only<br/>\r\nwork correctly, if the tape settings etc. remain the same between the parts i.e. if you restrict<br/>\r\nany reloading/rearranging to groups of feeders with the same settings.</li>\r\n<li>\r\n<strong>ChangePartAndClone</strong>: The part in the current feeder is changed but<br/>\r\nsettings are cloned from a template feeder.</li>\r\n</ul>\r\n</html>\r\n");
         panelVisionEnabled.add(lblOcrWrongPart, "2, 8, right, default");
 
         comboBoxWrongPartAction = new JComboBox(ReferencePushPullFeeder.OcrWrongPartAction.values());
         panelVisionEnabled.add(comboBoxWrongPartAction, "4, 8");
 
-        // Compose a font list of the system, the one currently selected, even if the system does not know it (yet), and the empty selection 
-        List<String> systemFontList = Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment()
-                .getAvailableFontFamilyNames()); 
-        List<String> fontList = new ArrayList<>();
-        if (!systemFontList.contains(feeder.getOcrFontName())) {
-            fontList.add(feeder.getOcrFontName());
-        }
-        fontList.add("");
-        fontList.addAll(systemFontList);
+        List<String> fontList = OcrUtils.createFontSelectionList(feeder.getOcrFontName(), true);
 
         lblOcrFontName = new JLabel("OCR Font Name");
-        lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized.<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
+        lblOcrFontName.setToolTipText("<html>Name of the OCR font to be recognized or [Barcode].<br/>\r\nMonospace fonts work much better, allow lower resolution and therefore faster <br/>\r\noperation. Use a font where all the used characters are easily distinguishable.<br/>\r\nFonts with clear separation between glyphs are much preferred.</html>");
         panelVisionEnabled.add(lblOcrFontName, "8, 8, right, default");
         comboBoxFontName = new JComboBox(fontList.toArray());
         panelVisionEnabled.add(comboBoxFontName, "10, 8");
@@ -629,29 +618,16 @@ extends AbstractReferenceFeederConfigurationWizard {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (Configuration.get().getMachine().isEnabled()) {
-                UiUtils.submitUiMachineTask(() -> {
-                    MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
-                    MovableUtils.fireTargetedUserAction(feeder.getCamera());
-                    feeder.getCamera().waitForCompletion(CompletionType.WaitForStillstand);
-                    SwingUtilities.invokeLater(() -> {
-                        UiUtils.messageBoxOnException(() -> {
+            UiUtils.messageBoxOnException(() -> {
+                UiUtils.confirmMoveToLocationAndAct(
+                        getTopLevelAncestor(), 
+                        "move the camera to the proper feeder vision location before editing the pipeline", 
+                        feeder.getCamera(), 
+                        feeder.getNominalVisionLocation(), 
+                        true, () -> {
                             editPipeline();
                         });
-                    });
-                });
-            }
-            else {
-                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "Machine not enabled, unable to move the camera to the right location to edit the pipeline.\n"
-                                +"Do you want to proceed anyway?",
-                                null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                if (result == JOptionPane.YES_OPTION) {
-                    UiUtils.messageBoxOnException(() -> {
-                        editPipeline();
-                    });                    
-                }
-            }
+            });
         }
     };
 
@@ -754,8 +730,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                     throw new Exception("This feeder is used as a template and cannot be overwritten.");
                 }
                 int result;
-                if (feeder.getLocation().equals(ReferencePushPullFeeder.nullLocation)) {
-                    // if the feeder.location is completely null, we assume this is a freshly created feeder 
+                if (!feeder.getLocation().isInitialized()) {
+                    // if the feeder.location is completely zero, we assume this is a freshly created feeder 
                     result = JOptionPane.YES_OPTION; 
                 }
                 else {
@@ -950,6 +926,20 @@ extends AbstractReferenceFeederConfigurationWizard {
         }
     };
 
+    private void editPipeline() throws Exception {
+        Camera camera = feeder.getCamera();
+        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true, true);
+        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), feeder.getName() + " Pipeline", editor);
+        dialog.setVisible(true);
+    }
+
+    private void resetPipeline() {
+        feeder.resetPipeline();
+    }
+    protected void initDataBindings() {
+    }
+
     private JLabel lblPartPitch;
     private JTextField textFieldPartPitch;
     private JTextField textFieldFeedPitch;
@@ -1029,21 +1019,4 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JLabel lblCloneLocationSettings;
     private JCheckBox checkBoxCloneLocationSettings;
     private JButton btnSetPartByOcr;
-
-    private void editPipeline() throws Exception {
-        Camera camera = feeder.getCamera();
-        CvPipeline pipeline = feeder.getCvPipeline(camera, false, true, true);
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new JDialog(MainFrame.get(), feeder.getName() + " Pipeline");
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(editor);
-        dialog.setSize(1024, 768);
-        dialog.setVisible(true);
-    }    
-
-    private void resetPipeline() {
-        feeder.resetPipeline();
-    }
-    protected void initDataBindings() {
-    }
 }

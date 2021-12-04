@@ -113,7 +113,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 		this.includePickLocation = includePickLocation;
 
 		panelPart = new JPanel();
-		panelPart.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "General Settings",
+		panelPart.setBorder(new TitledBorder(null, "General Settings",
 				TitledBorder.LEADING, TitledBorder.TOP, null));
 		contentPanel.add(panelPart);
 		panelPart.setLayout(new FormLayout(new ColumnSpec[] {
@@ -173,7 +173,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 
 		if (includePickLocation) {
 			panelLocation = new JPanel();
-			panelLocation.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+			panelLocation.setBorder(new TitledBorder(null,
 					"Tray Component Locations", TitledBorder.LEADING, TitledBorder.TOP, null));
 			contentPanel.add(panelLocation);
 			panelLocation.setLayout(new FormLayout(
@@ -241,7 +241,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			panelLocation.add(lastLocationButtonsPanel, "8, 8");
 
 			panelParameters = new JPanel();
-			panelParameters.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+			panelParameters.setBorder(new TitledBorder(null,
 					"Tray Parameters", TitledBorder.LEADING, TitledBorder.TOP, null));
 			contentPanel.add(panelParameters);
 
@@ -384,7 +384,7 @@ public class ReferenceRotatedTrayFeederConfigurationWizard extends AbstractConfi
 			textFieldTrayRotation.setColumns(10);
 
 			panelIllustration = new JPanel();
-			panelIllustration.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null),
+			panelIllustration.setBorder(new TitledBorder(null,
 					"Tray Illustration", TitledBorder.LEADING, TitledBorder.TOP, null));
 			contentPanel.add(panelIllustration);
 

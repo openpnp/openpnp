@@ -35,8 +35,6 @@ public class BufferedImageCamera extends ReferenceCamera {
 
     public BufferedImageCamera(Camera originalCamera) {
         this.originalCamera = originalCamera;
-
-        setUnitsPerPixel(originalCamera.getUnitsPerPixel());
     }
 
     protected void setImage(BufferedImage source) {
@@ -86,6 +84,7 @@ public class BufferedImageCamera extends ReferenceCamera {
             bufferedCamera = new BufferedImageCamera(camera); 
             bufferedCameras.put(camera, bufferedCamera);
         }
+        bufferedCamera.setUnitsPerPixel(camera.getUnitsPerPixelAtZ());
         bufferedCamera.setImage(image);
         return bufferedCamera;
     }

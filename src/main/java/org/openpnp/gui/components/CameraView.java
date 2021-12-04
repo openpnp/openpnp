@@ -81,6 +81,7 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.util.XmlSerialize;
 import org.pmw.tinylog.Logger;
 
@@ -229,8 +230,6 @@ public class CameraView extends JComponent implements CameraListener {
     }
     RenderingQuality renderingQuality = RenderingQuality.Low;
 
-    private Length viewingPlaneZ; //the Z coordinate at which the reticle is correctly scaled
-
     public CameraView() {
         setBackground(Color.black);
         setOpaque(true);
@@ -317,8 +316,6 @@ public class CameraView extends JComponent implements CameraListener {
         // turn on capture for the new camera
         if (this.camera != null) {
             this.camera.startContinuousCapture(this);
-            // set the viewing plane to the default for the camera
-            viewingPlaneZ = camera.getDefaultZ();
         }
     }
 
@@ -400,45 +397,6 @@ public class CameraView extends JComponent implements CameraListener {
         prefs.put(getQualityRenderingPrefKey(), renderingQuality.toString());
         this.renderingQuality = renderingQuality;
         calculateScalingData();
-    }
-
-    /**
-     * Gets the current Z coordinate of the viewing plane at which the reticle is correctly scaled
-     * 
-     * @return the Z coordinate
-     */
-    public Length getViewingPlaneZ() {
-        return viewingPlaneZ;
-    }
-
-    /**
-     * Sets the Z coordinate at which the reticle is correctly scaled
-     * 
-     * @param viewingPlaneZ the Z coordinate
-     */
-    public void setViewingPlaneZ(Length viewingPlaneZ) {
-        try {
-            if (camera.getAxisZ() != null 
-                    && camera.isInSafeZZone(viewingPlaneZ)) {
-                this.viewingPlaneZ = camera.getDefaultZ();
-            }
-            else {
-                this.viewingPlaneZ = viewingPlaneZ;
-            }
-        }
-        catch (Exception e) {
-            Logger.warn(e);
-        }
-        calculateScalingData();
-        repaint();
-    }
-
-    /**
-     * Resets the Z coordinate at which the reticle is correctly scaled to the default for the
-     * camera
-     */
-    public void resetViewingPlaneZ() {
-        this.setViewingPlaneZ(camera.getDefaultZ());
     }
 
     /**
@@ -574,7 +532,7 @@ public class CameraView extends JComponent implements CameraListener {
         lastFrame = img;
         if (oldFrame == null
                 || (oldFrame.getWidth() != img.getWidth() || oldFrame.getHeight() != img.getHeight()
-                        || !camera.getUnitsPerPixel(viewingPlaneZ).equals(lastUnitsPerPixel))) {
+                        || !camera.getUnitsPerPixelAtZ().equals(lastUnitsPerPixel))) {
             calculateScalingData();
         }
         fps = 1000.0 / fpsAverage.next(System.currentTimeMillis() - lastFrameReceivedTime);
@@ -638,7 +596,7 @@ public class CameraView extends JComponent implements CameraListener {
         scaleRatioX = lastSourceWidth / (double) scaledWidth;
         scaleRatioY = lastSourceHeight / (double) scaledHeight;
         
-        lastUnitsPerPixel = camera.getUnitsPerPixel(viewingPlaneZ);
+        lastUnitsPerPixel = camera.getUnitsPerPixelAtZ();
         scaledUnitsPerPixelX = lastUnitsPerPixel.getX() * scaleRatioX;
         scaledUnitsPerPixelY = lastUnitsPerPixel.getY() * scaleRatioY;
 
@@ -667,7 +625,7 @@ public class CameraView extends JComponent implements CameraListener {
                 g2d.drawImage(lastFrame, imageX, imageY, scaledWidth, scaledHeight, null);
             }
             else {
-                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
                 g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 AffineTransform t = new AffineTransform();
@@ -683,7 +641,7 @@ public class CameraView extends JComponent implements CameraListener {
                     .getRotation();
 
             for (Reticle reticle : reticles.values()) {
-                reticle.draw(g2d, camera.getUnitsPerPixel(viewingPlaneZ).getUnits(), scaledUnitsPerPixelX,
+                reticle.draw(g2d, camera.getUnitsPerPixelAtZ().getUnits(), scaledUnitsPerPixelX,
                         scaledUnitsPerPixelY, ins.left + (width / 2), ins.top + (height / 2),
                         scaledWidth, scaledHeight, c);
             }
@@ -710,16 +668,12 @@ public class CameraView extends JComponent implements CameraListener {
                 paintLightToggle(g2d);
             }
 
-            if (viewingPlaneZ != null) {
-                // Display the height of the reticle in the lower left corner if it is different than
-                // the default
-                Length viewingPlaneDiff = viewingPlaneZ.subtract(camera.getDefaultZ());
-                if (Math.abs(viewingPlaneDiff.
-                        convertToUnits(LengthUnit.Millimeters)
-                        .getValue()) > 0.05) {
+            if (camera.isUnitsPerPixelAtZCalibrated()) {
+                // Display the height of the reticle in the lower left corner if it is lower than
+                // safe Z.
+                if (camera.getLocation().getLengthZ().compareTo(camera.getSafeZ()) < 0) {   
                     LengthConverter lengthConverter = new LengthConverter();
-                    String text = "Z: " + lengthConverter.convertForward(viewingPlaneZ) 
-                    + viewingPlaneDiff.getUnits().getShortName();
+                    String text = "Z: " + lengthConverter.convertForward(camera.getLocation().getLengthZ());
                     Dimension dim = measureTextOverlay(g2d, text);
                     drawTextOverlay(g2d, width - dim.width - 10, height - dim.height - 10, text);
                 }
@@ -1215,32 +1169,24 @@ public class CameraView extends JComponent implements CameraListener {
         g2d.fillRect(topLeftX + insets.left, yPen, histogramWidth, histogramHeight);
 
         // Calculate the histogram
-        long[][] histogram = new long[3][256];
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
-                int rgb = image.getRGB(x, y);
-                int r = (rgb >> 16) & 0xff;
-                int g = (rgb >> 8) & 0xff;
-                int b = (rgb >> 0) & 0xff;
-                histogram[0][r]++;
-                histogram[1][g]++;
-                histogram[2][b]++;
-            }
-        }
+        long[][] histogram = VisionUtils.computeImageHistogram(image);
         // find the highest value in the histogram
         long maxVal = 0;
         for (int channel = 0; channel < 3; channel++) {
             // Smooth it 
-            for (int bucket = 254; bucket > 0; bucket--) {
+            long lastBucket = histogram[channel][0];
+            for (int bucket = 1; bucket < 255; bucket++) {
+                long currentBucket = histogram[channel][bucket];
                 histogram[channel][bucket] = 
-                        histogram[channel][bucket] 
-                                + histogram[channel][bucket-1]/2
-                                        + histogram[channel][bucket+1]/2;
+                        (currentBucket*2
+                                + lastBucket
+                                + histogram[channel][bucket+1])/4;
+                lastBucket = currentBucket;
             }
             long [] sorted = histogram[channel].clone();
             Arrays.sort(sorted);
-            // Exclude the largest extremes, typically saturation values. 
-            maxVal = Math.max(maxVal, sorted[sorted.length-3]);
+            // Exclude the largest two extremes, typically saturation values. 
+            maxVal = Math.max(maxVal, sorted[sorted.length-1-2]);
         }
         // and scale it to 50 pixels tall
         double scale = 50.0 / maxVal;
@@ -1473,12 +1419,12 @@ public class CameraView extends JComponent implements CameraListener {
      */
     private void captureSnapshot() {
         UiUtils.messageBoxOnException(() -> {
-            flash();
             File dir = new File(Configuration.get().getConfigurationDirectory(), "snapshots");
             dir.mkdirs();
             DateFormat df = new SimpleDateFormat("YYYY-MM-dd_HH.mm.ss.SSS");
             File file = new File(dir, camera.getName() + "_" + df.format(new Date()) + ".png");
             ImageIO.write(camera.lightSettleAndCapture(), "png", file);
+            flash();
         });
     }
 
@@ -1508,7 +1454,7 @@ public class CameraView extends JComponent implements CameraListener {
 
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
-        Location offsets = camera.getUnitsPerPixel(viewingPlaneZ).
+        Location offsets = camera.getUnitsPerPixelAtZ().
                 derive(offsetX, offsetY, 0.0, 0.0);
         // Add the offsets to the Camera's position.
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
@@ -1562,7 +1508,7 @@ public class CameraView extends JComponent implements CameraListener {
 
         // Create a location in the Camera's units per pixel's units
         // and with the values of the offsets.
-        Location offsets = camera.getUnitsPerPixel().derive(offsetX, offsetY, 0.0, 0.0);
+        Location offsets = new Location(camera.getUnitsPerPixel().getUnits(), offsetX, offsetY, 0.0, 0.0);
         return offsets;
     }
 
@@ -1592,7 +1538,7 @@ public class CameraView extends JComponent implements CameraListener {
                 // move the camera to the location
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
             }
-            MovableUtils.fireTargetedUserAction(camera);
+            MovableUtils.fireTargetedUserAction(camera, true);
         });
     }
     
@@ -1616,7 +1562,7 @@ public class CameraView extends JComponent implements CameraListener {
             Location location = selectedTool.getLocation();
             location = location.derive(null, null, null, targetAngle);
             MovableUtils.moveToLocationAtSafeZ(selectedTool, location);
-            MovableUtils.fireTargetedUserAction(selectedTool);
+            MovableUtils.fireTargetedUserAction(selectedTool, true);
         });
     }
 
@@ -1864,12 +1810,6 @@ public class CameraView extends JComponent implements CameraListener {
                 zoom = Math.max(zoom, 1.0d);
                 zoom = Math.min(zoom, 100d);
             }
-            else { // Scroll wheel with Ctrl or Ctrl-Alt changes the viewing plane
-                if (isViewingPlaneChangable()) {
-                    double factor = (modifiers & InputEvent.ALT_DOWN_MASK) == 0 ? 1.0 : 0.1;
-                    viewingPlaneZ = viewingPlaneZ.subtract(factor * e.getPreciseWheelRotation());
-                }
-            }
             calculateScalingData();
             repaint();
         }
@@ -1879,13 +1819,14 @@ public class CameraView extends JComponent implements CameraListener {
             new CameraViewSelectionTextDelegate() {
                 @Override
                 public String getSelectionText(CameraView cameraView) {
-                    double widthInUnits = selection.width * camera.getUnitsPerPixel(viewingPlaneZ).getX();
-                    double heightInUnits = selection.height * camera.getUnitsPerPixel(viewingPlaneZ).getY();
+                    Location upp = camera.getUnitsPerPixelAtZ();
+                    double widthInUnits = selection.width * upp.getX();
+                    double heightInUnits = selection.height * upp.getY();
 
                     String text = String.format(Locale.US, "%dpx, %dpx\n%2.3f%s, %2.3f%s",
                             (int) selection.getWidth(), (int) selection.getHeight(), widthInUnits,
-                            camera.getUnitsPerPixel(viewingPlaneZ).getUnits().getShortName(), heightInUnits,
-                            camera.getUnitsPerPixel(viewingPlaneZ).getUnits().getShortName());
+                            upp.getUnits().getShortName(), heightInUnits,
+                            upp.getUnits().getShortName());
                     return text;
                 }
             };

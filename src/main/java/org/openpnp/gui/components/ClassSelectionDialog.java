@@ -88,7 +88,7 @@ public class ClassSelectionDialog<T> extends JDialog {
             }
         });
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+        list.setBorder(null);
         panel.add(new JScrollPane(list), BorderLayout.CENTER);
         // setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setSize(400, 400);
