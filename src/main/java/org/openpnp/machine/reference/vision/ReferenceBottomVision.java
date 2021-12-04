@@ -98,7 +98,9 @@ public class ReferenceBottomVision implements PartAlignment {
         
         partSettingsByPartId = null;
 
-        bottomVisionSettings.setCvPipeline(pipeline);
+        if(pipeline != null) {
+            bottomVisionSettings.setCvPipeline(pipeline);
+        }
         pipeline = null;
     }
 
