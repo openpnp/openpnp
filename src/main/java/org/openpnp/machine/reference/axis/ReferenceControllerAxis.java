@@ -23,7 +23,6 @@ package org.openpnp.machine.reference.axis;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -31,13 +30,8 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.BacklashCompensationConfigurationWizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigurationWizard;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage;
-import org.openpnp.model.AxesLocation;
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Solutions;
+import org.openpnp.model.*;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
@@ -593,13 +587,13 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                                         }
                                     });
                                 }
-                                // Check all part setting.
-                                List<PartSettings> partSettings = new ArrayList<>();
+                                // Check all parts.
+                                List<BottomVisionSettings> partSettings = new ArrayList<>();
                                 List<String> parts = new ArrayList<>();
-                                for (Entry<String, PartSettings> entry : referenceBottomVision.getPartSettingsByPartId().entrySet()) {
-                                    if (entry.getValue().getPreRotateUsage() == PreRotateUsage.AlwaysOff) {
-                                        parts.add(entry.getKey());
-                                        partSettings.add(entry.getValue());
+                                for (Part part : Configuration.get().getParts()) {
+                                    if (part.getVisionSettings().getPreRotateUsage() == PreRotateUsage.AlwaysOff) {
+                                        parts.add(part.getId());
+                                        partSettings.add(part.getVisionSettings());
                                     }
                                 }
                                 parts.sort(null);
@@ -625,7 +619,7 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
 
                                         @Override
                                         public void setState(Solutions.State state) throws Exception {
-                                            for (PartSettings partSetting : partSettings) {
+                                            for (BottomVisionSettings partSetting : partSettings) {
                                                 partSetting.setPreRotateUsage((state == State.Solved) ?
                                                         PreRotateUsage.Default : PreRotateUsage.AlwaysOff);
                                             }
