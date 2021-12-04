@@ -1,5 +1,14 @@
 # Charmhigh Conversion Page
 
+___
+**This Wiki is outdated.** Some conversion steps are no longer strictly needed (you can keep the original cameras), others have changed. This Wiki pages should be updated by someone who owns such a machine and is on top of things. 
+
+**HELP WANTED!**
+
+_Mark (2021-12-04)
+___
+
+
 ## Introduction
 This page gives instructions on how to get OpenPnP to work with the pick-and-place machines from Charmhigh.
 
