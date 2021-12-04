@@ -137,7 +137,7 @@ public class PackageVisionPanel extends JPanel {
         tablePanel.add(tableScrollPane);
 
         JPanel bottomVisionPanel = new JPanel();
-        add(bottomVisionPanel, BorderLayout.SOUTH);
+        add(bottomVisionPanel, BorderLayout.SOUTH); //NORTH
         bottomVisionPanel.setBorder(
                 new TitledBorder(null, "Bottom Vision",
                         TitledBorder.LEADING, TitledBorder.TOP, null));
