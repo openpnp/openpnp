@@ -29,6 +29,9 @@ import org.simpleframework.xml.core.Commit;
 
 public class ReferenceBottomVision implements PartAlignment {
 
+    @Deprecated
+    @Element(required = false)
+    protected CvPipeline pipeline;
 
     @Element(required = false)
     protected BottomVisionSettings bottomVisionSettings = createDefaultBottomVisionSettings();
@@ -94,6 +97,7 @@ public class ReferenceBottomVision implements PartAlignment {
         });
         
         partSettingsByPartId = null;
+        pipeline = null;
     }
 
     @Override

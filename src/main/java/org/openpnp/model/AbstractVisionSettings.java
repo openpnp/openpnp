@@ -31,10 +31,12 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
         return id;
     }
     
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public void setName(String name) {
         this.name = name;
     }
