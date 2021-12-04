@@ -1,6 +1,6 @@
 # Project Status
 ___
-**This Wiki is outdated.** There are newer/better versions of Smoothieware firmware, Smoothieware configurations, and OpenPnP configuration around. This Wiki pages should be update by someone who owns such a machine and is on top of things. 
+**This Wiki is outdated.** There are newer/better versions of Smoothieware firmware, Smoothieware configurations, and OpenPnP configuration around. This Wiki pages should be updated by someone who owns such a machine and is on top of things. 
 
 **HELP WANTED!**
 
