@@ -19,35 +19,27 @@
 
 package org.openpnp.machine.neoden4.wizards;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DriversComboBoxModel;
 import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.NeoDen4FeederActuator;
 import org.openpnp.machine.reference.wizards.AbstractActuatorConfigurationWizard;
 import org.openpnp.model.Configuration;
-import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.util.UiUtils;
-import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -86,9 +78,8 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
     private JButton btnChangeFeederIdAction;
     private JLabel lblOldText;
     private JLabel lblNewText;
-    private JComboBox oldId;
-    private JComboBox newId;
-    
+    private JComboBox<Integer> oldId;
+    private JComboBox<Integer> newId;
     
     public NeoDen4FeederActuatorConfigurationWizard(AbstractMachine machine, NeoDen4FeederActuator actuator) {
         super(machine,  actuator);
@@ -214,9 +205,9 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
         lblOldText = new JLabel("Old ID");
         panelProperties.add(lblOldText, "6, 18, right, default");
         
-        oldId = new JComboBox();
-        newId = new JComboBox();
-        for(int i = 1; i <= 100; i++)
+        oldId = new JComboBox<Integer>();
+        newId = new JComboBox<Integer>();
+        for(int i = 0; i <= 99; i++)
         {
             oldId.addItem(i);        
             newId.addItem(i);        
@@ -240,8 +231,7 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
             }
         });
         
-//        btnChangeFeederIdAction.setText("Change Feeder ID");
-//        btnChangeFeederIdAction.setEnabled(true);
+
         panelProperties.add(btnChangeFeederIdAction, "14, 18, fill, default");
         
         super.createUi(machine);
