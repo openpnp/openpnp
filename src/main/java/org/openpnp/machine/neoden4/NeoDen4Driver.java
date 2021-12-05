@@ -709,11 +709,13 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     
     public void changeFeederId(int oldId, int newId) throws Exception {
         Logger.debug(String.format("changeFeederId, oldId=%d, newId=%d", oldId, newId));
-        if((oldId < 0)||(oldId >= 100))
+        if((oldId < 0)||(oldId >= 100)) {
             throw new IOException("changeFeederId oldId must be between 0-99.");
-        else 
-            if((newId < 0)||(newId >= 100))
+        }
+        else {
+            if((newId < 0)||(newId >= 100)) {
                 throw new IOException("changeFeederId newId must be between 0-99.");
+            }
             else {
                 boolean success = false;
                 for(int i=0; i<3; i++) {
@@ -734,6 +736,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
                     throw new IOException("changeFeederId error.");
                 }
             }
+        }
     }
     private void peelInternal(int id, int strength, int feedRate) throws Exception {
 
