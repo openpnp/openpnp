@@ -19,21 +19,35 @@
 
 package org.openpnp.machine.neoden4.wizards;
 
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.DriversComboBoxModel;
 import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NamedConverter;
+import org.openpnp.machine.neoden4.NeoDen4Driver;
 import org.openpnp.machine.neoden4.NeoDen4FeederActuator;
 import org.openpnp.machine.reference.wizards.AbstractActuatorConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.base.AbstractMachine;
+import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -67,6 +81,15 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
     private JTextField peelLengthTextField;
     private JLabel lblPeelLengthPercent;
     
+    private JLabel lblChangeId;
+    private JLabel lblChangeIdNote;
+    private JButton btnChangeFeederIdAction;
+    private JLabel lblOldText;
+    private JLabel lblNewText;
+    private JComboBox oldId;
+    private JComboBox newId;
+    
+    
     public NeoDen4FeederActuatorConfigurationWizard(AbstractMachine machine, NeoDen4FeederActuator actuator) {
         super(machine,  actuator);
     }
@@ -84,6 +107,14 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,  
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC
         		},
@@ -105,6 +136,9 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
                 
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
         }));
@@ -145,7 +179,7 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
         feedStrengthTextField = new JTextField();
         panelProperties.add(feedStrengthTextField, "4, 10, fill, default");
         feedStrengthTextField.setColumns(16);     
-     
+        
         lblPeelStrength = new JLabel("Peel Strength");
         panelProperties.add(lblPeelStrength, "2, 12, right, default");
         
@@ -166,9 +200,49 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
         peelLengthTextField = new JTextField();
         panelProperties.add(peelLengthTextField, "4, 16, fill, default");
         peelLengthTextField.setColumns(16);
- 
+        
         lblPeelLengthPercent = new JLabel("[%]");
         panelProperties.add(lblPeelLengthPercent, "6, 16, right, default");
+        
+        
+        lblChangeId = new JLabel("Change Feeder ID");
+        panelProperties.add(lblChangeId, "2, 18, right, default");
+        
+        lblChangeIdNote = new JLabel("(Stored in Feeder NVMEM)");
+        panelProperties.add(lblChangeIdNote, "4, 18, center, default");
+        
+        lblOldText = new JLabel("Old ID");
+        panelProperties.add(lblOldText, "6, 18, right, default");
+        
+        oldId = new JComboBox();
+        newId = new JComboBox();
+        for(int i = 1; i <= 100; i++)
+        {
+            oldId.addItem(i);        
+            newId.addItem(i);        
+        }
+        panelProperties.add(oldId, "8, 18, fill, default");
+        
+        lblNewText = new JLabel("New ID");
+        panelProperties.add(lblNewText, "10, 18, right, default");
+        
+        panelProperties.add(newId, "12, 18, fill, default");
+        
+        btnChangeFeederIdAction = new JButton(new AbstractAction("Change") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                NeoDen4Driver driver = getNeoden4Driver();
+                int oldIdInteger = (int)oldId.getSelectedItem();
+                int newIdInteger = (int)newId.getSelectedItem();
+                UiUtils.messageBoxOnException(() -> {
+                    driver.changeFeederId(oldIdInteger, newIdInteger);
+                });
+            }
+        });
+        
+//        btnChangeFeederIdAction.setText("Change Feeder ID");
+//        btnChangeFeederIdAction.setEnabled(true);
+        panelProperties.add(btnChangeFeederIdAction, "14, 18, fill, default");
         
         super.createUi(machine);
     }
@@ -188,9 +262,21 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
         addWrappedBinding(actuator, "feederId", feederIdTextField, "text", intConverter);
         addWrappedBinding(actuator, "feedStrength", feedStrengthTextField, "text", intConverter);
         addWrappedBinding(actuator, "peelStrength", peelStrengthTextField, "text", intConverter);
-//        addWrappedBinding(actuator, "feedLength", feedLengthTextField, "text", intConverter);
         addWrappedBinding(actuator, "peelLength", peelLengthTextField, "text", intConverter);
         
         ComponentDecorators.decorateWithAutoSelect(nameTf);
     }
+    
+    private NeoDen4Driver getNeoden4Driver() {
+        NeoDen4Driver driver = null;
+
+        for (Driver d : Configuration.get().getMachine().getDrivers()) {
+            if (d instanceof NeoDen4Driver) {
+                driver = (NeoDen4Driver) d;
+                break;
+            }
+        }
+        return driver;
+    }
+    
 }
