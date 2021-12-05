@@ -99,7 +99,10 @@ public class ReferenceBottomVision implements PartAlignment {
         partSettingsByPartId = null;
 
         if(pipeline != null) {
-            bottomVisionSettings.setCvPipeline(pipeline);
+            BottomVisionSettings defaultBottomVisionSettings = new BottomVisionSettings("BVS_migration_default");
+            defaultBottomVisionSettings.setName("BottomVisionSettings created from default ReferenceBottomVision Pipeline");
+            defaultBottomVisionSettings.setCvPipeline(pipeline);
+            configuration.addVisionSettings(defaultBottomVisionSettings);
         }
         pipeline = null;
     }
