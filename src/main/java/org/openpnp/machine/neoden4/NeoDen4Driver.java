@@ -698,13 +698,31 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     		throw new IOException("Feed error.");
     	}
     }
+    
     private void changeFeederIdInternal(int oldId, int newId) throws Exception {
-        byte[] b = new byte[9];
+        write(0x3f);
+        expect(0x0c);
+        
+        write(0x46+oldId);
+        read();
+
+        write(0xff);
+        expect(0x00);
+        
+        write(0x46+oldId);
+        read();
+        
+        byte[] b = new byte[8];
 
         b[0] = (byte) newId;
         b[7] = (byte) 0x01;
-        b[8] = (byte) oldId;
         writeWithChecksum(b);
+        
+        write(0x3f);
+        expect(0x0c);
+        
+        write(0x46+newId);
+        read();        
     }
     
     public void changeFeederId(int oldId, int newId) throws Exception {
