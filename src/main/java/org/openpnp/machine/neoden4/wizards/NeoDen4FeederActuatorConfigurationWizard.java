@@ -197,8 +197,8 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
         panelProperties.add(lblChangeIdNote, "4, 18, center, default");
         
         newId = new JComboBox<Integer>();
-        for(int i = 0; i <= 99; i++)
-            newId.addItem(i);        
+        for(int i = 0; i <= 99; i++) {
+            newId.addItem(i);        }
 
         lblNewText = new JLabel("New ID");
         panelProperties.add(lblNewText, "6, 18, right, default");
