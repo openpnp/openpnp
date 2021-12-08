@@ -76,9 +76,7 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
     private JLabel lblChangeId;
     private JLabel lblChangeIdNote;
     private JButton btnChangeFeederIdAction;
-    private JLabel lblOldText;
     private JLabel lblNewText;
-    private JComboBox<Integer> oldId;
     private JComboBox<Integer> newId;
     
     public NeoDen4FeederActuatorConfigurationWizard(AbstractMachine machine, NeoDen4FeederActuator actuator) {
@@ -98,10 +96,6 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,  
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
-                FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -131,7 +125,7 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
                 FormSpecs.DEFAULT_ROWSPEC,
                 
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC
         }));
         
         lblDriver = new JLabel("Driver");
@@ -202,28 +196,20 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
         lblChangeIdNote = new JLabel("(Stored in Feeder NVMEM)");
         panelProperties.add(lblChangeIdNote, "4, 18, center, default");
         
-        lblOldText = new JLabel("Old ID");
-        panelProperties.add(lblOldText, "6, 18, right, default");
-        
-        oldId = new JComboBox<Integer>();
         newId = new JComboBox<Integer>();
         for(int i = 0; i <= 99; i++)
-        {
-            oldId.addItem(i);        
             newId.addItem(i);        
-        }
-        panelProperties.add(oldId, "8, 18, fill, default");
-        
+
         lblNewText = new JLabel("New ID");
-        panelProperties.add(lblNewText, "10, 18, right, default");
+        panelProperties.add(lblNewText, "6, 18, right, default");
         
-        panelProperties.add(newId, "12, 18, fill, default");
+        panelProperties.add(newId, "8, 18, fill, default");
         
         btnChangeFeederIdAction = new JButton(new AbstractAction("Change") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 NeoDen4Driver driver = getNeoden4Driver();
-                int oldIdInteger = (int)oldId.getSelectedItem();
+                int oldIdInteger = Integer.parseInt(feederIdTextField.getText());
                 int newIdInteger = (int)newId.getSelectedItem();
                 UiUtils.messageBoxOnException(() -> {
                     driver.changeFeederId(oldIdInteger, newIdInteger);
@@ -232,7 +218,7 @@ public class NeoDen4FeederActuatorConfigurationWizard extends AbstractActuatorCo
         });
         
 
-        panelProperties.add(btnChangeFeederIdAction, "14, 18, fill, default");
+        panelProperties.add(btnChangeFeederIdAction, "10, 18, fill, default");
         
         super.createUi(machine);
     }

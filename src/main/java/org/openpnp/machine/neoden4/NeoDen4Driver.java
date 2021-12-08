@@ -721,7 +721,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         write(0x3f);
         expect(0x0c);
         
-        write(0x46+newId);
+        write(0x46+oldId);
         read();        
     }
     
