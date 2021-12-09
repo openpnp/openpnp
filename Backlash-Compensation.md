@@ -14,6 +14,8 @@ Backlash compensation is configured on the ReferenceControllerAxis. Refer to the
 
 ![Axis Wizard](https://user-images.githubusercontent.com/9963310/95772541-31df4480-0cbd-11eb-8086-c4106e24f103.png)
 
+### Backlash Compensation Methods
+
 **Backlash Compensation** defines the method used to compensate any backlash.
 
 
