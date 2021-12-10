@@ -18,9 +18,11 @@ The following requirements apply for controllers with axes attached:
 
 5. `G92` must work correctly when motion is still pending. Either by implicitly waiting for still-stand or (better!) by allowing on-the-fly offsetting. 
 
-6. The controller must be able to wait for motion completion, typically with the [`M400`](https://www.reprap.org/wiki/G-code#M400:_Wait_for_current_moves_to_finish) command. Any further commands sent after the `M400` must be suspended until motion completion. The controller must only acknowledge the command, when motion is complete i.e. the "ok" response must be suspended until then, providing blocking synchronization to OpenPnP. 
+6. The controller must be able to wait for motion completion, typically with the [`M400`](https://www.reprap.org/wiki/G-code#M400:_Wait_for_current_moves_to_finish) command. Any further commands sent after the `M400` must be suspended until motion completion. The controller must only acknowledge the command, when motion is complete i.e. the "ok" (`COMMAND_CONFIRM_REGEX`) response must be suspended until then, providing blocking synchronization to OpenPnP. 
 
 7. The controller must support dynamic acceleration and/or jerk limits, typically by the [`M204`](https://www.reprap.org/wiki/G-code#M204:_Set_default_acceleration) command for acceleration or the [`M201.3`](https://makr.zone/tinyg-new-g-code-commands-for-openpnp-use/577/) command for jerk.
+
+To adapt a new firmware it is sometimes best to play with the `GcodeServer` controller simulator built into OpenPnP. You can then send commands and observe the expected response and behavior. You can activate the built-in `GcodeServer` by switching the GcodeDriver to **tcp** and setting the **IP Address** to exactly `GcodeServer` (case sensitive).
 
 ## Duet3D
 
