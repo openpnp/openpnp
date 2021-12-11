@@ -6,6 +6,7 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.SimulationModeMachine.SimulationMode;
+import org.openpnp.machine.reference.driver.ReferenceDriverCommunications.LineEndingType;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.DataBits;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.FlowControl;
 import org.openpnp.machine.reference.driver.SerialPortCommunications.Parity;
@@ -40,30 +41,41 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
     @Attribute(required = false)
     protected boolean connectionKeepAlive = false;
 
+    @Attribute(required = false)
+    protected boolean syncInitialLocation = false;
+
     /**
      * TODO The following properties are for backwards compatibility and can be removed after 2019-07-15. 
      */
+    @Deprecated
     @Attribute(required = false)
     protected String portName;
 
+    @Deprecated
     @Attribute(required = false)
     protected Integer baud = 115200;
 
+    @Deprecated
     @Attribute(required = false)
     protected FlowControl flowControl = FlowControl.Off;
 
+    @Deprecated
     @Attribute(required = false)
     protected DataBits dataBits = DataBits.Eight;
 
+    @Deprecated
     @Attribute(required = false)
     protected StopBits stopBits = StopBits.One;
 
+    @Deprecated
     @Attribute(required = false)
     protected Parity parity = Parity.None;
 
+    @Deprecated
     @Attribute(required = false)
     protected Boolean setDtr = false;
 
+    @Deprecated
     @Attribute(required = false)
     protected Boolean setRts = false;
     
@@ -154,6 +166,14 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
         firePropertyChange("connectionKeepAlive", oldValue, connectionKeepAlive);
     }
 
+    public boolean isSyncInitialLocation() {
+        return syncInitialLocation;
+    }
+
+    public void setSyncInitialLocation(boolean syncInitialLocation) {
+        this.syncInitialLocation = syncInitialLocation;
+    }
+
     public boolean isInSimulationMode() {
         SimulationModeMachine machine = SimulationModeMachine.getSimulationModeMachine();
         return (machine != null && machine.getSimulationMode() != SimulationMode.Off);
@@ -172,13 +192,23 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
             }
             case tcp: {
                 tcp.setDriver(this);
-                return tcp;
+                return getTcp();
             }
             default: {
                 Logger.error("Invalid communications method attempted to be set. Defaulting to serial.");
                 return getSerial();
             }
         }
+    }
+
+    public LineEndingType getLineEndingType() {
+        return getCommunications().getLineEndingType();
+    }
+
+    public void setLineEndingType(LineEndingType lineEndingType) {
+        // Set it to all the communications types.
+        getSerial().setLineEndingType(lineEndingType);
+        getTcp().setLineEndingType(lineEndingType);
     }
 
     public String getPortName() {
@@ -261,6 +291,14 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
 
     public void setPort(int port) {
         tcp.setPort(port);
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) throws Exception {
+        if (enabled && isSyncInitialLocation()) {
+            // Synchronize to the controller's reported location.
+            getReportedLocation(-1);
+        }
     }
 
     @Override

@@ -37,6 +37,7 @@ import org.opencv.core.Point3;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -1311,7 +1312,37 @@ public class AdvancedCalibration extends LensCalibrationParams {
         
         return ret;
     }
-    
+
+    /**
+     * Apply the calibration results to the machine.
+     * 
+     * @param head
+     * @param camera
+     */
+    public void applyCalibrationToMachine(ReferenceHead head, ReferenceCamera camera) {
+        camera.setDefaultZ(getPrimaryLocation().getLengthZ());
+        Location calibratedOffsets = new Location(LengthUnit.Millimeters);
+        if (head != null) {
+            calibratedOffsets = calibratedOffsets
+                    .subtract(getCameraOffsetAtZ(camera.getDefaultZ())
+                            .derive(null, null, 0.0, 0.0));
+        }
+        else {
+            Location camLocation = new Location(LengthUnit.Millimeters, 
+                    getVectorFromMachToVirCamInMachRefFrame().get(0, 0)[0],
+                    getVectorFromMachToVirCamInMachRefFrame().get(1, 0)[0],
+                    0, 0);
+
+            calibratedOffsets = camLocation.subtract(camera.getHeadOffsets().derive(null, null, 0.0, 0.0));
+        }
+        setCalibratedOffsets(calibratedOffsets);
+        setValid(true);
+        // Make sure the camera undistort and virtual matrix are updated.
+        camera.clearCalibrationCache();
+        setEnabled(true);
+        camera.captureTransformed();
+    }
+        
     public synchronized void transformOldStyleSettingsToNew(ReferenceCamera referenceCamera) throws Exception {
         if (!preliminarySetupComplete && !valid) {
             Logger.trace("Updating {} to new style calibration", referenceCamera.getName());
@@ -1514,4 +1545,5 @@ public class AdvancedCalibration extends LensCalibrationParams {
         setEnabled(true);
         referenceCamera.clearCalibrationCache();
     }
+
 }

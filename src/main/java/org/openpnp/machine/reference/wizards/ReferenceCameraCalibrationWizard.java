@@ -25,11 +25,19 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.SpinnerListModel;
+import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -51,10 +59,10 @@ import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.camera.calibration.CameraCalibrationUtils;
-import org.openpnp.machine.reference.camera.ImageCamera;
-import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -64,17 +72,11 @@ import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.SimpleGraph.DataRow;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.ui.MatView;
+
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JCheckBox;
-import javax.swing.JSlider;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.SpinnerListModel;
-import javax.swing.JSeparator;
-import javax.swing.JSpinner;
 
 @SuppressWarnings("serial")
 public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizard {
@@ -199,7 +201,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 secondaryZ = new Length(advCal.getSavedTestPattern3dPointsList()[1][0][2], LengthUnit.Millimeters);
             }
             else {
-                secondaryZ = primaryLocation.getLengthZ().multiply(0.5); //default to half-way between primaryZ and 0
+                secondaryZ = primaryLocation.getLengthZ().multiply(0.5); //default to half-way between primaryZ and 0 <- TODO: use Nozzle SafeZ ! 
             }
             secondaryLocation = primaryLocation.deriveLengths(null, null, secondaryZ, null);
             
@@ -326,7 +328,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("default:grow"),}));
         
-        chckbxAdvancedCalOverride = new JCheckBox("Enable experimental calibration to override old"
+        chckbxAdvancedCalOverride = new JCheckBox("Enable the advanced calibration to override old"
                 + " style image transforms and distortion correction settings");
         chckbxAdvancedCalOverride.setToolTipText("Enable this to use advanced calibration.  "
                 + "Disable this to restore usage of old settings.");
@@ -1026,7 +1028,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
                     UiUtils.messageBoxOnException(() -> {
                         new CalibrateCameraProcess(MainFrame.get(), cameraView, 
-                                calibrationLocations, detectionDiameters) {
+                                calibrationLocations, detectionDiameters, false) {
         
                             @Override 
                             public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
@@ -1108,6 +1110,9 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     };
 
     private void postCalibrationProcessing() throws Exception {
+        advCal.applyCalibrationToMachine(referenceHead, referenceCamera);
+		advCal.setPreliminarySetupComplete(true);
+		
         //Reload the calibration heights and refresh the table
         calibrationHeightSelections = new ArrayList<LengthCellValue>();
         int numberOfCalibrationHeights = advCal.
@@ -1121,24 +1126,6 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         spinnerModel.setList(calibrationHeightSelections);
         
-        Location calibratedOffsets = new Location(LengthUnit.Millimeters);
-   
-        if (isMovable) {
-            calibratedOffsets = calibratedOffsets.subtract(advCal.getCameraOffsetAtZ(referenceHead.getCalibrationPrimaryFiducialLocation().getLengthZ()).derive(null, null, 0.0, 0.0));
-        }
-        else {
-            Location camLocation = new Location(LengthUnit.Millimeters, 
-                    advCal.getVectorFromMachToVirCamInMachRefFrame().get(0, 0)[0],
-                    advCal.getVectorFromMachToVirCamInMachRefFrame().get(1, 0)[0],
-                    0, 0);
-              
-            calibratedOffsets = camLocation.subtract(referenceCamera.getHeadOffsets().derive(null, null, 0.0, 0.0));
-        }
-        advCal.setCalibratedOffsets(calibratedOffsets);
-        
-        advCal.setValid(true);
-        advCal.setEnabled(true);
-        advCal.setPreliminarySetupComplete(true);
         chckbxEnable.setSelected(true);
         chckbxEnable.setEnabled(true);
         spinnerIndex.setEnabled(true);

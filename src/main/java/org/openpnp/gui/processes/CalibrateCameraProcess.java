@@ -20,8 +20,12 @@
 package org.openpnp.gui.processes;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -29,13 +33,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Future;
+
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraViewFilter;
@@ -52,12 +56,12 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.CameraWalker;
+import org.openpnp.util.ImageUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.UiUtils.Thrunnable;
 import org.openpnp.util.VisionUtils;
-import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.pmw.tinylog.Logger;
 
@@ -75,6 +79,7 @@ public abstract class CalibrateCameraProcess {
     private final int numberOfCalibrationHeights;
     private final MainFrame mainFrame;
     private final CameraView cameraView;
+    private boolean automatic;
     private final Camera camera;
     private final boolean isHeadMountedCamera;
     private Nozzle nozzle;
@@ -133,15 +138,18 @@ public abstract class CalibrateCameraProcess {
     protected Boolean previousProceedActionResult;
 
     protected CameraWalker cameraWalker;
+    private BufferedImage resultImage;
 
 
     public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, 
-            List<Location> calibrationLocations, ArrayList<Integer> detectionDiameters)
+            List<Location> calibrationLocations, ArrayList<Integer> detectionDiameters, boolean automatic)
             throws Exception {
         this.mainFrame = mainFrame;
         this.cameraView = cameraView;
         this.calibrationLocations = new ArrayList<Location>(calibrationLocations);
         this.detectionDiameters = detectionDiameters;
+        this.automatic = automatic;
+
         numberOfCalibrationHeights = calibrationLocations.size();
         
         camera = cameraView.getCamera();
@@ -219,13 +227,14 @@ public abstract class CalibrateCameraProcess {
 
         if (isHeadMountedCamera) {
             movable = camera;
-            movableZ = 0;
-            
+
             maskDiameter = initialMaskDiameter;
+            resultImage = null;
             showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
                     (int)(centeringDiameterFraction*maskDiameter/2), Color.GREEN);
-            
-            Location moveLocation = calibrationLocations.get(calibrationHeightIndex).derive(null, null, 0.0, 0.0);
+
+            Location moveLocation = calibrationLocations.get(calibrationHeightIndex).deriveLengths(null, null, camera.getSafeZ(), null);
+            movableZ = moveLocation.convertToUnits(LengthUnit.Millimeters).getZ();
             if (Double.isFinite(moveLocation.getX()) && Double.isFinite(moveLocation.getY())) {
                 Future<Void> future = UiUtils.submitUiMachineTask(() -> {
                     MovableUtils.moveToLocationAtSafeZ(camera, moveLocation, 1.0);
@@ -237,6 +246,11 @@ public abstract class CalibrateCameraProcess {
                     MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
                     cleanUpWhenCancelled();
                 }
+                // Note, automatic is only available if the moveLocation is already set.
+                if (automatic) {
+                    requestOperatorToAdjustDiameterAction();
+                    return true;
+                }
             }
             setInstructionsAndProceedAction("Using the jog controls on the Machine Controls panel, jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next when ready to proceed.", 
                     ()->requestOperatorToAdjustDiameterAction(),
@@ -244,11 +258,14 @@ public abstract class CalibrateCameraProcess {
         }
         else { //bottom camera
             movableZ = testPatternZ;
-            
+
+            if (automatic) {
+                requestOperatorToCenterNozzleTipAction();
+                return true;
+            }
             setInstructionsAndProceedAction("Select a nozzle and load it with the smallest available nozzle tip. Click Next when ready to proceed.",
                     ()->requestOperatorToCenterNozzleTipAction());
         }
-            
         return true;
     }
     
@@ -259,17 +276,19 @@ public abstract class CalibrateCameraProcess {
      * @return true when complete
      */
     private boolean requestOperatorToAdjustDiameterAction() {
-        setInstructionsAndProceedAction("Use the mouse scroll wheel to zoom in on the fiducial/nozzle tip and then adjust the Detection Diameter spinner until the red circle turns green with a + at its center and is sized to just fit the fiducial/nozzle tip with the + centered on the fiducial/nozzle tip. When ready, click Next to begin the automated calibration collection sequence.", 
-                ()->fiducialDiameterIsSetAction());
-        
         Point2D expectedPoint = new Point2D.Double((pixelsX-1)/2.0, (pixelsY-1)/2.0);
         pipeline.setProperty("MaskCircle.center", new org.opencv.core.Point(expectedPoint.getX(), 
                 expectedPoint.getY()));
         pipeline.setProperty("DetectCircularSymmetry.center", new org.openpnp.model.Point(
                 expectedPoint.getX(), expectedPoint.getY()));
-        
+
         if (detectionDiameters.get(calibrationHeightIndex) != null) {
             advCal.setFiducialDiameter(detectionDiameters.get(calibrationHeightIndex));
+            if (automatic) {
+                swingWorker = null;
+                fiducialDiameterIsSetAction();
+                return true;
+            }
         }
         else {
             if (isHeadMountedCamera) {
@@ -318,6 +337,7 @@ public abstract class CalibrateCameraProcess {
                         keyPoints = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
                                 .getExpectedListModel(KeyPoint.class, 
                                         new Exception("Calibration rig fiducial not found."));
+                        resultImage = OpenCvUtils.toBufferedImage(pipeline.getWorkingImage());
                     }
                     catch (Exception e) {
                         keyPoints = null;
@@ -360,9 +380,12 @@ public abstract class CalibrateCameraProcess {
                 cameraView.setCameraViewFilter(null);
             }
         };
-        
+
+        setInstructionsAndProceedAction("Use the mouse scroll wheel to zoom in on the fiducial/nozzle tip and then adjust the Detection Diameter spinner until the red circle turns green with a + at its center and is sized to just fit the fiducial/nozzle tip with the + centered on the fiducial/nozzle tip. When ready, click Next to begin the automated calibration collection sequence.", 
+                ()->fiducialDiameterIsSetAction());
+
         swingWorker.execute();
-        
+
         return true;
     }
     
@@ -373,9 +396,11 @@ public abstract class CalibrateCameraProcess {
      * @return true when complete
      */
     private boolean fiducialDiameterIsSetAction() {
-        swingWorker.cancel(true);
-        while (!swingWorker.isDone()) {
-            //spin
+        if (swingWorker != null) {
+            swingWorker.cancel(true);
+            while (!swingWorker.isDone()) {
+                //spin
+            }
         }
         estimateUnitsPerPixelAction();
         
@@ -655,6 +680,7 @@ public abstract class CalibrateCameraProcess {
      */
     protected boolean repeatAction() {
         maskDiameter = initialMaskDiameter;
+        resultImage = null;
         showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
                 (int)(centeringDiameterFraction*maskDiameter/2), Color.GREEN);
 
@@ -662,9 +688,8 @@ public abstract class CalibrateCameraProcess {
                 convertToUnits(LengthUnit.Millimeters).getZ();
         
         if (isHeadMountedCamera) {
-            movableZ = 0;
-            
-            Location moveLocation = calibrationLocations.get(calibrationHeightIndex).derive(null, null, 0.0, 0.0);
+            Location moveLocation = calibrationLocations.get(calibrationHeightIndex).deriveLengths(null, null, camera.getSafeZ(), null);
+            movableZ = moveLocation.convertToUnits(LengthUnit.Millimeters).getZ();
             if (Double.isFinite(moveLocation.getX()) && Double.isFinite(moveLocation.getY())) {
                 Future<Void> future = UiUtils.submitUiMachineTask(() -> {
                     camera.moveTo(moveLocation);
@@ -675,6 +700,11 @@ public abstract class CalibrateCameraProcess {
                 catch (Exception ex) {
                     MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
                     cleanUpWhenCancelled();
+                }
+                // Note, automatic only available when location set. 
+                if (automatic) {
+                    requestOperatorToAdjustDiameterAction();
+                    return true;
                 }
             }
             
@@ -712,13 +742,15 @@ public abstract class CalibrateCameraProcess {
      */
     private boolean requestOperatorToCenterNozzleTipAction() {
         maskDiameter = initialMaskDiameter;
+        resultImage = null;
         showCircle(new org.opencv.core.Point(imageCenterPoint.getX(), imageCenterPoint.getY()), 
                 (int)(centeringDiameterFraction*maskDiameter/2), Color.GREEN);
         
-        Location moveLocation = calibrationLocations.get(calibrationHeightIndex).derive(null, null, 0.0, 0.0);
+        Nozzle selectedNozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        Location moveLocation = calibrationLocations.get(calibrationHeightIndex).deriveLengths(null, null, selectedNozzle.getSafeZ(), null);
         if (Double.isFinite(moveLocation.getX()) && Double.isFinite(moveLocation.getY())) {
             Future<Void> future = UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.moveToLocationAtSafeZ(MainFrame.get().getMachineControls().getSelectedNozzle(), moveLocation);
+                MovableUtils.moveToLocationAtSafeZ(selectedNozzle, moveLocation);
             });
             try {
                 future.get();
@@ -727,8 +759,12 @@ public abstract class CalibrateCameraProcess {
                 MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
                 cleanUpWhenCancelled();
             }
+            // Note, automatic only available when location set. 
+            if (automatic) {
+                captureCentralLocationAction();
+                return true;
+            }
         }
-        
         setInstructionsAndProceedAction("Using the jog controls on the Machine Controls panel, jog the nozzle tip so that it is approximately in the center of the green circle. When ready, click Next to lower/raise the nozzle tip to the calibration height.", 
                 ()->captureCentralLocationAction());
         return true;
@@ -783,6 +819,10 @@ public abstract class CalibrateCameraProcess {
      * @return true when complete
      */
     private boolean requestOperatorToVerifyNozzleTipIsCenteredAction() {
+        if (automatic) {
+            captureVerifiedCentralLocationAction();
+            return true;
+        }
         setInstructionsAndProceedAction("Using the jog controls on the Machine Controls panel, rotate the nozzle tip through 360 degrees and verify it stays within the green circle. If necessary, jog it in X and/or Y so that it remains within the circle when it is rotated. Click Next when ready.", 
                 ()->captureVerifiedCentralLocationAction());
         return true;
@@ -891,6 +931,7 @@ public abstract class CalibrateCameraProcess {
                 keypoints = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
                         .getExpectedListModel(KeyPoint.class, 
                                 new Exception("Calibration rig fiducial not found."));
+                resultImage = OpenCvUtils.toBufferedImage(pipeline.getWorkingImage());
             }
             catch (Exception e) {
                 keypoints = null;
@@ -1100,21 +1141,22 @@ public abstract class CalibrateCameraProcess {
             cameraView.setCameraViewFilter(new CameraViewFilter() {
                 @Override
                 public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-                    Mat mat = OpenCvUtils.toMat(image);
+                    BufferedImage result = ImageUtils.clone(resultImage != null ? resultImage : image);
+                    Graphics2D g2D = result.createGraphics();
+
+                    g2D.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                    g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
                     if (point != null) {
                         double pointSize = Math.min(pixelsX, pixelsY) * 0.05;
-                        org.opencv.core.Point p1 = new org.opencv.core.Point(point.x-pointSize, point.y);
-                        org.opencv.core.Point p2 = new org.opencv.core.Point(point.x+pointSize, point.y);
-                        Imgproc.line(mat, p1, p2, FluentCv.colorToScalar(pointColor), 1);
-                        p1 = new org.opencv.core.Point(point.x, point.y-pointSize);
-                        p2 = new org.opencv.core.Point(point.x, point.y+pointSize);
-                        Imgproc.line(mat, p1, p2, FluentCv.colorToScalar(pointColor), 1);
+                        g2D.setColor(pointColor);
+                        g2D.draw(new Line2D.Double(point.x-pointSize, point.y, point.x+pointSize, point.y));
+                        g2D.draw(new Line2D.Double(point.x, point.y-pointSize, point.x, point.y+pointSize));
                     }
                     if (center != null) {
-                        Imgproc.circle(mat, center, radius, FluentCv.colorToScalar(circleColor), 1);
+                        g2D.setColor(circleColor);
+                        g2D.draw(new Ellipse2D.Double(center.x - radius, center.y - radius, radius*2, radius*2));
                     }
-                    BufferedImage result = OpenCvUtils.toBufferedImage(mat);
-                    mat.release();
                     return result;
                 }
             });
