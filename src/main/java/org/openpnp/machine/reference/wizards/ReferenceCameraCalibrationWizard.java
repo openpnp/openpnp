@@ -1138,6 +1138,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         advCal.setValid(true);
         advCal.setEnabled(true);
+        advCal.setPreliminarySetupComplete(true);
         chckbxEnable.setSelected(true);
         chckbxEnable.setEnabled(true);
         spinnerIndex.setEnabled(true);

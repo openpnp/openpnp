@@ -84,6 +84,7 @@ import org.openpnp.vision.LensCalibration.Pattern;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public abstract class ReferenceCamera extends AbstractBroadcastingCamera implements ReferenceHeadMountable {
     static {
@@ -202,6 +203,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         AutoFocus
     }
 
+    @Commit
+    protected void commit() throws Exception {
+        super.commit();
+        advancedCalibration.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
+    }
+    
     public ReferenceCamera() {
         super();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -580,6 +587,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
 
             if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+                if (!advancedCalibration.isPreliminarySetupComplete() && isOpen() && width != null && height != null) {
+                    advancedCalibration.transformOldStyleSettingsToNew(this);
+                }
                 //Skip all the old style image transforms and distortion corrections except for 
                 //deinterlacing and cropping
                 if (isDeinterlaced() || isCropped() || isWhiteBalanced() || advancedCalibration.isEnabled()) {
@@ -587,7 +597,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     mat = deinterlace(mat);
                     mat = crop(mat);
                     if (advancedCalibration.isEnabled()) {
-                        //Use the new advanced image transformation and distortion correction
                         mat = advancedUndistort(mat);
                     }
                     mat = whiteBalance(mat);
@@ -1111,6 +1120,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return calibration.isEnabled();
     }
 
+    /**
+     * Flips the image. NOTE!!!!! - flipX means to flip about the x-axis which is a vertical flip
+     * and flipY means to flip about the y-axis which is a horizontal flip
+     * @param mat
+     * @return
+     */
     protected Mat flip(Mat mat) {
         if (isFlipped()) {
             int flipCode;

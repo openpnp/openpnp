@@ -45,7 +45,6 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
