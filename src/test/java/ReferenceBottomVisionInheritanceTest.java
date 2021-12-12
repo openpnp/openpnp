@@ -1,4 +1,9 @@
-import com.google.common.io.Files;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.io.File;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,9 +15,7 @@ import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Machine;
 
-import java.io.File;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.google.common.io.Files;
 
 public class ReferenceBottomVisionInheritanceTest {
     static File workingDirectory;
@@ -50,13 +53,14 @@ public class ReferenceBottomVisionInheritanceTest {
     }
     
     private void assertBottomVisionIsDefault(BottomVisionSettings bottomVisionSettings) {
-        BottomVisionSettings defaultBottomVisionSettings = bottomVision.getBottomVisionSettings();
+        BottomVisionSettings defaultBottomVisionSettings = bottomVision.getVisionSettings();
         
         assertEquals(bottomVisionSettings.isEnabled(), defaultBottomVisionSettings.isEnabled(), "Part BottomVisionSettings should be the built-in default");
         assertEquals(bottomVisionSettings.getPreRotateUsage(), defaultBottomVisionSettings.getPreRotateUsage(), "Part BottomVisionSettings should be the built-in default");
         assertEquals(bottomVisionSettings.getCheckPartSizeMethod(), defaultBottomVisionSettings.getCheckPartSizeMethod(), "Part BottomVisionSettings should be the built-in default");
         assertEquals(bottomVisionSettings.getCheckSizeTolerancePercent(), defaultBottomVisionSettings.getCheckSizeTolerancePercent(), "Part BottomVisionSettings should be the built-in default");
         assertEquals(bottomVisionSettings.getMaxRotation(), defaultBottomVisionSettings.getMaxRotation(), "Part BottomVisionSettings should be the built-in default");
+        assertEquals(bottomVisionSettings.getVisionOffset(), defaultBottomVisionSettings.getVisionOffset(), "Part BottomVisionSettings should be the built-in default");
     }
 
     @Test
@@ -77,7 +81,7 @@ public class ReferenceBottomVisionInheritanceTest {
         bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         assertFalse(bottomVisionSettings.isEnabled(), "Part should inherit BottomVisionSettings from Package");
         
-        bottomVision.getBottomVisionSettings().setPreRotateUsage(ReferenceBottomVision.PreRotateUsage.AlwaysOn);
+        bottomVision.getVisionSettings().setPreRotateUsage(ReferenceBottomVision.PreRotateUsage.AlwaysOn);
         bottomVisionSettings = bottomVision.getBottomVisionSettings(part);
         assertEquals(ReferenceBottomVision.PreRotateUsage.Default, bottomVisionSettings.getPreRotateUsage(), "Part should inherit from Package custom settings");
         
@@ -112,7 +116,7 @@ public class ReferenceBottomVisionInheritanceTest {
         assertEquals(ReferenceBottomVision.PreRotateUsage.AlwaysOn, bottomVision.getBottomVisionSettings(part2).getPreRotateUsage(), "Part2 should inherit BottomVisionSettings from Package");
         assertEquals(ReferenceBottomVision.MaxRotation.Full, bottomVision.getBottomVisionSettings(part2).getMaxRotation(), "Part2 should inherit BottomVisionSettings from Package");
         
-        customPackageVisionSettings.setValues(bottomVision.getBottomVisionSettings());
+        customPackageVisionSettings.setValues(bottomVision.getVisionSettings());
         
         assertBottomVisionIsDefault(bottomVision.getBottomVisionSettings(part1));
         assertBottomVisionIsDefault(bottomVision.getBottomVisionSettings(part2));

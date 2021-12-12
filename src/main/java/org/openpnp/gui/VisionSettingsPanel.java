@@ -1,19 +1,35 @@
 package org.openpnp.gui;
 
-import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.support.*;
-import org.openpnp.gui.tablemodel.VisionSettingsTableModel;
-import org.openpnp.model.*;
-import org.openpnp.model.Package;
-
-import javax.swing.*;
-import javax.swing.table.TableRowSorter;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.TableRowSorter;
+
+import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.support.WizardContainer;
+import org.openpnp.gui.tablemodel.VisionSettingsTableModel;
+import org.openpnp.model.AbstractVisionSettings;
+import org.openpnp.model.BottomVisionSettings;
+import org.openpnp.model.Configuration;
 
 public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
@@ -44,6 +60,8 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         splitPane.addPropertyChangeListener("dividerLocation", evt -> prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation()));
         add(splitPane, BorderLayout.CENTER);
 
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
@@ -59,6 +77,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
             }
 
             AbstractVisionSettings visionSettings = getSelection();
+            tabbedPane.removeAll();
 
             if (visionSettings != null) {
                 Wizard wizard = visionSettings.getConfigurationWizard();
@@ -66,19 +85,16 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
                     JPanel panel = new JPanel();
                     panel.setLayout(new BorderLayout());
                     panel.add(wizard.getWizardPanel());
-                    splitPane.setRightComponent(new JScrollPane(panel));
+                    tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
                     wizard.setWizardContainer(VisionSettingsPanel.this);
                 }
-            } else {
-                splitPane.setRightComponent(new JPanel());
             }
-
             revalidate();
             repaint();
         });
 
         splitPane.setLeftComponent(new JScrollPane(table));
-        splitPane.setRightComponent(new JPanel());
+        splitPane.setRightComponent(tabbedPane);
     }
 
     private void createAndAddToolbar() {
@@ -155,17 +171,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
             List<String> usedIn = new ArrayList<>();
             for (AbstractVisionSettings settings : selections) {
-                for (Package pkg : Configuration.get().getPackages()) {
-                    if (pkg.getVisionSettings() == settings) {
-                        usedIn.add(pkg.getId());
-                    }
-                }
-
-                for (Part part : Configuration.get().getParts()) {
-                    if (part.getVisionSettings() == settings) {
-                        usedIn.add(part.getId());
-                    }
-                }
+                usedIn.addAll(settings.getUsedIn());
             }
 
             if (!usedIn.isEmpty()) {

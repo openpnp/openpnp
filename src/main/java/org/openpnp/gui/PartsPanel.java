@@ -59,11 +59,21 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.support.*;
+import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.NamedListCellRenderer;
+import org.openpnp.gui.support.NamedTableCellRenderer;
+import org.openpnp.gui.support.PackagesComboBoxModel;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
+import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
-import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.PartAlignment;
@@ -164,12 +174,12 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         JComboBox<AbstractVisionSettings> bottomVisionCombo = new JComboBox<>(new VisionSettingsComboBoxModel());
         bottomVisionCombo.setMaximumRowCount(20);
-        bottomVisionCombo.setRenderer(new IdentifiableListCellRenderer<>());
+        bottomVisionCombo.setRenderer(new NamedListCellRenderer<>());
 
         table.setDefaultEditor(AbstractVisionSettings.class,
                 new DefaultCellEditor(bottomVisionCombo));
         table.setDefaultRenderer(AbstractVisionSettings.class,
-                new IdentifiableTableCellRenderer<AbstractVisionSettings>());
+                new NamedTableCellRenderer<AbstractVisionSettings>());
 
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());

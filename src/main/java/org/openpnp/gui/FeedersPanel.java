@@ -687,7 +687,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      * @return
      */
     public static Location getTestPlacementLocation(Part part) {
-        PartAlignment aligner = AbstractPnpJobProcessor.findPartAligner(Configuration.get().getMachine(), part);
+        PartAlignment aligner = AbstractPnpJobProcessor.findPartAligner(Configuration.get().getMachine(), part, false);
         Location placementLocation = Configuration.get().getMachine().getDiscardLocation();
         placementLocation = new Location(placementLocation.getUnits(),
                 placementLocation.getX(), 

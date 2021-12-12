@@ -33,7 +33,7 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Version;
 import org.simpleframework.xml.core.Persist;
 
-public class Package extends AbstractModelObject implements Identifiable {
+public class Package extends AbstractModelObject implements PartSettingsHolder {
     @Version(revision=1.1)
     private double version;    
     
@@ -193,15 +193,21 @@ public class Package extends AbstractModelObject implements Identifiable {
         syncCompatibleNozzleTipIds();
         firePropertyChange("compatibleNozzleTips", null, getCompatibleNozzleTips());
     }
-    
+
+    @Override 
     public BottomVisionSettings getVisionSettings() {
         return visionSettings;
     }
-    
+
     public void setVisionSettings(BottomVisionSettings visionSettings) {
-        BottomVisionSettings odlValue = this.visionSettings;
+        BottomVisionSettings oldValue = visionSettings;
         this.visionSettings = visionSettings;
-        firePropertyChange("vision-settings", odlValue, visionSettings);
+        if (oldValue != visionSettings) {
+            firePropertyChange("vision-settings", oldValue, visionSettings);
+            firePropertyChange("visionSettings", oldValue, visionSettings);
+            oldValue.fireUsedInProperty();
+            visionSettings.fireUsedInProperty();
+        }
     }
 
     public void resetVisionSettings() {

@@ -28,7 +28,7 @@ import org.simpleframework.xml.core.Persist;
  * from one or more Feeders and is placed at a Placement as part of a Job. Parts can be used across
  * many boards and should generally represent a single part in the real world.
  */
-public class Part extends AbstractModelObject implements Identifiable {
+public class Part extends AbstractModelObject implements PartSettingsHolder {
     @Attribute
     private String id;
     @Attribute(required = false)
@@ -158,6 +158,7 @@ public class Part extends AbstractModelObject implements Identifiable {
         return getHeight().getValue() <= 0.0;
     }
 
+    @Override 
     public BottomVisionSettings getVisionSettings() {
         return visionSettings;
     }
@@ -165,7 +166,12 @@ public class Part extends AbstractModelObject implements Identifiable {
     public void setVisionSettings(BottomVisionSettings visionSettings) {
         BottomVisionSettings oldValue = visionSettings;
         this.visionSettings = visionSettings;
-        firePropertyChange("vision-settings", oldValue, visionSettings);
+        if (oldValue != visionSettings) {
+            firePropertyChange("vision-settings", oldValue, visionSettings);
+            firePropertyChange("visionSettings", oldValue, visionSettings);
+            oldValue.fireUsedInProperty();
+            visionSettings.fireUsedInProperty();
+        }
     }
 
     public void resetVisionSettings() {

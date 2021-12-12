@@ -2,20 +2,27 @@ package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.VisionSettingsComboBoxModel;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.NamedListCellRenderer;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
@@ -26,7 +33,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JTextField;
 
 public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceBottomVision bottomVision;
@@ -35,6 +41,8 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
     private JTextField textFieldMaxVisionPasses;
     private JTextField textFieldMaxLinearOffset;
     private JTextField textFieldMaxAngularOffset;
+    private JComboBox visionSettings;
+    private boolean reloadWizard = false;
 
     
     public ReferenceBottomVisionConfigurationWizard(ReferenceBottomVision bottomVision) {
@@ -48,7 +56,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:default"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -72,23 +80,33 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         panel.add(enabledCheckbox, "4, 2");
 
         JLabel lblBottomVision = new JLabel("Bottom Vision Settings");
-        panel.add(lblBottomVision, "2, 4");
-
-        JButton btnResetAllTo = new JButton("Reset All Packages/Parts");
-        btnResetAllTo.addActionListener((e) -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace all custom package and part pipelines with the built-in default Bottom Vision Settings. Are you sure?",
-                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    Configuration.get().getPackages().forEach(Package::resetVisionSettings);
-                    Configuration.get().getParts().forEach(Part::resetVisionSettings);
-                    MessageBoxes.infoBox("Parts and Packages Reset",
-                            "All custom package or part Bottom Vision Settings have been reset.");
+        panel.add(lblBottomVision, "2, 4, right, default");
+        
+                JButton btnResetAllTo = new JButton("Reset All Packages/Parts");
+                btnResetAllTo.addActionListener((e) -> {
+                    int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                            "This will replace all custom package and part pipelines with the built-in default Bottom Vision Settings. Are you sure?",
+                            null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    if (result == JOptionPane.YES_OPTION) {
+                        UiUtils.messageBoxOnException(() -> {
+                            Configuration.get().getPackages().forEach(Package::resetVisionSettings);
+                            Configuration.get().getParts().forEach(Part::resetVisionSettings);
+                            MessageBoxes.infoBox("Parts and Packages Reset",
+                                    "All custom package or part Bottom Vision Settings have been reset.");
+                        });
+                    }
                 });
-            }
-        });
-        panel.add(btnResetAllTo, "4, 4");
+                
+                visionSettings = new JComboBox(new VisionSettingsComboBoxModel());
+                visionSettings.setMaximumRowCount(20);
+                visionSettings.setRenderer(new NamedListCellRenderer<>());
+                visionSettings.addItemListener(new ItemListener() {
+                    public void itemStateChanged(ItemEvent e) {
+                        reloadWizard = true;
+                    }
+                });
+                panel.add(visionSettings, "4, 4, fill, default");
+                panel.add(btnResetAllTo, "6, 4");
 
         JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
         lblPreRot.setToolTipText("Pre-rotate default setting for bottom vision. Can be overridden on individual parts.");
@@ -148,6 +166,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
     
     @Override
     public void createBindings() {
+        addWrappedBinding(bottomVision, "visionSettings", visionSettings, "selectedItem");
         addWrappedBinding(bottomVision, "enabled", enabledCheckbox, "selected");
         addWrappedBinding(bottomVision, "preRotate", preRotCheckbox, "selected");
         
@@ -165,5 +184,14 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         ComponentDecorators.decorateWithAutoSelect(textFieldMaxAngularOffset);
         
         updateEnabledState();
+    }
+
+    @Override
+    protected void saveToModel() {
+        super.saveToModel();
+        if (reloadWizard) {
+            // Reselect the tree path to reload the wizard with potentially different property sheets. 
+            MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+        }
     }
 }

@@ -647,8 +647,8 @@ public class MainFrame extends JFrame {
         tabs.addTab("Job", null, jobPanel, null); //$NON-NLS-1$
         tabs.addTab("Parts", null, partsPanel, null); //$NON-NLS-1$
         tabs.addTab("Packages", null, packagesPanel, null); //$NON-NLS-1$
+        tabs.addTab("Vision", null, visionSettingsPanel, null); //$NON-NLS-1$
         tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
-        tabs.addTab("Vision", null, visionSettingsPanel, null);
         tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
         tabs.addTab("Issues & Solutions", null, issuesAndSolutionsPanel, null); //$NON-NLS-1$
 

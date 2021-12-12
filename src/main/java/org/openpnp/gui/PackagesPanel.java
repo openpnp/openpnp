@@ -38,7 +38,21 @@ import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
@@ -47,18 +61,26 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
-import org.openpnp.gui.support.*;
+import org.openpnp.gui.support.ActionGroup;
+import org.openpnp.gui.support.Helpers;
+import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.NamedListCellRenderer;
+import org.openpnp.gui.support.NamedTableCellRenderer;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
+import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
-import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.PartAlignment;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
 
 @SuppressWarnings("serial")
-public class PackagesPanel extends JPanel {
+public class PackagesPanel extends JPanel implements WizardContainer {
 
 
     private static final String PREF_DIVIDER_POSITION = "PackagesPanel.dividerPosition";
@@ -142,12 +164,12 @@ public class PackagesPanel extends JPanel {
 
         JComboBox<AbstractVisionSettings> bottomVisionCombo = new JComboBox<>(new VisionSettingsComboBoxModel());
         bottomVisionCombo.setMaximumRowCount(20);
-        bottomVisionCombo.setRenderer(new IdentifiableListCellRenderer<>());
+        bottomVisionCombo.setRenderer(new NamedListCellRenderer<>());
 
         table.setDefaultEditor(AbstractVisionSettings.class,
                 new DefaultCellEditor(bottomVisionCombo));
         table.setDefaultRenderer(AbstractVisionSettings.class,
-                new IdentifiableTableCellRenderer<AbstractVisionSettings>());
+                new NamedTableCellRenderer<AbstractVisionSettings>());
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -175,7 +197,18 @@ public class PackagesPanel extends JPanel {
                     tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
                     tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg)));
                     tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
-                    if (selectedTab != -1) {
+                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+                        Wizard wizard = partAlignment.getPartConfigurationWizard(pkg);
+                        if (wizard != null) {
+                            JPanel panel = new JPanel();
+                            panel.setLayout(new BorderLayout());
+                            panel.add(wizard.getWizardPanel());
+                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                            wizard.setWizardContainer(PackagesPanel.this);
+                        }
+                    }
+                    if (selectedTab != -1 
+                            && tabbedPane.getTabCount() > selectedTab) {
                         tabbedPane.setSelectedIndex(selectedTab);
                     }
                 }
@@ -370,4 +403,10 @@ public class PackagesPanel extends JPanel {
             }
         }
     };
+
+    @Override
+    public void wizardCompleted(Wizard wizard) {}
+
+    @Override
+    public void wizardCancelled(Wizard wizard) {}
 }

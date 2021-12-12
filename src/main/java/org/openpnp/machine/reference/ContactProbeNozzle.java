@@ -757,7 +757,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     protected boolean isPartHeightSensingAvailable(Part part, NozzleTip nozzleTip) {
         Machine machine = Configuration.get().getMachine();
-        if (part != null && AbstractPnpJobProcessor.findPartAligner(machine, part) != null) {
+        if (part != null && AbstractPnpJobProcessor.findPartAligner(machine, part, false) != null) {
             // Uses Alignment, so it also needs a vision based method.
             Camera camera;
             try {

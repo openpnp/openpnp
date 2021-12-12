@@ -1,6 +1,6 @@
 <openpnp-vision-settings>
-    <vision-settings class="org.openpnp.model.BottomVisionSettings" id="BVS_Default"
-                     name="Default Bottom Vision Settings"
+    <vision-settings class="org.openpnp.model.BottomVisionSettings" id="BVS_Stock"
+                     name="- Stock Bottom Vision Settings -"
                      enabled="true">
         <cv_pipeline>
             <stages>

@@ -6,6 +6,7 @@ import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 import org.openpnp.model.Part;
+import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.model.Solutions;
 
 /**
@@ -56,11 +57,11 @@ public interface PartAlignment extends Identifiable, Named, Solutions.Subject, P
     
     /**
      * Get a Wizard for configuring the PartAlignment instance properties for a specific
-     * Part.
-     * @param part
+     * PartSettingsHolder (Part or Package).
+     * @param partSettingsHolder
      * @return
      */
-    Wizard getPartConfigurationWizard(Part part);
+    Wizard getPartConfigurationWizard(PartSettingsHolder partSettingsHolder);
 
-    public boolean canHandle(Part part);
+    public boolean canHandle(PartSettingsHolder partSettingsHolder, boolean allowDisabled);
 }

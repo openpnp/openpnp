@@ -760,7 +760,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
 
-            final PartAlignment partAlignment = findPartAligner(machine, part);
+            final PartAlignment partAlignment = findPartAligner(machine, part, false);
             
             if (partAlignment == null) {
                 plannedPlacement.alignmentOffsets = null;

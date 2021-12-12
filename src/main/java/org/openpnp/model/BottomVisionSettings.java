@@ -1,12 +1,13 @@
 package org.openpnp.model;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision.*;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.MaxRotation;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSizeCheckMethod;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage;
 import org.openpnp.machine.reference.vision.wizards.BottomVisionSettingsConfigurationWizard;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-
-import java.util.UUID;
 
 public class BottomVisionSettings extends AbstractVisionSettings {
 
@@ -27,7 +28,11 @@ public class BottomVisionSettings extends AbstractVisionSettings {
 
     @Override
     public Wizard getConfigurationWizard() {
-        return new BottomVisionSettingsConfigurationWizard(this);
+        return new BottomVisionSettingsConfigurationWizard(this, null);
+    }
+
+    public Wizard getConfigurationWizard(PartSettingsHolder settingsHolder) {
+        return new BottomVisionSettingsConfigurationWizard(this, settingsHolder);
     }
 
     public BottomVisionSettings() {
@@ -38,13 +43,14 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     }
 
     public BottomVisionSettings(PartSettings partSettings) {
-        super("BVS_migration_" + UUID.randomUUID().toString().split("-")[0]);
+        super(Configuration.createId("BVS"));
         this.setEnabled(partSettings.isEnabled());
         this.setCvPipeline(partSettings.getPipeline());
         this.preRotateUsage = partSettings.getPreRotateUsage();
         this.checkPartSizeMethod = partSettings.getCheckPartSizeMethod();
         this.checkSizeTolerancePercent = partSettings.getCheckSizeTolerancePercent();
         this.maxRotation = partSettings.getMaxRotation();
+        this.visionOffset = partSettings.getVisionOffset();
     }
 
     public PreRotateUsage getPreRotateUsage() {
@@ -87,7 +93,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         this.visionOffset = visionOffset.derive(null, null, 0.0, 0.0);
         firePropertyChange("visionOffset", null, this.visionOffset);
     }
-    
+
     public void setValues(BottomVisionSettings another) throws CloneNotSupportedException {
         setEnabled(another.isEnabled());
         setCvPipeline(another.getCvPipeline().clone());
@@ -95,8 +101,11 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         setCheckPartSizeMethod(another.checkPartSizeMethod);
         setMaxRotation(another.getMaxRotation());
         setCheckSizeTolerancePercent(another.getCheckSizeTolerancePercent());
-
+        setVisionOffset(another.getVisionOffset());
         firePropertyChange("vision-settings", null, this);
     }
 
+    public boolean isStockSetting() {
+        return getId().equals(STOCK_ID);
+    }
 }

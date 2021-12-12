@@ -1,6 +1,7 @@
 package org.openpnp.spi.base;
 
 import org.openpnp.model.Part;
+import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
@@ -51,9 +52,9 @@ public abstract class AbstractPnpJobProcessor extends AbstractJobProcessor
     }
 
 
-    public static PartAlignment findPartAligner(Machine machine, Part part) {
+    public static PartAlignment findPartAligner(Machine machine, PartSettingsHolder settingsHolder, boolean allowDisabled) {
         for (PartAlignment partAlignment : machine.getPartAlignments()) {
-            if (partAlignment.canHandle(part)) {
+            if (partAlignment.canHandle(settingsHolder, allowDisabled)) {
                 return partAlignment;
             }
         }

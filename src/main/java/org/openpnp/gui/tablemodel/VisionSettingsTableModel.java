@@ -1,13 +1,14 @@
 package org.openpnp.gui.tablemodel;
 
-import org.openpnp.model.Configuration;
-import org.openpnp.model.AbstractVisionSettings;
-
-import javax.swing.table.AbstractTableModel;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.table.AbstractTableModel;
+
+import org.openpnp.model.AbstractVisionSettings;
+import org.openpnp.model.Configuration;
 
 public class VisionSettingsTableModel extends AbstractTableModel implements PropertyChangeListener {
 

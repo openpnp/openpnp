@@ -1,11 +1,20 @@
 package org.openpnp.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.VisionSettings;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
 public abstract class AbstractVisionSettings extends AbstractModelObject implements VisionSettings {
+    public static final String STOCK_ID = "BVS_Stock";
+    public static final String DEFAULT_ID = "BVS_Default";
+
     @Attribute()
     private String id;
 
@@ -62,6 +71,44 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     }
 
     public String toString() {
-        return String.format("id %s", id);
+        return getName();
     }
+
+    public void fireUsedInProperty() {
+        firePropertyChange("usedIn", null, getUsedIn());
+    }
+
+    public List<String> getUsedIn() {
+        List<String> usedIn = new ArrayList<>();
+        if (getId().equals(STOCK_ID)) {
+            usedIn.add(getName());
+        }
+        Configuration configuration = Configuration.get();
+        if (configuration != null) {
+            Machine machine = configuration.getMachine();
+            if (machine != null) {
+                for (PartAlignment partAlignment : machine.getPartAlignments()) {
+                    if (partAlignment instanceof ReferenceBottomVision) {
+                        if (((ReferenceBottomVision) partAlignment).getVisionSettings() == this) {
+                            usedIn.add(partAlignment.getClass().getSimpleName());
+                        }
+                    }
+                }
+            }
+
+            for (Package pkg : configuration.getPackages()) {
+                if (pkg.getVisionSettings() == this) {
+                    usedIn.add(pkg.getId());
+                }
+            }
+
+            for (Part part : configuration.getParts()) {
+                if (part.getVisionSettings() == this) {
+                    usedIn.add(part.getId());
+                }
+            }
+        }
+        return usedIn;
+    }
+
 }

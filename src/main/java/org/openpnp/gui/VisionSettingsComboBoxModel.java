@@ -1,12 +1,12 @@
 package org.openpnp.gui;
 
-import org.openpnp.gui.support.TableComboBoxModel;
+import org.openpnp.gui.support.NamedComboBoxModel;
+import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.AbstractVisionSettings;
 
 @SuppressWarnings("serial")
-public class VisionSettingsComboBoxModel extends TableComboBoxModel<AbstractVisionSettings> {
+public class VisionSettingsComboBoxModel extends NamedComboBoxModel<AbstractVisionSettings> {
 
     public VisionSettingsComboBoxModel() {
         super("vision-settings");
