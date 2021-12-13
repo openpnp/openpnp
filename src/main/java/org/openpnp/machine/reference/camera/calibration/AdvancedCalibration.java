@@ -1344,7 +1344,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
     }
         
     public synchronized void transformOldStyleSettingsToNew(ReferenceCamera referenceCamera) throws Exception {
-        if (!preliminarySetupComplete && !valid) {
+        if (!preliminarySetupComplete) {
             Logger.trace("Updating {} to new style calibration", referenceCamera.getName());
 
             //Note - in referenceCamera, flipX controls vertical flipping and flipY controls 
@@ -1386,10 +1386,10 @@ public class AdvancedCalibration extends LensCalibrationParams {
                         referenceCamera.getDefaultZ().convertToUnits(mm).getValue(), null);
                 double z0;
                 if (referenceCamera.getLooking() == Looking.Down) {
-                    z0 = referenceCamera.getDefaultZ().convertToUnits(mm).getValue() + 2000;
+                    z0 = referenceCamera.getDefaultZ().convertToUnits(mm).getValue() + 200;
                 }
                 else {
-                    z0 = referenceCamera.getDefaultZ().convertToUnits(mm).getValue() - 2000;
+                    z0 = referenceCamera.getDefaultZ().convertToUnits(mm).getValue() - 200;
                 }
                 Logger.trace("z0 = " + z0);
                 double d1 = Math.abs(upp[0].getZ() - z0);
@@ -1409,17 +1409,30 @@ public class AdvancedCalibration extends LensCalibrationParams {
                      {camDir*flipV*upp[i].getY()*Math.sin(rot), -camDir*flipV*upp[i].getY()*Math.cos(rot)}});
                 Logger.trace("scalingMats[{}] = {}", i, scalingMats[i]);
                 calHeights[i] = upp[i].getLengthZ();
+                Logger.trace("calHeights[{}] = {}", i, calHeights[i]);
             }
             
-            preliminarySetup(referenceCamera, scalingMats, calHeights);
+            if (referenceCamera.getCalibration().isEnabled()) {
+                setDistortionCoefficientsMat(referenceCamera.getCalibration().getDistortionCoefficientsMat());
+            }
+            
+            preliminaryAlignment(referenceCamera, scalingMats, calHeights);
         }
     }
     
-    public void preliminarySetup(ReferenceCamera referenceCamera, RealMatrix[] scalingMats, 
+    /**
+     * Sets-up a minimal set of advanced camera calibration parameters so that units-per-pixel 
+     * scaling, flips, and rotation are approximately correct.
+     * @param referenceCamera - the camera to which this calibration applies
+     * @param scalingMats - an array of two or more scaling matrices as measured by the 
+     * CameraWalker.estimateScaling method
+     * @param calHeights - an array of the same length as scalingMats containing the Z coordinate 
+     * at which the scaling matrices where measured
+     * @throws Exception if less then two scaling matrices are provided or if the length of 
+     * calHeights doesn't match the length of scalingMats
+     */
+    public void preliminaryAlignment(ReferenceCamera referenceCamera, RealMatrix[] scalingMats, 
             Length[] calHeights) throws Exception {
-        if (scalingMats.length < 2) {
-            throw new Exception("Need at least two scaling matrices to set camera scaling.");
-        }
         int n = scalingMats.length;
         if (calHeights.length != n) {
             throw new Exception("Need the same number of calibration heights as scaling matrices.");
@@ -1432,7 +1445,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         RealMatrix aMat = MatrixUtils.createRealMatrix(n, 2);
         RealMatrix bMat = MatrixUtils.createRealMatrix(n, 4);
         for (int i=0; i<n; i++) {
-            //The top row of aMat contains the calibration Z heights, the bottom row is all ones
+            //The first column of aMat contains the calibration Z heights, the second column is all ones
             aMat.setEntry(i, 0, calHeights[i].convertToUnits(mm).getValue());
             aMat.setEntry(i, 1, 1);
             
@@ -1452,8 +1465,13 @@ public class AdvancedCalibration extends LensCalibrationParams {
         
         //Solve for the Z where all the units per pixel go to zero. This is the Z of the physical
         //camera's pin hole lens.
-        double z0 = new SingularValueDecomposition(xMat.getRowMatrix(0)).getSolver().
-                solve(xMat.getRowMatrix(1).scalarMultiply(-1)).getEntry(0, 0);
+        double summb = 0;
+        double summm = 0;
+        for (int i=0; i<4; i++) {
+            summb -= xMat.getEntry(0, i) * xMat.getEntry(1, i);
+            summm += xMat.getEntry(0, i) * xMat.getEntry(0, i);
+        }
+        double z0 = summb/summm;
         Logger.trace("z0 = " + z0);
         
         //Create a new 3x3 scaling matrix and populate with the scalings from xMat
@@ -1494,7 +1512,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         sMat.setEntry(1, 1, 1/sMat.getEntry(1, 1));
         sMat.setEntry(2, 2, 1/sMat.getEntry(2, 2));
         
-        //Compute the decomposition of inverse(mMat)
+        //Compute the desired decomposition of inverse(mMat)
         RealMatrix camMat = vMat.multiply(sMat).multiply(vMat.transpose());
         RealMatrix rotMat = vMat.multiply(uMat.transpose());
         
@@ -1526,6 +1544,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         RealMatrix vectorFromPhyCamToDesiredPrincipalPoint = MatrixUtils.createColumnRealMatrix(new double[] {0, 0, 1});
         Logger.trace("vectorFromPhyCamToDesiredPrincipalPoint = " + vectorFromPhyCamToDesiredPrincipalPoint);
         
+        cameraMatrix.put(0, 0, new double[9] ); //zero all entries
         cameraMatrix.put(0, 0, camMat.getEntry(0, 0));
         cameraMatrix.put(0, 2, (referenceCamera.getWidth() - 1) / 2.0);
         cameraMatrix.put(1, 1, camMat.getEntry(1, 1));
