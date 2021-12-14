@@ -6,4 +6,5 @@ package org.openpnp.model;
  */
 public interface PartSettingsHolder extends Identifiable {
     public abstract BottomVisionSettings getVisionSettings();
+    public abstract void setVisionSettings(BottomVisionSettings visionSettings);
 }

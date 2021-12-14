@@ -1,8 +1,10 @@
 package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.Component;
+import java.awt.event.ActionEvent;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -51,8 +53,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     private final ReferenceBottomVision bottomVision;
     private final BottomVisionSettings visionSettings;
     private final PartSettingsHolder settingsHolder;
-    
-    
+
+
     private JPanel panel;
     private JCheckBox enabledCheckbox;
     private JComboBox comboBoxPreRotate;
@@ -64,11 +66,13 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     private JTextField testAlignmentAngle;
 
     private JCheckBox chckbxCenterAfterTest;
-    
+
     private JLabel usedIn;  
     private JTextField name;
     private JLabel lblName;
-    
+
+    private JButton btnCloneSetting;
+
     public BottomVisionSettingsConfigurationWizard(BottomVisionSettings visionSettings, 
             PartSettingsHolder settingsHolder) {
         this.visionSettings = visionSettings;
@@ -80,43 +84,81 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
     private void createUi() {
         createPanel();
-        
+
         lblName = new JLabel("Name");
         panel.add(lblName, "2, 2, right, default");
-        
+
         name = new JTextField();
         //name.setEditable(false);
         panel.add(name, "4, 2, 7, 1, fill, default");
         name.setColumns(10);
-        
+
         JPanel panelAssignedTo = new JPanel();
         panelAssignedTo.setBorder(UIManager.getBorder("TextField.border"));
         panel.add(panelAssignedTo, "4, 4, 7, 1, fill, fill");
         panelAssignedTo.setLayout(new FormLayout(new ColumnSpec[] {
                 ColumnSpec.decode("min(70dlu;default):grow"),},
-            new RowSpec[] {
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.DEFAULT_ROWSPEC,}));
         usedIn = new JLabel("None");
         panelAssignedTo.add(usedIn, "1, 1, fill, fill");
 
         JLabel lblAssignedTo = new JLabel("Assigned to");
         panel.add(lblAssignedTo, "2, 4");
-        
-                JButton resetButton = new JButton("Reset to Default");
-                resetButton.addActionListener(e -> {
-                    int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                            "This will reset the bottom vision settings with to the default settings. Are you sure??", null,
-                            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                    if (result == JOptionPane.YES_OPTION) {
-                        UiUtils.messageBoxOnException(() -> {
-                            ReferenceBottomVision bottomVision = (ReferenceBottomVision) Configuration.get().getMachine().getPartAlignments().get(0);
-                            visionSettings.setValues(bottomVision.getVisionSettings());
-                            firePropertyChange("visionSettings", null, this.visionSettings);
-                        });
-                    }
+
+        JLabel lblSettings = new JLabel("Manage Settings");
+        panel.add(lblSettings, "2, 6");
+
+        btnCloneSetting = new JButton();
+        if (settingsHolder != null) {
+            btnCloneSetting.setText("Specialize for "+settingsHolder.getId());
+            btnCloneSetting.setToolTipText("Create a copy of these Bottom Vision Settings and assign to "
+            +settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getId());
+        }
+        else {
+            btnCloneSetting.setEnabled(false);
+            btnCloneSetting.setText("Specialize");
+            btnCloneSetting.setToolTipText("Create a copy of these vision settings.");
+        }
+
+        btnCloneSetting.addActionListener(e -> {
+            applyAction.actionPerformed(null);
+            UiUtils.messageBoxOnException(() -> {
+                BottomVisionSettings newSettings = new BottomVisionSettings();
+                newSettings.setValues(visionSettings);
+                if (settingsHolder != null) {
+                    newSettings.setName(settingsHolder.getId());
+                    settingsHolder.setVisionSettings(newSettings);
+                }
+                else {
+                    newSettings.setName("Copy of "+visionSettings.getName());
+                }
+                Configuration.get().addVisionSettings(newSettings);
+                // Reselect the holder, this will reload the settings wizard.
+                if (settingsHolder instanceof Part) {
+                    MainFrame.get().getPartsTab().firePartSelectionChanged();
+                }
+                else if (settingsHolder instanceof org.openpnp.model.Package) {
+                    MainFrame.get().getPackagesTab().firePackageSelectionChanged();
+                }
+            });
+        });
+        panel.add(btnCloneSetting, "4, 6, 3, 1");
+
+        JButton resetButton = new JButton("Reset to Default");
+        resetButton.addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                    "This will reset the bottom vision settings with to the default settings. Are you sure??", null,
+                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (result == JOptionPane.YES_OPTION) {
+                UiUtils.messageBoxOnException(() -> {
+                    ReferenceBottomVision bottomVision = (ReferenceBottomVision) Configuration.get().getMachine().getPartAlignments().get(0);
+                    visionSettings.setValues(bottomVision.getVisionSettings());
                 });
-                panel.add(resetButton, "8, 6");
-        
+            }
+        });
+        panel.add(resetButton, "8, 6");
+
         JLabel lblEnabled = new JLabel("Enabled?");
         panel.add(lblEnabled, "2, 8");
 
@@ -136,7 +178,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         comboBoxMaxRotation.setToolTipText(
                 "Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1");
         panel.add(comboBoxMaxRotation, "4, 12, fill, default");
-        
+
         JLabel lblPartCheckType = new JLabel("Part size check");
         panel.add(lblPartCheckType, "2, 14");
 
@@ -148,26 +190,26 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         textPartSizeTolerance = new JTextField();
         panel.add(textPartSizeTolerance, "4, 16, fill, default");
-        
+
         JLabel lblX = new JLabel("X");
         panel.add(lblX, "4, 18, center, default");
-        
+
         JLabel lblY = new JLabel("Y");
         panel.add(lblY, "6, 18, center, default");
-        
+
         JLabel lblVisionCenterOffset = new JLabel("Vision Center Offset");
         lblVisionCenterOffset.setToolTipText("Offset relative to the pick location/center of the part to the center of the rectangle detected by the bottom vision");
         panel.add(lblVisionCenterOffset, "2, 20, right, default");
-        
+
         tfBottomVisionOffsetX = new JTextField();
         panel.add(tfBottomVisionOffsetX, "4, 20, fill, default");
         tfBottomVisionOffsetX.setColumns(10);
-        
+
         tfBottomVisionOffsetY = new JTextField();
         tfBottomVisionOffsetY.setText("");
         panel.add(tfBottomVisionOffsetY, "6, 20, fill, default");
         tfBottomVisionOffsetY.setColumns(10);
-        
+
         JButton btnAutoVisionCenterOffset = new JButton("Detect");
         btnAutoVisionCenterOffset.setToolTipText("Center part over bottom vision camera. Button will run bottom vision and calculates the offset.");
         panel.add(btnAutoVisionCenterOffset, "8, 20");
@@ -183,7 +225,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         JButton editPipelineButton = new JButton("Edit");
         editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
         panel.add(editPipelineButton, "4, 22");
-        
+
         JButton resetPipelineButton = new JButton("Reset Pipeline to Default");
         resetPipelineButton.addActionListener(e -> {
             int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
@@ -198,7 +240,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             }
         });
         panel.add(resetPipelineButton, "6, 22, 3, 1");
-        
+
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);
         panelAlign.setBorder(new TitledBorder(null, "Test Align", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -213,26 +255,26 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 0),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
         JLabel lblTestPlacementAngle = new JLabel("Placement Angle");
         panelAlign.add(lblTestPlacementAngle, "2, 2");
-        
+
         testAlignmentAngle = new JTextField();
         panelAlign.add(testAlignmentAngle, "4, 2");
         testAlignmentAngle.setColumns(10);
-        
+
         JButton btnTestAlighment = new JButton("Test Alignment");
         panelAlign.add(btnTestAlighment, "6, 2");
-        
-                chckbxCenterAfterTest = new JCheckBox("Center After Test");
-                panelAlign.add(chckbxCenterAfterTest, "8, 2");
-                chckbxCenterAfterTest.setToolTipText("Center and rotate the part after the test.");
-                chckbxCenterAfterTest.setSelected(true);
+
+        chckbxCenterAfterTest = new JCheckBox("Center After Test");
+        panelAlign.add(chckbxCenterAfterTest, "8, 2");
+        chckbxCenterAfterTest.setToolTipText("Center and rotate the part after the test.");
+        chckbxCenterAfterTest.setSelected(true);
         btnTestAlighment.addActionListener((e) -> {
             UiUtils.submitUiMachineTask(() -> {
                 testAlignment(chckbxCenterAfterTest.isSelected());
@@ -272,7 +314,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         @Override
         public List<String> convertReverse(String arg0) {
-           return null;
+            return null;
         }
 
     }
@@ -287,7 +329,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         name.setVisible(settingsHolder != null);
         if (visionSettings.isStockSetting()) {
             for (Component comp : panel.getComponents()) {
-                comp.setEnabled(false);
+                if (comp != btnCloneSetting) { 
+                    comp.setEnabled(false);
+                }
             }
         }
 
@@ -326,42 +370,42 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 0),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
     }
 
     private void editPipeline() throws Exception {
         CvPipeline pipeline = visionSettings.getCvPipeline();
         pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
         pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
-        
+
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
         dialog.setVisible(true);
@@ -458,7 +502,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         }
         if (bottomVision.getBottomVisionSettings(part) != visionSettings) {
             throw new Exception("Present Bottom Vision Settings are not effective for part "+part.getId()+" on Nozzle "+nozzle.getName()+". "
-            +"Assign to Package of Part.");
+                    +"Assign to Package of Part.");
         }
         return nozzle;
     }
@@ -468,4 +512,12 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         return "Bottom Vision Settings";
     }
 
+    private class SwingAction extends AbstractAction {
+        public SwingAction() {
+            putValue(NAME, "SwingAction");
+            putValue(SHORT_DESCRIPTION, "Some short description");
+        }
+        public void actionPerformed(ActionEvent e) {
+        }
+    }
 }

@@ -531,7 +531,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
 
     @Override
     public String getId() {
-        return null;
+        return "RBV1";
     }
 
     @Override
@@ -549,6 +549,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
         return bottomVisionSettings;
     }
 
+    @Override
     public void setVisionSettings(BottomVisionSettings visionSettings) {
         BottomVisionSettings oldValue = visionSettings;
         this.bottomVisionSettings = visionSettings;

@@ -36,6 +36,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     }
 
     public BottomVisionSettings() {
+        super(Configuration.createId("BVS"));
     }
 
     public BottomVisionSettings(String id) {
@@ -43,7 +44,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     }
 
     public BottomVisionSettings(PartSettings partSettings) {
-        super(Configuration.createId("BVS"));
+        this();
         this.setEnabled(partSettings.isEnabled());
         this.setCvPipeline(partSettings.getPipeline());
         this.preRotateUsage = partSettings.getPreRotateUsage();

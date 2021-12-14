@@ -157,7 +157,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         });
         add(splitPane, BorderLayout.CENTER);
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -178,43 +178,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                     return;
                 }
                 
-                List<Package> selections = getSelections();
-
-                if (selections.size() > 1) {
-                    singleSelectionActionGroup.setEnabled(false);
-                    multiSelectionActionGroup.setEnabled(true);
-                }
-                else {
-                    multiSelectionActionGroup.setEnabled(false);
-                    singleSelectionActionGroup.setEnabled(!selections.isEmpty());
-                }
-
-                Package pkg = getSelection();
-
-                int selectedTab = tabbedPane.getSelectedIndex();
-                tabbedPane.removeAll();
-                if (pkg != null) {
-                    tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
-                    tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg)));
-                    tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
-                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
-                        Wizard wizard = partAlignment.getPartConfigurationWizard(pkg);
-                        if (wizard != null) {
-                            JPanel panel = new JPanel();
-                            panel.setLayout(new BorderLayout());
-                            panel.add(wizard.getWizardPanel());
-                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
-                            wizard.setWizardContainer(PackagesPanel.this);
-                        }
-                    }
-                    if (selectedTab != -1 
-                            && tabbedPane.getTabCount() > selectedTab) {
-                        tabbedPane.setSelectedIndex(selectedTab);
-                    }
-                }
-
-                revalidate();
-                repaint();
+                firePackageSelectionChanged();
             }
         });
 
@@ -403,10 +367,51 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             }
         }
     };
+    private JTabbedPane tabbedPane;
 
     @Override
     public void wizardCompleted(Wizard wizard) {}
 
     @Override
     public void wizardCancelled(Wizard wizard) {}
+
+    public void firePackageSelectionChanged() {
+        List<Package> selections = getSelections();
+
+        if (selections.size() > 1) {
+            singleSelectionActionGroup.setEnabled(false);
+            multiSelectionActionGroup.setEnabled(true);
+        }
+        else {
+            multiSelectionActionGroup.setEnabled(false);
+            singleSelectionActionGroup.setEnabled(!selections.isEmpty());
+        }
+
+        Package pkg = getSelection();
+
+        int selectedTab = tabbedPane.getSelectedIndex();
+        tabbedPane.removeAll();
+        if (pkg != null) {
+            tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
+            tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg)));
+            tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
+            for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+                Wizard wizard = partAlignment.getPartConfigurationWizard(pkg);
+                if (wizard != null) {
+                    JPanel panel = new JPanel();
+                    panel.setLayout(new BorderLayout());
+                    panel.add(wizard.getWizardPanel());
+                    tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                    wizard.setWizardContainer(PackagesPanel.this);
+                }
+            }
+            if (selectedTab != -1 
+                    && tabbedPane.getTabCount() > selectedTab) {
+                tabbedPane.setSelectedIndex(selectedTab);
+            }
+        }
+
+        revalidate();
+        repaint();
+    }
 }

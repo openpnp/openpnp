@@ -163,7 +163,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         });
         add(splitPane, BorderLayout.CENTER);
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -207,54 +207,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     return;
                 }
 
-                List<Part> selections = getSelections();
-
-                if (selections.size() > 1) {
-                    singleSelectionActionGroup.setEnabled(false);
-                    multiSelectionActionGroup.setEnabled(true);
-                }
-                else {
-                    multiSelectionActionGroup.setEnabled(false);
-                    singleSelectionActionGroup.setEnabled(!selections.isEmpty());
-                }
-
-                Part part = getSelection();
-
-                int selectedTab = tabbedPane.getSelectedIndex();
-                tabbedPane.removeAll();
-
-                if (part != null) {
-                    tabbedPane.add("Settings", new JScrollPane(new PartSettingsPanel(part)));
-
-                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
-                        Wizard wizard = partAlignment.getPartConfigurationWizard(part);
-                        if (wizard != null) {
-                            JPanel panel = new JPanel();
-                            panel.setLayout(new BorderLayout());
-                            panel.add(wizard.getWizardPanel());
-                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
-                            wizard.setWizardContainer(PartsPanel.this);
-                        }
-                    }
-                    
-                    FiducialLocator fiducialLocator =
-                            Configuration.get().getMachine().getFiducialLocator();
-                    Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
-                    if (wizard != null) {
-                        JPanel panel = new JPanel();
-                        panel.setLayout(new BorderLayout());
-                        panel.add(wizard.getWizardPanel());
-                        tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
-                        wizard.setWizardContainer(PartsPanel.this);
-                    }
-                }
-
-                if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
-                    tabbedPane.setSelectedIndex(selectedTab);
-                }
-
-                revalidate();
-                repaint();
+                firePartSelectionChanged();
             }
         });
     }
@@ -438,7 +391,59 @@ public class PartsPanel extends JPanel implements WizardContainer {
             }
         }
     };
-    
+    private JTabbedPane tabbedPane;
+
+    public void firePartSelectionChanged() {
+        List<Part> selections = getSelections();
+
+        if (selections.size() > 1) {
+            singleSelectionActionGroup.setEnabled(false);
+            multiSelectionActionGroup.setEnabled(true);
+        }
+        else {
+            multiSelectionActionGroup.setEnabled(false);
+            singleSelectionActionGroup.setEnabled(!selections.isEmpty());
+        }
+
+        Part part = getSelection();
+
+        int selectedTab = tabbedPane.getSelectedIndex();
+        tabbedPane.removeAll();
+
+        if (part != null) {
+            tabbedPane.add("Settings", new JScrollPane(new PartSettingsPanel(part)));
+
+            for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+                Wizard wizard = partAlignment.getPartConfigurationWizard(part);
+                if (wizard != null) {
+                    JPanel panel = new JPanel();
+                    panel.setLayout(new BorderLayout());
+                    panel.add(wizard.getWizardPanel());
+                    tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                    wizard.setWizardContainer(PartsPanel.this);
+                }
+            }
+            
+            FiducialLocator fiducialLocator =
+                    Configuration.get().getMachine().getFiducialLocator();
+            Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
+            if (wizard != null) {
+                JPanel panel = new JPanel();
+                panel.setLayout(new BorderLayout());
+                panel.add(wizard.getWizardPanel());
+                tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                wizard.setWizardContainer(PartsPanel.this);
+            }
+        }
+
+        if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
+            tabbedPane.setSelectedIndex(selectedTab);
+        }
+
+        revalidate();
+        repaint();
+    }
+
     @Override
     public void wizardCompleted(Wizard wizard) {}
 

@@ -199,6 +199,7 @@ public class Package extends AbstractModelObject implements PartSettingsHolder {
         return visionSettings;
     }
 
+    @Override
     public void setVisionSettings(BottomVisionSettings visionSettings) {
         BottomVisionSettings oldValue = visionSettings;
         this.visionSettings = visionSettings;
