@@ -1154,8 +1154,8 @@ public class CalibrationSolutions implements Solutions.Subject {
         // in the raw format.
         advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
         advCal.setEnabled(false);
-        camera.lightSettleAndCapture();
-        camera.lightSettleAndCapture();
+        camera.clearCalibrationCache();
+        camera.captureTransformed(); //force image width and height to be recomputed
 
         Location primaryLocation;
         Location secondaryLocation;
@@ -1201,6 +1201,8 @@ public class CalibrationSolutions implements Solutions.Subject {
         ArrayList<Integer> detectionDiameters = new ArrayList<>();
         detectionDiameters.add(primaryDiameter);
         detectionDiameters.add(secondaryDiameter);
+        Length oldDefaultZ = camera.getDefaultZ();
+        camera.setDefaultZ(primaryLocation.getLengthZ());
 
         CameraView cameraView = MainFrame.get().getCameraViews().
                 getCameraView(camera);
@@ -1232,7 +1234,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                             head.visualHome(machine, true);
                         }
                         else {
-                            MovableUtils.moveToLocationAtSafeZ(movable, primaryLocation);
+                            MovableUtils.moveToLocationAtSafeZ(movable, camera.getLocation(movable));
                         }
                     });
                 }
@@ -1242,6 +1244,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                     advCal.setEnabled(false);
                     advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
                     issue.setState(State.Open);
+                    camera.setDefaultZ(oldDefaultZ);
                 }
                 MainFrame.get().getIssuesAndSolutionsTab().solutionChanged();
             }
@@ -1251,6 +1254,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                 advCal.setValid(false);
                 advCal.setEnabled(false);
                 advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
+                camera.setDefaultZ(oldDefaultZ);
 
                 try {
                     issue.setState(State.Open);

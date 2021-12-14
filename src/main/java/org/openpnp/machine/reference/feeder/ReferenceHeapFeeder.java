@@ -39,8 +39,6 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -53,8 +51,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class ReferenceHeapFeeder extends ReferenceFeeder {
-    private final static Logger logger = LoggerFactory.getLogger(ReferenceHeapFeeder.class);
-
     // some settings that I might expose later
     final static int maxThrowRetries = 12;
 
