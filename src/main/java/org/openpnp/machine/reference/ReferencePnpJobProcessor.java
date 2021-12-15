@@ -563,7 +563,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final JobPlacement jobPlacement = plannedPlacement.jobPlacement;
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
-            final BoardLocation boardLocation = plannedPlacement.jobPlacement.getBoardLocation();
+            final BoardLocation boardLocation = jobPlacement.getBoardLocation();
             
             /**
              * If anything goes wrong that causes us to fail all the retries, this is the error
@@ -621,7 +621,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 checkPartOff(nozzle, part);
 
                 try {
-                    feederPickRetry(nozzle, feeder, placement, part);
+                    feederPickRetry(nozzle, feeder, jobPlacement, part);
                 }
                 catch (JobProcessorException jpe) {
                     lastException = jpe;
@@ -679,11 +679,11 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             }
         }
         
-        private void feederPickRetry(Nozzle nozzle, Feeder feeder, Placement placement, Part part) throws JobProcessorException {
+        private void feederPickRetry(Nozzle nozzle, Feeder feeder, JobPlacement jobPlacement, Part part) throws JobProcessorException {
             Exception lastException = null;
             for (int i = 0; i < 1 + feeder.getPickRetryCount(); i++) {
                 try {
-                    pick(nozzle, feeder, placement, part);
+                    pick(nozzle, feeder, jobPlacement, part);
                     postPick(feeder, nozzle);
                     checkPartOn(nozzle);
                     return;
@@ -695,13 +695,14 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             throw new JobProcessorException(feeder, lastException);
         }
         
-        private void pick(Nozzle nozzle, Feeder feeder, Placement placement, Part part) throws JobProcessorException {
+        private void pick(Nozzle nozzle, Feeder feeder, JobPlacement jobPlacement, Part part) throws JobProcessorException {
             try {
                 fireTextStatus("Pick %s from %s for %s.", part.getId(), feeder.getName(),
-                        placement.getId());
+                        jobPlacement.getPlacement().getId());
 
                 // Prepare the Nozzle for pick-to-place articulation.
-                nozzle.prepareForPickAndPlaceArticulation(feeder.getPickLocation(), placement.getLocation());
+                Location placementLocation = Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), jobPlacement.getPlacement().getLocation());
+                nozzle.prepareForPickAndPlaceArticulation(feeder.getPickLocation(), placementLocation);
 
                 // Move to pick location.
                 nozzle.moveToPickLocation(feeder);
