@@ -31,7 +31,13 @@ import org.openpnp.machine.reference.axis.wizards.BacklashCompensationConfigurat
 import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigurationWizard;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage;
-import org.openpnp.model.*;
+import org.openpnp.model.AbstractVisionSettings;
+import org.openpnp.model.AxesLocation;
+import org.openpnp.model.BottomVisionSettings;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
@@ -588,39 +594,40 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
                                     });
                                 }
                                 // Check all parts.
-                                List<BottomVisionSettings> partSettings = new ArrayList<>();
-                                List<String> parts = new ArrayList<>();
-                                for (Part part : Configuration.get().getParts()) {
-                                    if (part.getVisionSettings().getPreRotateUsage() == PreRotateUsage.AlwaysOff) {
-                                        parts.add(part.getId());
-                                        partSettings.add(part.getVisionSettings());
+                                List<BottomVisionSettings> visionSettings = new ArrayList<>();
+                                List<String> items = new ArrayList<>();
+                                for (AbstractVisionSettings settings : Configuration.get().getVisionSettings()) {
+                                    if (settings instanceof BottomVisionSettings
+                                            && ((BottomVisionSettings) settings).getPreRotateUsage() == PreRotateUsage.AlwaysOff) {
+                                        items.add(settings.getName());
+                                        visionSettings.add((BottomVisionSettings) settings);
                                     }
                                 }
-                                parts.sort(null);
-                                if (!partSettings.isEmpty()) {
+                                items.sort(null);
+                                if (!visionSettings.isEmpty()) {
                                     solutions.add(new Solutions.Issue(
                                             referenceBottomVision, 
-                                            "Pre-rotate bottom vision must be allowed on all part settings, because the machine has a "
+                                            "Pre-rotate bottom vision must be allowed on all vision settings, because the machine has a "
                                                     + "limited articulation nozzle.", 
                                                     "Switch from "+PreRotateUsage.AlwaysOff+" to "+PreRotateUsage.Default, 
                                                     Severity.Error,
-                                            "https://github.com/openpnp/openpnp/wiki/Bottom-Vision#global-configuration") {
+                                            "https://github.com/openpnp/openpnp/wiki/Bottom-Vision#part-configuration") {
 
 
                                         @Override 
                                         public String getExtendedDescription() {
-                                            return "<html><p>Switch part settings pre-rotate usage from <strong>"+PreRotateUsage.AlwaysOff+"</strong> "
+                                            return "<html><p>Switch vision settings pre-rotate usage from <strong>"+PreRotateUsage.AlwaysOff+"</strong> "
                                                     + "to <strong>"+PreRotateUsage.Default+"</strong> on these parts:</p>"
                                                     + "<ol><li>"
-                                                    + parts.stream().collect(Collectors.joining("</li><li>"))
+                                                    + items.stream().collect(Collectors.joining("</li><li>"))
                                                     + "</li><ol>"
                                                     + "</html>";
                                         }
 
                                         @Override
                                         public void setState(Solutions.State state) throws Exception {
-                                            for (BottomVisionSettings partSetting : partSettings) {
-                                                partSetting.setPreRotateUsage((state == State.Solved) ?
+                                            for (BottomVisionSettings setting : visionSettings) {
+                                                setting.setPreRotateUsage((state == State.Solved) ?
                                                         PreRotateUsage.Default : PreRotateUsage.AlwaysOff);
                                             }
                                             super.setState(state);

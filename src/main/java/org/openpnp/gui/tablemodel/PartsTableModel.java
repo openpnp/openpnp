@@ -24,15 +24,17 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.table.AbstractTableModel;
-
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PercentConverter;
-import org.openpnp.model.*;
+import org.openpnp.model.AbstractVisionSettings;
+import org.openpnp.model.BottomVisionSettings;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.Package;
+import org.openpnp.model.Part;
 
 @SuppressWarnings("serial")
-public class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
+public class PartsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
     private String[] columnNames =
             new String[] {"ID", "Description", "Height", "Package", "Speed %", "BottomVision"};
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
@@ -68,8 +70,14 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
         return columnIndex != 0;
     }
 
-    public Part getPart(int index) {
+    @Override
+    public Part getRowObjectAt(int index) {
         return parts.get(index);
+    }
+
+    @Override
+    public int indexOf(Object selectedPart) {
+        return parts.indexOf(selectedPart);
     }
 
     @Override

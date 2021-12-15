@@ -71,8 +71,10 @@ import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
@@ -98,6 +100,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     private JTable table;
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
+    private JTabbedPane tabbedPane;
+    private Part selectedPart;
 
     public PartsPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
@@ -210,6 +214,21 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 firePartSelectionChanged();
             }
         });
+
+        Configuration.get().addPropertyChangeListener("visionSettings", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                // Handle vision settings changes like selection changes, as the inherited settings might change. 
+                firePartSelectionChanged();
+            }
+        });
+
+        tableModel.addTableModelListener(e -> {
+            if (selectedPart != null) { 
+                // Reselect previously selected settings.
+                Helpers.selectObjectTableRow(table, selectedPart);
+            }
+        });
     }
 
     private Part getSelection() {
@@ -224,7 +243,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         List<Part> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getPart(selectedRow));
+            selections.add(tableModel.getRowObjectAt(selectedRow));
         }
         return selections;
     }
@@ -270,7 +289,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
                 configuration.addPart(part);
                 tableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(table);
+                Helpers.selectObjectTableRow(table, part);
                 break;
             }
         }
@@ -391,7 +410,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
             }
         }
     };
-    private JTabbedPane tabbedPane;
+    private int selectedTab;
 
     public void firePartSelectionChanged() {
         List<Part> selections = getSelections();
@@ -405,16 +424,21 @@ public class PartsPanel extends JPanel implements WizardContainer {
             singleSelectionActionGroup.setEnabled(!selections.isEmpty());
         }
 
-        Part part = getSelection();
+        Part selectedPart = getSelection();
+        if (selectedPart != null) {
+            this.selectedPart = selectedPart;
+        }
 
-        int selectedTab = tabbedPane.getSelectedIndex();
+        if (tabbedPane.getTabCount() > 0) {
+            selectedTab = tabbedPane.getSelectedIndex();
+        }
         tabbedPane.removeAll();
 
-        if (part != null) {
-            tabbedPane.add("Settings", new JScrollPane(new PartSettingsPanel(part)));
+        if (selectedPart != null) {
+            tabbedPane.add("Settings", new JScrollPane(new PartSettingsPanel(selectedPart)));
 
             for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
-                Wizard wizard = partAlignment.getPartConfigurationWizard(part);
+                Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPart);
                 if (wizard != null) {
                     JPanel panel = new JPanel();
                     panel.setLayout(new BorderLayout());
@@ -426,13 +450,20 @@ public class PartsPanel extends JPanel implements WizardContainer {
             
             FiducialLocator fiducialLocator =
                     Configuration.get().getMachine().getFiducialLocator();
-            Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
+            Wizard wizard = fiducialLocator.getPartConfigurationWizard(selectedPart);
             if (wizard != null) {
                 JPanel panel = new JPanel();
                 panel.setLayout(new BorderLayout());
                 panel.add(wizard.getWizardPanel());
                 tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
                 wizard.setWizardContainer(PartsPanel.this);
+            }
+            MainFrame mainFrame = MainFrame.get();
+            if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getPartsTab() 
+                    && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
+                mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
+                mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
+                mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(ReferenceBottomVision.getVisionSettings(selectedPart));
             }
         }
 
@@ -442,6 +473,13 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         revalidate();
         repaint();
+
+    }
+
+    public void selectPartInTable(Part part) {
+        if (getSelection() != part) {
+            Helpers.selectObjectTableRow(table, part);
+        }
     }
 
     @Override

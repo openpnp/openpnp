@@ -2,7 +2,13 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -30,6 +36,8 @@ import org.openpnp.gui.tablemodel.VisionSettingsTableModel;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Configuration.VisionSettingsConfigurationHolder;
+import org.simpleframework.xml.Serializer;
 
 public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
@@ -38,6 +46,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     private Preferences prefs = Preferences.userNodeForPackage(VisionSettingsPanel.class);
 
     private final Frame frame;
+    protected AbstractVisionSettings selectedVisionSettings;
 
     private VisionSettingsTableModel tableModel;
     private TableRowSorter<VisionSettingsTableModel> tableSorter;
@@ -76,11 +85,14 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
                 return;
             }
 
-            AbstractVisionSettings visionSettings = getSelection();
+            AbstractVisionSettings selectedVisionSettings = getSelection();
+            if (selectedVisionSettings != null) {
+                this.selectedVisionSettings = selectedVisionSettings;
+            }
             tabbedPane.removeAll();
 
-            if (visionSettings != null) {
-                Wizard wizard = visionSettings.getConfigurationWizard();
+            if (selectedVisionSettings != null) {
+                Wizard wizard = selectedVisionSettings.getConfigurationWizard();
                 if (wizard != null) {
                     JPanel panel = new JPanel();
                     panel.setLayout(new BorderLayout());
@@ -91,6 +103,12 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
             }
             revalidate();
             repaint();
+        });
+        tableModel.addTableModelListener(e -> {
+            if (selectedVisionSettings != null) { 
+                // Reselect previously selected settings.
+                Helpers.selectObjectTableRow(table, selectedVisionSettings);
+            }
         });
 
         splitPane.setLeftComponent(new JScrollPane(table));
@@ -111,6 +129,9 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
         toolBar.add(newSettingsAction);
         toolBar.add(deleteSettingsAction);
+        toolBar.addSeparator();
+        toolBar.add(copyPackageToClipboardAction);
+        toolBar.add(pastePackageToClipboardAction);
 
         toolBar.addSeparator();
     }
@@ -127,7 +148,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         List<AbstractVisionSettings> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getVisionSettings(selectedRow));
+            selections.add(tableModel.getRowObjectAt(selectedRow));
         }
         return selections;
     }
@@ -135,26 +156,16 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action newSettingsAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Settings...");
-            putValue(SHORT_DESCRIPTION, "Create a new settings, specifying it's ID.");
+            putValue(NAME, "New Settings");
+            putValue(SHORT_DESCRIPTION, "Create a new Bottom Vision Settings.");
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            String id;
-            while ((id = JOptionPane.showInputDialog(frame,
-                    "Please enter an ID for the new settings.")) != null) {
-                if (Configuration.get().getBottomVisionSettings(id) == null) {
-                    AbstractVisionSettings visionSettings = new BottomVisionSettings(id);
-
-                    Configuration.get().addVisionSettings(visionSettings);
-                    tableModel.fireTableDataChanged();
-                    Helpers.selectLastTableRow(table);
-                    break;
-                }
-
-                MessageBoxes.errorBox(frame, "Error", "VisionSettings ID " + id + " already exists.");
-            }
+            AbstractVisionSettings visionSettings = new BottomVisionSettings();
+            visionSettings.setName(BottomVisionSettings.class.getSimpleName());
+            Configuration.get().addVisionSettings(visionSettings);
+            Helpers.selectObjectTableRow(table, visionSettings);
         }
     };
 
@@ -175,27 +186,91 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
             }
 
             if (!usedIn.isEmpty()) {
-                String errorIds = String.join(", ", usedIn);
+                String errorNames = String.join(", ", usedIn);
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                        "The selection cannot be deleted. It is used by " + errorIds);
+                        "The selection cannot be deleted. It is used by " + errorNames + ".");
                 return;
             }
 
-            List<String> ids = selections.stream().map(AbstractVisionSettings::getId).collect(Collectors.toList());
-            String formattedIds;
-            if (ids.size() <= 3) {
-                formattedIds = String.join(", ", ids);
+            List<String> names = selections.stream().map(AbstractVisionSettings::getName).collect(Collectors.toList());
+            String formattedNames;
+            if (names.size() <= 10) {
+                formattedNames = String.join(", ", names);
             } else {
-                formattedIds = String.join(", ", ids.subList(0, 3)) + ", and " + (ids.size() - 3) + " others";
+                formattedNames = String.join(", ", names.subList(0, 5)) + ", and " + (names.size() - 5) + " others";
             }
 
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + formattedIds + "?",
+                    "Are you sure you want to delete " + formattedNames + "?",
                     "Delete " + selections.size() + " vision settings?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (AbstractVisionSettings visionSettings : selections) {
                     Configuration.get().removeVisionSettings(visionSettings);
                 }
+            }
+        }
+    };
+
+    public final Action copyPackageToClipboardAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.copy);
+            putValue(NAME, "Copy Vision Settings to Clipboard");
+            putValue(SHORT_DESCRIPTION,
+                    "Copy the currently selected vision settings to the clipboard in text format.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            List<AbstractVisionSettings> visionSettings = getSelections();
+            if (visionSettings.isEmpty()) {
+                return;
+            }
+            try {
+                VisionSettingsConfigurationHolder holder = new VisionSettingsConfigurationHolder();
+                holder.visionSettings.addAll(visionSettings);
+                Serializer s = Configuration.createSerializer();
+                StringWriter w = new StringWriter();
+                s.write(holder, w);
+                StringSelection stringSelection = new StringSelection(w.toString());
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(stringSelection, null);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy Failed", e);
+            }
+        }
+    };
+
+    public final Action pastePackageToClipboardAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.paste);
+            putValue(NAME, "Create Vision Settings from Clipboard");
+            putValue(SHORT_DESCRIPTION, "Create a new vision setting from a definition on the clipboard.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                Serializer ser = Configuration.createSerializer();
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                StringReader r = new StringReader(s);
+                VisionSettingsConfigurationHolder holder = ser.read(VisionSettingsConfigurationHolder.class, s);
+                table.clearSelection();
+                for (AbstractVisionSettings visionSettings : holder.visionSettings) {
+                    visionSettings.setId(Configuration.createId(visionSettings.getId().substring(0, 3)));
+                    for (AbstractVisionSettings visionSettings2 : Configuration.get().getVisionSettings()) {
+                        if (visionSettings2.getName().equals(visionSettings.getName())) {
+                            visionSettings.setName(visionSettings+" (Copy)");
+                            break;
+                        }
+                    }
+                    Configuration.get().addVisionSettings(visionSettings);
+                }
+                Helpers.selectObjectTableRows(table, holder.visionSettings);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
             }
         }
     };
@@ -208,5 +283,11 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     @Override
     public void wizardCancelled(Wizard wizard) {
 
+    }
+
+    public void selectVisionSettingsInTable(AbstractVisionSettings visionSettings) {
+        if (getSelection() != visionSettings) {
+            Helpers.selectObjectTableRow(table, visionSettings);
+        }
     }
 }

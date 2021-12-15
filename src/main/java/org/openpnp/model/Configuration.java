@@ -19,13 +19,26 @@
 
 package org.openpnp.model;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
@@ -63,6 +76,8 @@ public class Configuration extends AbstractModelObject {
     private static final String PREF_UNITS = "Configuration.units";
     private static final String PREF_UNITS_DEF = "Millimeters";
 
+    private static final String PREF_TABLE_LINKS = "Configuration.tableLinks";
+
     private static final String PREF_THEME_INFO = "Configuration.theme.info";
     private static final String PREF_THEME_FONT_SIZE = "Configuration.theme.fontSize";
     private static final String PREF_THEME_ALTERNATE_ROWS = "Configuration.theme.alternateRows";
@@ -78,6 +93,11 @@ public class Configuration extends AbstractModelObject {
             "Configuration.verticalScrollUnitIncrement";
     private static final int PREF_VERTICAL_SCROLL_UNIT_INCREMENT_DEF = 16;
     private static final String imgurClientId = "620fc1fa8ee0180";
+
+    public enum TablesLinked {
+        Unlinked,
+        Linked
+    };
 
     private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
@@ -165,6 +185,14 @@ public class Configuration extends AbstractModelObject {
 
     public void setSystemUnits(LengthUnit lengthUnit) {
         prefs.put(PREF_UNITS, lengthUnit.name());
+    }
+
+    public TablesLinked getTablesLinked() {
+        return TablesLinked.valueOf(prefs.get(PREF_TABLE_LINKS, TablesLinked.Unlinked.toString()));
+    }
+
+    public void setTablesLinked(TablesLinked tablesLinked) {
+        prefs.put(PREF_TABLE_LINKS, tablesLinked.toString());
     }
 
     public Locale getLocale() {
@@ -383,7 +411,7 @@ public class Configuration extends AbstractModelObject {
             File file = new File(configurationDirectory, "vision-settings.xml");
             if (overrideUserConfig || !file.exists()) {
                 Logger.info("No vision-settings.xml found in configuration directory, loading defaults.");
-                file = File.createTempFile("vision-settings", "xml");
+                file = File.createTempFile("visionSettings", "xml");
                 FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/vision-settings.xml"), file);
                 forceSave = true;
             }
@@ -533,7 +561,7 @@ public class Configuration extends AbstractModelObject {
             throw new Error("Vision Settings with null Id cannot be added to Configuration.");
         }
         this.visionSettings.put(visionSettings.getId().toUpperCase(), visionSettings);
-        firePropertyChange("vision-settings", null, this.visionSettings);
+        fireVisionSettingsChanged();
     }
 
     public List<AbstractVisionSettings> getVisionSettings() {
@@ -544,18 +572,26 @@ public class Configuration extends AbstractModelObject {
         if (visionSettingsId == null) {
             return null;
         }
-        
+
         AbstractVisionSettings visionSettings = this.visionSettings.get(visionSettingsId.toUpperCase());
         return visionSettings instanceof BottomVisionSettings ? (BottomVisionSettings)visionSettings : null;
     }
 
     public void removeVisionSettings(AbstractVisionSettings visionSettings) {
         this.visionSettings.remove(visionSettings.getId().toUpperCase());
-        firePropertyChange("vision-settings", null, this.visionSettings);
+        fireVisionSettingsChanged();
     }
 
     public List<Board> getBoards() {
         return Collections.unmodifiableList(new ArrayList<>(boards.values()));
+    }
+
+    /**
+     * Signal that something about the vision settings has changed. Inheritance makes it hard to track how changes affect
+     * single properties, therefore this is simply fired globally.
+     */
+    public void fireVisionSettingsChanged() {
+        firePropertyChange("visionSettings", null, this.visionSettings);
     }
 
     public Machine getMachine() {
@@ -777,7 +813,7 @@ public class Configuration extends AbstractModelObject {
      */
     @Root(name = "openpnp-vision-settings")
     public static class VisionSettingsConfigurationHolder {
-        @ElementList(inline = true, entry = "vision-settings", required = false)
-        private ArrayList<AbstractVisionSettings> visionSettings = new ArrayList<>();
+        @ElementList(inline = true, entry = "visionSettings", required = false)
+        public ArrayList<AbstractVisionSettings> visionSettings = new ArrayList<>();
     }
 }

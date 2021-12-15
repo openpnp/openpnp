@@ -59,7 +59,9 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     }
 
     public void setPreRotateUsage(PreRotateUsage preRotateUsage) {
+        Object oldValue = this.preRotateUsage;
         this.preRotateUsage = preRotateUsage;
+        firePropertyChange("preRotateUsage", oldValue, preRotateUsage);
     }
 
     public PartSizeCheckMethod getCheckPartSizeMethod() {
@@ -67,7 +69,9 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     }
 
     public void setCheckPartSizeMethod(PartSizeCheckMethod checkPartSizeMethod) {
+        Object oldValue = this.checkPartSizeMethod;
         this.checkPartSizeMethod = checkPartSizeMethod;
+        firePropertyChange("checkPartSizeMethod", oldValue, checkPartSizeMethod);
     }
 
     public int getCheckSizeTolerancePercent() {
@@ -75,7 +79,9 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     }
 
     public void setCheckSizeTolerancePercent(int checkSizeTolerancePercent) {
+        Object oldValue = this.checkSizeTolerancePercent;
         this.checkSizeTolerancePercent = checkSizeTolerancePercent;
+        firePropertyChange("checkSizeTolerancePercent", oldValue, checkSizeTolerancePercent);
     }
 
     public MaxRotation getMaxRotation() {
@@ -83,7 +89,9 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     }
 
     public void setMaxRotation(MaxRotation maxRotation) {
+        Object oldValue = this.maxRotation;
         this.maxRotation = maxRotation;
+        firePropertyChange("maxRotation", oldValue, maxRotation);
     }
 
     public Location getVisionOffset() {
@@ -91,8 +99,9 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     }
 
     public void setVisionOffset(Location visionOffset) {
+        Object oldValue = this.visionOffset;
         this.visionOffset = visionOffset.derive(null, null, 0.0, 0.0);
-        firePropertyChange("visionOffset", null, this.visionOffset);
+        firePropertyChange("visionOffset", oldValue, this.visionOffset);
     }
 
     public void setValues(BottomVisionSettings another) throws CloneNotSupportedException {
@@ -103,10 +112,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         setMaxRotation(another.getMaxRotation());
         setCheckSizeTolerancePercent(another.getCheckSizeTolerancePercent());
         setVisionOffset(another.getVisionOffset());
-        firePropertyChange("vision-settings", null, this);
+        Configuration.get().fireVisionSettingsChanged();
     }
 
-    public boolean isStockSetting() {
-        return getId().equals(STOCK_ID);
-    }
 }

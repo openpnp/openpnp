@@ -5,21 +5,19 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.table.AbstractTableModel;
-
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.Configuration;
 
-public class VisionSettingsTableModel extends AbstractTableModel implements PropertyChangeListener {
+public class VisionSettingsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
 
     private String[] columnNames =
-            new String[]{"ID", "Name"};
+            new String[]{"Name", "Assigned To"};
     private Class[] columnTypes = new Class[] {String.class, String.class};
 
     private List<AbstractVisionSettings> visionSettings;
 
     public VisionSettingsTableModel() {
-        Configuration.get().addPropertyChangeListener("vision-settings", this);
+        Configuration.get().addPropertyChangeListener("visionSettings", this);
         visionSettings = new ArrayList<>(Configuration.get().getVisionSettings());
     }
 
@@ -63,7 +61,7 @@ public class VisionSettingsTableModel extends AbstractTableModel implements Prop
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex != 0;
+        return columnIndex == 0 && !getRowObjectAt(rowIndex).isStockSetting();
     }
 
     @Override
@@ -71,24 +69,30 @@ public class VisionSettingsTableModel extends AbstractTableModel implements Prop
         AbstractVisionSettings visionSettings = this.visionSettings.get(rowIndex);
         switch (columnIndex) {
             case 0:
-                return visionSettings.getId();
-            case 1:
                 return visionSettings.getName();
+            case 1:
+                return String.join(", ", visionSettings.getUsedIn());
             default:
                 return null;
         }
     }
 
-    public AbstractVisionSettings getVisionSettings(int index) {
+    @Override
+    public AbstractVisionSettings getRowObjectAt(int index) {
         return visionSettings.get(index);
     }
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         AbstractVisionSettings visionSettings = this.visionSettings.get(rowIndex);
-        if (columnIndex == 1) {
+        if (columnIndex == 0) {
             visionSettings.setName((String) aValue);
         }
+    }
+
+    @Override
+    public int indexOf(Object selectedVisionSettings) {
+        return visionSettings.indexOf(selectedVisionSettings);
     }
 
 }

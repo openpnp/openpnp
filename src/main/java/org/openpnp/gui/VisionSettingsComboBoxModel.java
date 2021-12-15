@@ -9,7 +9,7 @@ import org.openpnp.model.Configuration;
 public class VisionSettingsComboBoxModel extends NamedComboBoxModel<AbstractVisionSettings> {
 
     public VisionSettingsComboBoxModel() {
-        super("vision-settings");
+        super("visionSettings");
     }
 
     @Override

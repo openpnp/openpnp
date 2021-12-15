@@ -47,6 +47,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persist;
 
 public class ReferenceBottomVision extends AbstractModelObject implements PartAlignment, PartSettingsHolder {
 
@@ -54,8 +55,10 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
     @Element(required = false)
     protected CvPipeline pipeline;
 
-    @Element(required = false)
-    protected BottomVisionSettings bottomVisionSettings;
+    @Attribute(required = false)
+    private String bottomVisionId;
+
+    protected BottomVisionSettings visionSettings;
 
     @Attribute(required = false)
     protected boolean enabled = false;
@@ -80,15 +83,35 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
 
     public ReferenceBottomVision() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
+
             @Override
             public void configurationLoaded(Configuration configuration) throws Exception {
+                visionSettings = configuration.getBottomVisionSettings(bottomVisionId);
                 migratePartSettings();
+                if (visionSettings == null) {
+                    // Recovery mode, take any.
+                    for (AbstractVisionSettings settings : configuration.getVisionSettings()) {
+                        if (settings instanceof BottomVisionSettings) {
+                            visionSettings = (BottomVisionSettings) settings;
+                            break;
+                        }
+                    }
+                }
             }
         });
     }
 
+    @Persist
+    private void persist() {
+        bottomVisionId = (visionSettings == null ? null : visionSettings.getId());
+    }
+
     protected void migratePartSettings() {
-        if (partSettingsByPartId == null) {
+        if (Configuration.get().getVisionSettings().isEmpty()) {
+            // Fresh configuration: need to migrate the stock and default settings, even if no partSettingsById are present.  
+            partSettingsByPartId = new HashMap<>();
+        }
+        else if (partSettingsByPartId == null) {
             return;
         }
 
@@ -546,18 +569,18 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
 
     @Override 
     public BottomVisionSettings getVisionSettings() {
-        return bottomVisionSettings;
+        return visionSettings;
     }
 
     @Override
     public void setVisionSettings(BottomVisionSettings visionSettings) {
-        BottomVisionSettings oldValue = visionSettings;
-        this.bottomVisionSettings = visionSettings;
+        BottomVisionSettings oldValue = this.visionSettings;
+        this.visionSettings = visionSettings;
         if (oldValue != visionSettings) {
-            firePropertyChange("vision-settings", oldValue, visionSettings);
+            Configuration.get().fireVisionSettingsChanged();
             firePropertyChange("visionSettings", oldValue, visionSettings);
-            oldValue.fireUsedInProperty();
-            visionSettings.fireUsedInProperty();
+            AbstractVisionSettings.fireUsedInProperty(oldValue);
+            AbstractVisionSettings.fireUsedInProperty(visionSettings);
         }
     }
 
@@ -606,7 +629,9 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
     }
 
     public void setTestAlignmentAngle(double testAlignmentAngle) {
+        Object oldValue = this.testAlignmentAngle; 
         this.testAlignmentAngle = testAlignmentAngle;
+        firePropertyChange("testAlignmentAngle", oldValue, testAlignmentAngle);
     }
 
     @Override
@@ -635,7 +660,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
     public Icon getPropertySheetHolderIcon() {
         return null;
     }
-    
+
     public BottomVisionSettings getBottomVisionSettings(PartSettingsHolder partSettingsHolder) {
         BottomVisionSettings bottomVisionSettings = null;
         if (partSettingsHolder instanceof Part) {
@@ -653,6 +678,18 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
             bottomVisionSettings = getVisionSettings();
         }
         return bottomVisionSettings;
+    }
+
+    public static BottomVisionSettings getVisionSettings(PartSettingsHolder partSettingsHolder) {
+        for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+            if (partAlignment instanceof ReferenceBottomVision) {
+                BottomVisionSettings visionSettings = ((ReferenceBottomVision) partAlignment).getBottomVisionSettings(partSettingsHolder);
+                if (visionSettings != null) {
+                    return visionSettings;
+                }
+            }
+        }
+        return null;
     }
 
     @Override

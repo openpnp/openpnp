@@ -39,7 +39,11 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     public String getId() {
         return id;
     }
-    
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     @Override
     public String getName() {
         return name;
@@ -47,7 +51,9 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
 
     @Override
     public void setName(String name) {
+        Object oldValue = this.name;
         this.name = name;
+        firePropertyChange("name", oldValue, name);
     }
 
     public CvPipeline getCvPipeline() {
@@ -59,7 +65,9 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     }
 
     public void setCvPipeline(CvPipeline cvPipeline) {
+        Object oldValue = this.cvPipeline;
         this.cvPipeline = cvPipeline;
+        firePropertyChange("cvPipeline", oldValue, cvPipeline);
     }
 
     public boolean isEnabled() {
@@ -67,15 +75,19 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     }
 
     public void setEnabled(boolean enabled) {
+        Object oldValue = this.enabled;
         this.enabled = enabled;
+        firePropertyChange("enabled", oldValue, enabled);
     }
 
     public String toString() {
         return getName();
     }
 
-    public void fireUsedInProperty() {
-        firePropertyChange("usedIn", null, getUsedIn());
+    public static void fireUsedInProperty(AbstractVisionSettings settings) {
+        if (settings != null) {
+            settings.firePropertyChange("usedIn", null, settings.getUsedIn());
+        }
     }
 
     public List<String> getUsedIn() {
@@ -108,7 +120,11 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
                 }
             }
         }
+        usedIn.sort(null);
         return usedIn;
     }
 
+    public boolean isStockSetting() {
+        return getId().equals(STOCK_ID);
+    }
 }

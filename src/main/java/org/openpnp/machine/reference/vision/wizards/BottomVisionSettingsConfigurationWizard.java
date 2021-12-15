@@ -124,6 +124,11 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         btnCloneSetting.addActionListener(e -> {
             applyAction.actionPerformed(null);
             UiUtils.messageBoxOnException(() -> {
+                if (settingsHolder != null
+                        && visionSettings.getUsedIn().size() == 1 
+                        && visionSettings.getUsedIn().get(0).equals(settingsHolder.getId())) {
+                    throw new Exception("Vision Settings already specialized for "+settingsHolder.getId()+".");
+                }
                 BottomVisionSettings newSettings = new BottomVisionSettings();
                 newSettings.setValues(visionSettings);
                 if (settingsHolder != null) {
@@ -134,13 +139,6 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                     newSettings.setName("Copy of "+visionSettings.getName());
                 }
                 Configuration.get().addVisionSettings(newSettings);
-                // Reselect the holder, this will reload the settings wizard.
-                if (settingsHolder instanceof Part) {
-                    MainFrame.get().getPartsTab().firePartSelectionChanged();
-                }
-                else if (settingsHolder instanceof org.openpnp.model.Package) {
-                    MainFrame.get().getPackagesTab().firePackageSelectionChanged();
-                }
             });
         });
         panel.add(btnCloneSetting, "4, 6, 3, 1");
@@ -243,7 +241,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);
-        panelAlign.setBorder(new TitledBorder(null, "Test Align", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelAlign.setBorder(new TitledBorder(null, "Test Alignment", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelAlign.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
@@ -283,8 +281,6 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     }
 
     protected class UsedInConverter extends Converter<List<String>, String> {
-        private String format;
-
         public UsedInConverter() {
         }
 
@@ -316,7 +312,6 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         public List<String> convertReverse(String arg0) {
             return null;
         }
-
     }
 
     @Override

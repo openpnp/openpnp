@@ -24,15 +24,13 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.table.AbstractTableModel;
-
+import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Package;
-import org.openpnp.model.AbstractVisionSettings;
 
 @SuppressWarnings("serial")
-public class PackagesTableModel extends AbstractTableModel implements PropertyChangeListener {
+public class PackagesTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
     final private Configuration configuration;
 
     private String[] columnNames = new String[] {"ID", "Description", "Tape Specification", "BottomVision"};
@@ -69,8 +67,14 @@ public class PackagesTableModel extends AbstractTableModel implements PropertyCh
         return columnIndex != 0;
     }
 
-    public Package getPackage(int index) {
+    @Override
+    public Package getRowObjectAt(int index) {
         return packages.get(index);
+    }
+
+    @Override
+    public int indexOf(Object selectedPackage) {
+        return packages.indexOf(selectedPackage);
     }
 
     @Override

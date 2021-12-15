@@ -165,13 +165,13 @@ public class Part extends AbstractModelObject implements PartSettingsHolder {
 
     @Override
     public void setVisionSettings(BottomVisionSettings visionSettings) {
-        BottomVisionSettings oldValue = visionSettings;
+        BottomVisionSettings oldValue = this.visionSettings;
         this.visionSettings = visionSettings;
         if (oldValue != visionSettings) {
-            firePropertyChange("vision-settings", oldValue, visionSettings);
+            Configuration.get().fireVisionSettingsChanged();
             firePropertyChange("visionSettings", oldValue, visionSettings);
-            oldValue.fireUsedInProperty();
-            visionSettings.fireUsedInProperty();
+            AbstractVisionSettings.fireUsedInProperty(oldValue);
+            AbstractVisionSettings.fireUsedInProperty(visionSettings);
         }
     }
 

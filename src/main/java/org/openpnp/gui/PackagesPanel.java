@@ -70,8 +70,10 @@ import org.openpnp.gui.support.NamedTableCellRenderer;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
@@ -96,6 +98,8 @@ public class PackagesPanel extends JPanel implements WizardContainer {
     private JTable table;
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
+    private JTabbedPane tabbedPane;
+    private Package selectedPackage;
 
     public PackagesPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
@@ -182,6 +186,21 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             }
         });
 
+        Configuration.get().addPropertyChangeListener("visionSettings", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                // Handle vision settings changes like selection changes, as the inherited settings might change. 
+                firePackageSelectionChanged();
+            }
+        });
+
+        tableModel.addTableModelListener(e -> {
+            if (selectedPackage != null) { 
+                // Reselect previously selected settings.
+                Helpers.selectObjectTableRow(table, selectedPackage);
+            }
+        });
+
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
 
@@ -224,7 +243,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         List<Package> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getPackage(selectedRow));
+            selections.add(tableModel.getRowObjectAt(selectedRow));
         }
         return selections;
     }
@@ -261,7 +280,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
 
                 configuration.addPackage(this_package);
                 tableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(table);
+                Helpers.selectObjectTableRow(table, this_package);
                 break;
             }
         }
@@ -360,14 +379,14 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                     }
                 }
                 tableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(table);
+                Helpers.selectObjectTableRow(table, pkg);
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
             }
         }
     };
-    private JTabbedPane tabbedPane;
+    private int selectedTab;
 
     @Override
     public void wizardCompleted(Wizard wizard) {}
@@ -387,16 +406,21 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             singleSelectionActionGroup.setEnabled(!selections.isEmpty());
         }
 
-        Package pkg = getSelection();
+        Package selectedPackage = getSelection();
+        if (selectedPackage != null) {
+            this.selectedPackage = selectedPackage; 
+        }
 
-        int selectedTab = tabbedPane.getSelectedIndex();
+        if (tabbedPane.getTabCount() > 0) {
+            selectedTab = tabbedPane.getSelectedIndex();
+        }
         tabbedPane.removeAll();
-        if (pkg != null) {
-            tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
-            tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg)));
-            tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
+        if (selectedPackage != null) {
+            tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(selectedPackage));
+            tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(selectedPackage)));
+            tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(selectedPackage)));
             for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
-                Wizard wizard = partAlignment.getPartConfigurationWizard(pkg);
+                Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPackage);
                 if (wizard != null) {
                     JPanel panel = new JPanel();
                     panel.setLayout(new BorderLayout());
@@ -409,9 +433,20 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                     && tabbedPane.getTabCount() > selectedTab) {
                 tabbedPane.setSelectedIndex(selectedTab);
             }
+            MainFrame mainFrame = MainFrame.get();
+            if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getPackagesTab() 
+                    && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
+                 mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(ReferenceBottomVision.getVisionSettings(selectedPackage));
+            }
         }
 
         revalidate();
         repaint();
+    }
+
+    public void selectPackageInTable(Package packag) {
+        if (getSelection() != packag) {
+            Helpers.selectObjectTableRow(table, packag);
+        }
     }
 }
