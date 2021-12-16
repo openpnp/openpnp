@@ -107,12 +107,14 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
     }
 
     protected void migratePartSettings() {
-        if (Configuration.get().getVisionSettings().isEmpty()) {
-            // Fresh configuration: need to migrate the stock and default settings, even if no partSettingsById are present.  
-            partSettingsByPartId = new HashMap<>();
-        }
-        else if (partSettingsByPartId == null) {
-            return;
+        if (partSettingsByPartId == null) {
+            if (Configuration.get().getVisionSettings().isEmpty()) {
+                // Fresh configuration: need to migrate the stock and default settings, even if no partSettingsById are present.  
+                partSettingsByPartId = new HashMap<>();
+            }
+            else { 
+                return;
+            }
         }
 
         HashMap<String, BottomVisionSettings> bottomVisionSettingsHashMap = new HashMap<>();
