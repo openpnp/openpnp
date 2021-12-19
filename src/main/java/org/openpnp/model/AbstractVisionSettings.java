@@ -3,10 +3,12 @@ package org.openpnp.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.jdesktop.beansbinding.Converter;
+import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.VisionSettings;
+import org.openpnp.util.XmlSerialize;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -90,38 +92,125 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
         }
     }
 
-    public List<String> getUsedIn() {
-        List<String> usedIn = new ArrayList<>();
+    /**
+     * This is a pseudo PartSettingsHolder for stock settings. It provides an implicit reference to the 
+     * stock settings to the stock settings cannot be deleted etc. 
+     *
+     */
+    class StockSettingsHolder implements PartSettingsHolder {
+        @Override
+        public String getId() {
+            return getName();
+        }
+
+        @Override
+        public BottomVisionSettings getVisionSettings() {
+            return (BottomVisionSettings) AbstractVisionSettings.this;
+        }
+
+        @Override
+        public void setVisionSettings(BottomVisionSettings visionSettings) {
+        }
+
+        @Override
+        public PartSettingsHolder getParentHolder() {
+            return null;
+        }
+
+        @Override
+        public List<PartSettingsHolder> getSpecializedIn() {
+            return null;
+        }
+
+        @Override
+        public void resetSpecializedVisionSettings() {
+        }
+    }
+
+    /**
+     * @return the list of PartSettingsHolder that have these vision settings assigned.
+     */
+    public List<PartSettingsHolder> getUsedIn() {
+        List<PartSettingsHolder> list = new ArrayList<>();
         if (getId().equals(STOCK_ID)) {
-            usedIn.add(getName());
+            list.add(new StockSettingsHolder());
         }
         Configuration configuration = Configuration.get();
         if (configuration != null) {
             Machine machine = configuration.getMachine();
             if (machine != null) {
                 for (PartAlignment partAlignment : machine.getPartAlignments()) {
-                    if (partAlignment instanceof ReferenceBottomVision) {
-                        if (((ReferenceBottomVision) partAlignment).getVisionSettings() == this) {
-                            usedIn.add(partAlignment.getClass().getSimpleName());
-                        }
+                    if (partAlignment.getVisionSettings() == this) {
+                        list.add(partAlignment);
                     }
                 }
             }
 
             for (Package pkg : configuration.getPackages()) {
                 if (pkg.getVisionSettings() == this) {
-                    usedIn.add(pkg.getId());
+                    list.add(pkg);
                 }
             }
 
             for (Part part : configuration.getParts()) {
                 if (part.getVisionSettings() == this) {
-                    usedIn.add(part.getId());
+                    list.add(part);
                 }
             }
         }
-        usedIn.sort(null);
-        return usedIn;
+        list.sort(new AbstractPartSettingsHolder.PartSettingsComparator());
+        return list;
+    }
+
+    public static class ListConverter extends Converter<List<PartSettingsHolder>, String> {
+        private final PartSettingsHolder settingsHolder;
+        private final boolean html;
+
+        public ListConverter(boolean html) {
+            this.settingsHolder = null;
+            this.html = html;
+        }
+        public ListConverter(boolean html, PartSettingsHolder settingsHolder) {
+            this.settingsHolder = settingsHolder;
+            this.html = html;
+        }
+
+        @Override
+        public String convertForward(List<PartSettingsHolder> arg0) {
+            StringBuilder str = new StringBuilder();
+            if (html) {
+                str.append("<html>");
+            }
+            int n = 0;
+            for (PartSettingsHolder item : arg0) {
+                if (n > 0) {
+                    str.append(", ");
+                }
+                if (html) {
+                    if (settingsHolder == item) {
+                        str.append("<strong>");
+                        str.append(XmlSerialize.escapeXml(item.getShortName()));
+                        str.append("</strong>");
+                    }
+                    else {
+                        str.append(XmlSerialize.escapeXml(item.getShortName()));
+                    }
+                }
+                else {
+                    str.append(item.getShortName());
+                }
+                n++;
+            }
+            if (html) {
+                str.append("</html>");
+            }
+            return str.toString();
+        }
+
+        @Override
+        public List<PartSettingsHolder> convertReverse(String arg0) {
+            return null; // not implemented
+        }
     }
 
     public boolean isStockSetting() {

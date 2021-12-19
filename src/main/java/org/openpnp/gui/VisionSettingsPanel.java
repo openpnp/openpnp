@@ -37,6 +37,7 @@ import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.VisionSettingsConfigurationHolder;
+import org.openpnp.model.PartSettingsHolder;
 import org.simpleframework.xml.Serializer;
 
 public class VisionSettingsPanel extends JPanel implements WizardContainer {
@@ -180,13 +181,13 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         public void actionPerformed(ActionEvent e) {
             List<AbstractVisionSettings> selections = getSelections();
 
-            List<String> usedIn = new ArrayList<>();
+            List<PartSettingsHolder> usedIn = new ArrayList<>();
             for (AbstractVisionSettings settings : selections) {
                 usedIn.addAll(settings.getUsedIn());
             }
 
             if (!usedIn.isEmpty()) {
-                String errorNames = String.join(", ", usedIn);
+                String errorNames = new AbstractVisionSettings.ListConverter(false).convertForward(usedIn);
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
                         "The selection cannot be deleted. It is used by " + errorNames + ".");
                 return;

@@ -568,7 +568,7 @@ public class Configuration extends AbstractModelObject {
         return Collections.unmodifiableList(new ArrayList<>(visionSettings.values()));
     }
 
-    public BottomVisionSettings getBottomVisionSettings(String visionSettingsId) {
+    public BottomVisionSettings getVisionSettings(String visionSettingsId) {
         if (visionSettingsId == null) {
             return null;
         }

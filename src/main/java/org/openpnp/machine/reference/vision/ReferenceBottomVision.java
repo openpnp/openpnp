@@ -3,6 +3,7 @@ package org.openpnp.machine.reference.vision;
 import java.awt.Rectangle;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.Action;
@@ -47,18 +48,12 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persist;
 
-public class ReferenceBottomVision extends AbstractModelObject implements PartAlignment, PartSettingsHolder {
+public class ReferenceBottomVision extends AbstractPartAlignment {
 
     @Deprecated
     @Element(required = false)
     protected CvPipeline pipeline;
-
-    @Attribute(required = false)
-    private String bottomVisionId;
-
-    protected BottomVisionSettings visionSettings;
 
     @Attribute(required = false)
     protected boolean enabled = false;
@@ -83,13 +78,11 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
 
     public ReferenceBottomVision() {
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
-
             @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                visionSettings = configuration.getBottomVisionSettings(bottomVisionId);
-                migratePartSettings();
+            public void configurationComplete(Configuration configuration) throws Exception {
+                migratePartSettings(configuration);
                 if (visionSettings == null) {
-                    // Recovery mode, take any.
+                    // Recovery mode, take any setting.
                     for (AbstractVisionSettings settings : configuration.getVisionSettings()) {
                         if (settings instanceof BottomVisionSettings) {
                             visionSettings = (BottomVisionSettings) settings;
@@ -101,100 +94,10 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
         });
     }
 
-    @Persist
-    private void persist() {
-        bottomVisionId = (visionSettings == null ? null : visionSettings.getId());
-    }
-
-    protected void migratePartSettings() {
-        if (partSettingsByPartId == null) {
-            if (Configuration.get().getVisionSettings().isEmpty()) {
-                // Fresh configuration: need to migrate the stock and default settings, even if no partSettingsById are present.  
-                partSettingsByPartId = new HashMap<>();
-            }
-            else { 
-                return;
-            }
-        }
-
-        HashMap<String, BottomVisionSettings> bottomVisionSettingsHashMap = new HashMap<>();
-        Configuration configuration = Configuration.get();
-        // Create the factory stock settings.
-        BottomVisionSettings stockBottomVisionSettings = createDefaultBottomVisionSettings();
-        PartSettings equivalentPartSettings = new PartSettings();
-        configuration.addVisionSettings(stockBottomVisionSettings);
-        equivalentPartSettings.setPipeline(stockBottomVisionSettings.getCvPipeline());
-        bottomVisionSettingsHashMap.put(createPartSettingsFingerprint(equivalentPartSettings), stockBottomVisionSettings);
-        // Migrate the default settings.
-        BottomVisionSettings defaultBottomVisionSettings = new BottomVisionSettings(AbstractVisionSettings.DEFAULT_ID);
-        defaultBottomVisionSettings.setName("- Default ReferenceBottomVision -");
-        defaultBottomVisionSettings.setEnabled(enabled);
-        configuration.addVisionSettings(defaultBottomVisionSettings);
-        if(pipeline != null) {
-            defaultBottomVisionSettings.setCvPipeline(pipeline);
-            pipeline = null;
-        }
-        else {
-            defaultBottomVisionSettings.setCvPipeline(stockBottomVisionSettings.getCvPipeline());
-        }
-        setVisionSettings(defaultBottomVisionSettings);
-        equivalentPartSettings.setPipeline(defaultBottomVisionSettings.getCvPipeline());
-        bottomVisionSettingsHashMap.put(createPartSettingsFingerprint(equivalentPartSettings), defaultBottomVisionSettings);
-
-        partSettingsByPartId.forEach((partId, partSettings) -> {
-            if (partSettings == null) {
-                return;
-            }
-
-            try {
-                String partSettingsSerializedHash = createPartSettingsFingerprint(partSettings);
-                BottomVisionSettings bottomVisionSettings = bottomVisionSettingsHashMap.get(partSettingsSerializedHash);
-                if (bottomVisionSettings == stockBottomVisionSettings
-                        || bottomVisionSettings == defaultBottomVisionSettings) {
-                    // default setting, leave it.
-                }
-                else if (bottomVisionSettings != null) {
-                    bottomVisionSettings.setName(bottomVisionSettings.getName() + "; " + partId);
-                } else {
-                    bottomVisionSettings = new BottomVisionSettings(partSettings);
-                    bottomVisionSettings.setName(partId);
-                    bottomVisionSettingsHashMap.put(partSettingsSerializedHash, bottomVisionSettings);
-
-                    configuration.addVisionSettings(bottomVisionSettings);
-                }
-
-                Part part = configuration.getPart(partId);
-                if (part != null 
-                        && bottomVisionSettings != defaultBottomVisionSettings) {
-                    part.setVisionSettings(bottomVisionSettings);
-                    Logger.info("Part "+partId+" BottomVisionSettings migrated.");
-                } else {
-                    Logger.warn("Part "+partId+" BottomVisionSettings have no part.");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-        partSettingsByPartId = null;
-    }
-
-    public String createPartSettingsFingerprint(PartSettings partSettings) {
-        Serializer serOut = XmlSerialize.createSerializer();
-        StringWriter sw = new StringWriter();
-        try {
-            serOut.write(partSettings, sw);
-        }
-        catch (Exception e) {
-        }
-        String partSettingsSerializedHash = DigestUtils.shaHex(sw.toString());
-        return partSettingsSerializedHash;
-    }
-
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
             Location placementLocation, Nozzle nozzle) throws Exception {
-        BottomVisionSettings bottomVisionSettings = getBottomVisionSettings(part);
+        BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(part);
 
         if (!isEnabled() || !bottomVisionSettings.isEnabled()) {
             return new PartAlignmentOffset(new Location(LengthUnit.Millimeters), false);
@@ -250,20 +153,20 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
 
     private PartAlignmentOffset findOffsetsPreRotate(Part part, BoardLocation boardLocation,
             Location placementLocation, Nozzle nozzle, Camera camera, BottomVisionSettings bottomVisionSettings)
-            throws Exception {
+                    throws Exception {
         double wantedAngle = placementLocation.getRotation();
         if (boardLocation != null) {
             wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
-                           .getRotation();
+                    .getRotation();
         }
         wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);
         // Wanted location.
         Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, wantedAngle);
-                
+
         Location nozzleLocation = wantedLocation;
         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
         final Location center = new Location(maxLinearOffset.getUnits());
-        
+
         try (CvPipeline pipeline = bottomVisionSettings.getCvPipeline()) {
 
             // The running, iterative offset.
@@ -302,7 +205,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
                     // Maximum number of passes reached. 
                     break;
                 }
-                
+
                 // We not only check the center offset but also the corner offset brought about by the angular offset
                 // so a large part will react more sensitively to angular offsets.
                 Point corners[] = new Point[4];
@@ -339,7 +242,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
             Logger.debug("Offsets accepted {}", offsets);
             // Calculate cumulative offsets over all the passes.  
             offsets = wantedLocation.subtractWithRotation(nozzleLocation);
-            
+
             // subtract visionCenterOffset
             offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngle));
 
@@ -355,7 +258,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
         // Create a location that is the Camera's X, Y, it's Z + part height
         // and a rotation of 0, unless preRotate is enabled
         Location wantedLocation = getCameraLocationAtPartHeight(part, camera, nozzle, 0.);
-        
+
         MovableUtils.moveToLocationAtSafeZ(nozzle, wantedLocation);
 
         try (CvPipeline pipeline = bottomVisionSettings.getCvPipeline()) {
@@ -379,7 +282,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
                 // turning more than 180° in one direction makes no sense
                 angleOffset = Utils2D.angleNorm(angleOffset, 180);
             }
-            
+
             if (!partSizeCheck(part, bottomVisionSettings, rect, camera) ) {
                 throw new Exception(String.format(
                         "ReferenceBottomVision (%s): Incorrect part size.",
@@ -389,10 +292,10 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
 
             // Set the angle on the offsets.
             offsets = offsets.derive(null, null, null, angleOffset);
-            
+
             // subtract visionCenterOffset
             offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(offsets.getRotation()));
-            
+
             Logger.debug("Final offsets {}", offsets);
 
             displayResult(pipeline, part, offsets, camera, nozzle);
@@ -400,8 +303,8 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
             return new PartAlignmentOffset(offsets, false);
         }
     }
-    
-    
+
+
     private boolean partSizeCheck(Part part, BottomVisionSettings bottomVisionSettings, RotatedRect partRect, Camera camera) {
         // Check if this test needs to be done
         PartSizeCheckMethod partSizeCheckMethod = bottomVisionSettings.getCheckPartSizeMethod();
@@ -414,17 +317,17 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
 
         // Get the part footprint body dimensions to compare to
         switch (partSizeCheckMethod) {
-        case Disabled:
-            return true;
-        case BodySize:
-            checkWidth = footprint.getBodyWidth();
-            checkHeight = footprint.getBodyHeight();
-            break;
-        case PadExtents:
-            Rectangle bounds = footprint.getPadsShape().getBounds();
-            checkWidth = bounds.getWidth();
-            checkHeight = bounds.getHeight();
-            break;
+            case Disabled:
+                return true;
+            case BodySize:
+                checkWidth = footprint.getBodyWidth();
+                checkHeight = footprint.getBodyHeight();
+                break;
+            case PadExtents:
+                Rectangle bounds = footprint.getPadsShape().getBounds();
+                checkWidth = bounds.getWidth();
+                checkHeight = bounds.getHeight();
+                break;
         }
 
         // Make sure width is the longest dimension
@@ -509,35 +412,37 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
         if (result == null) {
             result = pipeline.getResult("result");
         }
-        
+
         if (result == null) {
             throw new Exception(String.format(
                     "ReferenceBottomVision (%s): Pipeline error. Pipeline must contain a result named '%s'.",
                     part.getId(), VisionUtils.PIPELINE_RESULTS_NAME));
         }
-        
+
         if (result.model == null) {
             throw new Exception(String.format(
                     "ReferenceBottomVision (%s): No result found.",
                     part.getId()));
         }
-        
+
         if (!(result.model instanceof RotatedRect)) {
             throw new Exception(String.format(
                     "ReferenceBottomVision (%s): Incorrect pipeline result type (%s). Expected RotatedRect.",
                     part.getId(), result.model.getClass().getSimpleName()));
         }
-        
+
         return (RotatedRect) result.model;
     }
 
     @Override
     public boolean canHandle(PartSettingsHolder settingsHolder, boolean allowDisabled) {
-        BottomVisionSettings visionSettings = getBottomVisionSettings(settingsHolder);
+        BottomVisionSettings visionSettings = getInheritedVisionSettings(settingsHolder);
         if (visionSettings != null) {
             boolean isEnabled = (enabled && visionSettings.isEnabled());
-            Logger.debug("{}.canHandle({}) => {}, {}", this.getClass().getSimpleName(), 
-                    settingsHolder == null ? "" : settingsHolder.getId(), visionSettings, isEnabled ? "enabled" : "disabled");
+            if (!allowDisabled) {
+                Logger.trace("{}.canHandle({}) => {}, {}", this.getClass().getSimpleName(), 
+                        settingsHolder == null ? "" : settingsHolder.getId(), visionSettings, isEnabled ? "enabled" : "disabled");
+            }
             return allowDisabled || isEnabled;
         }
         return false;
@@ -556,7 +461,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
 
     @Override
     public String getId() {
-        return "RBV1";
+        return null;
     }
 
     @Override
@@ -566,24 +471,19 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
 
     @Override
     public void setName(String name) {
-
     }
 
-    @Override 
-    public BottomVisionSettings getVisionSettings() {
-        return visionSettings;
+    @Override
+    public String getShortName() {
+        return getPropertySheetHolderTitle();
     }
 
     @Override
     public void setVisionSettings(BottomVisionSettings visionSettings) {
-        BottomVisionSettings oldValue = this.visionSettings;
-        this.visionSettings = visionSettings;
-        if (oldValue != visionSettings) {
-            Configuration.get().fireVisionSettingsChanged();
-            firePropertyChange("visionSettings", oldValue, visionSettings);
-            AbstractVisionSettings.fireUsedInProperty(oldValue);
-            AbstractVisionSettings.fireUsedInProperty(visionSettings);
+        if (visionSettings == null) {
+            return; // do not allow null
         }
+        super.setVisionSettings(visionSettings);
     }
 
     public boolean isEnabled() {
@@ -650,7 +550,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(new ReferenceBottomVisionConfigurationWizard(this)),
-                new PropertySheetWizardAdapter(new BottomVisionSettingsConfigurationWizard(getVisionSettings(), null))};
+                new PropertySheetWizardAdapter(new BottomVisionSettingsConfigurationWizard(getVisionSettings(), this))};
     }
 
     @Override
@@ -663,40 +563,9 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
         return null;
     }
 
-    public BottomVisionSettings getBottomVisionSettings(PartSettingsHolder partSettingsHolder) {
-        BottomVisionSettings bottomVisionSettings = null;
-        if (partSettingsHolder instanceof Part) {
-            Part part = (Part)partSettingsHolder;
-            bottomVisionSettings = part.getVisionSettings();
-            if (bottomVisionSettings == null) {
-                bottomVisionSettings = part.getPackage().getVisionSettings();
-            }
-        }
-        else if (partSettingsHolder instanceof org.openpnp.model.Package) {
-            org.openpnp.model.Package pkg = (org.openpnp.model.Package) partSettingsHolder;
-            bottomVisionSettings = pkg.getVisionSettings();
-        }
-        if (bottomVisionSettings == null) {
-            bottomVisionSettings = getVisionSettings();
-        }
-        return bottomVisionSettings;
-    }
-
-    public static BottomVisionSettings getVisionSettings(PartSettingsHolder partSettingsHolder) {
-        for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
-            if (partAlignment instanceof ReferenceBottomVision) {
-                BottomVisionSettings visionSettings = ((ReferenceBottomVision) partAlignment).getBottomVisionSettings(partSettingsHolder);
-                if (visionSettings != null) {
-                    return visionSettings;
-                }
-            }
-        }
-        return null;
-    }
-
     @Override
     public Wizard getPartConfigurationWizard(PartSettingsHolder partSettingsHolder) {
-        BottomVisionSettings visionSettings = getBottomVisionSettings(partSettingsHolder);
+        BottomVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
         try {
             visionSettings.getCvPipeline().setProperty("camera", VisionUtils.getBottomVisionCamera());
         }
@@ -704,7 +573,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
         }
         return new BottomVisionSettingsConfigurationWizard(visionSettings, partSettingsHolder);
     }
-    
+
     public enum PreRotateUsage {
         Default, AlwaysOn, AlwaysOff
     }
@@ -716,7 +585,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
     public enum MaxRotation {
         Adjust, Full
     }
-    
+
     @Deprecated
     @Root
     public static class PartSettings extends AbstractModelObject {
@@ -725,7 +594,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
         protected boolean enabled;
         @Attribute(required = false)
         protected PreRotateUsage preRotateUsage = PreRotateUsage.Default;
-        
+
         @Attribute(required = false)
         protected PartSizeCheckMethod checkPartSizeMethod = PartSizeCheckMethod.Disabled;
 
@@ -734,10 +603,10 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
 
         @Attribute(required = false)
         protected MaxRotation maxRotation = MaxRotation.Adjust;
-        
+
         @Element(required = false)
         protected Location visionOffset = new Location(LengthUnit.Millimeters);
-        
+
         @Element
         protected CvPipeline pipeline;
 
@@ -774,7 +643,7 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
         public void setPipeline(CvPipeline pipeline) {
             this.pipeline = pipeline;
         }
-        
+
         public MaxRotation getMaxRotation() {
             return maxRotation;
         }
@@ -784,15 +653,15 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
         }
 
         public PartSizeCheckMethod getCheckPartSizeMethod() {
-        	return checkPartSizeMethod;
+            return checkPartSizeMethod;
         }
-        
+
         public void setCheckPartSizeMethod(PartSizeCheckMethod checkPartSizeMethod) {
             this.checkPartSizeMethod = checkPartSizeMethod;
         }
 
         public int getCheckSizeTolerancePercent() {
-        	return checkSizeTolerancePercent;
+            return checkSizeTolerancePercent;
         }
 
         public void setCheckSizeTolerancePercent(int checkSizeTolerancePercent) {
@@ -806,6 +675,202 @@ public class ReferenceBottomVision extends AbstractModelObject implements PartAl
         public void setVisionOffset(Location visionOffset) {
             this.visionOffset = visionOffset.derive(null, null, 0.0, 0.0);
         }
-        
+
+    }
+
+    protected void migratePartSettings(Configuration configuration) {
+        if (partSettingsByPartId == null) {
+            if (configuration.getVisionSettings().isEmpty()) {
+                // Fresh configuration: need to migrate the stock and default settings, even if no partSettingsById are present.  
+                partSettingsByPartId = new HashMap<>();
+            }
+            else { 
+                return;
+            }
+        }
+
+        HashMap<String, BottomVisionSettings> bottomVisionSettingsHashMap = new HashMap<>();
+        // Create the factory stock settings.
+        BottomVisionSettings stockBottomVisionSettings = createDefaultBottomVisionSettings();
+        PartSettings equivalentPartSettings = new PartSettings();
+        configuration.addVisionSettings(stockBottomVisionSettings);
+        equivalentPartSettings.setPipeline(stockBottomVisionSettings.getCvPipeline());
+        bottomVisionSettingsHashMap.put(createSettingsFingerprint(equivalentPartSettings), stockBottomVisionSettings);
+        // Migrate the default settings.
+        BottomVisionSettings defaultBottomVisionSettings = new BottomVisionSettings(AbstractVisionSettings.DEFAULT_ID);
+        defaultBottomVisionSettings.setName("- Default ReferenceBottomVision -");
+        defaultBottomVisionSettings.setEnabled(enabled);
+        configuration.addVisionSettings(defaultBottomVisionSettings);
+        if(pipeline != null) {
+            defaultBottomVisionSettings.setCvPipeline(pipeline);
+            pipeline = null;
+        }
+        else {
+            defaultBottomVisionSettings.setCvPipeline(stockBottomVisionSettings.getCvPipeline());
+        }
+        setVisionSettings(defaultBottomVisionSettings);
+        equivalentPartSettings.setPipeline(defaultBottomVisionSettings.getCvPipeline());
+        bottomVisionSettingsHashMap.put(createSettingsFingerprint(equivalentPartSettings), defaultBottomVisionSettings);
+        for (Part part: configuration.getParts()) {
+            part.resetVisionSettings();
+        }
+        for (org.openpnp.model.Package pkg : configuration.getPackages()) {
+            pkg.resetVisionSettings();
+        }
+        partSettingsByPartId.forEach((partId, partSettings) -> {
+            if (partSettings == null) {
+                return;
+            }
+
+            try {
+                Part part = configuration.getPart(partId);
+                if (part != null) { 
+                    String serializedHash = createSettingsFingerprint(partSettings);
+                    BottomVisionSettings bottomVisionSettings = bottomVisionSettingsHashMap.get(serializedHash);
+                    if (bottomVisionSettings == null) {
+                        bottomVisionSettings = new BottomVisionSettings(partSettings);
+                        bottomVisionSettings.setName(" ");
+                        bottomVisionSettingsHashMap.put(serializedHash, bottomVisionSettings);
+
+                        configuration.addVisionSettings(bottomVisionSettings);
+                    }
+
+                    part.setVisionSettings((bottomVisionSettings != defaultBottomVisionSettings) ? bottomVisionSettings : null);
+                    Logger.info("Part "+partId+" BottomVisionSettings migrated.");
+                } else {
+                    Logger.warn("Part "+partId+" BottomVisionSettings with no part.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        partSettingsByPartId = null;
+
+        optimizeVisionSettings(configuration);
+    }
+
+    public void optimizeVisionSettings(Configuration configuration) {
+        // Remove any duplicate settings.
+        HashMap<String, AbstractVisionSettings> bottomVisionSettingsHashMap = new HashMap<>();
+        BottomVisionSettings defaultVisionSettings = getVisionSettings();
+        for (AbstractVisionSettings visionSettings : configuration.getVisionSettings()) {
+            String serializedHash = createSettingsFingerprint(visionSettings);
+            AbstractVisionSettings firstVisionSettings = bottomVisionSettingsHashMap.get(serializedHash);
+            if (firstVisionSettings == null) {
+                bottomVisionSettingsHashMap.put(serializedHash, visionSettings);
+            }
+            else if (visionSettings != defaultVisionSettings
+                    && !visionSettings.isStockSetting()) {
+                // Duplicate, remove any references.
+                for (PartSettingsHolder holder : visionSettings.getUsedIn()) {
+                    holder.setVisionSettings((BottomVisionSettings) firstVisionSettings);
+                }
+                if (visionSettings.getUsedIn().size() == 0) {
+                    if (firstVisionSettings != defaultVisionSettings  
+                            && !firstVisionSettings.isStockSetting()) {
+                        firstVisionSettings.setName(firstVisionSettings.getName()+" + "+visionSettings.getName());
+                    }
+                    configuration.removeVisionSettings(visionSettings);
+                }
+            }
+        }
+
+        // Per package, search the most common settings on parts, and make them inherited package setting.
+        for (org.openpnp.model.Package pkg : configuration.getPackages()) {
+            HashMap<String, Integer> histogram = new HashMap<>();
+            BottomVisionSettings mostFrequentVisionSettings = null;
+            int highestFrequency = 0;
+            BottomVisionSettings packageVisionSettings = AbstractPartAlignment.getInheritedVisionSettings(pkg, true);
+            for (Part part: configuration.getParts()) {
+                if (part.getPackage() == pkg) {
+                    BottomVisionSettings visionSettings = AbstractPartAlignment.getInheritedVisionSettings(part, true);
+                    String id = visionSettings != null ? visionSettings.getId() : "";
+                    Integer frequency = histogram.get(id);
+                    frequency = (frequency != null ? frequency + 1 : 1);
+                    histogram.put(id, frequency);
+                    if (highestFrequency < frequency) {
+                        highestFrequency = frequency;
+                        mostFrequentVisionSettings = visionSettings;
+                    }
+                }
+            }
+            if (mostFrequentVisionSettings != null) {
+                if (mostFrequentVisionSettings == defaultVisionSettings) {
+                    pkg.resetVisionSettings();
+                }
+                else {
+                    pkg.setVisionSettings(mostFrequentVisionSettings);
+                }
+                for (Part part: configuration.getParts()) {
+                    if (part.getPackage() == pkg) {
+                        if (part.getVisionSettings() == mostFrequentVisionSettings) {
+                            // Parts inherit from package now.
+                            part.resetVisionSettings();
+                        }
+                        else if (part.getVisionSettings() == null 
+                                && packageVisionSettings != mostFrequentVisionSettings){
+                            // Former package settings were inherited, now we must freeze them. 
+                            part.setVisionSettings(packageVisionSettings);
+                        }
+                    }
+                }
+                if (packageVisionSettings != null && packageVisionSettings.getUsedIn().size() == 0) {
+                    // No longer used.
+                    configuration.removeVisionSettings(packageVisionSettings);
+                }
+                if (mostFrequentVisionSettings != defaultVisionSettings
+                        && !mostFrequentVisionSettings.isStockSetting()
+                        && !mostFrequentVisionSettings.getName().isBlank() 
+                        && mostFrequentVisionSettings.getUsedIn().size() == 1) {
+                    // If these part settings are now unique to the package, name them so. 
+                    mostFrequentVisionSettings.setName(pkg.getShortName());
+                }
+            }
+        }
+
+        // Set missing names by usage.
+        AbstractVisionSettings.ListConverter listConverter = new AbstractVisionSettings.ListConverter(false);
+        int various = 0;
+        for (AbstractVisionSettings visionSettings : configuration.getVisionSettings()) {
+            if (visionSettings.getName().isBlank()) {
+                List<PartSettingsHolder> usedIn = visionSettings.getUsedIn();
+                if (usedIn.size() <= 3) {
+                    visionSettings.setName(listConverter.convertForward(usedIn));
+                }
+                else {
+                    various++;
+                    visionSettings.setName("Migrated "+various);
+                }
+            }
+        }
+    }
+
+    private String createSettingsFingerprint(Object partSettings) {
+        Serializer serOut = XmlSerialize.createSerializer();
+        StringWriter sw = new StringWriter();
+        try {
+            serOut.write(partSettings, sw);
+        }
+        catch (Exception e) {
+        }
+        String serialized = sw.toString();
+        if (partSettings instanceof AbstractVisionSettings) {
+            // Must filter out the id.
+            for (java.lang.reflect.Field field : AbstractVisionSettings.class.getDeclaredFields()) {
+                if (field.getName().equals("id")) {
+                    serialized = XmlSerialize.purgeFieldXml(serialized, field);
+                }
+                else if (field.getName().equals("name")) {
+                    serialized = XmlSerialize.purgeFieldXml(serialized, field);
+                }
+            }
+        }
+        String partSettingsSerializedHash = DigestUtils.shaHex(serialized);
+        return partSettingsSerializedHash;
+    }
+
+    public static ReferenceBottomVision getDefault() { 
+        return (ReferenceBottomVision) Configuration.get().getMachine().getPartAlignments().get(0);
     }
 }

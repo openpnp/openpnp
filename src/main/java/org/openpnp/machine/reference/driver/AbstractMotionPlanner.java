@@ -657,7 +657,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             }
             else {
                 throw new Exception("Axis "+axis.getName()+" with limited articulation cannot rotate to "+
-                        axesLocation.getCoordinate(axis)+" ("+hm.getName()+" at "+location.getRotation()+"°)");
+                        limitedAxesLocation.getCoordinate(axis)+" ("+hm.getName()+" to "+location.getRotation()+"°)");
             }
         }
         return limitedAxesLocation;

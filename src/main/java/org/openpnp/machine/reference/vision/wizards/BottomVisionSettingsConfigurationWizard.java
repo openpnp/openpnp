@@ -17,7 +17,6 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -25,7 +24,9 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -35,7 +36,6 @@ import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
-import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -71,14 +71,14 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     private JTextField name;
     private JLabel lblName;
 
-    private JButton btnCloneSetting;
+    private JButton btnSpecializeSetting;
+    private JButton btnGeneralizeSettings;
 
     public BottomVisionSettingsConfigurationWizard(BottomVisionSettings visionSettings, 
             PartSettingsHolder settingsHolder) {
         this.visionSettings = visionSettings;
         this.settingsHolder = settingsHolder;
-        this.bottomVision = (ReferenceBottomVision) AbstractPnpJobProcessor.findPartAligner(Configuration.get().getMachine(), 
-                settingsHolder, true);
+        this.bottomVision = (ReferenceBottomVision) AbstractPartAlignment.getPartAlignment(settingsHolder, true);
         createUi();
     }
 
@@ -90,12 +90,12 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         name = new JTextField();
         //name.setEditable(false);
-        panel.add(name, "4, 2, 7, 1, fill, default");
+        panel.add(name, "4, 2, 11, 1, fill, default");
         name.setColumns(10);
 
         JPanel panelAssignedTo = new JPanel();
         panelAssignedTo.setBorder(UIManager.getBorder("TextField.border"));
-        panel.add(panelAssignedTo, "4, 4, 7, 1, fill, fill");
+        panel.add(panelAssignedTo, "4, 4, 11, 1, fill, fill");
         panelAssignedTo.setLayout(new FormLayout(new ColumnSpec[] {
                 ColumnSpec.decode("min(70dlu;default):grow"),},
                 new RowSpec[] {
@@ -109,53 +109,96 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         JLabel lblSettings = new JLabel("Manage Settings");
         panel.add(lblSettings, "2, 6");
 
-        btnCloneSetting = new JButton();
-        if (settingsHolder != null) {
-            btnCloneSetting.setText("Specialize for "+settingsHolder.getId());
-            btnCloneSetting.setToolTipText("Create a copy of these Bottom Vision Settings and assign to "
-            +settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getId());
+        btnSpecializeSetting = new JButton();
+        btnSpecializeSetting.setText(" ");
+        if (settingsHolder != null && settingsHolder.getParentHolder() != null) {
+            btnSpecializeSetting.setText("Specialize for "+settingsHolder.getShortName());
+            btnSpecializeSetting.setToolTipText("Create a copy of these Bottom Vision Settings and assign to "
+                    +settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName());
+        }
+        else if (settingsHolder != null) {
+            btnSpecializeSetting.setText("Optimize");
+            btnSpecializeSetting.setToolTipText("<html>Optimize the Bottom Vision Settings and their assignments:<br/>"
+                    + "<ul>"
+                    + "<li>Remove duplicate settings.</li>"
+                    + "<li>Remove unused settings.</li>"
+                    + "<li>Assign the most common Part settings as the Package settings (and inherit on Parts).</li>"
+                    + "<li>Use inheritance where assignments are redundant.</li>"
+                    + "</ul>"
+                    + "</html>");
         }
         else {
-            btnCloneSetting.setEnabled(false);
-            btnCloneSetting.setText("Specialize");
-            btnCloneSetting.setToolTipText("Create a copy of these vision settings.");
+            btnSpecializeSetting.setEnabled(false);
+            btnSpecializeSetting.setText("Specialize");
+            btnSpecializeSetting.setToolTipText("");
         }
 
-        btnCloneSetting.addActionListener(e -> {
+        btnSpecializeSetting.addActionListener(e -> {
             applyAction.actionPerformed(null);
             UiUtils.messageBoxOnException(() -> {
-                if (settingsHolder != null
-                        && visionSettings.getUsedIn().size() == 1 
-                        && visionSettings.getUsedIn().get(0).equals(settingsHolder.getId())) {
-                    throw new Exception("Vision Settings already specialized for "+settingsHolder.getId()+".");
-                }
-                BottomVisionSettings newSettings = new BottomVisionSettings();
-                newSettings.setValues(visionSettings);
-                if (settingsHolder != null) {
-                    newSettings.setName(settingsHolder.getId());
+                if (settingsHolder != null && settingsHolder.getParentHolder() != null) {
+                    if (visionSettings.getUsedIn().size() == 1 
+                            && visionSettings.getUsedIn().get(0) == settingsHolder) {
+                        throw new Exception("Vision Settings already specialized for "+settingsHolder.getShortName()+".");
+                    }
+                    BottomVisionSettings newSettings = new BottomVisionSettings();
+                    newSettings.setValues(visionSettings);
+                    newSettings.setName(settingsHolder.getShortName());
                     settingsHolder.setVisionSettings(newSettings);
+                    Configuration.get().addVisionSettings(newSettings);
                 }
                 else {
-                    newSettings.setName("Copy of "+visionSettings.getName());
+                    ReferenceBottomVision.getDefault().optimizeVisionSettings(Configuration.get());
+                    Configuration.get().fireVisionSettingsChanged();
                 }
-                Configuration.get().addVisionSettings(newSettings);
             });
         });
-        panel.add(btnCloneSetting, "4, 6, 3, 1");
+        panel.add(btnSpecializeSetting, "4, 6, 3, 1");
+
+        final String subjects = settingsHolder instanceof Package ? "Parts" : "Parts and Packages";
+        btnGeneralizeSettings = new JButton("Generalize");
+        btnGeneralizeSettings.addActionListener((e) -> {
+            UiUtils.messageBoxOnException(() -> {
+                List<PartSettingsHolder> list = settingsHolder.getSpecializedIn();
+                if (list.size() == 0) {
+                    throw new Exception("There are no specializations on "+subjects+" with the "+settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".");
+                }
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "This will remove the specialized vision settings in:\n\n"+
+                                new AbstractVisionSettings.ListConverter(false).convertForward(list)+"\n\n"+
+                                "Are you sure?", null,
+                                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    UiUtils.messageBoxOnException(settingsHolder::resetSpecializedVisionSettings);
+                }
+            });
+        });
+        panel.add(btnGeneralizeSettings, "8, 6, 3, 1");
+        if (settingsHolder == null || settingsHolder instanceof Part) {
+            btnGeneralizeSettings.setEnabled(false);
+        }
+        else {
+            btnGeneralizeSettings.setText("Generalize for "+settingsHolder.getShortName());
+            btnGeneralizeSettings.setToolTipText("<html>Generalize these Bottom Vision Settings for all the "
+                    + subjects
+                    + " with the "+ settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".<br/>"
+                    + "This will unassign any special Bottom Vision Settings on "+subjects+" and delete those<br/>"
+                            + "Bottom Vision Settings that are no longer used elsewhere.</html>");
+        }
 
         JButton resetButton = new JButton("Reset to Default");
         resetButton.addActionListener(e -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will reset the bottom vision settings with to the default settings. Are you sure??", null,
-                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    ReferenceBottomVision bottomVision = (ReferenceBottomVision) Configuration.get().getMachine().getPartAlignments().get(0);
+            UiUtils.messageBoxOnException(() -> {
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "This will reset the bottom vision settings with to the default settings. Are you sure??", null,
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
                     visionSettings.setValues(bottomVision.getVisionSettings());
-                });
-            }
+                }
+            });
         });
-        panel.add(resetButton, "8, 6");
+        panel.add(resetButton, "12, 6");
 
         JLabel lblEnabled = new JLabel("Enabled?");
         panel.add(lblEnabled, "2, 8");
@@ -231,7 +274,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                     JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
-                    ReferenceBottomVision bottomVision = (ReferenceBottomVision) Configuration.get().getMachine().getPartAlignments().get(0);
+                    ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
                     visionSettings.setCvPipeline(bottomVision.getVisionSettings().getCvPipeline().clone());
                     editPipeline();
                 });
@@ -280,40 +323,6 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         });
     }
 
-    protected class UsedInConverter extends Converter<List<String>, String> {
-        public UsedInConverter() {
-        }
-
-        @Override
-        public String convertForward(List<String> arg0) {
-            StringBuilder str = new StringBuilder();
-            str.append("<html>");
-            int n = 0;
-            for (String item : visionSettings.getUsedIn()) {
-                if (n > 0) {
-                    str.append(", ");
-                }
-                if (settingsHolder != null
-                        && item.toUpperCase().equals(settingsHolder.getId().toUpperCase())) {
-                    str.append("<strong>");
-                    str.append(item);
-                    str.append("</strong>");
-                }
-                else {
-                    str.append(item);   
-                }
-                n++;
-            }
-            str.append("</html>");
-            return str.toString();
-        }
-
-        @Override
-        public List<String> convertReverse(String arg0) {
-            return null;
-        }
-    }
-
     @Override
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
@@ -324,14 +333,15 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         name.setVisible(settingsHolder != null);
         if (visionSettings.isStockSetting()) {
             for (Component comp : panel.getComponents()) {
-                if (comp != btnCloneSetting) { 
+                if (comp != btnSpecializeSetting) { 
                     comp.setEnabled(false);
                 }
             }
         }
 
         addWrappedBinding(visionSettings, "name", name, "text");
-        bind(UpdateStrategy.READ, visionSettings, "usedIn", usedIn, "text", new UsedInConverter());
+        bind(UpdateStrategy.READ, visionSettings, "usedIn", usedIn, "text", 
+                new AbstractVisionSettings.ListConverter(true, settingsHolder));
         addWrappedBinding(visionSettings, "enabled", enabledCheckbox, "selected");
         addWrappedBinding(visionSettings, "preRotateUsage", comboBoxPreRotate, "selectedItem");
         addWrappedBinding(visionSettings, "checkPartSizeMethod", comboBoxCheckPartSizeMethod, "selectedItem");
@@ -358,42 +368,46 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("min(70dlu;default)"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("min(70dlu;default)"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 0),
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
     }
 
     private void editPipeline() throws Exception {
@@ -495,7 +509,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         if (bottomVision == null) {
             throw new Exception("Bottom Vision for vision settings "+visionSettings.getName()+" not enabled.");
         }
-        if (bottomVision.getBottomVisionSettings(part) != visionSettings) {
+        if (bottomVision.getInheritedVisionSettings(part) != visionSettings) {
             throw new Exception("Present Bottom Vision Settings are not effective for part "+part.getId()+" on Nozzle "+nozzle.getName()+". "
                     +"Assign to Package of Part.");
         }

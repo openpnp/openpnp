@@ -23,7 +23,17 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -41,8 +51,10 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.tablemodel.FootprintTableModel;
-import org.openpnp.model.*;
+import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Package;
 import org.openpnp.spi.Camera;
 
@@ -50,7 +62,6 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import org.openpnp.util.UiUtils;
 
 @SuppressWarnings("serial")
 public class PackageVisionPanel extends JPanel {
@@ -135,31 +146,6 @@ public class PackageVisionPanel extends JPanel {
         JScrollPane tableScrollPane = new JScrollPane(table);
         tableScrollPane.setPreferredSize(new Dimension(454, 100));
         tablePanel.add(tableScrollPane);
-
-        JPanel bottomVisionPanel = new JPanel();
-        add(bottomVisionPanel, BorderLayout.SOUTH); //NORTH
-        bottomVisionPanel.setBorder(
-                new TitledBorder(null, "Bottom Vision",
-                        TitledBorder.LEADING, TitledBorder.TOP, null));
-        bottomVisionPanel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
-        
-
-        JButton resetPartsBtn = new JButton("Reset Parts");
-        resetPartsBtn.addActionListener((e) -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the pipeline for all parts under the package with the package's pipeline. Are you sure?", null,
-                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(pkg::resetParts);
-            }
-        });
-        
-        bottomVisionPanel.add(resetPartsBtn, "2, 2, left, default");
 
         showReticle();
         initDataBindings();

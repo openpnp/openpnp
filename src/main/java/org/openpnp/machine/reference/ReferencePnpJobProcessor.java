@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -761,7 +762,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             final Placement placement = jobPlacement.getPlacement();
             final Part part = placement.getPart();
 
-            final PartAlignment partAlignment = findPartAligner(machine, part, false);
+            final PartAlignment partAlignment = AbstractPartAlignment.getPartAlignment(part);
             
             if (partAlignment == null) {
                 plannedPlacement.alignmentOffsets = null;

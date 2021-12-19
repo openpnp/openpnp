@@ -291,55 +291,60 @@ public class XmlSerialize {
      * @throws SecurityException
      */
     public static String purgeSubclassXml(Class cls, String serialized) throws SecurityException {
-        HyphenStyle hyphenStyle = new HyphenStyle();
         for (Field f : cls.getDeclaredFields()) {
-            // Handle all fields with xml annotation.
-            for (Annotation annotation : f.getAnnotations()) {
-                if (annotation.annotationType().getPackage().getName().equals("org.simpleframework.xml")) {
-                    // Try element syntax.
-                    String elementName = hyphenStyle.getElement(f.getName());
-                    int begin = Math.max(serialized.indexOf("<"+elementName+">"),
-                            serialized.indexOf("<"+elementName+" "));
-                    if (begin >= 0) {
-                        // Element without closing tag.
-                        int end = serialized.indexOf("/>", begin+elementName.length()+2);
-                        if (end > begin) {
-                            end += 2;
-                            serialized = serialized.substring(0, begin)
-                                    + serialized.substring(end);
-                        }
-                        else {
-                            // Element with closing tag.
-                            end = serialized.indexOf("</"+elementName+">", begin+elementName.length()+2);
-                            if (end > begin) {
-                                end += elementName.length()+3;
-                                serialized = serialized.substring(0, begin)
-                                        + serialized.substring(end);
-                            }
-                        }
+            serialized = purgeFieldXml(serialized, f);
+        }
+        return serialized;
+    }
+
+    public static String purgeFieldXml(String serialized, Field f) {
+        HyphenStyle hyphenStyle = new HyphenStyle();
+        // Handle all fields with xml annotation.
+        for (Annotation annotation : f.getAnnotations()) {
+            if (annotation.annotationType().getPackage().getName().equals("org.simpleframework.xml")) {
+                // Try element syntax.
+                String elementName = hyphenStyle.getElement(f.getName());
+                int begin = Math.max(serialized.indexOf("<"+elementName+">"),
+                        serialized.indexOf("<"+elementName+" "));
+                if (begin >= 0) {
+                    // Element without closing tag.
+                    int end = serialized.indexOf("/>", begin+elementName.length()+2);
+                    if (end > begin) {
+                        end += 2;
+                        serialized = serialized.substring(0, begin)
+                                + serialized.substring(end);
                     }
                     else {
-                        // Empty Element.
-                        begin = serialized.indexOf("<"+elementName+"/>");
-                        if (begin >= 0) {
-                            int end = begin+elementName.length()+3;
+                        // Element with closing tag.
+                        end = serialized.indexOf("</"+elementName+">", begin+elementName.length()+2);
+                        if (end > begin) {
+                            end += elementName.length()+3;
                             serialized = serialized.substring(0, begin)
                                     + serialized.substring(end);
                         }
                     }
-                    // Try attribute syntax.
-                    String attributeName = hyphenStyle.getAttribute(f.getName());
-                    begin = serialized.indexOf(" "+attributeName+"=\"");
-                    if (begin >= 0) {
-                        int end = serialized.indexOf("\"", begin+attributeName.length()+3);
-                        if (end >= begin) {
-                            end += 1;
-                            serialized = serialized.substring(0, begin)
-                                    + serialized.substring(end);
-                        }
-                    }
-                    break;//annotation
                 }
+                else {
+                    // Empty Element.
+                    begin = serialized.indexOf("<"+elementName+"/>");
+                    if (begin >= 0) {
+                        int end = begin+elementName.length()+3;
+                        serialized = serialized.substring(0, begin)
+                                + serialized.substring(end);
+                    }
+                }
+                // Try attribute syntax.
+                String attributeName = hyphenStyle.getAttribute(f.getName());
+                begin = serialized.indexOf(" "+attributeName+"=\"");
+                if (begin >= 0) {
+                    int end = serialized.indexOf("\"", begin+attributeName.length()+3);
+                    if (end >= begin) {
+                        end += 1;
+                        serialized = serialized.substring(0, begin)
+                                + serialized.substring(end);
+                    }
+                }
+                break;//annotation
             }
         }
         return serialized;

@@ -20,6 +20,7 @@
 package org.openpnp.model;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persist;
 
@@ -28,7 +29,7 @@ import org.simpleframework.xml.core.Persist;
  * from one or more Feeders and is placed at a Placement as part of a Job. Parts can be used across
  * many boards and should generally represent a single part in the real world.
  */
-public class Part extends AbstractModelObject implements PartSettingsHolder {
+public class Part extends AbstractPartSettingsHolder {
     @Attribute
     private String id;
     @Attribute(required = false)
@@ -45,15 +46,10 @@ public class Part extends AbstractModelObject implements PartSettingsHolder {
     private String packageId;
 
     @Attribute(required = false)
-    protected String bottomVisionId;
-
-    @Attribute(required = false)
     private double speed = 1.0;
     
     @Attribute(required = false)
     private int pickRetryCount = 0;
-
-    private BottomVisionSettings visionSettings;
 
     @SuppressWarnings("unused")
     private Part() {
@@ -66,7 +62,6 @@ public class Part extends AbstractModelObject implements PartSettingsHolder {
             @Override
             public void configurationLoaded(Configuration configuration) {
                 packag = configuration.getPackage(packageId);
-                visionSettings = configuration.getBottomVisionSettings(bottomVisionId);
             }
         });
     }
@@ -74,7 +69,6 @@ public class Part extends AbstractModelObject implements PartSettingsHolder {
     @Persist
     private void persist() {
         packageId = (packag == null ? null : packag.getId());
-        bottomVisionId = (visionSettings == null ? null : visionSettings.getId());
     }
 
     @Override
@@ -158,24 +152,8 @@ public class Part extends AbstractModelObject implements PartSettingsHolder {
         return getHeight().getValue() <= 0.0;
     }
 
-    @Override 
-    public BottomVisionSettings getVisionSettings() {
-        return visionSettings;
-    }
-
     @Override
-    public void setVisionSettings(BottomVisionSettings visionSettings) {
-        BottomVisionSettings oldValue = this.visionSettings;
-        this.visionSettings = visionSettings;
-        if (oldValue != visionSettings) {
-            Configuration.get().fireVisionSettingsChanged();
-            firePropertyChange("visionSettings", oldValue, visionSettings);
-            AbstractVisionSettings.fireUsedInProperty(oldValue);
-            AbstractVisionSettings.fireUsedInProperty(visionSettings);
-        }
-    }
-
-    public void resetVisionSettings() {
-        setVisionSettings(null);
+    public PartSettingsHolder getParentHolder() {
+        return getPackage();
     }
 }

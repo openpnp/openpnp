@@ -70,7 +70,7 @@ import org.openpnp.gui.support.NamedTableCellRenderer;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
@@ -436,7 +436,8 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             MainFrame mainFrame = MainFrame.get();
             if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getPackagesTab() 
                     && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
-                 mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(ReferenceBottomVision.getVisionSettings(selectedPackage));
+                 mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(
+                         AbstractPartAlignment.getInheritedVisionSettings(selectedPackage, true));
             }
         }
 

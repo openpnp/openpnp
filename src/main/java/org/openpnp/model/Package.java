@@ -25,23 +25,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.vision.AbstractPartAlignment;
+import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
 import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Version;
-import org.simpleframework.xml.core.Persist;
 
-public class Package extends AbstractModelObject implements PartSettingsHolder {
+public class Package extends AbstractPartSettingsHolder {
     @Version(revision=1.1)
     private double version;    
     
     @Attribute
     private String id;
-
-    @Attribute(required = false)
-    protected String bottomVisionId;
 
     @Attribute(required = false)
     private String description;
@@ -67,23 +64,9 @@ public class Package extends AbstractModelObject implements PartSettingsHolder {
         this(null);
     }
 
-    private BottomVisionSettings visionSettings;
-
     public Package(String id) {
         this.id = id;
         footprint = new Footprint();
-
-        Configuration.get().addListener(new ConfigurationListener.Adapter() {
-            @Override
-            public void configurationLoaded(Configuration configuration) {
-                visionSettings = configuration.getBottomVisionSettings(bottomVisionId);
-            }
-        });
-    }
-
-    @Persist
-    private void persist() {
-        bottomVisionId = (visionSettings == null ? null : visionSettings.getId());
     }
 
     @Override
@@ -194,32 +177,8 @@ public class Package extends AbstractModelObject implements PartSettingsHolder {
         firePropertyChange("compatibleNozzleTips", null, getCompatibleNozzleTips());
     }
 
-    @Override 
-    public BottomVisionSettings getVisionSettings() {
-        return visionSettings;
-    }
-
     @Override
-    public void setVisionSettings(BottomVisionSettings visionSettings) {
-        BottomVisionSettings oldValue = this.visionSettings;
-        this.visionSettings = visionSettings;
-        if (oldValue != visionSettings) {
-            Configuration.get().fireVisionSettingsChanged();
-            firePropertyChange("visionSettings", oldValue, visionSettings);
-            AbstractVisionSettings.fireUsedInProperty(oldValue);
-            AbstractVisionSettings.fireUsedInProperty(visionSettings);
-        }
-    }
-
-    public void resetVisionSettings() {
-        setVisionSettings(null);
-    }
-    
-    public void resetParts() {
-        Configuration.get().getParts().forEach(part -> {
-            if (part.getPackage().getId().equals(id)) {
-                part.resetVisionSettings();
-            }
-        });
+    public PartSettingsHolder getParentHolder() {
+        return AbstractPartAlignment.getPartAlignment(this, true);
     }
 }

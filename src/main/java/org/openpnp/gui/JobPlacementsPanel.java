@@ -54,7 +54,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -171,7 +171,8 @@ public class JobPlacementsPanel extends JPanel {
                         mainFrame.getPartsTab().selectPartInTable(selectedPart);
                         mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
                         mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
-                        mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(ReferenceBottomVision.getVisionSettings(selectedPart));
+                        mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(
+                                AbstractPartAlignment.getInheritedVisionSettings(selectedPart, true));
                     }
                 }
             }

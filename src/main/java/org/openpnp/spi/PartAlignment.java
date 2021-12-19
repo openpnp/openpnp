@@ -2,7 +2,6 @@ package org.openpnp.spi;
 
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.BoardLocation;
-import org.openpnp.model.Identifiable;
 import org.openpnp.model.Location;
 import org.openpnp.model.Named;
 import org.openpnp.model.Part;
@@ -14,7 +13,7 @@ import org.openpnp.model.Solutions;
  * is an implementation of this interface, but other implementations could include laser
  * alignment or pit alignment.  
  */
-public interface PartAlignment extends Identifiable, Named, Solutions.Subject, PropertySheetHolder {
+public interface PartAlignment extends PartSettingsHolder, Named, Solutions.Subject, PropertySheetHolder {
 
     public class PartAlignmentOffset
     {
@@ -64,4 +63,7 @@ public interface PartAlignment extends Identifiable, Named, Solutions.Subject, P
     Wizard getPartConfigurationWizard(PartSettingsHolder partSettingsHolder);
 
     public boolean canHandle(PartSettingsHolder partSettingsHolder, boolean allowDisabled);
+
+    boolean isEnabled();
+
 }

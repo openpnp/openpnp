@@ -67,6 +67,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
+import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -83,7 +84,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
-import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -690,7 +690,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      * @return
      */
     public static Location getTestPlacementLocation(Part part) {
-        PartAlignment aligner = AbstractPnpJobProcessor.findPartAligner(Configuration.get().getMachine(), part, false);
+        PartAlignment aligner = AbstractPartAlignment.getPartAlignment(part);
         Location placementLocation = Configuration.get().getMachine().getDiscardLocation();
         placementLocation = new Location(placementLocation.getUnits(),
                 placementLocation.getX(), 
