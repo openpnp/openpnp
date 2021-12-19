@@ -84,7 +84,7 @@ public class QuickHull {
             hull.add(insertPosition, p);
             return;
         }
-        double dist = Double.MIN_VALUE;
+        double dist = Double.NEGATIVE_INFINITY;
         int furthestPoint = -1;
         for (int i = 0; i < set.size(); i++) {
             Point p = set.get(i);
