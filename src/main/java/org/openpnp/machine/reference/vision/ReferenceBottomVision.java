@@ -729,7 +729,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     BottomVisionSettings bottomVisionSettings = bottomVisionSettingsHashMap.get(serializedHash);
                     if (bottomVisionSettings == null) {
                         bottomVisionSettings = new BottomVisionSettings(partSettings);
-                        bottomVisionSettings.setName(" ");
+                        bottomVisionSettings.setName("");
                         bottomVisionSettingsHashMap.put(serializedHash, bottomVisionSettings);
 
                         configuration.addVisionSettings(bottomVisionSettings);
@@ -821,7 +821,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 }
                 if (mostFrequentVisionSettings != defaultVisionSettings
                         && !mostFrequentVisionSettings.isStockSetting()
-                        && !mostFrequentVisionSettings.getName().isBlank() 
+                        && !mostFrequentVisionSettings.getName().isEmpty() 
                         && mostFrequentVisionSettings.getUsedIn().size() == 1) {
                     // If these part settings are now unique to the package, name them so. 
                     mostFrequentVisionSettings.setName(pkg.getShortName());
@@ -833,7 +833,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         AbstractVisionSettings.ListConverter listConverter = new AbstractVisionSettings.ListConverter(false);
         int various = 0;
         for (AbstractVisionSettings visionSettings : configuration.getVisionSettings()) {
-            if (visionSettings.getName().isBlank()) {
+            if (visionSettings.getName().isEmpty()) {
                 List<PartSettingsHolder> usedIn = visionSettings.getUsedIn();
                 if (usedIn.size() <= 3) {
                     visionSettings.setName(listConverter.convertForward(usedIn));
