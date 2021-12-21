@@ -19,7 +19,7 @@ If you have USB 3 specific cameras these should work. USB 2 cameras on a USB 3 p
 ## Why is it a software limitation?
 Most cameras on the market also support MJPEG compressed video. This is **much** lower bandwidth and you can have 2 or more cameras on a port. Unfortunately, OpenCV does not have a way to tell the camera to switch to MJPEG mode so it is stuck at YUV. By using the [[OpenPnpCaptureCamera]] instead you can get around this issue.
 
-But for some cameras even MJPEG does not help. They simply still use too much bandwidth. A typical example is the ELP Full HD camera, as opposed to the [recommended ELP 720p camera](https://github.com/openpnp/openpnp/wiki/Build-FAQ#what-should-i-build). The FullHD model provides double the resolution at the same 30fps or double the fps (60fps) at the same 720p resolution. It is logical that you need double the bandwidth. 
+But for some cameras even MJPEG does not help. They simply still use too much bandwidth. A typical example is the ELP Full HD camera, as opposed to the [recommended ELP 720p camera](https://github.com/openpnp/openpnp/wiki/Build-FAQ#what-should-i-build). The FullHD model provides double the resolution (number of pixels) at the same 30fps or double the fps (60fps) at the same 720p resolution. It is logical that you need double the bandwidth. 
 
 ## What are some other options?
 ONVIF IP cameras have none of these limitations. If you use these you should be able to use as many as your network will support. **Note: Links to some good ONVIF cameras here would be appreciated.**
