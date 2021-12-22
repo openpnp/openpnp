@@ -293,9 +293,12 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                                     lastSelectedTabIndex.get(feeder.getClass()))));
                         }
                         if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getFeedersTab()
-                              &&  Configuration.get().getTablesLinked() == TablesLinked.Linked) {
+                              &&  Configuration.get().getTablesLinked() == TablesLinked.Linked
+                              && feeder.getPart() != null) {
                             mainFrame.getPartsTab().selectPartInTable(feeder.getPart());
                             mainFrame.getPackagesTab().selectPackageInTable(feeder.getPart().getPackage());
+                            mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(
+                                    AbstractPartAlignment.getInheritedVisionSettings(feeder.getPart(), true));
                         }
                     }
 
