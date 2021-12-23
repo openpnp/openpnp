@@ -2,6 +2,7 @@
 
 This page lists Controllers and associated Firmware that are known to be compatible with [[GcodeAsyncDriver]] and [[Advanced Motion Control]] features. Other controllers may also support the needed features, if you think your controller provides the needed features, please [contact us in the user group](https://groups.google.com/forum/#!forum/openpnp). 
 
+
 ### Key Features
 
 The following key features need to be supported (_in addition_ to basic homing and motion commands like [`G1`](https://www.reprap.org/wiki/G-code#G0_.26_G1:_Move) etc. of course):
@@ -42,6 +43,8 @@ Refer to the Duet3D Wiki on how to upgrade:
 * [Duet 3 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Getting_Started_With_Duet_3#Section_Updating_Duet_3_main_board_firmware)
 
 ## Smoothieware
+
+**⚠ WARNING ⚠** do not buy the illegitimate clones of the Smoothieboard that are typically offered in Chinese online-shops. These are known to violate Open Source licenses and brand names, they use inferior/sub-spec and counterfeit components, inadequate copper layers etc. They are known to fail with OpenPnP. **We will not provide support for these boards.** See the discussions [here](https://groups.google.com/g/openpnp/c/rdAXltRoSdc/m/lPNkWLX4BQAJ) and [here](https://groups.google.com/g/openpnp/c/4LswIzPOfpU/m/gopdUoiPAAAJ).   
 
 A special Smoothieware firmware for OpenPnP is available. It contains some bug-fixes and features that are crucial for use with OpenPnP but are not present/accepted in the official Smoothieware firmware. The firmware and more details are available here:
 
