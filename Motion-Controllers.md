@@ -32,7 +32,11 @@ Some Smoothie based boards that are known to work with OpenPnP, and which you ca
 * **Re-Arm**: http://www.panucatt.com/default.asp
     Panucatt Devices also sells the Re-Arm, which is a Smoothie based board in the form factor of an Arduino Mega. This allows it to be used with existing RAMPS 1.4 boards which are common in the 3D printer world. 
 
-Note that MKS Smoothie clones are **not recommended**. See [this FAQ](http://smoothieware.org/troubleshooting#what-is-wrong-with-mks) for more information on why.
+**⚠ WARNING ⚠** do not buy the illegitimate clones of the Smoothieboard that are typically offered in Chinese online-shops. These are known to violate Open Source licenses and brand names, they use inferior/sub-spec and counterfeit components, inadequate copper layers etc. They are known to fail with OpenPnP. **We will not provide support for these boards.** See the discussions [here](https://groups.google.com/g/openpnp/c/rdAXltRoSdc/m/lPNkWLX4BQAJ) and [here](https://groups.google.com/g/openpnp/c/4LswIzPOfpU/m/gopdUoiPAAAJ).   
+
+See [this FAQ](http://smoothieware.org/troubleshooting#what-is-wrong-with-mks) for more information on why. 
+
+
 
 ### Using with a Peter's Head and Advanced Motion Control
 
