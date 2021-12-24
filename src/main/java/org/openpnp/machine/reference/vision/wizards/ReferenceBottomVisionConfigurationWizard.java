@@ -5,11 +5,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
@@ -21,13 +19,9 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NamedListCellRenderer;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Package;
-import org.openpnp.model.Part;
-import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -56,7 +50,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:default"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -81,21 +75,6 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
 
         JLabel lblBottomVision = new JLabel("Bottom Vision Settings");
         panel.add(lblBottomVision, "2, 4, right, default");
-        
-                JButton btnResetAllTo = new JButton("Reset All Packages/Parts");
-                btnResetAllTo.addActionListener((e) -> {
-                    int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                            "This will replace all custom package and part pipelines with the built-in default Bottom Vision Settings. Are you sure?",
-                            null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                    if (result == JOptionPane.YES_OPTION) {
-                        UiUtils.messageBoxOnException(() -> {
-                            Configuration.get().getPackages().forEach(Package::resetVisionSettings);
-                            Configuration.get().getParts().forEach(Part::resetVisionSettings);
-                            MessageBoxes.infoBox("Parts and Packages Reset",
-                                    "All custom package or part Bottom Vision Settings have been reset.");
-                        });
-                    }
-                });
                 
                 visionSettings = new JComboBox(new VisionSettingsComboBoxModel());
                 visionSettings.setMaximumRowCount(20);
@@ -105,8 +84,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                         reloadWizard = true;
                     }
                 });
-                panel.add(visionSettings, "4, 4, fill, default");
-                panel.add(btnResetAllTo, "6, 4");
+                panel.add(visionSettings, "4, 4, 3, 1, fill, default");
 
         JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
         lblPreRot.setToolTipText("Pre-rotate default setting for bottom vision. Can be overridden on individual parts.");

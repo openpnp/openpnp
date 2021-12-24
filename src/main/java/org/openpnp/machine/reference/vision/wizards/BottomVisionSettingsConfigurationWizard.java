@@ -120,10 +120,10 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             btnSpecializeSetting.setText("Optimize");
             btnSpecializeSetting.setToolTipText("<html>Optimize the Bottom Vision Settings and their assignments:<br/>"
                     + "<ul>"
-                    + "<li>Remove duplicate settings.</li>"
+                    + "<li>Consolidate duplicate settings.</li>"
                     + "<li>Remove unused settings.</li>"
-                    + "<li>Assign the most common Part settings as the Package settings (and inherit on Parts).</li>"
-                    + "<li>Use inheritance where assignments are redundant.</li>"
+                    + "<li>Assign the most common Part settings as the Package settings, inherit on such Parts, and override on the exceptions (if any).</li>"
+                    + "<li>Remove specific assignments where the same settings would be inherited anyway.</li>"
                     + "</ul>"
                     + "</html>");
         }
