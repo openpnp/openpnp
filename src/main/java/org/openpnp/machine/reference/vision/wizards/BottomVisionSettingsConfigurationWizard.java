@@ -122,8 +122,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                     + "<ul>"
                     + "<li>Consolidate duplicate settings.</li>"
                     + "<li>Remove unused settings.</li>"
-                    + "<li>Assign the most common Part settings as the Package settings, inherit on such Parts, and override on the exceptions (if any).</li>"
-                    + "<li>Remove specific assignments where the same settings would be inherited anyway.</li>"
+                    + "<li>Configure the most common Part settings as inherited Package settings.</li>"
+                    + "<li>Remove assignments where the same settings would be inherited anyway.</li>"
                     + "</ul>"
                     + "</html>");
         }
