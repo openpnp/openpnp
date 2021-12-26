@@ -37,6 +37,8 @@ ___
 
 ![GcodeDriver new Settings](https://user-images.githubusercontent.com/9963310/96040839-347f9c80-0e6b-11eb-915b-4da9fa11f39d.png)
 
+### Motion Control Type
+
 **Motion Control Type** determines how the OpenPnP MotionPlanner will plan the motion and how it will talk 
 to the controller:
 * **ToolpathFeedRate:**
