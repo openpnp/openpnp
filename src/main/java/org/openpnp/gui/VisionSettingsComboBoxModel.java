@@ -2,22 +2,20 @@ package org.openpnp.gui;
 
 import org.openpnp.gui.support.NamedComboBoxModel;
 import org.openpnp.model.AbstractVisionSettings;
-import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
 
 @SuppressWarnings("serial")
-public class VisionSettingsComboBoxModel extends NamedComboBoxModel<AbstractVisionSettings> {
-
-    public VisionSettingsComboBoxModel() {
-        super("visionSettings");
+public class VisionSettingsComboBoxModel<T extends AbstractVisionSettings> extends NamedComboBoxModel<AbstractVisionSettings> {
+    public VisionSettingsComboBoxModel(Class<T> visionClass) {
+        super("visionSettings", (Class<AbstractVisionSettings>) visionClass);
     }
 
     @Override
     protected void addAllElements() {
         Configuration.get().getVisionSettings().stream()
-                .filter(BottomVisionSettings.class::isInstance)
-                .sorted(comparator)
-                .forEach(this::addElement);
+        .filter(namedClass::isInstance)
+        .sorted(comparator)
+        .forEach(this::addElement);
         addElement(null);
     }
 }

@@ -26,9 +26,9 @@ import java.util.List;
 
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PercentConverter;
-import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Length;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
@@ -36,9 +36,9 @@ import org.openpnp.model.Part;
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
     private String[] columnNames =
-            new String[] {"ID", "Description", "Height", "Package", "Speed %", "BottomVision"};
+            new String[] {"ID", "Description", "Height", "Package", "Speed %", "BottomVision", "FiducialVision"};
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
-            Package.class, String.class, AbstractVisionSettings.class};
+            Package.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class};
     private List<Part> parts;
     private PercentConverter percentConverter = new PercentConverter();
 
@@ -109,7 +109,10 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                 part.setSpeed(percentConverter.convertReverse(aValue.toString()));
             }
             else if (columnIndex == 5) {
-                part.setVisionSettings((BottomVisionSettings) aValue);
+                part.setBottomVisionSettings((BottomVisionSettings) aValue);
+            }
+            else if (columnIndex == 6) {
+                part.setFiducialVisionSettings((FiducialVisionSettings) aValue);
             }
         }
         catch (Exception e) {
@@ -131,7 +134,9 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
             case 4:
                 return percentConverter.convertForward(part.getSpeed());
             case 5:
-                return part.getVisionSettings();
+                return part.getBottomVisionSettings();
+            case 6:
+                return part.getFiducialVisionSettings();
             default:
                 return null;
         }

@@ -1,8 +1,11 @@
 package org.openpnp.model;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.jdesktop.beansbinding.Converter;
 import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
 import org.openpnp.spi.Machine;
@@ -12,10 +15,13 @@ import org.openpnp.util.XmlSerialize;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Serializer;
 
 public abstract class AbstractVisionSettings extends AbstractModelObject implements VisionSettings {
-    public static final String STOCK_ID = "BVS_Stock";
-    public static final String DEFAULT_ID = "BVS_Default";
+    public static final String STOCK_BOTTOM_ID = "BVS_Stock";
+    public static final String STOCK_FIDUCIAL_ID = "FVS_Stock";
+    public static final String DEFAULT_BOTTOM_ID = "BVS_Default";
+    public static final String DEFAULT_FIDUCIAL_ID = "FVS_Default";
 
     @Attribute()
     private String id;
@@ -88,7 +94,8 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
 
     public static void fireUsedInProperty(AbstractVisionSettings settings) {
         if (settings != null) {
-            settings.firePropertyChange("usedIn", null, settings.getUsedIn());
+            settings.firePropertyChange("usedBottomVisionIn", null, settings.getUsedBottomVisionIn());
+            settings.firePropertyChange("usedFiducialVisionIn", null, settings.getUsedFiducialVisionIn());
         }
     }
 
@@ -104,35 +111,54 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
         }
 
         @Override
-        public BottomVisionSettings getVisionSettings() {
-            return (BottomVisionSettings) AbstractVisionSettings.this;
-        }
-
-        @Override
-        public void setVisionSettings(BottomVisionSettings visionSettings) {
-        }
-
-        @Override
-        public PartSettingsHolder getParentHolder() {
+        public BottomVisionSettings getBottomVisionSettings() {
+            if (AbstractVisionSettings.this instanceof BottomVisionSettings) {
+                return (BottomVisionSettings) AbstractVisionSettings.this;
+            }
             return null;
         }
 
         @Override
-        public List<PartSettingsHolder> getSpecializedIn() {
+        public void setBottomVisionSettings(BottomVisionSettings visionSettings) {
+        }
+
+        @Override
+        public List<PartSettingsHolder> getSpecializedBottomVisionIn() {
             return null;
         }
 
         @Override
-        public void resetSpecializedVisionSettings() {
+        public void generalizeBottomVisionSettings() {
+        }
+
+        @Override
+        public FiducialVisionSettings getFiducialVisionSettings() {
+            if (AbstractVisionSettings.this instanceof FiducialVisionSettings) {
+                return (FiducialVisionSettings) AbstractVisionSettings.this;
+            }
+            return null;
+        }
+
+        @Override
+        public void setFiducialVisionSettings(FiducialVisionSettings visionSettings) {
+        }
+
+        @Override
+        public List<PartSettingsHolder> getSpecializedFiducialVisionIn() {
+            return null;
+        }
+
+        @Override
+        public void generalizeFiducialVisionSettings() {
         }
     }
 
     /**
-     * @return the list of PartSettingsHolder that have these vision settings assigned.
+     * @return the list of PartSettingsHolder that have these bottom vision settings assigned.
      */
-    public List<PartSettingsHolder> getUsedIn() {
+    protected List<PartSettingsHolder> getUsedIn(Function<PartSettingsHolder, AbstractVisionSettings> propertyGetter) {
         List<PartSettingsHolder> list = new ArrayList<>();
-        if (getId().equals(STOCK_ID)) {
+        if (getId().equals(STOCK_BOTTOM_ID) || getId().equals(STOCK_FIDUCIAL_ID)) {
             list.add(new StockSettingsHolder());
         }
         Configuration configuration = Configuration.get();
@@ -140,26 +166,34 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
             Machine machine = configuration.getMachine();
             if (machine != null) {
                 for (PartAlignment partAlignment : machine.getPartAlignments()) {
-                    if (partAlignment.getVisionSettings() == this) {
+                    if (propertyGetter.apply(partAlignment) == this) {
                         list.add(partAlignment);
                     }
                 }
             }
 
             for (Package pkg : configuration.getPackages()) {
-                if (pkg.getVisionSettings() == this) {
+                if (propertyGetter.apply(pkg) == this) {
                     list.add(pkg);
                 }
             }
 
             for (Part part : configuration.getParts()) {
-                if (part.getVisionSettings() == this) {
+                if (propertyGetter.apply(part) == this) {
                     list.add(part);
                 }
             }
         }
         list.sort(new AbstractPartSettingsHolder.PartSettingsComparator());
         return list;
+    }
+
+    public List<PartSettingsHolder> getUsedBottomVisionIn() {
+        return getUsedIn((h) -> h.getBottomVisionSettings());
+    }
+
+    public List<PartSettingsHolder> getUsedFiducialVisionIn() {
+        return getUsedIn((h) -> h.getFiducialVisionSettings());
     }
 
     public static class ListConverter extends Converter<List<PartSettingsHolder>, String> {
@@ -214,6 +248,30 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     }
 
     public boolean isStockSetting() {
-        return getId().equals(STOCK_ID);
+        return getId().equals(STOCK_BOTTOM_ID) || getId().equals(STOCK_FIDUCIAL_ID);
+    }
+
+    public static String createSettingsFingerprint(Object partSettings) {
+        Serializer serOut = XmlSerialize.createSerializer();
+        StringWriter sw = new StringWriter();
+        try {
+            serOut.write(partSettings, sw);
+        }
+        catch (Exception e) {
+        }
+        String serialized = sw.toString();
+        if (partSettings instanceof AbstractVisionSettings) {
+            // Must filter out the id.
+            for (java.lang.reflect.Field field : AbstractVisionSettings.class.getDeclaredFields()) {
+                if (field.getName().equals("id")) {
+                    serialized = XmlSerialize.purgeFieldXml(serialized, field);
+                }
+                else if (field.getName().equals("name")) {
+                    serialized = XmlSerialize.purgeFieldXml(serialized, field);
+                }
+            }
+        }
+        String partSettingsSerializedHash = DigestUtils.shaHex(serialized);
+        return partSettingsSerializedHash;
     }
 }

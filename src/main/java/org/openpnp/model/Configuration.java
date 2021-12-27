@@ -26,7 +26,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -42,11 +41,9 @@ import java.util.Set;
 import java.util.prefs.Preferences;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.ThemeInfo;
 import org.openpnp.gui.components.ThemeSettingsPanel;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.NanosecondTime;
@@ -568,13 +565,12 @@ public class Configuration extends AbstractModelObject {
         return Collections.unmodifiableList(new ArrayList<>(visionSettings.values()));
     }
 
-    public BottomVisionSettings getVisionSettings(String visionSettingsId) {
+    public AbstractVisionSettings getVisionSettings(String visionSettingsId) {
         if (visionSettingsId == null) {
             return null;
         }
 
-        AbstractVisionSettings visionSettings = this.visionSettings.get(visionSettingsId.toUpperCase());
-        return visionSettings instanceof BottomVisionSettings ? (BottomVisionSettings)visionSettings : null;
+        return this.visionSettings.get(visionSettingsId.toUpperCase());
     }
 
     public void removeVisionSettings(AbstractVisionSettings visionSettings) {
@@ -770,16 +766,6 @@ public class Configuration extends AbstractModelObject {
         // NanosecondTime guarantees unique Ids, even if created in rapid succession such as in migration code.
         return prefix + NanosecondTime.get().toString(16);
     }
-    
-    public static BottomVisionSettings getDefaultBottomVisionSettings() throws Exception {
-        String xml = IOUtils.toString(ReferenceBottomVision.class.getResource(
-            "ReferenceBottomVision-DefaultBottomVisionSettings.xml"));
-        
-        Serializer serializer = createSerializer();
-        VisionSettingsConfigurationHolder holder =
-                serializer.read(VisionSettingsConfigurationHolder.class, new StringReader(xml));
-        return (BottomVisionSettings) holder.visionSettings.get(0);
-    }
 
     /**
      * Used to provide a fixed root for the Machine when serializing.
@@ -816,4 +802,5 @@ public class Configuration extends AbstractModelObject {
         @ElementList(inline = true, entry = "visionSettings", required = false)
         public ArrayList<AbstractVisionSettings> visionSettings = new ArrayList<>();
     }
+
 }

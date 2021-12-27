@@ -151,9 +151,4 @@ public class Part extends AbstractPartSettingsHolder {
     public boolean isPartHeightUnknown() {
         return getHeight().getValue() <= 0.0;
     }
-
-    @Override
-    public PartSettingsHolder getParentHolder() {
-        return getPackage();
-    }
 }

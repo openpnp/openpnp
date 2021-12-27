@@ -1,10 +1,8 @@
 package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.Component;
-import java.awt.event.ActionEvent;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -111,7 +109,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         btnSpecializeSetting = new JButton();
         btnSpecializeSetting.setText(" ");
-        if (settingsHolder != null && settingsHolder.getParentHolder() != null) {
+        if (settingsHolder != null && bottomVision.getParentHolder(settingsHolder) != null) {
             btnSpecializeSetting.setText("Specialize for "+settingsHolder.getShortName());
             btnSpecializeSetting.setToolTipText("Create a copy of these Bottom Vision Settings and assign to "
                     +settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName());
@@ -136,15 +134,15 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         btnSpecializeSetting.addActionListener(e -> {
             applyAction.actionPerformed(null);
             UiUtils.messageBoxOnException(() -> {
-                if (settingsHolder != null && settingsHolder.getParentHolder() != null) {
-                    if (visionSettings.getUsedIn().size() == 1 
-                            && visionSettings.getUsedIn().get(0) == settingsHolder) {
+                if (settingsHolder != null && bottomVision.getParentHolder(settingsHolder) != null) {
+                    if (visionSettings.getUsedBottomVisionIn().size() == 1 
+                            && visionSettings.getUsedBottomVisionIn().get(0) == settingsHolder) {
                         throw new Exception("Vision Settings already specialized for "+settingsHolder.getShortName()+".");
                     }
                     BottomVisionSettings newSettings = new BottomVisionSettings();
                     newSettings.setValues(visionSettings);
                     newSettings.setName(settingsHolder.getShortName());
-                    settingsHolder.setVisionSettings(newSettings);
+                    settingsHolder.setBottomVisionSettings(newSettings);
                     Configuration.get().addVisionSettings(newSettings);
                 }
                 else {
@@ -159,7 +157,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         btnGeneralizeSettings = new JButton("Generalize");
         btnGeneralizeSettings.addActionListener((e) -> {
             UiUtils.messageBoxOnException(() -> {
-                List<PartSettingsHolder> list = settingsHolder.getSpecializedIn();
+                List<PartSettingsHolder> list = settingsHolder.getSpecializedBottomVisionIn();
                 if (list.size() == 0) {
                     throw new Exception("There are no specializations on "+subjects+" with the "+settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".");
                 }
@@ -169,7 +167,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                                 "Are you sure?", null,
                                 JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
-                    UiUtils.messageBoxOnException(settingsHolder::resetSpecializedVisionSettings);
+                    UiUtils.messageBoxOnException(settingsHolder::generalizeBottomVisionSettings);
                 }
             });
         });
@@ -194,7 +192,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
-                    visionSettings.setValues(bottomVision.getVisionSettings());
+                    visionSettings.setValues(bottomVision.getBottomVisionSettings());
                 }
             });
         });
@@ -275,7 +273,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
                     ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
-                    visionSettings.setCvPipeline(bottomVision.getVisionSettings().getCvPipeline().clone());
+                    visionSettings.setCvPipeline(bottomVision.getBottomVisionSettings().getCvPipeline().clone());
                     editPipeline();
                 });
             }
@@ -340,7 +338,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         }
 
         addWrappedBinding(visionSettings, "name", name, "text");
-        bind(UpdateStrategy.READ, visionSettings, "usedIn", usedIn, "text", 
+        bind(UpdateStrategy.READ, visionSettings, "usedBottomVisionIn", usedIn, "text", 
                 new AbstractVisionSettings.ListConverter(true, settingsHolder));
         addWrappedBinding(visionSettings, "enabled", enabledCheckbox, "selected");
         addWrappedBinding(visionSettings, "preRotateUsage", comboBoxPreRotate, "selectedItem");
@@ -521,12 +519,4 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         return "Bottom Vision Settings";
     }
 
-    private class SwingAction extends AbstractAction {
-        public SwingAction() {
-            putValue(NAME, "SwingAction");
-            putValue(SHORT_DESCRIPTION, "Some short description");
-        }
-        public void actionPerformed(ActionEvent e) {
-        }
-    }
 }

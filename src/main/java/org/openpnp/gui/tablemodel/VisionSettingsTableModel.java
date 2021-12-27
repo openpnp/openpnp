@@ -72,7 +72,7 @@ public class VisionSettingsTableModel extends AbstractObjectTableModel implement
                 return visionSettings.getName();
             case 1:
                 return new AbstractVisionSettings.ListConverter(false)
-                        .convertForward(visionSettings.getUsedIn());
+                        .convertForward(visionSettings.getUsedBottomVisionIn());
             default:
                 return null;
         }

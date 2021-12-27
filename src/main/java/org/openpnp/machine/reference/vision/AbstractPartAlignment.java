@@ -1,24 +1,48 @@
 package org.openpnp.machine.reference.vision;
 
+import javax.swing.Action;
+import javax.swing.Icon;
+
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.wizards.BottomVisionSettingsConfigurationWizard;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
+import org.openpnp.model.PartSettingsRoot;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.VisionUtils;
 
-public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder implements PartAlignment {
+public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder implements PartSettingsRoot, PartAlignment {
 
+    @Override 
+    public PartSettingsHolder getParentHolder(PartSettingsHolder partSettingsHolder) {
+        if (partSettingsHolder instanceof Part) {
+            return ((Part) partSettingsHolder).getPackage();
+        }
+        else if (partSettingsHolder instanceof org.openpnp.model.Package) {
+            return this;
+        }
+        else {
+            return null;
+        }
+    }
+
+    @Override 
     public BottomVisionSettings getInheritedVisionSettings(PartSettingsHolder partSettingsHolder) {
         while (partSettingsHolder != null) {
-            BottomVisionSettings visionSettings = partSettingsHolder.getVisionSettings();
+            BottomVisionSettings visionSettings = partSettingsHolder.getBottomVisionSettings();
             if (visionSettings != null) {
                 return visionSettings;
             }
-            partSettingsHolder = partSettingsHolder.getParentHolder();
+            partSettingsHolder = getParentHolder(partSettingsHolder);
         }
         return null;
+    }
+
+    @Override
+    public BottomVisionSettings getVisionSettings(PartSettingsHolder partSettingsHolder) {
+        return partSettingsHolder.getBottomVisionSettings();
     }
 
     public static BottomVisionSettings getInheritedVisionSettings(PartSettingsHolder partSettingsHolder, boolean allowDisabled) {
@@ -37,6 +61,7 @@ public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder i
         for (boolean allowDisabledPass : (allowDisabled ? new boolean [] { false, true } : new boolean [] { false })) {
             for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
                 if (partAlignment.isEnabled() || allowDisabledPass) {
+                    // TODO: if there are ever multiple Alignment<->VisionSettings classes, they would have to be matched up here. 
                     if (partAlignment instanceof AbstractPartAlignment) {
                         return (AbstractPartAlignment) partAlignment;
                     }
@@ -51,6 +76,16 @@ public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder i
     }
 
     @Override
+    public Action[] getPropertySheetHolderActions() {
+        return null;
+    }
+
+    @Override
+    public Icon getPropertySheetHolderIcon() {
+        return null;
+    }
+
+    @Override
     public Wizard getPartConfigurationWizard(PartSettingsHolder partSettingsHolder) {
         BottomVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
         try {
@@ -60,10 +95,4 @@ public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder i
         }
         return new BottomVisionSettingsConfigurationWizard(visionSettings, partSettingsHolder);
     }
-
-    @Override
-    public PartSettingsHolder getParentHolder() {
-        return null;
-    }
-
 }

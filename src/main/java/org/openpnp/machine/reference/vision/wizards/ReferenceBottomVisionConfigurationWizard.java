@@ -21,6 +21,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedListCellRenderer;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
+import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -76,7 +77,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         JLabel lblBottomVision = new JLabel("Bottom Vision Settings");
         panel.add(lblBottomVision, "2, 4, right, default");
                 
-                visionSettings = new JComboBox(new VisionSettingsComboBoxModel());
+                visionSettings = new JComboBox(new VisionSettingsComboBoxModel(BottomVisionSettings.class));
                 visionSettings.setMaximumRowCount(20);
                 visionSettings.setRenderer(new NamedListCellRenderer<>());
                 visionSettings.addItemListener(new ItemListener() {
@@ -144,14 +145,14 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
     
     @Override
     public void createBindings() {
-        addWrappedBinding(bottomVision, "visionSettings", visionSettings, "selectedItem");
-        addWrappedBinding(bottomVision, "enabled", enabledCheckbox, "selected");
-        addWrappedBinding(bottomVision, "preRotate", preRotCheckbox, "selected");
-        
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
                                                                            .getLengthDisplayFormat());
+
+        addWrappedBinding(bottomVision, "bottomVisionSettings", visionSettings, "selectedItem");
+        addWrappedBinding(bottomVision, "enabled", enabledCheckbox, "selected");
+        addWrappedBinding(bottomVision, "preRotate", preRotCheckbox, "selected");
 
         addWrappedBinding(bottomVision, "maxVisionPasses", textFieldMaxVisionPasses, "text", intConverter);
         addWrappedBinding(bottomVision, "maxLinearOffset", textFieldMaxLinearOffset, "text", lengthConverter);

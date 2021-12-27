@@ -24,17 +24,17 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Package;
 
 @SuppressWarnings("serial")
 public class PackagesTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
     final private Configuration configuration;
 
-    private String[] columnNames = new String[] {"ID", "Description", "Tape Specification", "BottomVision"};
-    private Class[] columnTypes = new Class[] {String.class, String.class, String.class, AbstractVisionSettings.class};
+    private String[] columnNames = new String[] {"ID", "Description", "Tape Specification", "BottomVision", "FiducialVision"};
+    private Class[] columnTypes = new Class[] {String.class, String.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class};
     private List<Package> packages;
 
     public PackagesTableModel(Configuration configuration) {
@@ -88,7 +88,10 @@ public class PackagesTableModel extends AbstractObjectTableModel implements Prop
                 this_package.setTapeSpecification((String) aValue);
             }
             else if (columnIndex == 3) {
-                this_package.setVisionSettings((BottomVisionSettings) aValue);
+                this_package.setBottomVisionSettings((BottomVisionSettings) aValue);
+            }
+            else if (columnIndex == 4) {
+                this_package.setFiducialVisionSettings((FiducialVisionSettings) aValue);
             }
         }
         catch (Exception e) {
@@ -106,7 +109,9 @@ public class PackagesTableModel extends AbstractObjectTableModel implements Prop
             case 2:
                 return this_package.getTapeSpecification();
             case 3:
-                return this_package.getVisionSettings();
+                return this_package.getBottomVisionSettings();
+            case 4:
+                return this_package.getFiducialVisionSettings();
             default:
                 return null;
         }

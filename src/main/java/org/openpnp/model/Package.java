@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
 import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
@@ -175,10 +174,5 @@ public class Package extends AbstractPartSettingsHolder {
         compatibleNozzleTips.remove(nt);
         syncCompatibleNozzleTipIds();
         firePropertyChange("compatibleNozzleTips", null, getCompatibleNozzleTips());
-    }
-
-    @Override
-    public PartSettingsHolder getParentHolder() {
-        return AbstractPartAlignment.getPartAlignment(this, true);
     }
 }

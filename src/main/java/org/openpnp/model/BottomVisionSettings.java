@@ -104,9 +104,13 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         firePropertyChange("visionOffset", oldValue, this.visionOffset);
     }
 
-    public void setValues(BottomVisionSettings another) throws CloneNotSupportedException {
+    public void setValues(BottomVisionSettings another) {
         setEnabled(another.isEnabled());
-        setCvPipeline(another.getCvPipeline().clone());
+        try {
+            setCvPipeline(another.getCvPipeline().clone());
+        }
+        catch (CloneNotSupportedException e) {
+        }
         setPreRotateUsage(another.getPreRotateUsage());
         setCheckPartSizeMethod(another.checkPartSizeMethod);
         setMaxRotation(another.getMaxRotation());

@@ -72,8 +72,10 @@ import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.model.AbstractVisionSettings;
+import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
+import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
@@ -166,12 +168,20 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        JComboBox<AbstractVisionSettings> bottomVisionCombo = new JComboBox<>(new VisionSettingsComboBoxModel());
+        JComboBox<BottomVisionSettings> bottomVisionCombo = new JComboBox<>(
+                new VisionSettingsComboBoxModel(BottomVisionSettings.class));
         bottomVisionCombo.setMaximumRowCount(20);
         bottomVisionCombo.setRenderer(new NamedListCellRenderer<>());
-
-        table.setDefaultEditor(AbstractVisionSettings.class,
+        table.setDefaultEditor(BottomVisionSettings.class,
                 new DefaultCellEditor(bottomVisionCombo));
+
+        JComboBox<BottomVisionSettings> fiducialVisionCombo = new JComboBox<>(
+                new VisionSettingsComboBoxModel(FiducialVisionSettings.class));
+        fiducialVisionCombo.setMaximumRowCount(20);
+        fiducialVisionCombo.setRenderer(new NamedListCellRenderer<>());
+        table.setDefaultEditor(FiducialVisionSettings.class,
+                new DefaultCellEditor(fiducialVisionCombo));
+
         table.setDefaultRenderer(AbstractVisionSettings.class,
                 new NamedTableCellRenderer<AbstractVisionSettings>());
 
