@@ -13,7 +13,15 @@ ___
 This page gives instructions on how to get OpenPnP to work with the pick-and-place machines from Charmhigh.
 
 ## Overview
-This process will have you reflash the pick-and-place's control board firmware with [Smoothieware](https://github.com/Smoothieware/Smoothieware), which is a popular CNC controller.
+Upgrading the PnP machine will require the following general steps:
+You will need to reflash the pick-and-place's control board firmware with [Smoothieware](https://github.com/Smoothieware/Smoothieware), which is a popular CNC controller.
+
+You can optionally upgrade the camera's to HD USB with better resolution (Upgrading the camera's takes the most effort in upgrading the hardware). You can decide to keep the existing camera's, but be aware that calibrating them in OpenPnP will take time that will need to be redone when upgrading in a later stage.
+
+Installing OpenPnP and loading provided machine.xml configuration file by overwriting default machine.xml configuration file. (There is no import config or known default machines list in OpenPnP at the moment)
+
+Calibrating and fine tuning machine configuration in OpenPnP (This step should not be underestimated, provided machine.xml will help setup most of the essentials though)
+
 
 There are also some recommendations made so that you can get the most out of your machine when using OpenPnP.
 
