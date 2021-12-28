@@ -25,7 +25,7 @@ public class FiducialVisionSettings extends AbstractVisionSettings {
 
     public FiducialVisionSettings(PartSettings partSettings) {
         this();
-        this.setEnabled(partSettings.isEnabled());
+        this.setEnabled(true);// Enabled state was not actually used.
         this.setCvPipeline(partSettings.getPipeline());
     }
 

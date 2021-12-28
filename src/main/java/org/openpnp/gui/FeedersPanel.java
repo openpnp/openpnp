@@ -297,8 +297,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                               && feeder.getPart() != null) {
                             mainFrame.getPartsTab().selectPartInTable(feeder.getPart());
                             mainFrame.getPackagesTab().selectPackageInTable(feeder.getPart().getPackage());
-                            mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(
-                                    AbstractPartAlignment.getInheritedVisionSettings(feeder.getPart(), true));
+                            mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(feeder.getPart());
                         }
                     }
 

@@ -71,7 +71,6 @@ import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
-import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
@@ -473,8 +472,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
                 mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
                 mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
-                mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(
-                        AbstractPartAlignment.getInheritedVisionSettings(selectedPart, true));
+                mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(selectedPart);
             }
         }
 

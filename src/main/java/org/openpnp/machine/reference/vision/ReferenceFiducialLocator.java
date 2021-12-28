@@ -382,8 +382,13 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                     pkg.getId()));
         }
 
-        FiducialVisionSettings partSettings = getInheritedVisionSettings(part);
-        CvPipeline pipeline = partSettings.getCvPipeline(); 
+        FiducialVisionSettings visionSettings = getInheritedVisionSettings(part);
+        if (!visionSettings.isEnabled()) {
+            throw new  Exception(String.format(
+                    "Package %s fidcuial vision settings %s are disabled.",
+                    pkg.getId(), visionSettings.getName()));
+        }
+        CvPipeline pipeline = visionSettings.getCvPipeline(); 
 
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("part", part);
@@ -562,7 +567,8 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
-                new PropertySheetWizardAdapter(new ReferenceFiducialLocatorConfigurationWizard(this))};
+                new PropertySheetWizardAdapter(new ReferenceFiducialLocatorConfigurationWizard(this)),
+                new PropertySheetWizardAdapter(new FiducialVisionSettingsConfigurationWizard(getFiducialVisionSettings(), this))};
     }
 
     @Override
@@ -652,6 +658,11 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
     }  
 
+    @Override
+    public String getShortName() {
+        return getPropertySheetHolderTitle();
+    }
+
     public static ReferenceFiducialLocator getDefault() { 
         return (ReferenceFiducialLocator) Configuration.get().getMachine().getFiducialLocator();
     }
@@ -667,16 +678,16 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             }
         }
 
-        HashMap<String, FiducialVisionSettings> bottomVisionSettingsHashMap = new HashMap<>();
+        HashMap<String, FiducialVisionSettings> fiducialVisionSettingsHashMap = new HashMap<>();
         // Create the factory stock settings.
         FiducialVisionSettings stockFiducialVisionSettings = createStockFiducialVisionSettings();
         configuration.addVisionSettings(stockFiducialVisionSettings);
         PartSettings equivalentPartSettings = new PartSettings();
         equivalentPartSettings.setPipeline(stockFiducialVisionSettings.getCvPipeline());
-        bottomVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), stockFiducialVisionSettings);
+        fiducialVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), stockFiducialVisionSettings);
         // Migrate the default settings.
         FiducialVisionSettings defaultFiducialVisionSettings = new FiducialVisionSettings(AbstractVisionSettings.DEFAULT_FIDUCIAL_ID);
-        defaultFiducialVisionSettings.setName("- Default ReferenceFiducialLocator -");
+        defaultFiducialVisionSettings.setName("- Default Machine Fiducial Locator -");
         defaultFiducialVisionSettings.setEnabled(true);
         configuration.addVisionSettings(defaultFiducialVisionSettings);
         if(pipeline != null) {
@@ -688,7 +699,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
         setFiducialVisionSettings(defaultFiducialVisionSettings);
         equivalentPartSettings.setPipeline(defaultFiducialVisionSettings.getCvPipeline());
-        bottomVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), defaultFiducialVisionSettings);
+        fiducialVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), defaultFiducialVisionSettings);
         for (Part part: configuration.getParts()) {
             part.setFiducialVisionSettings(null);
         }
@@ -704,16 +715,16 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                 Part part = configuration.getPart(partId);
                 if (part != null) { 
                     String serializedHash = AbstractVisionSettings.createSettingsFingerprint(partSettings);
-                    FiducialVisionSettings bottomVisionSettings = bottomVisionSettingsHashMap.get(serializedHash);
-                    if (bottomVisionSettings == null) {
-                        bottomVisionSettings = new FiducialVisionSettings(partSettings);
-                        bottomVisionSettings.setName("");
-                        bottomVisionSettingsHashMap.put(serializedHash, bottomVisionSettings);
+                    FiducialVisionSettings fiducialVisionSettings = fiducialVisionSettingsHashMap.get(serializedHash);
+                    if (fiducialVisionSettings == null) {
+                        fiducialVisionSettings = new FiducialVisionSettings(partSettings);
+                        fiducialVisionSettings.setName("");
+                        fiducialVisionSettingsHashMap.put(serializedHash, fiducialVisionSettings);
 
-                        configuration.addVisionSettings(bottomVisionSettings);
+                        configuration.addVisionSettings(fiducialVisionSettings);
                     }
 
-                    part.setFiducialVisionSettings((bottomVisionSettings != defaultFiducialVisionSettings) ? bottomVisionSettings : null);
+                    part.setFiducialVisionSettings((fiducialVisionSettings != defaultFiducialVisionSettings) ? fiducialVisionSettings : null);
                     Logger.info("Part "+partId+" FiducialVisionSettings migrated.");
                 } else {
                     Logger.warn("Part "+partId+" FiducialVisionSettings with no part.");
@@ -733,6 +744,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         try {
             fiducialVisionSettings = new FiducialVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_ID);
             fiducialVisionSettings.setName("- Stock Fiducial Vision Settings -");
+            fiducialVisionSettings.setEnabled(true);
             fiducialVisionSettings.setCvPipeline(createStockPipeline());
             return fiducialVisionSettings;
         }
@@ -743,26 +755,30 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
 
     public void optimizeVisionSettings(Configuration configuration) {
         // Remove any duplicate settings.
-        HashMap<String, AbstractVisionSettings> bottomVisionSettingsHashMap = new HashMap<>();
+        HashMap<String, AbstractVisionSettings> visionSettingsHashMap = new HashMap<>();
         FiducialVisionSettings defaultVisionSettings = getFiducialVisionSettings();
+        // Make it dominant in case it is identical to stock.
+        visionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(defaultVisionSettings), defaultVisionSettings);
         for (AbstractVisionSettings visionSettings : configuration.getVisionSettings()) {
-            String serializedHash = AbstractVisionSettings.createSettingsFingerprint(visionSettings);
-            AbstractVisionSettings firstVisionSettings = bottomVisionSettingsHashMap.get(serializedHash);
-            if (firstVisionSettings == null) {
-                bottomVisionSettingsHashMap.put(serializedHash, visionSettings);
-            }
-            else if (visionSettings != defaultVisionSettings
-                    && !visionSettings.isStockSetting()) {
-                // Duplicate, remove any references.
-                for (PartSettingsHolder holder : visionSettings.getUsedFiducialVisionIn()) {
-                    holder.setFiducialVisionSettings((FiducialVisionSettings) firstVisionSettings);
+            if (visionSettings instanceof FiducialVisionSettings) {
+                String serializedHash = AbstractVisionSettings.createSettingsFingerprint(visionSettings);
+                AbstractVisionSettings firstVisionSettings = visionSettingsHashMap.get(serializedHash);
+                if (firstVisionSettings == null) {
+                    visionSettingsHashMap.put(serializedHash, visionSettings);
                 }
-                if (visionSettings.getUsedFiducialVisionIn().size() == 0) {
-                    if (firstVisionSettings != defaultVisionSettings  
-                            && !firstVisionSettings.isStockSetting()) {
-                        firstVisionSettings.setName(firstVisionSettings.getName()+" + "+visionSettings.getName());
+                else if (visionSettings != defaultVisionSettings
+                        && !visionSettings.isStockSetting()) {
+                    // Duplicate, remove any references.
+                    for (PartSettingsHolder holder : visionSettings.getUsedFiducialVisionIn()) {
+                        holder.setFiducialVisionSettings((FiducialVisionSettings) firstVisionSettings);
                     }
-                    configuration.removeVisionSettings(visionSettings);
+                    if (visionSettings.getUsedFiducialVisionIn().size() == 0) {
+                        if (firstVisionSettings != defaultVisionSettings  
+                                && !firstVisionSettings.isStockSetting()) {
+                            firstVisionSettings.setName(firstVisionSettings.getName()+" + "+visionSettings.getName());
+                        }
+                        configuration.removeVisionSettings(visionSettings);
+                    }
                 }
             }
         }
@@ -824,14 +840,16 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         AbstractVisionSettings.ListConverter listConverter = new AbstractVisionSettings.ListConverter(false);
         int various = 0;
         for (AbstractVisionSettings visionSettings : configuration.getVisionSettings()) {
-            if (visionSettings.getName().isEmpty()) {
-                List<PartSettingsHolder> usedIn = visionSettings.getUsedFiducialVisionIn();
-                if (usedIn.size() <= 3) {
-                    visionSettings.setName(listConverter.convertForward(usedIn));
-                }
-                else {
-                    various++;
-                    visionSettings.setName("Migrated "+various);
+            if (visionSettings instanceof FiducialVisionSettings) {
+                if (visionSettings.getName().isEmpty()) {
+                    List<PartSettingsHolder> usedIn = visionSettings.getUsedFiducialVisionIn();
+                    if (usedIn.size() <= 3) {
+                        visionSettings.setName(listConverter.convertForward(usedIn));
+                    }
+                    else {
+                        various++;
+                        visionSettings.setName("Migrated "+various);
+                    }
                 }
             }
         }

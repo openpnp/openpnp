@@ -251,7 +251,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         JButton btnAutoVisionCenterOffset = new JButton("Detect");
         btnAutoVisionCenterOffset.setToolTipText("Center part over bottom vision camera. Button will run bottom vision and calculates the offset.");
-        panel.add(btnAutoVisionCenterOffset, "8, 20");
+        panel.add(btnAutoVisionCenterOffset, "8, 20, 3, 1");
         btnAutoVisionCenterOffset.addActionListener((e) -> {
             UiUtils.submitUiMachineTask(() -> {
                 determineVisionOffset();
@@ -263,22 +263,22 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         JButton editPipelineButton = new JButton("Edit");
         editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
-        panel.add(editPipelineButton, "4, 22");
-
-        JButton resetPipelineButton = new JButton("Reset Pipeline to Default");
-        resetPipelineButton.addActionListener(e -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the Pipeline with the built-in default. Are you sure??", null,
-                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
-                    visionSettings.setCvPipeline(bottomVision.getBottomVisionSettings().getCvPipeline().clone());
-                    editPipeline();
-                });
-            }
-        });
-        panel.add(resetPipelineButton, "6, 22, 3, 1");
+        panel.add(editPipelineButton, "4, 22, 3, 1");
+                
+                        JButton resetPipelineButton = new JButton("Reset Pipeline to Default");
+                        resetPipelineButton.addActionListener(e -> {
+                            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                                    "This will replace the Pipeline with the built-in default. Are you sure??", null,
+                                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                            if (result == JOptionPane.YES_OPTION) {
+                                UiUtils.messageBoxOnException(() -> {
+                                    ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
+                                    visionSettings.setCvPipeline(bottomVision.getBottomVisionSettings().getCvPipeline().clone());
+                                    editPipeline();
+                                });
+                            }
+                        });
+                        panel.add(resetPipelineButton, "8, 22, 3, 1");
 
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);

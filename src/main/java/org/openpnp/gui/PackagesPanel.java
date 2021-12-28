@@ -70,7 +70,6 @@ import org.openpnp.gui.support.NamedTableCellRenderer;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
-import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
@@ -79,6 +78,8 @@ import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.FiducialLocator;
+import org.openpnp.spi.Machine;
 import org.openpnp.spi.PartAlignment;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
@@ -429,7 +430,8 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(selectedPackage));
             tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(selectedPackage)));
             tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(selectedPackage)));
-            for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+            Machine machine = Configuration.get().getMachine();
+            for (PartAlignment partAlignment : machine.getPartAlignments()) {
                 Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPackage);
                 if (wizard != null) {
                     JPanel panel = new JPanel();
@@ -439,6 +441,15 @@ public class PackagesPanel extends JPanel implements WizardContainer {
                     wizard.setWizardContainer(PackagesPanel.this);
                 }
             }
+            FiducialLocator fiducialLocator = machine.getFiducialLocator();
+            Wizard wizard = fiducialLocator.getPartConfigurationWizard(selectedPackage);
+            if (wizard != null) {
+                JPanel panel = new JPanel();
+                panel.setLayout(new BorderLayout());
+                panel.add(wizard.getWizardPanel());
+                tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                wizard.setWizardContainer(PackagesPanel.this);
+            }
             if (selectedTab != -1 
                     && tabbedPane.getTabCount() > selectedTab) {
                 tabbedPane.setSelectedIndex(selectedTab);
@@ -446,8 +457,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             MainFrame mainFrame = MainFrame.get();
             if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getPackagesTab() 
                     && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
-                 mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(
-                         AbstractPartAlignment.getInheritedVisionSettings(selectedPackage, true));
+                 mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(selectedPackage);
             }
         }
 

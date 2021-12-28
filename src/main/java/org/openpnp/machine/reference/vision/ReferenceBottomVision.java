@@ -447,6 +447,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         try {
             bottomVisionSettings = new BottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID);
             bottomVisionSettings.setName("- Stock Bottom Vision Settings -");
+            bottomVisionSettings.setEnabled(true);
             bottomVisionSettings.setCvPipeline(createStockPipeline());
             return bottomVisionSettings;
         }
@@ -665,7 +666,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         bottomVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), stockBottomVisionSettings);
         // Migrate the default settings.
         BottomVisionSettings defaultBottomVisionSettings = new BottomVisionSettings(AbstractVisionSettings.DEFAULT_BOTTOM_ID);
-        defaultBottomVisionSettings.setName("- Default ReferenceBottomVision -");
+        defaultBottomVisionSettings.setName("- Default Machine Bottom Vision -");
         defaultBottomVisionSettings.setEnabled(enabled);
         configuration.addVisionSettings(defaultBottomVisionSettings);
         if(pipeline != null) {
@@ -721,24 +722,28 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         // Remove any duplicate settings.
         HashMap<String, AbstractVisionSettings> bottomVisionSettingsHashMap = new HashMap<>();
         BottomVisionSettings defaultVisionSettings = getBottomVisionSettings();
+        // Make it dominant in case it is identical to stock.
+        bottomVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(defaultVisionSettings), defaultVisionSettings);
         for (AbstractVisionSettings visionSettings : configuration.getVisionSettings()) {
-            String serializedHash = AbstractVisionSettings.createSettingsFingerprint(visionSettings);
-            AbstractVisionSettings firstVisionSettings = bottomVisionSettingsHashMap.get(serializedHash);
-            if (firstVisionSettings == null) {
-                bottomVisionSettingsHashMap.put(serializedHash, visionSettings);
-            }
-            else if (visionSettings != defaultVisionSettings
-                    && !visionSettings.isStockSetting()) {
-                // Duplicate, remove any references.
-                for (PartSettingsHolder holder : visionSettings.getUsedBottomVisionIn()) {
-                    holder.setBottomVisionSettings((BottomVisionSettings) firstVisionSettings);
+            if (visionSettings instanceof BottomVisionSettings) {
+                String serializedHash = AbstractVisionSettings.createSettingsFingerprint(visionSettings);
+                AbstractVisionSettings firstVisionSettings = bottomVisionSettingsHashMap.get(serializedHash);
+                if (firstVisionSettings == null) {
+                    bottomVisionSettingsHashMap.put(serializedHash, visionSettings);
                 }
-                if (visionSettings.getUsedBottomVisionIn().size() == 0) {
-                    if (firstVisionSettings != defaultVisionSettings  
-                            && !firstVisionSettings.isStockSetting()) {
-                        firstVisionSettings.setName(firstVisionSettings.getName()+" + "+visionSettings.getName());
+                else if (visionSettings != defaultVisionSettings
+                        && !visionSettings.isStockSetting()) {
+                    // Duplicate, remove any references.
+                    for (PartSettingsHolder holder : visionSettings.getUsedBottomVisionIn()) {
+                        holder.setBottomVisionSettings((BottomVisionSettings) firstVisionSettings);
                     }
-                    configuration.removeVisionSettings(visionSettings);
+                    if (visionSettings.getUsedBottomVisionIn().size() == 0) {
+                        if (firstVisionSettings != defaultVisionSettings  
+                                && !firstVisionSettings.isStockSetting()) {
+                            firstVisionSettings.setName(firstVisionSettings.getName()+" + "+visionSettings.getName());
+                        }
+                        configuration.removeVisionSettings(visionSettings);
+                    }
                 }
             }
         }
@@ -800,14 +805,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         AbstractVisionSettings.ListConverter listConverter = new AbstractVisionSettings.ListConverter(false);
         int various = 0;
         for (AbstractVisionSettings visionSettings : configuration.getVisionSettings()) {
-            if (visionSettings.getName().isEmpty()) {
-                List<PartSettingsHolder> usedIn = visionSettings.getUsedBottomVisionIn();
-                if (usedIn.size() <= 3) {
-                    visionSettings.setName(listConverter.convertForward(usedIn));
-                }
-                else {
-                    various++;
-                    visionSettings.setName("Migrated "+various);
+            if (visionSettings instanceof BottomVisionSettings) {
+                if (visionSettings.getName().isEmpty()) {
+                    List<PartSettingsHolder> usedIn = visionSettings.getUsedBottomVisionIn();
+                    if (usedIn.size() <= 3) {
+                        visionSettings.setName(listConverter.convertForward(usedIn));
+                    }
+                    else {
+                        various++;
+                        visionSettings.setName("Migrated "+various);
+                    }
                 }
             }
         }

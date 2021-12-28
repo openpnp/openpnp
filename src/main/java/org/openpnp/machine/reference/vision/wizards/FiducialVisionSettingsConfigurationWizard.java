@@ -193,22 +193,22 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
 
         JButton editPipelineButton = new JButton("Edit");
         editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
-        panel.add(editPipelineButton, "4, 12");
-
-        JButton resetPipelineButton = new JButton("Reset Pipeline to Default");
-        resetPipelineButton.addActionListener(e -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the Pipeline with the built-in default. Are you sure??", null,
-                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    ReferenceBottomVision fiducialVision = ReferenceBottomVision.getDefault();
-                    visionSettings.setCvPipeline(fiducialVision.getBottomVisionSettings().getCvPipeline().clone());
-                    editPipeline();
+        panel.add(editPipelineButton, "4, 12, 3, 1");
+        
+                JButton resetPipelineButton = new JButton("Reset Pipeline to Default");
+                resetPipelineButton.addActionListener(e -> {
+                    int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                            "This will replace the Pipeline with the built-in default. Are you sure??", null,
+                            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    if (result == JOptionPane.YES_OPTION) {
+                        UiUtils.messageBoxOnException(() -> {
+                            ReferenceBottomVision fiducialVision = ReferenceBottomVision.getDefault();
+                            visionSettings.setCvPipeline(fiducialVision.getBottomVisionSettings().getCvPipeline().clone());
+                            editPipeline();
+                        });
+                    }
                 });
-            }
-        });
-        panel.add(resetPipelineButton, "6, 12, 3, 1");
+                panel.add(resetPipelineButton, "8, 12, 3, 1");
 
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);
@@ -245,7 +245,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         name.setVisible(settingsHolder != null);
         if (visionSettings.isStockSetting()) {
             for (Component comp : panel.getComponents()) {
-                if (comp != btnSpecializeSetting) { 
+                if (comp != btnSpecializeSetting && comp != btnGeneralizeSettings) { 
                     comp.setEnabled(false);
                 }
             }

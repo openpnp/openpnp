@@ -7,6 +7,8 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -24,6 +28,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
@@ -33,10 +38,13 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.VisionSettingsTableModel;
+import org.openpnp.machine.reference.vision.AbstractPartAlignment;
+import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.VisionSettingsConfigurationHolder;
+import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.PartSettingsHolder;
 import org.simpleframework.xml.Serializer;
 
@@ -52,6 +60,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     private VisionSettingsTableModel tableModel;
     private TableRowSorter<VisionSettingsTableModel> tableSorter;
     private JTable table;
+    private JComboBox visionTypeFilter;
 
     public VisionSettingsPanel(Frame frame) {
         this.frame = frame;
@@ -111,6 +120,7 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
                 Helpers.selectObjectTableRow(table, selectedVisionSettings);
             }
         });
+        filterTable();
 
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
@@ -124,9 +134,20 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         toolbarPanel.add(toolBar);
-
-        JPanel upperPanel = new JPanel();
-        toolbarPanel.add(upperPanel, BorderLayout.EAST);
+        
+        JPanel filterPanel = new JPanel();
+        toolbarPanel.add(filterPanel, BorderLayout.EAST);
+        
+        JLabel lblFilterType = new JLabel("Type");
+        filterPanel.add(lblFilterType);
+        
+        visionTypeFilter = new JComboBox(VisionTypeFilter.values());
+        filterPanel.add(visionTypeFilter);
+        visionTypeFilter.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent arg0) {
+                filterTable();
+            }
+        });
 
         toolBar.add(newSettingsAction);
         toolBar.add(deleteSettingsAction);
@@ -135,6 +156,11 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         toolBar.add(pastePackageToClipboardAction);
 
         toolBar.addSeparator();
+    }
+
+    protected enum VisionTypeFilter {
+        BottomVision,
+        FiducialVision
     }
 
     private AbstractVisionSettings getSelection() {
@@ -286,9 +312,41 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
     }
 
+    public void selectVisionSettingsInTable(PartSettingsHolder partSettingsHolder) {
+        final VisionTypeFilter filterType = (VisionTypeFilter) visionTypeFilter.getSelectedItem();
+        AbstractVisionSettings visionSettings = null;
+        switch (filterType) {
+            case BottomVision:
+                visionSettings = AbstractPartAlignment.getInheritedVisionSettings(partSettingsHolder, true);
+                break;
+            case FiducialVision:
+                visionSettings = ReferenceFiducialLocator.getDefault().getInheritedVisionSettings(partSettingsHolder);
+                break;
+        }
+        selectVisionSettingsInTable(visionSettings);
+    }
+
     public void selectVisionSettingsInTable(AbstractVisionSettings visionSettings) {
         if (getSelection() != visionSettings) {
             Helpers.selectObjectTableRow(table, visionSettings);
         }
+    }
+
+    protected void filterTable() {
+        final VisionTypeFilter filterType = (VisionTypeFilter) visionTypeFilter.getSelectedItem();
+        tableSorter.setRowFilter(new RowFilter<VisionSettingsTableModel, Integer>() {
+            @Override
+            public boolean include(Entry<? extends VisionSettingsTableModel, ? extends Integer> entry) {
+                AbstractVisionSettings visionSettings = tableModel.getRowObjectAt(entry.getIdentifier());
+                switch (filterType) {
+                    case BottomVision:
+                        return visionSettings instanceof BottomVisionSettings;
+                    case FiducialVision:
+                        return visionSettings instanceof FiducialVisionSettings;
+                    default: 
+                        return false;
+                }
+            }
+        });
     }
 }
