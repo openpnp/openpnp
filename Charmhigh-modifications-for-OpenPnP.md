@@ -18,13 +18,13 @@ This process will have you reflash the pick-and-place's control board firmware w
 There are also some recommendations made so that you can get the most out of your machine when using OpenPnP.
 
 ## Consider not doing this
-This process will surely void your warranty.  You might break your machine.  
+This process will surely void your warranty.  You might break your machine.
 
-It might also make your machine slower.  The Charmhigh firmware has the machine only operate at its maximum speed.  This requires your machine to be placed on a very sturdy table for operation as it will transfer those acceleration forces into its base.  Smoothie is different.  It will accelerate smoothly and you won't have your table shaking every time the machine moves.  This acceleration ramping does come at the cost of some speed.
+This is not yet an easy and quick 5 minute conversion. OpenPnP is designed to be used with custom DIY build machines and therefor requires extensive configuration to get up and running. However, pre-configured configuration files are available for both 48VB and 36VA machines and greatly help to start. Nevertheless, do plan for your machine to be down for a while.
 
-This process takes also takes time, so plan for your machine to be down for a while.
+It might also make your machine slower, however, latest configuration tuning can match original software speed. But it will make your machine smoother due to better acceleration algorithms implemented in Smoothieware in combination with AdvancedMotionPlanner in OpenPnP. 
 
-This process is known to work for the 48VB model.  I do not know for certain if other machines use the exact same control board or if the process will work for other Charmhigh models.
+This process is known to work for the 48VB and 36VA model with some small differences here and there.  I do not know for certain if other machines use the exact same control board or if the process will work for other Charmhigh models.
 
 Some of the steps that follow might not be in the best order or might lack detail.  Feel free to update this page if you go through the process and can make it easier for those that follow you.
 
