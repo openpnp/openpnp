@@ -194,21 +194,21 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         JButton editPipelineButton = new JButton("Edit");
         editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
         panel.add(editPipelineButton, "4, 12, 3, 1");
-        
-                JButton resetPipelineButton = new JButton("Reset Pipeline to Default");
-                resetPipelineButton.addActionListener(e -> {
-                    int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                            "This will replace the Pipeline with the built-in default. Are you sure??", null,
-                            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                    if (result == JOptionPane.YES_OPTION) {
-                        UiUtils.messageBoxOnException(() -> {
-                            ReferenceBottomVision fiducialVision = ReferenceBottomVision.getDefault();
-                            visionSettings.setCvPipeline(fiducialVision.getBottomVisionSettings().getCvPipeline().clone());
-                            editPipeline();
-                        });
-                    }
+
+        JButton resetPipelineButton = new JButton("Reset Pipeline to Default");
+        resetPipelineButton.addActionListener(e -> {
+            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                    "This will replace the Pipeline with the default. Are you sure??", null,
+                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (result == JOptionPane.YES_OPTION) {
+                UiUtils.messageBoxOnException(() -> {
+                    ReferenceBottomVision fiducialVision = ReferenceBottomVision.getDefault();
+                    visionSettings.setCvPipeline(fiducialVision.getBottomVisionSettings().getCvPipeline().clone());
+                    editPipeline();
                 });
-                panel.add(resetPipelineButton, "8, 12, 3, 1");
+            }
+        });
+        panel.add(resetPipelineButton, "8, 12, 3, 1");
 
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);
@@ -237,6 +237,10 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                         testFiducialLocation();
                     });
                 });
+                // Only available on Part or Package (it needs the footprint).
+                btnTestFiducialLocator.setEnabled(
+                        settingsHolder instanceof Part 
+                        || settingsHolder instanceof org.openpnp.model.Package);
     }
 
     @Override
@@ -308,15 +312,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
 
     private void testFiducialLocation() throws Exception {
         Camera camera = fiducialLocator.getVisionCamera();
-        Part part = null;
-        if (settingsHolder instanceof Part) {
-            part = (Part) settingsHolder;
-        }
-        else {
-            //TODO: 
-            throw new Exception("Not a part.");
-        }
-        Location location = fiducialLocator.getFiducialLocation(camera.getLocation(), part);
+        Location location = fiducialLocator.getFiducialLocation(camera.getLocation(), settingsHolder);
         camera.moveTo(location);
     }
 

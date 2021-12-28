@@ -70,6 +70,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     @Element(required = false)
     protected CvPipeline pipeline;
 
+    @Deprecated
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId;
 
@@ -362,11 +363,17 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         return getFiducialLocation(location, part);
     }
 
-    public CvPipeline getFiducialPipeline(Camera camera, Part part) throws Exception {
-        org.openpnp.model.Package pkg = part.getPackage();
+    public CvPipeline getFiducialPipeline(Camera camera, PartSettingsHolder partSettingsHolder) throws Exception {
+        org.openpnp.model.Package pkg = null;
+        if (partSettingsHolder instanceof Part) {
+            pkg = ((Part) partSettingsHolder).getPackage();
+        }
+        else if (partSettingsHolder instanceof org.openpnp.model.Package) {
+            pkg = (org.openpnp.model.Package) partSettingsHolder;
+        }
         if (pkg == null) {
             throw new Exception(
-                    String.format("Part %s does not have a valid package assigned.", part.getId()));
+                    String.format("%s %s does not have a valid package assigned.", partSettingsHolder.getClass().getSimpleName(), partSettingsHolder.getShortName()));
         }
 
         Footprint footprint = pkg.getFootprint();
@@ -382,7 +389,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                     pkg.getId()));
         }
 
-        FiducialVisionSettings visionSettings = getInheritedVisionSettings(part);
+        FiducialVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
         if (!visionSettings.isEnabled()) {
             throw new  Exception(String.format(
                     "Package %s fidcuial vision settings %s are disabled.",
@@ -391,7 +398,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         CvPipeline pipeline = visionSettings.getCvPipeline(); 
 
         pipeline.setProperty("camera", camera);
-        pipeline.setProperty("part", part);
+        pipeline.setProperty("part", partSettingsHolder);
         pipeline.setProperty("package", pkg);
         pipeline.setProperty("footprint", footprint);
         Rectangle2D bounds = footprint.getPadsShape().getBounds2D();
@@ -401,7 +408,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         return pipeline;
     }
 
-    public Location getFiducialLocation(Location nominalLocation, Part part) throws Exception {
+    public Location getFiducialLocation(Location nominalLocation, PartSettingsHolder partSettingsHolder) throws Exception {
         Location location = nominalLocation;
         Camera camera = getVisionCamera();
 
@@ -410,12 +417,12 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             repeatFiducialRecognition = this.repeatFiducialRecognition;
         }
 
-        Logger.debug("Looking for {} at {}", part.getId(), location);
+        Logger.debug("Looking for {} at {}", partSettingsHolder.getShortName(), location);
         MovableUtils.moveToLocationAtSafeZ(camera, location);
 
         List<Location> matchedLocations = new ArrayList<Location>();
 
-        try(CvPipeline pipeline = getFiducialPipeline(camera, part)) {
+        try(CvPipeline pipeline = getFiducialPipeline(camera, partSettingsHolder)) {
             for (int i = 0; i < repeatFiducialRecognition; i++) {
                 // Perform vision operation
                 pipeline.process();
@@ -423,7 +430,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                 // Get the results
                 List<KeyPoint> keypoints = pipeline.getExpectedResult(VisionUtils.PIPELINE_RESULTS_NAME)
                         .getExpectedListModel(KeyPoint.class, 
-                                new Exception(part.getId()+" no matches found."));
+                                new Exception(partSettingsHolder.getId()+" no matches found."));
 
                 // Convert to Locations
                 List<Location> locations = new ArrayList<Location>();
@@ -457,7 +464,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                     }
                 }
 
-                Logger.debug("{} located at {}", part.getId(), location);
+                Logger.debug("{} located at {}", partSettingsHolder.getId(), location);
                 // Move to where we actually found the fid
                 camera.moveTo(location);
     
@@ -483,12 +490,12 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             location = location.derive(sumX / matchedLocations.size(),
                     sumY / matchedLocations.size(), null, null);
 
-            Logger.debug("{} averaged location is at {}", part.getId(), location);
+            Logger.debug("{} averaged location is at {}", partSettingsHolder.getId(), location);
 
             camera.moveTo(location);
         }
         if (location.convertToUnits(maxDistance.getUnits()).getLinearDistanceTo(nominalLocation) > maxDistance.getValue()) {
-            throw new Exception("Fiducial "+part.getName()+" detected too far away.");
+            throw new Exception("Fiducial "+partSettingsHolder.getShortName()+" detected too far away.");
         }
         return location;
     }
@@ -822,10 +829,6 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                         }
                     }
                 }
-                if (packageVisionSettings != null && packageVisionSettings.getUsedFiducialVisionIn().size() == 0) {
-                    // No longer used.
-                    configuration.removeVisionSettings(packageVisionSettings);
-                }
                 if (mostFrequentVisionSettings != defaultVisionSettings
                         && !mostFrequentVisionSettings.isStockSetting()
                         && !mostFrequentVisionSettings.getName().isEmpty() 
@@ -841,8 +844,13 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         int various = 0;
         for (AbstractVisionSettings visionSettings : configuration.getVisionSettings()) {
             if (visionSettings instanceof FiducialVisionSettings) {
-                if (visionSettings.getName().isEmpty()) {
-                    List<PartSettingsHolder> usedIn = visionSettings.getUsedFiducialVisionIn();
+                List<PartSettingsHolder> usedIn = visionSettings.getUsedFiducialVisionIn();
+                if (!visionSettings.isStockSetting()
+                        && visionSettings != defaultVisionSettings
+                        && usedIn.isEmpty()) {
+                    configuration.removeVisionSettings(visionSettings);
+                }
+                else if (visionSettings.getName().isEmpty()) {
                     if (usedIn.size() <= 3) {
                         visionSettings.setName(listConverter.convertForward(usedIn));
                     }

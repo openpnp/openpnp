@@ -56,9 +56,9 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),
-                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {

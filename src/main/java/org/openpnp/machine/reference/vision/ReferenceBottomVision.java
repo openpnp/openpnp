@@ -787,10 +787,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         }
                     }
                 }
-                if (packageVisionSettings != null && packageVisionSettings.getUsedBottomVisionIn().size() == 0) {
-                    // No longer used.
-                    configuration.removeVisionSettings(packageVisionSettings);
-                }
                 if (mostFrequentVisionSettings != defaultVisionSettings
                         && !mostFrequentVisionSettings.isStockSetting()
                         && !mostFrequentVisionSettings.getName().isEmpty() 
@@ -806,8 +802,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         int various = 0;
         for (AbstractVisionSettings visionSettings : configuration.getVisionSettings()) {
             if (visionSettings instanceof BottomVisionSettings) {
-                if (visionSettings.getName().isEmpty()) {
-                    List<PartSettingsHolder> usedIn = visionSettings.getUsedBottomVisionIn();
+                List<PartSettingsHolder> usedIn = visionSettings.getUsedBottomVisionIn();
+                if (!visionSettings.isStockSetting()
+                        && visionSettings != defaultVisionSettings
+                        && usedIn.isEmpty()) {
+                    configuration.removeVisionSettings(visionSettings);
+                }
+                else if (visionSettings.getName().isEmpty()) {
                     if (usedIn.size() <= 3) {
                         visionSettings.setName(listConverter.convertForward(usedIn));
                     }
