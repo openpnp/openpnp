@@ -19,18 +19,22 @@
 
 package org.openpnp.gui.support;
 
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Package;
+import org.jdesktop.swingx.autocomplete.ObjectToStringConverter;
+import org.openpnp.model.Named;
 
-@SuppressWarnings("serial")
-public class PackagesComboBoxModel extends TableComboBoxModel<Package> {
+public class NamedObjectToStringConverter<T extends Named>
+        extends ObjectToStringConverter {
+    private static final int MAX_NAME_LENGTH = 80;
 
-    public PackagesComboBoxModel() {
-        super("packages");
-    }
-
-    @Override
-    protected void addAllElements() {
-        Configuration.get().getPackages().stream().sorted(comparator).forEach(this::addElement);
+    public String getPreferredStringForItem(Object o) {
+        T t = (T) o;
+        if (t == null || t.getName() == null) {
+            return " ";
+        }
+        String name = t.getName();
+        if (name.length() > MAX_NAME_LENGTH) {
+            name = name.substring(0, Math.min(t.getName().length(), MAX_NAME_LENGTH))+"...";
+        }
+        return name;
     }
 }

@@ -19,18 +19,17 @@
 
 package org.openpnp.gui.support;
 
-import org.openpnp.model.Configuration;
-import org.openpnp.model.Package;
+import javax.swing.table.DefaultTableCellRenderer;
+
+import org.openpnp.model.Named;
 
 @SuppressWarnings("serial")
-public class PackagesComboBoxModel extends TableComboBoxModel<Package> {
-
-    public PackagesComboBoxModel() {
-        super("packages");
-    }
+public class NamedTableCellRenderer<T extends Named>
+        extends DefaultTableCellRenderer {
+    NamedObjectToStringConverter<T> converter = new NamedObjectToStringConverter<>();
 
     @Override
-    protected void addAllElements() {
-        Configuration.get().getPackages().stream().sorted(comparator).forEach(this::addElement);
+    protected void setValue(Object value) {
+        setText(converter.getPreferredStringForItem(value));
     }
 }

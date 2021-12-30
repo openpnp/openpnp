@@ -67,9 +67,11 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.FeedersTableModel;
+import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -82,7 +84,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
-import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
@@ -291,6 +292,13 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                             configurationPanel.setSelectedIndex(Math.max(0, Math.min(configurationPanel.getTabCount()-1, 
                                     lastSelectedTabIndex.get(feeder.getClass()))));
                         }
+                        if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getFeedersTab()
+                              &&  Configuration.get().getTablesLinked() == TablesLinked.Linked
+                              && feeder.getPart() != null) {
+                            mainFrame.getPartsTab().selectPartInTable(feeder.getPart());
+                            mainFrame.getPackagesTab().selectPackageInTable(feeder.getPart().getPackage());
+                            mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(feeder.getPart());
+                        }
                     }
 
                     revalidate();
@@ -367,7 +375,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             mainFrame.showTab("Feeders");
             
             for (int i = 0; i < tableModel.getRowCount(); i++) {
-                if (tableModel.getFeeder(i) == event.feeder) {
+                if (tableModel.getRowObjectAt(i) == event.feeder) {
                     int index = table.convertRowIndexToView(i);
                     table.getSelectionModel().setSelectionInterval(index, index);
                     table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
@@ -393,25 +401,17 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         if (feeder == null) {
             feeder = findFeeder(part, false);
         }
-        if (feeder == null) {            
+        if (feeder == null) {
             newFeeder(part);
         }
         else {
-            table.getSelectionModel().clearSelection();
-            for (int i = 0; i < tableModel.getRowCount(); i++) {
-                if (tableModel.getFeeder(i) == feeder) {
-                    int index = table.convertRowIndexToView(i);
-                    table.getSelectionModel().setSelectionInterval(index, index);
-                    table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
-                    break;
-                }
-            }
+            Helpers.selectObjectTableRow(table, feeder);
         }
     }
 
     private Feeder findFeeder(Part part, boolean enabled) {
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            Feeder feeder = tableModel.getFeeder(i); 
+            Feeder feeder = tableModel.getRowObjectAt(i); 
             if (feeder.getPart() == part && feeder.isEnabled() == enabled) {
                 return feeder;
             }
@@ -678,6 +678,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
         // The part is now on the nozzle.
         MovableUtils.fireTargetedUserAction(nozzle);
+        if (MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getFeedersTab() 
+                && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
+            MainFrame.get().getPartsTab().selectPartInTable(feeder.getPart());
+            MainFrame.get().getPackagesTab().selectPackageInTable(feeder.getPart().getPackage());
+        }
     }
 
     /**
@@ -687,7 +692,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
      * @return
      */
     public static Location getTestPlacementLocation(Part part) {
-        PartAlignment aligner = AbstractPnpJobProcessor.findPartAligner(Configuration.get().getMachine(), part);
+        PartAlignment aligner = AbstractPartAlignment.getPartAlignment(part);
         Location placementLocation = Configuration.get().getMachine().getDiscardLocation();
         placementLocation = new Location(placementLocation.getUnits(),
                 placementLocation.getX(), 
@@ -810,4 +815,20 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             table.repaint();
         }
     };
+
+    public void selectFeederInTable(Feeder feeder) {
+        Helpers.selectObjectTableRow(table, feeder);
+    }
+    public void selectFeederForPart(Part part) {
+        if (getSelection() == null || getSelection().getPart() != part) {
+            Feeder feeder = findFeeder(part, true);
+            // Prefer enabled feeders but fall back to disabled ones.
+            if (feeder == null) {
+                feeder = findFeeder(part, false);
+            }
+            if (feeder != null) {
+                Helpers.selectObjectTableRow(table, feeder);
+            }
+        }
+    }
 }

@@ -19,8 +19,6 @@
 
 package org.openpnp.gui.tablemodel;
 
-import javax.swing.table.AbstractTableModel;
-
 import org.openpnp.gui.JobPlacementsPanel;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
@@ -37,7 +35,7 @@ import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Feeder;
 
-public class PlacementsTableModel extends AbstractTableModel {
+public class PlacementsTableModel extends AbstractObjectTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
@@ -77,9 +75,15 @@ public class PlacementsTableModel extends AbstractTableModel {
         }
         fireTableDataChanged();
     }
-    
-    public Placement getPlacement(int index) {
+
+    @Override
+    public Placement getRowObjectAt(int index) {
         return board.getPlacements().get(index);
+    }
+
+    @Override
+    public int indexOf(Object object) {
+        return board.getPlacements().indexOf(object);
     }
 
     @Override

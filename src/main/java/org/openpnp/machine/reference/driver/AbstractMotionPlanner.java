@@ -134,6 +134,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, MotionOption... options) throws Exception {
+        if (speed <= 0) {
+            throw new Exception("Speed must be greater than 0.");
+        }
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
 
@@ -657,7 +660,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             }
             else {
                 throw new Exception("Axis "+axis.getName()+" with limited articulation cannot rotate to "+
-                        axesLocation.getCoordinate(axis)+" ("+hm.getName()+" at "+location.getRotation()+"°)");
+                        limitedAxesLocation.getCoordinate(axis)+" ("+hm.getName()+" to "+location.getRotation()+"°)");
             }
         }
         return limitedAxesLocation;
