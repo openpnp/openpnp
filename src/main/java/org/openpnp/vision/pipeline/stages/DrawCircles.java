@@ -1,7 +1,7 @@
 package org.openpnp.vision.pipeline.stages;
 
 import java.awt.Color;
-import java.util.List;
+import java.util.*;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -74,8 +74,17 @@ public class DrawCircles extends CvStage {
         if (result.model == null) {
             return null;
         }
+
         Mat mat = pipeline.getWorkingImage();
-        List<Result.Circle> circles = result.getExpectedListModel(Result.Circle.class, null);
+
+        List<Result.Circle> circles = new LinkedList<>();
+
+        if(result.model instanceof Result.Circle){
+            circles.add((Result.Circle) result.model);
+        }else if (result instanceof List<?> ){
+            circles.addAll((List<Result.Circle>)result.model);
+        }
+
         for (int i = 0; i < circles.size(); i++) {
             Result.Circle circle = circles.get(i);
             Color color = this.color == null ? FluentCv.indexedColor(i) : this.color;
