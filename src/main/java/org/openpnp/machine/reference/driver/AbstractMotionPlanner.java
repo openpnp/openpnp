@@ -134,6 +134,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, MotionOption... options) throws Exception {
+        if (speed <= 0) {
+            throw new Exception("Speed must be greater than 0.");
+        }
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
 
@@ -657,7 +660,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             }
             else {
                 throw new Exception("Axis "+axis.getName()+" with limited articulation cannot rotate to "+
-                        axesLocation.getCoordinate(axis)+" ("+hm.getName()+" at "+location.getRotation()+"°)");
+                        limitedAxesLocation.getCoordinate(axis)+" ("+hm.getName()+" to "+location.getRotation()+"°)");
             }
         }
         return limitedAxesLocation;
@@ -773,17 +776,29 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
     }
 
+    /**
+     * Wait for the drivers.
+     * 
+     * @param hm
+     * @param completionType
+     * @throws Exception
+     */
     protected void waitForDriverCompletion(HeadMountable hm, CompletionType completionType)
             throws Exception {
-        // Wait for the driver(s).
         ReferenceMachine machine = getMachine();
-        // If the hm is given, we just wait for the drivers of that hm, otherwise we wait for all drivers of the machine axes.
-        AxesLocation mappedAxes = (hm != null ? 
-                hm.getMappedAxes(machine) 
-                : new AxesLocation(machine));
-        if (!mappedAxes.isEmpty()) {
-            for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
-                driver.waitForCompletion((ReferenceHeadMountable) hm, completionType);
+        // If the hm is given, we just wait for the drivers of that hm, otherwise we wait for all drivers,
+        // including those that do not have any axes attached.
+        if (hm != null) {
+            AxesLocation mappedAxes = hm.getMappedAxes(machine);
+            if (!mappedAxes.isEmpty()) {
+                for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
+                    driver.waitForCompletion((ReferenceHeadMountable) hm, completionType);
+                }
+            }
+        }
+        else {
+            for (Driver driver : machine.getDrivers()) {
+                driver.waitForCompletion(null, completionType);
             }
         }
     }

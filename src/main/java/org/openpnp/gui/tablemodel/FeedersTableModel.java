@@ -22,15 +22,13 @@ package org.openpnp.gui.tablemodel;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.table.AbstractTableModel;
-
 import org.openpnp.ConfigurationListener;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.util.BeanUtils;
 
-public class FeedersTableModel extends AbstractTableModel {
+public class FeedersTableModel extends AbstractObjectTableModel {
     final private Configuration configuration;
 
     private String[] columnNames = new String[] {"Name", "Type", "Part", "Enabled"};
@@ -66,8 +64,14 @@ public class FeedersTableModel extends AbstractTableModel {
         return (feeders == null) ? 0 : feeders.size();
     }
 
-    public Feeder getFeeder(int index) {
+    @Override
+    public Feeder getRowObjectAt(int index) {
         return feeders.get(index);
+    }
+
+    @Override
+    public int indexOf(Object selectedVisionSettings) {
+        return feeders.indexOf(selectedVisionSettings);
     }
 
     @Override

@@ -40,6 +40,8 @@ import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -63,16 +65,27 @@ import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.NamedListCellRenderer;
+import org.openpnp.gui.support.NamedTableCellRenderer;
+import org.openpnp.gui.support.Wizard;
+import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PackagesTableModel;
+import org.openpnp.model.AbstractVisionSettings;
+import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Configuration.TablesLinked;
+import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.FiducialLocator;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.PartAlignment;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
 
 @SuppressWarnings("serial")
-public class PackagesPanel extends JPanel {
+public class PackagesPanel extends JPanel implements WizardContainer {
 
 
     private static final String PREF_DIVIDER_POSITION = "PackagesPanel.dividerPosition";
@@ -88,6 +101,8 @@ public class PackagesPanel extends JPanel {
     private JTable table;
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
+    private JTabbedPane tabbedPane;
+    private Package selectedPackage;
 
     public PackagesPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
@@ -149,10 +164,27 @@ public class PackagesPanel extends JPanel {
         });
         add(splitPane, BorderLayout.CENTER);
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+
+        JComboBox<BottomVisionSettings> bottomVisionCombo = new JComboBox<>(
+                new VisionSettingsComboBoxModel(BottomVisionSettings.class));
+        bottomVisionCombo.setMaximumRowCount(20);
+        bottomVisionCombo.setRenderer(new NamedListCellRenderer<>());
+        table.setDefaultEditor(BottomVisionSettings.class,
+                new DefaultCellEditor(bottomVisionCombo));
+
+        JComboBox<BottomVisionSettings> fiducialVisionCombo = new JComboBox<>(
+                new VisionSettingsComboBoxModel(FiducialVisionSettings.class));
+        fiducialVisionCombo.setMaximumRowCount(20);
+        fiducialVisionCombo.setRenderer(new NamedListCellRenderer<>());
+        table.setDefaultEditor(FiducialVisionSettings.class,
+                new DefaultCellEditor(fiducialVisionCombo));
+
+        table.setDefaultRenderer(AbstractVisionSettings.class,
+                new NamedTableCellRenderer<AbstractVisionSettings>());
 
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -161,36 +193,27 @@ public class PackagesPanel extends JPanel {
                     return;
                 }
                 
-                List<Package> selections = getSelections();
+                firePackageSelectionChanged();
+            }
+        });
 
-                if (selections.size() > 1) {
-                    singleSelectionActionGroup.setEnabled(false);
-                    multiSelectionActionGroup.setEnabled(true);
-                }
-                else {
-                    multiSelectionActionGroup.setEnabled(false);
-                    singleSelectionActionGroup.setEnabled(!selections.isEmpty());
-                }
+        Configuration.get().addPropertyChangeListener("visionSettings", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                // Handle vision settings changes like selection changes, as the inherited settings might change. 
+                firePackageSelectionChanged();
+            }
+        });
 
-                Package pkg = getSelection();
-
-                int selectedTab = tabbedPane.getSelectedIndex();
-                tabbedPane.removeAll();
-                if (pkg != null) {
-                    tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(pkg));
-                    tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(pkg.getFootprint())));
-                    tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(pkg)));
-                    if (selectedTab != -1) {
-                        tabbedPane.setSelectedIndex(selectedTab);
-                    }
-                }
-
-                revalidate();
-                repaint();
+        tableModel.addTableModelListener(e -> {
+            if (selectedPackage != null) { 
+                // Reselect previously selected settings.
+                Helpers.selectObjectTableRow(table, selectedPackage);
             }
         });
 
         table.setRowSorter(tableSorter);
+        table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
 
         splitPane.setLeftComponent(new JScrollPane(table));
         splitPane.setRightComponent(tabbedPane);
@@ -231,7 +254,7 @@ public class PackagesPanel extends JPanel {
         List<Package> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getPackage(selectedRow));
+            selections.add(tableModel.getRowObjectAt(selectedRow));
         }
         return selections;
     }
@@ -268,7 +291,7 @@ public class PackagesPanel extends JPanel {
 
                 configuration.addPackage(this_package);
                 tableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(table);
+                Helpers.selectObjectTableRow(table, this_package);
                 break;
             }
         }
@@ -367,11 +390,84 @@ public class PackagesPanel extends JPanel {
                     }
                 }
                 tableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(table);
+                Helpers.selectObjectTableRow(table, pkg);
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(getTopLevelAncestor(), "Paste Failed", e);
             }
         }
     };
+    private int selectedTab;
+
+    @Override
+    public void wizardCompleted(Wizard wizard) {}
+
+    @Override
+    public void wizardCancelled(Wizard wizard) {}
+
+    public void firePackageSelectionChanged() {
+        List<Package> selections = getSelections();
+
+        if (selections.size() > 1) {
+            singleSelectionActionGroup.setEnabled(false);
+            multiSelectionActionGroup.setEnabled(true);
+        }
+        else {
+            multiSelectionActionGroup.setEnabled(false);
+            singleSelectionActionGroup.setEnabled(!selections.isEmpty());
+        }
+
+        Package selectedPackage = getSelection();
+        if (selectedPackage != null) {
+            this.selectedPackage = selectedPackage; 
+        }
+
+        if (tabbedPane.getTabCount() > 0) {
+            selectedTab = tabbedPane.getSelectedIndex();
+        }
+        tabbedPane.removeAll();
+        if (selectedPackage != null) {
+            tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(selectedPackage));
+            tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(selectedPackage)));
+            tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(selectedPackage)));
+            Machine machine = Configuration.get().getMachine();
+            for (PartAlignment partAlignment : machine.getPartAlignments()) {
+                Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPackage);
+                if (wizard != null) {
+                    JPanel panel = new JPanel();
+                    panel.setLayout(new BorderLayout());
+                    panel.add(wizard.getWizardPanel());
+                    tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                    wizard.setWizardContainer(PackagesPanel.this);
+                }
+            }
+            FiducialLocator fiducialLocator = machine.getFiducialLocator();
+            Wizard wizard = fiducialLocator.getPartConfigurationWizard(selectedPackage);
+            if (wizard != null) {
+                JPanel panel = new JPanel();
+                panel.setLayout(new BorderLayout());
+                panel.add(wizard.getWizardPanel());
+                tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                wizard.setWizardContainer(PackagesPanel.this);
+            }
+            if (selectedTab != -1 
+                    && tabbedPane.getTabCount() > selectedTab) {
+                tabbedPane.setSelectedIndex(selectedTab);
+            }
+            MainFrame mainFrame = MainFrame.get();
+            if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getPackagesTab() 
+                    && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
+                 mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(selectedPackage);
+            }
+        }
+
+        revalidate();
+        repaint();
+    }
+
+    public void selectPackageInTable(Package packag) {
+        if (getSelection() != packag) {
+            Helpers.selectObjectTableRow(table, packag);
+        }
+    }
 }

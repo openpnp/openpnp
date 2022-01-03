@@ -58,6 +58,7 @@ import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -161,6 +162,16 @@ public class JobPlacementsPanel extends JPanel {
                             && getSelection().getSide() == boardLocation.getSide());
                     Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
                             boardLocation, JobPlacementsPanel.this));
+                    MainFrame mainFrame = MainFrame.get();
+                    if (getSelection() != null
+                            && mainFrame.getTabs().getSelectedComponent() == mainFrame.getJobTab() 
+                            && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
+                        Part selectedPart = getSelection().getPart();
+                        mainFrame.getPartsTab().selectPartInTable(selectedPart);
+                        mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
+                        mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
+                        mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(selectedPart);
+                    }
                 }
             }
         });
@@ -315,7 +326,7 @@ public class JobPlacementsPanel extends JPanel {
 
     public void selectPlacement(Placement placement) {
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            if (tableModel.getPlacement(i) == placement) {
+            if (tableModel.getRowObjectAt(i) == placement) {
                 int index = table.convertRowIndexToView(i);
                 table.getSelectionModel().setSelectionInterval(index, index);
                 table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
@@ -361,7 +372,7 @@ public class JobPlacementsPanel extends JPanel {
                     return false;
                 }
                 PlacementsTableModel model = entry.getModel();
-                Placement placement = model.getPlacement(entry.getIdentifier());
+                Placement placement = model.getRowObjectAt(entry.getIdentifier());
                 return placement.getSide() == boardLocation.getSide();
             }
         };
