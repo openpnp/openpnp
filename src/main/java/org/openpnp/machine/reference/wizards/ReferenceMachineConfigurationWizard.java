@@ -37,6 +37,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
     private JComboBox motionPlannerClass;
     private boolean reloadWizard;
     private JCheckBox autoToolSelect;
+    private JCheckBox safeZPark;
 
     public ReferenceMachineConfigurationWizard(ReferenceMachine machine) {
         this.machine = machine;
@@ -58,6 +59,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
         JLabel lblHomeAfterEnabled = new JLabel("Home after enabled?");
@@ -72,13 +75,20 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         autoToolSelect = new JCheckBox("");
         panelGeneral.add(autoToolSelect, "4, 4");
         
+        JLabel lblParkAllAtSafeZ = new JLabel("Park all at Safe Z?");
+        lblParkAllAtSafeZ.setToolTipText("When the Z Park button is pressed, move all tools mounted on the same head to safe Z.");
+        panelGeneral.add(lblParkAllAtSafeZ, "2, 6, right, default");
+        
+        safeZPark = new JCheckBox("");
+        panelGeneral.add(safeZPark, "4, 6");
+        
         JLabel lblMotionPlanning = new JLabel("Motion Planning");
-        panelGeneral.add(lblMotionPlanning, "2, 6, right, default");
+        panelGeneral.add(lblMotionPlanning, "2, 8, right, default");
         
         Object[] classNames = machine.getCompatibleMotionPlannerClasses().stream()
         .map(c -> c.getSimpleName()).toArray();
         motionPlannerClass = new JComboBox(classNames);
-        panelGeneral.add(motionPlannerClass, "4, 6, fill, default");
+        panelGeneral.add(motionPlannerClass, "4, 8, fill, default");
         
                 JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
@@ -142,6 +152,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
 
         addWrappedBinding(machine, "homeAfterEnabled", checkBoxHomeAfterEnabled, "selected");
         addWrappedBinding(machine, "autoToolSelect", autoToolSelect, "selected");
+        addWrappedBinding(machine, "safeZPark", safeZPark, "selected");
 
         motionPlannerClassName = machine.getMotionPlanner().getClass().getSimpleName();
         addWrappedBinding(this, "motionPlannerClassName", motionPlannerClass, "selectedItem");
