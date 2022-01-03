@@ -78,7 +78,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(MatchPartsTemplate.class);
         registerStageClass(MinAreaRect.class);
         registerStageClass(MinAreaRectContours.class);
-        registerStageClass(MinAreaCircle.class);
+        registerStageClass(MinEnclosingCircle.class);
         registerStageClass(FitEllipseContours.class);
         registerStageClass(Normalize.class);
         registerStageClass(OrientRotatedRects.class);
