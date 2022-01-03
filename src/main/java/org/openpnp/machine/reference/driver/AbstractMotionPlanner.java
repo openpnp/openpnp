@@ -776,17 +776,29 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
     }
 
+    /**
+     * Wait for the drivers.
+     * 
+     * @param hm
+     * @param completionType
+     * @throws Exception
+     */
     protected void waitForDriverCompletion(HeadMountable hm, CompletionType completionType)
             throws Exception {
-        // Wait for the driver(s).
         ReferenceMachine machine = getMachine();
-        // If the hm is given, we just wait for the drivers of that hm, otherwise we wait for all drivers of the machine axes.
-        AxesLocation mappedAxes = (hm != null ? 
-                hm.getMappedAxes(machine) 
-                : new AxesLocation(machine));
-        if (!mappedAxes.isEmpty()) {
-            for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
-                driver.waitForCompletion((ReferenceHeadMountable) hm, completionType);
+        // If the hm is given, we just wait for the drivers of that hm, otherwise we wait for all drivers,
+        // including those that do not have any axes attached.
+        if (hm != null) {
+            AxesLocation mappedAxes = hm.getMappedAxes(machine);
+            if (!mappedAxes.isEmpty()) {
+                for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
+                    driver.waitForCompletion((ReferenceHeadMountable) hm, completionType);
+                }
+            }
+        }
+        else {
+            for (Driver driver : machine.getDrivers()) {
+                driver.waitForCompletion(null, completionType);
             }
         }
     }
