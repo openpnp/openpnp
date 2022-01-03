@@ -129,6 +129,9 @@ public class ReferenceMachine extends AbstractMachine {
     @Attribute(required = false)
     private boolean autoToolSelect = true;
 
+    @Attribute(required = false)
+    private boolean safeZPark = true;
+
     @Element(required = false)
     private Solutions solutions = new Solutions();
 
@@ -263,6 +266,17 @@ public class ReferenceMachine extends AbstractMachine {
         Object oldValue = this.autoToolSelect;
         this.autoToolSelect = autoToolSelect;
         firePropertyChange("autoToolSelect", oldValue, autoToolSelect);
+    }
+
+    @Override
+    public boolean isSafeZPark() {
+        return safeZPark;
+    }
+
+    public void setSafeZPark(boolean safeZPark) {
+        Object oldValue = this.safeZPark;
+        this.safeZPark = safeZPark;
+        firePropertyChange("safeZPark", oldValue, safeZPark);
     }
 
     @Override
