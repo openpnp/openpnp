@@ -1,29 +1,29 @@
 package org.openpnp.vision.pipeline.stages;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
-import org.opencv.core.RotatedRect;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
- * Finds the smallest rotated rectangle that encloses pixels that fall within the given range.
- * Input should be a grayscale image. 
+ * Finds the smallest circle that encloses pixels that fall within the given range.
+ * Input should be a grayscale image.
  */
-public class MinAreaRect extends CvStage {
+public class MinEnclosingCircle extends CvStage {
     @Attribute
     private int thresholdMin;
-    
+
     @Attribute
     private int thresholdMax;
-    
+
     public int getThresholdMin() {
         return thresholdMin;
     }
@@ -39,12 +39,11 @@ public class MinAreaRect extends CvStage {
     public void setThresholdMax(int thresholdMax) {
         this.thresholdMax = thresholdMax;
     }
-    
-    
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         if (pipeline.getWorkingColorSpace() != FluentCv.ColorSpace.Gray){
-            throw new Exception(String.format("%s is not compatible with %s colorspace. Only Grey colorspace is supported.", MinAreaRect.class.getSimpleName(), pipeline.getWorkingColorSpace()));
+            throw new Exception(String.format("%s is not compatible with %s colorspace. Only Grey colorspace is supported.", MinEnclosingCircle.class.getSimpleName(), pipeline.getWorkingColorSpace()));
         }
 
         Mat mat = pipeline.getWorkingImage();
@@ -63,8 +62,18 @@ public class MinAreaRect extends CvStage {
             return null;
         }
         MatOfPoint2f pointsMat = new MatOfPoint2f(points.toArray(new Point[]{}));
-        RotatedRect r = Imgproc.minAreaRect(pointsMat);
+
+        Point center = new Point();
+        float[] radius = new float[1];
+        Imgproc.minEnclosingCircle(pointsMat, center, radius);
         pointsMat.release();
-        return new Result(null, r);
+
+        Result.Circle detectedCircle = new Result.Circle(center.x, center.y, radius[0] * 2);
+
+        // Returning List instead of a single circle for compatibility with other stages
+        // ie DrawCircles that works with List
+        List<Result.Circle> model = Collections.singletonList(detectedCircle);
+
+        return new Result(null, model);
     }
 }
