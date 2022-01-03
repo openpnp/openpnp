@@ -1365,7 +1365,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         super.findIssues(solutions);
         try {
             if (solutions.isTargeting(Milestone.Basics)) {
-                if (getVacuumActuator().getValueType() == ActuatorValueType.Double) {
+                if (getVacuumActuator() != null 
+                        && getVacuumActuator().getValueType() == ActuatorValueType.Double) {
                     findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
                         new CommandType[] { CommandType.ACTUATE_DOUBLE_COMMAND });
                 }
