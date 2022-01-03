@@ -371,12 +371,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
     }
 
-    private static RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
+    private RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
             Nozzle nozzle, Location wantedLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("part", part);
         pipeline.setProperty("nozzle", nozzle);
+        pipeline.setProperty("alignment.center", wantedLocation);
         pipeline.setProperty("alignment.expectedAngle", wantedLocation.getRotation());
+        pipeline.setProperty("alignment.searchDistance", getMaxSearchDistance());
         Location partSize = bottomVisionSettings.getPartCheckSize(part);
         if (partSize != null) {
             pipeline.setProperty("alignment.maxWidth", partSize.getLengthX());
