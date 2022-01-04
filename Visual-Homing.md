@@ -80,7 +80,7 @@ With the new method you can rest assured that axis transformations such as [[Non
 
 * **None**: Switches off visual homing.
 
-* **ResetToFiducialLocation**: do **not** use this method for an already set up machine! 
+* **ResetToFiducialLocation**: do **not** use this method for an already set up machine that has **ResetToHomeLocation**! 
 
 * **ResetToHomeLocation**: after mechanical homing, OpenPnP will move the camera to the Fiducial Location using the mechanical coordinate system. Computer Vision will then pin the fiducial down precisely. Afterwards this location is reset to the X and Y axis **Home Coordinates**. See the [[Machine Axis Controller Settings for how to set the Homing Coordinate|Machine-Axes#controller-settings]]. These are raw coordinates so axis transformations such as [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] will not be applied, the coordinates may therefore appear differently in OpenPnP's DRO. 
 
