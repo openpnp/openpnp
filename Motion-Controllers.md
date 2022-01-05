@@ -26,7 +26,7 @@ Some Smoothie based boards that are known to work with OpenPnP, and which you ca
 * **Smoothieboard**: http://smoothieware.org/getting-smoothieboard
     The original. Buying this board helps support the creators of Smoothie. Available with up to 5 stepper drivers and 6 MOSFET outputs.
 * **Rapid Star Board**: https://www.deltaprintr.com/product/rapid-star-board/
-    Created by Deltaprintr, this board is a remix of the smoothie board but has features tailored specifically towards PNP machines and supports up to 6 axis with many additional features.
+    Created by Deltaprintr, this board is a remix of the smoothie board but has features tailored specifically towards PNP machines and supports up to 6 stepper drivers with many additional features.
 * **Cohesion3D Remix**: http://cohesion3d.com/cohesion3d-remix/
     Created by an OpenPnP forum member, this board is designed with PnP in mind and has up to 6 stepper drivers and 6 MOSFET outputs. This board is great for larger, more complex machines.
 * **Azteeg**: http://www.panucatt.com/default.asp
