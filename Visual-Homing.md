@@ -92,7 +92,7 @@ This is a procedure to "migrate" to the new **ResetToFiducialLocation** method, 
 1. This is delicate: follow this carefully!
 1. Leave your existing **old** homing fiducial physically intact **(important!)**.
 1. Mount a **new** fiducial in a more central location, both in X and Y (as described [above](#mounting-a-fiducial)).
-1. Start OpenPnP fresh.
+1. Start a fresh OpenPnP session.
 1. Perform a full machine homing. Make sure the visual homing was successful and your old homing fiducial is perfectly in the cross-hairs, when you move to the home location coordinates.
 1. While the machine is still homed that way, do the following steps. **Don't interrupt this!**
 1. Set **Homing Method** on the head to **ResetToFiducialLocation**, press **Apply**.
