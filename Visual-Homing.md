@@ -98,7 +98,7 @@ This is a procedure to "migrate" to the new **ResetToFiducialLocation** method, 
 1. Set **Homing Method** on the head to **ResetToFiducialLocation**, press **Apply**.
 1. Jog to the **new** homing fiducial, press **Visual Test** to center the camera perfectly.
 1. Capture the new **Homing Fiducial** location using the usual blue camera button. Press **Apply**.
-1. Test a full machine homing. It should now use the **new** fiducial and the modern **ResetToFiducialLocation** method.
+1. Test a full machine homing. It should now use the **new** fiducial and the modern **ResetToFiducialLocation** method. If this works out, you're already done.
 1. If it does not find the **new** fiducial, then your former **ResetToHomingLocation** configuration had a fiducial location that did not match the homing location at all, perhaps due to a home-to-max config, large retract, or something. The electro-mechanically homed coordinate system is too different from the visually homed one. You need to figure out the **shift in X/Y**.
 1. Alternative A: if you have the TinyG, set the home coordinates on the X, Y Axes in OpenPnP to correspond to the visually homed coordinate system (compensate for the shift). Then delete (empty) your existing `HOME_COMMAND` and let [[Issues and Solutions]] generate a dynamic one.
 1. Alternative B: in our controller's config (e.g. Smoothieware `config.txt`), set the X, Y home coordinates to correspond to the visually homed coordinate system (compensate for the shift).
