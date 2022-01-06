@@ -37,7 +37,7 @@ For the final step, go to the machine Head and set up Visual Homing. There are t
 * A legacy method that aims to keep compatibility for existing machines **to preserve their coordinate system**.
 
 ___
-**CAUTION**: Do not be tempted to use the new method on an old machine unless you are absolutely sure to start from scratch with everything!
+**CAUTION**: Do not be tempted to just switch to the new method on an old machine unless you are absolutely sure to start from scratch with everything! There is a guide to to migrate the new method [below](#migrate-to-new-resettofiduciallocation-method). 
 ___
 
 ### Method for new Machines
@@ -68,7 +68,7 @@ With the new method you can rest assured that axis transformations such as [[Non
 
 **Basic Operation Theory**: Before visual homing is performed, the controller is already mechanically homed by end-switches on the axes (some users also position the head manually). The coordinate system can be anything. Visual Homing will completely redefine the coordinate system to the **Home Coordinate** set on the X and Y axes. Axis transformations are not accounted for. 
 
-**NOTE**: you should never change these setting for an existing machine. The following is just intended to _understand_ what has been migrated automatically from previous versions of OpenPnP 2.0. There is a guide to convert to the new method in section [[#Migrate-to-new-method]].
+**NOTE**: you should never change these setting for an existing machine. The following is just intended to _understand_ what has been migrated automatically from previous versions of OpenPnP 2.0. There is a guide to convert to the new method [below](#migrate-to-new-resettofiduciallocation-method).
 
 ![Visual Homing OLD](https://user-images.githubusercontent.com/9963310/99187254-bd814080-2755-11eb-85e9-f3d9ef0efc3c.png)
 
