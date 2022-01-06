@@ -120,6 +120,7 @@ This is a procedure to "migrate" from the old **ResetToHomeLocation** method to 
 1. Jog to the **new** homing fiducial, press **Visual Test** to center the camera perfectly.
 1. Capture the new **Homing Fiducial** location using the usual blue camera button. Press **Apply**.
 1. Test a full machine homing. It should now use the **new** fiducial and the modern **ResetToFiducialLocation** method. If this works out, you're already done.
+   ___
 
 1. If it does not find the **new** fiducial, then your former **ResetToHomingLocation** configuration had a fiducial location that did not match the homing location at all, perhaps due to a home-to-max config, large retract, or something. The electro-mechanically homed coordinate system is too different from the visually homed one. You need to figure out the **shift in X/Y**.
 1. _Alternative A_: if you have the TinyG, set the home coordinates on the X, Y Axes in OpenPnP to correspond to the visually homed coordinate system (compensate for the **shift in X/Y**). Then delete (empty) your existing `HOME_COMMAND` and let [[Issues and Solutions]] generate a new dynamic one. This new `HOME_COMMAND` will then automatically establish an electro-mechanically homed coordinate system that roughly corresponds to the visually homed coordinate system.
