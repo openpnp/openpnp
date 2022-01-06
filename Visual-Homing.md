@@ -68,7 +68,7 @@ With the new method you can rest assured that axis transformations such as [[Non
 
 **Basic Operation Theory**: Before visual homing is performed, the controller is already mechanically homed by end-switches on the axes (some users also position the head manually). The coordinate system can be anything. Visual Homing will completely redefine the coordinate system to the **Home Coordinate** set on the X and Y axes. Axis transformations are not accounted for. 
 
-**NOTE**: you should never change these setting for an existing machine. The following is just intended to understand what has been migrated automatically from previous versions of OpenPnP 2.0. 
+**NOTE**: you should never change these setting for an existing machine. The following is just intended to _understand_ what has been migrated automatically from previous versions of OpenPnP 2.0. There is a guide to convert to the new method in section [[#Migrate-to-new-method]].
 
 ![Visual Homing OLD](https://user-images.githubusercontent.com/9963310/99187254-bd814080-2755-11eb-85e9-f3d9ef0efc3c.png)
 
@@ -83,6 +83,34 @@ With the new method you can rest assured that axis transformations such as [[Non
 * **ResetToFiducialLocation**: do **not** use this method for an already set up machine that has **ResetToHomeLocation**! 
 
 * **ResetToHomeLocation**: after mechanical homing, OpenPnP will move the camera to the Fiducial Location using the mechanical coordinate system. Computer Vision will then pin the fiducial down precisely. Afterwards this location is reset to the X and Y axis **Home Coordinates**. See the [[Machine Axis Controller Settings for how to set the Homing Coordinate|Machine-Axes#controller-settings]]. These are raw coordinates so axis transformations such as [[Non-Squareness Compensation|Linear-Transformed-Axes#use-case--non-squareness-compensation]] will not be applied, the coordinates may therefore appear differently in OpenPnP's DRO. 
+
+### Migrate to new **ResetToFiducialLocation** Method
+
+This is a procedure to "migrate" to the new **ResetToFiducialLocation** method, without losing any coordinates you already captured. It is a delicate, manual procedure, that unfortnuately cannot be automated in the general case. 
+
+1. This works easily, if your fiducial was very near the (electro-mechanical) homing coordinates. Otherwise it will get more complicated, see the last few points.
+1. This is delicate: follow this carefully!
+1. Leave your existing **old** homing fiducial physically intact **(important!)**.
+1. Mount a **new** fiducial in a more central location, both in X and Y (as described [above](#mounting-a-fiducial)).
+1. Start OpenPnP fresh.
+1. Perform a full machine homing. Make sure the visual homing was successful and your old homing fiducial is perfectly in the cross-hairs, when you move to the home location coordinates.
+1. While the machine is still homed that way, do the following steps. **Don't interrupt this!**
+1. Set **Homing Method** on the head to **ResetToFiducialLocation**, press **Apply**.
+1. Jog to the **new** homing fiducial, press **Visual Test** to center the camera perfectly.
+1. Capture the new **Homing Fiducial** location using the usual blue camera button. Press **Apply**.
+1. Test a full machine homing. It should now use the **new** fiducial and the modern **ResetToFiducialLocation** method.
+1. If it does not find the **new** fiducial, then your former **ResetToHomingLocation** configuration had a fiducial location that did not match the homing location at all, perhaps due to a home-to-max config, large retract, or something. The electro-mechanically homed coordinate system is too different from the visually homed one. You need to figure out the **shift in X/Y**.
+1. Alternative A: if you have the TinyG, set the home coordinates on the X, Y Axes in OpenPnP to correspond to the visually homed coordinate system (compensate for the shift). Then delete (empty) your existing `HOME_COMMAND` and let [[Issues and Solutions]] generate a dynamic one.
+1. Alternative B: in our controller's config (e.g. Smoothieware `config.txt`), set the X, Y home coordinates to correspond to the visually homed coordinate system (compensate for the shift).
+1. Alternative C: Add G-code to your `HOME_COMMAND` to roughly move the camera over the old homing fiducial using coordinates of the electro-mechanically homed machine coordinate system and then reset this position to the visually homed coordinate system, something like this:
+
+    ```
+    ... ; existing homing sequence`
+    G1 X10 Y650 ; move roughly over the old fiducial (but use your raw old fiducial coordinates!)
+    G92 X0 Y0 ; reset to old home coordinates (but use your old home coordinates!)
+    Retry from 13.
+    ```
+
 
 ___
 
