@@ -107,12 +107,12 @@ If you ever want to use a new homing fiducial at a different location, follow th
 
 ### Migrate to new **ResetToFiducialLocation** Method
 
-This is a procedure to "migrate" from the old **ResetToHomeLocation** method to the new **ResetToFiducialLocation** method, without losing any coordinates you already captured. It is a delicate, manual procedure, that unfortunately cannot be automated in the general case. 
+This is a procedure to "migrate" from the old **ResetToHomeLocation** method to the new **ResetToFiducialLocation** method, without losing any coordinates you already captured. It assumes you also want to establish a **new** homing fiducial at a more ideal location. It is a delicate, manual procedure, that unfortunately cannot be automated in the general case. 
 
 1. This works easily, if your fiducial was very near the electro-mechanical homing coordinates. Otherwise it will get more complicated, see the last few steps.
 1. This is delicate: follow this carefully!
 1. Leave your existing **old** homing fiducial physically intact **(important!)**.
-1. Mount a **new** fiducial in the desired new spot, on the same Z level as the PCB surface, and ideally in a central location, both in X and Y (as described [above](#mounting-a-fiducial)).
+1. Mount a **new** fiducial, on the same Z level as the PCB surface, and ideally in a central location, both in X and Y (as described [above](#mounting-a-fiducial)).
 1. Start a fresh OpenPnP session.
 1. Perform a full machine homing. Make sure the visual homing was successful and your **old** homing fiducial is perfectly in the cross-hairs, when you move to the home location coordinates.
 1. While the machine is still homed that way, do the following steps. **Don't interrupt this!**
