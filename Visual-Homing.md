@@ -71,7 +71,7 @@ The **Visual Home** button will perform the Visual Homing, resetting the coordin
 
 ### Using a new Homing Fiducial Location
 
-If you ever want to us a new homing fiducial at a different location, follow this procedure:
+If you ever want to use a new homing fiducial at a different location, follow this procedure:
 
 1. ⚠ Do **not** do this if you currently have the legacy **ResetToHomeLocation** method set! In that case, use the procedure [further below](#migrate-to-new-resettofiduciallocation-method) instead. 
 1. Leave your existing **old** homing fiducial physically intact until the new one is fully established.
