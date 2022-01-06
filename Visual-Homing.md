@@ -88,7 +88,7 @@ With the new method you can rest assured that axis transformations such as [[Non
 
 This is a procedure to "migrate" to the new **ResetToFiducialLocation** method, without losing any coordinates you already captured. It is a delicate, manual procedure, that unfortnuately cannot be automated in the general case. 
 
-1. This works easily, if your fiducial was very near the (electro-mechanical) homing coordinates. Otherwise it will get more complicated, see the last few points.
+1. This works easily, if your fiducial was very near the electro-mechanical homing coordinates. Otherwise it will get more complicated, see the last few points.
 1. This is delicate: follow this carefully!
 1. Leave your existing **old** homing fiducial physically intact **(important!)**.
 1. Mount a **new** fiducial in a more central location, both in X and Y (as described [above](#mounting-a-fiducial)).
