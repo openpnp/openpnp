@@ -44,7 +44,7 @@ ___
 
 **Basic Operation Theory**: Before visual homing is performed, the controller is already mechanically homed by end-switches on the axes (some users also position the head manually). The coordinate system must now already _roughly_ be right, the Visual Homing is only used to nail the coordinate system down more precisely. 
 
-![Visual Homing](https://user-images.githubusercontent.com/9963310/99185536-c02a6880-274a-11eb-8416-ecf0c2447a66.png)
+![Visual Homing](https://user-images.githubusercontent.com/9963310/148373226-ce1d68bc-9cfe-404a-ad16-276ec0302b8e.png)
 
 **Homing Fiducial** locates the fiducial on the machine in OpenPnP coordinates. You can simply jog to the fiducial and capture it using the Capture button:
 
@@ -63,6 +63,27 @@ With the new method you can rest assured that axis transformations such as [[Non
 * **ResetToFiducialLocation**: use this method for a newly set up machine. After the fiducial has been pinned down by Computer Vision, the machine position is reset to the **Homing Fiducial** location i.e. the theoretical (rounded) fiducial location and the actual machine location are made to match. 
 
 * **ResetToHomeLocation**: do **not** use this method for a newly set up machine. 
+
+
+The **Visual Test** button can be used to test the visual homing, without actually performing the visual homing, i.e., without affecting the machine coordinate system. It will center the camera perfectly on the fiducial. 
+
+The **Visual Home** button will perform the Visual Homing, resetting the coordinate system. 
+
+### Using a new Homing Fiducial Location
+
+If you ever want to us a new homing fiducial at a different location, follow this procedure:
+
+1. ⚠ Do **not** do this if you currently have the legacy **ResetToHomeLocation** method set! In that case, use the procedure [further below](#migrate-to-new-resettofiduciallocation-method) instead. 
+1. Leave your existing **old** homing fiducial physically intact until the new one is fully established.
+1. Mount a **new** fiducial in the desired new spot, on the same Z level as the PCB surface, and ideally in a central location, both in X and Y (as described [above](#mounting-a-fiducial)).
+1. Start a fresh OpenPnP session.
+1. Perform a full machine homing. Make sure the **old** visual homing was successful and your **old** homing fiducial is perfectly in the cross-hairs, when you move to the home location coordinates.
+1. While the machine is still homed that way, do the following steps. **Do not interrupt this!**
+1. Jog to the **new** homing fiducial, press **Visual Test** to center the camera perfectly.
+1. Capture the **new** **Homing Fiducial** location using the usual blue camera button. Press **Apply**.
+1. Test a full machine homing. It should now use the **new** fiducial.
+1. Do **File / Save Configuration** to make sure the new fidcuial is properly saved. 
+1. After a few sessions of successfully using the new fiducial, you can physically remove the old if you like. 
 
 ### Method for old Machines
 
