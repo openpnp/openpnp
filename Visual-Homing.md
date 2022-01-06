@@ -105,12 +105,12 @@ This is a procedure to "migrate" to the new **ResetToFiducialLocation** method, 
 1. Alternative C: Add G-code to your `HOME_COMMAND` to roughly move the camera over the old homing fiducial using coordinates of the electro-mechanically homed machine coordinate system and then reset this position to the visually homed coordinate system, something like this:
 
     ```
-    ... ; existing homing sequence`
+    ... ; existing homing sequence
     G1 X10 Y650 ; move roughly over the old fiducial (but use your raw old fiducial coordinates!)
     G92 X0 Y0 ; reset to old home coordinates (but use your old home coordinates!)
-    Retry from 13.
     ```
 
+1. Retry from step 11.
 
 ___
 
