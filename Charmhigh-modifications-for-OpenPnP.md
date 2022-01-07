@@ -9,29 +9,27 @@ See also:
 [[CharmHigh CHMT36VA]]
 
 _Mark (2021-12-04)
+
+Working on it
+Sam (2022-01-07)
 ___
 
 
 ## Introduction
-This page gives instructions on how to get OpenPnP to work with the pick-and-place machines from Charmhigh.
+This page gives instructions on how to upgrade your Charmhigh CHMT48VB or CHMT36VA machine to work with OpenPnP. For Full instructions on how to Setup and Calibrate your machine with OpenPnP see [[CharmHigh CHMT36VA]]
 
 ## Overview
-Upgrading the PnP machine will require the following general steps:  
+Upgrading the PnP machine will require the following:  
 You will need to reflash the pick-and-place's control board firmware with [Smoothieware](https://github.com/Smoothieware/Smoothieware), which is a popular CNC controller.
 
 Upgrading the camera's to HD USB with better resolution (Upgrading the camera's takes the most effort in upgrading the hardware). You can decide to keep the existing camera's, but this is not recommended, because OpenPnP does use computer vision that needs the best image quality possible.
-
-Installing OpenPnP and loading provided machine.xml configuration file by overwriting default machine.xml configuration file. (There is no import config or known default machines list in OpenPnP at the moment)
-
-Calibrating and fine tuning machine configuration in OpenPnP (This step should not be underestimated, provided machine.xml will help setup most of the essentials though)
-
 
 There are also some recommendations made so that you can get the most out of your machine when using OpenPnP.
 
 ## Consider not doing this
 This process will surely void your warranty.  You might break your machine.
 
-This is not yet an easy and quick 5 minute conversion. OpenPnP is designed to be used with custom DIY build machines and therefor requires extensive configuration to get up and running. However, pre-configured configuration files are available for both 48VB and 36VA machines and greatly help to start. Nevertheless, do plan for your machine to be down for a while.
+This is not yet an easy and quick 5 minute conversion. OpenPnP is designed to be used with custom DIY build machines and therefor requires extensive configuration to get up and running. However, pre-configured configuration files are available for both 48VB and 36VA machines and greatly help to start. Nevertheless, do plan for your machine to be down for a while (most people need 1 week or more).
 
 It might also make your machine slower, however, latest configuration tuning can match original software speed. But it will make your machine smoother due to better acceleration algorithms implemented in Smoothieware in combination with AdvancedMotionPlanner in OpenPnP. 
 
