@@ -90,7 +90,15 @@ To supply the wanted diameter and maximum search distance from the vision operat
 
 **Vision Diameter**: Must be set to the physical diameter of the feature you want to detect. Typically, a feature at the very point of the nozzle tip. Either the outer diameter or the air bore. 
 
-Measuring the Vision Diameter using the camera and relative DRO mode:
+Measuring the **Vision Diameter** using the camera and relative DRO mode:
+
+1. Center the nozzle tip.
+1. Zoom the Camera View using scroll-mouse.
+1. Jog to the right edge of the wanted circular feature. 
+1. Click the DRO to put it in Relative Mode (it turns from greenish to blueish).
+1. Jog to the left edge of the wanted circular feature. 
+1. Read the diameter off the DRO `X` coordinate. 
+1. Enter as **Vision Diameter**.
 
 ![Measuring the nozzle tip feature diameter avi](https://user-images.githubusercontent.com/9963310/148825895-aa5780b7-9785-4945-b441-c76ffc7e880f.gif)
 
