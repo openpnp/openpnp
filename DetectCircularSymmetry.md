@@ -90,6 +90,10 @@ To supply the wanted diameter and maximum search distance from the vision operat
 
 **Vision Diameter**: Must be set to the physical diameter of the feature you want to detect. Typically, a feature at the very point of the nozzle tip. Either the outer diameter or the air bore. 
 
+Measuring the Vision Diameter using the camera and relative DRO mode:
+
+![Measuring the nozzle tip feature diameter avi](https://user-images.githubusercontent.com/9963310/148825895-aa5780b7-9785-4945-b441-c76ffc7e880f.gif)
+
 The **maxDistance** property is automatically derived from the already present **Offset Threshold**.
 
 Standard pipeline (Edit the pipeline and paste this using the ![Paste](https://user-images.githubusercontent.com/9963310/115295345-f0db5780-a159-11eb-826e-4fcabc1917e6.png) button):
