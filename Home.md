@@ -8,6 +8,7 @@
 * [[Video Tutorials]]
 * [[FAQ]]
 * [[Getting Help]]
+* [3rd party step by step guide from Index PnP](https://docs.google.com/document/d/1lw5UAbjrDN3risLOfTEdrzQ7aJtqhbUJQ0RssY0m3ZI/edit)
 
 ## Going Further
 * [[Scripting]]
