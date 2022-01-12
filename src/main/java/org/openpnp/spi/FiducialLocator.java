@@ -4,6 +4,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.PartSettingsHolder;
 
 
 /**
@@ -20,9 +21,9 @@ public interface FiducialLocator extends PropertySheetHolder {
     
     /**
      * Get a Wizard for configuring the FiducialLocator instance properties for a specific
-     * Part.
+     * part settings holder.
      * @param part
      * @return
      */
-    Wizard getPartConfigurationWizard(Part part);
+    Wizard getPartConfigurationWizard(PartSettingsHolder partSettingsHolder);
 }

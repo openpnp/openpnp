@@ -38,6 +38,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.spi.base.AbstractHead;
 import org.pmw.tinylog.Logger;
@@ -88,6 +89,14 @@ public class ReferenceHead extends AbstractHead {
                     // Use bare X, Y homing coordinates (legacy mode).
                     axesHomingLocation =  new AxesLocation(machine, 
                             (axis) -> (axis.getHomeCoordinate())); 
+                    // For best legacy support, we suppress the camera calibration head offsets, but we do not
+                    // suppress the head offsets in general. Whether it was a bug or a feature to not account for the 
+                    // head offsets, can be left open. 
+                    Location cameraHomingLocation = hm.toHeadMountableLocation(hm.toTransformed(axesHomingLocation), 
+                            LocationOption.SuppressCameraCalibration);
+                    // Having the legacy camera location, we can derive the axesHomingLocation, this time accounting 
+                    // for the camera calibration head offsets.
+                    axesHomingLocation = hm.toRaw(hm.toHeadLocation(cameraHomingLocation));
                 }
                 // Just take the X and Y axes.
                 axesHomingLocation = axesHomingLocation.byType(Axis.Type.X, Axis.Type.Y); 

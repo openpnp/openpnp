@@ -19,14 +19,19 @@
 
 package org.openpnp.gui.support;
 
+import java.awt.Rectangle;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import org.jdesktop.beansbinding.BeanProperty;
+import org.openpnp.gui.tablemodel.AbstractObjectTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 
@@ -63,12 +68,49 @@ public class Helpers {
      * @param table
      */
     public static void selectLastTableRow(JTable table) {
-        table.clearSelection();
-        int index = table.getModel().getRowCount() - 1;
-        index = table.convertRowIndexToView(index);
-        table.addRowSelectionInterval(index, index);
+        SwingUtilities.invokeLater(() -> {
+            int index = table.getModel().getRowCount() - 1;
+            index = table.convertRowIndexToView(index);
+            table.setRowSelectionInterval(index, index);
+        });
     }
-    
+
+    /**
+     * Select the specified multiple row objects in the table.  
+     * 
+     * @param table
+     * @param rows
+     */
+    public static void selectObjectTableRows(JTable table, List<? extends Object> rows) {
+        SwingUtilities.invokeLater(() -> {
+            table.clearSelection();
+            AbstractObjectTableModel tableModel = (AbstractObjectTableModel) table.getModel();
+            for (Object row : rows) {
+                int index = tableModel.indexOf(row);
+                if (index >= 0) {
+                    int viewIndex = table.getRowSorter().convertRowIndexToView(index);
+                    table.addRowSelectionInterval(viewIndex, viewIndex);
+                    Rectangle cellRect = table.getCellRect(viewIndex, viewIndex, true);
+                    table.scrollRectToVisible(cellRect);
+                }
+            }
+        });
+    }
+
+    /**
+     * Select the specified row object in the table.
+     *  
+     * @param table
+     * @param row
+     */
+    public static void selectObjectTableRow(JTable table, Object row) {
+        if (row != null) {
+            List<Object> rows = new ArrayList<>();
+            rows.add(row);
+            selectObjectTableRows(table, rows);
+        }
+    }
+
     public static void selectNextTableRow(JTable table){
     	 int index = table.getSelectedRow();
     	 

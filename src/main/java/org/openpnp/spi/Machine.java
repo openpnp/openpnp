@@ -356,4 +356,9 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * @return True if the tool in machine controls should be auto-selected based on targeted user action.
      */
     public boolean isAutoToolSelect();
+
+    /**
+     * @return True if the Z Park button should move all other HeadMountables to Safe Z. 
+     */
+    public boolean isSafeZPark();
 }

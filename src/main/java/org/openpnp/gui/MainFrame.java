@@ -95,6 +95,7 @@ import org.openpnp.gui.support.OSXAdapter;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.scripting.ScriptFileWatcher;
 import org.pmw.tinylog.Logger;
@@ -154,6 +155,7 @@ public class MainFrame extends JFrame {
     private JPanel panelMachine;
     private MachineSetupPanel machineSetupPanel;
     private IssuesAndSolutionsPanel issuesAndSolutionsPanel;
+    private VisionSettingsPanel visionSettingsPanel;
     private JDialog frameCamera;
     private JDialog frameMachineControls;
     private Map<KeyStroke, Action> hotkeyActionMap;
@@ -208,6 +210,10 @@ public class MainFrame extends JFrame {
 
     public PackagesPanel getPackagesTab() {
         return packagesPanel;
+    }
+
+    public VisionSettingsPanel getVisionSettingsTab() {
+        return visionSettingsPanel;
     }
 
     public FeedersPanel getFeedersTab() {
@@ -299,6 +305,7 @@ public class MainFrame extends JFrame {
         feedersPanel = new FeedersPanel(configuration, this);
         machineSetupPanel = new MachineSetupPanel();
         issuesAndSolutionsPanel = new IssuesAndSolutionsPanel(configuration, this);
+        visionSettingsPanel = new VisionSettingsPanel(this);
 
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -376,6 +383,24 @@ public class MainFrame extends JFrame {
             menuItem.setSelected(true);
         }
         mnUnits.add(menuItem);
+        
+        // View -> Tables Linked
+        buttonGroup = new ButtonGroup();
+        JMenu tablesLinked = new JMenu(Translations.getString("Menu.View.TablesLinked")); //$NON-NLS-1$
+        mnView.add(tablesLinked);
+
+        menuItem = new JCheckBoxMenuItem(tablesUnlinkedSelected);
+        buttonGroup.add(menuItem);
+        if (configuration.getTablesLinked() == TablesLinked.Unlinked) {
+            menuItem.setSelected(true);
+        }
+        tablesLinked.add(menuItem);
+        menuItem = new JCheckBoxMenuItem(tablesLinkedSelected);
+        buttonGroup.add(menuItem);
+        if (configuration.getTablesLinked() == TablesLinked.Linked) {
+            menuItem.setSelected(true);
+        }
+        tablesLinked.add(menuItem);
         
         // View -> Language
         buttonGroup = new ButtonGroup();
@@ -645,6 +670,7 @@ public class MainFrame extends JFrame {
         tabs.addTab("Job", null, jobPanel, null); //$NON-NLS-1$
         tabs.addTab("Parts", null, partsPanel, null); //$NON-NLS-1$
         tabs.addTab("Packages", null, packagesPanel, null); //$NON-NLS-1$
+        tabs.addTab("Vision", null, visionSettingsPanel, null); //$NON-NLS-1$
         tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
         tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
         tabs.addTab("Issues & Solutions", null, issuesAndSolutionsPanel, null); //$NON-NLS-1$
@@ -1075,6 +1101,20 @@ public class MainFrame extends JFrame {
             configuration.setSystemUnits(LengthUnit.Millimeters);
             MessageBoxes.infoBox("Notice", //$NON-NLS-1$
                     "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+        }
+    };
+
+    private Action tablesUnlinkedSelected = new AbstractAction(TablesLinked.Unlinked.name()) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            configuration.setTablesLinked(TablesLinked.Unlinked);
+        }
+    };
+
+    private Action tablesLinkedSelected = new AbstractAction(TablesLinked.Linked.name()) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            configuration.setTablesLinked(TablesLinked.Linked);
         }
     };
 

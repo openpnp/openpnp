@@ -25,13 +25,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
 import org.openpnp.spi.NozzleTip;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Version;
 
-public class Package extends AbstractModelObject implements Identifiable {
+public class Package extends AbstractPartSettingsHolder {
     @Version(revision=1.1)
     private double version;    
     

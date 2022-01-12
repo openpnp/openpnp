@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.File;
 
 import org.junit.jupiter.api.AfterEach;
@@ -13,10 +15,9 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.GcodeServer;
+import org.pmw.tinylog.Logger;
 
 import com.google.common.io.Files;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class GcodeDriverTest {
     GcodeServer server;
@@ -40,6 +41,7 @@ public class GcodeDriverTest {
         server.addCommandResponse("G90 ; Set absolute positioning mode", "ok");
         server.addCommandResponse("M82 ; Set absolute mode for extruder", "ok");
         server.addCommandResponse("G28 ; Home all axes", "ok");
+        server.addCommandResponse("M400 ; Wait for moves to complete before returning", "ok");
 
         /**
          * Create a new config directory and load the default configuration.
@@ -172,16 +174,12 @@ public class GcodeDriverTest {
     
     @AfterEach
     public void after() throws Exception {
+        Logger.info("Shutdown");
         /**
-         * TODO: This is cleaner than not shutting it down, but it causes a 3s delay in the test
-         * because the TCP implementation does not handle timeouts correctly. Until that's fixed,
-         * this can be left out to speed up the tests. 
+         * Stop the machine.
          */
-//        /**
-//         * Stop the machine.
-//         */
-//        Machine machine = Configuration.get().getMachine();
-//        machine.setEnabled(false);
+        Machine machine = Configuration.get().getMachine();
+        machine.setEnabled(false);
 
         server.shutdown();
     }

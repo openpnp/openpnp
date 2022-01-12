@@ -10,6 +10,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.openpnp.spi.Driver;
 import org.openpnp.util.GcodeServer;
+import org.pmw.tinylog.Logger;
 
 /**
  * A base class for basic TCP based Drivers. Includes functions for connecting,
@@ -47,11 +48,19 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
         return "simulated: "+(gcodeServer == null ? "off" : "port "+gcodeServer.getListenerPort());
     }
 
-    public GcodeServer getGcodeServer() throws Exception {
+    @Override
+    public GcodeServer getGcodeServer() {
         if (gcodeServer == null) {
-            gcodeServer = new GcodeServer();
+            try {
+                gcodeServer = new GcodeServer();
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
         }
-        gcodeServer.setDriver(driver);
+        if (gcodeServer != null) {
+            gcodeServer.setDriver(driver);
+        }
         return gcodeServer;
     }
 

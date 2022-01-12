@@ -48,8 +48,8 @@ import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
-import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.Length;
@@ -62,7 +62,6 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.model.Solutions.Subject;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
@@ -1424,13 +1423,23 @@ public class VisionSolutions implements Solutions.Subject {
             configuration.addPart(part);
         }
         part.setPackage(pkg);
-        FiducialLocator fiducialLocator =
-                Configuration.get().getMachine().getFiducialLocator();
-        PartSettings settings = ((ReferenceFiducialLocator) fiducialLocator).getPartSettings(part);
+        ReferenceFiducialLocator fiducialLocator = ReferenceFiducialLocator.getDefault();
+        FiducialVisionSettings visionSettings = fiducialLocator.getInheritedVisionSettings(part);
+        if (visionSettings.getUsedFiducialVisionIn().size() == 1 
+                && visionSettings.getUsedFiducialVisionIn().get(0) == part) {
+            // Alreday a special setting on the part. Modify it.
+        }
+        else {
+            FiducialVisionSettings newSettings = new FiducialVisionSettings();
+            newSettings.setValues(visionSettings);
+            newSettings.setName(part.getShortName());
+            part.setFiducialVisionSettings(newSettings);
+            Configuration.get().addVisionSettings(newSettings);
+        }
         String xml = IOUtils.toString(ReferenceBottomVision.class
                 .getResource("ReferenceFiducialLocator-CircularSymmetryPipeline.xml"));
         CvPipeline pipeline = new CvPipeline(xml);
-        settings.setPipeline(pipeline);
+        visionSettings.setCvPipeline(pipeline);
     }
 
     public Length getHomingFiducialDiameter() {
