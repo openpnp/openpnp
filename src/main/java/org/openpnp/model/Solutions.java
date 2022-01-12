@@ -358,6 +358,24 @@ public class Solutions extends AbstractTableModel {
                 return toolTip;
             }
         }
+        public abstract class StringProperty extends CustomProperty {
+            public StringProperty(String label, String toolTip) {
+                super(label, toolTip);
+            }
+            public String [] getSuggestions() { 
+                return null; 
+            }
+            public abstract String get();
+            public abstract void set(String value);
+            public String getSuggestionToolTip() { 
+                return getToolTip();
+            }
+        }
+        public abstract class MultiLineTextProperty extends StringProperty {
+            public MultiLineTextProperty(String label, String toolTip) {
+                super(label, toolTip);
+            }
+        }
         public abstract class IntegerProperty extends CustomProperty {
             private final int min;
             private final int max;

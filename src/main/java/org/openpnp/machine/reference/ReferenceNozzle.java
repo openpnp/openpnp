@@ -17,8 +17,7 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
-import org.openpnp.machine.reference.driver.GcodeDriver;
-import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
+import org.openpnp.machine.reference.solutions.ActuatorSolutions;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCameraOffsetWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCompatibleNozzleTipsWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleConfigurationWizard;
@@ -31,7 +30,6 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
-import org.openpnp.model.Solutions.Severity;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.Camera;
@@ -1031,7 +1029,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     }
 
     protected void actuatePump(boolean on) throws Exception {
-        Actuator pump = getHead().getPump();
+        Actuator pump = getHead().getPumpActuator();
         if (pump != null && !hasPartOnAnyOtherNozzle()) {
             pump.actuate(on);
         }
@@ -1365,14 +1363,12 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         super.findIssues(solutions);
         try {
             if (solutions.isTargeting(Milestone.Basics)) {
-                if (getVacuumActuator() != null 
-                        && getVacuumActuator().getValueType() == ActuatorValueType.Double) {
-                    findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
-                        new CommandType[] { CommandType.ACTUATE_DOUBLE_COMMAND });
-                }
-                else {
-                    findActuatorIssues(solutions, getVacuumActuator(), "vacuum valve", 
-                            new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND });
+                ActuatorSolutions.findActuateIssues(solutions, this, getVacuumActuator(), "vacuum valve",
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup");
+                if (getBlowOffActuator() != null) {
+                    AbstractActuator.suggestValueType(getBlowOffActuator(), ActuatorValueType.Double);
+                    ActuatorSolutions.findActuateIssues(solutions, this, getBlowOffActuator(), "blow off",
+                            "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup");
                 }
                 // If at least one nozzle tip uses vacuum sensing, require a sensing actuator.
                 boolean needsSensing = false;
@@ -1387,13 +1383,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     }
                 }
                 if (needsSensing) {
-                    findActuatorIssues(solutions, getVacuumSenseActuator(), "vacuum sensing", 
-                        new CommandType[] { CommandType.ACTUATOR_READ_COMMAND, CommandType.ACTUATOR_READ_REGEX });
-                }
-                if (getBlowOffActuator() != null) {
-                    AbstractActuator.suggestValueType(getBlowOffActuator(), ActuatorValueType.Double);
-                    findActuatorIssues(solutions, getBlowOffActuator(), "blow-off", 
-                            new CommandType[] { CommandType.ACTUATE_DOUBLE_COMMAND });
+                    ActuatorSolutions.findActuatorReadIssues(solutions, this, getVacuumSenseActuator(), "vacuum sensing", 
+                            "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing#actuator-setup");
                 }
             }
         }
@@ -1401,40 +1392,6 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             Logger.warn(e);
         }
         ContactProbeNozzle.addConversionIssue(solutions, this);
-    }
-
-    protected void findActuatorIssues(Solutions solutions, Actuator actuator, String qualifier,
-            CommandType[] commandTypes) {
-        if (actuator == null) {
-            solutions.add(new Solutions.PlainIssue(
-                    this, 
-                    "Nozzle is missing a "+qualifier+" actuator.", 
-                    "Create and assign a "+qualifier+" actuator as described in the Wiki.", 
-                    Severity.Warning,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup"));
-        }
-        else if (actuator.getDriver() == null) {
-            if (!actuator.isDriverless()) {solutions.add(new Solutions.PlainIssue(
-                    actuator, 
-                    "The "+qualifier+" actuator "+actuator.getName()+" has no driver assigned.", 
-                    "Assign a driver as described in the Wiki.", 
-                    Severity.Warning,
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#driver-assignment"));
-            }
-        }
-        else if (actuator.getDriver() instanceof GcodeDriver) {
-            GcodeDriver driver =  (GcodeDriver) actuator.getDriver();
-            for (CommandType commandType : commandTypes) {
-                if (driver.getCommand(actuator, commandType) == null) {
-                    solutions.add(new Solutions.PlainIssue(
-                            driver, 
-                            "The "+qualifier+" actuator "+actuator.getName()+" has no "+commandType+" assigned.", 
-                            "Assign the command to driver "+driver.getName()+" as described in the Wiki.", 
-                            Severity.Warning,
-                            "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands"));
-                }
-            }
-        }
     }
 
     @Deprecated

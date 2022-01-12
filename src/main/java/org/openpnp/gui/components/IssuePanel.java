@@ -1,15 +1,40 @@
-package org.openpnp.gui.components;
+/*
+ * Copyright (C) 2021 <mark@makr.zone>
+ * inspired and based on work
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
+ package org.openpnp.gui.components;
 
 import java.awt.BorderLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -26,6 +51,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -40,6 +67,8 @@ import org.openpnp.model.Solutions.Issue.ActionProperty;
 import org.openpnp.model.Solutions.Issue.DoubleProperty;
 import org.openpnp.model.Solutions.Issue.IntegerProperty;
 import org.openpnp.model.Solutions.Issue.LengthProperty;
+import org.openpnp.model.Solutions.Issue.MultiLineTextProperty;
+import org.openpnp.model.Solutions.Issue.StringProperty;
 import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -192,7 +221,97 @@ public class IssuePanel extends JPanel {
             formRow++;
         }
         for (Solutions.Issue.CustomProperty property : issue.getProperties()) {
-            if (property instanceof IntegerProperty) {
+            if (property instanceof StringProperty) {
+                StringProperty stringProperty = (StringProperty) property;
+                JLabel lbl = new JLabel(property.getLabel());
+                lbl.setToolTipText(property.getToolTip());
+                panel.add(lbl, "2, "+(formRow*2)+", right, default");
+                if (property instanceof MultiLineTextProperty) {
+                    JPanel subPanel = new JPanel();
+                    subPanel.setLayout(new BorderLayout());
+                    JScrollPane scrollPane = new JScrollPane();
+                    subPanel.add(scrollPane);
+                    JTextArea textField = new JTextArea();
+                    textField.setRows(4);
+                    scrollPane.setViewportView(textField);
+                    textField.getDocument().addDocumentListener(new DocumentListener() {
+                        public void changedUpdate(DocumentEvent e) {
+                            stringProperty.set(textField.getText());
+                        }
+                        public void removeUpdate(DocumentEvent e) {
+                            stringProperty.set(textField.getText());
+                        }
+                        public void insertUpdate(DocumentEvent e) {
+                            stringProperty.set(textField.getText());
+                        }
+                    });
+                    String val = stringProperty.get();
+                    textField.setText(val);
+                    textField.setToolTipText(property.getToolTip());
+                    textField.setEnabled(issue.getState() == Solutions.State.Open);
+                    panel.add(subPanel, "4, "+(formRow*2)+",fill, fill");
+                    if (stringProperty.getSuggestions() != null) {
+//                        lbl = new JLabel("Suggestions");
+//                        lbl.setToolTipText(property.getToolTip());
+//                        panel.add(lbl, "2, "+(formRow*2)+", right, default");
+                        JPanel suggestPanel = new JPanel();
+                        suggestPanel.setLayout(new BorderLayout());
+                        JLabel lbl2 = new JLabel("Templates: ");
+                        lbl2.setToolTipText(stringProperty.getSuggestionToolTip());
+                        suggestPanel.add(lbl2, BorderLayout.WEST);
+                        JComboBox comboBox = new JComboBox(stringProperty.getSuggestions());
+                        comboBox.setMaximumRowCount(20);
+                        setAutoSuggestions(comboBox, stringProperty);
+                        comboBox.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                textField.setText((String) comboBox.getSelectedItem());
+                            }
+                        });
+                        comboBox.setToolTipText(stringProperty.getSuggestionToolTip());
+                        comboBox.setEnabled(issue.getState() == Solutions.State.Open);
+                        suggestPanel.add(comboBox);
+                        subPanel.add(suggestPanel, BorderLayout.NORTH);
+                    }
+                }
+                else if (stringProperty.getSuggestions() != null) {
+                    JComboBox comboBox = new JComboBox(stringProperty.getSuggestions());
+                    comboBox.setEditable(true);
+                    comboBox.setMaximumRowCount(20);
+                    setAutoSuggestions(comboBox, stringProperty);
+                    comboBox.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            stringProperty.set((String) comboBox.getSelectedItem());
+                        }
+                    });
+                    String val = stringProperty.get();
+                    comboBox.setSelectedItem(val);
+                    comboBox.setToolTipText(stringProperty.getSuggestionToolTip());
+                    comboBox.setEnabled(issue.getState() == Solutions.State.Open);
+                    panel.add(comboBox, "4, "+(formRow*2)+", left, default");
+                }
+                else {
+                    JTextField textField = new JTextField();
+                    textField.getDocument().addDocumentListener(new DocumentListener() {
+                        public void changedUpdate(DocumentEvent e) {
+                            stringProperty.set(textField.getText());
+                        }
+                        public void removeUpdate(DocumentEvent e) {
+                            stringProperty.set(textField.getText());
+                        }
+                        public void insertUpdate(DocumentEvent e) {
+                            stringProperty.set(textField.getText());
+                        }
+                    });
+                    String val = stringProperty.get();
+                    textField.setText(val);
+                    textField.setToolTipText(property.getToolTip());
+                    textField.setEnabled(issue.getState() == Solutions.State.Open);
+                    panel.add(textField, "4, "+(formRow*2)+", left, default");
+                }
+            }
+            else if (property instanceof IntegerProperty) {
                 IntegerProperty intProperty = (IntegerProperty) property;
                 JLabel lbl = new JLabel(property.getLabel());
                 lbl.setToolTipText(property.getToolTip());
@@ -349,6 +468,25 @@ public class IssuePanel extends JPanel {
                 formRow++;
             }
         }
+    }
+
+    protected void setAutoSuggestions(JComboBox comboBox, StringProperty stringProperty) {
+        comboBox.addPopupMenuListener(new PopupMenuListener() {
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+                comboBox.setModel(new DefaultComboBoxModel<>(stringProperty.getSuggestions()));
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+            }
+            
+        });
     }
 
     public void setClipboardHandler(JLabel lbl) {
