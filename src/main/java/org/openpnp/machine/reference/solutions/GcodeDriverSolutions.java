@@ -327,10 +327,10 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     // Having a response already means we have a new firmware.
                     firmware = FirmwareType.TinyG;
                 }
-                else if (gcodeDriver.getDetectedFirmware().contains("Grbl")) {
+                else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Grbl")) {
                     firmware = FirmwareType.Grbl;
                 }
-                else if (gcodeDriver.getDetectedFirmware().contains("GcodeServer")) {
+                else if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("GcodeServer")) {
                     firmware = FirmwareType.Generic;
                 }
                 else { 
@@ -897,39 +897,45 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     break;
                 case POSITION_REPORT_REGEX:
                     if (hasAxes) {
-                        // We need to parse the report in standard Gcode axis order. This might not cover all the controllers, 
-                        // but it's what we can do.
-                        final String[] cgodeAxisLetters = new String[] { "X", "Y", "Z", "U", "V", "W", "A", "B", "C", "D", "E" };
-                        commandBuilt = "^.*";
-                        int axisIndex = 0;
-                        int lastAxisIndex = 26;
-                        String pattern = "";
-                        for (String axisLetter: cgodeAxisLetters) {
-                            for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                if (variable.equals(axisLetter)) {
-                                    if (lastAxisIndex < axisIndex-1) {
-                                        // Skipped some axes, add a wild.card.
-                                        commandBuilt += ".*";
+                        try {
+                            // We need to parse the report in standard Gcode axis order. This might not cover all the controllers, 
+                            // but it's what we can do.
+                            final String[] cgodeAxisLetters = new String[] { "X", "Y", "Z", "U", "V", "W", "A", "B", "C", "D", "E" };
+                            commandBuilt = "^.*";
+                            int axisIndex = 0;
+                            int lastAxisIndex = 26;
+                            String pattern = "";
+                            for (String axisLetter: cgodeAxisLetters) {
+                                for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                                    if (variable.equals(axisLetter)) {
+                                        if (lastAxisIndex < axisIndex-1) {
+                                            // Skipped some axes, add a wild.card.
+                                            commandBuilt += ".*";
+                                        }
+                                        commandBuilt += variable+":(?<"+variable+">-?\\d+\\.\\d+) ";
+                                        pattern += variable+" ";
+                                        lastAxisIndex = axisIndex;
                                     }
-                                    commandBuilt += variable+":(?<"+variable+">-?\\d+\\.\\d+) ";
-                                    pattern += variable+" ";
-                                    lastAxisIndex = axisIndex;
                                 }
+                                axisIndex++;
                             }
-                            axisIndex++;
+                            commandBuilt = commandBuilt.trim();
+                            commandBuilt += ".*";
+                            if (gcodeDriver.getReportedAxes() != null 
+                                    && !gcodeDriver.getReportedAxes().matches(commandBuilt)) {
+                                solutions.add(new Solutions.PlainIssue(
+                                        gcodeDriver, 
+                                        "The driver does not report axes in the expected "+pattern+" pattern: "+gcodeDriver.getReportedAxes(), 
+                                        (dialect.isSmoothie() ? "Check axis letters and make sure use a proper 6-axis configuration without extruders."
+                                                : "Check axis letters and make sure the controller is capable to use extra axes (i.e. not extruders)."), 
+                                        Severity.Error,
+                                        (dialect.isSmoothie() ? "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#axes-vs-extruder-configuration"
+                                                : "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares")));
+                            }
                         }
-                        commandBuilt = commandBuilt.trim();
-                        commandBuilt += ".*";
-                        if (gcodeDriver.getReportedAxes() != null 
-                                && !gcodeDriver.getReportedAxes().matches(commandBuilt)) {
-                            solutions.add(new Solutions.PlainIssue(
-                                    gcodeDriver, 
-                                    "The driver does not report axes in the expected "+pattern+" pattern: "+gcodeDriver.getReportedAxes(), 
-                                    (dialect.isSmoothie() ? "Check axis letters and make sure use a proper 6-axis configuration without extruders."
-                                            : "Check axis letters and make sure the controller is capable to use extra axes (i.e. not extruders)."), 
-                                    Severity.Error,
-                                    (dialect.isSmoothie() ? "http://smoothieware.org/6axis"
-                                            : "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares")));
+                        catch (Exception e) {
+                            // If there are duplicate axis letters, this may throw. But duplicate axis letters are caught in the AxisSolutions,
+                            // so we can ignore this exception here.
                         }
                     }
                     else if (command != null) {

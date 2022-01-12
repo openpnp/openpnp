@@ -22,6 +22,7 @@ package org.openpnp.machine.reference.driver;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import org.openpnp.util.GcodeServer;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -114,5 +115,8 @@ public abstract class ReferenceDriverCommunications {
     
     public LineEndingType getLineEndingType() {
         return lineEndingType;
+    }
+    public GcodeServer getGcodeServer() {
+        return null;
     }
 }

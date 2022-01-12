@@ -249,6 +249,15 @@ public class HeadSolutions implements Solutions.Subject {
                         }
                     }
                 }
+
+                if (head.getPumpActuator() != null) {
+                    ActuatorSolutions.findActuateIssues(solutions, head, head.getPumpActuator(), "pump control",
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup#pump-control-setup");
+                }
+                if (head.getzProbeActuator() != null) {
+                    ActuatorSolutions.findActuatorReadIssues(solutions, head, head.getzProbeActuator(), "Z probe",
+                        "https://github.com/openpnp/openpnp/wiki/Z-Probing");
+                }
             }
         }
     }
