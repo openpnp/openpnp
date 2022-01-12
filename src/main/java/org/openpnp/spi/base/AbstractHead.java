@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.swing.Icon;
 
+import org.openpnp.ConfigurationListener;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -23,6 +24,7 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 public abstract class AbstractHead extends AbstractModelObject implements Head {
     @Attribute
@@ -102,10 +104,21 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     private Length calibrationTestObjectDiameter = null;
 
     protected Machine machine;
+    private Actuator pumpActuator;
+    private Actuator zProbeActuator;
+
 
     public AbstractHead() {
         this.id = Configuration.createId("HED");
         this.name = getClass().getSimpleName();
+
+        Configuration.get().addListener(new ConfigurationListener.Adapter() {
+            @Override
+            public void configurationLoaded(Configuration configuration) throws Exception {
+                zProbeActuator = getActuatorByName(zProbeActuatorName);
+                pumpActuator = getActuatorByName(pumpActuatorName);
+            }
+        });
     }
 
     @SuppressWarnings("unused")
@@ -114,6 +127,12 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         for (HeadMountable hm : getHeadMountables()) {
             hm.setHead(this);
         }
+    }
+    
+    @Persist
+    private void persist() {
+        zProbeActuatorName = (zProbeActuator != null ? zProbeActuator.getName() : null); 
+        pumpActuatorName = (pumpActuator != null ? pumpActuator.getName() : null); 
     }
 
     @Override
@@ -396,29 +415,25 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
     }
 
     @Override
-    public Actuator getZProbe() {
-        return getActuatorByName(zProbeActuatorName); 
+    public Actuator getzProbeActuator() {
+        return zProbeActuator; 
     }
 
-    public String getzProbeActuatorName() {
-        return zProbeActuatorName;
-    }
-
-    public void setzProbeActuatorName(String zProbeActuatorName) {
-        this.zProbeActuatorName = zProbeActuatorName;
+    public void setzProbeActuator(Actuator zProbeActuator) {
+        Object oldValue = this.zProbeActuator;
+        this.zProbeActuator = zProbeActuator;
+        firePropertyChange("zProbeActuator", oldValue, zProbeActuator);
     }
 
     @Override
-    public Actuator getPump() {
-        return getActuatorByName(pumpActuatorName); 
+    public Actuator getPumpActuator() {
+        return pumpActuator; 
     }
 
-    public String getPumpActuatorName() {
-        return pumpActuatorName;
-    }
-
-    public void setPumpActuatorName(String pumpActuatorName) {
-        this.pumpActuatorName = pumpActuatorName;
+    public void setPumpActuator(Actuator pumpActuator) {
+        Object oldValue = this.pumpActuator;
+        this.pumpActuator = pumpActuator;
+        firePropertyChange("pumpActuator", oldValue, pumpActuator);
     }
 
     public VisualHomingMethod getVisualHomingMethod() {
