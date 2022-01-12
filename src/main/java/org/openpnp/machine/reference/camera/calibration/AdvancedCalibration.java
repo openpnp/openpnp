@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -38,6 +41,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Camera.Looking;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -52,6 +56,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
     
     @Attribute(required = false)
     private Boolean valid = false;
+    
+    @Attribute(required = false)
+    private Boolean preliminarySetupComplete = false;
     
     @Attribute(required = false)
     private Boolean dataAvailable = false;
@@ -294,6 +301,20 @@ public class AdvancedCalibration extends LensCalibrationParams {
      */
     public Boolean isValid() {
         return valid;
+    }
+
+    /**
+     * @return the preliminarySetupComplete
+     */
+    public Boolean isPreliminarySetupComplete() {
+        return preliminarySetupComplete;
+    }
+
+    /**
+     * @param preliminarySetupComplete the preliminarySetupComplete to set
+     */
+    public void setPreliminarySetupComplete(Boolean preliminarySetupComplete) {
+        this.preliminarySetupComplete = preliminarySetupComplete;
     }
 
     /**
@@ -1321,4 +1342,227 @@ public class AdvancedCalibration extends LensCalibrationParams {
         setEnabled(true);
         camera.captureTransformed();
     }
+        
+    public synchronized void transformOldStyleSettingsToNew(ReferenceCamera referenceCamera) throws Exception {
+        if (!preliminarySetupComplete) {
+            Logger.trace("Updating {} to new style calibration", referenceCamera.getName());
+
+            //Note - in referenceCamera, flipX controls vertical flipping and flipY controls 
+            //horizontal flipping - the opposite of what you might think
+            double flipH = referenceCamera.isFlipY() ? -1 : 1;
+            double flipV = referenceCamera.isFlipX() ? -1 : 1;
+            
+            double rot = Math.toRadians(referenceCamera.getRotation());
+            
+            LengthUnit mm = LengthUnit.Millimeters;
+    
+            Location upp[] = new Location[2];
+            
+            upp[0] = referenceCamera.getUnitsPerPixelPrimary();
+            if (upp[0] == null) {
+                upp[0] = new Location(LengthUnit.Millimeters, 0.001, 0.001, 0, 0);
+            }
+            upp[0] = upp[0].convertToUnits(mm);
+            
+            if (referenceCamera.getDefaultZ() == null) {
+                if (referenceCamera.getLooking() == Looking.Down) {
+                    referenceCamera.setDefaultZ(upp[0].getLengthZ());
+                }
+                else {
+                    referenceCamera.setDefaultZ(referenceCamera.getHeadOffsets().getLengthZ());
+                }
+            }
+
+            upp[1] = referenceCamera.getUnitsPerPixelSecondary();
+            if (upp[1] == null) {
+                upp[1] = upp[0];
+            }
+            upp[1] = upp[1].convertToUnits(mm);
+    
+            if (!referenceCamera.isEnableUnitsPerPixel3D() || Math.abs(upp[0].getZ() - upp[1].getZ()) < 0.1) {
+                //We don't have enough information so we'll just assume the camera is at some 
+                //arbitrary Z and proceed from there.
+                upp[0] = upp[0].derive(null, null, 
+                        referenceCamera.getDefaultZ().convertToUnits(mm).getValue(), null);
+                double z0;
+                if (referenceCamera.getLooking() == Looking.Down) {
+                    z0 = referenceCamera.getDefaultZ().convertToUnits(mm).getValue() + 200;
+                }
+                else {
+                    z0 = referenceCamera.getDefaultZ().convertToUnits(mm).getValue() - 200;
+                }
+                Logger.trace("z0 = " + z0);
+                double d1 = Math.abs(upp[0].getZ() - z0);
+                upp[1] = upp[1].derive(null, null, upp[0].getZ() + 20, null);
+                double d2 = Math.abs(upp[1].getZ() - z0);
+                upp[1] = upp[1].derive(d2*upp[0].getX()/d1, d2*upp[0].getY()/d1, null, null);
+            }
+            
+            RealMatrix[] scalingMats = new RealMatrix[2];
+            Length[] calHeights = new Length[2];
+            
+            double camDir = referenceCamera.getLooking() == Looking.Down ? -1 : +1;
+            
+            for (int i=0; i<2; i++) {
+                scalingMats[i] = MatrixUtils.createRealMatrix(new double[][] 
+                    {{camDir*flipH*upp[i].getX()*Math.cos(rot),  camDir*flipH*upp[i].getX()*Math.sin(rot)},
+                     {camDir*flipV*upp[i].getY()*Math.sin(rot), -camDir*flipV*upp[i].getY()*Math.cos(rot)}});
+                Logger.trace("scalingMats[{}] = {}", i, scalingMats[i]);
+                calHeights[i] = upp[i].getLengthZ();
+                Logger.trace("calHeights[{}] = {}", i, calHeights[i]);
+            }
+            
+            if (referenceCamera.getCalibration().isEnabled()) {
+                setDistortionCoefficientsMat(referenceCamera.getCalibration().getDistortionCoefficientsMat());
+            }
+            
+            preliminaryAlignment(referenceCamera, scalingMats, calHeights);
+        }
+    }
+    
+    /**
+     * Sets-up a minimal set of advanced camera calibration parameters so that units-per-pixel 
+     * scaling, flips, and rotation are approximately correct.
+     * @param referenceCamera - the camera to which this calibration applies
+     * @param scalingMats - an array of two or more scaling matrices as measured by the 
+     * CameraWalker.estimateScaling method
+     * @param calHeights - an array of the same length as scalingMats containing the Z coordinate 
+     * at which the scaling matrices where measured
+     * @throws Exception if less then two scaling matrices are provided or if the length of 
+     * calHeights doesn't match the length of scalingMats
+     */
+    public void preliminaryAlignment(ReferenceCamera referenceCamera, RealMatrix[] scalingMats, 
+            Length[] calHeights) throws Exception {
+        int n = scalingMats.length;
+        if (calHeights.length != n) {
+            throw new Exception("Need the same number of calibration heights as scaling matrices.");
+        }
+        
+        LengthUnit mm = LengthUnit.Millimeters;
+        
+        //Setup to solve aMat[n x 2] * xMat[2 x 4] = bMat[n x 4] for xMat in a least squared error 
+        //sense
+        RealMatrix aMat = MatrixUtils.createRealMatrix(n, 2);
+        RealMatrix bMat = MatrixUtils.createRealMatrix(n, 4);
+        for (int i=0; i<n; i++) {
+            //The first column of aMat contains the calibration Z heights, the second column is all ones
+            aMat.setEntry(i, 0, calHeights[i].convertToUnits(mm).getValue());
+            aMat.setEntry(i, 1, 1);
+            
+            //The rows of bMat contain the four elements of each scaling matrix
+            bMat.setEntry(i, 0, scalingMats[i].getEntry(0, 0));
+            bMat.setEntry(i, 1, scalingMats[i].getEntry(0, 1));
+            bMat.setEntry(i, 2, scalingMats[i].getEntry(1, 0));
+            bMat.setEntry(i, 3, scalingMats[i].getEntry(1, 1));
+        }
+        Logger.trace("aMat = " + aMat);
+        Logger.trace("bMat = " + bMat);
+        
+        //Solve for xMat - the top row contains the change in units per pixel per change in Z and
+        //the bottom row contains the units per pixel at Z=0. The column order is the same as bMat.
+        RealMatrix xMat = new SingularValueDecomposition(aMat).getSolver().solve(bMat);
+        Logger.trace("xMat = " + xMat);
+        
+        //Solve for the Z where all the units per pixel go to zero. This is the Z of the physical
+        //camera's pin hole lens.
+        double summb = 0;
+        double summm = 0;
+        for (int i=0; i<4; i++) {
+            summb -= xMat.getEntry(0, i) * xMat.getEntry(1, i);
+            summm += xMat.getEntry(0, i) * xMat.getEntry(0, i);
+        }
+        double z0 = summb/summm;
+        Logger.trace("z0 = " + z0);
+        
+        //Create a new 3x3 scaling matrix and populate with the scalings from xMat
+        RealMatrix mMat = MatrixUtils.createRealMatrix(3, 3);
+        mMat.setEntry(0, 0, xMat.getEntry(0, 0));
+        mMat.setEntry(0, 1, xMat.getEntry(0, 1));
+        mMat.setEntry(1, 0, xMat.getEntry(0, 2));
+        mMat.setEntry(1, 1, xMat.getEntry(0, 3));
+        
+        //The lower right corner entry needs to be -1 for both top and bottom cameras. For top 
+        //cameras, the negation is needed because both their physical and virtual Z-axes point in 
+        //the opposite direction of the machine Z-axis.  For bottom cameras, the negation is also 
+        //needed even though their Z-axes (physical only) points in the same direction as the 
+        //machine Z-axis because the projection direction is opposite for the physical and virtual 
+        //cameras.
+        mMat.setEntry(2, 2, -1);
+        
+        //Up to this point we've been working in the units-per-pixel domain since it is linear with 
+        //distance from the camera: machineUnits = unitsPerPixelPerUnitZ * distanceZ * imagePixels; 
+        //however, the camera model works the opposite way around (computes pixels from machine 
+        //units) so we need to work with mMat's inverse.  But our end goal is to decompose mMat's 
+        //inverse into the product of two matrices - the first of which is analogous to the camera
+        //matrix and the second which is analogous to the rotation matrix that converts from the 
+        //machine reference frame to the camera reference frame. To perform that decomposition, we
+        //will make use of singular value decomposition to find matrices u, s, and v such that
+        //u * s * transpose(v) = mMat. And since u and v are orthogonal matrices and s is a diagonal
+        //matrix, we have v * inverse(s) * transpose(u) = inverse(mMat). The final decomposition is
+        //then (v * inverse(s) * transpose(v)) * (v * transpose(u)) = inverse(mMat).
+        SingularValueDecomposition svd = new SingularValueDecomposition(mMat);
+        
+        RealMatrix uMat = svd.getU();
+        RealMatrix sMat = svd.getS();
+        RealMatrix vMat = svd.getV();
+        
+        //Since sMat is diagonal, its inverse is just each diagonal element replaced by its 
+        //reciprocal 
+        sMat.setEntry(0, 0, 1/sMat.getEntry(0, 0));
+        sMat.setEntry(1, 1, 1/sMat.getEntry(1, 1));
+        sMat.setEntry(2, 2, 1/sMat.getEntry(2, 2));
+        
+        //Compute the desired decomposition of inverse(mMat)
+        RealMatrix camMat = vMat.multiply(sMat).multiply(vMat.transpose());
+        RealMatrix rotMat = vMat.multiply(uMat.transpose());
+        
+        RealMatrix transformMachToVirCam = MatrixUtils.createRealIdentityMatrix(3);
+        transformMachToVirCam.setEntry(1, 1, -1);
+        transformMachToVirCam.setEntry(2, 2, -1);
+        
+        RealMatrix rectMat = transformMachToVirCam.multiply(rotMat.transpose());
+        rectificationMatrix.put(0, 0, rectMat.getRow(0));
+        rectificationMatrix.put(1, 0, rectMat.getRow(1));
+        rectificationMatrix.put(2, 0, rectMat.getRow(2));
+        Logger.trace("rectificationMatrix = " + rectificationMatrix.dump());
+                
+        RealMatrix unitVectorPhyCamZ = MatrixUtils.createColumnRealMatrix(new double[] 
+                {0, 0, referenceCamera.getLooking() == Looking.Down ? -1 : 1});
+        unitVectorPhyCamZInMachRefFrame.put(0, 0, unitVectorPhyCamZ.getColumn(0));
+        Logger.trace("unitVectorPhyCamZInMachRefFrame = " + unitVectorPhyCamZInMachRefFrame.dump());
+        
+        RealMatrix vectorFromMachToPhyCam;
+        if (referenceCamera.getLooking() == Looking.Down) {
+            vectorFromMachToPhyCam = MatrixUtils.createColumnRealMatrix(new double[] {0, 0, z0});
+        }
+        else {
+            Location loc = referenceCamera.getHeadOffsets().convertToUnits(mm);
+            vectorFromMachToPhyCam = MatrixUtils.createColumnRealMatrix(new double[] {loc.getX(), loc.getY(), z0});
+        }
+        Logger.trace("vectorFromMachToPhyCam = " + vectorFromMachToPhyCam);
+        
+        RealMatrix vectorFromPhyCamToDesiredPrincipalPoint = MatrixUtils.createColumnRealMatrix(new double[] {0, 0, 1});
+        Logger.trace("vectorFromPhyCamToDesiredPrincipalPoint = " + vectorFromPhyCamToDesiredPrincipalPoint);
+        
+        cameraMatrix.put(0, 0, new double[9] ); //zero all entries
+        cameraMatrix.put(0, 0, camMat.getEntry(0, 0));
+        cameraMatrix.put(0, 2, (referenceCamera.getWidth() - 1) / 2.0);
+        cameraMatrix.put(1, 1, camMat.getEntry(1, 1));
+        cameraMatrix.put(1, 2, (referenceCamera.getHeight() - 1) / 2.0);
+        cameraMatrix.put(2, 2, 1);
+        Logger.trace("cameraMatrix = " + cameraMatrix.dump());
+
+        vectorFromMachToPhyCamInMachRefFrame.put(0, 0, vectorFromMachToPhyCam.getColumn(0));
+        Logger.trace("vectorFromMachToPhyCamInMachRefFrame = " + vectorFromMachToPhyCamInMachRefFrame.dump());
+        
+        vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.put(0, 0, vectorFromPhyCamToDesiredPrincipalPoint.getColumn(0));
+        Logger.trace("vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame = " + vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame.dump());
+        
+        calibratedOffsets = new Location(mm, 0, 0, 0, 0);
+        
+        preliminarySetupComplete = true;
+        setEnabled(true);
+        referenceCamera.clearCalibrationCache();
+    }
+
 }

@@ -122,9 +122,11 @@ public class CameraWalker {
      * should be kept relatively small.
      * @param expectedPoint - the expected point where the feature is expected to be detected in 
      * the image
+     * @return the 2x2 scaling matrix that converts changes in image pixel locations to changes in 
+     * machine coordinates
      * @throws Exception if the scaling can't be estimated
      */
-    public void estimateScaling(Length testStepLength, Point expectedPoint) throws Exception {
+    public RealMatrix estimateScaling(Length testStepLength, Point expectedPoint) throws Exception {
         cancelWalk();
         testStepLength = testStepLength.convertToUnits(LengthUnit.Millimeters);
         Location start = movable.getLocation();
@@ -185,6 +187,7 @@ public class CameraWalker {
         
         mirror  = Math.signum((new LUDecomposition(scalingMat)).getDeterminant());
         
+        return scalingMat;
     }
     
     /**
@@ -309,9 +312,11 @@ public class CameraWalker {
         if (isSingleStep()) {
             return oldLocation;
         }
+        
         while (step()) {
-            
+            //keep stepping until done
         }
+        
         return oldLocation;
     }
 

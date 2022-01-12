@@ -1111,7 +1111,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
 
     private void postCalibrationProcessing() throws Exception {
         advCal.applyCalibrationToMachine(referenceHead, referenceCamera);
-
+		advCal.setPreliminarySetupComplete(true);
+		
         //Reload the calibration heights and refresh the table
         calibrationHeightSelections = new ArrayList<LengthCellValue>();
         int numberOfCalibrationHeights = advCal.
