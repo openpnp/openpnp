@@ -54,7 +54,7 @@ Refer to the Smoothieware Wiki on how to upgrade:
 
 * [Flashing Smoothie Firmware](http://smoothieware.org/flashing-smoothie-firmware)
 
-### Remove Extruder Configuration
+### Axes vs. Extruder Configuration
 
 Please make sure your Smoothieware is configured to use true axes, i.e. `A` `B` `C`, not extruders (we're not 3D printing!). If your config.txt contains something like this:
   
