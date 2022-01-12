@@ -313,73 +313,6 @@ public class CameraWalker {
             
         }
         return oldLocation;
-//        while ((newErrorMagnitude < oldErrorMagnitude) && 
-//                (newErrorMagnitude >= minAllowedPixelStep)) {
-//            if (Thread.currentThread().isInterrupted()) {
-//                throw new InterruptedException();
-//            }
-//            oldErrorMagnitude = newErrorMagnitude;
-//            oldLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters);
-//            
-//            lastFoundPoint = foundPoint;
-//            if (savePoints) {
-//                machine3DCoordinates.add(new double[] {oldLocation.getX(), oldLocation.getY(), 
-//                        oldLocation.getZ()});
-//                image2DCoordinates.add(new double[] {foundPoint.x, foundPoint.y});
-//            }
-//            
-//            RealMatrix errorMat = MatrixUtils.createColumnRealMatrix(new double[] {error.x, error.y});
-//            RealMatrix machineErrorMat = scalingMat.multiply(errorMat);
-//            
-//            double maxLimitScaling = Math.min(1, 
-//                    maxAllowedPixelStep/(newErrorMagnitude * loopGain));
-//            maxLimitScaling = Math.min(maxLimitScaling, 
-//                    maxAllowedMachineStep.convertToUnits(LengthUnit.Millimeters).getValue()/
-//                    (machineErrorMat.getFrobeniusNorm() * loopGain));
-//            error.x *= maxLimitScaling;
-//            error.y *= maxLimitScaling;
-//            
-//            errorMat = errorMat.scalarMultiply(maxLimitScaling);
-//            machineErrorMat = machineErrorMat.scalarMultiply(maxLimitScaling);
-//            
-//            expectedPoint.x = foundPoint.x - error.x * loopGain; 
-//            expectedPoint.y = foundPoint.y - error.y * loopGain;
-//            
-//            Location correction = new Location(LengthUnit.Millimeters, 
-//                    -machineErrorMat.getEntry(0, 0) * loopGain, 
-//                    -machineErrorMat.getEntry(1, 0) * loopGain, 0, 0);
-//            
-//            newLocation = oldLocation.add(correction);
-//            if (newLocation.getLinearLengthTo(oldLocation).compareTo(minAllowedMachineStep) < 0) {
-//                //Don't bother moving if the move will be very tiny
-//                return oldLocation;
-//            }
-//            
-//            //Move the machine and wait for it to finish
-//            final Location moveLocation = newLocation;
-//            future = UiUtils.submitUiMachineTask(() -> {
-//                if (onlySafeZMovesAllowed) {
-//                    movable.moveToSafeZ();
-//                    
-//                    movable.moveTo(moveLocation.
-//                            derive(movable.getLocation(), false, false, true, false));
-//                }
-//                movable.moveTo(moveLocation);
-//            });
-//            future.get();
-//
-//            foundPoint = findFeatureInImage.apply(expectedPoint);
-//            Logger.trace("expectedPoint = " + expectedPoint);
-//            Logger.trace("newPoint = " + foundPoint);
-//            if (foundPoint == null) {
-//                throw new Exception("Unable to complete walk - can't find feature in image.");
-//            }
-//            
-//            error = foundPoint.subtract(desiredCameraPoint);
-//            newErrorMagnitude = Math.hypot(error.x, error.y);
-//        }
-//        walkComplete = true;
-//        return oldLocation;
     }
 
     public boolean step() throws Exception {
@@ -422,7 +355,6 @@ public class CameraWalker {
             //Don't bother moving if the move will be very tiny
             walkComplete = true;
             return false;
-//            return oldLocation;
         }
         
         //Move the machine and wait for it to finish

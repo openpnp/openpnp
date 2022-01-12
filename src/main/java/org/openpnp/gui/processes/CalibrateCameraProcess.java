@@ -30,8 +30,10 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import javax.swing.SwingUtilities;
@@ -49,6 +51,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
@@ -151,6 +154,18 @@ public abstract class CalibrateCameraProcess {
         this.automatic = automatic;
 
         numberOfCalibrationHeights = calibrationLocations.size();
+        Set<Length> setOfDifferentCalibrationHeights = new HashSet<Length>();
+        for (Location location : calibrationLocations) {
+            setOfDifferentCalibrationHeights.add(location.convertToUnits(LengthUnit.Millimeters).getLengthZ());
+        }
+        if (setOfDifferentCalibrationHeights.size() < 2) {
+            throw new Exception("Number of different calibration heights is less than 2.");
+        }
+        
+        if (detectionDiameters.size() != calibrationLocations.size()) {
+            throw new Exception("Number of detection diameters does not equal the number of "
+                    + "calibration heights.");
+        }
         
         camera = cameraView.getCamera();
         pixelsX = camera.getWidth();
@@ -433,6 +448,7 @@ public abstract class CalibrateCameraProcess {
                     cameraWalker.estimateScaling(advCal.getTrialStep(), new Point(pixelsX/2, pixelsY/2));
                 }
                 catch (Exception e) {
+                    Logger.trace(e);
                     return null;
                 }
                 
@@ -554,12 +570,14 @@ public abstract class CalibrateCameraProcess {
                                 new Point(scaling*unitVector[0] + pixelsX/2, scaling*unitVector[1] + pixelsY/2));
                     }
                     catch (InterruptedException ie) {
+                        Logger.trace(ie);
                         return null;
                     }
                     catch (Exception e) {
                         Logger.trace(e);
                         errorCount++;
                         if (errorCount > maxErrorCount) {
+                            Logger.trace("Exceeded maximum error count - terminating calibration sequence.");
                             return null;
                         }
                     }
@@ -577,8 +595,22 @@ public abstract class CalibrateCameraProcess {
                                 iLine+1, numberOfLines,
                                 loopCount+1,
                                 calibrationHeightIndex+1, numberOfCalibrationHeights));
-                        if (lineWalkers.get(randomIdx.get(iLine)).step()) {
-                            done = false;
+                        try {
+                            if (lineWalkers.get(randomIdx.get(iLine)).step()) {
+                                done = false;
+                            }
+                        }
+                        catch (InterruptedException ie) {
+                            Logger.trace(ie);
+                            return null;
+                        }
+                        catch (Exception e) {
+                            Logger.trace(e);
+                            errorCount++;
+                            if (errorCount > maxErrorCount) {
+                                Logger.trace("Exceeded maximum error count - terminating calibration sequence.");
+                                return null;
+                            }
                         }
                         Logger.trace("angle = " + angle);
                         if (isCancelled()) {
@@ -887,6 +919,7 @@ public abstract class CalibrateCameraProcess {
                     future.get();
                 }
                 catch (Exception e) {
+                    Logger.trace(e);
                     return null;
                 }
             }
@@ -1043,8 +1076,10 @@ public abstract class CalibrateCameraProcess {
      * status string
      */
     private void displayStatus(String status, Object... statusArguments) {
+        String str = String.format(status, statusArguments);
+        Logger.trace(str);
         mainFrame.showInstructions("Camera Calibration Instructions/Status", 
-                "<html><body>" + String.format(status, statusArguments) + "</body></html>", 
+                "<html><body>" + str + "</body></html>", 
                 true, false, "Next", cancelActionListener, proceedActionListener);
     }
     
@@ -1059,8 +1094,10 @@ public abstract class CalibrateCameraProcess {
      */
     private void setInstructionsAndProceedAction(String instructions, 
             Thrunnable proceedAction, Object... instructionArguments) {
+        String str = String.format(instructions, instructionArguments);
+        Logger.trace(str);
         mainFrame.showInstructions("Camera Calibration Instructions/Status", 
-                "<html><body>" + String.format(instructions, instructionArguments) + "</body></html>", 
+                "<html><body>" + str + "</body></html>", 
                 true, true,  "Next", cancelActionListener, proceedActionListener);
         this.proceedAction = proceedAction;
     }
@@ -1071,6 +1108,7 @@ public abstract class CalibrateCameraProcess {
     private final ActionListener proceedActionListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
+            Logger.trace("Next button clicked by operator");
             if (proceedAction != null) {
                 Thrunnable tempAction = proceedAction;
                 proceedAction = null;
