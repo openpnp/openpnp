@@ -206,7 +206,21 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Commit
     protected void commit() throws Exception {
         super.commit();
-        advancedCalibration.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
+        if (!advancedCalibration.isPreliminarySetupComplete() && !advancedCalibration.isValid()) {
+            //Since the new advanced calibration doesn't have valid data, we want to convert 
+            //the old style settings to the new style but we can't do it right now because we 
+            //have to wait until the camera is up and running. So we clear the flag to indicate 
+            //we haven't done this yet and enable the new style to override the old style. Then 
+            //when the camera is up and running, the old style settings will get converted to the
+            //new style in transformImage.
+            advancedCalibration.setPreliminarySetupComplete(false);
+            advancedCalibration.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
+        }
+        else {
+            //Either the old style settings have already been converted or advanced calibration has
+            //been previously run so in either case we don't want to disturb it
+            advancedCalibration.setPreliminarySetupComplete(true);
+        }
     }
     
     public ReferenceCamera() {
@@ -588,18 +602,18 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
             if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
                 if (!advancedCalibration.isPreliminarySetupComplete() && isOpen() && width != null && height != null) {
-                    advancedCalibration.transformOldStyleSettingsToNew(this);
+                    //Now that the camera is generating valid images, we can do the conversion from
+                    //the old style to the new
+                    advancedCalibration.convertOldStyleSettingsToNew(this);
                 }
                 //Skip all the old style image transforms and distortion corrections except for 
-                //deinterlacing and cropping
+                //deinterlacing, cropping, and white balancing
                 if (isDeinterlaced() || isCropped() || isWhiteBalanced() || advancedCalibration.isEnabled()) {
                     Mat mat = OpenCvUtils.toMat(image);
                     mat = deinterlace(mat);
                     mat = crop(mat);
-                    if (advancedCalibration.isEnabled()) {
-                        mat = advancedUndistort(mat);
-                    }
                     mat = whiteBalance(mat);
+                    mat = advancedUndistort(mat);
                     image = OpenCvUtils.toBufferedImage(mat);
                     mat.release();
                 }
@@ -668,6 +682,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     private Mat advancedUndistort(Mat mat) {
+        if (!advancedCalibration.isEnabled()) {
+            return mat;
+        }
         if (undistortionMap1 == null || undistortionMap2 == null) {
             undistortionMap1 = new Mat();
             undistortionMap2 = new Mat();

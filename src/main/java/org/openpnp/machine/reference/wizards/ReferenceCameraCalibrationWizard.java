@@ -983,6 +983,10 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite Primary and Secondary Calibration Z values before starting calibration.");
                 return;
             }
+            if (advCal.getPrimaryLocation().getZ() == advCal.getSecondaryLocation().getZ()) {
+                MessageBoxes.errorBox(MainFrame.get(), "Error", "Primary and Secondary Calibration Z values must be different.");
+                return;
+            }
             if (referenceCamera.getDefaultZ() == null || !Double.isFinite(referenceCamera.getDefaultZ().getValue())) {
                 MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite Default Working Plane Z value before starting calibration.");
                 return;

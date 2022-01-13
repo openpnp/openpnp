@@ -1343,10 +1343,21 @@ public class AdvancedCalibration extends LensCalibrationParams {
         camera.captureTransformed();
     }
         
-    public synchronized void transformOldStyleSettingsToNew(ReferenceCamera referenceCamera) throws Exception {
+    public void convertOldStyleSettingsToNew(ReferenceCamera referenceCamera) throws Exception {
         if (!preliminarySetupComplete) {
             Logger.trace("Updating {} to new style calibration", referenceCamera.getName());
 
+            Location priUpp = referenceCamera.getUnitsPerPixelPrimary();
+            if (priUpp == null) {
+                //Set it to something relatively safe
+                priUpp = new Location(LengthUnit.Millimeters, 0.001, 0.001, 0, 0);
+            }
+            //Note - in referenceCamera, flipX controls vertical flipping and flipY controls 
+            //horizontal flipping - the opposite of what you might think
+            setPrimaryAlignment(referenceCamera, priUpp, 
+                    priUpp.getLengthZ(), 
+                    referenceCamera.isFlipX(), referenceCamera.isFlipY(), 
+                    referenceCamera.getRotation());
             //Note - in referenceCamera, flipX controls vertical flipping and flipY controls 
             //horizontal flipping - the opposite of what you might think
             double flipH = referenceCamera.isFlipY() ? -1 : 1;
@@ -1379,6 +1390,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
             }
             upp[1] = upp[1].convertToUnits(mm);
     
+            
             if (!referenceCamera.isEnableUnitsPerPixel3D() || Math.abs(upp[0].getZ() - upp[1].getZ()) < 0.1) {
                 //We don't have enough information so we'll just assume the camera is at some 
                 //arbitrary Z and proceed from there.
@@ -1420,12 +1432,123 @@ public class AdvancedCalibration extends LensCalibrationParams {
         }
     }
     
+    public void setPrimaryAlignment(ReferenceCamera referenceCamera, Location primaryUnitsPerPixel, 
+            Length primaryCalHeight, boolean flipVertical, boolean flipHorizontal, 
+            double rotation) throws Exception {
+        
+        LengthUnit mm = LengthUnit.Millimeters;
+
+        primaryUnitsPerPixel = primaryUnitsPerPixel.convertToUnits(mm);
+        if (primaryUnitsPerPixel.getX() <= 0 || primaryUnitsPerPixel.getY() <= 0) {
+            throw new Exception("Units per pixel must be positive.");
+        }
+        primaryCalHeight = primaryCalHeight.convertToUnits(mm);
+        
+        double flipH = flipHorizontal ? -1 : 1;
+        double flipV = flipVertical ? -1 : 1;
+        double camDir = referenceCamera.getLooking() == Looking.Down ? -1 : +1;
+        double rot = Math.toRadians(rotation);
+        
+        referenceCamera.setDefaultZ(primaryCalHeight);
+
+        double z1 = primaryCalHeight.getValue();
+        
+        //At this point we don't know the secondary calibration Z coordinate so just assume it is
+        //20 millimeters above the primary
+        double z2 = z1 + 20;
+                
+        //At this point we don't have enough information to determine the true Z coordinate of the
+        //camera so we will just assume it is +/-200 millimeters away from the primary calibration Z
+        double z0;
+        if (referenceCamera.getLooking() == Looking.Down) {
+            z0 = z1 + 200;
+        }
+        else {
+            z0 = z1 - 200;
+        }
+        Logger.trace("z0 = " + z0);
+        
+        Location upp[] = new Location[2];
+        
+        upp[0] = primaryUnitsPerPixel.derive(null, null, z1, 0.0);
+        
+        //Now compute the secondary units per pixel by scaling the primary units per pixel based
+        //on the distance from the camera
+        double d1 = Math.abs(z1 - z0);
+        double d2 = Math.abs(z2 - z0);
+        upp[1] = upp[1].derive(d2*upp[0].getX()/d1, d2*upp[0].getY()/d1, z2, null);
+        
+        RealMatrix[] scalingMats = new RealMatrix[2];
+        Length[] calHeights = new Length[2];
+        
+        for (int i=0; i<2; i++) {
+            scalingMats[i] = MatrixUtils.createRealMatrix(new double[][] 
+                {{camDir*flipH*upp[i].getX()*Math.cos(rot),  camDir*flipH*upp[i].getX()*Math.sin(rot)},
+                 {camDir*flipV*upp[i].getY()*Math.sin(rot), -camDir*flipV*upp[i].getY()*Math.cos(rot)}});
+            Logger.trace("scalingMats[{}] = {}", i, scalingMats[i]);
+            calHeights[i] = upp[i].getLengthZ();
+            Logger.trace("calHeights[{}] = {}", i, calHeights[i]);
+        }
+        
+        preliminaryAlignment(referenceCamera, scalingMats, calHeights);
+    }
+    
+    public void setSecondaryAlignment(ReferenceCamera referenceCamera, Location secondaryUnitsPerPixel, 
+            Length secondaryCalHeight, boolean flipVertical, boolean flipHorizontal, 
+            double rotation ) throws Exception {
+        
+        LengthUnit mm = LengthUnit.Millimeters;
+
+        Length primaryCalHeight = referenceCamera.getDefaultZ().convertToUnits(mm);
+        Location primaryUnitsPerPixel = referenceCamera.getUnitsPerPixel(primaryCalHeight).convertToUnits(mm);
+        
+        secondaryUnitsPerPixel = secondaryUnitsPerPixel.convertToUnits(mm);
+        if (secondaryUnitsPerPixel.getX() <= 0 || secondaryUnitsPerPixel.getY() <= 0) {
+            throw new Exception("Units per pixel must be positive.");
+        }
+        if (secondaryUnitsPerPixel.getX() == primaryUnitsPerPixel.getX() || 
+                secondaryUnitsPerPixel.getY() == primaryUnitsPerPixel.getY()) {
+            throw new Exception("Secondary units per pixel must be different than primary units per pixel.");
+        }
+        secondaryCalHeight = secondaryCalHeight.convertToUnits(mm);
+        
+        double z1 = primaryCalHeight.getValue();
+        double z2 = secondaryCalHeight.getValue();
+        if (z1 == z2) {
+            throw new Exception("Secondary calibration height must be different than primary calibration height.");
+        }
+                
+        double flipH = flipHorizontal ? -1 : 1;
+        double flipV = flipVertical ? -1 : 1;
+        double camDir = referenceCamera.getLooking() == Looking.Down ? -1 : +1;
+        double rot = Math.toRadians(rotation);
+        
+        Location upp[] = new Location[2];
+        
+        upp[0] = primaryUnitsPerPixel.derive(null, null, z1, 0.0);
+        upp[1] = secondaryUnitsPerPixel.derive(null, null, z2, 0.0);
+        
+        RealMatrix[] scalingMats = new RealMatrix[2];
+        Length[] calHeights = new Length[2];
+        
+        for (int i=0; i<2; i++) {
+            scalingMats[i] = MatrixUtils.createRealMatrix(new double[][] 
+                {{camDir*flipH*upp[i].getX()*Math.cos(rot),  camDir*flipH*upp[i].getX()*Math.sin(rot)},
+                 {camDir*flipV*upp[i].getY()*Math.sin(rot), -camDir*flipV*upp[i].getY()*Math.cos(rot)}});
+            Logger.trace("scalingMats[{}] = {}", i, scalingMats[i]);
+            calHeights[i] = upp[i].getLengthZ();
+            Logger.trace("calHeights[{}] = {}", i, calHeights[i]);
+        }
+        
+        preliminaryAlignment(referenceCamera, scalingMats, calHeights);
+    }
+    
     /**
      * Sets-up a minimal set of advanced camera calibration parameters so that units-per-pixel 
      * scaling, flips, and rotation are approximately correct.
      * @param referenceCamera - the camera to which this calibration applies
      * @param scalingMats - an array of two or more scaling matrices as measured by the 
-     * CameraWalker.estimateScaling method
+     * CameraWalker.estimateScaling method or its equivalent
      * @param calHeights - an array of the same length as scalingMats containing the Z coordinate 
      * at which the scaling matrices where measured
      * @throws Exception if less then two scaling matrices are provided or if the length of 
@@ -1499,7 +1622,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
         //will make use of singular value decomposition to find matrices u, s, and v such that
         //u * s * transpose(v) = mMat. And since u and v are orthogonal matrices and s is a diagonal
         //matrix, we have v * inverse(s) * transpose(u) = inverse(mMat). The final decomposition is
-        //then (v * inverse(s) * transpose(v)) * (v * transpose(u)) = inverse(mMat).
+        //then (v * inverse(s) * transpose(v)) * (v * transpose(u)) = inverse(mMat), where the 
+        //camera matrix is given by (v * inverse(s) * transpose(v)) and the rotation matrix is given
+        //by (v * transpose(u)).
         SingularValueDecomposition svd = new SingularValueDecomposition(mMat);
         
         RealMatrix uMat = svd.getU();
@@ -1561,8 +1686,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         calibratedOffsets = new Location(mm, 0, 0, 0, 0);
         
         preliminarySetupComplete = true;
-        setEnabled(true);
-        referenceCamera.clearCalibrationCache();
+        applyCalibrationToMachine((ReferenceHead)referenceCamera.getHead(), referenceCamera);
     }
 
 }
