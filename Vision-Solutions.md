@@ -18,7 +18,7 @@ In order to perform Visual Calibration, a certain calibration rig is needed. The
 
 Preliminary camera calibration can be performed automatically by looking at a [fiducial](https://en.wikipedia.org/wiki/Fiducial_marker#Printed_circuit_boards) while moving the camera around in a certain pattern. 
 
-The fiducial must be round, high contrast, sharp and flat. The standard fiducial (the same type is used for [[Visual Homing]]) is just any bright 1mm diameter round mark on dark ground. You can simply print the linked PDF. It is recommended to use a high quality matte photo paper or similar: 
+The fiducial must be round, high contrast, sharp and flat. The standard fiducial (the same type is used for [[Visual Homing]]) is just any bright 1mm diameter round mark on dark ground. You can simply print the linked PDF. It is recommended to use a high-quality matte photo paper or similar: 
 
 * [FiducialHome.pdf](https://github.com/openpnp/openpnp/files/5542424/FiducialHome.pdf)
 
@@ -26,7 +26,7 @@ The camera must be free to move in a wide area (250mm × 250mm) centered around 
 
 As both the camera and the camera light will move around and point at the fiducial from various angles, the fiducial must not have any depth or 3D structure, and it should have [diffuse reflection](https://en.wikipedia.org/wiki/Diffuse_reflection) so lighting it from the side should be fine. Don't use through holes, carrier tape sprocket holes, prints on glossy photo paper, HASL PCB fiducials or similar.
 
-The fiducial must be mounted precisely on PCB surface Z Level, one way to make sure of this, is to glue the printed-out fiducial flat onto a surplus PCB that you can position reproducibly (±1 mm) on its holder.
+The fiducial must be mounted precisely on PCB surface Z Level, one way to make sure of this, is to glue the printed-out fiducial flat onto a surplus PCB that you can position reproducibly (±1 mm) on its holder. When capturing the location of the fiducial, the Z coordinate is the most critical as any error there will result is a camera scaling (units per pixel) error.
 
 On the solution, you can adjust the **Feature Diameter**. 
 
@@ -36,17 +36,17 @@ Press the **Auto-Adjust** button. A range of diameters will be scanned, the one 
 
 Note, this will likely work reliably for fiducials, but for nozzle tips, manual adjustment might still be needed, to get the right feature, such as the air bore. See [Up-looking Camera Offsets](#up-looking-camera-offsets). 
 
-For manual settings, use the spin control. On new machines/cameras, nothing is yet known about the camera viewing scale, therefore the adjustment is in pixels rather than real length units. Adjust the diameter up/down until a green circle and cross-hairs appear. The circle should hug the fiducial contour, just slightly outside. It will snap to it across a certain range of given diameters, it is sufficient to be in that range. Remember, you can zoom the camera view using the mouse scroll-wheel. 
+For manual settings, use the spin control. On new machines/cameras, nothing is yet known about the camera viewing scale, therefore the adjustment is in pixels rather than real length units. Adjust the diameter up/down until a green circle and crosshairs appear. The circle should hug the fiducial contour, just slightly outside. It will snap to it across a certain range of given diameters, it is sufficient to be in that range. Remember, you can zoom the camera view using the mouse scroll-wheel. 
 
 ## Calibration Secondary Fiducial
 
-Preliminary camera calibration also requires looking at a secondary fiducial at different height (Z level). This will provide the calibration algorithm with the needed 3D/spacial information to determine the true focal length of the lens and the optical position of the camera in space. 
+Preliminary camera calibration also requires looking at a secondary fiducial at different height (Z level). This will provide the calibration algorithm with the needed 3D/spatial information to determine the true focal length of the lens and the optical position of the camera in space. 
 
-The secondary fiducial should be placed close to the primary fiducial (see previous section), but on an elevated (or lowered) level in Z. The fiducial may be out of focus, but the blur should not go all the way across. In the illustration below the middle one is still good, the right one not.
+The secondary fiducial should be placed close to the primary fiducial (see previous section), but at a different Z level (be sure to keep it below the safe Z level). The fiducial may be out of focus, but the blur should not go all the way across. In the illustration below the middle one is still good, the right one not. As with the primary fiducial, when capturing the location of the secondary fiducial, the Z coordinate is the most critical as any error there will result is a camera scaling (units per pixel) error. 
 
 ![Out of Focus](https://user-images.githubusercontent.com/9963310/118112263-0e13e680-b3e5-11eb-818b-64d157866b35.png)
 
-The placement must not obstruct the camera view on either fiducials from all around them, again so that they can appear anywhere inside and to the edge of the camera view. 
+The placement must not obstruct the camera view on either fiducial from all around them, again so that they can appear anywhere inside and to the edge of the camera view. 
 
 You can print out the same fiducial as for the primary fiducial, cut it out with a margin of a few millimeters, and glue it onto a spacer. The spacer should be as black and matte as possible. All the other rules for the primary fiducial apply equally.
 
