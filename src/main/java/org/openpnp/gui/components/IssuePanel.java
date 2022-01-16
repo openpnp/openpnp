@@ -251,9 +251,6 @@ public class IssuePanel extends JPanel {
                     textField.setEnabled(issue.getState() == Solutions.State.Open);
                     panel.add(subPanel, "4, "+(formRow*2)+",fill, fill");
                     if (stringProperty.getSuggestions() != null) {
-//                        lbl = new JLabel("Suggestions");
-//                        lbl.setToolTipText(property.getToolTip());
-//                        panel.add(lbl, "2, "+(formRow*2)+", right, default");
                         JPanel suggestPanel = new JPanel();
                         suggestPanel.setLayout(new BorderLayout());
                         JLabel lbl2 = new JLabel("Templates: ");
