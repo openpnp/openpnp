@@ -108,6 +108,15 @@ The maximum feed rate value that will ever be sent in a move-to-command. The act
 
 Number of milliseconds to wait after connecting to the serial port before sending any commands. This is useful if you have a controller that resets on connect or takes a few seconds to start responding.
 
+### backslash-escaped-characters
+
+Enable this to allow escaped character sequences to be embedded in commands. The escape format is backslash U (upper or lower case) followed by exactly four hexadecimal characters (upper or lower case) representing the [Unicode](https://en.wikipedia.org/wiki/List_of_Unicode_characters) character to be sent.  For example, to send a ctrl-x character (hex 18), place \u0018 in your command. The following shortcut escape sequences are also permissible:
+* \b - backspace character, equivalent to \u0008
+* \f - form feed character, equivalent to \u000C
+* \n - line feed character, equivalent to \u000A
+* \r - carriage return character, equivalent to \u000D
+* \t - tab character, equivalent to \u0009
+
 ## Sub-Drivers
 
 For **newer Versions of OpenPnP 2.0**, Sub-Drivers are obsolete. You can now add multiple drivers of any type using the usual `[+]` button on the Drivers tree node. 
