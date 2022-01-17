@@ -103,7 +103,9 @@ The other linear axes (X, Y) may also have a limited **Safe Zone**. If you combi
 
 ### Kinematic Settings / Rate Limits
 
-**Feedrate [/s]** sets the speed limit on the axis. **NOTE**: Unlike in G-code `F` words, this limit is per second rather than per minute. It seemed more consistent to define all rates (Feedrate/Acceleration/Jerk) in the same [s] time unit. You need to divide by 60 if converting from G-code feed-rates. 
+![per Second per Minute](https://user-images.githubusercontent.com/9963310/149734042-4a1a806e-b1cc-41a8-831d-bbecc74bec51.png)
+
+**Feedrate [/s]** sets the speed limit on the axis. **NOTE**: you can set it in units per second, or (more traditionally) in units per minute, as in the G-code `F` word. The GUI will convert back and forth for you. 
 
 The Axes can have different speed limits which is especially important for the rotational axes where the limit is angular [°/s] rather than linear [mm/s]. In typical DIY stepper machines the angular speed can be much higher than the linear speed, e.g. a 180° nozzle turn should be quicker than a 180mm linear move. 
 
