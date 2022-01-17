@@ -105,25 +105,29 @@ The other linear axes (X, Y) may also have a limited **Safe Zone**. If you combi
 
 ![per Second per Minute](https://user-images.githubusercontent.com/9963310/149734042-4a1a806e-b1cc-41a8-831d-bbecc74bec51.png)
 
-**Feedrate [/s]** sets the speed limit on the axis. **NOTE**: you can set it in units per second, or (more traditionally) in units per minute, as in the G-code `F` word. The GUI will convert back and forth for you. 
+**Feedrate [/s]** sets the velocity limit on the axis. **NOTE**: you can set it in units per second, or (more traditionally) in units per minute, as in the G-code `F` word. The GUI will convert back and forth for you. 
 
-The Axes can have different speed limits which is especially important for the rotational axes where the limit is angular [°/s] rather than linear [mm/s]. In typical DIY stepper machines the angular speed can be much higher than the linear speed, e.g. a 180° nozzle turn should be quicker than a 180mm linear move. 
+The Axes can have different velocity limits which is especially important for the rotational axes where the limit is angular [°/s] rather than linear [mm/s]. In typical DIY PnP machines the angular velocity is usually be much higher than the linear velocity, e.g. a 180° nozzle turn should be quicker than a 180mm linear move. 
 
 When OpenPnP is performing a move with several axes involved (e.g. a diagonal plus rotation), it will exploit the speed limit on all the axes. I.e. the overall speed along the diagonal can be significantly faster than for an individual axis (this behavior is optional, see [[Advanced-Motion-Control]]). 
 
 **Acceleration [/s²]** sets the [acceleration](https://simple.wikipedia.org/wiki/Acceleration) limit (maximum change of velocity per unit of time). In many cases this is more important than the speed limit, as the speed limit is only ever reached in very long moves. 
 
-**Jerk [/s³]** sets the [jerk](https://simple.wikipedia.org/wiki/Jerk) limit (maximum change of acceleration per unit of time). If left at zero, no jerk control will be used. Without jerk control, the acceleration will be switched on and off instantaneous, creating vibrations and wear and tear. OpenPnP has several options to use jerk control, even if your controller does not natively have the capability (see [[Advanced-Motion-Control]]).
+**Jerk [/s³]** sets the [jerk](https://simple.wikipedia.org/wiki/Jerk) limit (maximum change of acceleration per unit of time). If left at zero, no jerk control will be used. Whether you need to set Jerk or not, depends on your controller. Most controllers have acceleration control only, so Jerk is optional. For TinyG, setting Jerk is mandatory, because it uses _only_ Jerk. 
 
-**Important**: you need to set these limits **at or below** the limits configured for the controller. Otherwise you will get very strange result, as the motion planning is then completely useless. 
+Without jerk control, the acceleration will be switched on and off instantaneous, creating vibrations and wear and tear. OpenPnP has several options to use jerk control, even if your controller does not natively have the capability (see [[Advanced-Motion-Control]]).
 
-In case of Smoothieware, look for values like these (divide by 60 from mm/min). See the [Smoothie guide](http://smoothieware.org/configuration-options): 
+**Important**: you need to set these limits **at or below** the limits configured for the controller. Otherwise you will get very strange results, motion planning inside OpenPnP is then completely wrong.
+
+For a Smoothieware controller, look for values like these in your `config.txt` file. See the [Smoothie guide](http://smoothieware.org/configuration-options): 
 
 <pre>
 x_axis_max_speed                             40000            # mm/min
 alpha_max_rate                               40000            # mm/min actuator max speed
 alpha_acceleration                           2000.0           # mm/sec^2
 </pre>
+
+For other types of controller firmwares, these settings will be found in different places, please consult your controller documentation.
 
 #### What values should I set?
 
