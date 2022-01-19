@@ -135,57 +135,81 @@ public class KinematicSolutions implements Solutions.Subject {
                                     final boolean oldEnableLow = axisZ.isSafeZoneLowEnabled(); 
                                     final boolean oldEnableHigh = axisZ.isSafeZoneHighEnabled();  
 
-                                    solutions.add(new Solutions.Issue(
-                                            hm, 
-                                            "Set Safe Z of "+hm.getName()+".", 
-                                            "Jog "+hm.getName()+" over the tallest obstacle and capture.", 
-                                            Solutions.Severity.Fundamental,
-                                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
-
-                                        @Override 
-                                        public void activate() throws Exception {
-                                            MainFrame.get().getMachineControls().setSelectedTool(hm);
-                                        }
-
-                                        @Override 
-                                        public String getExtendedDescription() {
-                                            return "<html>"
-                                                    + "<p>Jog "+hm.getName()+" over the tallest obstacle on your machine.</p><br/>"
-                                                    + "<p>Then lower it down so it  still has sufficient clearance"
-                                                    + (partClearance ? " even with the tallest part on the nozzle" : "")
-                                                    +".</p><br/>"
-                                                    + "<p>Then press Accept to capture the Safe Z.</p>"
-                                                    + "</html>";
-                                        }
-
-                                        @Override
-                                        public Icon getExtendedIcon() {
-                                            return partClearance ? Icons.safeZFixed : Icons.safeZCapture;
-                                        }
-
-
-                                        @Override
-                                        public void setState(Solutions.State state) throws Exception {
-                                            Length newLimit = axisZ.getDriverLengthCoordinate();
-                                            if (limitLow) {
-                                                axisZ.setSafeZoneLow((state == State.Solved) ? newLimit : oldLimitLow);
-                                                axisZ.setSafeZoneLowEnabled((state == State.Solved) ? true : oldEnableLow);
-                                                if (!isShared) {
-                                                    axisZ.setSafeZoneHighEnabled((state == State.Solved) ? false : oldEnableHigh);
-                                                }
+                                    if (axisZ.isSafeZoneLowEnabled() && axisZ.isSafeZoneHighEnabled()
+                                            && axisZ.getSafeZoneLow().compareTo(axisZ.getSafeZoneHigh()) > 0) {
+                                        solutions.add(new Solutions.Issue(
+                                                axisZ, 
+                                                "Invalid Safe Z Zone on "+axisZ.getName()+".", 
+                                                "The Save Z Zone of "+axisZ.getName()+" is invalid (lower limit > higher limit). Start fresh configuration.", 
+                                                Solutions.Severity.Error,
+                                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
+                                            @Override
+                                            public void setState(Solutions.State state) throws Exception {
+                                                axisZ.setSafeZoneLowEnabled(state != State.Solved);
+                                                axisZ.setSafeZoneHighEnabled(state != State.Solved);
+                                                MainFrame.get().getIssuesAndSolutionsTab().findIssuesAndSolutions();
                                             }
-                                            else {
-                                                axisZ.setSafeZoneHigh((state == State.Solved) ? newLimit : oldLimitHigh);
-                                                axisZ.setSafeZoneHighEnabled((state == State.Solved) ? true : oldEnableHigh);
-                                                if (!isShared) {
-                                                    axisZ.setSafeZoneLowEnabled((state == State.Solved) ? false : oldEnableLow);
-                                                }
+                                        });
+                                    }
+                                    else {
+
+                                        solutions.add(new Solutions.Issue(
+                                                hm, 
+                                                "Set Safe Z of "+hm.getName()+".", 
+                                                "Jog "+hm.getName()+" over the tallest obstacle and capture.", 
+                                                Solutions.Severity.Fundamental,
+                                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
+
+                                            @Override 
+                                            public void activate() throws Exception {
+                                                MainFrame.get().getMachineControls().setSelectedTool(hm);
                                             }
-                                            // This is a permanently available solution and we need to save state.
-                                            solutions.setSolutionsIssueSolved(this, (state == State.Solved));
-                                            super.setState(state);
-                                        }
-                                    });
+
+                                            @Override 
+                                            public String getExtendedDescription() {
+                                                return "<html>"
+                                                        + "<p>Jog "+hm.getName()+" over the tallest obstacle on your machine.</p><br/>"
+                                                        + "<p>Then lower it down so it  still has sufficient clearance"
+                                                        + (partClearance ? " even with the tallest part on the nozzle" : "")
+                                                        +".</p><br/>"
+                                                        + "<p>Then press Accept to capture the Safe Z.</p>"
+                                                        + "</html>";
+                                            }
+
+                                            @Override
+                                            public Icon getExtendedIcon() {
+                                                return partClearance ? Icons.safeZFixed : Icons.safeZCapture;
+                                            }
+
+                                            @Override
+                                            public boolean isForcedUnsolved() {
+                                                // Always show this as unsolved, if 
+                                                return !(limitLow ? axisZ.isSafeZoneLowEnabled() : axisZ.isSafeZoneHighEnabled()); 
+                                            }
+
+                                            @Override
+                                            public void setState(Solutions.State state) throws Exception {
+                                                Length newLimit = axisZ.getDriverLengthCoordinate();
+                                                if (limitLow) {
+                                                    axisZ.setSafeZoneLow((state == State.Solved) ? newLimit : oldLimitLow);
+                                                    axisZ.setSafeZoneLowEnabled((state == State.Solved) ? true : oldEnableLow);
+                                                    if (!isShared) {
+                                                        axisZ.setSafeZoneHighEnabled((state == State.Solved) ? false : oldEnableHigh);
+                                                    }
+                                                }
+                                                else {
+                                                    axisZ.setSafeZoneHigh((state == State.Solved) ? newLimit : oldLimitHigh);
+                                                    axisZ.setSafeZoneHighEnabled((state == State.Solved) ? true : oldEnableHigh);
+                                                    if (!isShared) {
+                                                        axisZ.setSafeZoneLowEnabled((state == State.Solved) ? false : oldEnableLow);
+                                                    }
+                                                }
+                                                // This is a permanently available solution and we need to save state.
+                                                solutions.setSolutionsIssueSolved(this, (state == State.Solved));
+                                                super.setState(state);
+                                            }
+                                        });
+                                    }
                                 }
                                 catch (Exception e) {
                                     Logger.warn(e);

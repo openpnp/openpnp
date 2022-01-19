@@ -53,10 +53,10 @@ import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
-import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.camera.calibration.LensCalibrationParams;
 import org.openpnp.machine.reference.camera.wizards.ReferenceCameraWhiteBalanceConfigurationWizard;
+import org.openpnp.machine.reference.solutions.ActuatorSolutions;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;
@@ -1342,6 +1342,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
         if (solutions.isTargeting(Milestone.Vision)) {
+            /* replaced by more advanced solutions
             if (getLooking() == Looking.Up
                     && isFlipX() == isFlipY()
                     && ! (this instanceof SimulatedUpCamera)) {
@@ -1352,7 +1353,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                         Severity.Warning,
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms"));
             }
-            /*duplicate
             if (getUnitsPerPixel().getX() == 0 && getUnitsPerPixel().getY() == 0) {
                 solutions.add(new Solutions.PlainIssue(
                         this, 
@@ -1429,6 +1429,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                         }
                     });
                 }
+            }
+            if (getLightActuator() != null) {
+                ActuatorSolutions.findActuateIssues(solutions, this, this.getLightActuator(), "camera light",
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
             }
         }
     }

@@ -1576,6 +1576,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
 
         try {
+            Logger.debug("Detecting firmware and position reporting, please ignore any errors and warnings.");
             sendCommand("M115");
             String firmware = receiveSingleResponse("^.*FIRMWARE.*");
             if (firmware != null) {
@@ -1608,6 +1609,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             else {
                 setReportedAxes("");
             }
+            Logger.debug("End detecting firmware and position reporting.");
         }
         finally {
             if (!wasConnected) {

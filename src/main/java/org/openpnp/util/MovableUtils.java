@@ -5,6 +5,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.base.AbstractMachine;
 import org.pmw.tinylog.Logger;
@@ -25,7 +26,8 @@ public class MovableUtils {
             throws Exception {
         Head head = hm.getHead();
         Location currentLocationWithNewZ = hm.getLocation().derive(location, false, false, true, false);
-        if (! hm.toRaw(location).matches(hm.toRaw(currentLocationWithNewZ))) {
+        if (! hm.toRaw(hm.toHeadLocation(location, LocationOption.Quiet), LocationOption.Quiet)
+                .matches(hm.toRaw(hm.toHeadLocation(currentLocationWithNewZ, LocationOption.Quiet), LocationOption.Quiet))) {
             // Moves in X, Y or C, move to safe Z needed. 
             head.moveToSafeZ(speed);
             // Determine the exit Safe Z of that hm to optimize the move. In shared axis configurations with a Safe Z Zone
@@ -33,7 +35,15 @@ public class MovableUtils {
             // quick as possible. 
             Length safeZ = hm.getEffectiveSafeZ();
             if (safeZ != null) {
-                safeZ = safeZ.convertToUnits(location.getUnits());    
+                // If the target Z is higher than safe Z, optimize, but stay within the Safe Z Zone.
+                if (location.getLengthZ().compareTo(safeZ) > 0) {
+                    Length[] zone = hm.getSafeZZone();
+                    if (zone[1] != null) { 
+                        safeZ = (location.getLengthZ().compareTo(zone[1]) < 0) ?
+                                location.getLengthZ() : zone[1];
+                    }
+                }
+                safeZ = safeZ.convertToUnits(location.getUnits());
             }
             hm.moveTo(location.derive(null, null, (safeZ != null ? safeZ.getValue() : Double.NaN), null), speed);
         }

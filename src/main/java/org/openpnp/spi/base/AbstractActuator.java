@@ -4,8 +4,10 @@ import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ActuatorInterlockMonitor;
+import org.openpnp.machine.reference.solutions.ActuatorSolutions;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.model.Solutions;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Driver;
@@ -425,5 +427,11 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
 
     public void setInterlockMonitor(InterlockMonitor interlockMonitor) {
         this.interlockMonitor = interlockMonitor;
+    }
+
+    @Override
+    public void findIssues(Solutions solutions) {
+        super.findIssues(solutions);
+        new ActuatorSolutions(this).findIssues(solutions);
     }
 }
