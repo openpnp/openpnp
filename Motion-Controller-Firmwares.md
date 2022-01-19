@@ -49,6 +49,7 @@ Refer to the Duet3D Wiki on how to upgrade:
 A special Smoothieware firmware for OpenPnP is available. It contains some bug-fixes and features that are crucial for use with OpenPnP but are not present/accepted in the official Smoothieware firmware. The firmware and more details are available here:
 
 * [makr.zone: "Smoothieware: New Firmware for PnP"](https://makr.zone/smoothieware-new-firmware-for-pnp/500/)
+* Note: for CHMT machines you require a different build, see [[CharmHigh CHMT36VA]]
 
 Refer to the Smoothieware Wiki on how to upgrade:
 
