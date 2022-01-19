@@ -76,7 +76,9 @@ The **Type** will restrict the input axes to the same **Type** i.e. only the coo
 
 **Cam Arms Angle** defines the angle between the two arms. Normally, a 180° angle is used for straight-across arms. If the angle is 0°, it describes a one-armed design that always only pushes one side i.e nozzle at a time. Other "V-shaped" arms angles could be used to describe designs, that eliminate dead-time, that the 0° one-armed design has.
 
-**Cam Wheel Radius** and **Cam Wheel Gap** are physical properties of the mechanics. However, they both just add a constant offset to the transformation. Because we relate the target Z coordinate to the nozzle **tip** rather than the nozzle **back** (where the cam wheel pushes it), such an offset is not purposeful and you will simply end up compensating for it in the nozzle offset. ⚠ It is highly recommended to **leave both at zero**.
+**Cam Wheel Radius** and **Cam Wheel Gap** are physical properties of the mechanics. However, they both just add a constant offset to the transformation. Because we relate the target Z coordinate to the nozzle **tip** rather than the nozzle **back** (where the cam wheel pushes it), such an offset is not purposeful and you will simply end up compensating for it in the nozzle offset. 
+
+⚠️ It is highly recommended to leave both **Cam Wheel Radius** and **Cam Wheel Gap** at zero.
 
 ## ReferenceCamClockwiseAxis
 
