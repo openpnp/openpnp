@@ -74,8 +74,9 @@ Fortunately, if **Limit to Range** and **Wrap around** are combined, the axis co
 Note: the GcodeDriver must have the `SET_GLOBAL_OFFSETS_COMMAND` configured, usually proposed by [[Issues and Solutions]], if the controller supports it.
 
 ### Kinematic Settings / Axis Limits
-
-All these settings can now be setup by [[Issues and Solutions]] with easy step-by-step instructions. 
+___
+Note: the following settings can now be setup by [[Issues and Solutions]] with easy step-by-step instructions, and capturing the actual coordinates by interactively positioning the machine. The following instructions remain for the exceptional manual setup and for a better understanding. 
+___
 
 **Soft Limit Low** and **Soft Limit High** bracket the valid range of the axis. OpenPnP will refuse a move to a Location if it leads outside this range. 
 
