@@ -144,9 +144,7 @@ public class CameraWalker {
             //Move the machine to the test location and wait for it to finish
             Future<?> future = UiUtils.submitUiMachineTask(() -> {
                 if (onlySafeZMovesAllowed) {
-                    movable.moveToSafeZ();
-                    movable.moveTo(testLocation.
-                            derive(movable.getLocation(), false, false, true, false));
+                    MovableUtils.moveToLocationAtSafeZ(movable, testLocation, 1.0);
                 }
                 movable.moveTo(testLocation);
             });
@@ -285,9 +283,7 @@ public class CameraWalker {
         //Move the machine to the starting location and wait for it to finish
         Future<?> future = UiUtils.submitUiMachineTask(() -> {
             if (onlySafeZMovesAllowed) {
-                movable.moveToSafeZ();
-                movable.moveTo(startingMachineLocation.
-                        derive(movable.getLocation(), false, false, true, false));
+                MovableUtils.moveToLocationAtSafeZ(movable, startingMachineLocation, 1.0);
             }
             movable.moveTo(startingMachineLocation);
         });
@@ -366,10 +362,7 @@ public class CameraWalker {
         final Location moveLocation = newLocation.derive(null, null, null, movable.getLocation().getRotation());
         Future<?> future = UiUtils.submitUiMachineTask(() -> {
             if (onlySafeZMovesAllowed) {
-                movable.moveToSafeZ();
-                
-                movable.moveTo(moveLocation.
-                        derive(movable.getLocation(), false, false, true, false));
+                MovableUtils.moveToLocationAtSafeZ(movable, moveLocation, 1.0);
             }
             movable.moveTo(moveLocation);
         });

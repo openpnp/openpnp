@@ -198,6 +198,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     private Actuator lightActuator;
 
+    private boolean undistortionMappingSemaphore = false;
+
     public enum FocusSensingMethod {
         None,
         AutoFocus
@@ -208,9 +210,9 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         super.commit();
         if (!advancedCalibration.isPreliminarySetupComplete() && !advancedCalibration.isValid()) {
             //Since the new advanced calibration doesn't have valid data, we want to convert 
-            //the old style settings to the new style but we can't do it right now because we 
+            //the old style settings to the new style. But we can't do it right now because we 
             //have to wait until the camera is up and running. So we clear the flag to indicate 
-            //we haven't done this yet and enable the new style to override the old style. Then 
+            //we haven't done it yet and enable the new style to override the old style. Then 
             //when the camera is up and running, the old style settings will get converted to the
             //new style in transformImage.
             advancedCalibration.setPreliminarySetupComplete(false);
@@ -604,7 +606,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                 if (!advancedCalibration.isPreliminarySetupComplete() && isOpen() && width != null && height != null) {
                     //Now that the camera is generating valid images, we can do the conversion from
                     //the old style to the new
-                    advancedCalibration.convertOldStyleSettingsToNew(this);
+                    advancedCalibration.convertLegacySettings(this);
                 }
                 //Skip all the old style image transforms and distortion corrections except for 
                 //deinterlacing, cropping, and white balancing
@@ -672,28 +674,59 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public Location getUnitsPerPixel(Length viewingPlaneZ) {
         if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
                 advancedCalibration.isValid()) {
-            double upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
-                        convertToUnits(LengthUnit.Millimeters).getValue() / 
-                        advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
+            double upp = 0;
+            if (takeUndistortionMappingSemaphore()) {
+                upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
+                            convertToUnits(LengthUnit.Millimeters).getValue() / 
+                            advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
+                releaseUndistortionMappingSemaphore();
+            }
             upp = Double.isFinite(upp) ? upp : 0;
             return new Location(LengthUnit.Millimeters, upp, upp, 0, 0);
         }
         return super.getUnitsPerPixel(viewingPlaneZ);
     }
 
+    /**
+     * Attempts to take the semaphore protecting the undistortion mapping. If it is successfully 
+     * taken, true is returned, otherwise false is returned. If the semaphore is taken, the caller 
+     * must call releaseUndistortionMappingSemaphore() to release the semaphore.
+     * @return true if the semaphore was successfully taken
+     */
+    private synchronized boolean takeUndistortionMappingSemaphore() {
+        if (!undistortionMappingSemaphore) {
+            undistortionMappingSemaphore = true;
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Returns the semaphore that was taken by isUndistortionMappingAvailable()
+     */
+    private synchronized void releaseUndistortionMappingSemaphore() {
+        undistortionMappingSemaphore = false;
+    }
+   
     private Mat advancedUndistort(Mat mat) {
         if (!advancedCalibration.isEnabled()) {
             return mat;
         }
-        if (undistortionMap1 == null || undistortionMap2 == null) {
-            undistortionMap1 = new Mat();
-            undistortionMap2 = new Mat();
-            advancedCalibration.initUndistortRectifyMap(mat.size(), 
-                    undistortionMap1, undistortionMap2);
-        }
-        
         Mat dst = mat.clone();
-        Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
+        if (takeUndistortionMappingSemaphore()) {
+            if (undistortionMap1 == null || undistortionMap2 == null) {
+                if (undistortionMap1 == null) {
+                    undistortionMap1 = new Mat();
+                }
+                if (undistortionMap2 == null) {
+                    undistortionMap2 = new Mat();
+                }
+                advancedCalibration.initUndistortRectifyMap(mat.size(), 
+                        undistortionMap1, undistortionMap2);
+            }
+            Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
+            releaseUndistortionMappingSemaphore();
+        }
         mat.release();
 
         return dst;
@@ -1207,7 +1240,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return calibrating;
     }
 
-    public synchronized void clearCalibrationCache() {
+    public void clearCalibrationCache() {
+        while (!takeUndistortionMappingSemaphore()) {
+            //spin until it is available
+        }
         // Clear the calibration cache
         if (undistortionMap1 != null) {
             undistortionMap1.release();
@@ -1217,6 +1253,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             undistortionMap2.release();
             undistortionMap2 = null;
         }
+        releaseUndistortionMappingSemaphore();
     }
 
     public void startCalibration(CalibrationCallback callback) {

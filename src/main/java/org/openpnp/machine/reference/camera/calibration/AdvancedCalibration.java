@@ -38,6 +38,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -51,6 +52,10 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 public class AdvancedCalibration extends LensCalibrationParams {
+    private static final double defaultPrimaryToCameraDistanceMm = 200;
+    private static final double defaultPrimaryToSecondaryDistanceMm = 20;
+    private static final Location defaultUpp = new Location(LengthUnit.Millimeters, 0.001, 0.001, -35, 0);
+    
     @Attribute(required = false)
     private boolean overridingOldTransformsAndDistortionCorrectionSettings = false;
     
@@ -1054,6 +1059,11 @@ public class AdvancedCalibration extends LensCalibrationParams {
         cameraMatrix.put(1, 2, cameraParams[3]);
         Logger.trace("cameraMatrix = " + cameraMatrix.dump());
         
+        if (Core.checkRange(cameraMatrix, true, -10e6, +10e6)) {
+            throw new Exception("Model didn't converge as expected - camera matrix has "
+                    + " much larger magnitudes than expected");
+        }
+        
         //Compute the field of view of the physical camera
         double[] fovx = new double[1];
         double[] fovy = new double[1];
@@ -1070,6 +1080,11 @@ public class AdvancedCalibration extends LensCalibrationParams {
         distortionCoefficients.put(3, 0, cameraParams[7]);
         distortionCoefficients.put(4, 0, cameraParams[8]);
         Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
+        
+        if (Core.checkRange(distortionCoefficients, true, -10e6, +10e6)) {
+            throw new Exception("Model didn't converge as expected - distortion coefficients have"
+                    + " much larger magnitudes than expected");
+        }
         
         //Convert the new estimate of the rotation vector to a rotation matrix
         rvec = Mat.zeros(3, 1, CvType.CV_64FC1);
@@ -1248,10 +1263,12 @@ public class AdvancedCalibration extends LensCalibrationParams {
      */
     public void initUndistortRectifyMap(Size size, Mat undistortionMap1, Mat undistortionMap2) {
         Size virCamSize = new Size();
+        if (virtualCameraMatrix != null) {
+            virtualCameraMatrix.release();
+        }
         virtualCameraMatrix = CameraCalibrationUtils.computeVirtualCameraMatrix(cameraMatrix, 
                 distortionCoefficients, rectificationMatrix, size, virCamSize, alphaPercent / 100.0, 
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame);
-        Logger.trace("virtualCameraMatrix = " + virtualCameraMatrix.dump());
 
         //Compute the field of view of the virtual camera
         double[] fovx = new double[1];
@@ -1320,7 +1337,10 @@ public class AdvancedCalibration extends LensCalibrationParams {
      * @param camera
      */
     public void applyCalibrationToMachine(ReferenceHead head, ReferenceCamera camera) {
-        camera.setDefaultZ(getPrimaryLocation().getLengthZ());
+        if (getPrimaryLocation() != null) {
+            camera.setDefaultZ(getPrimaryLocation().getLengthZ());
+        }
+        
         Location calibratedOffsets = new Location(LengthUnit.Millimeters);
         if (head != null) {
             calibratedOffsets = calibratedOffsets
@@ -1337,98 +1357,67 @@ public class AdvancedCalibration extends LensCalibrationParams {
         }
         setCalibratedOffsets(calibratedOffsets);
         setValid(true);
+        setEnabled(true);
         // Make sure the camera undistort and virtual matrix are updated.
         camera.clearCalibrationCache();
-        setEnabled(true);
         camera.captureTransformed();
     }
         
-    public void convertOldStyleSettingsToNew(ReferenceCamera referenceCamera) throws Exception {
+    public void convertLegacySettings(ReferenceCamera referenceCamera) throws Exception {
         if (!preliminarySetupComplete) {
             Logger.trace("Updating {} to new style calibration", referenceCamera.getName());
+            
+            if (referenceCamera.getCalibration().isEnabled()) {
+                setDistortionCoefficientsMat(referenceCamera.getCalibration().getDistortionCoefficientsMat());
+            }
+            else {
+                setDistortionCoefficientsMat(Mat.zeros(5, 1, CvType.CV_64FC1));
+            }
+
+            LengthUnit mm = LengthUnit.Millimeters;
 
             Location priUpp = referenceCamera.getUnitsPerPixelPrimary();
             if (priUpp == null) {
                 //Set it to something relatively safe
-                priUpp = new Location(LengthUnit.Millimeters, 0.001, 0.001, 0, 0);
+                priUpp = defaultUpp;
             }
+            priUpp = priUpp.convertToUnits(mm);
+            double z1 = priUpp.getZ();
+            Length defaultZ = referenceCamera.getDefaultZ();
+            if (defaultZ == null) {
+                defaultZ = priUpp.getLengthZ();
+                referenceCamera.setDefaultZ(defaultZ);
+            }
+            defaultZ = defaultZ.convertToUnits(mm);
+            
+            //If defaultZ is different than where the primary units per pixel was measured, scale
+            //upp so that it appears to have been measured at defaultZ with a camera at the default
+            //distance
+            if (defaultZ.compareTo(priUpp.getLengthZ()) != 0) {
+                double z0;
+                if (referenceCamera.getLooking() == Looking.Down) {
+                    z0 = z1 + defaultPrimaryToCameraDistanceMm;
+                }
+                else {
+                    z0 = z1 - defaultPrimaryToCameraDistanceMm;
+                }
+                priUpp = priUpp.multiply(Math.abs(z0 - defaultZ.getValue())/defaultPrimaryToCameraDistanceMm).
+                        deriveLengths(null, null, defaultZ, 0.0);
+            }
+            
             //Note - in referenceCamera, flipX controls vertical flipping and flipY controls 
             //horizontal flipping - the opposite of what you might think
             setPrimaryAlignment(referenceCamera, priUpp, 
                     priUpp.getLengthZ(), 
                     referenceCamera.isFlipX(), referenceCamera.isFlipY(), 
                     referenceCamera.getRotation());
-            //Note - in referenceCamera, flipX controls vertical flipping and flipY controls 
-            //horizontal flipping - the opposite of what you might think
-            double flipH = referenceCamera.isFlipY() ? -1 : 1;
-            double flipV = referenceCamera.isFlipX() ? -1 : 1;
-            
-            double rot = Math.toRadians(referenceCamera.getRotation());
-            
-            LengthUnit mm = LengthUnit.Millimeters;
-    
-            Location upp[] = new Location[2];
-            
-            upp[0] = referenceCamera.getUnitsPerPixelPrimary();
-            if (upp[0] == null) {
-                upp[0] = new Location(LengthUnit.Millimeters, 0.001, 0.001, 0, 0);
-            }
-            upp[0] = upp[0].convertToUnits(mm);
-            
-            if (referenceCamera.getDefaultZ() == null) {
-                if (referenceCamera.getLooking() == Looking.Down) {
-                    referenceCamera.setDefaultZ(upp[0].getLengthZ());
-                }
-                else {
-                    referenceCamera.setDefaultZ(referenceCamera.getHeadOffsets().getLengthZ());
-                }
-            }
 
-            upp[1] = referenceCamera.getUnitsPerPixelSecondary();
-            if (upp[1] == null) {
-                upp[1] = upp[0];
+            if (referenceCamera.isEnableUnitsPerPixel3D()) {
+                Location secUpp = referenceCamera.getUnitsPerPixelSecondary();
+                setSecondaryAlignment(referenceCamera, secUpp, 
+                    secUpp.getLengthZ(), referenceCamera.isFlipX(), referenceCamera.isFlipY(), 
+                    referenceCamera.getRotation() );
             }
-            upp[1] = upp[1].convertToUnits(mm);
-    
-            
-            if (!referenceCamera.isEnableUnitsPerPixel3D() || Math.abs(upp[0].getZ() - upp[1].getZ()) < 0.1) {
-                //We don't have enough information so we'll just assume the camera is at some 
-                //arbitrary Z and proceed from there.
-                upp[0] = upp[0].derive(null, null, 
-                        referenceCamera.getDefaultZ().convertToUnits(mm).getValue(), null);
-                double z0;
-                if (referenceCamera.getLooking() == Looking.Down) {
-                    z0 = referenceCamera.getDefaultZ().convertToUnits(mm).getValue() + 200;
-                }
-                else {
-                    z0 = referenceCamera.getDefaultZ().convertToUnits(mm).getValue() - 200;
-                }
-                Logger.trace("z0 = " + z0);
-                double d1 = Math.abs(upp[0].getZ() - z0);
-                upp[1] = upp[1].derive(null, null, upp[0].getZ() + 20, null);
-                double d2 = Math.abs(upp[1].getZ() - z0);
-                upp[1] = upp[1].derive(d2*upp[0].getX()/d1, d2*upp[0].getY()/d1, null, null);
-            }
-            
-            RealMatrix[] scalingMats = new RealMatrix[2];
-            Length[] calHeights = new Length[2];
-            
-            double camDir = referenceCamera.getLooking() == Looking.Down ? -1 : +1;
-            
-            for (int i=0; i<2; i++) {
-                scalingMats[i] = MatrixUtils.createRealMatrix(new double[][] 
-                    {{camDir*flipH*upp[i].getX()*Math.cos(rot),  camDir*flipH*upp[i].getX()*Math.sin(rot)},
-                     {camDir*flipV*upp[i].getY()*Math.sin(rot), -camDir*flipV*upp[i].getY()*Math.cos(rot)}});
-                Logger.trace("scalingMats[{}] = {}", i, scalingMats[i]);
-                calHeights[i] = upp[i].getLengthZ();
-                Logger.trace("calHeights[{}] = {}", i, calHeights[i]);
-            }
-            
-            if (referenceCamera.getCalibration().isEnabled()) {
-                setDistortionCoefficientsMat(referenceCamera.getCalibration().getDistortionCoefficientsMat());
-            }
-            
-            preliminaryAlignment(referenceCamera, scalingMats, calHeights);
         }
     }
     
@@ -1453,18 +1442,18 @@ public class AdvancedCalibration extends LensCalibrationParams {
 
         double z1 = primaryCalHeight.getValue();
         
-        //At this point we don't know the secondary calibration Z coordinate so just assume it is
-        //20 millimeters above the primary
-        double z2 = z1 + 20;
+        //At this point we don't care about the secondary calibration Z coordinate so just assume 
+        //the default distance above the primary fiducial
+        double z2 = z1 + defaultPrimaryToSecondaryDistanceMm;
                 
-        //At this point we don't have enough information to determine the true Z coordinate of the
-        //camera so we will just assume it is +/-200 millimeters away from the primary calibration Z
+        //We also don't care about the true Z coordinate of the camera so we will just assume it is 
+        //the default distance above/below the primary calibration Z
         double z0;
         if (referenceCamera.getLooking() == Looking.Down) {
-            z0 = z1 + 200;
+            z0 = z1 + defaultPrimaryToCameraDistanceMm;
         }
         else {
-            z0 = z1 - 200;
+            z0 = z1 - defaultPrimaryToCameraDistanceMm;
         }
         Logger.trace("z0 = " + z0);
         
@@ -1476,7 +1465,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         //on the distance from the camera
         double d1 = Math.abs(z1 - z0);
         double d2 = Math.abs(z2 - z0);
-        upp[1] = upp[1].derive(d2*upp[0].getX()/d1, d2*upp[0].getY()/d1, z2, null);
+        upp[1] = new Location(mm, d2*upp[0].getX()/d1, d2*upp[0].getY()/d1, z2, 0);
         
         RealMatrix[] scalingMats = new RealMatrix[2];
         Length[] calHeights = new Length[2];
@@ -1485,9 +1474,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
             scalingMats[i] = MatrixUtils.createRealMatrix(new double[][] 
                 {{camDir*flipH*upp[i].getX()*Math.cos(rot),  camDir*flipH*upp[i].getX()*Math.sin(rot)},
                  {camDir*flipV*upp[i].getY()*Math.sin(rot), -camDir*flipV*upp[i].getY()*Math.cos(rot)}});
-            Logger.trace("scalingMats[{}] = {}", i, scalingMats[i]);
+            Logger.trace("{} scalingMats[{}] = {}", referenceCamera.getName(), i, scalingMats[i]);
             calHeights[i] = upp[i].getLengthZ();
-            Logger.trace("calHeights[{}] = {}", i, calHeights[i]);
+            Logger.trace("{} calHeights[{}] = {}", referenceCamera.getName(), i, calHeights[i]);
         }
         
         preliminaryAlignment(referenceCamera, scalingMats, calHeights);
@@ -1500,7 +1489,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
         LengthUnit mm = LengthUnit.Millimeters;
 
         Length primaryCalHeight = referenceCamera.getDefaultZ().convertToUnits(mm);
-        Location primaryUnitsPerPixel = referenceCamera.getUnitsPerPixel(primaryCalHeight).convertToUnits(mm);
+        Mat camMat = referenceCamera.getAdvancedCalibration().getCameraMatrixMat();
+        Location primaryUnitsPerPixel = new Location(mm, defaultPrimaryToCameraDistanceMm/camMat.get(0, 0)[0], 
+                defaultPrimaryToCameraDistanceMm/camMat.get(1, 1)[0], primaryCalHeight.getValue(), 0);
         
         secondaryUnitsPerPixel = secondaryUnitsPerPixel.convertToUnits(mm);
         if (secondaryUnitsPerPixel.getX() <= 0 || secondaryUnitsPerPixel.getY() <= 0) {
@@ -1533,11 +1524,11 @@ public class AdvancedCalibration extends LensCalibrationParams {
         
         for (int i=0; i<2; i++) {
             scalingMats[i] = MatrixUtils.createRealMatrix(new double[][] 
-                {{camDir*flipH*upp[i].getX()*Math.cos(rot),  camDir*flipH*upp[i].getX()*Math.sin(rot)},
-                 {camDir*flipV*upp[i].getY()*Math.sin(rot), -camDir*flipV*upp[i].getY()*Math.cos(rot)}});
-            Logger.trace("scalingMats[{}] = {}", i, scalingMats[i]);
+                {{camDir*flipH*upp[i].getX()*Math.cos(rot),  camDir*flipH*upp[i].getY()*Math.sin(rot)},
+                 {camDir*flipV*upp[i].getX()*Math.sin(rot), -camDir*flipV*upp[i].getY()*Math.cos(rot)}});
+            Logger.trace("{} scalingMats[{}] = {}", referenceCamera.getName(), i, scalingMats[i]);
             calHeights[i] = upp[i].getLengthZ();
-            Logger.trace("calHeights[{}] = {}", i, calHeights[i]);
+            Logger.trace("{} calHeights[{}] = {}", referenceCamera.getName(), i, calHeights[i]);
         }
         
         preliminaryAlignment(referenceCamera, scalingMats, calHeights);
@@ -1611,6 +1602,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         //machine Z-axis because the projection direction is opposite for the physical and virtual 
         //cameras.
         mMat.setEntry(2, 2, -1);
+        Logger.trace("mMat for {} = {}", referenceCamera.getName(), mMat);
         
         //Up to this point we've been working in the units-per-pixel domain since it is linear with 
         //distance from the camera: machineUnits = unitsPerPixelPerUnitZ * distanceZ * imagePixels; 
@@ -1687,6 +1679,83 @@ public class AdvancedCalibration extends LensCalibrationParams {
         
         preliminarySetupComplete = true;
         applyCalibrationToMachine((ReferenceHead)referenceCamera.getHead(), referenceCamera);
+        
+        Logger.trace("LegacySettings for {} = {}", referenceCamera.getName(), extractLegacySettings(referenceCamera));
     }
 
+    private class LegacySettings {
+        Location unitsPerPixelPrimary = Location.origin;
+        Location unitsPerPixelSecondary = Location.origin;
+        boolean flipHorizontal = false;
+        boolean flipVertical = false;
+        double rotation = 0;
+        
+        public LegacySettings(Location unitsPerPixelPrimary, Location unitsPerPixelSecondary, boolean flipHorizontal, boolean flipVertical, double rotation) {
+            this.unitsPerPixelPrimary = unitsPerPixelPrimary;
+            this.unitsPerPixelSecondary = unitsPerPixelSecondary;
+            this.flipHorizontal = flipHorizontal;
+            this.flipVertical = flipVertical;
+            this.rotation = rotation;
+        }
+        
+        public String toString() {
+            return String.format("(upp@%s=(%s,%s), upp@%s=(%s,%s), flipH=%s, flipV=%s, rotation=%1.3fdeg)", 
+                    unitsPerPixelPrimary.getLengthZ(), unitsPerPixelPrimary.getLengthX(), unitsPerPixelPrimary.getLengthY(), 
+                    unitsPerPixelSecondary.getLengthZ(), unitsPerPixelSecondary.getLengthX(), unitsPerPixelSecondary.getLengthY(), 
+                    flipHorizontal, flipVertical, rotation);
+        }
+    };
+    
+    private LegacySettings extractLegacySettings(ReferenceCamera referenceCamera) {
+        LengthUnit mm = LengthUnit.Millimeters;
+        Length cameraZ = new Length(vectorFromMachToPhyCamInMachRefFrame.get(2, 0)[0], mm);
+        Length primaryZ;
+        Length secondaryZ;
+        if (referenceCamera.getLooking() == Looking.Down) {
+            primaryZ = ((ReferenceHead)referenceCamera.getHead()).getCalibrationPrimaryFiducialLocation().getLengthZ().convertToUnits(mm);
+            secondaryZ = ((ReferenceHead)referenceCamera.getHead()).getCalibrationSecondaryFiducialLocation().getLengthZ().convertToUnits(mm);
+        }
+        else {
+            primaryZ = referenceCamera.getLocation().getLengthZ();
+            secondaryZ = primaryZ.add(new Length(2.0, mm));
+        }
+        double d1 = Math.abs(primaryZ.subtract(cameraZ).getValue());
+        double d2 = Math.abs(secondaryZ.subtract(cameraZ).getValue());
+        Location upp1 = new Location(mm, d1/cameraMatrix.get(0, 0)[0], d1/cameraMatrix.get(1, 1)[0], primaryZ.getValue(), 0);
+        Location upp2 = new Location(mm, d2/cameraMatrix.get(0, 0)[0], d2/cameraMatrix.get(1, 1)[0], secondaryZ.getValue(), 0);
+        
+        
+        Mat transformFromMachToVirCamRefFrame = Mat.zeros(3, 3, CvType.CV_64FC1);
+        transformFromMachToVirCamRefFrame.put(0,  0,  1);
+        transformFromMachToVirCamRefFrame.put(1,  1,  -1);
+        transformFromMachToVirCamRefFrame.put(2,  2, -1);
+        
+        Mat rot = Mat.eye(3, 3, CvType.CV_64FC1);
+        Core.gemm(transformFromMachToVirCamRefFrame, rectificationMatrix, 1.0, transformFromMachToVirCamRefFrame, 0, rot);
+        
+        Logger.trace("rot = " + rot.dump());
+        double m11 = rot.get(0, 0)[0];
+        double m12 = rot.get(0, 1)[0];
+        double m21 = rot.get(1, 0)[0];
+        double m22 = -rot.get(1, 1)[0];
+        rot.release();
+        
+        double theta = Math.atan(m12/m11);
+        double cosTheta = Math.cos(theta);
+        double sinTheta = Math.sin(theta);
+        
+        boolean flipH;
+        boolean flipV;
+        if (Math.abs(cosTheta) != 1) {
+            flipH = m12/sinTheta < 0;
+            flipV = m21/sinTheta < 0;
+        }
+        else {
+            flipH = m11/cosTheta < 0;
+            flipV = m22/cosTheta < 0;
+        }
+        
+        return new LegacySettings(upp1, upp2, flipH, flipV, Math.toDegrees(theta));
+    }
+    
 }
