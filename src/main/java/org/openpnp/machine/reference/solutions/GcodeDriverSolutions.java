@@ -759,7 +759,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         if (dialect == FirmwareType.TinyG) {
                             commandBuilt = 
                                     // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
-                                    //"$ex=1\n" // XonXoff
+                                    //"$ex=0\n" // off
                                     "$sv=0\n" // Non-verbose
                                     +commandBuilt;
                         }
@@ -767,16 +767,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else if (dialect == FirmwareType.TinyG) {
                         commandModified = true;
                         if (command.contains("$ex=2")) {
-                            commandBuilt = command.replace("$ex=2", "$ex=1");
+                            commandBuilt = command.replace("$ex=2", "$ex=0");
                         }
-                        else if (command.contains("$ex=0")) {
-                            commandBuilt = command.replace("$ex=0", "$ex=1");
+                        else if (command.contains("$ex=1")) {
+                            commandBuilt = command.replace("$ex=1", "$ex=0");
                         }
-                        // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
-//                                    else if (!command.contains("$ex=1")){
-//                                        commandBuilt = "$ex=1\n"
-//                                                +command;
-//                                    }
+                        // We no longer propose the $ex setting, if not yet present. You can't change flow-control in mid-connection reliably.
                     }
                     break;
                 case COMMAND_CONFIRM_REGEX:
