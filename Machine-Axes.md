@@ -13,9 +13,9 @@ Theoretically, the software should support machines with all-positive Z. However
 
 1. Locations are initialized to all zero, including Z. Sometimes the X, Y and Z are treated separately, i.e. you setup the X, Y with the camera and the Z with the nozzle (typical for feeders, nozzle changer locations etc.). With all-positive Z coordinates, if you forget to setup the Z and leave it at 0, that's potentially dangerous, as it may crash the nozzle into the feeder/nozzle changer etc. when you or some part of OpenPnP tries to position to that location. Nothing bad happens, if the uninitialized Z=0 is also the safe height.
 2. Z=0 as the highest/balanced, safe Z point, is the established default for OpenPnP. Most users (including developers!) use it that way. While the software clearly is supposed to support all-positive Z coordinates, I believe this has hardly ever been tested. There is just a higher chance that there could be code that initializes Z to 0 and forgets to set the proper Safe Z coordinate. On a "vanilla" machine, this won't even be noticeable. On an all-positive Z machine, it will crash the nozzle.
-3. The automatic [calibration of Nozzle Offsets](https://github.com/openpnp/openpnp/wiki/Vision-Solutions#nozzle-offsets) performed by [[Issues and Solutions]] currently assumes you are using the default Z=0 as the highest/balanced, safe Z point (subject to change).
+3. Some code in OpenPnP assumes that Z=0 means "not yet set up" on locations that are meant to be in the working range (i.e. not at Safe Z). That is the case for many of the [[Issues and Solutions]] calibration steps that are only proposed when such coordinates are not yet set up. If you have an all-positive Z coordinate system and Z=0 should be a valid working range coordinate, please enter Z=0.001 in such cases.
 
-If somebody still wants to set it up with all-positive Z, please ask [the discussion group](http://groups.google.com/group/openpnp) for a how-to. If you managed to pull this off by yourself, please report it!
+If somebody still wants to set it up with all-positive Z, please ask [the discussion group](http://groups.google.com/group/openpnp) for an up-to-date status. If you managed to pull this off by yourself, please report it!
 
 ## Defining Axes in OpenPnP
 
