@@ -21,6 +21,8 @@
 
 package org.openpnp.machine.reference.axis.wizards;
 
+import java.awt.Color;
+
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -66,6 +68,7 @@ public class ReferenceCamCounterClockwiseAxisConfigurationWizard extends Abstrac
     private AxesComboBoxModel inputAxisModel;
     private JLabel lblArmsAngle;
     private JTextField camArmsAngle;
+    private JLabel lblDeprecated2;
 
     public ReferenceCamCounterClockwiseAxisConfigurationWizard(AbstractMachine machine, ReferenceCamCounterClockwiseAxis axis) {
         super(axis);
@@ -116,27 +119,40 @@ public class ReferenceCamCounterClockwiseAxisConfigurationWizard extends Abstrac
         panelTransformation.add(camArmsAngle, "4, 6, fill, default");
         camArmsAngle.setColumns(10);
         
+                labelSpacer = new JLabel(" ");
+                panelTransformation.add(labelSpacer, "6, 6");
+        
         lblCamWheelRadius = new JLabel("Cam Wheel Radius");
+        lblCamWheelRadius.setEnabled(false);
         panelTransformation.add(lblCamWheelRadius, "2, 8, right, default");
         
         camWheelRadius = new JTextField();
         panelTransformation.add(camWheelRadius, "4, 8, fill, default");
         camWheelRadius.setColumns(10);
         
+        lblDeprecated2 = new JLabel("<html>Cam Wheel Radius and Gap are deprecated.<br/>\nIssues & Solutions can fix existing configurations <br/>\nwithout losing captured Z coordinates. </html>");
+        lblDeprecated2.setForeground(Color.RED);
+        panelTransformation.add(lblDeprecated2, "6, 8, 1, 3");
+        
         lblCamWheelGap = new JLabel("Cam Wheel Gap");
+        lblCamWheelGap.setEnabled(false);
         panelTransformation.add(lblCamWheelGap, "2, 10, right, default");
         
         camWheelGap = new JTextField();
         panelTransformation.add(camWheelGap, "4, 10, fill, default");
         camWheelGap.setColumns(10);
-
-        labelSpacer = new JLabel(" ");
-        panelTransformation.add(labelSpacer, "6, 10");
-        lbIllustration = new JLabel(Icons.comAxisTransform);
+        lbIllustration = new JLabel(Icons.camAxisTransform);
         panelTransformation.add(lbIllustration, "2, 12, 5, 1");
         initDataBindings();
+        ReferenceCamCounterClockwiseAxis camAxis = (ReferenceCamCounterClockwiseAxis)axis;
+        boolean showDeprecated = (camAxis.getCamWheelRadius().getValue() != 0 || camAxis.getCamWheelGap().getValue() != 0);
+        lblDeprecated2.setVisible(showDeprecated);
+        lblCamWheelRadius.setVisible(showDeprecated);
+        camWheelRadius.setVisible(showDeprecated);
+        lblCamWheelGap.setVisible(showDeprecated);
+        camWheelGap.setVisible(showDeprecated);
     }
-    
+
     @Override
     public void createBindings() {
         super.createBindings();

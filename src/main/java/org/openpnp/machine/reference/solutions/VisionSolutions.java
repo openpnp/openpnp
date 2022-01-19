@@ -726,6 +726,10 @@ public class VisionSolutions implements Solutions.Subject {
             for (boolean primary : (nozzle == defaultNozzle && isSolvedSecondaryXY(head)) ? new boolean [] {true, false} : new boolean [] {true} ) {
                 String qualifier = primary ? "primary" : "secondary";
                 Location oldLocation = primary ? oldPrimaryFiducialLocation : oldSecondaryFiducialLocation;
+                boolean isNonZeroReferenceZOffset = (primary 
+                        && nozzle == defaultNozzle 
+                        && Math.abs(nozzle.getHeadOffsets().getLengthZ()
+                        .convertToUnits(LengthUnit.Millimeters).getValue()) > 0.1);
                 if (defaultNozzle == nozzle
                         && oldLocation.getLengthZ().isInitialized()
                         && oldLocation.getLengthZ().compareTo(nozzle.getSafeZ()) >= 0) {
@@ -757,10 +761,19 @@ public class VisionSolutions implements Solutions.Subject {
                                 + ((nozzle == defaultNozzle) ? 
                                         "<p>This will also capture the calibration "+qualifier+" fiducial Z coordinate.</p><br/>" : 
                                             "<p>This will also equalize Z of nozzle "+nozzle.getName()+" to Z of the default nozzle "+defaultNozzle.getName()+".</p><br/>")
+                                + (isNonZeroReferenceZOffset ?
+                                        "<p><strong color=\"red\">CAUTION:</strong> A non-zero head offsets Z has been detected on "
+                                        + "default nozzle "+nozzle.getName()+". "
+                                        + "Accepting this solution will reset it to zero, creating the new reference in Z. "
+                                        + "This will change the meaning of Z coordinates that have already been captured. "
+                                        + "Do not accept this solution, unless you are confident this is OK. "
+                                        + "In the worst case, this may lead to machine collisions! "
+                                        + "<strong color=\"red\">You have been warned!</strong></p><br/>" : 
+                                        "")
                                 + "<p>Jog nozzle " + nozzle.getName()
                                 + " over the "+qualifier+" fiducial. Lower the nozzle tip down until it touches the fiducial.</p><br/>"
                                         + "<p><strong style=\"color:red;\">CAUTION:</strong> this is a very important Z coordinate, please capture it with care.</p><br/>"
-                                + "<p>Then press Accept to capture the nozzle head offsets.</p>"
+                                        + "<p>Then press Accept to capture the nozzle head offsets.</p>"
                                 + "</html>";
                     }
 

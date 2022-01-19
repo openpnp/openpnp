@@ -353,7 +353,8 @@ public class CalibrationSolutions implements Solutions.Subject {
         VisionSolutions visionSolutions = machine.getVisionSolutions();
         // Allow zero offsets on the simulated default nozzle.
         boolean isSimulatedNozzle = (nozzle == defaultNozzle && defaultCamera instanceof ImageCamera);
-        if (visionSolutions.isSolvedPrimaryXY(head) && visionSolutions.isSolvedPrimaryZ(head) 
+        if (visionSolutions.isSolvedPrimaryXY(head) 
+                && visionSolutions.isSolvedPrimaryZ(head) 
                 && (nozzle.getHeadOffsets().isInitialized() || isSimulatedNozzle)) {
             final Location oldNozzleOffsets = nozzle.getHeadOffsets();
             final Length oldTestObjectDiameter = head.getCalibrationTestObjectDiameter(); 
@@ -447,7 +448,10 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     private void perUpLookingCameraSolutions(Solutions solutions, Camera defaultCamera,
             Nozzle defaultNozzle, ReferenceCamera camera) {
-        if (camera.getLocation().isInitialized()
+        VisionSolutions visionSolutions = machine.getVisionSolutions();
+        if (visionSolutions.isSolvedPrimaryXY((ReferenceHead) defaultNozzle.getHead())
+                && visionSolutions.isSolvedPrimaryZ((ReferenceHead) defaultNozzle.getHead())
+                && camera.getLocation().isInitialized()
                 && camera.getUnitsPerPixel().isInitialized()
                 && !camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
             solutions.add(new Solutions.Issue(
@@ -1180,6 +1184,9 @@ public class CalibrationSolutions implements Solutions.Subject {
         else {
             // Up-looking camera uses the nozzle.
             ReferenceNozzle nozzle = (ReferenceNozzle) movable;
+            if (nozzle.getNozzleTip() == null) {
+                throw new Exception("Nozzle "+nozzle.getName()+" does not have a nozzle tip loaded.");
+            }
             primaryLocation = camera.getHeadOffsets();
             camera.setDefaultZ(primaryLocation.getLengthZ());
             // Default to just arbitrary difference: 

@@ -70,9 +70,11 @@ public class ReferenceCamCounterClockwiseAxis extends AbstractSingleTransformedA
     @Element(required = false)
     private double camArmsAngle = 180.0;
 
+    @Deprecated
     @Element(required = false)
     private Length camWheelRadius = new Length(0, LengthUnit.Millimeters);
 
+    @Deprecated
     @Element(required = false)
     private Length camWheelGap = new Length(0, LengthUnit.Millimeters);
 
@@ -176,18 +178,22 @@ public class ReferenceCamCounterClockwiseAxis extends AbstractSingleTransformedA
         this.camArmsAngle = camArmsAngle;
     }
 
+    @Deprecated
     public Length getCamWheelRadius() {
         return camWheelRadius;
     }
 
+    @Deprecated
     public void setCamWheelRadius(Length camWheelRadius) {
         this.camWheelRadius = camWheelRadius;
     }
 
+    @Deprecated
     public Length getCamWheelGap() {
         return camWheelGap;
     }
 
+    @Deprecated
     public void setCamWheelGap(Length camWheelGap) {
         this.camWheelGap = camWheelGap;
     }
