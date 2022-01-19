@@ -75,6 +75,8 @@ Note: the GcodeDriver must have the `SET_GLOBAL_OFFSETS_COMMAND` configured, usu
 
 ### Kinematic Settings / Axis Limits
 
+All these settings can now be setup by [[Issues and Solutions]] with easy step-by-step instructions. 
+
 **Soft Limit Low** and **Soft Limit High** bracket the valid range of the axis. OpenPnP will refuse a move to a Location if it leads outside this range. 
 
 ![Soft Limit](https://user-images.githubusercontent.com/9963310/95889274-7e408800-0d82-11eb-9b45-d275c7d96874.png)
