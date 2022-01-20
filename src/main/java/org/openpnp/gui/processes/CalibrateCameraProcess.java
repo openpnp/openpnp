@@ -55,6 +55,7 @@ import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.Nozzle.RotationMode;
 import org.openpnp.util.CameraWalker;
 import org.openpnp.util.ImageUtils;
 import org.openpnp.util.MovableUtils;
@@ -430,6 +431,14 @@ public abstract class CalibrateCameraProcess {
             protected Void doInBackground() throws Exception {
                 publish("Estimating Units Per Pixel.");
                 try {
+                    if (movable instanceof Nozzle
+                            && ((Nozzle) movable).getRotationMode() == RotationMode.LimitedArticulation
+                            && angleIncrement < 360) {
+                        // Make sure it is compliant with limited articulation.
+                        Location l1 = centralLocation.derive(null, null, null, (double) angleIncrement);
+                        ((Nozzle) movable).prepareForPickAndPlaceArticulation(centralLocation, l1);
+                    }
+
                     cameraWalker.estimateScaling(advCal.getTrialStep(), new Point(pixelsX/2, pixelsY/2));
                 }
                 catch (Exception e) {
