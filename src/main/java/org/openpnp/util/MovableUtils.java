@@ -1,5 +1,6 @@
 package org.openpnp.util;
 
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
@@ -26,8 +27,9 @@ public class MovableUtils {
             throws Exception {
         Head head = hm.getHead();
         Location currentLocationWithNewZ = hm.getLocation().derive(location, false, false, true, false);
-        if (! hm.toRaw(hm.toHeadLocation(location, LocationOption.Quiet), LocationOption.Quiet)
-                .matches(hm.toRaw(hm.toHeadLocation(currentLocationWithNewZ, LocationOption.Quiet), LocationOption.Quiet))) {
+        AxesLocation rawLocation = hm.toRaw(hm.toHeadLocation(location, LocationOption.Quiet), LocationOption.Quiet);
+        AxesLocation rawLocationWithNewZ = hm.toRaw(hm.toHeadLocation(currentLocationWithNewZ, LocationOption.Quiet), LocationOption.Quiet);
+        if (! rawLocation.matches(rawLocationWithNewZ)) {
             // Moves in X, Y or C, move to safe Z needed. 
             head.moveToSafeZ(speed);
             // Determine the exit Safe Z of that hm to optimize the move. In shared axis configurations with a Safe Z Zone

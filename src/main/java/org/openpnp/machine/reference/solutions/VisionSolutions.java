@@ -648,6 +648,9 @@ public class VisionSolutions implements Solutions.Subject {
                             throw new Exception("The nozzle "+defaultNozzle.getName()+" head offsets are not yet set. "
                                     + "You need to perform the \"Nozzle "+defaultNozzle.getName()+" offsets for the primary fiducial\" calibration first.");
                         }
+                        if (referenceNozzleTip == null) {
+                            throw new Exception("The nozzle "+defaultNozzle.getName()+" has no nozzle tip loaded.");
+                        }
 
                         final State oldState = getState();
                         UiUtils.submitUiMachineTask(
@@ -661,10 +664,8 @@ public class VisionSolutions implements Solutions.Subject {
                                     camera.setHeadOffsets(nozzleLocation);
                                     Logger.info("Set camera "+camera.getName()+" offsets to "+headOffsets
                                             +" (previously "+oldCameraOffsets+")");
-                                    if (referenceNozzleTip != null) {
-                                        referenceNozzleTip.getCalibration().setCalibrationTipDiameter(visionDiameter);
-                                        Logger.info("Set nozzle tip "+referenceNozzleTip.getName()+" vision diameter to "+visionDiameter+" (previously "+oldVisionDiameter+")");
-                                    }
+                                    referenceNozzleTip.getCalibration().setCalibrationTipDiameter(visionDiameter);
+                                    Logger.info("Set nozzle tip "+referenceNozzleTip.getName()+" vision diameter to "+visionDiameter+" (previously "+oldVisionDiameter+")");
                                     return true;
                                 },
                                 (result) -> {
