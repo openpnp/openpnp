@@ -108,13 +108,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         communicationsType = new JComboBox(CommunicationsType.values());
         communicationsType.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
-                if (communicationsType.getSelectedItem() == CommunicationsType.serial) {
-                    setPanelEnabled(panelSerial, true);
-                    setPanelEnabled(panelTcp, false);
-                } else {
-                    setPanelEnabled(panelSerial, false);
-                    setPanelEnabled(panelTcp, true);
-                }
+                communicationsTypeChanged();
             }
         });
         
@@ -328,5 +322,17 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         addWrappedBinding(driver, "port", portTextField, "text", integerConverter);
 
         ComponentDecorators.decorateWithAutoSelect(driverName);
+
+        communicationsTypeChanged();
+    }
+
+    protected void communicationsTypeChanged() {
+        if (communicationsType.getSelectedItem() == CommunicationsType.serial) {
+            setPanelEnabled(panelSerial, true);
+            setPanelEnabled(panelTcp, false);
+        } else {
+            setPanelEnabled(panelSerial, false);
+            setPanelEnabled(panelTcp, true);
+        }
     }
 }

@@ -341,6 +341,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                         if (state == State.Solved) {
                             advancedCameraCalibration(camera, defaultNozzle, head, this);
                         }
+                        else {
+                            camera.getAdvancedCalibration()
+                            .setOverridingOldTransformsAndDistortionCorrectionSettings(false);
+                        }
                         super.setState(state);
                     }
                 });
@@ -463,7 +467,7 @@ public class CalibrationSolutions implements Solutions.Subject {
 
                 @Override 
                 public void activate() throws Exception {
-                    MainFrame.get().getMachineControls().setSelectedTool(camera);
+                    MainFrame.get().getMachineControls().setSelectedTool(defaultNozzle);
                     camera.ensureCameraVisible();
                 }
 
@@ -490,6 +494,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
                         advancedCameraCalibration(camera, defaultNozzle, null, this);
+                    }
+                    else {
+                        camera.getAdvancedCalibration()
+                        .setOverridingOldTransformsAndDistortionCorrectionSettings(false);
                     }
                     super.setState(state);
                 }
@@ -1161,122 +1169,137 @@ public class CalibrationSolutions implements Solutions.Subject {
             throw new Exception("Machine is not enabled and homed.");
         }
         AdvancedCalibration advCal = camera.getAdvancedCalibration();
-        // Switch on the override but disable the calibration, get some frames to make sure the camera is now
-        // in the raw format.
-        advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
-        advCal.setEnabled(false);
-        camera.clearCalibrationCache();
-        camera.captureTransformed(); //force image width and height to be recomputed
-
-        Location primaryLocation;
-        Location secondaryLocation;
-        Integer primaryDiameter;
-        Integer secondaryDiameter;
-        if (head != null) {
-            // Down-looking camera uses the calibration rig:
-            primaryLocation = head.getCalibrationPrimaryFiducialLocation();
-            secondaryLocation = head.getCalibrationSecondaryFiducialLocation();
-            primaryDiameter = (int) Math.round(head.getCalibrationPrimaryFiducialDiameter().divide(
-                    camera.getUnitsPerPixel(primaryLocation.getLengthZ()).getLengthX()));
-            secondaryDiameter = (int) Math.round(head.getCalibrationSecondaryFiducialDiameter().divide(
-                    camera.getUnitsPerPixel(secondaryLocation.getLengthZ()).getLengthX()));
-        }
-        else {
-            // Up-looking camera uses the nozzle.
-            ReferenceNozzle nozzle = (ReferenceNozzle) movable;
-            if (nozzle.getNozzleTip() == null) {
-                throw new Exception("Nozzle "+nozzle.getName()+" does not have a nozzle tip loaded.");
+        try {
+            // Switch on the override but disable the calibration, get a frames to make sure the camera is now
+            // in the raw format.
+            advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
+            advCal.setEnabled(false);
+            camera.clearCalibrationCache();
+            camera.captureTransformed(); //force image width and height to be recomputed
+            Location primaryLocation;
+            Location secondaryLocation;
+            Integer primaryDiameter;
+            Integer secondaryDiameter;
+            if (head != null) {
+                // Down-looking camera uses the calibration rig:
+                primaryLocation = head.getCalibrationPrimaryFiducialLocation();
+                secondaryLocation = head.getCalibrationSecondaryFiducialLocation();
+                primaryDiameter = (int) Math.round(head.getCalibrationPrimaryFiducialDiameter()
+                                                       .divide(camera.getUnitsPerPixel(
+                                                               primaryLocation.getLengthZ())
+                                                                     .getLengthX()));
+                secondaryDiameter = (int) Math.round(head.getCalibrationSecondaryFiducialDiameter()
+                                                         .divide(camera.getUnitsPerPixel(
+                                                                 secondaryLocation.getLengthZ())
+                                                                       .getLengthX()));
             }
-            primaryLocation = camera.getHeadOffsets();
-            camera.setDefaultZ(primaryLocation.getLengthZ());
-            // Default to just arbitrary difference: 
-            Length secondaryZ = primaryLocation.getLengthZ()
-                    .add(new Length(upLookingSecondaryOffsetZMm, LengthUnit.Millimeters)); 
-            secondaryLocation = primaryLocation.deriveLengths(null, null, secondaryZ, null);
-            // Encapsulated CalibrateCameraProcess
-            Length calibrationTipDiameter = nozzle.getNozzleTip().getCalibration().
-                    getCalibrationTipDiameter();
-            primaryDiameter = (int) Math.round(calibrationTipDiameter.divide(
-                    camera.getUnitsPerPixel(primaryLocation.getLengthZ())
-                    .getLengthX()));
-            // This will not be accurate on the first go (no 3D UPP present). We just hope the diameter 
-            // margin will still cover it.
-            secondaryDiameter =  (int) Math.round(calibrationTipDiameter.divide(
-                    camera.getUnitsPerPixel(secondaryLocation.getLengthZ())
-                    .getLengthX()));
-        }
-        advCal.setPrimaryLocation(primaryLocation);
-        advCal.setSecondaryLocation(secondaryLocation);
-        ArrayList<Location>calibrationLocations = new ArrayList<>();
-        calibrationLocations.add(primaryLocation);
-        calibrationLocations.add(secondaryLocation);
-
-        advCal.setFiducialDiameter(primaryDiameter);
-        ArrayList<Integer> detectionDiameters = new ArrayList<>();
-        detectionDiameters.add(primaryDiameter);
-        detectionDiameters.add(secondaryDiameter);
-        Length oldDefaultZ = camera.getDefaultZ();
-        camera.setDefaultZ(primaryLocation.getLengthZ());
-
-        CameraView cameraView = MainFrame.get().getCameraViews().
-                getCameraView(camera);
-
-        // Encapsulated CalibrateCameraProcess
-        new CalibrateCameraProcess(MainFrame.get(), cameraView, 
-                calibrationLocations, detectionDiameters, true) {
-
-            @Override 
-            public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
-                    double[][][] testPatternImagePointsList, Size size, double mirrored,
-                    double apparentMotionDirection) throws Exception {
-
-                advCal.setDataAvailable(true);
-                advCal.setValid(false);
-
-                try {
-                    advCal.processRawCalibrationData(
-                            testPattern3dPointsList, testPatternImagePointsList, 
-                            size, mirrored, apparentMotionDirection);
-
-                    advCal.applyCalibrationToMachine(head, camera);
-
-                    // Tidy up.
-                    UiUtils.submitUiMachineTask(() -> {
-                        if (head != null 
-                                && head.getDefaultCamera() == camera
-                                && head.getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
-                            head.visualHome(machine, true);
-                        }
-                        else {
-                            MovableUtils.moveToLocationAtSafeZ(movable, camera.getLocation(movable));
-                        }
-                    });
+            else {
+                // Up-looking camera uses the nozzle.
+                ReferenceNozzle nozzle = (ReferenceNozzle) movable;
+                if (nozzle.getNozzleTip() == null) {
+                    throw new Exception(
+                            "Nozzle " + nozzle.getName() + " does not have a nozzle tip loaded.");
                 }
-                catch (Exception e) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                primaryLocation = camera.getHeadOffsets();
+                camera.setDefaultZ(primaryLocation.getLengthZ());
+                // Default to just arbitrary difference: 
+                Length secondaryZ = primaryLocation.getLengthZ()
+                                                   .add(new Length(upLookingSecondaryOffsetZMm,
+                                                           LengthUnit.Millimeters));
+                secondaryLocation = primaryLocation.deriveLengths(null, null, secondaryZ, null);
+                // Encapsulated CalibrateCameraProcess
+                Length calibrationTipDiameter = nozzle.getNozzleTip()
+                                                      .getCalibration()
+                                                      .getCalibrationTipDiameter();
+                primaryDiameter = (int) Math.round(calibrationTipDiameter.divide(
+                        camera.getUnitsPerPixel(primaryLocation.getLengthZ())
+                              .getLengthX()));
+                // This will not be accurate on the first go (no 3D UPP present). We just hope the diameter 
+                // margin will still cover it.
+                secondaryDiameter = (int) Math.round(calibrationTipDiameter.divide(
+                        camera.getUnitsPerPixel(secondaryLocation.getLengthZ())
+                              .getLengthX()));
+            }
+            advCal.setPrimaryLocation(primaryLocation);
+            advCal.setSecondaryLocation(secondaryLocation);
+            ArrayList<Location> calibrationLocations = new ArrayList<>();
+            calibrationLocations.add(primaryLocation);
+            calibrationLocations.add(secondaryLocation);
+            advCal.setFiducialDiameter(primaryDiameter);
+            ArrayList<Integer> detectionDiameters = new ArrayList<>();
+            detectionDiameters.add(primaryDiameter);
+            detectionDiameters.add(secondaryDiameter);
+            Length oldDefaultZ = camera.getDefaultZ();
+            camera.setDefaultZ(primaryLocation.getLengthZ());
+            CameraView cameraView = MainFrame.get()
+                                             .getCameraViews()
+                                             .getCameraView(camera);
+            // Encapsulated CalibrateCameraProcess
+            new CalibrateCameraProcess(MainFrame.get(), cameraView, calibrationLocations,
+                    detectionDiameters, true) {
+
+                @Override
+                public void processRawCalibrationData(double[][][] testPattern3dPointsList,
+                        double[][][] testPatternImagePointsList, Size size, double mirrored,
+                        double apparentMotionDirection) throws Exception {
+
+                    advCal.setDataAvailable(true);
+                    advCal.setValid(false);
+
+                    try {
+                        advCal.processRawCalibrationData(testPattern3dPointsList,
+                                testPatternImagePointsList, size, mirrored,
+                                apparentMotionDirection);
+
+                        advCal.applyCalibrationToMachine(head, camera);
+
+                        // Tidy up.
+                        UiUtils.submitUiMachineTask(() -> {
+                            if (head != null && head.getDefaultCamera() == camera
+                                    && head.getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
+                                head.visualHome(machine, true);
+                            }
+                            else {
+                                MovableUtils.moveToLocationAtSafeZ(movable,
+                                        camera.getLocation(movable));
+                            }
+                        });
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                        advCal.setValid(false);
+                        advCal.setEnabled(false);
+                        advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
+                        issue.setState(State.Open);
+                        camera.setDefaultZ(oldDefaultZ);
+                    }
+                    MainFrame.get()
+                             .getIssuesAndSolutionsTab()
+                             .solutionChanged();
+                }
+
+                @Override
+                protected void processCanceled() {
                     advCal.setValid(false);
                     advCal.setEnabled(false);
                     advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
-                    issue.setState(State.Open);
                     camera.setDefaultZ(oldDefaultZ);
-                }
-                MainFrame.get().getIssuesAndSolutionsTab().solutionChanged();
-            }
 
-            @Override
-            protected void processCanceled() {
-                advCal.setValid(false);
-                advCal.setEnabled(false);
-                advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
-                camera.setDefaultZ(oldDefaultZ);
-
-                try {
-                    issue.setState(State.Open);
+                    try {
+                        issue.setState(State.Open);
+                    }
+                    catch (Exception e) {
+                    }
+                    MainFrame.get()
+                             .getIssuesAndSolutionsTab()
+                             .solutionChanged();
                 }
-                catch (Exception e) {
-                }
-                MainFrame.get().getIssuesAndSolutionsTab().solutionChanged();
-            }
-        };
+            };
+        }
+        catch (Exception e) {
+            // Aborted 
+            advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
+            throw e;
+        }
     }
 }

@@ -166,11 +166,13 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/GcodeDriver#connection"));
             }
-            if (machine.isEnabled() && gcodeDriver.isSpeakingGcode()) {
+            if (gcodeDriver.isSpeakingGcode()) {
                 try {
-                    UiUtils.submitUiMachineTask(
-                            () -> gcodeDriver.detectFirmware(true)
-                            ).get();
+                    machine.execute(
+                            () -> {
+                                gcodeDriver.detectFirmware(true);
+                                return true;
+                            }, true, 1L);
                 }
                 catch (Exception e) {
                     Logger.warn(e, gcodeDriver.getName()+" failure to detect firmware");
@@ -360,8 +362,10 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
                                 "Change of serial port Flow Control recommended.",
-                                "Set "+newFlowControl.name()+" on serial port.",
-                                Severity.Warning,
+                                "Set Flow Control to "+newFlowControl.name()+" on serial port."
+                                +(newFlowControl == FlowControl.Off ? " The detected "+firmware+" controller is known to not "
+                                + "(reliably) support serial flow-control." : ""),
+                                newFlowControl == FlowControl.Off ? Severity.Warning : Severity.Suggestion,
                                 "https://en.wikipedia.org/wiki/Flow_control_(data)#Hardware_flow_control") {
 
                             @Override
@@ -416,18 +420,21 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             }
                         });
                     }
-                    boolean confirmationFlowControlRecommended = firmware.isFlowControlOff() || ! hasAxes;
+                    boolean serialFlowControlOff = (gcodeDriver.getCommunicationsType() == CommunicationsType.serial 
+                        && gcodeDriver.getSerial() != null 
+                        && gcodeDriver.getSerial().getFlowControl() == FlowControl.Off) || firmware.isFlowControlOff();
+                    boolean confirmationFlowControlRecommended = serialFlowControlOff || ! hasAxes;
                     if (confirmationFlowControlRecommended != confirmationFlowControl) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver,
                                 (confirmationFlowControl ?
                                         "Disable Confirmation Flow Control for full asynchronous operation."
                                         : "Enable Confirmation Flow Control" + (hasAxes ? "" : ", controller has no axes") 
-                                            + (firmware.isFlowControlOff() ? ", "+firmware+" detected" : "") + "."),
+                                        + (serialFlowControlOff ? ", serial flow control is not available" : "") + "."),
                                 (confirmationFlowControl ?
                                         "Disable Confirmation Flow Control."
                                         :"Enable Confirmation Flow Control."),
-                                Severity.Suggestion,
+                                confirmationFlowControl ? Severity.Suggestion : Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
 
                             @Override
