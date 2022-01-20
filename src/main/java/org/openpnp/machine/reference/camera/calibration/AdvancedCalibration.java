@@ -38,7 +38,6 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
-import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -53,7 +52,7 @@ import org.simpleframework.xml.core.Persist;
 
 public class AdvancedCalibration extends LensCalibrationParams {
     private static final double defaultPrimaryToCameraDistanceMm = 200;
-    private static final double defaultPrimaryToSecondaryDistanceMm = 20;
+    private static final double defaultPrimaryToSecondaryDistanceMm = 2;
     private static final Location defaultUpp = new Location(LengthUnit.Millimeters, 0.001, 0.001, -35, 0);
     
     @Attribute(required = false)
@@ -62,8 +61,10 @@ public class AdvancedCalibration extends LensCalibrationParams {
     @Attribute(required = false)
     private Boolean valid = false;
     
+    //TODO - initialize this to false when we're ready to automatically migrate legacy camera 
+    //setting to the new settings
     @Attribute(required = false)
-    private Boolean preliminarySetupComplete = false;
+    private Boolean preliminarySetupComplete = true;
     
     @Attribute(required = false)
     private Boolean dataAvailable = false;
@@ -1059,9 +1060,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
         cameraMatrix.put(1, 2, cameraParams[3]);
         Logger.trace("cameraMatrix = " + cameraMatrix.dump());
         
-        if (Core.checkRange(cameraMatrix, true, -10e6, +10e6)) {
+        if (!Core.checkRange(cameraMatrix, true, -10e6, +10e6)) {
             throw new Exception("Model didn't converge as expected - camera matrix has "
-                    + " much larger magnitudes than expected");
+                    + "much larger magnitudes than expected");
         }
         
         //Compute the field of view of the physical camera
@@ -1081,7 +1082,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         distortionCoefficients.put(4, 0, cameraParams[8]);
         Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
         
-        if (Core.checkRange(distortionCoefficients, true, -10e6, +10e6)) {
+        if (!Core.checkRange(distortionCoefficients, true, -10e6, +10e6)) {
             throw new Exception("Model didn't converge as expected - distortion coefficients have"
                     + " much larger magnitudes than expected");
         }
