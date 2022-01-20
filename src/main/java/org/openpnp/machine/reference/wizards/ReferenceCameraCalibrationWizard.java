@@ -51,6 +51,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.components.VerticalLabel;
 import org.openpnp.gui.processes.CalibrateCameraProcess;
+import org.openpnp.gui.processes.CalibrateCameraProcess.CameraCalibrationProcessProperties;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
@@ -101,6 +102,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private Location secondaryLocation;
     private double primaryDiameter;
     private double secondaryDiameter;
+    private Machine machine;
+    private CameraCalibrationProcessProperties props;
 
 
     /**
@@ -152,6 +155,16 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
 
     public ReferenceCameraCalibrationWizard(ReferenceCamera referenceCamera) {
         this.referenceCamera = referenceCamera;
+        
+        machine = Configuration.get().getMachine();
+        props = (CameraCalibrationProcessProperties) machine.getProperty("CameraCalibrationProcessProperties");
+        
+        if (props == null) {
+            props = new CameraCalibrationProcessProperties();
+            machine.setProperty("CameraCalibrationProcessProperties", props);
+        }
+
+
         setName(referenceCamera.getName());
         referenceHead = (ReferenceHead) referenceCamera.getHead();
         isMovable = referenceHead != null;
@@ -201,7 +214,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 secondaryZ = new Length(advCal.getSavedTestPattern3dPointsList()[1][0][2], LengthUnit.Millimeters);
             }
             else {
-                secondaryZ = primaryLocation.getLengthZ().multiply(0.5); //default to half-way between primaryZ and 0 <- TODO: use Nozzle SafeZ ! 
+                secondaryZ = primaryLocation.getLengthZ().add(new Length(props.defaultUpLookingSecondaryOffsetZMm, LengthUnit.Millimeters));
             }
             secondaryLocation = primaryLocation.deriveLengths(null, null, secondaryZ, null);
             

@@ -27,11 +27,13 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Machine;
 import org.pmw.tinylog.Logger;
 
 /**
@@ -95,6 +97,7 @@ public class CameraWalker {
     private Point error;
     private double oldErrorMagnitude;
     private double newErrorMagnitude;
+    private Machine machine;
 
 
     
@@ -110,6 +113,7 @@ public class CameraWalker {
         this.movable = movable;
         this.findFeatureInImage = findFeatureInImage;
         scalingMat = null;
+        machine = Configuration.get().getMachine();
     }
     
     /**
@@ -142,13 +146,15 @@ public class CameraWalker {
             final Location testLocation = start.add(step).derive(null, null, null, movable.getLocation().getRotation());
             
             //Move the machine to the test location and wait for it to finish
-            Future<?> future = UiUtils.submitUiMachineTask(() -> {
+            machine.execute(() -> {
                 if (onlySafeZMovesAllowed) {
                     MovableUtils.moveToLocationAtSafeZ(movable, testLocation, 1.0);
                 }
-                movable.moveTo(testLocation);
+                else {
+                    movable.moveTo(testLocation);
+                }
+                return null;
             });
-            future.get();
             
             Point foundPoint = findFeatureInImage.apply(expectedPoint);
             if (foundPoint == null) {
@@ -281,14 +287,15 @@ public class CameraWalker {
         savePoints = (machine3DCoordinates != null) && (image2DCoordinates != null);
         
         //Move the machine to the starting location and wait for it to finish
-        Future<?> future = UiUtils.submitUiMachineTask(() -> {
+        machine.execute(() -> {
             if (onlySafeZMovesAllowed) {
                 MovableUtils.moveToLocationAtSafeZ(movable, startingMachineLocation, 1.0);
             }
-            movable.moveTo(startingMachineLocation);
+            else {
+                movable.moveTo(startingMachineLocation);
+            }
+            return null;
         });
-        future.get();
-        
         savedLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters);
 
         oldLocation = startingMachineLocation.convertToUnits(LengthUnit.Millimeters);
@@ -360,13 +367,15 @@ public class CameraWalker {
         
         //Move the machine and wait for it to finish
         final Location moveLocation = newLocation.derive(null, null, null, movable.getLocation().getRotation());
-        Future<?> future = UiUtils.submitUiMachineTask(() -> {
+        machine.execute(() -> {
             if (onlySafeZMovesAllowed) {
                 MovableUtils.moveToLocationAtSafeZ(movable, moveLocation, 1.0);
             }
-            movable.moveTo(moveLocation);
+            else {
+                movable.moveTo(moveLocation);
+            }
+            return null;
         });
-        future.get();
         
         savedLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters);
 
