@@ -84,7 +84,6 @@ import org.openpnp.vision.LensCalibration.Pattern;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
 
 public abstract class ReferenceCamera extends AbstractBroadcastingCamera implements ReferenceHeadMountable {
     static {
@@ -198,33 +197,13 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     private Actuator lightActuator;
 
-    private boolean undistortionMappingSemaphore = false;
+    private int undistortionMappingSemaphore = 0; //-1:writing, 0:free, >0:reading
 
     public enum FocusSensingMethod {
         None,
         AutoFocus
     }
 
-    @Commit
-    protected void commit() throws Exception {
-        super.commit();
-        if (!advancedCalibration.isPreliminarySetupComplete() && !advancedCalibration.isValid()) {
-            //Since the new advanced calibration doesn't have valid data, we want to convert 
-            //the old style settings to the new style. But we can't do it right now because we 
-            //have to wait until the camera is up and running. So we clear the flag to indicate 
-            //we haven't done it yet and enable the new style to override the old style. Then 
-            //when the camera is up and running, the old style settings will get converted to the
-            //new style in transformImage.
-            advancedCalibration.setPreliminarySetupComplete(false);
-            advancedCalibration.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
-        }
-        else {
-            //Either the old style settings have already been converted or advanced calibration has
-            //been previously run so in either case we don't want to disturb it
-            advancedCalibration.setPreliminarySetupComplete(true);
-        }
-    }
-    
     public ReferenceCamera() {
         super();
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
@@ -603,11 +582,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             }
 
             if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
-                if (!advancedCalibration.isPreliminarySetupComplete() && isOpen() && width != null && height != null) {
-                    //Now that the camera is generating valid images, we can do the conversion from
-                    //the old style to the new
-                    advancedCalibration.convertLegacySettings(this);
-                }
                 //Skip all the old style image transforms and distortion corrections except for 
                 //deinterlacing, cropping, and white balancing
                 if (isDeinterlaced() || isCropped() || isWhiteBalanced() || advancedCalibration.isEnabled()) {
@@ -675,11 +649,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
                 advancedCalibration.isValid()) {
             double upp = 0;
-            if (takeUndistortionMappingSemaphore()) {
+            if (takeAdvancedCalibrationSemaphore()) {
                 upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
                             convertToUnits(LengthUnit.Millimeters).getValue() / 
                             advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
-                releaseUndistortionMappingSemaphore();
+                releaseAdvancedCalibrationSemaphore();
             }
             upp = Double.isFinite(upp) ? upp : 0;
             return new Location(LengthUnit.Millimeters, upp, upp, 0, 0);
@@ -688,24 +662,46 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     /**
-     * Attempts to take the semaphore protecting the undistortion mapping. If it is successfully 
+     * Attempts to take the semaphore for reading the undistortion mapping. If it is successfully 
      * taken, true is returned, otherwise false is returned. If the semaphore is taken, the caller 
-     * must call releaseUndistortionMappingSemaphore() to release the semaphore.
+     * must call releaseAdvancedCalibrationSemaphore() to release the semaphore.
      * @return true if the semaphore was successfully taken
      */
-    private synchronized boolean takeUndistortionMappingSemaphore() {
-        if (!undistortionMappingSemaphore) {
-            undistortionMappingSemaphore = true;
+    private synchronized boolean takeAdvancedCalibrationSemaphore() {
+        return takeAdvancedCalibrationSemaphore(true);
+    }
+    
+    /**
+     * Attempts to take the semaphore protecting the undistortion mapping and virtual camera matrix.
+     * If it is successfully taken, true is returned, otherwise false is returned. If the semaphore
+     * is taken, the caller must call releaseAdvancedCalibrationSemaphore() to release the 
+     * semaphore.
+     * @param forReading - flag to indicate whether the semaphore is being taken for reading (true)
+     * or for writing (false)
+     * @return true if the semaphore was successfully taken
+     */
+    private synchronized boolean takeAdvancedCalibrationSemaphore(boolean forReading) {
+        if (forReading && undistortionMappingSemaphore >= 0) {
+            undistortionMappingSemaphore += 1; //any number of threads can take it for reading
+            return true;
+        }
+        else if (!forReading && undistortionMappingSemaphore == 0) {
+            undistortionMappingSemaphore = -1; //only one thread can write at a time
             return true;
         }
         return false;
     }
-    
+
     /**
-     * Returns the semaphore that was taken by isUndistortionMappingAvailable()
+     * Returns the semaphore that was taken by takeUndistortionMappingSemaphore()
      */
-    private synchronized void releaseUndistortionMappingSemaphore() {
-        undistortionMappingSemaphore = false;
+    private synchronized void releaseAdvancedCalibrationSemaphore() {
+        if (undistortionMappingSemaphore > 0) {
+            undistortionMappingSemaphore -= 1;
+        }
+        else if (undistortionMappingSemaphore < 0) {
+            undistortionMappingSemaphore = 0;
+        }
     }
    
     private Mat advancedUndistort(Mat mat) {
@@ -713,8 +709,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             return mat;
         }
         Mat dst = mat.clone();
-        if (takeUndistortionMappingSemaphore()) {
+        if (takeAdvancedCalibrationSemaphore()) {
             if (undistortionMap1 == null || undistortionMap2 == null) {
+                releaseAdvancedCalibrationSemaphore();
+                while (takeAdvancedCalibrationSemaphore(false)) {
+                    //spin until we take the semaphore for writing
+                }
                 if (undistortionMap1 == null) {
                     undistortionMap1 = new Mat();
                 }
@@ -725,7 +725,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                         undistortionMap1, undistortionMap2);
             }
             Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
-            releaseUndistortionMappingSemaphore();
+            releaseAdvancedCalibrationSemaphore();
         }
         mat.release();
 
@@ -1241,7 +1241,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     public void clearCalibrationCache() {
-        while (!takeUndistortionMappingSemaphore()) {
+        while (!takeAdvancedCalibrationSemaphore(false)) {
             //spin until it is available
         }
         // Clear the calibration cache
@@ -1253,7 +1253,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             undistortionMap2.release();
             undistortionMap2 = null;
         }
-        releaseUndistortionMappingSemaphore();
+        releaseAdvancedCalibrationSemaphore();
     }
 
     public void startCalibration(CalibrationCallback callback) {

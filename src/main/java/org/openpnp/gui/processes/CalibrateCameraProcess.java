@@ -19,6 +19,7 @@
 
 package org.openpnp.gui.processes;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -762,7 +763,10 @@ public abstract class CalibrateCameraProcess {
                 }
                 // Note, automatic only available when location set. 
                 if (automatic) {
-                    requestOperatorToAdjustDiameterAction();
+                    setInstructionsAndProceedAction("If necessary, use the jog controls on the Machine Controls panel to jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next when ready to proceed.", 
+                            ()->requestOperatorToAdjustDiameterAction(),
+                            calibrationLocations.get(calibrationHeightIndex).getLengthZ().toString()); 
+//                    requestOperatorToAdjustDiameterAction();
                     return true;
                 }
             }
@@ -1022,7 +1026,7 @@ public abstract class CalibrateCameraProcess {
                 }
                
                 //Show a circle centered on where the fiducial is expected to be found
-                Color circleColor = Color.GREEN;
+                Color circleColor = Color.YELLOW;
                 Color pointColor = Color.GREEN;
                 double enclosingDiameter = 2*minDistance + bestKeyPoint.size;
                 if (enclosingDiameter > props.maskGrowthThresholdFactor*maskDiameter) {
@@ -1045,7 +1049,7 @@ public abstract class CalibrateCameraProcess {
                     return null;
                 }
                 showPointAndCircle(bestKeyPoint.pt, new org.opencv.core.Point(expectedPoint.getX(),
-                        expectedPoint.getY()), maskDiameter/2, pointColor, circleColor);
+                        expectedPoint.getY()), -maskDiameter/2, pointColor, circleColor);
                 if (changeMaskSize > props.changeMaskThreshold) {
                     maskDiameter *= (1 + props.maskGrowthFactor);
                     pipeline.setProperty("MaskCircle.diameter", maskDiameter);
@@ -1225,7 +1229,16 @@ public abstract class CalibrateCameraProcess {
                     }
                     if (center != null) {
                         g2D.setColor(circleColor);
-                        g2D.draw(new Ellipse2D.Double(center.x - radius, center.y - radius, radius*2, radius*2));
+                        if (radius < 0) {
+                            g2D.setStroke(new BasicStroke(3.0f, BasicStroke.CAP_BUTT,
+                                    BasicStroke.JOIN_MITER,
+                                    10.0f, new float[] {(float) (-radius*0.10472)}, 0));
+                            g2D.draw(new Ellipse2D.Double(center.x + radius, center.y + radius, -radius*2, -radius*2));
+                       }
+                        else {
+                            g2D.setStroke(new BasicStroke(1.0f));
+                            g2D.draw(new Ellipse2D.Double(center.x - radius, center.y - radius, radius*2, radius*2));
+                        }
                     }
                     return result;
                 }

@@ -20,7 +20,6 @@
 package org.openpnp.util;
 
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.function.Function;
 
 import org.apache.commons.math3.linear.LUDecomposition;

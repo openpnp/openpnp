@@ -31,6 +31,7 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
@@ -1128,8 +1129,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
 
     private void postCalibrationProcessing() throws Exception {
         advCal.applyCalibrationToMachine(referenceHead, referenceCamera);
-		advCal.setPreliminarySetupComplete(true);
-		
+
         //Reload the calibration heights and refresh the table
         calibrationHeightSelections = new ArrayList<LengthCellValue>();
         int numberOfCalibrationHeights = advCal.
@@ -1151,10 +1151,16 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         updateDiagnosticsDisplay();
         
         if (isMovable && referenceCamera.getHead().getDefaultCamera() == referenceCamera) {
-            UiUtils.submitUiMachineTask(() -> {
-                Machine machine = Configuration.get().getMachine();
-                machine.home();
-            });
+            int ans = JOptionPane.showConfirmDialog(MainFrame.get(), 
+                    "Calibration of the head's default camera is complete and the machine should "
+                    + "be re-homed before any new locations are captured/examined. Home the machine now?", 
+                    "Calibration Complete", JOptionPane.YES_NO_OPTION);
+            if (ans == JOptionPane.YES_OPTION) {
+                UiUtils.submitUiMachineTask(() -> {
+                    Machine machine = Configuration.get().getMachine();
+                    machine.home();
+                });
+            }
         }
     }
     
