@@ -88,7 +88,7 @@
                   <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
                   <safe-z value="0.0" units="Millimeters"/>
                   <calibration enabled="false">
-                     <camera-matrix length="9">6.230376566125635E-307, 1.2460956845815852E-306, 2.2251519509571264E-307, 8.90029544190352E-307, 8.344264635844817E-308, 9.456988303771646E-308, 1.1125776721685723E-307, 1.7802098355419175E-306, 1.7802098357077205E-306</camera-matrix>
+                     <camera-matrix length="9">0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</camera-matrix>
                      <distortion-coefficients length="5">0.0, 0.0, 0.0, 0.0, 0.0</distortion-coefficients>
                   </calibration>
                   <source-uri>classpath://samples/pnp-test/pnp-test.png</source-uri>
@@ -333,8 +333,8 @@
             <head-offsets units="Millimeters" x="118.799" y="7.117" z="-10.0" rotation="0.0"/>
             <safe-z value="0.0" units="Millimeters"/>
             <calibration enabled="false">
-               <camera-matrix length="9">3.5E-323, 0.0, 2.5E-323, NaN, 6.93224685617292E-310, 6.932247478583E-310, 0.0, 0.0, 0.0</camera-matrix>
-               <distortion-coefficients length="5">NaN, 0.0, 0.0, 0.0, 0.0</distortion-coefficients>
+               <camera-matrix length="9">0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</camera-matrix>
+               <distortion-coefficients length="5">0.0, 0.0, 0.0, 0.0, 0.0</distortion-coefficients>
             </calibration>
             <error-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
          </camera>

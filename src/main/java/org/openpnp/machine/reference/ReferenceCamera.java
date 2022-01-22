@@ -197,6 +197,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
     private Actuator lightActuator;
 
+    private int undistortionMappingSemaphore = 0; //-1:writing, 0:free, >0:reading
+
     public enum FocusSensingMethod {
         None,
         AutoFocus
@@ -581,16 +583,13 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
             if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
                 //Skip all the old style image transforms and distortion corrections except for 
-                //deinterlacing and cropping
+                //deinterlacing, cropping, and white balancing
                 if (isDeinterlaced() || isCropped() || isWhiteBalanced() || advancedCalibration.isEnabled()) {
                     Mat mat = OpenCvUtils.toMat(image);
                     mat = deinterlace(mat);
                     mat = crop(mat);
-                    if (advancedCalibration.isEnabled()) {
-                        //Use the new advanced image transformation and distortion correction
-                        mat = advancedUndistort(mat);
-                    }
                     mat = whiteBalance(mat);
+                    mat = advancedUndistort(mat);
                     image = OpenCvUtils.toBufferedImage(mat);
                     mat.release();
                 }
@@ -649,25 +648,85 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public Location getUnitsPerPixel(Length viewingPlaneZ) {
         if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
                 advancedCalibration.isValid()) {
-            double upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
-                        convertToUnits(LengthUnit.Millimeters).getValue() / 
-                        advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
+            double upp = 0;
+            if (takeAdvancedCalibrationSemaphore()) {
+                upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
+                            convertToUnits(LengthUnit.Millimeters).getValue() / 
+                            advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
+                releaseAdvancedCalibrationSemaphore();
+            }
             upp = Double.isFinite(upp) ? upp : 0;
             return new Location(LengthUnit.Millimeters, upp, upp, 0, 0);
         }
         return super.getUnitsPerPixel(viewingPlaneZ);
     }
 
-    private Mat advancedUndistort(Mat mat) {
-        if (undistortionMap1 == null || undistortionMap2 == null) {
-            undistortionMap1 = new Mat();
-            undistortionMap2 = new Mat();
-            advancedCalibration.initUndistortRectifyMap(mat.size(), 
-                    undistortionMap1, undistortionMap2);
+    /**
+     * Attempts to take the semaphore for reading the undistortion mapping. If it is successfully 
+     * taken, true is returned, otherwise false is returned. If the semaphore is taken, the caller 
+     * must call releaseAdvancedCalibrationSemaphore() to release the semaphore.
+     * @return true if the semaphore was successfully taken
+     */
+    private synchronized boolean takeAdvancedCalibrationSemaphore() {
+        return takeAdvancedCalibrationSemaphore(true);
+    }
+    
+    /**
+     * Attempts to take the semaphore protecting the undistortion mapping and virtual camera matrix.
+     * If it is successfully taken, true is returned, otherwise false is returned. If the semaphore
+     * is taken, the caller must call releaseAdvancedCalibrationSemaphore() to release the 
+     * semaphore.
+     * @param forReading - flag to indicate whether the semaphore is being taken for reading (true)
+     * or for writing (false)
+     * @return true if the semaphore was successfully taken
+     */
+    private synchronized boolean takeAdvancedCalibrationSemaphore(boolean forReading) {
+        if (forReading && undistortionMappingSemaphore >= 0) {
+            undistortionMappingSemaphore += 1; //any number of threads can take it for reading
+            return true;
         }
-        
+        else if (!forReading && undistortionMappingSemaphore == 0) {
+            undistortionMappingSemaphore = -1; //only one thread can write at a time
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns the semaphore that was taken by takeUndistortionMappingSemaphore()
+     */
+    private synchronized void releaseAdvancedCalibrationSemaphore() {
+        if (undistortionMappingSemaphore > 0) {
+            undistortionMappingSemaphore -= 1;
+        }
+        else if (undistortionMappingSemaphore < 0) {
+            undistortionMappingSemaphore = 0;
+        }
+    }
+   
+    private Mat advancedUndistort(Mat mat) {
+        if (!advancedCalibration.isEnabled()) {
+            return mat;
+        }
         Mat dst = mat.clone();
-        Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
+        if (takeAdvancedCalibrationSemaphore()) {
+            if (undistortionMap1 == null || undistortionMap2 == null) {
+                releaseAdvancedCalibrationSemaphore();
+                while (takeAdvancedCalibrationSemaphore(false)) {
+                    //spin until we take the semaphore for writing
+                }
+                if (undistortionMap1 == null) {
+                    undistortionMap1 = new Mat();
+                }
+                if (undistortionMap2 == null) {
+                    undistortionMap2 = new Mat();
+                }
+                advancedCalibration.initUndistortRectifyMap(mat.size(), 
+                        undistortionMap1, undistortionMap2);
+            }
+            Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
+            releaseAdvancedCalibrationSemaphore();
+        }
         mat.release();
 
         return dst;
@@ -1111,6 +1170,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return calibration.isEnabled();
     }
 
+    /**
+     * Flips the image. NOTE!!!!! - flipX means to flip about the x-axis which is a vertical flip
+     * and flipY means to flip about the y-axis which is a horizontal flip
+     * @param mat
+     * @return
+     */
     protected Mat flip(Mat mat) {
         if (isFlipped()) {
             int flipCode;
@@ -1175,7 +1240,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return calibrating;
     }
 
-    public synchronized void clearCalibrationCache() {
+    public void clearCalibrationCache() {
+        while (!takeAdvancedCalibrationSemaphore(false)) {
+            //spin until it is available
+        }
         // Clear the calibration cache
         if (undistortionMap1 != null) {
             undistortionMap1.release();
@@ -1185,6 +1253,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
             undistortionMap2.release();
             undistortionMap2 = null;
         }
+        releaseAdvancedCalibrationSemaphore();
     }
 
     public void startCalibration(CalibrationCallback callback) {

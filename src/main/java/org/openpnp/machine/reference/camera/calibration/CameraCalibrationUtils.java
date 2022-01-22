@@ -1163,9 +1163,11 @@ public class CameraCalibrationUtils {
             boolean fullyConstrained = false;
             double maxWidth = 0;
             double maxHeight = 0;
+            int count = 0;
     
             // Iterate until the rectangle is fully constrained (can't grow any larger)
-            while (!fullyConstrained) {
+            while (!fullyConstrained && count<500) {
+                count++;
                 innerMinX = Double.NEGATIVE_INFINITY;
                 innerMaxX = Double.POSITIVE_INFINITY;
                 innerMinY = Double.NEGATIVE_INFINITY;
@@ -1276,6 +1278,9 @@ public class CameraCalibrationUtils {
                     maxHeight = newHeight;
                     fullyConstrained = false;
                 }
+            }
+            if (count>=500) {
+                Logger.error("Iteration failed to converge");
             }
             
             //Of all the aspect ratios, keep the one with the largest area
@@ -1486,10 +1491,12 @@ public class CameraCalibrationUtils {
             facetVertices.release();
         }
 
-        //Smooth the image 
-        double kernelSize =
-                1.0 * Math.sqrt(size.height * size.width / actual2DPoints[testPatternIndex].length);
-        Imgproc.blur(grayImage, grayImage, new Size(kernelSize, kernelSize));
+        if (testPatternIndex < actual2DPoints.length) {
+            //Smooth the image 
+            double kernelSize =
+                    1.0 * Math.sqrt(size.height * size.width / actual2DPoints[testPatternIndex].length);
+            Imgproc.blur(grayImage, grayImage, new Size(kernelSize, kernelSize));
+        }
         
         //Apply the TURBO color mapping - 0 : Dark Blue ... 255 : Dark Red
         Mat colorImage = new Mat();
