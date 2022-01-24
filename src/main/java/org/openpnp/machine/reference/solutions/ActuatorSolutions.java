@@ -89,8 +89,8 @@ public class ActuatorSolutions implements Solutions.Subject {
         HashMap<CommandType, String []> suggestions = new HashMap<>();
         suggestions.put(CommandType.ACTUATOR_READ_COMMAND, new String[] { "M105 ; read inputs" });
         suggestions.put(CommandType.ACTUATOR_READ_REGEX, new String[] { 
-                "*\u2753:(?<Value>-?\\d+).*",
-                "*\u2753:(?<Value>-?\\d+\\.\\d+).*" 
+                ".*\u2753:(?<Value>-?\\d+).*",
+                ".*\u2753:(?<Value>-?\\d+\\.\\d+).*" 
         });
         new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
                 new CommandType[] { CommandType.ACTUATOR_READ_COMMAND, CommandType.ACTUATOR_READ_REGEX }, suggestions, 
