@@ -23,7 +23,7 @@ While the bottom camera location can be set up perfectly for the first nozzle, t
 # Preparation
 The calibration can only work correctly if the location and rotation of the nozzle/nozzle tip in relation to the machine coordinate system is precisely known. OpenPNP uses the down-looking camera location as the coordinate reference. So it is very important to set head to nozzle offsets correctly, before you start using the calibration. 
 
-Use Issues & Solutions [[Vision Solutions]] as well as the [[Calibration Solutions]], to set up everything as indicated.
+Use Issues & Solutions [[Vision Solutions]] and at least the [precision Nozzle offsets calibration](https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets) from the [[Calibration Solutions]], to set up the machine to be ready for Nozzle tip calibration.
 
 # Basic Calibration Setup
 You can setup the calibration features per nozzle tip. This allows you to tune the pipeline well to the different nozzle tips' diameter sizes. 
