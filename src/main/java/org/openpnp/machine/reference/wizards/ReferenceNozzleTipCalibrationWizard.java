@@ -46,6 +46,7 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
@@ -62,6 +63,7 @@ import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
+import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -451,6 +453,18 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(offsetThresholdTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationZOffsetTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationTipDiameter);
+
+        try {
+            Camera camera = VisionUtils.getBottomVisionCamera();
+            if (camera instanceof ReferenceCamera) {
+                if (((ReferenceCamera) camera).getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+                    btnCalibrateCamera.setVisible(false);
+                }
+            }
+        }
+        catch (Exception e1) {
+            Logger.warn(e1);
+        }
     }
     protected void initDataBindings() {
         BeanProperty<JCheckBox, Boolean> jCheckBoxBeanProperty = BeanProperty.create("selected");
