@@ -1,8 +1,7 @@
 # What does the Nozzle Tip Calibration do?
 Using the bottom camera and computer vision the position of the nozzle tip held above the camera can be precisely determined. By moving the nozzle tip in certain patterns, OpenPNP can calibrate the following things:
 1. The runout of the nozzle and nozzle tip.
-2. The true location of the bottom camera i.e. where a nozzle tip has to be moved to, in order to appear precisely in the center of the camera view.
-3. The true rotation of the bottom camera so that the nozzle tip moves precisely horizontal in X (and precisely vertical in Y).
+2. The true, tool specific location of the bottom camera i.e. where a nozzle tip has to be moved to, in order to appear precisely in the center of the camera view.
 
 # What is Runout and Runout Compensation?
 See the animations below. Left side is without compensation, right side is compensation enabled. The compensation algorithm removes the eccentricity of the nozzle tip to gain better placement accuracy. See the difference with a 3d printed demo-nozzle tip:
@@ -13,26 +12,18 @@ See the animations below. Left side is without compensation, right side is compe
 Runout can come from both the nozzle tip or the nozzle it is attached to. The calibration system will automatically handle any combination of the two.
 
 # What is the Bottom Camera Location and how can it vary between nozzles?
-In order to be able to precisely align parts in Bottom Vision, the true location of the bottom camera in relation to the nozzle tip must be known. For a first rough setup, [the location of the bottom camera must be set up manually](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Bottom-Camera-Setup#set-camera-location).
+In order to be able to precisely align parts in Bottom Vision, the true location of the bottom camera in relation to the nozzle tip must be known. Issues & Solutions [[Vision Solutions]] will set up the general bottom camera location and orientation for you.
 
-However it can be quite difficult to set the _precise_ center of the nozzle tip using the naked eye, especially if the nozzle tip or the nozzle has runout. While the first location setup needs to be done manually, the Nozzle Tip Calibration can then automatically improve the precision for you. 
-
-For a multi-nozzle machine, things might even get a bit more complicated, especially if your bottom camera does not have a focal plane that exactly matches the surface plane of the PCB. The nozzle Z axes might not be perfectly parallel and can introduce a slight offset. The following exagerated illustration shows how this might happen:
+However, for a multi-nozzle machine, things are a bit more complicated, especially if your bottom camera does not have a focal plane that exactly matches the surface plane of the PCB. The nozzle Z axes might not be perfectly parallel and can introduce a slight offset. The following exagerated illustration shows how this might happen:
 
 ![Z axes parallax](https://user-images.githubusercontent.com/9963310/58963177-fff6cd80-87ac-11e9-8bd8-fc7c83e75151.png)
 
 While the bottom camera location can be set up perfectly for the first nozzle, there might be an offset needed for the other nozzles. The Nozzle Tip Calibration can automatically calibrate and apply this offset whenever it is needed. 
 
-# What is Bottom Camera Rotation and how does it matter?
-
-The Bottom Camera (or even the sensor chip inside) might be mounted with a slight rotation in relation to the X and Y axes of the machine. When aligning large parts, even a slight rotation will introduce surprisingly large placement errors.
-
-The rotation can be [compensated using the Camera Rotation](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms). However this is quite hard to do manually using just the jog and trial and error. The Nozzle Tip Calibration can automatically calibrate and apply this rotation.
-
 # Preparation
-The calibration can only work correctly if the location of the nozzle tip in relation to the machine coordinate system is precisely known. OpenPNP uses the down-looking camera location as the coordinate reference. So it is very important to set up the down-looking camera to nozzle offset correctly, before you start using the calibration. 
+The calibration can only work correctly if the location and rotation of the nozzle/nozzle tip in relation to the machine coordinate system is precisely known. OpenPNP uses the down-looking camera location as the coordinate reference. So it is very important to set head to nozzle offsets correctly, before you start using the calibration. 
 
-Use the [Nozzle Offset Wizard](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup#head-offsets) to set up the offset first. Be sure to rotate the nozzle tip in the marker material to get the true nozzle axis center, regardless of any runout. 
+Use Issues & Solutions [[Vision Solutions]] as well as the [[Calibrations Solutions]].
 
 # Basic Calibration Setup
 You can setup the calibration features per nozzle tip. This allows you to tune the pipeline well to the different nozzle tips' diameter sizes. 
