@@ -17,9 +17,14 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.File;
+
 import org.junit.jupiter.api.Test;
 import org.openpnp.model.Area;
 import org.openpnp.model.AreaUnit;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -27,7 +32,7 @@ import org.openpnp.spi.Camera;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.google.common.io.Files;
 
 
 public class CvStageTest {
@@ -51,6 +56,13 @@ public class CvStageTest {
 	 */
     @Test
     public void testPipelinePropertyOverrides() throws Exception {
+        File workingDirectory = Files.createTempDir();
+        workingDirectory = new File(workingDirectory, ".openpnp");
+        System.out.println("Configuration directory: " + workingDirectory);
+
+        Configuration.initialize(workingDirectory);
+        Configuration.get().load();
+
         Camera camera = new VisionUtilsTest.TestCamera();
         
         String propName = "propName";
