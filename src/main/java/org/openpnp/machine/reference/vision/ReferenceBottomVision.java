@@ -1,6 +1,6 @@
 package org.openpnp.machine.reference.vision;
 
-import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -318,7 +318,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 checkHeight = footprint.getBodyHeight();
                 break;
             case PadExtents:
-                Rectangle bounds = footprint.getPadsShape().getBounds();
+                Rectangle2D bounds = footprint.getPadsShape().getBounds2D();
                 checkWidth = bounds.getWidth();
                 checkHeight = bounds.getHeight();
                 break;
