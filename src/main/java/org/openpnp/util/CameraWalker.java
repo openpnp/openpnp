@@ -20,18 +20,19 @@
 package org.openpnp.util;
 
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.function.Function;
 
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Machine;
 import org.pmw.tinylog.Logger;
 
 /**
@@ -95,6 +96,7 @@ public class CameraWalker {
     private Point error;
     private double oldErrorMagnitude;
     private double newErrorMagnitude;
+    private Machine machine;
 
 
     
@@ -110,6 +112,7 @@ public class CameraWalker {
         this.movable = movable;
         this.findFeatureInImage = findFeatureInImage;
         scalingMat = null;
+        machine = Configuration.get().getMachine();
     }
     
     /**
@@ -122,9 +125,11 @@ public class CameraWalker {
      * should be kept relatively small.
      * @param expectedPoint - the expected point where the feature is expected to be detected in 
      * the image
+     * @return the 2x2 scaling matrix that converts changes in image pixel locations to changes in 
+     * machine coordinates
      * @throws Exception if the scaling can't be estimated
      */
-    public void estimateScaling(Length testStepLength, Point expectedPoint) throws Exception {
+    public RealMatrix estimateScaling(Length testStepLength, Point expectedPoint) throws Exception {
         cancelWalk();
         testStepLength = testStepLength.convertToUnits(LengthUnit.Millimeters);
         Location start = movable.getLocation();
@@ -140,15 +145,15 @@ public class CameraWalker {
             final Location testLocation = start.add(step).derive(null, null, null, movable.getLocation().getRotation());
             
             //Move the machine to the test location and wait for it to finish
-            Future<?> future = UiUtils.submitUiMachineTask(() -> {
+            machine.execute(() -> {
                 if (onlySafeZMovesAllowed) {
-                    movable.moveToSafeZ();
-                    movable.moveTo(testLocation.
-                            derive(movable.getLocation(), false, false, true, false));
+                    MovableUtils.moveToLocationAtSafeZ(movable, testLocation, 1.0);
                 }
-                movable.moveTo(testLocation);
+                else {
+                    movable.moveTo(testLocation);
+                }
+                return null;
             });
-            future.get();
             
             Point foundPoint = findFeatureInImage.apply(expectedPoint);
             if (foundPoint == null) {
@@ -185,6 +190,7 @@ public class CameraWalker {
         
         mirror  = Math.signum((new LUDecomposition(scalingMat)).getDeterminant());
         
+        return scalingMat;
     }
     
     /**
@@ -280,16 +286,15 @@ public class CameraWalker {
         savePoints = (machine3DCoordinates != null) && (image2DCoordinates != null);
         
         //Move the machine to the starting location and wait for it to finish
-        Future<?> future = UiUtils.submitUiMachineTask(() -> {
+        machine.execute(() -> {
             if (onlySafeZMovesAllowed) {
-                movable.moveToSafeZ();
-                movable.moveTo(startingMachineLocation.
-                        derive(movable.getLocation(), false, false, true, false));
+                MovableUtils.moveToLocationAtSafeZ(movable, startingMachineLocation, 1.0);
             }
-            movable.moveTo(startingMachineLocation);
+            else {
+                movable.moveTo(startingMachineLocation);
+            }
+            return null;
         });
-        future.get();
-        
         savedLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters);
 
         oldLocation = startingMachineLocation.convertToUnits(LengthUnit.Millimeters);
@@ -309,77 +314,12 @@ public class CameraWalker {
         if (isSingleStep()) {
             return oldLocation;
         }
+        
         while (step()) {
-            
+            //keep stepping until done
         }
+        
         return oldLocation;
-//        while ((newErrorMagnitude < oldErrorMagnitude) && 
-//                (newErrorMagnitude >= minAllowedPixelStep)) {
-//            if (Thread.currentThread().isInterrupted()) {
-//                throw new InterruptedException();
-//            }
-//            oldErrorMagnitude = newErrorMagnitude;
-//            oldLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters);
-//            
-//            lastFoundPoint = foundPoint;
-//            if (savePoints) {
-//                machine3DCoordinates.add(new double[] {oldLocation.getX(), oldLocation.getY(), 
-//                        oldLocation.getZ()});
-//                image2DCoordinates.add(new double[] {foundPoint.x, foundPoint.y});
-//            }
-//            
-//            RealMatrix errorMat = MatrixUtils.createColumnRealMatrix(new double[] {error.x, error.y});
-//            RealMatrix machineErrorMat = scalingMat.multiply(errorMat);
-//            
-//            double maxLimitScaling = Math.min(1, 
-//                    maxAllowedPixelStep/(newErrorMagnitude * loopGain));
-//            maxLimitScaling = Math.min(maxLimitScaling, 
-//                    maxAllowedMachineStep.convertToUnits(LengthUnit.Millimeters).getValue()/
-//                    (machineErrorMat.getFrobeniusNorm() * loopGain));
-//            error.x *= maxLimitScaling;
-//            error.y *= maxLimitScaling;
-//            
-//            errorMat = errorMat.scalarMultiply(maxLimitScaling);
-//            machineErrorMat = machineErrorMat.scalarMultiply(maxLimitScaling);
-//            
-//            expectedPoint.x = foundPoint.x - error.x * loopGain; 
-//            expectedPoint.y = foundPoint.y - error.y * loopGain;
-//            
-//            Location correction = new Location(LengthUnit.Millimeters, 
-//                    -machineErrorMat.getEntry(0, 0) * loopGain, 
-//                    -machineErrorMat.getEntry(1, 0) * loopGain, 0, 0);
-//            
-//            newLocation = oldLocation.add(correction);
-//            if (newLocation.getLinearLengthTo(oldLocation).compareTo(minAllowedMachineStep) < 0) {
-//                //Don't bother moving if the move will be very tiny
-//                return oldLocation;
-//            }
-//            
-//            //Move the machine and wait for it to finish
-//            final Location moveLocation = newLocation;
-//            future = UiUtils.submitUiMachineTask(() -> {
-//                if (onlySafeZMovesAllowed) {
-//                    movable.moveToSafeZ();
-//                    
-//                    movable.moveTo(moveLocation.
-//                            derive(movable.getLocation(), false, false, true, false));
-//                }
-//                movable.moveTo(moveLocation);
-//            });
-//            future.get();
-//
-//            foundPoint = findFeatureInImage.apply(expectedPoint);
-//            Logger.trace("expectedPoint = " + expectedPoint);
-//            Logger.trace("newPoint = " + foundPoint);
-//            if (foundPoint == null) {
-//                throw new Exception("Unable to complete walk - can't find feature in image.");
-//            }
-//            
-//            error = foundPoint.subtract(desiredCameraPoint);
-//            newErrorMagnitude = Math.hypot(error.x, error.y);
-//        }
-//        walkComplete = true;
-//        return oldLocation;
     }
 
     public boolean step() throws Exception {
@@ -422,21 +362,19 @@ public class CameraWalker {
             //Don't bother moving if the move will be very tiny
             walkComplete = true;
             return false;
-//            return oldLocation;
         }
         
         //Move the machine and wait for it to finish
         final Location moveLocation = newLocation.derive(null, null, null, movable.getLocation().getRotation());
-        Future<?> future = UiUtils.submitUiMachineTask(() -> {
+        machine.execute(() -> {
             if (onlySafeZMovesAllowed) {
-                movable.moveToSafeZ();
-                
-                movable.moveTo(moveLocation.
-                        derive(movable.getLocation(), false, false, true, false));
+                MovableUtils.moveToLocationAtSafeZ(movable, moveLocation, 1.0);
             }
-            movable.moveTo(moveLocation);
+            else {
+                movable.moveTo(moveLocation);
+            }
+            return null;
         });
-        future.get();
         
         savedLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters);
 

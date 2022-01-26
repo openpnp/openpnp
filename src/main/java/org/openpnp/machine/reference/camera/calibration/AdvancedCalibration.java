@@ -60,7 +60,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private CvPipeline pipeline = new CvPipeline(
             "<cv-pipeline>" +
                 "<stages>" +
-                    "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"image\" enabled=\"true\" default-light=\"true\" settle-first=\"true\" count=\"3\"/>" +
+                    "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"image\" enabled=\"true\" default-light=\"true\" settle-first=\"true\" count=\"1\"/>" +
                     "<cv-stage class=\"org.openpnp.vision.pipeline.stages.DetectCircularSymmetry\" name=\"detect_circle\" enabled=\"true\" min-diameter=\"18\" max-diameter=\"25\" max-distance=\"100\" search-width=\"0\" search-height=\"0\" max-target-count=\"1\" min-symmetry=\"1.2\" corr-symmetry=\"0.0\" property-name=\"DetectCircularSymmetry\" outer-margin=\"0.1\" inner-margin=\"0.1\" sub-sampling=\"8\" super-sampling=\"8\" diagnostics=\"false\" heat-map=\"false\"/>" +
                     "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertModelToKeyPoints\" name=\"results\" enabled=\"true\" model-stage-name=\"detect_circle\"/>" +
                 "</stages>" +
@@ -877,7 +877,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         cameraMatrix.put(1, 1, getApproximateCameraF());
         cameraMatrix.put(0, 2, (size.width - 1.0)/2.0);
         cameraMatrix.put(1, 2, (size.height - 1.0)/2.0);
-        Logger.trace("cameraMatrix = " + cameraMatrix.dump());
+        Logger.trace("initial cameraMatrix = " + cameraMatrix.dump());
         
         distortionCoefficients.release();
         distortionCoefficients = Mat.zeros(5, 1, CvType.CV_64FC1);
@@ -1027,11 +1027,14 @@ public class AdvancedCalibration extends LensCalibrationParams {
         setRmsError(rms);
         
         //Use the new estimates for the physical camera's matrix
-        cameraMatrix.put(0, 0, cameraParams[0]);
-        cameraMatrix.put(1, 1, cameraParams[1]);
-        cameraMatrix.put(0, 2, cameraParams[2]);
-        cameraMatrix.put(1, 2, cameraParams[3]);
+        cameraMatrix.put(0, 0, new double[] 
+                {cameraParams[0], 0, cameraParams[2], 0, cameraParams[1], cameraParams[3], 0, 0, 1});
         Logger.trace("cameraMatrix = " + cameraMatrix.dump());
+        
+        if (!Core.checkRange(cameraMatrix, true, -10e6, +10e6)) {
+            throw new Exception("Model didn't converge as expected - camera matrix has "
+                    + "much larger magnitudes than expected");
+        }
         
         //Compute the field of view of the physical camera
         double[] fovx = new double[1];
@@ -1049,6 +1052,12 @@ public class AdvancedCalibration extends LensCalibrationParams {
         distortionCoefficients.put(3, 0, cameraParams[7]);
         distortionCoefficients.put(4, 0, cameraParams[8]);
         Logger.trace("distortionCoefficients = " + distortionCoefficients.dump());
+        
+        if (!Core.checkRange(distortionCoefficients, true, -10e6, +10e6)) {
+            distortionCoefficients.put(0, 0, new double[9]);
+            throw new Exception("Model didn't converge as expected - distortion coefficients have"
+                    + " much larger magnitudes than expected, resetting them to zero.");
+        }
         
         //Convert the new estimate of the rotation vector to a rotation matrix
         rvec = Mat.zeros(3, 1, CvType.CV_64FC1);
@@ -1227,10 +1236,12 @@ public class AdvancedCalibration extends LensCalibrationParams {
      */
     public void initUndistortRectifyMap(Size size, Mat undistortionMap1, Mat undistortionMap2) {
         Size virCamSize = new Size();
+        if (virtualCameraMatrix != null) {
+            virtualCameraMatrix.release();
+        }
         virtualCameraMatrix = CameraCalibrationUtils.computeVirtualCameraMatrix(cameraMatrix, 
                 distortionCoefficients, rectificationMatrix, size, virCamSize, alphaPercent / 100.0, 
                 vectorFromPhyCamToDesiredPrincipalPointInPhyCamRefFrame);
-        Logger.trace("virtualCameraMatrix = " + virtualCameraMatrix.dump());
 
         //Compute the field of view of the virtual camera
         double[] fovx = new double[1];
@@ -1299,7 +1310,10 @@ public class AdvancedCalibration extends LensCalibrationParams {
      * @param camera
      */
     public void applyCalibrationToMachine(ReferenceHead head, ReferenceCamera camera) {
-        camera.setDefaultZ(getPrimaryLocation().getLengthZ());
+        if (getPrimaryLocation() != null) {
+            camera.setDefaultZ(getPrimaryLocation().getLengthZ());
+        }
+        
         Location calibratedOffsets = new Location(LengthUnit.Millimeters);
         if (head != null) {
             calibratedOffsets = calibratedOffsets
@@ -1316,9 +1330,9 @@ public class AdvancedCalibration extends LensCalibrationParams {
         }
         setCalibratedOffsets(calibratedOffsets);
         setValid(true);
+        setEnabled(true);
         // Make sure the camera undistort and virtual matrix are updated.
         camera.clearCalibrationCache();
-        setEnabled(true);
         camera.captureTransformed();
     }
 }

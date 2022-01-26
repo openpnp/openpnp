@@ -179,8 +179,8 @@ public class CalibrationSolutions implements Solutions.Subject {
     private void perDownLookingCameraSolutions(Solutions solutions, ReferenceHead head,
             ReferenceCamera defaultCamera, Nozzle defaultNozzle, ReferenceCamera camera) {
 
-        VisionSolutions visualSolutions = machine.getVisionSolutions();
-        if (visualSolutions.isSolvedPrimaryXY(head)) {
+        VisionSolutions visionSolutions = machine.getVisionSolutions();
+        if (visionSolutions.isSolvedPrimaryXY(head)) {
             // Calibrate backlash.
             if (camera == defaultCamera) {
                 CoordinateAxis rawAxisX = HeadSolutions.getRawAxis(machine, camera.getAxisX());
@@ -220,9 +220,9 @@ public class CalibrationSolutions implements Solutions.Subject {
                                         + "linkages of machine axes. More information can be found in the Wiki (press the blue Info button below).</p><br/>"
                                         + "<p>Set the acceptable <strong>Tolerance ±</strong> as high as possible to allow for a more efficient backlash "
                                         + "compensation method, avoiding extra moves and direction changes.</p><br/>"
-                                        + "<p><span color=\"red\">CAUTION 1</span>: The camera "+camera.getName()+" will move over the primary fiducial "
+                                        + "<p><strong color=\"red\">CAUTION 1</strong>: The camera "+camera.getName()+" will move over the primary fiducial "
                                         + "and then perform a calibration motion pattern, moving the axis "+axis.getName()+" over its full soft-limit range.</p><br/>"
-                                        + "<p><span color=\"red\">CAUTION 2</span>: The machine will also perform a visual homing cycle, once the new backlash "
+                                        + "<p><strong color=\"red\">CAUTION 2</strong>: The machine will also perform a visual homing cycle, once the new backlash "
                                         + "compensation method is established. This is done to recalibrate the coordinate system that might be affected by the "
                                         + "new method.</p><br/>"
                                         + "<p>When ready, press Accept.</p>"
@@ -265,7 +265,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                             @Override
                             public void setState(Solutions.State state) throws Exception {
                                 if (state == State.Solved) {
-                                    if (! visualSolutions.isSolvedPrimaryXY(head)) {
+                                    if (! visionSolutions.isSolvedPrimaryXY(head)) {
                                         throw new Exception("The head "+head.getName()+" primary fiducial location X and Y must be set first.");
                                     }
 
@@ -302,7 +302,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                     }
                 }
             }
-            if (!camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+            if (visionSolutions.isSolvedPrimaryZ(head) // In addition to XY checked in the outer if()
+                    && visionSolutions.isSolvedSecondaryXY(head)
+                    && visionSolutions.isSolvedSecondaryZ(head)
+                    && !camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
                 solutions.add(new Solutions.Issue(
                         camera, 
                         "Advanced camera "+camera.getName()+" calibration.", 
@@ -328,7 +331,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                 + "<p>If not, please revisit the <strong>Primary calibration fiducial position</strong> and "
                                 + "<strong>Secondary calibration fiducial position</strong> steps first (Enable the "
                                 + "<strong>Include Solved?</strong> checkbox above, to see revisitable solutions).</p><br/>"
-                                + "<p><span color=\"red\">CAUTION</span>: The camera "+camera.getName()+" will move over the "
+                                + "<p><strong color=\"red\">CAUTION</strong>: The camera "+camera.getName()+" will move over the "
                                 + "calibration rig and perform a length calibration motion pattern.</p><br/>" 
                                 + "</html>";
                     }
@@ -337,6 +340,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                     public void setState(Solutions.State state) throws Exception {
                         if (state == State.Solved) {
                             advancedCameraCalibration(camera, defaultNozzle, head, this);
+                        }
+                        else {
+                            camera.getAdvancedCalibration()
+                            .setOverridingOldTransformsAndDistortionCorrectionSettings(false);
                         }
                         super.setState(state);
                     }
@@ -347,15 +354,16 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     private void perNozzleSolutions(Solutions solutions, ReferenceHead head, ReferenceCamera defaultCamera,
             Nozzle defaultNozzle, ReferenceNozzle nozzle) {
-        VisionSolutions visualSolutions = machine.getVisionSolutions();
+        VisionSolutions visionSolutions = machine.getVisionSolutions();
         // Allow zero offsets on the simulated default nozzle.
         boolean isSimulatedNozzle = (nozzle == defaultNozzle && defaultCamera instanceof ImageCamera);
-        if (visualSolutions.isSolvedPrimaryXY(head) && visualSolutions.isSolvedPrimaryZ(head) 
+        if (visionSolutions.isSolvedPrimaryXY(head) 
+                && visionSolutions.isSolvedPrimaryZ(head) 
                 && (nozzle.getHeadOffsets().isInitialized() || isSimulatedNozzle)) {
             final Location oldNozzleOffsets = nozzle.getHeadOffsets();
             final Length oldTestObjectDiameter = head.getCalibrationTestObjectDiameter(); 
             // Get the test subject diameter.
-            solutions.add(visualSolutions.new VisionFeatureIssue(
+            solutions.add(visionSolutions.new VisionFeatureIssue(
                     nozzle, 
                     defaultCamera,
                     oldTestObjectDiameter,
@@ -377,7 +385,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                             + "<p>Adjust the <strong>Feature diameter</strong> up and down and see if it is detected right in the "
                             + "camera view. A green circle and cross-hairs should appear and hug the test object contour. "
                             + "Zoom the camera using the scroll-wheel.</p><br/>"
-                            + "<p><strong color=\"red\">Caution:</strong> The nozzle "+nozzle.getName()+" will move to the test object "
+                            + "<p><strong color=\"red\">CAUTION</strong> The nozzle "+nozzle.getName()+" will move to the test object "
                             + "and perform the calibration pick & place pattern. Make sure to load the right nozzle tip and "
                             + "ready the vacuum system.</p><br/>"
                             + "<p>When ready, press Accept.</p>"
@@ -398,10 +406,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                 @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
-                        if (! visualSolutions.isSolvedPrimaryXY(head)) {
+                        if (! visionSolutions.isSolvedPrimaryXY(head)) {
                             throw new Exception("The head "+head.getName()+" primary fiducial location X and Y must be set first.");
                         }
-                        if (! visualSolutions.isSolvedPrimaryZ(head)) {
+                        if (! visionSolutions.isSolvedPrimaryZ(head)) {
                             throw new Exception("The head "+head.getName()+" primary fiducial location Z must be set first.");
                         }
                         if (! (nozzle == defaultNozzle || nozzle.getHeadOffsets().isInitialized())) {
@@ -411,7 +419,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         final State oldState = getState();
                         UiUtils.submitUiMachineTask(
                                 () -> {
-                                    Circle testObject = visualSolutions
+                                    Circle testObject = visionSolutions
                                             .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null, null);
                                     head.setCalibrationTestObjectDiameter(
                                             defaultCamera.getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
@@ -444,7 +452,12 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     private void perUpLookingCameraSolutions(Solutions solutions, Camera defaultCamera,
             Nozzle defaultNozzle, ReferenceCamera camera) {
-        if (!camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+        VisionSolutions visionSolutions = machine.getVisionSolutions();
+        if (visionSolutions.isSolvedPrimaryXY((ReferenceHead) defaultNozzle.getHead())
+                && visionSolutions.isSolvedPrimaryZ((ReferenceHead) defaultNozzle.getHead())
+                && camera.getLocation().isInitialized()
+                && camera.getUnitsPerPixel().isInitialized()
+                && !camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
             solutions.add(new Solutions.Issue(
                     camera, 
                     "Advanced camera "+camera.getName()+" calibration.", 
@@ -454,7 +467,7 @@ public class CalibrationSolutions implements Solutions.Subject {
 
                 @Override 
                 public void activate() throws Exception {
-                    MainFrame.get().getMachineControls().setSelectedTool(camera);
+                    MainFrame.get().getMachineControls().setSelectedTool(defaultNozzle);
                     camera.ensureCameraVisible();
                 }
 
@@ -470,8 +483,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                             + "still valid. Furthermore the camera "+camera.getName()+" position (including Z) must still be valid.</p><br/>"
                             + "<p>If not, please revisit the <strong>Determine up-looking camera "+camera.getName()+" position</strong> step first "
                             + "(Enable the <strong>Include Solved?</strong> checkbox above, to see revisitable solutions).</p><br/>"
-                            + "<p><span color=\"red\">CAUTION</span>: The nozzle "+defaultNozzle.getName()+" will automatically "
-                            + "move over the camera "+camera.getName()+" and perform a lengthy calibration motion pattern.</p><br/>" 
+                            + "<p><strong color=\"red\">CAUTION</strong>: The nozzle "+defaultNozzle.getName()+" will perform a lengthy "
+                            + "calibration motion pattern all over the view area of the camera "+camera.getName()+". "
+                            + "Before pressing <strong>Accept</strong>, you need to be sure nozzle "+defaultNozzle.getName()+" will not collide "
+                            + "with anything!</p><br/>" 
                             + "</html>";
                 }
 
@@ -479,6 +494,10 @@ public class CalibrationSolutions implements Solutions.Subject {
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
                         advancedCameraCalibration(camera, defaultNozzle, null, this);
+                    }
+                    else {
+                        camera.getAdvancedCalibration()
+                        .setOverridingOldTransformsAndDistortionCorrectionSettings(false);
                     }
                     super.setState(state);
                 }
@@ -1150,119 +1169,137 @@ public class CalibrationSolutions implements Solutions.Subject {
             throw new Exception("Machine is not enabled and homed.");
         }
         AdvancedCalibration advCal = camera.getAdvancedCalibration();
-        // Switch on the override but disable the calibration, get some frames to make sure the camera is now
-        // in the raw format.
-        advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
-        advCal.setEnabled(false);
-        camera.clearCalibrationCache();
-        camera.captureTransformed(); //force image width and height to be recomputed
-
-        Location primaryLocation;
-        Location secondaryLocation;
-        Integer primaryDiameter;
-        Integer secondaryDiameter;
-        if (head != null) {
-            // Down-looking camera uses the calibration rig:
-            primaryLocation = head.getCalibrationPrimaryFiducialLocation();
-            secondaryLocation = head.getCalibrationSecondaryFiducialLocation();
-            primaryDiameter = (int) Math.round(head.getCalibrationPrimaryFiducialDiameter().divide(
-                    camera.getUnitsPerPixel(primaryLocation.getLengthZ()).getLengthX()));
-            secondaryDiameter = (int) Math.round(head.getCalibrationSecondaryFiducialDiameter().divide(
-                    camera.getUnitsPerPixel(secondaryLocation.getLengthZ()).getLengthX()));
-        }
-        else {
-            // Up-looking camera uses the nozzle.
-            ReferenceNozzle nozzle = (ReferenceNozzle) movable;
-            primaryLocation = camera.getHeadOffsets();
-            camera.setDefaultZ(primaryLocation.getLengthZ());
-            // Default to just arbitrary difference: 
-            Length secondaryZ = primaryLocation.getLengthZ()
-                    .add(new Length(upLookingSecondaryOffsetZMm, LengthUnit.Millimeters)); 
-            secondaryLocation = primaryLocation.deriveLengths(null, null, secondaryZ, null);
-            // Encapsulated CalibrateCameraProcess
-            Length calibrationTipDiameter = nozzle.getNozzleTip().getCalibration().
-                    getCalibrationTipDiameter();
-            primaryDiameter = (int) Math.round(calibrationTipDiameter.divide(
-                    camera.getUnitsPerPixel(primaryLocation.getLengthZ())
-                    .getLengthX()));
-            // This will not be accurate on the first go (no 3D UPP present). We just hope the diameter 
-            // margin will still cover it.
-            secondaryDiameter =  (int) Math.round(calibrationTipDiameter.divide(
-                    camera.getUnitsPerPixel(secondaryLocation.getLengthZ())
-                    .getLengthX()));
-        }
-        advCal.setPrimaryLocation(primaryLocation);
-        advCal.setSecondaryLocation(secondaryLocation);
-        ArrayList<Location>calibrationLocations = new ArrayList<>();
-        calibrationLocations.add(primaryLocation);
-        calibrationLocations.add(secondaryLocation);
-
-        advCal.setFiducialDiameter(primaryDiameter);
-        ArrayList<Integer> detectionDiameters = new ArrayList<>();
-        detectionDiameters.add(primaryDiameter);
-        detectionDiameters.add(secondaryDiameter);
-        Length oldDefaultZ = camera.getDefaultZ();
-        camera.setDefaultZ(primaryLocation.getLengthZ());
-
-        CameraView cameraView = MainFrame.get().getCameraViews().
-                getCameraView(camera);
-
-        // Encapsulated CalibrateCameraProcess
-        new CalibrateCameraProcess(MainFrame.get(), cameraView, 
-                calibrationLocations, detectionDiameters, true) {
-
-            @Override 
-            public void processRawCalibrationData(double[][][] testPattern3dPointsList, 
-                    double[][][] testPatternImagePointsList, Size size, double mirrored,
-                    double apparentMotionDirection) throws Exception {
-
-                advCal.setDataAvailable(true);
-                advCal.setValid(false);
-
-                try {
-                    advCal.processRawCalibrationData(
-                            testPattern3dPointsList, testPatternImagePointsList, 
-                            size, mirrored, apparentMotionDirection);
-
-                    advCal.applyCalibrationToMachine(head, camera);
-
-                    // Tidy up.
-                    UiUtils.submitUiMachineTask(() -> {
-                        if (head != null 
-                                && head.getDefaultCamera() == camera
-                                && head.getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
-                            head.visualHome(machine, true);
-                        }
-                        else {
-                            MovableUtils.moveToLocationAtSafeZ(movable, camera.getLocation(movable));
-                        }
-                    });
+        try {
+            // Switch on the override but disable the calibration, get a frames to make sure the camera is now
+            // in the raw format.
+            advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(true);
+            advCal.setEnabled(false);
+            camera.clearCalibrationCache();
+            camera.captureTransformed(); //force image width and height to be recomputed
+            Location primaryLocation;
+            Location secondaryLocation;
+            Integer primaryDiameter;
+            Integer secondaryDiameter;
+            if (head != null) {
+                // Down-looking camera uses the calibration rig:
+                primaryLocation = head.getCalibrationPrimaryFiducialLocation();
+                secondaryLocation = head.getCalibrationSecondaryFiducialLocation();
+                primaryDiameter = (int) Math.round(head.getCalibrationPrimaryFiducialDiameter()
+                                                       .divide(camera.getUnitsPerPixel(
+                                                               primaryLocation.getLengthZ())
+                                                                     .getLengthX()));
+                secondaryDiameter = (int) Math.round(head.getCalibrationSecondaryFiducialDiameter()
+                                                         .divide(camera.getUnitsPerPixel(
+                                                                 secondaryLocation.getLengthZ())
+                                                                       .getLengthX()));
+            }
+            else {
+                // Up-looking camera uses the nozzle.
+                ReferenceNozzle nozzle = (ReferenceNozzle) movable;
+                if (nozzle.getNozzleTip() == null) {
+                    throw new Exception(
+                            "Nozzle " + nozzle.getName() + " does not have a nozzle tip loaded.");
                 }
-                catch (Exception e) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                primaryLocation = camera.getHeadOffsets();
+                camera.setDefaultZ(primaryLocation.getLengthZ());
+                // Default to just arbitrary difference: 
+                Length secondaryZ = primaryLocation.getLengthZ()
+                                                   .add(new Length(upLookingSecondaryOffsetZMm,
+                                                           LengthUnit.Millimeters));
+                secondaryLocation = primaryLocation.deriveLengths(null, null, secondaryZ, null);
+                // Encapsulated CalibrateCameraProcess
+                Length calibrationTipDiameter = nozzle.getNozzleTip()
+                                                      .getCalibration()
+                                                      .getCalibrationTipDiameter();
+                primaryDiameter = (int) Math.round(calibrationTipDiameter.divide(
+                        camera.getUnitsPerPixel(primaryLocation.getLengthZ())
+                              .getLengthX()));
+                // This will not be accurate on the first go (no 3D UPP present). We just hope the diameter 
+                // margin will still cover it.
+                secondaryDiameter = (int) Math.round(calibrationTipDiameter.divide(
+                        camera.getUnitsPerPixel(secondaryLocation.getLengthZ())
+                              .getLengthX()));
+            }
+            advCal.setPrimaryLocation(primaryLocation);
+            advCal.setSecondaryLocation(secondaryLocation);
+            ArrayList<Location> calibrationLocations = new ArrayList<>();
+            calibrationLocations.add(primaryLocation);
+            calibrationLocations.add(secondaryLocation);
+            advCal.setFiducialDiameter(primaryDiameter);
+            ArrayList<Integer> detectionDiameters = new ArrayList<>();
+            detectionDiameters.add(primaryDiameter);
+            detectionDiameters.add(secondaryDiameter);
+            Length oldDefaultZ = camera.getDefaultZ();
+            camera.setDefaultZ(primaryLocation.getLengthZ());
+            CameraView cameraView = MainFrame.get()
+                                             .getCameraViews()
+                                             .getCameraView(camera);
+            // Encapsulated CalibrateCameraProcess
+            new CalibrateCameraProcess(MainFrame.get(), cameraView, calibrationLocations,
+                    detectionDiameters, true) {
+
+                @Override
+                public void processRawCalibrationData(double[][][] testPattern3dPointsList,
+                        double[][][] testPatternImagePointsList, Size size, double mirrored,
+                        double apparentMotionDirection) throws Exception {
+
+                    advCal.setDataAvailable(true);
+                    advCal.setValid(false);
+
+                    try {
+                        advCal.processRawCalibrationData(testPattern3dPointsList,
+                                testPatternImagePointsList, size, mirrored,
+                                apparentMotionDirection);
+
+                        advCal.applyCalibrationToMachine(head, camera);
+
+                        // Tidy up.
+                        UiUtils.submitUiMachineTask(() -> {
+                            if (head != null && head.getDefaultCamera() == camera
+                                    && head.getVisualHomingMethod() == VisualHomingMethod.ResetToFiducialLocation) {
+                                head.visualHome(machine, true);
+                            }
+                            else {
+                                MovableUtils.moveToLocationAtSafeZ(movable,
+                                        camera.getLocation(movable));
+                            }
+                        });
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                        advCal.setValid(false);
+                        advCal.setEnabled(false);
+                        advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
+                        issue.setState(State.Open);
+                        camera.setDefaultZ(oldDefaultZ);
+                    }
+                    MainFrame.get()
+                             .getIssuesAndSolutionsTab()
+                             .solutionChanged();
+                }
+
+                @Override
+                protected void processCanceled() {
                     advCal.setValid(false);
                     advCal.setEnabled(false);
                     advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
-                    issue.setState(State.Open);
                     camera.setDefaultZ(oldDefaultZ);
-                }
-                MainFrame.get().getIssuesAndSolutionsTab().solutionChanged();
-            }
 
-            @Override
-            protected void processCanceled() {
-                advCal.setValid(false);
-                advCal.setEnabled(false);
-                advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
-                camera.setDefaultZ(oldDefaultZ);
-
-                try {
-                    issue.setState(State.Open);
+                    try {
+                        issue.setState(State.Open);
+                    }
+                    catch (Exception e) {
+                    }
+                    MainFrame.get()
+                             .getIssuesAndSolutionsTab()
+                             .solutionChanged();
                 }
-                catch (Exception e) {
-                }
-                MainFrame.get().getIssuesAndSolutionsTab().solutionChanged();
-            }
-        };
+            };
+        }
+        catch (Exception e) {
+            // Aborted 
+            advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
+            throw e;
+        }
     }
 }

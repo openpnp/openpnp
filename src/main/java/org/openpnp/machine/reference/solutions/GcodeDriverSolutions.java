@@ -70,15 +70,20 @@ public class GcodeDriverSolutions implements Solutions.Subject {
 
     protected enum FirmwareType {
         Generic,
-        Smoothie,
-        SmoothieWithGrblSyntax,
+        Smoothieware,
+        SmoothiewareGrblSyntax,
+        SmoothiewareChmt,
         Duet,
         TinyG,
         Marlin,
         Grbl;
 
         boolean isSmoothie() {
-            return this == Smoothie || this == SmoothieWithGrblSyntax;
+            return this == Smoothieware || this == SmoothiewareGrblSyntax || this == SmoothiewareChmt;
+        }
+
+        boolean isFlowControlOff() {
+            return this == TinyG || this == Grbl || this == SmoothiewareChmt;
         }
     }
 
@@ -161,11 +166,13 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/GcodeDriver#connection"));
             }
-            if (machine.isEnabled() && gcodeDriver.isSpeakingGcode()) {
+            if (gcodeDriver.isSpeakingGcode()) {
                 try {
-                    UiUtils.submitUiMachineTask(
-                            () -> gcodeDriver.detectFirmware(true)
-                            ).get();
+                    machine.execute(
+                            () -> {
+                                gcodeDriver.detectFirmware(true);
+                                return true;
+                            }, true, 1L);
                 }
                 catch (Exception e) {
                     Logger.warn(e, gcodeDriver.getName()+" failure to detect firmware");
@@ -245,11 +252,16 @@ public class GcodeDriverSolutions implements Solutions.Subject {
             }
             else {
                 if (gcodeDriver.getFirmwareProperty("FIRMWARE_NAME", "").contains("Smoothieware")) {
-                    firmware = (gcodeDriver.getFirmwareProperty("X-GRBL_MODE", "").contentEquals("1"))
-                            ? FirmwareType.SmoothieWithGrblSyntax : FirmwareType.Smoothie;
+                    firmware = (gcodeDriver.getFirmwareProperty("X-GRBL_MODE", "").contains("1"))? 
+                            FirmwareType.SmoothiewareGrblSyntax : 
+                                gcodeDriver.getFirmwareProperty("FIRMWARE_VERSION", "").contains("chmt-")?
+                                        FirmwareType.SmoothiewareChmt : FirmwareType.Smoothieware;
                     firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-AXES", "0"));
                     firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "3"));
-                    if (firmwarePrimaryAxesCount == firmwareAxesCount) {
+                    if (firmware == FirmwareType.SmoothiewareChmt) {
+                        // OK.
+                    }
+                    else if (firmwarePrimaryAxesCount == firmwareAxesCount) {
                         // OK.
                     }
                     else {
@@ -345,13 +357,15 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                 if (gcodeDriver.getCommunicationsType() == CommunicationsType.serial 
                         && gcodeDriver.getSerial() != null) {
                     final FlowControl oldFlowControl = gcodeDriver.getSerial().getFlowControl();
-                    final FlowControl newFlowControl = (firmware == FirmwareType.TinyG || firmware == FirmwareType.Grbl) ? FlowControl.XonXoff : FlowControl.RtsCts;
+                    final FlowControl newFlowControl = (firmware.isFlowControlOff() ? FlowControl.Off : FlowControl.RtsCts);
                     if (oldFlowControl != newFlowControl) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver, 
                                 "Change of serial port Flow Control recommended.",
-                                "Set "+newFlowControl.name()+" on serial port.",
-                                (gcodeDriver.getSerial().getFlowControl() == FlowControl.Off || (firmware == FirmwareType.TinyG) ? Severity.Warning : Severity.Suggestion),
+                                "Set Flow Control to "+newFlowControl.name()+" on serial port."
+                                +(newFlowControl == FlowControl.Off ? " The detected "+firmware+" controller is known to not "
+                                + "(reliably) support serial flow-control." : ""),
+                                newFlowControl == FlowControl.Off ? Severity.Warning : Severity.Suggestion,
                                 "https://en.wikipedia.org/wiki/Flow_control_(data)#Hardware_flow_control") {
 
                             @Override
@@ -406,19 +420,21 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             }
                         });
                     }
-                    boolean confirmationFlowControlRecommended = (firmware == FirmwareType.TinyG || firmware == FirmwareType.Grbl) || ! hasAxes;
+                    boolean serialFlowControlOff = (gcodeDriver.getCommunicationsType() == CommunicationsType.serial 
+                        && gcodeDriver.getSerial() != null 
+                        && gcodeDriver.getSerial().getFlowControl() == FlowControl.Off) || firmware.isFlowControlOff();
+                    boolean confirmationFlowControlRecommended = serialFlowControlOff || ! hasAxes;
                     if (confirmationFlowControlRecommended != confirmationFlowControl) {
                         solutions.add(new Solutions.Issue(
                                 gcodeDriver,
                                 (confirmationFlowControl ?
                                         "Disable Confirmation Flow Control for full asynchronous operation."
                                         : "Enable Confirmation Flow Control" + (hasAxes ? "" : ", controller has no axes") 
-                                            + ((firmware == FirmwareType.TinyG) ? ", TinyG detected" : "")
-                                            + ((firmware == FirmwareType.Grbl) ? ", Grbl detected" : "") + "."),
+                                        + (serialFlowControlOff ? ", serial flow control is not available" : "") + "."),
                                 (confirmationFlowControl ?
                                         "Disable Confirmation Flow Control."
                                         :"Enable Confirmation Flow Control."),
-                                Severity.Suggestion,
+                                confirmationFlowControl ? Severity.Suggestion : Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#advanced-settings") {
 
                             @Override
@@ -750,7 +766,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         if (dialect == FirmwareType.TinyG) {
                             commandBuilt = 
                                     // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
-                                    //"$ex=1\n" // XonXoff
+                                    //"$ex=0\n" // off
                                     "$sv=0\n" // Non-verbose
                                     +commandBuilt;
                         }
@@ -758,16 +774,12 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else if (dialect == FirmwareType.TinyG) {
                         commandModified = true;
                         if (command.contains("$ex=2")) {
-                            commandBuilt = command.replace("$ex=2", "$ex=1");
+                            commandBuilt = command.replace("$ex=2", "$ex=0");
                         }
-                        else if (command.contains("$ex=0")) {
-                            commandBuilt = command.replace("$ex=0", "$ex=1");
+                        else if (command.contains("$ex=1")) {
+                            commandBuilt = command.replace("$ex=1", "$ex=0");
                         }
-                        // We no longer propose the $ex setting. You can't change flow-control in mid-connection reliably.
-//                                    else if (!command.contains("$ex=1")){
-//                                        commandBuilt = "$ex=1\n"
-//                                                +command;
-//                                    }
+                        // We no longer propose the $ex setting, if not yet present. You can't change flow-control in mid-connection reliably.
                     }
                     break;
                 case COMMAND_CONFIRM_REGEX:
@@ -788,7 +800,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     break;
                 case HOME_COMMAND:
                     if (command == null) {
-                        if (dialect == FirmwareType.SmoothieWithGrblSyntax || dialect == FirmwareType.Grbl) {
+                        if (dialect == FirmwareType.SmoothiewareGrblSyntax || dialect == FirmwareType.Grbl) {
                             commandBuilt = "$H ; Home all axes";
                         }
                         else if (dialect == FirmwareType.TinyG) {

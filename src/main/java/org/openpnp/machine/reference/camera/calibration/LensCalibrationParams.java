@@ -43,6 +43,11 @@ public class LensCalibrationParams extends AbstractModelObject {
     @Commit void commit() {
         cameraMatrix.put(0, 0, cameraMatrixArr);
         distortionCoefficients.put(0, 0, distortionCoefficientsArr);
+        /*if (!Core.checkRange(distortionCoefficients, true, -10e6, +10e6)) {
+            Logger.warn("distortionCoefficients = " + distortionCoefficients.dump());
+            Logger.warn("Distortion Coefficients have extreme values - resetting all to zero");
+            distortionCoefficients.put(0, 0, new double[5] );
+        }*/
     }
 
     @Persist void persist() {

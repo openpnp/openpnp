@@ -705,6 +705,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     }
 
     protected static Nozzle getCompatibleNozzleAndTip(Feeder feeder, boolean allowNozzleTipChange) throws Exception {
+        if (feeder.getPart() == null) {
+            throw new Exception("Feeder has not part set.");
+        }
         // Check the nozzle tip package compatibility.
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
         org.openpnp.model.Package packag = feeder.getPart().getPackage();

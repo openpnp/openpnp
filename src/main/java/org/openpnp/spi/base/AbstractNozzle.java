@@ -21,6 +21,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
@@ -191,6 +192,7 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         Object oldValue = this.rotationModeOffset;
         this.rotationModeOffset = rotationModeOffset;
         firePropertyChange("rotationModeOffset", oldValue, rotationModeOffset);
+        Logger.trace("Set rotation mode offset: "+rotationModeOffset != null ? rotationModeOffset+"°." : "none.");
         // Note, we do not 
         //  fireMachineHeadActivity(head); 
         // as only the upcoming coordinate changes will really make sense and matter.

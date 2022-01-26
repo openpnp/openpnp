@@ -344,7 +344,6 @@ public class IssuesAndSolutionsPanel extends JPanel {
             if (issue.getUri() != null) {
                 needInfo = true;
             }
-
         }
         acceptSolutionAction.setEnabled(needAccept && issues.size() == 1);
         dismissSolutionAction.setEnabled(needDismiss);
@@ -352,6 +351,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
         infoAction.setEnabled(needInfo);
         if (issuePanel != null) {
             issuePane.remove(issuePanel);
+            issuePanel.setVisible(false);
+            issuePanel = null;
+            issuePane.revalidate();
         }
         if (issues.size() == 1) {
             issuePanel = new IssuePanel(issues.get(0), machine);

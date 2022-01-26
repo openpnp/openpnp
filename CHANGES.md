@@ -1,6 +1,17 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2022-01-23
+
+## Advanced Camera Calibration
+
+Camera setup and calibration has been improved to eliminate the need for manual 
+setup of camera flips, rotation, position, units-per-pixel scaling, and lens 
+distortion compensation. In addition, camera tilt is also now corrected. See the Wiki:
+
+* https://github.com/openpnp/openpnp/wiki/Advanced-Camera-Calibration
+* https://github.com/openpnp/openpnp/wiki/Advance-Camera-Calibration---Camera-Mounting-Errors
+
 # 2021-11-07
 
 ## Machine Calibration with Issues & Solutions 
