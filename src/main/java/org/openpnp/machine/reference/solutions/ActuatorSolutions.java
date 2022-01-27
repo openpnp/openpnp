@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
@@ -35,7 +36,6 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.model.Solutions.Subject;
 import org.openpnp.spi.Actuator;
-import org.openpnp.spi.Actuator.ActuatorValueType;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.TextUtils;
 
@@ -61,26 +61,49 @@ public class ActuatorSolutions implements Solutions.Subject {
     }
 
     public static void findActuateIssues(Solutions solutions, Solutions.Subject holder, Actuator actuator, String qualifier, String uri) {
-        if (actuator != null 
-                && actuator.getValueType() == ActuatorValueType.Double) {
-            HashMap<CommandType, String []> suggestions = new HashMap<>();
-            suggestions.put(CommandType.ACTUATE_DOUBLE_COMMAND, new String[] { 
-                    "M\u2753 {DoubleValue:%.4f}; actuate "+qualifier+" with double value",
-                    "M\u2753 {IntegerValue}; actuate "+qualifier+" with integer value",
-            });
-            new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
-                    new CommandType[] { CommandType.ACTUATE_DOUBLE_COMMAND }, suggestions, 
-                    uri);
-        }
-        else {
-            HashMap<CommandType, String []> suggestions = new HashMap<>();
-            suggestions.put(CommandType.ACTUATE_BOOLEAN_COMMAND, new String[] { 
-                    "{True:M\u2753 ; actuate "+qualifier+" ON}\n"
-                            + "{False:M\u2753 ; actuate "+qualifier+" OFF}"
-            });
-            new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
-                    new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND }, suggestions, 
-                    uri);
+        if (actuator != null) { 
+            switch (actuator.getValueType()) {
+                case Double: {
+                    HashMap<CommandType, String []> suggestions = new HashMap<>();
+                    suggestions.put(CommandType.ACTUATE_DOUBLE_COMMAND, new String[] { 
+                            "M\u2753 \u2753{DoubleValue:%.4f}; actuate "+qualifier+" with double value",
+                            "M\u2753 \u2753{IntegerValue}; actuate "+qualifier+" with integer value",
+                    });
+                    new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
+                            new CommandType[] { CommandType.ACTUATE_DOUBLE_COMMAND }, suggestions, 
+                            uri);
+                    break;
+                }
+                case Boolean: {
+                    HashMap<CommandType, String []> suggestions = new HashMap<>();
+                    suggestions.put(CommandType.ACTUATE_BOOLEAN_COMMAND, new String[] { 
+                            "{True:M\u2753 ; actuate "+qualifier+" ON}\n"
+                                    + "{False:M\u2753 ; actuate "+qualifier+" OFF}"
+                    });
+                    new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
+                            new CommandType[] { CommandType.ACTUATE_BOOLEAN_COMMAND }, suggestions, 
+                            uri);
+                    break;
+                }
+                case String: {
+                    HashMap<CommandType, String []> suggestions = new HashMap<>();
+                    suggestions.put(CommandType.ACTUATE_STRING_COMMAND, new String[] { 
+                            "{StringValue} ; actuate "+qualifier+" with direct string command value",
+                            "M\u2753 \u2753{StringValue} ; actuate "+qualifier+" with string value argument"
+                    });
+                    new ActuatorSolutions(actuator).findActuatorIssues(solutions, holder, qualifier, 
+                            new CommandType[] { CommandType.ACTUATE_STRING_COMMAND }, suggestions, 
+                            uri);
+                    break;
+                }
+                case Profile: {
+                    // Recurse into single profile actuators.
+                    for (Actuator profileActuator : ((ReferenceActuator) actuator).getActuatorProfiles().getAll()) {
+                        findActuateIssues(solutions, holder, profileActuator, qualifier, uri); 
+                    }
+                    break;
+                }
+            }
         }
     }
 

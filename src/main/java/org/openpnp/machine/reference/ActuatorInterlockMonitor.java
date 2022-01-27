@@ -246,10 +246,9 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
 
     public void actuate(Actuator actuator, boolean on) throws Exception {
         // Only actuate, if the value is unknown or it has changed.
-        if (!(actuator.getLastActuationValue() instanceof Boolean 
-                && on == (boolean)actuator.getLastActuationValue())) {
+        if (actuator.isActuated() == null || actuator.isActuated() != on) {
             Logger.trace(actuator.getName()+" interlock actuation changes to "+on);
-            actuator.actuate(on);
+            actuator.actuate(on); 
         }
     }
 
@@ -273,12 +272,12 @@ public class ActuatorInterlockMonitor extends AbstractModelObject implements Act
                 return false;
             }
             if (conditionalActuator != null) {
-                if (conditionalActuator.getLastActuationValue() instanceof Boolean) { 
+                if (conditionalActuator.isActuated() != null) { 
                     // The actuator has a known boolean state.
-                    if (conditionalActuatorState.mayBeOn() != (boolean)conditionalActuator.getLastActuationValue()) {
+                    if (conditionalActuatorState.mayBeOn() != conditionalActuator.isActuated()) {
                         // The conditional Actuator has a different state, interlock does not apply. 
                         Logger.trace(actuator.getName()+" interlock masked by conditionalActuator "+conditionalActuator.getName()
-                        +" being "+conditionalActuator.getLastActuationValue());
+                        +" being "+conditionalActuator.getLastActuationValue()+" handled as "+(conditionalActuator.isActuated() ? "ON" : "OFF"));
                         return false;
                     }
                 }

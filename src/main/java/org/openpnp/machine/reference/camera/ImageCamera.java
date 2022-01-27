@@ -267,6 +267,7 @@ public class ImageCamera extends ReferenceCamera {
         BufferedImage frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D gFrame = frame.createGraphics();
+        AffineTransform tx = gFrame.getTransform();
 
         double locationX = location.getX();
         double locationY = location.getY();
@@ -447,7 +448,9 @@ public class ImageCamera extends ReferenceCamera {
                 }
             }
         }
+
         if (simulation) {
+            gFrame.setTransform(tx);
             SimulationModeMachine.simulateCameraExposure(this, gFrame, width, height);
         }
 
