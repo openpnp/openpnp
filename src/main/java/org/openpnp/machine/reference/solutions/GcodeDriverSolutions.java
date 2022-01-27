@@ -259,7 +259,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-AXES", "0"));
                     firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "3"));
                     if (firmware == FirmwareType.SmoothiewareChmt) {
-                        // OK.
+                        // OK. Take PAXES == 5 if missing (legacy make)
+                        firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "5"));
                     }
                     else if (firmwarePrimaryAxesCount == firmwareAxesCount) {
                         // OK.

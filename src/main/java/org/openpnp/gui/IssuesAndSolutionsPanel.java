@@ -377,18 +377,20 @@ public class IssuesAndSolutionsPanel extends JPanel {
             }
         }
         JTabbedPane tabs = frame.getTabs();
-        int index = tabs.indexOfComponent(frame.getIssuesAndSolutionsTab());
-        if (index >= 0) {
-            if (maxSeverity.ordinal() > Solutions.Severity.Information.ordinal()) {
-                int indicatorUnicode = 0x2B24;
-                Color color = maxSeverity.color;
-                color = saturate(color);
-                tabs.setTitleAt(index, "<html>Issues &amp; Solutions <span style=\"color:#"
-                        +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
-                        +";\">&#"+(indicatorUnicode)+";</span></html>");
-            }
-            else {
-                tabs.setTitleAt(index, "Issues & Solutions");
+        if (tabs != null) {
+            int index = tabs.indexOfComponent(frame.getIssuesAndSolutionsTab());
+            if (index >= 0) {
+                if (maxSeverity.ordinal() > Solutions.Severity.Information.ordinal()) {
+                    int indicatorUnicode = 0x2B24;
+                    Color color = maxSeverity.color;
+                    color = saturate(color);
+                    tabs.setTitleAt(index, "<html>Issues &amp; Solutions <span style=\"color:#"
+                            +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
+                            +";\">&#"+(indicatorUnicode)+";</span></html>");
+                }
+                else {
+                    tabs.setTitleAt(index, "Issues & Solutions");
+                }
             }
         }
     }

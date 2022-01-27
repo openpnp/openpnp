@@ -565,7 +565,7 @@ public class SimulationModeMachine extends ReferenceMachine {
     public void fireMachineActuatorActivity(Actuator actuator) {
         super.fireMachineActuatorActivity(actuator);
         ActuatorHistory history = getActuatorHistory(actuator);
-        history.put(NanosecondTime.getRuntimeSeconds(), actuator.isActuated());
+        history.put(NanosecondTime.getRuntimeSeconds(), actuator.isActuated() != null && actuator.isActuated());
     }
 
     private static class ActuatorHistory  {
