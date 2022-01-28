@@ -257,13 +257,13 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 gcodeDriver.getFirmwareProperty("FIRMWARE_VERSION", "").contains("chmt-")?
                                         FirmwareType.SmoothiewareChmt : FirmwareType.Smoothieware;
                     firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-AXES", "0"));
-                    firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "3"));
                     if (firmware == FirmwareType.SmoothiewareChmt) {
-                        // OK. Take PAXES == 5 if missing (legacy make)
+                        // OK, CHMT STM32 Smoothieware board. Take PAXES == 5 if missing (legacy build).
                         firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "5"));
                     }
-                    else if (firmwarePrimaryAxesCount == firmwareAxesCount) {
-                        // OK.
+                    else if (gcodeDriver.getFirmwareProperty("X-SOURCE_CODE_URL", "").contains("best-for-pnp")) {
+                        // OK, regular Smoothieboard with pnp firmware.
+                        firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "3"));
                     }
                     else {
                         solutions.add(new Solutions.PlainIssue(
@@ -271,6 +271,15 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 "There is a better Smoothieware firmware available. "+gcodeDriver.getDetectedFirmware(), 
                                 "Please upgrade to the special PnP version. See info link.", 
                                 Severity.Error, 
+                                "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware"));
+                    }
+                    if (firmwarePrimaryAxesCount != null 
+                            && firmwarePrimaryAxesCount != firmwareAxesCount) {
+                        solutions.add(new Solutions.PlainIssue(
+                                gcodeDriver, 
+                                "Smoothieware firmware should be made with the PAXIS="+firmwareAxesCount+" option.", 
+                                "Download an up-to-date firmware built for OpenPnP, or if you build the firmware yourself, please use the `make AXIS="+firmwareAxesCount+" PAXIS="+firmwareAxesCount+"` command. See info link.", 
+                                Severity.Warning, 
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware"));
                     }
                 }
