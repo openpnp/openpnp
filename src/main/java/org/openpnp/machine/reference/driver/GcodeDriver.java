@@ -1058,7 +1058,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         Logger.debug("[{}] >> {}, {}", getCommunications().getConnectionName(), command, timeout);
         command = preProcessCommand(command);
-        if (command == "") {
+        if (command.isEmpty()) {
+            Logger.debug("{} empty command after pre process", getCommunications().getConnectionName());
             return;
         }
 
