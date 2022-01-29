@@ -1394,8 +1394,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         return false;
     }
 
-
-
     @Override
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
@@ -1526,6 +1524,23 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         this.reportedAxes = reportedAxes;
         firePropertyChange("reportedAxes", oldValue, reportedAxes);
         firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
+    }
+
+    public List<String> getReportedAxesLetters() {
+        List<String> reportedLetters = new ArrayList<>();
+        if (getReportedAxes() == null) {
+            return reportedLetters;
+        }
+        Pattern p = Pattern.compile("(?<letter>[A-Z]):-?\\d+.\\d+");
+        Matcher m = p.matcher(getReportedAxes());
+        while (m.find()) {
+            String letter = m.group("letter");
+            if (!reportedLetters.contains(letter) // No duplicates.
+                    && (!letter.equals("E") || reportedLetters.contains("A"))) { // Not E, if solo.
+                reportedLetters.add(letter);
+            }
+        }
+        return reportedLetters;
     }
 
     public String getConfiguredAxes() {
