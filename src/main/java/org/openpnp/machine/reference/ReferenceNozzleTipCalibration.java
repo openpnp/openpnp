@@ -1,6 +1,7 @@
 package org.openpnp.machine.reference;
 
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,7 +12,10 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.KeyPoint;
+import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
@@ -21,11 +25,13 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Point;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
+import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.pmw.tinylog.Logger;
@@ -510,6 +516,34 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     @Attribute(required = false)
     private RecalibrationTrigger recalibrationTrigger = RecalibrationTrigger.NozzleTipChangeInJob;
 
+    public enum BackgroundCalibrationMethod {
+        None, Brightness, BrightnessAndKeyColor
+    }
+
+    @Attribute(required = false)
+    private BackgroundCalibrationMethod backgroundCalibrationMethod = BackgroundCalibrationMethod.None;
+
+    @Element(required = false)
+    private Length minimumDetailSize = new Length(0.1, LengthUnit.Millimeters);
+
+    @Attribute(required = false)
+    private int backgroundMinHue; 
+
+    @Attribute(required = false)
+    private int backgroundMaxHue; 
+
+    @Attribute(required = false)
+    private int backgroundMinSaturation; 
+
+    @Attribute(required = false)
+    private int backgroundMaxSaturation; 
+
+    @Attribute(required = false)
+    private int backgroundMinValue; 
+
+    @Attribute(required = false)
+    private int backgroundMaxValue; 
+
     /**
      * TODO Left for backward compatibility. Unused. Can be removed after Feb 7, 2020.
      */
@@ -557,6 +591,23 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private Length calibrationZOffset = new Length(0.0, LengthUnit.Millimeters);
     @Element(required = false)
     private Length calibrationTipDiameter = new Length(0.0, LengthUnit.Millimeters);
+
+    @Attribute(required = false)
+    private double maxPartDiameterBackgroundFactor = 1.2;
+
+    /**
+     * Minimum brightness (value, range 0..255) at which to consider hue masking.
+     */
+    @Attribute(required = false)
+    private int minBackgroundMaskValue = 8;  
+
+    /**
+     * Maximum brightness (value, range 0..255) at which to consider hue masking.
+     */
+    @Attribute(required = false)
+    private int maxBackgroundMaskValue = 220;
+
+    private List<Mat> backgroundImages;
 
     public ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
         return this.runoutCompensationAlgorithm;
@@ -662,7 +713,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 }
 
                 // detect the nozzle tip
-                Location offset = findCircle(measureLocation);
+                Location offset = findCircle(nozzle, measureLocation, calibrateCamera);
                 if (offset != null) {
                     // for later usage in the algorithm, the measureAngle is stored to the offset location in millimeter unit 
                     offset = offset.derive(null, null, null, measureAngle);		
@@ -750,6 +801,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             // go to camera position (now offset-corrected). prevents the user from being irritated if it's not exactly centered
             nozzle.moveTo(camera.getLocation(nozzle).derive(null, null, measureBaseLocation.getZ(), angleStop));
 
+            // Finish the background calibration, if images were successfully collected.  
+            finishBackgroundCalibration(referenceCamera, nozzle);
+
             // after processing the nozzle returns to safe-z
             nozzle.moveToSafeZ();
             MovableUtils.fireTargetedUserAction(nozzle);
@@ -815,11 +869,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
     }
 
-    private Location findCircle(Location measureLocation) throws Exception {
+    private Location findCircle(Nozzle nozzle, Location measureLocation, boolean calibrateCamera) throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
-        try (CvPipeline pipeline = getPipeline(camera, measureLocation)) {
+        try (CvPipeline pipeline = getPipeline(camera, nozzle, measureLocation)) {
             
             pipeline.process();
+            if (!calibrateCamera) {
+                addBackgroundImage(camera, pipeline.getLastCapturedImage());
+            }
             List<Location> locations = new ArrayList<>();
 
             String stageName = VisionUtils.PIPELINE_RESULTS_NAME;
@@ -891,6 +948,136 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
     }
 
+    private void addBackgroundImage(Camera camera, BufferedImage bufferedImage) {
+        if (bufferedImage != null
+                && getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
+            Mat image = OpenCvUtils.toMat(bufferedImage);
+            int kernelSize = ((int)getMinimumDetailSize()
+                    .divide(camera.getUnitsPerPixel().getLengthX()))|1;
+            Imgproc.GaussianBlur(image, image, new Size(kernelSize, kernelSize), 0);
+            if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.BrightnessAndKeyColor) {
+                Imgproc.cvtColor(image, image, FluentCv.ColorCode.Bgr2HsvFull.getCode());
+                backgroundImages.add(image);
+            }
+            else {
+                Imgproc.cvtColor(image, image, FluentCv.ColorCode.Bgr2Gray.getCode());
+                backgroundImages.add(image);
+            }
+        }
+    }
+
+    protected void finishBackgroundCalibration(Camera camera, ReferenceNozzle nozzle) throws Exception {
+        try{
+            ReferenceNozzleTip nozzleTip = nozzle.getCalibrationNozzleTip();
+            if (nozzleTip != null 
+                    && backgroundImages.size() > 3) {
+                if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.BrightnessAndKeyColor) {
+                    int histogramValue[] = new int[256];
+                    int histogramHue[] = new int[256];
+                    int bestMasked = Integer.MAX_VALUE;
+                    int bestMinHue = 0;
+                    int bestMaxHue = 0;
+                    int bestMinSaturation = 0;
+                    int bestMaxSaturation = 0;
+                    int bestMaxValue = 0;
+                    int bestMinValue = 0;
+                    for (int minValue = minBackgroundMaskValue; 
+                            minValue < maxBackgroundMaskValue; 
+                            minValue += 8) {
+                        // Reset
+                        int histogramCount = 0;
+                        int maskedCount = 0;
+                        Arrays.fill(histogramValue, 0);
+                        Arrays.fill(histogramHue, 0);
+                        int minSaturation = 256;
+                        int maxSaturation = 0;
+                        int maxValue = 0;
+                        for (Mat image : backgroundImages) {
+                            int rows = image.rows();
+                            int cols = image.cols();
+                            byte data[] = new byte[image.channels()];
+                            int maskSq = (int)Math.pow(nozzleTip.getMaxPartDiameter()
+                                    .divide(camera.getUnitsPerPixel().getLengthX())/2
+                                    *maxPartDiameterBackgroundFactor, 2);
+                            for (int y = 0; y < rows; y++) {
+                                for (int x = 0; x < cols; x++) {
+                                    int dx = x - cols/2;
+                                    int dy = y - rows/2;
+                                    int rSq = dx*dx + dy*dy;
+                                    if (rSq < maskSq) {
+                                        maskedCount++;
+                                        image.get(y, x, data);
+                                        int hue = Byte.toUnsignedInt(data[0]);
+                                        int saturation = Byte.toUnsignedInt(data[1]);
+                                        int value = Byte.toUnsignedInt(data[2]);
+                                        if (value >= minValue) {
+                                            histogramHue[hue]++;
+                                            histogramValue[value]++;
+                                            histogramCount++;
+                                            minSaturation = Math.min(saturation, minSaturation);
+                                            maxSaturation = Math.max(saturation, maxSaturation);
+                                            maxValue = Math.max(value, maxValue);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (histogramCount <= 0) {
+                            // No color data above minValue.
+                            break;
+                        }
+                        // Find the largest gap in hue data (it warps around).
+                        int largestGap = 0;
+                        int minHue = 0;
+                        int maxHue = 0;
+                        for (int hue = 0; hue < 256; hue++) {
+                            int gap = 0;
+                            for (; histogramHue[(hue+gap)&0xFF] == 0; gap++) {}
+                            if (gap > largestGap) {
+                                largestGap = gap;
+                                maxHue = (hue - 1)&0xFF;
+                                minHue = (hue + gap)&0xFF;
+                            }
+                        }
+                        // Calculate the masked color space.
+                        int brightnessMasked = minValue*255*255;
+                        int hueMasked = 
+                                ((maxHue + 1 - minHue)&0xFF)
+                                *(maxValue + 1 - minValue)
+                                *(maxSaturation + 1 - minSaturation);
+                        int totalMasked = brightnessMasked + hueMasked;
+                        if (totalMasked < bestMasked) {
+                            bestMasked = totalMasked;
+                            bestMinValue = minValue;
+                            bestMinHue = minHue;
+                            bestMaxHue = maxHue;
+                            bestMinSaturation = minSaturation;
+                            bestMaxSaturation = maxSaturation;
+                            bestMaxValue = maxValue;
+                        }
+                    }
+                    // Set the result.
+                    setBackgroundMinHue(bestMinHue);
+                    setBackgroundMaxHue(bestMaxHue);
+                    setBackgroundMinSaturation(bestMinSaturation);
+                    setBackgroundMaxSaturation(bestMaxSaturation);
+                    setBackgroundMinValue(bestMinValue);
+                    setBackgroundMaxValue(bestMaxValue);
+                }
+                else if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.Brightness) {
+                    throw new Exception("Not yet implemented");
+                }
+            }
+        }
+        finally {
+            // Cleanup.
+            for (Mat image : backgroundImages) {
+                image.release();
+            }
+            backgroundImages = null;
+        }
+    }
+
     public static CvPipeline createDefaultPipeline() {
         try {
             String xml = IOUtils.toString(ReferenceNozzleTip.class
@@ -911,6 +1098,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         setRunoutCompensation(nozzle, null);
         // deprecated
         runoutCompensation = null;
+        // Start a new set of background images.
+        backgroundImages = new ArrayList<>();
     }
 
     public void resetAll() {
@@ -1055,7 +1244,84 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         this.failHoming = failHoming;
     }
 
-    public CvPipeline getPipeline(Camera camera, Location measureLocation) throws Exception {
+    public BackgroundCalibrationMethod getBackgroundCalibrationMethod() {
+        return backgroundCalibrationMethod;
+    }
+
+    public void setBackgroundCalibrationMethod(
+            BackgroundCalibrationMethod backgroundCalibrationMethod) {
+        this.backgroundCalibrationMethod = backgroundCalibrationMethod;
+    }
+
+    public Length getMinimumDetailSize() {
+        return minimumDetailSize;
+    }
+
+    public void setMinimumDetailSize(Length minimumDetailSize) {
+        this.minimumDetailSize = minimumDetailSize;
+    }
+
+    public int getBackgroundMinHue() {
+        return backgroundMinHue;
+    }
+
+    public void setBackgroundMinHue(int backgroundMinHue) {
+        Object oldValue = this.backgroundMinHue;
+        this.backgroundMinHue = backgroundMinHue;
+        firePropertyChange("backgroundMinHue", oldValue, backgroundMinHue);
+    }
+
+    public int getBackgroundMaxHue() {
+        return backgroundMaxHue;
+    }
+
+    public void setBackgroundMaxHue(int backgroundMaxHue) {
+        Object oldValue = this.backgroundMaxHue;
+        this.backgroundMaxHue = backgroundMaxHue;
+        firePropertyChange("backgroundMaxHue", oldValue, backgroundMaxHue);
+    }
+
+    public int getBackgroundMinSaturation() {
+        return backgroundMinSaturation;
+    }
+
+    public void setBackgroundMinSaturation(int backgroundMinSaturation) {
+        Object oldValue = this.backgroundMinSaturation;
+        this.backgroundMinSaturation = backgroundMinSaturation;
+        firePropertyChange("backgroundMinSaturation", oldValue, backgroundMinSaturation);
+    }
+
+    public int getBackgroundMaxSaturation() {
+        return backgroundMaxSaturation;
+    }
+
+    public void setBackgroundMaxSaturation(int backgroundMaxSaturation) {
+        Object oldValue = this.backgroundMaxSaturation;
+        this.backgroundMaxSaturation = backgroundMaxSaturation;
+        firePropertyChange("backgroundMaxSaturation", oldValue, backgroundMaxSaturation);
+    }
+
+    public int getBackgroundMinValue() {
+        return backgroundMinValue;
+    }
+
+    public void setBackgroundMinValue(int backgroundMinValue) {
+        Object oldValue = this.backgroundMinValue;
+        this.backgroundMinValue = backgroundMinValue;
+        firePropertyChange("backgroundMinValue", oldValue, backgroundMinValue);
+    }
+
+    public int getBackgroundMaxValue() {
+        return backgroundMaxValue;
+    }
+
+    public void setBackgroundMaxValue(int backgroundMaxValue) {
+        Object oldValue = this.backgroundMaxValue;
+        this.backgroundMaxValue = backgroundMaxValue;
+        firePropertyChange("backgroundMaxValue", oldValue, backgroundMaxValue);
+    }
+
+    public CvPipeline getPipeline(Camera camera, Nozzle nozzle, Location measureLocation) throws Exception {
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("nozzleTip.diameter", getCalibrationTipDiameter());
         // Set the search tolerance to be somewhat larger than the threshold.
