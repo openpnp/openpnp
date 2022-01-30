@@ -63,7 +63,6 @@ import org.simpleframework.xml.Serializer;
  */
 public class GcodeDriverSolutions implements Solutions.Subject {
     private final GcodeDriver gcodeDriver;
-
     public GcodeDriverSolutions(GcodeDriver gcodeDriver) {
         this.gcodeDriver = gcodeDriver;
     }
@@ -257,13 +256,13 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 gcodeDriver.getFirmwareProperty("FIRMWARE_VERSION", "").contains("chmt-")?
                                         FirmwareType.SmoothiewareChmt : FirmwareType.Smoothieware;
                     firmwareAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-AXES", "0"));
-                    firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "3"));
                     if (firmware == FirmwareType.SmoothiewareChmt) {
-                        // OK. Take PAXES == 5 if missing (legacy make)
+                        // OK, CHMT STM32 Smoothieware board. Take PAXES == 5 if missing (legacy build).
                         firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "5"));
                     }
-                    else if (firmwarePrimaryAxesCount == firmwareAxesCount) {
-                        // OK.
+                    else if (gcodeDriver.getFirmwareProperty("X-SOURCE_CODE_URL", "").contains("best-for-pnp")) {
+                        // OK, regular Smoothieboard with pnp firmware.
+                        firmwarePrimaryAxesCount = Integer.valueOf(gcodeDriver.getFirmwareProperty("X-PAXES", "3"));
                     }
                     else {
                         solutions.add(new Solutions.PlainIssue(
@@ -271,6 +270,15 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                 "There is a better Smoothieware firmware available. "+gcodeDriver.getDetectedFirmware(), 
                                 "Please upgrade to the special PnP version. See info link.", 
                                 Severity.Error, 
+                                "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware"));
+                    }
+                    if (firmwarePrimaryAxesCount != null 
+                            && firmwarePrimaryAxesCount != firmwareAxesCount) {
+                        solutions.add(new Solutions.PlainIssue(
+                                gcodeDriver, 
+                                "Smoothieware firmware should be built with the PAXIS="+firmwareAxesCount+" option.", 
+                                "Download up-to-date firmware optimized for OpenPnP, or if you build the firmware yourself, please use the `make AXIS="+firmwareAxesCount+" PAXIS="+firmwareAxesCount+"` command. See info link.", 
+                                Severity.Warning, 
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#smoothieware"));
                     }
                 }
@@ -655,8 +663,11 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         lettersOk = false;
                     }
                     else if (axis instanceof ReferenceControllerAxis) {
-                        if (firmwarePrimaryAxesCount != null && firmwarePrimaryAxesCount == firmwareAxesCount) {
-                            // Check rotation axes have the linear switch set.
+                        // Find the index of the axis.
+                        int index = gcodeDriver.getReportedAxesLetters().indexOf(axis.getLetter());
+                        if (firmwarePrimaryAxesCount != null 
+                                && firmwarePrimaryAxesCount > index) {
+                            // Check rotation axes handled as primary have the linear switch set.
                             if (axis.isRotationalOnController()) {
                                 final boolean oldInvertLinearRotational = ((ReferenceControllerAxis) axis).isInvertLinearRotational();
                                 solutions.add(new Solutions.Issue(
@@ -913,12 +924,11 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         try {
                             // We need to parse the report in standard Gcode axis order. This might not cover all the controllers, 
                             // but it's what we can do.
-                            final String[] cgodeAxisLetters = new String[] { "X", "Y", "Z", "U", "V", "W", "A", "B", "C", "D", "E" };
                             commandBuilt = "^.*";
                             int axisIndex = 0;
                             int lastAxisIndex = 26;
                             String pattern = "";
-                            for (String axisLetter: cgodeAxisLetters) {
+                            for (String axisLetter: gcodeDriver.getReportedAxesLetters()) {
                                 for (String variable : gcodeDriver.getAxisVariables(machine)) {
                                     if (variable.equals(axisLetter)) {
                                         if (lastAxisIndex < axisIndex-1) {

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PreRotateUsage;
 import org.openpnp.model.AbstractVisionSettings;
@@ -51,8 +52,9 @@ import org.openpnp.spi.base.AbstractNozzle;
  *
  */
 public class AxisSolutions implements Solutions.Subject {
+    public static final String[] VALID_AXIS_LETTERS = new String[] { "X", "Y", "Z", "U", "V", "W", "A", "B", "C", "D", "E" };
+
     private final ReferenceControllerAxis axis;
-    private final String[] validStandardAxisLetters = new String[] {"X", "Y", "Z", "A", "B", "C", "D", "U", "V", "W" };
     private Machine machine;
 
     public AxisSolutions(ReferenceControllerAxis axis) {
@@ -92,10 +94,10 @@ public class AxisSolutions implements Solutions.Subject {
                             "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version"));
                 }
             }
-            else if (axis.getLetter().length() != 1 || !Arrays.asList(validStandardAxisLetters).contains(axis.getLetter())) {
+            else if (!getValidAxisLetters().contains(axis.getLetter())) {
                 solutions.add(new AxisLetterIssue(
                         axis, 
-                        "Axis letter "+axis.getLetter()+" is not a G-code standard letter, one of "+String.join(" ", validStandardAxisLetters)+".", 
+                        "Axis letter "+axis.getLetter()+" is not a controller/G-code standard letter, one of "+String.join(" ", getValidAxisLetters())+".", 
                         "Please assign the correct controller axis letter (some contoller may support an extended range of letters, "
                                 + "in which case you can dismiss this warning).", 
                                 Severity.Warning,
@@ -303,6 +305,16 @@ public class AxisSolutions implements Solutions.Subject {
         }
     }
 
+    protected List<String> getValidAxisLetters() {
+        if (axis.getDriver() instanceof GcodeDriver)  { 
+            List<String> letters = ((GcodeDriver)axis.getDriver()).getReportedAxesLetters();
+            if (letters.size() > 0) {
+                return letters;
+            }
+        }
+        return Arrays.asList(AxisSolutions.VALID_AXIS_LETTERS);
+    }
+
     public class AxisLetterIssue extends Solutions.Issue {
         final String oldAxisLetter;
         String newAxisLetter;
@@ -354,7 +366,7 @@ public class AxisSolutions implements Solutions.Subject {
                         @Override
                         public String[] getSuggestions() {
                             ArrayList<String> list = new ArrayList<>();
-                            for (String axisLetter : validStandardAxisLetters) {
+                            for (String axisLetter : getValidAxisLetters()) {
                                 boolean taken = false;
                                 for (Axis otherAxis : machine.getAxes()) {
                                     if (otherAxis != axis && otherAxis instanceof AbstractControllerAxis) {

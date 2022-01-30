@@ -26,8 +26,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
-import org.openpnp.machine.reference.ReferenceHeadMountable;
-import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.driver.wizards.GcodeAsyncDriverSettings;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -314,6 +312,10 @@ public class GcodeAsyncDriver extends GcodeDriver {
 
         Logger.debug("{} commandQueue.offer({}, {})...", getCommunications().getConnectionName(), command, timeout);
         command = preProcessCommand(command);
+        if (command.isEmpty()) {
+            Logger.debug("{} empty command after pre process", getCommunications().getConnectionName());
+            return;
+        }
         CommandLine commandLine = new CommandLine(command, timeout);
         commandQueue.offer(commandLine, writerQueueTimeout, TimeUnit.MILLISECONDS);
     }
