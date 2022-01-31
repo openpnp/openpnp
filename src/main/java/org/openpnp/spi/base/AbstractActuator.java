@@ -303,10 +303,11 @@ public abstract class AbstractActuator extends AbstractHeadMountable implements 
     }
 
     @Override 
-    public boolean isActuated() { 
+    public Boolean isActuated() { 
         Object defaultOff = getDefaultOffValue();
         Object last = getLastActuationValue();
-        return defaultOff != null && last != null && !defaultOff.equals(last);
+        return (defaultOff != null && last != null) ? 
+                !defaultOff.equals(last) : null;
     }
 
     @Override

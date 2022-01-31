@@ -1,5 +1,6 @@
 package org.openpnp.machine.reference.vision;
 
+import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -460,7 +462,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     @Override
     public void setName(String name) {
-
     }
 
     @Override
@@ -607,7 +608,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
         @Deprecated
         public PartSettings() {
-
         }
 
         @Deprecated

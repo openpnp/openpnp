@@ -126,11 +126,11 @@ public interface Actuator
 
     /**
      * Returns the Boolean state of the actuator i.e. whether the last actuation was not equal to the default off value.
-     * Returns false when the actuator state is unknown, i.e. when it was never actuated. 
+     * Returns null when the actuator state is unknown, i.e. when it was never actuated. 
      * 
      * @return 
      */
-    public boolean isActuated();
+    public Boolean isActuated();
 
     /**
      * Read a value from the actuator. The value will be returned exactly as provided by the
