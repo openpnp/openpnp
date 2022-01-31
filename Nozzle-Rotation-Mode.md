@@ -1,6 +1,6 @@
 ## What is it?
 
-The first thing to realize, is that only the nozzle rotation between the moment it picks a part and the moment it places it, matters. The absolute angle of the nozzle at the time of the pick is irrelevant, only the _relative_ rotation _while it carries a part_ matters. 
+The first thing to realize, is that _only_ the nozzle rotation between the moment it picks a part and the moment it places it, matters. The absolute angle of the nozzle at the time of the pick _is irrelevant_, _only_ the _relative_ rotation _while it carries a part_ matters. 
 
 The **Rotation Mode** can now exploit these facts and optimize the way a nozzle rotates between the pick and place. This can serve the following purposes:
 
