@@ -400,6 +400,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(HttpActuator.class);
         l.add(ScriptActuator.class);
         l.add(ThermistorToLinearSensorActuator.class);
+        l.add(NeoDen4FeederActuator.class);
         return l;
     }
 
