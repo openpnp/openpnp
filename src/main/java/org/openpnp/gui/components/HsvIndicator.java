@@ -29,6 +29,8 @@ import javax.swing.JComponent;
 
 public class HsvIndicator extends JComponent {
 
+    private static final double EXCLUDED_RATIO = 0.33;
+
     public HsvIndicator() {
         super();
     }
@@ -56,6 +58,7 @@ public class HsvIndicator extends JComponent {
         int unit = diameter/5;
         double radius = diameter/2.0; 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        boolean monochrome = minSaturation == 0 && maxSaturation == 255;
         int [] data = new int[width*height];
         for (int y = 0; y < diameter; y++) {
             for (int x = 0; x < diameter; x++) {
@@ -68,32 +71,32 @@ public class HsvIndicator extends JComponent {
                     double alpha = Math.min(1.0, radius - r);
                     double dHue = r/64;
                     double dSat = radius/255;
-                    double included = Math.max(0, Math.min(1.0, Math.min(
-                            dHue*(minHue <= maxHue ? Math.min(hue - minHue, maxHue - hue) : Math.max(hue - minHue, maxHue - hue)),
-                            dSat*Math.min(saturation - minSaturation, maxSaturation - saturation))));
-                    alpha = alpha*(included*0.8 + 0.2);
-                    Color color = makeHsvColor((int)hue, (isEnabled() ? (int)saturation : 0), maxValue, (int) (255*alpha));
+                    double included = monochrome ? 1.0 : Math.max(0, Math.min(1.0, Math.min(
+                            dHue*(minHue <= maxHue ? Math.min(hue + 1 - minHue, maxHue + 1 - hue) : Math.max(hue + 1 - minHue, maxHue + 1 - hue)),
+                            dSat*Math.min(saturation + 1 - minSaturation, maxSaturation + 1 - saturation))));
+                    double includedAlpha = (included*(maxValue - minValue) + minValue)/255;
+                    Color color = makeHsvColor((int)hue, (isEnabled() ? (int)saturation : 0), (int) (255*includedAlpha), (int) (255*alpha));
                     data[y*width + x] = color.getRGB();
                 }
             }
         }
-        
+
         for (int y = 0; y < diameter; y++) {
             int value = 255 - 255*y/diameter; 
-            int hue = (minHue < maxHue ? (minHue + maxHue)/2 : ((maxHue - minHue)/2) & 0xFF);
+            int hue = (minHue <= maxHue ? (minHue + maxHue)/2 : ((255 + minHue + maxHue)/2) & 0xFF);
             double dVal = diameter/255.0;
             double included = Math.max(0, Math.min(1.0, 
                     dVal*(Math.min(value - minValue, maxValue - value))));
-            double alpha = included*0.8 + 0.2;
+            double alpha = included*(1.0 - EXCLUDED_RATIO) + EXCLUDED_RATIO;
             int x0 = diameter + unit;
             int x1 = Math.min(diameter + unit*2, width);
             for (int x = x0; x < x1; x++) {
                 double r = (double)(x - x0)/(x1 - x0);
-                int saturation = isEnabled() && included > 0 ? 
+                int saturation =  monochrome ? 0 : isEnabled() && included > 0 ? 
                         ((int) (r*(maxSaturation - minSaturation) + minSaturation)) : 0;
                 Color color = makeHsvColor(hue, 
                         saturation, 
-                                value, (int) (255*alpha));
+                        value, (int) (255*alpha));
                 data[y*width + x] = color.getRGB();
             }
         }
