@@ -162,27 +162,39 @@ public class HsvIndicator extends JComponent {
         double s = saturation/255.0;
         double v = value/255.0;
         double h = 360.0*hue/255;
-        double C = s*v;
-        double X = C*(1 - Math.abs(((h/60.0) % 2) - 1.0));
-        double m = v - C;
+        double c = s*v;
+        double x = c*(1 - Math.abs(((h/60.0) % 2) - 1.0));
+        double m = v - c;
         double r, g, b;
         if (h >= 0 && h < 60){
-            r = C; g = X; b = 0;
+            r = c; 
+            g = x; 
+            b = 0;
         }
         else if (h >= 60 && h < 120){
-            r = X; g = C; b = 0;
+            r = x; 
+            g = c; 
+            b = 0;
         }
         else if (h >= 120 && h < 180){
-            r = 0; g = C; b = X;
+            r = 0; 
+            g = c; 
+            b = x;
         }
         else if (h >= 180 && h < 240){
-            r = 0; g = X; b = C;
+            r = 0; 
+            g = x; 
+            b = c;
         }
         else if (h >= 240 && h < 300){
-            r = X; g = 0; b = C;
+            r = x; 
+            g = 0; 
+            b = c;
         }
         else{
-            r = C; g = 0; b = X;
+            r = c;
+            g = 0;
+            b = x;
         }
         int red = (int) ((r+m)*255);
         int green = (int) ((g+m)*255);
