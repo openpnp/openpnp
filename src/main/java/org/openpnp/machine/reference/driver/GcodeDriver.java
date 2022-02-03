@@ -1284,6 +1284,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 }
                 catch (IOException e) {
                     if (disconnectRequested) {
+                        Logger.trace("Read error while disconnecting (normal)");
                         return;
                     }
                     else {
