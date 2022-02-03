@@ -107,7 +107,7 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
             serialPort.setRTS();
         }
         serialPort.setComPortTimeouts(
-                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 500, 0);
+                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0);
     }
 
     public synchronized void disconnect() throws Exception {
