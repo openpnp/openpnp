@@ -991,14 +991,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         disconnectRequested = true;
         connected = false;
 
-        disconnectThreads();
-
         try {
             getCommunications().disconnect();
         }
         catch (Exception e) {
             Logger.error(e, "disconnect()");
         }
+
+        disconnectThreads();
 
         closeGcodeLogger();
     }
@@ -1284,7 +1284,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 }
                 catch (IOException e) {
                     if (disconnectRequested) {
-                        Logger.trace(e, "Read error while disconnecting");
+                        Logger.trace("Read error while disconnecting (normal)");
                         return;
                     }
                     else {
