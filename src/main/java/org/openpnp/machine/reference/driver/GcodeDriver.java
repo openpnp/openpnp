@@ -988,14 +988,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         disconnectRequested = true;
         connected = false;
 
-        disconnectThreads();
-
         try {
             getCommunications().disconnect();
         }
         catch (Exception e) {
             Logger.error(e, "disconnect()");
         }
+
+        disconnectThreads();
 
         closeGcodeLogger();
     }
