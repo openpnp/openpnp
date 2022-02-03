@@ -32,6 +32,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
@@ -410,8 +411,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
     private void editPipeline() throws Exception {
         CvPipeline pipeline = visionSettings.getCvPipeline();
-        pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
-        pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
+        Camera camera = VisionUtils.getBottomVisionCamera();
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        ReferenceBottomVision.preparePipeline(pipeline, camera, nozzle);
 
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);
         JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);

@@ -13,6 +13,8 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
+import org.openpnp.machine.reference.ReferenceNozzleTipCalibration.BackgroundCalibrationMethod;
 import org.openpnp.machine.reference.vision.wizards.BottomVisionSettingsConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
@@ -392,11 +394,34 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
     }
 
+    public static void preparePipeline(CvPipeline pipeline, Camera camera, Nozzle nozzle) {
+        pipeline.setProperty("camera", camera);
+        // Set the footprint.
+        if (nozzle.getPart() != null && nozzle.getPart().getPackage() != null) {
+            Footprint footprint = nozzle.getPart().getPackage().getFootprint();
+            pipeline.setProperty("footprint", footprint);
+        }
+        // Set the background removal properties.
+        if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) { 
+            ReferenceNozzleTip referenceNozzleTip = (ReferenceNozzleTip) nozzle.getNozzleTip();
+            pipeline.setProperty("MaskCircle.diameter", referenceNozzleTip.getMaxPartDiameter());
+            ReferenceNozzleTipCalibration calibration = referenceNozzleTip.getCalibration();
+            if (calibration != null 
+                    && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
+                pipeline.setProperty("BlurGaussian.kernelSize", calibration.getMinimumDetailSize());
+                pipeline.setProperty("MaskHsv.hueMin", calibration.getBackgroundMinHue());
+                pipeline.setProperty("MaskHsv.hueMax", calibration.getBackgroundMaxHue());
+                pipeline.setProperty("MaskHsv.saturationMin", calibration.getBackgroundMinSaturation());
+                pipeline.setProperty("MaskHsv.saturationMax", calibration.getBackgroundMaxSaturation());
+                pipeline.setProperty("MaskHsv.valueMin", calibration.getBackgroundMinValue());
+                pipeline.setProperty("MaskHsv.valueMax", calibration.getBackgroundMaxValue());
+            }
+        }
+    }
+
     private static RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
             Nozzle nozzle) throws Exception {
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("part", part);
-        pipeline.setProperty("nozzle", nozzle);
+        preparePipeline(pipeline, camera, nozzle);
         pipeline.process();
 
         Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);

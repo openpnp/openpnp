@@ -1,7 +1,10 @@
 package org.openpnp.machine.reference;
 
+import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,6 +18,7 @@ import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.AbstractModelObject;
@@ -548,6 +552,39 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     @Attribute(required = false)
     private String backgroundDiagnostics; 
 
+
+    /**
+     * Minimum brightness (value, range 0..255) at which to consider hue masking.
+     */
+    @Attribute(required = false)
+    private int minBackgroundMaskValue = 8;  
+
+    /**
+     * Maximum brightness (value, range 0..255) at which to consider hue masking.
+     */
+    @Attribute(required = false)
+    private int maxBackgroundMaskValue = 220;
+
+    /**
+     * A key color should always be quite vivid, the worst saturation is set here.
+     */
+    @Attribute(required = false)
+    private int backgroundWorstSaturation = 16;
+
+    /**
+     * A key color should be quite consistent, the worst hue span (max - min) is set here. 
+     */
+    @Attribute(required = false)
+    private int backgroundWorstHueSpan = 255/6; // The hue span should not be larger than 60°.
+
+    /**
+     * A background (minus the key color) should be quite dark. 
+     */
+    @Attribute(required = false)
+    private int backgroundWorstValue = 255/2; 
+
+    private List<Mat> backgroundImages;
+
     /**
      * TODO Left for backward compatibility. Unused. Can be removed after Feb 7, 2020.
      */
@@ -595,41 +632,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private Length calibrationZOffset = new Length(0.0, LengthUnit.Millimeters);
     @Element(required = false)
     private Length calibrationTipDiameter = new Length(0.0, LengthUnit.Millimeters);
-
-    @Attribute(required = false)
-    private double maxPartDiameterBackgroundFactor = 1.2;
-
-    /**
-     * Minimum brightness (value, range 0..255) at which to consider hue masking.
-     */
-    @Attribute(required = false)
-    private int minBackgroundMaskValue = 8;  
-
-    /**
-     * Maximum brightness (value, range 0..255) at which to consider hue masking.
-     */
-    @Attribute(required = false)
-    private int maxBackgroundMaskValue = 220;
-
-    /**
-     * A key color should always be quite vivid, the worst saturation is set here.
-     */
-    @Attribute(required = false)
-    private int backgroundWorstSaturation = 16;
-
-    /**
-     * A key color should be quite consistent, the worst hue span (max - min) is set here. 
-     */
-    @Attribute(required = false)
-    private int backgroundWorstHueSpan = 255/4; // The hue span should not be larger than one quadrant.
-
-    /**
-     * A background (minus the key color) should be quite dark. 
-     */
-    @Attribute(required = false)
-    private int backgroundWorstValue = 255/2; 
-
-    private List<Mat> backgroundImages;
 
     public ReferenceNozzleTipCalibration.RunoutCompensationAlgorithm getRunoutCompensationAlgorithm() {
         return this.runoutCompensationAlgorithm;
@@ -896,9 +898,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         try (CvPipeline pipeline = getPipeline(camera, nozzle, measureLocation)) {
             
             pipeline.process();
-            if (!calibrateCamera) {
-                addBackgroundImage(camera, pipeline.getLastCapturedImage());
-            }
             List<Location> locations = new ArrayList<>();
 
             String stageName = VisionUtils.PIPELINE_RESULTS_NAME;
@@ -962,6 +961,10 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 return null;
             }
 
+            if (!calibrateCamera) {
+                addBackgroundImage(camera, nozzle, pipeline.getLastCapturedImage(), locations.get(0));
+            }
+
             // finally return the location at index (0) which is either a) the only one or b) the one best matching the nozzle tip
             return locations.get(0);
         }
@@ -970,13 +973,32 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
     }
 
-    private void addBackgroundImage(Camera camera, BufferedImage bufferedImage) {
+    private void addBackgroundImage(Camera camera, Nozzle nozzle, BufferedImage bufferedImage, Location location) {
         if (bufferedImage != null
                 && getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
             Mat image = OpenCvUtils.toMat(bufferedImage);
+            // Blot out the nozzle tip.
+            Point center = VisionUtils.getLocationPixels(camera, location.add(camera.getLocation()));
+            org.opencv.core.Point center2 = new org.opencv.core.Point(center.x, center.y);
+            int radius = (int)Math.ceil(getCalibrationTipDiameter()
+                    .add(getMinimumDetailSize().multiply(2))
+                    .divide(camera.getUnitsPerPixel().getLengthX())
+                    *0.5);
+            Imgproc.circle(image, center2, 
+                    radius, 
+                    FluentCv.colorToScalar(new Color(0, 0, 0)),
+                    Imgproc.FILLED, 8, 0);
+            // Blur.
             int kernelSize = ((int)getMinimumDetailSize()
                     .divide(camera.getUnitsPerPixel().getLengthX()))|1;
             Imgproc.GaussianBlur(image, image, new Size(kernelSize, kernelSize), 0);
+            try {
+                File file = Configuration.get()
+                        .createResourceFile(getClass(), "background", ".jpg");
+                Imgcodecs.imwrite(file.getAbsolutePath(), image);
+            }
+            catch (IOException e) {
+            }
             if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.BrightnessAndKeyColor) {
                 Imgproc.cvtColor(image, image, FluentCv.ColorCode.Bgr2HsvFull.getCode());
                 backgroundImages.add(image);
@@ -995,8 +1017,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     && backgroundImages.size() > 3) {
                 double t0 = NanosecondTime.getRuntimeSeconds();
                 int maskSq = (int)Math.pow(nozzleTip.getMaxPartDiameter()
-                        .divide(camera.getUnitsPerPixel().getLengthX())/2
-                        *maxPartDiameterBackgroundFactor, 2);
+                        .divide(camera.getUnitsPerPixel().getLengthX())*0.5, 2);
                 ArrayList<byte[]> imageData = new ArrayList<>();
                 int rows = 0, cols = 0, ch = 0;
                 for (Mat image : backgroundImages) {
@@ -1006,9 +1027,6 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     byte data[] = new byte[ch*rows*cols];
                     image.get(0, 0, data);
                     imageData.add(data);
-//                    File file = Configuration.get()
-//                            .createResourceFile(getClass(), "background", ".jpg");
-//                    Imgcodecs.imwrite(file.getAbsolutePath(), image);
                 }
                 if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.BrightnessAndKeyColor) {
                     int histogramValue[] = new int[256];
@@ -1099,11 +1117,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     // Diagnostics.
                     StringBuilder report = new StringBuilder();
                     report.append("<html>");
-                    report.append("The monochrome background is ");
+                    report.append("Monochrome background elements are ");
                     if (bestMinValue > backgroundWorstValue) {
                         report.append("too bright.<br/>"
                                 + "Try to eliminate highlights and reflections.<br/>"
-                                + "Use a shade behind the nozzle.<br/>");
+                                + "Use a shade behind the nozzle.<br/>"
+                                + "Renew the blackening of dark parts of the nozzle tip.<br/>"
+                                + "Clean the nozzle tip. If it is shiny, make it dull.<br/>"
+                                + "Eliminate light sources that reflect on the nozzle tip.");
                     }
                     else if (bestMinValue > backgroundWorstValue/2) {
                         report.append("sufficiently dark. <br/>");
@@ -1115,37 +1136,39 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     else {
                         report.append("quite dark. Perfect!<br/>");
                     }
-                    report.append("<hr/>");
-                    report.append("The key color is ");
-                    int hueSpan = (bestMaxHue-bestMinHue)&0xFF;
-                    if (hueSpan > backgroundWorstHueSpan) {
-                        report.append("not consistent enough.<br/>"
-                                + (bestMinValue <= backgroundWorstValue ? 
-                                        "Check camera white balance (see the Wiki).<br/>" : "")
-                                + "Clean the nozzle tip. If it is shiny, make it dull.<br/>"
-                                + "Eliminate reflections and highlights on the nozzle tip.<br/>");
-                    }
-                    else if (hueSpan > backgroundWorstHueSpan/2) {
-                        report.append("sufficiently consistent.<br/>");
-                    }
-                    else {
-                        report.append("very consistent. Perfect!<br/>");
-                    }
-                    if (hueSpan <= backgroundWorstHueSpan) {
+                    if (bestMinValue <= backgroundWorstValue) {
                         report.append("<hr/>");
                         report.append("The key color is ");
-                        if (bestMinSaturation <= backgroundWorstSaturation) {
-                            report.append("not vivid enough.<br/>"
+                        int hueSpan = (bestMaxHue-bestMinHue)&0xFF;
+                        if (hueSpan > backgroundWorstHueSpan) {
+                            report.append("not consistent enough.<br/>"
                                     + (bestMinValue <= backgroundWorstValue ? 
                                             "Check camera white balance (see the Wiki).<br/>" : "")
                                     + "Clean the nozzle tip. If it is shiny, make it dull.<br/>"
-                                    + "Eliminate reflections and highlights on the nozzle tip.<br/>");
+                                    + "Eliminate light sources that reflect on the nozzle tip..<br/>");
                         }
-                        else if (bestMinSaturation < (255+backgroundWorstSaturation)/2) {
-                            report.append("sufficiently saturated.<br/>");
+                        else if (hueSpan > backgroundWorstHueSpan/2) {
+                            report.append("sufficiently consistent.<br/>");
                         }
                         else {
-                            report.append("very vivid. Perfect!<br/>");
+                            report.append("very consistent. Perfect!<br/>");
+                        }
+                        if (hueSpan <= backgroundWorstHueSpan) {
+                            report.append("<hr/>");
+                            report.append("The key color is ");
+                            if (bestMinSaturation <= backgroundWorstSaturation) {
+                                report.append("not vivid enough.<br/>"
+                                        + (bestMinValue <= backgroundWorstValue ? 
+                                                "Check camera white balance (see the Wiki).<br/>" : "")
+                                        + "Clean the nozzle tip. If it is shiny, make it dull.<br/>"
+                                        + "Eliminate light sources that reflect on the nozzle tip.<br/>");
+                            }
+                            else if (bestMinSaturation < (255+backgroundWorstSaturation)/2) {
+                                report.append("sufficiently saturated.<br/>");
+                            }
+                            else {
+                                report.append("very vivid. Perfect!<br/>");
+                            }
                         }
                     }
                     report.append("</html>");
@@ -1190,11 +1213,14 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                     // Diagnostics.
                     StringBuilder report = new StringBuilder();
                     report.append("<html>");
-                    report.append("The background is ");
+                    report.append("Background elements are ");
                     if (bestMaxValue > backgroundWorstValue) {
                         report.append("too bright.<br/>"
                                 + "Try to eliminate highlights and reflections.<br/>"
-                                + "Use a shade behind the nozzle.<br/>");
+                                + "Use a shade behind the nozzle.<br/>"
+                                + "Renew the blackening of dark parts of the nozzle tip.<br/>"
+                                + "Clean the nozzle tip. If it is shiny, make it dull.<br/>"
+                                + "Eliminate light sources that reflect on the nozzle tip.");
                     }
                     else if (bestMaxValue > backgroundWorstValue/2) {
                         report.append("sufficiently dark. <br/>");
