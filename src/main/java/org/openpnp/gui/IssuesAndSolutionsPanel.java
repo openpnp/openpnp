@@ -232,7 +232,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                             return;
                         }
 
-                        selectionActions();
+                        solutionChanged();
                     }
                 });
                 table.getColumnModel().getColumn(0).setPreferredWidth(150);
@@ -256,7 +256,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                         new java.util.TimerTask() {
                             @Override
                             public void run() {
-                                findIssuesAndSolutions(); 
+                                SwingUtilities.invokeLater(()->findIssuesAndSolutions()); 
                             }
                         },
                         5000
@@ -580,8 +580,8 @@ public class IssuesAndSolutionsPanel extends JPanel {
      * Rebuild the UI as needed, when solutions have changed state, perhaps asynchronously.
      */
     public void solutionChanged() {
+        dirty = true;
         SwingUtilities.invokeLater(() -> {
-            dirty = true;
             notifySolutionsChanged();
         });
     }
