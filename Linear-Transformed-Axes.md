@@ -40,7 +40,7 @@ Finally, an **Offset** is added.
 
 ## Use Case : Non-Squareness Compensation
 
-No mechanical machine is _ever_ perfectly square. Many times this is irrelevant for the application at hand. However, inexpensive (DIY) machines are prone to exhibit some noticeable non-squareness that may matter for Pick&Place accuracy. So instead of buying much more expensive hardware, let's use a piece of clever software and some brains to compensate. The following illustration shows the problem and steps to solve it: 
+Even after having tried to mechanically square a machine (see the [[Machine Squaring Guide]]) it is hardly _ever_ perfect. Other machines cannot be mechanically squared, due to technical or safety constraints. A mild non-squareness is irrelevant for the Pick&Place use case, as it is not very demanding, and OpenPnP has various built-in compensation capabilities. However, inexpensive (DIY) machines are prone to exhibit noticeable non-squareness that may matter practically. So instead of buying much more expensive hardware, let's use a piece of clever software and some brains to compensate. The following illustration shows the problem and steps to solve it: 
 
 ![Non-Squareness-Compensation](https://user-images.githubusercontent.com/9963310/96003787-e488e180-0e3a-11eb-8732-0c4d06ca2b33.png)
 
