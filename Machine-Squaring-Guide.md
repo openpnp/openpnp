@@ -5,6 +5,10 @@
 Unless you are the Übermechanic your machine's X and Y axes will not be perfectly squared, i.e. the angle between them will not be a perfect 90°. OpenPnP has a software solution to compensate for that, but before you start calibration the machine you have the (last) chance to try and eliminate (or minimize) the non-squareness mechanically. 
 
 ## Step-by-Step Guide
+___
+
+**Follow this guide at your own risk.** You will be handling the machine with powered motors. This _may_ be acceptable for a weak DIY machine like the Liteplacer, with the motion controls safely disabled, but it is not acceptable for strong machines. As you will be touching the machine, also make sure, [electrical safety is ensured](https://makr.zone/electrical-safety-issues/230/). 
+___
 
 This guide covers mechanical squaring of a machine that has a double belt driven Y axis with coupling drive shaft (e.g. the Liteplacer):
 ![Liteplacer Frame](https://www.liteplacer.com/wp-content/uploads/2014/02/Liteplacer_v1_2_frame.png)
