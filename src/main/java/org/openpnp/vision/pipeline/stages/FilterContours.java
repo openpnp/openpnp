@@ -5,8 +5,10 @@ import java.util.List;
 
 import org.opencv.core.MatOfPoint;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.model.Area;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Property;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -17,11 +19,17 @@ public class FilterContours extends CvStage {
     private String contoursStageName = null;
     
     @Attribute
+    @Property(description = "Minimum area of the contour, or -1 if no minimum limit is wanted.")
     private double minArea = -1;
     
     @Attribute
+    @Property(description = "Maximum area of the contour, or -1 if no maximum limit is wanted.")
     private double maxArea = -1;
-    
+
+    @Attribute(required = false)
+    @Property(description = "Name of the property through which OpenPnP controls this stage. Use \"FilterContours\" for standard control.")
+    private String propertyName = "FilterContours";
+
     public String getContoursStageName() {
         return contoursStageName;
     }
@@ -55,6 +63,10 @@ public class FilterContours extends CvStage {
         if (result.model == null) {
             return null;
         }
+        double minArea = getPossiblePipelinePropertyOverride(this.minArea, pipeline, propertyName+".minArea",
+                Double.class, Area.class);
+        double maxArea = getPossiblePipelinePropertyOverride(this.maxArea, pipeline, propertyName+".maxArea",
+                Double.class, Area.class);
         List<MatOfPoint> contours = result.getExpectedListModel(MatOfPoint.class, null);
         List<MatOfPoint> results = new ArrayList<MatOfPoint>();
         for (MatOfPoint contour : contours) {

@@ -63,7 +63,7 @@ public class MaskHsv extends CvStage {
     private boolean binaryMask = false;
 
     @Attribute(required = false)
-    @Property(description = "Name of the property controlled by OpenPnP. Use \"MaskHsv\" for bottom vision background removal.")
+    @Property(description = "Name of the property through which OpenPnP controls this stage. Use \"MaskHsv\" for standard control.")
     private String propertyName = "MaskHsv";
 
     public Boolean getAuto() {

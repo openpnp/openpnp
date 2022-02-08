@@ -414,10 +414,21 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         Camera camera = VisionUtils.getBottomVisionCamera();
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
         ReferenceBottomVision.preparePipeline(pipeline, camera, nozzle);
+        // Nominal position of the part over camera center
+        double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
+                .convertReverse(testAlignmentAngle.getText());
+        Location alignmentLocation = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), 
+                camera,
+                nozzle, angle);
 
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
-        dialog.setVisible(true);
+        UiUtils.confirmMoveToLocationAndAct(getTopLevelAncestor(), 
+                "move nozzle "+nozzle.getName()+" to the camera alignment location before editing the pipeline", 
+                nozzle, 
+                alignmentLocation, true, () -> {
+                    CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+                    JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
+                    dialog.setVisible(true);
+                });
     }
 
     private void testAlignment(boolean centerAfterTest) throws Exception {

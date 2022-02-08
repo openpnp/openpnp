@@ -3,8 +3,6 @@ package org.openpnp.machine.reference;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,7 +16,6 @@ import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.AbstractModelObject;
@@ -654,6 +651,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             throw new Exception("Nozzle to nozzle tip mismatch.");
         }
 
+        if (nozzle.getPart()!= null) {
+            throw new Exception("Cannot calibrate nozzle tip with part on nozzle "+nozzle.getName()+".");
+        }
         // Make sure to set start and end rotation to the limits.
         double [] rotationModeLimits = nozzle.getRotationModeLimits();
         angleStart = rotationModeLimits[0];
@@ -992,13 +992,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             int kernelSize = ((int)getMinimumDetailSize()
                     .divide(camera.getUnitsPerPixel().getLengthX()))|1;
             Imgproc.GaussianBlur(image, image, new Size(kernelSize, kernelSize), 0);
-            try {
-                File file = Configuration.get()
-                        .createResourceFile(getClass(), "background", ".jpg");
-                Imgcodecs.imwrite(file.getAbsolutePath(), image);
-            }
-            catch (IOException e) {
-            }
+//            try {
+//                File file = Configuration.get()
+//                        .createResourceFile(getClass(), "background", ".jpg");
+//                Imgcodecs.imwrite(file.getAbsolutePath(), image);
+//            }
+//            catch (IOException e) {
+//            }
             if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.BrightnessAndKeyColor) {
                 Imgproc.cvtColor(image, image, FluentCv.ColorCode.Bgr2HsvFull.getCode());
                 backgroundImages.add(image);

@@ -17,7 +17,7 @@ public class BlurGaussian extends CvStage {
     private int kernelSize = 3;
 
     @Attribute(required = false)
-    @Property(description = "Name of the property controlled by OpenPnP. Use \"BlurGaussian\" for bottom vision background removal blur.")
+    @Property(description = "Name of the property through which OpenPnP controls this stage. Use \"BlurGaussian\" for standard control.")
     private String propertyName = "BlurGaussian";
 
     public int getKernelSize() {

@@ -118,6 +118,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) throws Exception {
+        if (part == null) {
+            throw new Exception("There is no part on nozzle "+nozzle.getName()+".");
+        }
         if (part.isPartHeightUnknown()) {
             if (camera.getFocusProvider() != null
                     && nozzle.getNozzleTip() instanceof ReferenceNozzleTip) {
@@ -409,6 +412,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             if (calibration != null 
                     && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
                 pipeline.setProperty("BlurGaussian.kernelSize", calibration.getMinimumDetailSize());
+                pipeline.setProperty("FilterContours.minArea", calibration.getMinimumDetailSize()
+                        .multiply(calibration.getMinimumDetailSize()));
                 pipeline.setProperty("MaskHsv.hueMin", calibration.getBackgroundMinHue());
                 pipeline.setProperty("MaskHsv.hueMax", calibration.getBackgroundMaxHue());
                 pipeline.setProperty("MaskHsv.saturationMin", calibration.getBackgroundMinSaturation());

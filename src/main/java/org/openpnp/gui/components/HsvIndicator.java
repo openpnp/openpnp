@@ -75,7 +75,7 @@ public class HsvIndicator extends JComponent {
                             dHue*(minHue <= maxHue ? Math.min(hue + 1 - minHue, maxHue + 1 - hue) : Math.max(hue + 1 - minHue, maxHue + 1 - hue)),
                             dSat*Math.min(saturation + 1 - minSaturation, maxSaturation + 1 - saturation))));
                     double includedAlpha = (included*(maxValue - minValue) + minValue)/255;
-                    Color color = makeHsvColor((int)hue, (isEnabled() ? (int)saturation : 0), (int) (255*includedAlpha), (int) (255*alpha));
+                    Color color = getHsvColor((int)hue, (isEnabled() ? (int)saturation : 0), (int) (255*includedAlpha), (int) (255*alpha));
                     data[y*width + x] = color.getRGB();
                 }
             }
@@ -92,9 +92,9 @@ public class HsvIndicator extends JComponent {
             int x1 = Math.min(diameter + unit*2, width);
             for (int x = x0; x < x1; x++) {
                 double r = (double)(x - x0)/(x1 - x0);
-                int saturation =  monochrome ? 0 : isEnabled() && included > 0 ? 
+                int saturation =  monochrome ? 0 : isEnabled() && included > 0 ?
                         ((int) (r*(maxSaturation - minSaturation) + minSaturation)) : 0;
-                Color color = makeHsvColor(hue, 
+                Color color = getHsvColor(hue, 
                         saturation, 
                         value, (int) (255*alpha));
                 data[y*width + x] = color.getRGB();
@@ -158,47 +158,9 @@ public class HsvIndicator extends JComponent {
         repaint();
     }
 
-    private Color makeHsvColor(int hue, int saturation, int value, int alpha){
-        double s = saturation/255.0;
-        double v = value/255.0;
-        double h = 360.0*hue/255;
-        double c = s*v;
-        double x = c*(1 - Math.abs(((h/60.0) % 2) - 1.0));
-        double m = v - c;
-        double r, g, b;
-        if (h >= 0 && h < 60){
-            r = c; 
-            g = x; 
-            b = 0;
-        }
-        else if (h >= 60 && h < 120){
-            r = x; 
-            g = c; 
-            b = 0;
-        }
-        else if (h >= 120 && h < 180){
-            r = 0; 
-            g = c; 
-            b = x;
-        }
-        else if (h >= 180 && h < 240){
-            r = 0; 
-            g = x; 
-            b = c;
-        }
-        else if (h >= 240 && h < 300){
-            r = x; 
-            g = 0; 
-            b = c;
-        }
-        else{
-            r = c;
-            g = 0;
-            b = x;
-        }
-        int red = (int) ((r+m)*255);
-        int green = (int) ((g+m)*255);
-        int blue = (int) ((b+m)*255);
-        return new Color(red, green, blue, alpha);
+    private static Color getHsvColor(int hue, int saturation, int value, int alpha){
+        Color rgb = Color.getHSBColor(hue/255.0f, saturation/255.0f, value/255.0f);
+        // Add alpha.
+        return new Color(rgb.getRed(), rgb.getGreen(), rgb.getBlue(), alpha);
     }
 }
