@@ -53,6 +53,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
@@ -77,7 +78,6 @@ public class MachineControlsPanel extends JPanel {
     private final Configuration configuration;
     private final JobPanel jobPanel;
 
-    private static final double VIRTUAL_Z_MAX_UNSAFE_ROAMING_MM = 10;
     private static final String PREF_JOG_CONTROLS_EXPANDED =
             "MachineControlsPanel.jogControlsExpanded"; //$NON-NLS-1$
     private static final boolean PREF_JOG_CONTROLS_EXPANDED_DEF = true;
@@ -436,8 +436,8 @@ public class MachineControlsPanel extends JPanel {
                 else {
                     // Jogging the same selected tool. Apply auto-Safe Z.
                     if (hm.getAxisZ() instanceof ReferenceVirtualAxis) {
-                        double distance = lastUserActionLocation.getLinearDistanceTo(hm.getLocation());
-                        if (distance > VIRTUAL_Z_MAX_UNSAFE_ROAMING_MM) {
+                        Length distance = lastUserActionLocation.getLinearLengthTo(hm.getLocation());
+                        if (distance.compareTo(machine.getUnsafeZRoamingDistance()) > 0) {
                             // Distance is too large to retain virtual Z. Make it safe.
                             Logger.debug(hm.getName()+" exceeded roaming distance at non-safe Z, going to safe Z. "
                                     + "Last user action at "+lastUserActionLocation+" roamed to "+hm.getLocation()+" distance "+distance+"mm.");
