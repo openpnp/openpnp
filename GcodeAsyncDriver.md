@@ -73,7 +73,7 @@ to the controller:
 
 * **Simulated3rdOrderControl:**
 
-   Apply motion planning assuming a controller with constant acceleration motion control but simulating 3rd order control with time step interpolation. [Watch a video](https://youtu.be/cH0SF2D6FhM) to see the effect on oscicaltions/vibrations. 
+   Apply motion planning assuming a controller with constant acceleration motion control but simulating 3rd order control with time step interpolation. [Watch a video](https://youtu.be/cH0SF2D6FhM) to see the effect of **Simulated3rdOrderControl** on oscillations/vibrations. 
 
 * **Full3rdOrderControl:**
 
@@ -151,7 +151,7 @@ True 3rd order Motion Control (a.k.a. Jerk Control) would ramp up acceleration s
 
 ![Simulated Jerk Control](https://user-images.githubusercontent.com/9963310/96153482-0dc67200-0f0e-11eb-8d6e-fe7ac8a249eb.png)
 
-Note: the maximum number of steps is only used if the maximum acceleration limit is reached. Sometimes an extra step is added when the feed-rate limit is reached. 
+Note: the maximum number of steps is only used if the maximum acceleration limit is reached. Sometimes an extra step is added when the feed-rate limit is reached. [Watch a video](https://youtu.be/cH0SF2D6FhM) to see the effect of **Simulated3rdOrderControl** on oscillations/vibrations. 
 
 **Minimum Time Step** determines the smallest possible interpolation interval. Generated interpolation steps will be multiples of this. Be aware that setting a very small interval will increase computation time. 
 
