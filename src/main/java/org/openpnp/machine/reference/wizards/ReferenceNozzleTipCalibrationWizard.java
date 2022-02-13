@@ -24,6 +24,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.image.BufferedImage;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -34,10 +36,12 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.HsvIndicator;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -321,7 +325,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("max(50dlu;default)"),}));
+                RowSpec.decode("max(50dlu;default)"),
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblMethod = new JLabel("Method");
         panelBackground.add(lblMethod, "2, 2, right, default");
@@ -349,6 +355,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelBackground.add(lblBrightnessMin, "2, 6, right, default");
 
         backgroundMinValue = new JTextField();
+        backgroundMinValue.setEditable(false);
         panelBackground.add(backgroundMinValue, "4, 6, fill, default");
         backgroundMinValue.setColumns(10);
 
@@ -356,6 +363,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelBackground.add(lblBrightnessMax, "6, 6, right, default");
 
         backgroundMaxValue = new JTextField();
+        backgroundMaxValue.setEditable(false);
         panelBackground.add(backgroundMaxValue, "8, 6, fill, default");
         backgroundMaxValue.setColumns(10);
 
@@ -363,6 +371,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelBackground.add(lblHueMin, "2, 8, right, default");
 
         backgroundMinHue = new JTextField();
+        backgroundMinHue.setEditable(false);
         panelBackground.add(backgroundMinHue, "4, 8, fill, default");
         backgroundMinHue.setColumns(10);
 
@@ -370,6 +379,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelBackground.add(lblHueMax, "6, 8, right, default");
 
         backgroundMaxHue = new JTextField();
+        backgroundMaxHue.setEditable(false);
         panelBackground.add(backgroundMaxHue, "8, 8, fill, default");
         backgroundMaxHue.setColumns(10);
 
@@ -377,6 +387,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelBackground.add(lblSaturationMin, "2, 10, right, default");
 
         backgroundMinSaturation = new JTextField();
+        backgroundMinSaturation.setEditable(false);
         panelBackground.add(backgroundMinSaturation, "4, 10, fill, default");
         backgroundMinSaturation.setColumns(10);
 
@@ -384,14 +395,23 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelBackground.add(lblSaturationMax, "6, 10, right, default");
 
         backgroundMaxSaturation = new JTextField();
+        backgroundMaxSaturation.setEditable(false);
         panelBackground.add(backgroundMaxSaturation, "8, 10, fill, default");
         backgroundMaxSaturation.setColumns(10);
 
         hsvIndicator = new HsvIndicator();
-        panelBackground.add(hsvIndicator, "4, 12, 3, 1");
+        panelBackground.add(hsvIndicator, "4, 12, 3, 3");
 
         backgroundDiagnostics = new JLabel("No diagnostics yet.");
         panelBackground.add(backgroundDiagnostics, "8, 12, 3, 1");
+        
+        btnShowProblems = new JButton("Show Problems");
+        btnShowProblems.addActionListener(new ActionListener() {
+           public void actionPerformed(ActionEvent arg0) {
+                showBackgroundProblems(nozzleTip);
+            }
+        });
+        panelBackground.add(btnShowProblems, "8, 14");
 
         adaptDialog();
     }
@@ -423,7 +443,8 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                     || comp == lblBrightnessMin || comp == lblBrightnessMax
                     || comp == lblDetailSize
                     || comp == hsvIndicator
-                    || comp == backgroundDiagnostics) {
+                    || comp == backgroundDiagnostics
+                    || comp == btnShowProblems) {
                 comp.setEnabled(enabled && (method != BackgroundCalibrationMethod.None)); 
             }
             else {
@@ -483,6 +504,11 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private JPanel panel_2;
     private JLabel backgroundDiagnostics;
     private JLabel lblBlowup;
+    private JButton btnShowProblems;
+
+    private Timer timer;
+
+    private int imageCount;
 
     public static ReferenceNozzle getUiCalibrationNozzle(ReferenceNozzleTip nozzleTip) throws Exception {
         ReferenceNozzle refNozzle; 
@@ -657,5 +683,33 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         catch (Exception e1) {
             Logger.warn(e1);
         }
+    }
+
+    protected void showBackgroundProblems(ReferenceNozzleTip nozzleTip) {
+        UiUtils.messageBoxOnException(() -> {
+            List<BufferedImage> backgroundCalibrationImages = nozzleTip.getCalibration().getBackgroundCalibrationImages();
+            if (backgroundCalibrationImages == null) {
+                throw new Exception("No background calibration recorded for "+nozzleTip.getName());
+            }
+            if (backgroundCalibrationImages.size() == 0) {
+                throw new Exception("Background calibration for "+nozzleTip.getName()+" does not indicate any problems.");
+            }
+            btnShowProblems.setEnabled(false);
+            Camera camera = VisionUtils.getBottomVisionCamera();
+            camera.ensureCameraVisible();
+            CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
+            imageCount = 0;
+            cameraView.showFilteredImage(backgroundCalibrationImages.get(0), 2000);
+            timer = new Timer(1000, e ->  {
+                if (++imageCount >= backgroundCalibrationImages.size()) {
+                    timer.stop();
+                    timer = null;
+                    btnShowProblems.setEnabled(true);
+                    return;
+                }
+                cameraView.showFilteredImage(backgroundCalibrationImages.get(imageCount), 1100);
+            });
+            timer.start();
+        });
     }
 }
