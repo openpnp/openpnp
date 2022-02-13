@@ -73,7 +73,7 @@ to the controller:
 
 * **Simulated3rdOrderControl:**
 
-   Apply motion planning assuming a controller with constant acceleration motion control but simulating 3rd order control with time step interpolation.
+   Apply motion planning assuming a controller with constant acceleration motion control but simulating 3rd order control with time step interpolation. [Watch a video](https://youtu.be/cH0SF2D6FhM) to see the effect on oscicaltions/vibrations. 
 
 * **Full3rdOrderControl:**
 
