@@ -42,7 +42,7 @@ Refer to the Duet3D Wiki on how to upgrade:
 
 * [Duet 3 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Getting_Started_With_Duet_3#Section_Updating_Duet_3_main_board_firmware)
 
-### Example Duet3D config.g File
+[Duet3D config.g Example](https://github.com/openpnp/openpnp/wiki/Duet3D-Example)
 
 ## Smoothieware
 
