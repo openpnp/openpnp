@@ -42,8 +42,8 @@ Refer to the Duet3D Wiki on how to upgrade:
 
 * [Duet 3 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Getting_Started_With_Duet_3#Section_Updating_Duet_3_main_board_firmware)
 
-### Example config.g File
-The following is basic working config.g file for the 6HC. This config allows Openpnp to fully drive/calibrate a machine with the following;
+### Example Duet3D config.g File
+The following is basic working config.g file for the 6HC or Mini 5+. This config allows Openpnp to fully drive calibrate a machine with the following;
 * 5 Axis machine; linear XYZ, rotational AB
 * Single head, CAM driven dual nozzle with -180+180 rotation
 * XYZ Limit switches
@@ -170,6 +170,8 @@ M308 S1 P"temp1" Y"linear-analog" A"Pressure_2" F0 B0 C4095
 ;***End of config.g
 
 ```
+
+![Schematic_36VA_2022-02-14](https://user-images.githubusercontent.com/72060223/153997525-25ea2149-ba17-4b97-9615-c6fbbb237899.png)
 
 
 ## Smoothieware
