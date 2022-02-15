@@ -50,11 +50,12 @@ The following is basic working config.g file for the 6HC. This config allows Ope
 * x2 Analog inputs for nozzle pressure
 * x1 binary input for drag pin state detection
 * x7 Outputs PWM 20k to drive; x2 LED array, x2pumps, x2 pneumatic valves and x1 drag pin solenoid.
-
-`	if {network.interfaces[0].type = "ethernet"}`
-    		`M552 P192.168.1.14 S1`
-	`else`
-    		`M552 S1`
+``
+if {network.interfaces[0].type = "ethernet"}
+	M552 P192.168.1.14 S1
+else
+	M552 S1
+``
 
 
 ## Smoothieware
