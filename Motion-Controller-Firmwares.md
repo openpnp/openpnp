@@ -47,20 +47,20 @@ The following is basic working config.g file for the 6HC. This config allows Ope
 * -5 Axis machine; linear XYZ, rotational AB
 * -Single head, CAM driven dual nozzle with +180-180 rotation
 * -XYZ Limit switches
-* -x2 Analog inputs for neg/positive nozzle pressure
-* -x1 binary input for drap pin state detection
+* -x2 Analog inputs for nozzle pressure
+* -x1 binary input for drag pin state detection
 * -x7 Outputs PWM 20k to drive; x2 LED array, x2pumps, x2 pneumatic valves and x1 drag pin solenoid.
 
 ;***Display initial welcome message
 ;-M291: Display message and optionally wait for response \ https://duet3d.dozuki.com/Wiki/M291
 ;M291 P"Please go to <a href=""https://www.duet3d.com/StartHere"" target=""_blank"">this</a> page for further instructions on how to set it up." R"Welcome to your new Duet 3!" S1 T0
 
-;***Network Settings Ethernet Version only
-;-M552: Set IP address, enable/disable network interface \ https://duet3d.dozuki.com/Wiki/M552
-if {network.interfaces[0].type = "ethernet"}
-    M552 P192.168.1.14 S1
-else
-    M552 S1
+`;***Network Settings Ethernet Version only`
+`;-M552: Set IP address, enable/disable network interface \ https://duet3d.dozuki.com/Wiki/M552`
+`if {network.interfaces[0].type = "ethernet"}`
+    `M552 P192.168.1.14 S1`
+`else`
+    `M552 S1`
 
 ;***Serial Setup
 ;-M575: Set serial comms parameters \ https://duet3d.dozuki.com/Wiki/M575
