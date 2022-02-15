@@ -42,7 +42,7 @@ Refer to the Duet3D Wiki on how to upgrade:
 
 * [Duet 3 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Getting_Started_With_Duet_3#Section_Updating_Duet_3_main_board_firmware)
 
-# Example Config File
+### Example Config File
 The following is basic working config.g file for the 6HC. This config allows Openpnp to fully drive/calibrate a machine with the following;
 -5 Axis machine; linear XYZ, rotational AB
 -Single head, CAM driven dual nozzle with +180-180 rotation
