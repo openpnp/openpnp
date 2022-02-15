@@ -85,7 +85,7 @@ M569 P40.0 S1 R1 	; change enable polarity, active = disable drive
 M569 P41.0 S1 R1 	; change enable polarity, active = disable drive
 ;ZUV (ZAB) driven on board
 M569 P0 S1      	; Z 
-M569 P1 S0	; U
+M569 P1 S0	        ; U
 M569 P3 S0      	; V P2 skipped 2nd "Winding Ground Fault" reported on that driver
 ;-M584: Set drive mapping \ https://duet3d.dozuki.com/Wiki/M584
 M584 X40.0 R0	; X LIN R0 = LINEAR, R1 = ROTATION
@@ -98,13 +98,13 @@ M584 V3 R1	; B ROT
 ;-M350: Set microstepping mode \ https://duet3d.dozuki.com/Wiki/M350
 M350 Z16 U16 V16 I1					; Configure microstepping with interpolation
 ;-M92: Set axis steps per unit \ https://duet3d.dozuki.com/Wiki/M92
-M92 X40.00 Y40.00 Z8.8880 U8.8888 V8.8888			; Set steps per mm 50mm/rev 
+M92 X40.00 Y40.00 Z8.8880 U8.8888 V8.8888		; Set steps per mm 50mm/rev 
 ;-M566: Set allowable instantaneous speed change \ https://duet3d.dozuki.com/Wiki/M566
-M566 X900.00 Y900.00 Z900.00 U100.0 V100.0			; Set maximum instantaneous speed changes (mm/min)
+M566 X900.00 Y900.00 Z900.00 U100.0 V100.0		; Set maximum instantaneous speed changes (mm/min)
 ;-M203: Set maximum feedrate \ https://duet3d.dozuki.com/Wiki/M203
 M203 X126000.00 Y126000.00 Z24000.00 U24000.0 V24000.0	; Set maximum speeds (mm/min)
 ;-M201: Set max acceleration \ https://duet3d.dozuki.com/Wiki/M201
-M201 X50000.00 Y50000.00 Z500.00 U5000.0 V5000.0		; Set accelerations (mm/s^2)
+M201 X50000.00 Y50000.00 Z500.00 U5000.0 V5000.0	; Set accelerations (mm/s^2)
 ;- M906: Set motor currents \ https://duet3d.dozuki.com/Wiki/M906
 M906 Z600.00 U500.0 V500.0 I30				; Set motor currents (mA) and motor idle factor in per cent
 ;-M564: Limit axes \ https://duet3d.dozuki.com/Wiki/M564
@@ -120,7 +120,7 @@ M84 S30							; Set idle timeout
 ;-Ynnn Y axis limit
 ;-Znnn Z axis limit
 M208 X0 Y0 Z-50 U-180 V-180 S1	; Set axis minima
-M208 X450 Y500 Z50 U180 V180 S0	;Set axis maxima
+M208 X450 Y500 Z50 U180 V180 S0	; Set axis maxima
 
 ;***Endstops
 ;-M574: Set endstop configuration \ https://duet3d.dozuki.com/Wiki/M574
@@ -148,12 +148,12 @@ M574 Z1 S1 P"!io2.in"	;Z Opto
 ;-T Temperature sensor number, required only when creating a heater. See M308.
 ;-Lbbbor Laaa:bbb RPM values that are achieved at zero PWM and at maximum RPM. (optional and for spindles only - RRF 3.3beta2 and later)
 ;***Inputs
-M950 J0 C"io3.in"		;DragPin Sensor
+M950 J0 C"io3.in"	;Drag Pin Sensor
 ;***Outputs
 M950 P0 C"out0" Q20000	;LED UP Actuator
 M950 P1 C"out1" Q20000	;Pump (-) Actuator
 M950 P2 C"out2" Q20000	;Pump (+) Actuator
-M950 P3 C"out3" Q20000	;Dragpin Actuator
+M950 P3 C"out3" Q20000	;Drag pin Actuator
 M950 P4 C"out4" Q20000	;LED DN Actuator
 M950 P5 C"out5" Q20000	;Valve 1 Actuator
 M950 P6 C"out6" Q20000	;Valve 2 Actuator
@@ -166,6 +166,7 @@ M950 P6 C"out6" Q20000	;Valve 2 Actuator
 ;-A"name" Sensor name (optional), displayed in the web interface
 M308 S0 P"temp0" Y"linear-analog" A"Pressure_1" F0 B0 C4095
 M308 S1 P"temp1" Y"linear-analog" A"Pressure_2" F0 B0 C4095
+
 ;***End of config.g
 
 ```
