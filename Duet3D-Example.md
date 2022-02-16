@@ -148,3 +148,7 @@ Now test. Open the dialog box for declared actuator in Openpnp and click the rea
 
 ![image](https://user-images.githubusercontent.com/72060223/154172964-a90d0331-6a11-4a21-8440-f1e6f7d668cd.png)
 
+### Write Outputs. As above choose an actuator and set the boolean and or the double value GCode commands. In this instance P5 is the vacuum valve for nozzle 1 and is set as seen here...
+![image](https://user-images.githubusercontent.com/72060223/154173604-4f9ddcef-7404-47bc-be7a-b6dbc605ff85.png)
+
+
