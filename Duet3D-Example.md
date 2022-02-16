@@ -128,3 +128,9 @@ M308 S1 P"temp1" Y"linear-analog" A"Pressure_2" F0 B0 C4095
 ```
 
 ![Schematic_36VA_2022-02-14](https://user-images.githubusercontent.com/72060223/153997525-25ea2149-ba17-4b97-9615-c6fbbb237899.png)
+
+### Example Openpnp GCode Commands
+Read Sensor Values. For the config above, S0 refers to Analog Sensor 0 which reads the pressure of Nozzle 1. Within Openpnp > Drivers > Gcode Driver > Gcode locate/select the 'Actuator' from the dropdown box. Once the actuator is selected move to the 'Setting' dropdown box and select 'ACTUATOR_READ_COMMAND'. Now enter the GCode command to read the value...
+```
+M308 S0
+```
