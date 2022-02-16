@@ -149,7 +149,7 @@ Now test. Open the dialog box for declared actuator in Openpnp and click the rea
 ![image](https://user-images.githubusercontent.com/72060223/154172964-a90d0331-6a11-4a21-8440-f1e6f7d668cd.png)
 
 ### Write Outputs. 
-As above choose an actuator and set the boolean and or the double value GCode commands. In this instance P5 is the vacuum valve for nozzle 1 and is set as seen here...
+As above choose an actuator and set the boolean and or the double value GCode commands. In this instance P5 is the vacuum valve for nozzle 1 and is set/reset M42 https://duet3d.dozuki.com/Wiki/M42 as seen here...
 
 ![image](https://user-images.githubusercontent.com/72060223/154173678-ed90293f-b960-43b1-9103-7b7b8f4c3296.png)
 
