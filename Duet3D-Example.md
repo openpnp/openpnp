@@ -142,5 +142,4 @@ Now set the read REGEX
 ```
 .*reading (?<Value>-?\d+\.\d+).*
 ```
-![image](https://user-images.githubusercontent.com/72060223/154172561-2bf5cded-b891-4bc6-b166-6e1a43685dc2.png)
-
+![image](https://user-images.githubusercontent.com/72060223/154172656-d00dd468-dac2-4de6-84a5-99573637f819.png)
