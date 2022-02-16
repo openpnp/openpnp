@@ -1,4 +1,4 @@
-### Example Duet3D config.g File
+## Example Duet3D config.g File
 The following is basic working config.g file for the 6HC or Mini 5+. This config allows Openpnp to fully drive calibrate a machine with the following;
 * 5 Axis machine; linear XYZ, rotational AB
 * Single head, CAM driven dual nozzle with -180+180 rotation
@@ -129,9 +129,12 @@ M308 S1 P"temp1" Y"linear-analog" A"Pressure_2" F0 B0 C4095
 
 ![Schematic_36VA_2022-02-14](https://user-images.githubusercontent.com/72060223/153997525-25ea2149-ba17-4b97-9615-c6fbbb237899.png)
 
-### Example Duet/Openpnp GCode Commands
+## Example Duet/Openpnp GCode Commands
 
-Read Sensor Values. For the config above, S0 refers to Analog Sensor 0 which reads the pressure of Nozzle 1. Within Openpnp > Drivers > Gcode Driver > Gcode locate/select the 'Actuator' from the dropdown box. Once the actuator is selected move to the 'Setting' dropdown box and select 'ACTUATOR_READ_COMMAND'. Now enter the GCode command to read the value...
+### Read Sensor Values. 
+For the config above, S0 refers to Analog Sensor 0 which reads the pressure of Nozzle 1. Within Openpnp > Drivers > Gcode Driver > Gcode locate/select the 'Actuator' from the dropdown box. Once the actuator is selected move to the 'Setting' dropdown box and select 'ACTUATOR_READ_COMMAND'. Now enter the GCode command to read the value...
+![image](https://user-images.githubusercontent.com/72060223/154172184-a4327c65-c6fb-4850-b568-6393efed1930.png)
+
 ```
 M308 S0
 ```
