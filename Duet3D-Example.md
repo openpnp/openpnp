@@ -145,5 +145,6 @@ Now set the read REGEX
 ![image](https://user-images.githubusercontent.com/72060223/154172656-d00dd468-dac2-4de6-84a5-99573637f819.png)
 
 Now test. Open the dialog box for declared actuator in Openpnp and click the read button. You should find a reasonable value within the texbox as show here.
+
 ![image](https://user-images.githubusercontent.com/72060223/154172964-a90d0331-6a11-4a21-8440-f1e6f7d668cd.png)
 
