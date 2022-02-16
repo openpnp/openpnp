@@ -132,7 +132,7 @@ M308 S1 P"temp1" Y"linear-analog" A"Pressure_2" F0 B0 C4095
 ## Example Duet/Openpnp GCode Commands
 
 ### Read Sensor Values. 
-For the config above, S0 refers to Analog Sensor 0 which reads the pressure of Nozzle 1. Within Openpnp > Drivers > Gcode Driver > Gcode locate/select the 'Actuator' from the dropdown box. Once the actuator is selected move to the 'Setting' dropdown box and select 'ACTUATOR_READ_COMMAND'. Now enter the GCode command to read the value...
+For the config above, S0 refers to Analog Sensor 0 which reads the pressure of Nozzle 1. Within Openpnp > Drivers > Gcode Driver > Gcode locate/select the 'Actuator' from the dropdown box. Once the actuator is selected move to the 'Setting' dropdown box and select 'ACTUATOR_READ_COMMAND'. Now enter the GCode command M308 https://duet3d.dozuki.com/Wiki/M308 to read the value...
 ```
 M308 S0
 ```
@@ -149,7 +149,7 @@ Now test. Open the dialog box for declared actuator in Openpnp and click the rea
 ![image](https://user-images.githubusercontent.com/72060223/154172964-a90d0331-6a11-4a21-8440-f1e6f7d668cd.png)
 
 ### Write Outputs. 
-As above choose an actuator and set the boolean and or the double value GCode commands. In this instance P5 is the vacuum valve for nozzle 1 and is set/reset M42 https://duet3d.dozuki.com/Wiki/M42 as seen here...
+As above choose an actuator and set the boolean and or the double value GCode commands. In this instance P5 is the vacuum valve for nozzle 1 and is set/reset or PWM value via M42 https://duet3d.dozuki.com/Wiki/M42 as seen here...
 
 ![image](https://user-images.githubusercontent.com/72060223/154173678-ed90293f-b960-43b1-9103-7b7b8f4c3296.png)
 
