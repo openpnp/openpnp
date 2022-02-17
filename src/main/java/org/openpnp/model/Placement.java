@@ -33,7 +33,7 @@ import org.simpleframework.xml.core.Persist;
  * 
  * @author jason
  */
-public class Placement extends AbstractModelObject implements Identifiable {
+public class Placement extends AbstractLocatable implements Identifiable {
     public enum Type {
         Placement, 
         Fiducial,
@@ -59,8 +59,10 @@ public class Placement extends AbstractModelObject implements Identifiable {
 
     @Attribute
     private String id;
-    @Element
-    private Location location;
+    
+//    @Element
+//    private Location location;
+    
     @Attribute
     private Side side = Side.Top;
 
@@ -87,9 +89,9 @@ public class Placement extends AbstractModelObject implements Identifiable {
     }
 
     public Placement(String id) {
+        super(new Location(LengthUnit.Millimeters));
         this.id = id;
         this.type = Type.Placement;
-        setLocation(new Location(LengthUnit.Millimeters));
     }
 
     @SuppressWarnings("unused")
@@ -128,15 +130,15 @@ public class Placement extends AbstractModelObject implements Identifiable {
         return id;
     }
 
-    public Location getLocation() {
-        return location;
-    }
-
-    public void setLocation(Location location) {
-        Location oldValue = this.location;
-        this.location = location;
-        firePropertyChange("location", oldValue, location);
-    }
+//    public Location getLocation() {
+//        return location;
+//    }
+//
+//    public void setLocation(Location location) {
+//        Location oldValue = this.location;
+//        this.location = location;
+//        firePropertyChange("location", oldValue, location);
+//    }
 
     public Side getSide() {
         return side;

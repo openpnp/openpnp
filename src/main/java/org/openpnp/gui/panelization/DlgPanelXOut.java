@@ -45,11 +45,11 @@ public class DlgPanelXOut extends JDialog {
         getRootPane().add(headerPanel);
 
         // Panel with Checkboxes
-        int cols = jobPanel.getJob().getPanels().get(0).getColumns();
-        int rows = jobPanel.getJob().getPanels().get(0).getRows();
+//        int cols = jobPanel.getJob().getPanels().get(0).getColumns();
+//        int rows = jobPanel.getJob().getPanels().get(0).getRows();
         checkBoxPanel = new JPanel();
         checkBoxPanel.setBorder(new EmptyBorder(0, 30, 0, 0));
-        checkBoxPanel.setLayout(new GridLayout(rows, cols));
+//        checkBoxPanel.setLayout(new GridLayout(rows, cols));
         getRootPane().add(checkBoxPanel);
 
         // Checkboxes will be added to the grid as columns from upper left
@@ -59,14 +59,14 @@ public class DlgPanelXOut extends JDialog {
         // sort this out, we store the linear array offset with each
         // checkbox so that we don't
         // have to deal with this mapping outside of the few lines below.
-        for (int i = 0; i < rows * cols; i++) {
-            int x = i % cols;
-            int y = i / cols;
-            String lbl = String.format("%d,%d", x + 1, rows - y);
-            JCheckBox cb = new JCheckBox(lbl);
-            cb.putClientProperty("index", (rows - y - 1) * cols + x);
-            checkBoxPanel.add(cb);
-        }
+//        for (int i = 0; i < rows * cols; i++) {
+//            int x = i % cols;
+//            int y = i / cols;
+//            String lbl = String.format("%d,%d", x + 1, rows - y);
+//            JCheckBox cb = new JCheckBox(lbl);
+//            cb.putClientProperty("index", (rows - y - 1) * cols + x);
+//            checkBoxPanel.add(cb);
+//        }
 
         // Footer
         JPanel footerPanel = new JPanel();

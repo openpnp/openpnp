@@ -39,7 +39,7 @@ import org.simpleframework.xml.core.Commit;
  * to specify pick and place operations.
  */
 @Root(name = "openpnp-board")
-public class Board extends AbstractModelObject implements PropertyChangeListener {
+public class Board extends FiducialLocatable implements PropertyChangeListener {
     public enum Side {
         Bottom, Top
     }
@@ -47,17 +47,17 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
     @Version(revision=1.1)
     private double version;    
 
-    @Attribute
-    private String name;
+//    @Attribute
+//    private String name;
 
-    @Element(required = false)
-    private Location dimensions = new Location(LengthUnit.Millimeters);
+//    @Element(required = false)
+//    private Location dimensions = new Location(LengthUnit.Millimeters);
 
     @ElementList(required = false)
     private ArrayList<Fiducial> fiducials = new ArrayList<>();
 
-    @ElementList
-    private ArrayList<Placement> placements = new ArrayList<>();
+//    @ElementList
+//    private ArrayList<Placement> placements = new ArrayList<>();
 
     @ElementList(required = false)
     private ArrayList<BoardPad> solderPastePads = new ArrayList<>();
@@ -89,15 +89,15 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
         return Collections.unmodifiableList(fiducials);
     }
 
-    public Location getDimensions() {
-        return dimensions;
-    }
-
-    public void setDimensions(Location location) {
-        Location oldValue = this.dimensions;
-        this.dimensions = location;
-        firePropertyChange("dimensions", oldValue, location);
-    }
+//    public Location getDimensions() {
+//        return dimensions;
+//    }
+//
+//    public void setDimensions(Location location) {
+//        Location oldValue = this.dimensions;
+//        this.dimensions = location;
+//        firePropertyChange("dimensions", oldValue, location);
+//    }
 
     public void addFiducial(Fiducial fiducial) {
         ArrayList<Fiducial> oldValue = fiducials;
@@ -113,29 +113,29 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
         firePropertyChange("fiducials", oldValue, fiducials);
     }
 
-    public List<Placement> getPlacements() {
-        return Collections.unmodifiableList(placements);
-    }
-
-    public void addPlacement(Placement placement) {
-        Object oldValue = placements;
-        placements = new ArrayList<>(placements);
-        placements.add(placement);
-        firePropertyChange("placements", oldValue, placements);
-        if (placement != null) {
-            placement.addPropertyChangeListener(this);
-        }
-    }
-
-    public void removePlacement(Placement placement) {
-        Object oldValue = placements;
-        placements = new ArrayList<>(placements);
-        placements.remove(placement);
-        firePropertyChange("placements", oldValue, placements);
-        if (placement != null) {
-            placement.removePropertyChangeListener(this);
-        }
-    }
+//    public List<Placement> getPlacements() {
+//        return Collections.unmodifiableList(placements);
+//    }
+//
+//    public void addPlacement(Placement placement) {
+//        Object oldValue = placements;
+//        placements = new ArrayList<>(placements);
+//        placements.add(placement);
+//        firePropertyChange("placements", oldValue, placements);
+//        if (placement != null) {
+//            placement.addPropertyChangeListener(this);
+//        }
+//    }
+//
+//    public void removePlacement(Placement placement) {
+//        Object oldValue = placements;
+//        placements = new ArrayList<>(placements);
+//        placements.remove(placement);
+//        firePropertyChange("placements", oldValue, placements);
+//        if (placement != null) {
+//            placement.removePropertyChangeListener(this);
+//        }
+//    }
 
     public List<BoardPad> getSolderPastePads() {
         return Collections.unmodifiableList(solderPastePads);
@@ -162,15 +162,15 @@ public class Board extends AbstractModelObject implements PropertyChangeListener
     }
 
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        Object oldValue = this.name;
-        this.name = name;
-        firePropertyChange("name", oldValue, name);
-    }
+//    public String getName() {
+//        return name;
+//    }
+//
+//    public void setName(String name) {
+//        Object oldValue = this.name;
+//        this.name = name;
+//        firePropertyChange("name", oldValue, name);
+//    }
 
     public File getFile() {
         return file;

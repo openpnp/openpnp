@@ -27,15 +27,21 @@ import java.util.Collections;
 import java.util.List;
 
 import org.openpnp.util.IdentifiableList;
+import org.openpnp.util.ResourceUtils;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 /**
  * A Job specifies a list of one or more BoardLocations.
  */
 @Root(name = "openpnp-job")
 public class Job extends AbstractModelObject implements PropertyChangeListener {
+    @ElementList(required = false)
+    protected IdentifiableList<PanelLocation> panelLocations = new IdentifiableList<>();
+
+    @Deprecated
     @ElementList(required = false)
     protected IdentifiableList<Panel> panels = new IdentifiableList<>();
 
@@ -55,8 +61,28 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         for (BoardLocation boardLocation : boardLocations) {
             boardLocation.addPropertyChangeListener(this);
         }
+        for (PanelLocation panelLocation : panelLocations) {
+            panelLocation.addPropertyChangeListener(this);
+        }
+        
+        //Convert deprecated list of Panels to list of PanelLocations
+        if (panels != null && !panels.isEmpty()) {
+            Panel panel = panels.get(0);
+//            String boardFileName = boardLocations.get(0).getBoardFile();
+//            String panelFileName = boardFileName.substring(0, boardFileName.indexOf(".board.xml")) + ".panel.xml";
+            PanelLocation panelLocation = new PanelLocation(panel);
+//            panelLocation.setPanelFile(panelFileName);
+            panelLocation.setParent(null);
+            panelLocation.setLocation(boardLocations.get(0).getLocation());
+            panelLocation.setId(panel.getId());
+            ((Panel) panelLocation.getPanel()).getChildren().addAll(boardLocations);
+            boardLocations.clear();
+            panelLocation.addPropertyChangeListener(this);
+            panelLocations.add(panelLocation);
+            panels = null;
+        }
     }
-
+    
     public List<BoardLocation> getBoardLocations() {
         return Collections.unmodifiableList(boardLocations);
     }
@@ -105,16 +131,25 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     // panels. This function is intended to let the rest of OpenPNP know if the
     // autopanelize function is being used
     public boolean isUsingPanel() {
-        if (panels == null) {
+        if (panelLocations == null) {
             return false;
         }
 
-        if ((panels.size() >= 1)
-                && ((panels.get(0).getRows() > 1) || (panels.get(0).getColumns() > 1))) {
+        if (panelLocations.size() >= 1) {
             return true;
         }
 
         return false;
+    }
+
+    public IdentifiableList<PanelLocation> getPanelLocations() {
+        return panelLocations;
+    }
+
+    public void setPanelLocations(IdentifiableList<PanelLocation> panelLocations) {
+        Object oldValue = this.panelLocations;
+        this.panelLocations = panelLocations;
+        firePropertyChange("panelLocations", oldValue, panelLocations);
     }
 
     public File getFile() {

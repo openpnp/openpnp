@@ -19,6 +19,7 @@
 
 package org.openpnp.model;
 
+import java.awt.geom.AffineTransform;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -46,8 +47,10 @@ import org.openpnp.gui.components.ThemeInfo;
 import org.openpnp.gui.components.ThemeSettingsPanel;
 import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
+import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.ResourceUtils;
+import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -100,6 +103,7 @@ public class Configuration extends AbstractModelObject {
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
     private LinkedHashMap<String, AbstractVisionSettings> visionSettings = new LinkedHashMap<>();
     private Machine machine;
+    private LinkedHashMap<File, Panel> panels = new LinkedHashMap<>();
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
     private boolean loaded;
     private Set<ConfigurationListener> listeners = Collections.synchronizedSet(new HashSet<>());
@@ -594,6 +598,23 @@ public class Configuration extends AbstractModelObject {
         return machine;
     }
 
+    public Panel getPanel(File file) throws Exception {
+        if (!file.exists()) {
+            Panel panel = new Panel(file);
+            panel.setName(file.getName());
+            Serializer serializer = createSerializer();
+            serializer.write(panel, file);
+        }
+        file = file.getCanonicalFile();
+        if (panels.containsKey(file)) {
+            return panels.get(file);
+        }
+        Panel panel = loadPanel(file);
+        panels.put(file, panel);
+        firePropertyChange("panels", null, panels);
+        return panel;
+    }
+    
     public Board getBoard(File file) throws Exception {
         if (!file.exists()) {
             Board board = new Board(file);
@@ -683,6 +704,8 @@ public class Configuration extends AbstractModelObject {
         Job job = serializer.read(Job.class, file);
         job.setFile(file);
 
+        resolvePanels(job, job.panelLocations, new AffineTransform());
+        
         // Once the Job is loaded we need to resolve any Boards that it
         // references.
         for (BoardLocation boardLocation : job.getBoardLocations()) {
@@ -708,12 +731,90 @@ public class Configuration extends AbstractModelObject {
         return job;
     }
 
+    private void resolvePanels(Job job, List<PanelLocation> panelLocations, AffineTransform parentToRootTransfom) throws Exception {
+        if (panelLocations == null || panelLocations.isEmpty()) {
+            return;
+        }
+        for (FiducialLocatableLocation panelLocation : panelLocations) {
+            Panel panel;
+            if (panelLocation.getFiducialLocatable() == null) {
+                String panelFileName = panelLocation.getFileName();
+                File panelFile = new File(panelFileName);
+                if (!panelFile.exists()) {
+                    // If that fails, see if we can find it relative to the
+                    // directory the job was in
+                    panelFile = new File(job.getFile().getParentFile(), panelFileName);
+                }
+                if (!panelFile.exists()) {
+                    throw new Exception("Panel file not found: " + panelFileName);
+                }
+                panel = getPanel(panelFile);
+                panelLocation.setFiducialLocatable(panel);
+            }
+            else {
+                //This fixes old style panels that were part of the job file
+                panel = (Panel) panelLocation.getFiducialLocatable();
+                String boardFileName = panel.getChildren().get(0).getFileName();
+                String panelFileName = boardFileName.substring(0, boardFileName.indexOf(".board.xml")) + ".panel.xml";
+                File panelFile = new File(job.getFile().getParentFile(), panelFileName);
+                panelLocation.setFileName(panelFileName);
+                panel.setFile(panelFile);
+                panelLocation.setParent(null);
+                panel.setDirty(true);
+            }
+            
+            AffineTransform localToParentTransform = panelLocation.getLocalToParentTransform();
+            if (localToParentTransform == null) {
+                localToParentTransform = Utils2D.getDefaultBoardPlacementLocationTransform(panelLocation);
+            }
+            Location newPanelLocation = Utils2D.calculateBoardPlacementLocation(panelLocation, Location.origin);
+            newPanelLocation = newPanelLocation.convertToUnits(panelLocation.getLocation().getUnits());
+            newPanelLocation = newPanelLocation.derive(null, null, panelLocation.getLocation().getZ(), null);
+
+            
+            List<PanelLocation> childPanelLocations = new IdentifiableList<>();
+            for (FiducialLocatableLocation child : panel.getChildren()) {
+                if (child instanceof PanelLocation) {
+                    childPanelLocations.add((PanelLocation) child);
+                }
+                if (child instanceof BoardLocation) {
+                    BoardLocation boardLocation = (BoardLocation) child;
+                    boardLocation.setParentId(panelLocation.getId());
+                    job.addBoardLocation((BoardLocation) child);
+                }
+            }
+            
+            resolvePanels(job, childPanelLocations, localToParentTransform);
+        }
+    }
+    
     public void saveJob(Job job, File file) throws Exception {
         Serializer serializer = createSerializer();
+
+        Set<Panel> panels = new HashSet<>();
+        // Fix the paths to any panels in the Job
+        for (PanelLocation panelLocation : job.getPanelLocations()) {
+            Panel panel = (Panel) panelLocation.getPanel();
+            panels.add(panel);
+            try {
+                String relativePath = ResourceUtils.getRelativePath(
+                        panel.getFile().getAbsolutePath(), file.getAbsolutePath(), File.separator);
+                panelLocation.setPanelFile(relativePath);
+            }
+            catch (ResourceUtils.PathResolutionException ex) {
+                panelLocation.setPanelFile(panel.getFile().getAbsolutePath());
+            }
+        }
+        // Save any panels in the job
+        for (Panel panel : panels) {
+            savePanel(panel);
+        }
+
+        List<BoardLocation> savedBoardLocations = job.getBoardLocations();
         Set<Board> boards = new HashSet<>();
         // Fix the paths to any boards in the Job
-        for (BoardLocation boardLocation : job.getBoardLocations()) {
-            Board board = boardLocation.getBoard();
+        for (BoardLocation boardLocation : savedBoardLocations) {
+            Board board = (Board) boardLocation.getBoard();
             boards.add(board);
             try {
                 String relativePath = ResourceUtils.getRelativePath(
@@ -723,20 +824,45 @@ public class Configuration extends AbstractModelObject {
             catch (ResourceUtils.PathResolutionException ex) {
                 boardLocation.setBoardFile(board.getFile().getAbsolutePath());
             }
+            if (!boardLocation.getParentId().contentEquals("Root")) {
+                job.removeBoardLocation(boardLocation);
+            }
         }
         // Save any boards in the job
         for (Board board : boards) {
             saveBoard(board);
         }
-        // Save the job
+        
+        // Save the job - minus any board locations that are owned by a panel
         serializer.write(job, new ByteArrayOutputStream());
         serializer.write(job, file);
         job.setFile(file);
         job.setDirty(false);
+        
+        // Restore the board locations
+        job.removeAllBoards();
+        for (BoardLocation boardLocation : savedBoardLocations) {
+            job.addBoardLocation(boardLocation);
+        }
     }
     
     public String getImgurClientId() {
         return imgurClientId;
+    }
+
+    public void savePanel(Panel panel) throws Exception {
+        Serializer serializer = createSerializer();
+        serializer.write(panel, new ByteArrayOutputStream());
+        serializer.write(panel, panel.getFile());
+        panel.setDirty(false);
+    }
+
+    private Panel loadPanel(File file) throws Exception {
+        Serializer serializer = createSerializer();
+        Panel panel = serializer.read(Panel.class, file);
+        panel.setFile(file);
+        panel.setDirty(false);
+        return panel;
     }
 
     public void saveBoard(Board board) throws Exception {

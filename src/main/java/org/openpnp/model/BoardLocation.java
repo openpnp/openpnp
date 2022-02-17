@@ -23,42 +23,25 @@ import java.awt.geom.AffineTransform;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openpnp.model.Board.Side;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Placement.Type;
 import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
-public class BoardLocation extends AbstractModelObject {
-    @Element
-    private Location location;
-    
-    @Attribute
-    private Side side = Side.Top;
-    private Board board;
+public class BoardLocation extends FiducialLocatableLocation {
 
-    @Attribute
+    @Deprecated
+    @Attribute(required = false)
     private String boardFile;
 
+    @Deprecated
     @Attribute(required = false)
-    private String panelId = new String("Panel1"); // UI doesn't have a way to specify multiple
-                                                    // panels at this point
-
-    @Attribute(required = false)
-    private boolean checkFiducials;
-
-    @Attribute(required = false)
-    private boolean enabled = true;
+    private String panelId; 
 
     @ElementMap(required = false)
     private Map<String, Boolean> placed = new HashMap<>();
-
-    /**
-     * Important note: The placement transform is in Millimeters no matter what the source
-     * units are.
-     */
-    private AffineTransform placementTransform;
 
     BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
@@ -66,13 +49,7 @@ public class BoardLocation extends AbstractModelObject {
 
     // Copy constructor needed for deep copy of object.
     public BoardLocation(BoardLocation obj) {
-        this.location = obj.location;
-        this.side = obj.side;
-        this.board = obj.board;
-        this.boardFile = obj.boardFile;
-        this.panelId = obj.panelId;
-        this.checkFiducials = obj.checkFiducials;
-        this.enabled = obj.enabled;
+        super(obj);
         this.placed = obj.placed;
     }
 
@@ -81,38 +58,35 @@ public class BoardLocation extends AbstractModelObject {
         setBoard(board);
     }
 
-    @SuppressWarnings("unused")
     @Commit
     private void commit() {
         setLocation(location);
-        setBoard(board);
-    }
-
-    public Location getLocation() {
-        return location;
-    }
-
-    public void setLocation(Location location) {
-        Location oldValue = this.location;
-        this.location = location;
-        firePropertyChange("location", oldValue, location);
-        // If the location is changing it is not possible the placement transform is
-        // still valid, so clear it.
-        if (!this.location.equals(oldValue)) {
-            setPlacementTransform(null);
+        setFiducialLocatable((Board) fiducialLocatable);
+        
+        //Converted deprecated attributes/elements
+        if (boardFile != null) {
+            setFileName(boardFile);
+            boardFile = null;
+        }
+        if (panelId != null) {
+            setParentId(panelId);
+            panelId = null;
         }
     }
     
-    public Side getSide() {
-        return side;
+    @Persist
+    private void persist() {
+        if (MainFrame.get().getJobTab().getJob().getPanelLocations().get(parentId) == null) {
+            parentId = "Root";
+        }
     }
     
     public int getTotalActivePlacements(){
-    	if (board == null) {
+    	if (fiducialLocatable == null) {
     		return 0;
     	}
     	int counter = 0;
-    	for(Placement placement : board.getPlacements()) {
+    	for(Placement placement : fiducialLocatable.getPlacements()) {
     		if (placement.getSide() == getSide()
     		        && placement.getType() == Type.Placement
     		        && placement.isEnabled()) {
@@ -123,11 +97,11 @@ public class BoardLocation extends AbstractModelObject {
     }
     
     public int getActivePlacements() {
-    	if (board == null) {
+    	if (fiducialLocatable == null) {
     		return 0;
     	}
     	int counter = 0;
-	    for(Placement placement : board.getPlacements()) {
+	    for(Placement placement : fiducialLocatable.getPlacements()) {
             if (placement.getSide() == getSide()
                     && placement.getType() == Type.Placement
                     && placement.isEnabled()
@@ -138,58 +112,28 @@ public class BoardLocation extends AbstractModelObject {
     	return counter;
     }
 
-    public void setSide(Side side) {
-        Object oldValue = this.side;
-        this.side = side;
-        firePropertyChange("side", oldValue, side);
-    }
-
-    public Board getBoard() {
-        return board;
+    public FiducialLocatable getBoard() {
+        return getFiducialLocatable();
     }
 
     public void setBoard(Board board) {
-        Board oldValue = this.board;
-        this.board = board;
-        firePropertyChange("board", oldValue, board);
+        setFiducialLocatable(board);
     }
 
     String getBoardFile() {
-        return boardFile;
+        return getFileName();
     }
 
     void setBoardFile(String boardFile) {
-        this.boardFile = boardFile;
+        setFileName(boardFile);
     }
 
     public String getPanelId() {
-        return panelId;
+        return getParentId();
     }
 
     public void setPanelId(String id) {
-        String oldValue = this.panelId;
-        this.panelId = id;
-        firePropertyChange("panelId", oldValue, panelId);
-    }
-
-    public boolean isCheckFiducials() {
-        return checkFiducials;
-    }
-
-    public void setCheckFiducials(boolean checkFiducials) {
-        boolean oldValue = this.checkFiducials;
-        this.checkFiducials = checkFiducials;
-        firePropertyChange("checkFiducials", oldValue, checkFiducials);
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        boolean oldValue = this.enabled;
-        this.enabled = enabled;
-        firePropertyChange("enabled", oldValue, enabled);
+        setParentId(id);
     }
 
     public void setPlaced(String placementId, boolean placed) {
@@ -212,13 +156,11 @@ public class BoardLocation extends AbstractModelObject {
     }
     
     public AffineTransform getPlacementTransform() {
-        return placementTransform;
+        return getLocalToParentTransform();
     }
 
     public void setPlacementTransform(AffineTransform placementTransform) {
-        Object oldValue = this.placementTransform;
-        this.placementTransform = placementTransform;
-        firePropertyChange("placementTransform", oldValue, placementTransform);
+        setLocalToParentTransform(placementTransform);
     }
 
     @Override

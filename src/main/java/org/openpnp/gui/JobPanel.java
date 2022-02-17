@@ -96,6 +96,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.pmw.tinylog.Logger;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -180,7 +181,7 @@ public class JobPanel extends JPanel {
                         BoardLocation boardLocation =
                                 tableModel.getBoardLocation(row);
                         if (boardLocation != null) {
-                            return boardLocation.getBoard()
+                            return ((Board) boardLocation.getBoard())
                                                 .getFile()
                                                 .toString();
                         }
@@ -635,7 +636,8 @@ public class JobPanel extends JPanel {
                 return true;
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(frame, "Job Save Error", e.getMessage()); //$NON-NLS-1$
+                e.printStackTrace();
+                MessageBoxes.errorBox(frame, "Job Save Error", e.toString()); //$NON-NLS-1$
                 return false;
             }
         }
@@ -767,7 +769,7 @@ public class JobPanel extends JPanel {
         try {
             Board importedBoard = boardImporter.importBoard((Frame) getTopLevelAncestor());
             if (importedBoard != null) {
-                Board existingBoard = getSelection().getBoard();
+                Board existingBoard = (Board) getSelection().getBoard();
                 for (Placement placement : importedBoard.getPlacements()) {
                     existingBoard.addPlacement(placement);
                 }
@@ -1413,8 +1415,17 @@ public class JobPanel extends JPanel {
                 Helpers.selectFirstTableRow(table);
                 Location location = Configuration.get().getMachine().getFiducialLocator()
                         .locateBoard(getSelection(), true);
+
+                /**
+                 * Set the panel's location to the one returned from the fiducial check. We have
+                 * to store and restore the placement transform because setting the location
+                 * clears it.
+                 */
+                AffineTransform tx = getSelection().getPlacementTransform();
                 getSelection().setLocation(location);
+                getSelection().setPlacementTransform(tx);
                 refreshSelectedRow();
+                
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);

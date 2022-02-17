@@ -17,6 +17,14 @@ import org.openpnp.model.Identifiable;
 public class IdentifiableList<E extends Identifiable> extends ArrayList<E> {
     private static final long serialVersionUID = -2350184908321182804L;
     
+    public IdentifiableList() {
+        super();
+    }
+    
+    public IdentifiableList(IdentifiableList<E> identifiableList) {
+        super(identifiableList);
+    }
+    
     public String createId(String prefix) {
         for (int i = 0; ; i++) {
             if (get(prefix + i) == null) {

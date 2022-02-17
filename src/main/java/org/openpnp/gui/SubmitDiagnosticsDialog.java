@@ -272,7 +272,7 @@ public class SubmitDiagnosticsDialog extends JDialog {
                         content += createPasteStringFromFile(file);
                         HashSet<Board> boards = new HashSet<>();
                         for (BoardLocation bl : job.getBoardLocations()) {
-                            boards.add(bl.getBoard());
+                            boards.add((Board) bl.getBoard());
                         }
                         for (Board board : boards) {
                             content += createPasteStringFromFile(board.getFile());

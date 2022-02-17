@@ -30,6 +30,7 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
+import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
@@ -99,7 +100,7 @@ public class Utils2D {
      * @param bl
      * @return
      */
-    private static AffineTransform getDefaultBoardPlacementLocationTransform(BoardLocation bl) {
+    public static AffineTransform getDefaultBoardPlacementLocationTransform(FiducialLocatableLocation bl) {
         Location l = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
         AffineTransform tx = new AffineTransform();
         tx.translate(l.getX(), l.getY());
@@ -109,7 +110,7 @@ public class Utils2D {
              * Translate by the board width. This is used to support the "New" Board Location
              * system ala https://github.com/openpnp/openpnp/wiki/Board-Locations.
              */
-            tx.translate(bl.getBoard().getDimensions().convertToUnits(LengthUnit.Millimeters).getX(), 0);
+            tx.translate(bl.getFiducialLocatable().getDimensions().convertToUnits(LengthUnit.Millimeters).getX(), 0);
         }
         return tx;
     }
@@ -200,9 +201,9 @@ public class Utils2D {
         return ret;
     }
 
-    public static Location calculateBoardPlacementLocation(BoardLocation bl,
+    public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl,
             Location placementLocation) {
-        AffineTransform tx = bl.getPlacementTransform();        
+        AffineTransform tx = bl.getLocalToParentTransform();        
         if (tx == null) {
             tx = getDefaultBoardPlacementLocationTransform(bl);
         }
@@ -287,11 +288,11 @@ public class Utils2D {
      * @param observedLocationB
      * @return
      */
-    public static Location calculateBoardLocation(BoardLocation boardLocation, Placement placementA,
+    public static Location calculateBoardLocation(FiducialLocatableLocation boardLocation, Placement placementA,
             Placement placementB, Location observedLocationA, Location observedLocationB) {
         // Create a new BoardLocation based on the input except with a zeroed
         // Location. This will be used to calculate our ideal placement locations.
-        BoardLocation bl = new BoardLocation(boardLocation.getBoard());
+        FiducialLocatableLocation bl = new FiducialLocatableLocation(boardLocation.getFiducialLocatable());
         bl.setLocation(new Location(boardLocation.getLocation().getUnits()));
         bl.setSide(boardLocation.getSide());
 

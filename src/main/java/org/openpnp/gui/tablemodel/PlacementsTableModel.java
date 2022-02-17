@@ -27,6 +27,7 @@ import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.FiducialLocatable;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -53,7 +54,8 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
         Disabled
     }
 
-    private Board board;
+//    private Board board;
+    private FiducialLocatable board;
     private BoardLocation boardLocation;
     private JobPlacementsPanel jobPlacementsPanel;
 
