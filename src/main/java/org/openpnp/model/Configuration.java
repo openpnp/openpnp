@@ -704,34 +704,42 @@ public class Configuration extends AbstractModelObject {
         Job job = serializer.read(Job.class, file);
         job.setFile(file);
 
-        resolvePanels(job, job.panelLocations, new AffineTransform());
+        resolvePanels(job, job.panelLocations);
         
         // Once the Job is loaded we need to resolve any Boards that it
         // references.
-        for (BoardLocation boardLocation : job.getBoardLocations()) {
-            String boardFilename = boardLocation.getBoardFile();
-            // First see if we can find the board at the given filename
-            // If the filename is not absolute this will be relative
-            // to the working directory
-            File boardFile = new File(boardFilename);
-            if (!boardFile.exists()) {
-                // If that fails, see if we can find it relative to the
-                // directory the job was in
-                boardFile = new File(file.getParentFile(), boardFilename);
-            }
-            if (!boardFile.exists()) {
-                throw new Exception("Board file not found: " + boardFilename);
-            }
-            Board board = getBoard(boardFile);
-            boardLocation.setBoard(board);
-        }
+        resolveBoards(job);
 
         job.setDirty(false);
 
         return job;
     }
 
-    private void resolvePanels(Job job, List<PanelLocation> panelLocations, AffineTransform parentToRootTransfom) throws Exception {
+    private void resolveBoards(Job job) throws Exception {
+        for (BoardLocation boardLocation : job.getBoardLocations()) {
+            resolveBoard(job, boardLocation);
+        }
+    }
+    
+    private void resolveBoard(Job job, BoardLocation boardLocation) throws Exception {
+        String boardFilename = boardLocation.getBoardFile();
+        // First see if we can find the board at the given filename
+        // If the filename is not absolute this will be relative
+        // to the working directory
+        File boardFile = new File(boardFilename);
+        if (!boardFile.exists()) {
+            // If that fails, see if we can find it relative to the
+            // directory the job was in
+            boardFile = new File(job.getFile().getParentFile(), boardFilename);
+        }
+        if (!boardFile.exists()) {
+            throw new Exception("Board file not found: " + boardFilename);
+        }
+        Board board = getBoard(boardFile);
+        boardLocation.setBoard(board);
+    }
+    
+    private void resolvePanels(Job job, List<PanelLocation> panelLocations) throws Exception {
         if (panelLocations == null || panelLocations.isEmpty()) {
             return;
         }
@@ -752,22 +760,60 @@ public class Configuration extends AbstractModelObject {
                 panelLocation.setFiducialLocatable(panel);
             }
             else {
-                //This fixes old style panels that were part of the job file
+                //This fixes old style panels that were part of the job file - sets the panel file 
+                //and moves the boards from the job to the panel
+                
+                //First resolve the boards as we need the dimensions of the boards
+                resolveBoards(job);
+                BoardLocation rootPcb = job.getBoardLocations().get(0);
+                
                 panel = (Panel) panelLocation.getFiducialLocatable();
-                String boardFileName = panel.getChildren().get(0).getFileName();
+                String boardFileName = rootPcb.getFileName();
                 String panelFileName = boardFileName.substring(0, boardFileName.indexOf(".board.xml")) + ".panel.xml";
                 File panelFile = new File(job.getFile().getParentFile(), panelFileName);
                 panelLocation.setFileName(panelFileName);
                 panel.setFile(panelFile);
                 panelLocation.setParent(null);
-                panel.setDirty(true);
+                
+                Location rootDims = rootPcb.getBoard().getDimensions().
+                        convertToUnits(Configuration.get().getSystemUnits());
+                
+                double pcbStepX = rootDims.getLengthX().add(panel.xGap).getValue();
+                double pcbStepY = rootDims.getLengthY().add(panel.yGap).getValue();
+              
+                for (int j = 0; j < panel.rows; j++) {
+                    for (int i = 0; i < panel.columns; i++) {
+                        // deep copy the existing rootPcb
+                        BoardLocation newPcb = new BoardLocation(rootPcb);
+                        newPcb.setLocation(rootPcb.getLocation().derive(0.0, 0.0, null, 0.0));
+                        
+                        // Offset the sub PCB
+                        newPcb.setLocation(newPcb.getLocation()
+                                .add(new Location(Configuration.get().getSystemUnits(),
+                                        pcbStepX * i,
+                                        pcbStepY * j, 0, 0)));
+                        
+                        panel.getChildren().add(newPcb);
+                    }
+                }
+                panel.setDimensions(Location.origin.deriveLengths(
+                    rootDims.getLengthX().add(panel.xGap).multiply(panel.columns).subtract(panel.xGap),
+                    rootDims.getLengthY().add(panel.yGap).multiply(panel.rows).subtract(panel.yGap),
+                    null, null));
+                
+                //Remove the deprecated elements from the panel
+                panel.xGap = null;
+                panel.yGap = null;
+                panel.rows = null;
+                panel.columns = null;
+                
+                //Remove all the old boards from the job - they will get added back below
+                job.removeAllBoards();
             }
             
-            AffineTransform localToParentTransform = panelLocation.getLocalToParentTransform();
-            if (localToParentTransform == null) {
-                localToParentTransform = Utils2D.getDefaultBoardPlacementLocationTransform(panelLocation);
-            }
-            Location newPanelLocation = Utils2D.calculateBoardPlacementLocation(panelLocation, Location.origin);
+            AffineTransform localToRootTransform = ((PanelLocation) panelLocation).getLocalToRootTransform();
+            
+            Location newPanelLocation = Utils2D.calculateBoardPlacementLocation(panelLocation, new Placement("Dummy"));
             newPanelLocation = newPanelLocation.convertToUnits(panelLocation.getLocation().getUnits());
             newPanelLocation = newPanelLocation.derive(null, null, panelLocation.getLocation().getZ(), null);
 
@@ -778,13 +824,17 @@ public class Configuration extends AbstractModelObject {
                     childPanelLocations.add((PanelLocation) child);
                 }
                 if (child instanceof BoardLocation) {
-                    BoardLocation boardLocation = (BoardLocation) child;
+                    BoardLocation boardLocation = new BoardLocation((BoardLocation) child);
                     boardLocation.setParentId(panelLocation.getId());
-                    job.addBoardLocation((BoardLocation) child);
+                    resolveBoard(job, boardLocation);
+                    Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(panelLocation, boardLocation);
+                    boardLocation.setLocation(newBoardLocation);
+                    
+                    job.addBoardLocation(boardLocation);
                 }
             }
             
-            resolvePanels(job, childPanelLocations, localToParentTransform);
+            resolvePanels(job, childPanelLocations);
         }
     }
     

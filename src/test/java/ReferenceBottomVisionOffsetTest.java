@@ -17,6 +17,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
@@ -90,7 +91,9 @@ public class ReferenceBottomVisionOffsetTest {
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
-                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
+                Placement placement = new Placement("Dummy");
+                placement.setLocation(testPair[0]);
+                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
                 Location offsets = offset.getLocation();
                 assertMaxDelta(offsets.getX(), testPair[1].getX(), maxError.getX());
                 assertMaxDelta(offsets.getY(), testPair[1].getY(), maxError.getY());
@@ -133,7 +136,9 @@ public class ReferenceBottomVisionOffsetTest {
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
-                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
+                Placement placement = new Placement("Dummy");
+                placement.setLocation(testPair[0]);
+                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
                 Location offsets = offset.getLocation();
                 assertMaxDelta(offsets.getX(), testPair[1].getX(), maxError.getX());
                 assertMaxDelta(offsets.getY(), testPair[1].getY(), maxError.getY());
@@ -177,7 +182,9 @@ public class ReferenceBottomVisionOffsetTest {
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
-                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
+                Placement placement = new Placement("Dummy");
+                placement.setLocation(testPair[0]);
+                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
                 Location offsets = offset.getLocation();
                 assertMaxDelta(offsets.getX(), testPair[1].getX(), maxError.getX());
                 assertMaxDelta(offsets.getY(), testPair[1].getY(), maxError.getY());
@@ -221,7 +228,9 @@ public class ReferenceBottomVisionOffsetTest {
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
-                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
+                Placement placement = new Placement("Dummy");
+                placement.setLocation(testPair[0]);
+                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
                 Location offsets = offset.getLocation();
                 assertMaxDelta(offsets.getX(), testPair[1].getX(), maxError.getX());
                 assertMaxDelta(offsets.getY(), testPair[1].getY(), maxError.getY());
@@ -264,7 +273,9 @@ public class ReferenceBottomVisionOffsetTest {
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
-                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
+                Placement placement = new Placement("Dummy");
+                placement.setLocation(testPair[0]);
+                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
                 Location offsets = offset.getLocation();
                 assertMaxDelta(offsets.getX(), testPair[1].getX(), maxError.getX());
                 assertMaxDelta(offsets.getY(), testPair[1].getY(), maxError.getY());
@@ -308,7 +319,9 @@ public class ReferenceBottomVisionOffsetTest {
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
-                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
+                Placement placement = new Placement("Dummy");
+                placement.setLocation(testPair[0]);
+                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
                 Location offsets = offset.getLocation();
                 assertMaxDelta(offsets.getX(), testPair[1].getX(), maxError.getX());
                 assertMaxDelta(offsets.getY(), testPair[1].getY(), maxError.getY());
@@ -352,7 +365,9 @@ public class ReferenceBottomVisionOffsetTest {
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
-                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
+                Placement placement = new Placement("Dummy");
+                placement.setLocation(testPair[0]);
+                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
                 Location offsets = offset.getLocation();
                 assertMaxDelta(offsets.getX(), testPair[1].getX(), maxError.getX());
                 assertMaxDelta(offsets.getY(), testPair[1].getY(), maxError.getY());
@@ -400,7 +415,9 @@ public class ReferenceBottomVisionOffsetTest {
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
-                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
+                Placement placement = new Placement("Dummy");
+                placement.setLocation(testPair[0]);
+                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
                 Location offsets = offset.getLocation();
                 assertMaxDelta(offsets.getX(), testPair[1].getX(), maxError.getX());
                 assertMaxDelta(offsets.getY(), testPair[1].getY(), maxError.getY());
@@ -451,7 +468,9 @@ public class ReferenceBottomVisionOffsetTest {
         for (Location[] testPair: testData) {
             machine.execute(() -> {
                 nozzle.pick(part);
-                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, testPair[0], nozzle);
+                Placement placement = new Placement("Dummy");
+                placement.setLocation(testPair[0]);
+                PartAlignmentOffset offset = bottomVision.findOffsets(part, boardLocation, placement, nozzle);
                 Location offsets = offset.getLocation();
                 assertMaxDelta(offsets.getX(), testPair[1].getX(), maxError.getX());
                 assertMaxDelta(offsets.getY(), testPair[1].getY(), maxError.getY());

@@ -19,6 +19,8 @@
 
 package org.openpnp.model;
 
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -28,6 +30,7 @@ import java.util.List;
 
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.ResourceUtils;
+import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
@@ -75,8 +78,25 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
             panelLocation.setParent(null);
             panelLocation.setLocation(boardLocations.get(0).getLocation());
             panelLocation.setId(panel.getId());
-            ((Panel) panelLocation.getPanel()).getChildren().addAll(boardLocations);
-            boardLocations.clear();
+//            AffineTransform panelLocalToRoot = panelLocation.getLocalToRootTransform();
+//            for (BoardLocation boardLocation : boardLocations) {
+//                
+//                AffineTransform boardLocalToPanel = Utils2D.getDefaultBoardPlacementLocationTransform(boardLocation);
+//                try {
+//                    boardLocalToPanel.concatenate(panelLocalToRoot.createInverse());
+//                }
+//                catch (NoninvertibleTransformException e) {
+//                    // TODO Auto-generated catch block
+//                    e.printStackTrace();
+//                }
+//                boardLocation.setLocalToParentTransform(boardLocalToPanel);
+//                Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, Location.origin);
+//                newBoardLocation = newBoardLocation.convertToUnits(boardLocation.getLocation().getUnits());
+//                newBoardLocation = newBoardLocation.derive(null, null, boardLocation.getLocation().getZ(), null);
+//                boardLocation.setLocation(newBoardLocation);
+//                panelLocation.getPanel().getChildren().add(boardLocation);
+//            }
+//            boardLocations.clear();
             panelLocation.addPropertyChangeListener(this);
             panelLocations.add(panelLocation);
             panels = null;

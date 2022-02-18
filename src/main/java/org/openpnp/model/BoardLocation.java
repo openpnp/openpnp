@@ -165,6 +165,6 @@ public class BoardLocation extends FiducialLocatableLocation {
 
     @Override
     public String toString() {
-        return String.format("board (%s), location (%s), side (%s)", boardFile, location, side);
+        return String.format("board (%s), location (%s), side (%s)", getFileName(), location, side);
     }
 }

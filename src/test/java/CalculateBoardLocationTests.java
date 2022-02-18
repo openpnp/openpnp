@@ -15,7 +15,7 @@ public class CalculateBoardLocationTests {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
     }
@@ -29,7 +29,7 @@ public class CalculateBoardLocationTests {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setPlacementTransform(tx);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
     }
@@ -39,7 +39,7 @@ public class CalculateBoardLocationTests {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
 
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
     }
@@ -53,7 +53,7 @@ public class CalculateBoardLocationTests {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setPlacementTransform(tx);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Utils2DTest.checkNormalized(p1l, 23.160, 130.902, -10.00, 119.628);
     }
@@ -63,7 +63,7 @@ public class CalculateBoardLocationTests {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
 
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Utils2DTest.checkNormalized(p1l, 91.015, 79.253, -10.00, 81.585);
     }
@@ -77,7 +77,7 @@ public class CalculateBoardLocationTests {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setPlacementTransform(tx);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Utils2DTest.checkNormalized(p1l, 91.015, 79.253, -10.00, 81.585);
     }
@@ -87,7 +87,7 @@ public class CalculateBoardLocationTests {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Utils2DTest.checkNormalized(p1l, 91.025, 79.246, -10.00, 81.662);
     }
@@ -101,7 +101,7 @@ public class CalculateBoardLocationTests {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setPlacementTransform(tx);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Utils2DTest.checkNormalized(p1l, 91.025, 79.246, -10.00, 81.662);
     }
@@ -111,7 +111,7 @@ public class CalculateBoardLocationTests {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
         
@@ -127,7 +127,7 @@ public class CalculateBoardLocationTests {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setPlacementTransform(tx);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
         
@@ -139,7 +139,7 @@ public class CalculateBoardLocationTests {
         BoardLocation boardLocation = createTestBoardLocation(Side.Top, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
         
@@ -155,7 +155,7 @@ public class CalculateBoardLocationTests {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setPlacementTransform(tx);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
         
@@ -167,7 +167,7 @@ public class CalculateBoardLocationTests {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, false);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
         
@@ -183,7 +183,7 @@ public class CalculateBoardLocationTests {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setPlacementTransform(tx);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
         
@@ -195,7 +195,7 @@ public class CalculateBoardLocationTests {
         BoardLocation boardLocation = createTestBoardLocation(Side.Bottom, true);
         Placement p1 = boardLocation.getBoard().getPlacements().get(0);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
         
@@ -211,7 +211,7 @@ public class CalculateBoardLocationTests {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setPlacementTransform(tx);
         
-        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1.getLocation());
+        Location p1l = Utils2D.calculateBoardPlacementLocation(boardLocation, p1);
         
         Location p1li = Utils2D.calculateBoardPlacementLocationInverse(boardLocation, p1l);
         
@@ -243,9 +243,9 @@ public class CalculateBoardLocationTests {
         fid3.setLocation(new Location(LengthUnit.Millimeters, 2, 2, 0, 0));
         
         boardLocation.setPlacementTransform(null);
-        Location fid1l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid1.getLocation());
-        Location fid2l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid2.getLocation());
-        Location fid3l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid3.getLocation());
+        Location fid1l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid1);
+        Location fid2l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid2);
+        Location fid3l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid3);
         
         if (boardLocation.getSide() == Side.Bottom) {
             fid1.setLocation(fid1.getLocation().multiply(-1, 1, 1, 1));

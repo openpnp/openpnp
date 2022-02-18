@@ -58,7 +58,12 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
         else {
             this.parent = null;
         }
-        this.fiducialLocatable = new FiducialLocatable(fiducialLocatableLocation.fiducialLocatable);
+        if (fiducialLocatableLocation.fiducialLocatable != null) {
+            this.fiducialLocatable = new FiducialLocatable(fiducialLocatableLocation.fiducialLocatable);
+        }
+        else {
+            this.fiducialLocatable = null;
+        }
         if (fiducialLocatableLocation.localToParentTransform != null) {
             this.localToParentTransform = new AffineTransform(fiducialLocatableLocation.localToParentTransform);
         }

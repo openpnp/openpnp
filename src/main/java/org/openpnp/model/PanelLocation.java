@@ -46,8 +46,8 @@ public class PanelLocation extends FiducialLocatableLocation {
         setFiducialLocatable(fiducialLocatable);
     }
     
-    public FiducialLocatable getPanel() {
-        return getFiducialLocatable();
+    public Panel getPanel() {
+        return (Panel) getFiducialLocatable();
     }
 
     public void setPanel(Panel panel) {
@@ -62,13 +62,13 @@ public class PanelLocation extends FiducialLocatableLocation {
         setFileName(panelFile);
     }
 
-    public String getPanelId() {
-        return getParentId();
-    }
-
-    public void setPanelId(String id) {
-        setParentId(id);
-    }
+//    public String getPanelId() {
+//        return getParentId();
+//    }
+//
+//    public void setPanelId(String id) {
+//        setParentId(id);
+//    }
 
     public AffineTransform getLocalToRootTransform() {
         AffineTransform localToRootTransform = Utils2D.getDefaultBoardPlacementLocationTransform(this);

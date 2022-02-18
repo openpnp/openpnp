@@ -158,7 +158,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                 new TravellingSalesman.Locator<Placement>() { 
                     @Override
                     public Location getLocation(Placement locatable) {
-                        return Utils2D.calculateBoardPlacementLocation(fiducialLocatableLocation, locatable.getLocation());
+                        return Utils2D.calculateBoardPlacementLocation(fiducialLocatableLocation, locatable);
                     }
                 }, 
                 // start from current camera location
@@ -190,9 +190,13 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         fiducialLocatableLocation.setLocalToParentTransform(tx);
         
         // Return the compensated board location
-        Location origin = new Location(LengthUnit.Millimeters);
+//        Location origin = new Location(LengthUnit.Millimeters);
+//        if (fiducialLocatableLocation.getSide() == Side.Bottom) {
+//            origin = origin.add(fiducialLocatableLocation.getFiducialLocatable().getDimensions().derive(null, 0., 0., 0.));
+//        }
+        Placement origin = new Placement("dummy");
         if (fiducialLocatableLocation.getSide() == Side.Bottom) {
-            origin = origin.add(fiducialLocatableLocation.getFiducialLocatable().getDimensions().derive(null, 0., 0., 0.));
+            origin.setLocation(fiducialLocatableLocation.getFiducialLocatable().getDimensions().derive(null, 0., 0., 0.));
         }
         Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(fiducialLocatableLocation, origin);
         newBoardLocation = newBoardLocation.convertToUnits(fiducialLocatableLocation.getLocation().getUnits());
@@ -360,7 +364,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
 
         Location location =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, fid.getLocation());
+                Utils2D.calculateBoardPlacementLocation(boardLocation, fid);
 
         return getFiducialLocation(location, part);
     }

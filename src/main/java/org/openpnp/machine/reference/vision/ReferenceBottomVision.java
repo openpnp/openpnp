@@ -26,6 +26,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
@@ -90,7 +91,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     @Override
     public PartAlignmentOffset findOffsets(Part part, BoardLocation boardLocation,
-            Location placementLocation, Nozzle nozzle) throws Exception {
+            Placement placement, Nozzle nozzle) throws Exception {
         BottomVisionSettings bottomVisionSettings = getInheritedVisionSettings(part);
 
         if (!isEnabled() || !bottomVisionSettings.isEnabled()) {
@@ -108,10 +109,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
         if ((bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.Default && preRotate)
                 || (bottomVisionSettings.getPreRotateUsage() == PreRotateUsage.AlwaysOn)) {
-            return findOffsetsPreRotate(part, boardLocation, placementLocation, nozzle, camera, bottomVisionSettings);
+            return findOffsetsPreRotate(part, boardLocation, placement, nozzle, camera, bottomVisionSettings);
         }
         else {
-            return findOffsetsPostRotate(part, boardLocation, placementLocation, nozzle, camera, bottomVisionSettings);
+            return findOffsetsPostRotate(part, boardLocation, placement, nozzle, camera, bottomVisionSettings);
         }
     }
 
@@ -146,11 +147,11 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     private PartAlignmentOffset findOffsetsPreRotate(Part part, BoardLocation boardLocation,
-            Location placementLocation, Nozzle nozzle, Camera camera, BottomVisionSettings bottomVisionSettings)
+            Placement placement, Nozzle nozzle, Camera camera, BottomVisionSettings bottomVisionSettings)
                     throws Exception {
-        double wantedAngle = placementLocation.getRotation();
+        double wantedAngle = placement.getLocation().getRotation();
         if (boardLocation != null) {
-            wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placementLocation)
+            wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placement)
                     .getRotation();
         }
         wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);
@@ -247,7 +248,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     private PartAlignmentOffset findOffsetsPostRotate(Part part, BoardLocation boardLocation,
-            Location placementLocation, Nozzle nozzle, Camera camera, BottomVisionSettings bottomVisionSettings)
+            Placement placement, Nozzle nozzle, Camera camera, BottomVisionSettings bottomVisionSettings)
                     throws Exception {
         // Create a location that is the Camera's X, Y, it's Z + part height
         // and a rotation of 0, unless preRotate is enabled

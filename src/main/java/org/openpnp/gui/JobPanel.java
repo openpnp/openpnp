@@ -79,6 +79,7 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.BoardLocationsTableModel;
+import org.openpnp.gui.tablemodel.PanelLocationsTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -121,8 +122,10 @@ public class JobPanel extends JPanel {
     private static final String PREF_RECENT_FILES = "JobPanel.recentFiles"; //$NON-NLS-1$
     private static final int PREF_RECENT_FILES_MAX = 10;
 
-    private BoardLocationsTableModel tableModel;
-    private JTable table;
+    private PanelLocationsTableModel panelTableModel;
+    private JTable panelTable;
+    private BoardLocationsTableModel boardTableModel;
+    private JTable boardTable;
     private JSplitPane splitPane;
 
     private ActionGroup singleSelectionActionGroup;
@@ -161,13 +164,13 @@ public class JobPanel extends JPanel {
         
         panelizeXOutAction.setEnabled(false);
         panelizeFiducialCheck.setEnabled(false);
-        tableModel = new BoardLocationsTableModel(configuration);
+        boardTableModel = new BoardLocationsTableModel(configuration);
 
         // Suppress because adding the type specifiers breaks WindowBuilder.
         @SuppressWarnings({"unchecked", "rawtypes"})
         JComboBox sidesComboBox = new JComboBox(Side.values());
 
-        table = new AutoSelectTextTable(tableModel) {
+        boardTable = new AutoSelectTextTable(boardTableModel) {
             @Override
             public String getToolTipText(MouseEvent e) {
 
@@ -177,9 +180,9 @@ public class JobPanel extends JPanel {
 
                 if (row >= 0) {
                     if (col == 0) {
-                        row = table.convertRowIndexToModel(row);
+                        row = boardTable.convertRowIndexToModel(row);
                         BoardLocation boardLocation =
-                                tableModel.getBoardLocation(row);
+                                boardTableModel.getBoardLocation(row);
                         if (boardLocation != null) {
                             return ((Board) boardLocation.getBoard())
                                                 .getFile()
@@ -192,11 +195,11 @@ public class JobPanel extends JPanel {
             }
         };
 
-        table.setAutoCreateRowSorter(true);
-        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
-        table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
-        table.getModel().addTableModelListener(new TableModelListener() {
+        boardTable.setAutoCreateRowSorter(true);
+        boardTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        boardTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
+        boardTable.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
+        boardTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
                 SwingUtilities.invokeLater(() -> {
@@ -237,7 +240,7 @@ public class JobPanel extends JPanel {
             }
         });
         
-        table.getSelectionModel()
+        boardTable.getSelectionModel()
                 .addListSelectionListener(new ListSelectionListener() {
                     @Override
                     public void valueChanged(ListSelectionEvent e) {
@@ -369,7 +372,7 @@ public class JobPanel extends JPanel {
         toolBarBoards.add(btnPanelizeFidCheck);
         btnPanelizeFidCheck.setHideActionText(true);
 
-        pnlBoards.add(new JScrollPane(table));
+        pnlBoards.add(new JScrollPane(boardTable));
         JPanel pnlRight = new JPanel();
         pnlRight.setLayout(new BorderLayout(0, 0));
 
@@ -419,7 +422,7 @@ public class JobPanel extends JPanel {
         setCheckFidsMenu.add(new SetCheckFidsAction(false));
         popupMenu.add(setCheckFidsMenu);
 
-        table.setComponentPopupMenu(popupMenu);
+        boardTable.setComponentPopupMenu(popupMenu);
 
         Configuration.get().getBus().register(this);
     }
@@ -430,7 +433,7 @@ public class JobPanel extends JPanel {
     }
     
     public JTable getBoardLocationsTable() {
-        return table;
+        return boardTable;
     }
 
     @Subscribe
@@ -460,12 +463,12 @@ public class JobPanel extends JPanel {
     }
 
     private void selectBoardLocation(BoardLocation boardLocation) {
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
-            if (tableModel.getBoardLocation(i) == boardLocation) {
-                int index = table.convertRowIndexToView(i);
-                table.getSelectionModel().setSelectionInterval(index, index);
-                table.scrollRectToVisible(
-                        new Rectangle(table.getCellRect(index, 0, true)));
+        for (int i = 0; i < boardTableModel.getRowCount(); i++) {
+            if (boardTableModel.getBoardLocation(i) == boardLocation) {
+                int index = boardTable.convertRowIndexToView(i);
+                boardTable.getSelectionModel().setSelectionInterval(index, index);
+                boardTable.scrollRectToVisible(
+                        new Rectangle(boardTable.getCellRect(index, 0, true)));
                 break;
             }
         }
@@ -481,7 +484,7 @@ public class JobPanel extends JPanel {
             this.job.removePropertyChangeListener("file", titlePropertyChangeListener); //$NON-NLS-1$
         }
         this.job = job;
-        tableModel.setJob(job);
+        boardTableModel.setJob(job);
         job.addPropertyChangeListener("dirty", titlePropertyChangeListener); //$NON-NLS-1$
         job.addPropertyChangeListener("file", titlePropertyChangeListener); //$NON-NLS-1$
         updateTitle();
@@ -539,12 +542,12 @@ public class JobPanel extends JPanel {
     }
 
     public void refresh() {
-        tableModel.fireTableDataChanged();
+        boardTableModel.fireTableDataChanged();
     }
 
     public void refreshSelectedRow() {
-        int index = table.convertRowIndexToModel(table.getSelectedRow());
-        tableModel.fireTableRowsUpdated(index, index);
+        int index = boardTable.convertRowIndexToModel(boardTable.getSelectedRow());
+        boardTableModel.fireTableRowsUpdated(index, index);
     }
 
     public BoardLocation getSelection() {
@@ -557,9 +560,9 @@ public class JobPanel extends JPanel {
 
     public List<BoardLocation> getSelections() {
         ArrayList<BoardLocation> selections = new ArrayList<>();
-        int[] selectedRows = table.getSelectedRows();
+        int[] selectedRows = boardTable.getSelectedRows();
         for (int selectedRow : selectedRows) {
-            selectedRow = table.convertRowIndexToModel(selectedRow);
+            selectedRow = boardTable.convertRowIndexToModel(selectedRow);
             selections.add(job.getBoardLocations().get(selectedRow));
         }
         return selections;
@@ -947,7 +950,7 @@ public class JobPanel extends JPanel {
     
     private void updatePanelizationIconState() {
     	// If more than board is in the job list, then autopanelize isn't allowed
-        if (getJob().isUsingPanel() == false && table.getRowCount() > 1){
+        if (getJob().isUsingPanel() == false && boardTable.getRowCount() > 1){
         	panelizeAction.setEnabled(false);
         	panelizeFiducialCheck.setEnabled(false);
             panelizeXOutAction.setEnabled(false);	
@@ -977,7 +980,7 @@ public class JobPanel extends JPanel {
         // 1. autopanelize is not in use OR
         // 2. autopanelize is in use and row 0 (first pcb) is selected
         if (getJob().isUsingPanel() == false
-                || (getJob().isUsingPanel() && table.getSelectedRow() == 0)) {
+                || (getJob().isUsingPanel() && boardTable.getSelectedRow() == 0)) {
             removeBoardAction.setEnabled(true);
         }
         else {
@@ -994,8 +997,8 @@ public class JobPanel extends JPanel {
             // of the 0,0 panel
             getJob().getPanels().get(0).setLocation(getJob());
 
-            tableModel.fireTableDataChanged();
-            Helpers.selectFirstTableRow(table);
+            boardTableModel.fireTableDataChanged();
+            Helpers.selectFirstTableRow(boardTable);
         }
     }
 
@@ -1123,9 +1126,9 @@ public class JobPanel extends JPanel {
                 Board board = configuration.getBoard(file);
                 BoardLocation boardLocation = new BoardLocation(board);
                 getJob().addBoardLocation(boardLocation);
-                tableModel.fireTableDataChanged();
+                boardTableModel.fireTableDataChanged();
 
-                Helpers.selectLastTableRow(table);
+                Helpers.selectLastTableRow(boardTable);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1162,9 +1165,9 @@ public class JobPanel extends JPanel {
                 BoardLocation boardLocation = new BoardLocation(board);
                 getJob().addBoardLocation(boardLocation);
                 // TODO: Move to a list property listener.
-                tableModel.fireTableDataChanged();
+                boardTableModel.fireTableDataChanged();
 
-                Helpers.selectLastTableRow(table);
+                Helpers.selectLastTableRow(boardTable);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -1187,7 +1190,7 @@ public class JobPanel extends JPanel {
             if (getJob().isUsingPanel()) {
                 getJob().removeAllBoards();
                 getJob().removeAllPanels();
-                tableModel.fireTableDataChanged();
+                boardTableModel.fireTableDataChanged();
                 addNewBoardAction.setEnabled(true);
                 addExistingBoardAction.setEnabled(true);
                 removeBoardAction.setEnabled(true);
@@ -1196,7 +1199,7 @@ public class JobPanel extends JPanel {
                 for (BoardLocation selection : getSelections()) {
                     getJob().removeBoardLocation(selection);
                 }
-                tableModel.fireTableDataChanged();
+                boardTableModel.fireTableDataChanged();
             }
             updatePanelizationIconState();
         }
@@ -1278,7 +1281,7 @@ public class JobPanel extends JPanel {
                         // used after the initial click. Otherwise, button focus is lost
                         // when table is updated
                     	Component comp = MainFrame.get().getFocusOwner();
-                    	Helpers.selectNextTableRow(table);
+                    	Helpers.selectNextTableRow(boardTable);
                     	comp.requestFocus();
                        HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                         Camera camera = tool.getHead().getDefaultCamera();
@@ -1412,7 +1415,7 @@ public class JobPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Helpers.selectFirstTableRow(table);
+                Helpers.selectFirstTableRow(boardTable);
                 Location location = Configuration.get().getMachine().getFiducialLocator()
                         .locateBoard(getSelection(), true);
 

@@ -30,10 +30,10 @@ public class Utils2DTest {
             // Given the actual board location and the two placements, calculate where they should
             // be after transforming. This calculation is known to be good.
             Location actualLocationA = Utils2D
-                    .calculateBoardPlacementLocation(actualBoardLocation, placementA.getLocation())
+                    .calculateBoardPlacementLocation(actualBoardLocation, placementA)
                     .derive(null, null, null, 0d);
             Location actualLocationB = Utils2D
-                    .calculateBoardPlacementLocation(actualBoardLocation, placementB.getLocation())
+                    .calculateBoardPlacementLocation(actualBoardLocation, placementB)
                     .derive(null, null, null, 0d);
 
             // Using a random input board location, which should not actually affect the result,
@@ -133,11 +133,11 @@ public class Utils2DTest {
         tx.translate(5, 15);
         tx.rotate(Math.toRadians(-6));
         
-        Location locationBefore = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+        Location locationBefore = Utils2D.calculateBoardPlacementLocation(boardLocation, placement);
         System.out.println(locationBefore);
         
         boardLocation.setPlacementTransform(tx);
-        Location locationAfter = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+        Location locationAfter = Utils2D.calculateBoardPlacementLocation(boardLocation, placement);
         System.out.println(locationAfter);
         
         check(locationBefore, 60.22, 14.22, -8, 84);

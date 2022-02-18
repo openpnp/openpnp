@@ -702,7 +702,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         jobPlacement.getPlacement().getId());
 
                 // Prepare the Nozzle for pick-to-place articulation.
-                Location placementLocation = Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), jobPlacement.getPlacement().getLocation());
+                Location placementLocation = Utils2D.calculateBoardPlacementLocation(jobPlacement.getBoardLocation(), jobPlacement.getPlacement());
                 nozzle.prepareForPickAndPlaceArticulation(feeder.getPickLocation(), placementLocation);
 
                 // Move to pick location.
@@ -792,7 +792,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                             partAlignment,
                             part,
                             boardLocation,
-                            placement.getLocation(), nozzle);
+                            placement, nozzle);
                     Logger.debug("Align {} with {}, offsets {}", part, nozzle, plannedPlacement.alignmentOffsets);
                     return;
                 }
@@ -973,7 +973,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
             // Check if there is a fiducial override for the board location and if so, use it.
             Location placementLocation =
-                    Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation());
+                    Utils2D.calculateBoardPlacementLocation(boardLocation, placement);
 
             // If there are alignment offsets update the placement location with them
             if (plannedPlacement.alignmentOffsets != null) {

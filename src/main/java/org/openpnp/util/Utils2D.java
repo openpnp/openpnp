@@ -31,6 +31,7 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.AbstractLocatable;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
@@ -201,8 +202,31 @@ public class Utils2D {
         return ret;
     }
 
+    public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl) {
+        Placement p = new Placement("dummy");
+        return calculateBoardPlacementLocation(bl, p);
+    }
+    
     public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl,
-            Location placementLocation) {
+            AbstractLocatable locatable) {
+//            Location placementLocation) {
+        
+        Location placementLocation = null;
+        if (locatable instanceof Placement) {
+            placementLocation = locatable.getLocation();
+        }
+        else if (locatable instanceof FiducialLocatableLocation) {
+            FiducialLocatableLocation fiducialLocatableLocation = (FiducialLocatableLocation) locatable;
+            Placement dummy = new Placement("dummy");
+            Location dims = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
+            Location loc = fiducialLocatableLocation.getLocation();
+            dummy.setLocation(dims.derive(null, 0.0, 0.0, 0.0).invert(false, false, false, false));
+            placementLocation = calculateBoardPlacementLocation(fiducialLocatableLocation, dummy);
+        }
+        else {
+            throw new UnsupportedOperationException("Unable calculate location for type " + locatable.getClass());
+        }
+        
         AffineTransform tx = bl.getLocalToParentTransform();        
         if (tx == null) {
             tx = getDefaultBoardPlacementLocationTransform(bl);
@@ -298,8 +322,8 @@ public class Utils2D {
 
         // Calculate the ideal placement locations. This is where we would expect the
         // placements to be if the board was at 0,0,0,0.
-        Location idealA = calculateBoardPlacementLocation(bl, placementA.getLocation());
-        Location idealB = calculateBoardPlacementLocation(bl, placementB.getLocation());
+        Location idealA = calculateBoardPlacementLocation(bl, placementA);
+        Location idealB = calculateBoardPlacementLocation(bl, placementB);
 
         // Just rename a couple variables to make the code easier to read.
         Location actualA = observedLocationA;

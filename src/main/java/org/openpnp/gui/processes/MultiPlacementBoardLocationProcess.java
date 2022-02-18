@@ -176,7 +176,7 @@ public class MultiPlacementBoardLocationProcess {
             //Move the camera near the first placement's location
             UiUtils.submitUiMachineTask(() -> {
                 Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                        placements.get(0).getLocation() );
+                        placements.get(0));
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
                 MovableUtils.fireTargetedUserAction(camera);
             });
@@ -237,7 +237,7 @@ public class MultiPlacementBoardLocationProcess {
                 //Move the camera near the next placement's expected location
                 UiUtils.submitUiMachineTask(() -> {
                     Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                            placements.get(idxPlacement).getLocation() );
+                            placements.get(idxPlacement) );
                     MovableUtils.moveToLocationAtSafeZ(camera, location);
                     MovableUtils.fireTargetedUserAction(camera);
                 });
@@ -308,9 +308,13 @@ public class MultiPlacementBoardLocationProcess {
         boardLocation.setPlacementTransform(tx);
         
         // Compute the compensated board location
-        Location origin = new Location(LengthUnit.Millimeters);
+//        Location origin = new Location(LengthUnit.Millimeters);
+//        if (boardSide == Side.Bottom) {
+//            origin = origin.add(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
+//        }
+        Placement origin = new Placement("dummy");
         if (boardSide == Side.Bottom) {
-            origin = origin.add(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
+            origin.setLocation(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
         }
         Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
         newBoardLocation = newBoardLocation.convertToUnits(boardLocation.getLocation().getUnits());
@@ -334,7 +338,7 @@ public class MultiPlacementBoardLocationProcess {
                 new TravellingSalesman.Locator<Placement>() { 
                     @Override
                     public Location getLocation(Placement locatable) {
-                        return Utils2D.calculateBoardPlacementLocation(boardLocation, locatable.getLocation());
+                        return Utils2D.calculateBoardPlacementLocation(boardLocation, locatable);
                     }
                 }, 
                 // start from current camera location

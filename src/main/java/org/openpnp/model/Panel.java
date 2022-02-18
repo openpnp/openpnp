@@ -25,16 +25,16 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener, 
 
     @Deprecated
     @Element(required = false)
-    private Integer columns = 1;
+    public Integer columns = 1;
     @Deprecated
     @Element(required = false)
-    private Integer rows = 1;
+    public Integer rows = 1;
     @Deprecated
     @Element(required = false)
-    private Length xGap;
+    public Length xGap;
     @Deprecated
     @Element(required = false)
-    private Length yGap;
+    public Length yGap;
 
     @Element(required=false)
     private String partId;
@@ -62,10 +62,10 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener, 
             placements.addAll(fiducials);
             fiducials = null;
         }
-        columns = null;
-        rows = null;
-        xGap = null;
-        yGap = null;
+//        columns = null;
+//        rows = null;
+//        xGap = null;
+//        yGap = null;
     }
     
     public Panel(File file) {
