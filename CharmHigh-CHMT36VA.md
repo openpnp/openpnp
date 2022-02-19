@@ -47,5 +47,5 @@ This documentation is incomplete and can use your help! Anyone with a GitHub acc
 * [Smoothie on STM32/CHMT Thread](https://groups.google.com/d/msg/desktop-pick-and-place/C-n9dksqhDQ/xZdmKPh3CAAJ)
 * [SwitcherCamera Documentation](https://github.com/openpnp/openpnp/wiki/SwitcherCamera): The SwitcherCamera lets OpenPnP switch the camera board on the CHMT between the top and bottom camera.
 * [CharmHigh Conversion](https://github.com/openpnp/openpnp/wiki/Charmhigh-modifications-for-OpenPnP): how to convert the CharmHigh machine to use Smoothieware and OpenPnP.
-* [Pneumatics Overview](https://github.com/openpnp/openpnp/wiki/Charmhigh-36VA-Pneumatics)
+* [Pneumatics Overview](https://github.com/openpnp/openpnp/wiki/Charmhigh-36VA-Pneumatics) Basic workings of the OEM pneumatics
 ---
