@@ -991,14 +991,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         disconnectRequested = true;
         connected = false;
 
-        disconnectThreads();
-
         try {
             getCommunications().disconnect();
         }
         catch (Exception e) {
             Logger.error(e, "disconnect()");
         }
+
+        disconnectThreads();
 
         closeGcodeLogger();
     }
@@ -1284,7 +1284,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 }
                 catch (IOException e) {
                     if (disconnectRequested) {
-                        Logger.trace(e, "Read error while disconnecting");
+                        Logger.trace("Read error while disconnecting (normal)");
                         return;
                     }
                     else {
@@ -1645,7 +1645,18 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 String value;
                 int pos = matcher.end();
                 if (matcher.find()) {
-                    value = detectedFirmware.substring(pos, matcher.start()-1);
+                    if (matcher.start() <= pos) {
+                        // Likely an illegal value with ':' in it, like an URL.
+                        if (matcher.find()) {
+                            value = detectedFirmware.substring(pos, matcher.start()-1);
+                        }
+                        else {
+                            value = detectedFirmware.substring(pos);
+                        }
+                    }
+                    else {
+                        value = detectedFirmware.substring(pos, matcher.start()-1);
+                    }
                 }
                 else {
                     value = detectedFirmware.substring(pos);

@@ -32,6 +32,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
@@ -410,12 +411,23 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
     private void editPipeline() throws Exception {
         CvPipeline pipeline = visionSettings.getCvPipeline();
-        pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
-        pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
+        Camera camera = VisionUtils.getBottomVisionCamera();
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        // Nominal position of the part over camera center
+        double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
+                .convertReverse(testAlignmentAngle.getText());
+        Location alignmentLocation = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), 
+                camera, nozzle, angle);
+        bottomVision.preparePipeline(pipeline, camera, nozzle, nozzle.getPart(), alignmentLocation, visionSettings);
 
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
-        dialog.setVisible(true);
+        UiUtils.confirmMoveToLocationAndAct(getTopLevelAncestor(), 
+                "move nozzle "+nozzle.getName()+" to the camera alignment location before editing the pipeline", 
+                nozzle, 
+                alignmentLocation, true, () -> {
+                    CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+                    JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
+                    dialog.setVisible(true);
+                });
     }
 
     private void testAlignment(boolean centerAfterTest) throws Exception {

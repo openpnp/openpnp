@@ -1,6 +1,5 @@
 package org.openpnp.machine.reference.vision;
 
-import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +12,8 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
+import org.openpnp.machine.reference.ReferenceNozzleTipCalibration.BackgroundCalibrationMethod;
 import org.openpnp.machine.reference.vision.wizards.BottomVisionSettingsConfigurationWizard;
 import org.openpnp.machine.reference.vision.wizards.ReferenceBottomVisionConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
@@ -119,6 +120,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) throws Exception {
+        if (part == null) {
+            throw new Exception("There is no part on nozzle "+nozzle.getName()+".");
+        }
         if (part.isPartHeightUnknown()) {
             if (camera.getFocusProvider() != null
                     && nozzle.getNozzleTip() instanceof ReferenceNozzleTip) {
@@ -373,11 +377,40 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
     }
 
-    private RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
-            Nozzle nozzle, Location wantedLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
+    public void preparePipeline(CvPipeline pipeline, Camera camera, Nozzle nozzle, 
+        Part part, Location wantedLocation, BottomVisionSettings bottomVisionSettings) {
         pipeline.setProperty("camera", camera);
-        pipeline.setProperty("part", part);
-        pipeline.setProperty("nozzle", nozzle);
+        // Set the footprint.
+        if (nozzle.getPart() != null && nozzle.getPart().getPackage() != null) {
+            Footprint footprint = nozzle.getPart().getPackage().getFootprint();
+            pipeline.setProperty("footprint", footprint);
+        }
+        // Set the background removal properties.
+        if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) { 
+            ReferenceNozzleTip referenceNozzleTip = (ReferenceNozzleTip) nozzle.getNozzleTip();
+            pipeline.setProperty("MaskCircle.diameter", referenceNozzleTip.getMaxPartDiameter());
+            ReferenceNozzleTipCalibration calibration = referenceNozzleTip.getCalibration();
+            if (calibration != null 
+                    && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
+                pipeline.setProperty("BlurGaussian.kernelSize", calibration.getMinimumDetailSize());
+// TODO: use a new minimumDetailSize property on the bottomVisionSettings (will be introduced a as new PR)
+//                pipeline.setProperty("FilterContours.minArea", 
+//                        bottomVisionSettings.getMinimumDetailSize()
+//                        .multiply(bottomVisionSettings.getMinimumDetailSize()));
+                pipeline.setProperty("MaskHsv.hueMin", 
+                        Math.max(0, calibration.getBackgroundMinHue() - calibration.getBackgroundTolHue()));
+                pipeline.setProperty("MaskHsv.hueMax", 
+                        Math.min(255, calibration.getBackgroundMaxHue() + calibration.getBackgroundTolHue()));
+                pipeline.setProperty("MaskHsv.saturationMin", 
+                        Math.max(0, calibration.getBackgroundMinSaturation() - calibration.getBackgroundTolSaturation()));
+                pipeline.setProperty("MaskHsv.saturationMax", 255);  
+                        // no need to restrict: Math.min(255, calibration.getBackgroundMaxSaturation() + calibration.getBackgroundTolSaturation()));
+                pipeline.setProperty("MaskHsv.valueMin", 0); 
+                        // no need to restrict: Math.max(0, calibration.getBackgroundMinValue() - calibration.getBackgroundTolValue()));
+                pipeline.setProperty("MaskHsv.valueMax", 
+                        Math.min(255, calibration.getBackgroundMaxValue() +  calibration.getBackgroundTolValue()));
+            }
+        }
         pipeline.setProperty("alignment.center", wantedLocation);
         pipeline.setProperty("alignment.expectedAngle", wantedLocation.getRotation());
         pipeline.setProperty("alignment.searchDistance", getMaxSearchDistance());
@@ -391,6 +424,12 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             pipeline.setProperty("alignment.maxWidth", maxPartDiameter);
             pipeline.setProperty("alignment.maxHeight", maxPartDiameter);
         }
+        
+    }
+
+    private RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
+            Nozzle nozzle, Location wantedLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
+        preparePipeline(pipeline, camera, nozzle, part, wantedLocation, bottomVisionSettings);
         pipeline.process();
 
         Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);

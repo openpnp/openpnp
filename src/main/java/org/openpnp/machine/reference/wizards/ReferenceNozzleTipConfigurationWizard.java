@@ -190,7 +190,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
 
         lblMaxPartDiameter = new JLabel("Max. Part Diameter");
         lblMaxPartDiameter.setToolTipText(
-                "Maximum diameter/diagonal of parts picked with this nozzle tip. ");
+                "<html>\nMaximum diameter/diagonal of parts picked with this nozzle tip, <br/>\nincluding tolerances.\n</html>\n");
         panelPartDimensions.add(lblMaxPartDiameter, "2, 2, right, default");
 
         maxPartDiameter = new JTextField();
