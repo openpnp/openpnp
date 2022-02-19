@@ -78,7 +78,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
         }
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
-        g.setColor(Color.black);
+        g.setColor(new Color(32, 32, 32));
         g.fillRect(0, 0, width, height);
         AffineTransform tx = g.getTransform();
         // invert the image in Y so that Y+ is up
@@ -160,6 +160,7 @@ public class SimulatedUpCamera extends ReferenceCamera {
 
         // Create a nozzle shape
         if (fillShape(g, new Ellipse2D.Double(-0.5, -0.5, 1, 1), new Color(0, 220, 0), unitsPerPixel, offsets, false)) {
+            fillShape(g, new Ellipse2D.Double(-0.1, -0.1, 0.2, 0.2), new Color(32, 32, 32), unitsPerPixel, offsets, false);
             if (frame != null) {
                 blurObjectIntoView(gView, frame, nozzle, l);
 

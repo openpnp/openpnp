@@ -1,5 +1,6 @@
 package org.openpnp.vision.pipeline;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -64,6 +65,8 @@ public class CvPipeline implements AutoCloseable {
     private ColorSpace workingColorSpace;
     
     private long totalProcessingTimeNs;
+
+    private BufferedImage lastCapturedImage;
     
     public CvPipeline() {
         
@@ -405,5 +408,13 @@ public class CvPipeline implements AutoCloseable {
         AnnotationStrategy strategy = new AnnotationStrategy();
         Serializer serializer = new Persister(strategy, format);
         return serializer;
+    }
+
+    public BufferedImage getLastCapturedImage() {
+        return lastCapturedImage;
+    }
+
+    public void setLastCapturedImage(BufferedImage lastCapturedImage) {
+        this.lastCapturedImage = lastCapturedImage;
     }
 }
