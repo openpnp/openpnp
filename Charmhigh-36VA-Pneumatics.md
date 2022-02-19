@@ -1,4 +1,7 @@
 ## 36VA General Pneumatic State/Output Diagram
+### CHMT OEM Pneumatic State Logic
+![Schematic_36VA_2022-02-19](https://user-images.githubusercontent.com/72060223/154819617-4d425036-a3c5-4a4f-9f77-a5eac3acc8f2.png)
+### Testing States
 ![Schematic_36VA_2022-02-18 (2)](https://user-images.githubusercontent.com/72060223/154782792-09768e5b-beb9-4d09-a2ad-ff65a555d4c6.png)
 ## Analog Pressure Sensor Analog Response 
 Settings:
