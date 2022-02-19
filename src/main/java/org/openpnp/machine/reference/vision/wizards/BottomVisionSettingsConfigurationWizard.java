@@ -413,7 +413,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         CvPipeline pipeline = visionSettings.getCvPipeline();
         Camera camera = VisionUtils.getBottomVisionCamera();
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-        ReferenceBottomVision.preparePipeline(pipeline, camera, nozzle);
+        ReferenceBottomVision.preparePipeline(pipeline, camera, nozzle, visionSettings);
         // Nominal position of the part over camera center
         double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
                 .convertReverse(testAlignmentAngle.getText());

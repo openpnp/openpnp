@@ -535,16 +535,25 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private int backgroundMaxHue; 
 
     @Attribute(required = false)
+    private int backgroundTolHue = 8; 
+
+    @Attribute(required = false)
     private int backgroundMinSaturation; 
 
     @Attribute(required = false)
     private int backgroundMaxSaturation; 
 
     @Attribute(required = false)
+    private int backgroundTolSaturation = 8; 
+
+    @Attribute(required = false)
     private int backgroundMinValue; 
 
     @Attribute(required = false)
     private int backgroundMaxValue; 
+
+    @Attribute(required = false)
+    private int backgroundTolValue = 8; 
 
     @Attribute(required = false)
     private String backgroundDiagnostics; 
@@ -1530,7 +1539,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     }
 
     public void setMinimumDetailSize(Length minimumDetailSize) {
+        Object oldValue = this.minimumDetailSize;
         this.minimumDetailSize = minimumDetailSize;
+        firePropertyChange("minimumDetailSize", oldValue, minimumDetailSize);
     }
 
     public int getBackgroundMinHue() {
@@ -1553,6 +1564,16 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         firePropertyChange("backgroundMaxHue", oldValue, backgroundMaxHue);
     }
 
+    public int getBackgroundTolHue() {
+        return backgroundTolHue;
+    }
+
+    public void setBackgroundTolHue(int backgroundTolHue) {
+        Object oldValue = this.backgroundTolHue;
+        this.backgroundTolHue = backgroundTolHue;
+        firePropertyChange("backgroundTolHue", oldValue, backgroundTolHue);
+    }
+
     public int getBackgroundMinSaturation() {
         return backgroundMinSaturation;
     }
@@ -1573,6 +1594,17 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         firePropertyChange("backgroundMaxSaturation", oldValue, backgroundMaxSaturation);
     }
 
+
+    public int getBackgroundTolSaturation() {
+        return backgroundTolSaturation;
+    }
+
+    public void setBackgroundTolSaturation(int backgroundTolSaturation) {
+        Object oldValue = this.backgroundTolSaturation;
+        this.backgroundTolSaturation = backgroundTolSaturation;
+        firePropertyChange("backgroundTolSaturation", oldValue, backgroundTolSaturation);
+    }
+
     public int getBackgroundMinValue() {
         return backgroundMinValue;
     }
@@ -1591,6 +1623,16 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         Object oldValue = this.backgroundMaxValue;
         this.backgroundMaxValue = backgroundMaxValue;
         firePropertyChange("backgroundMaxValue", oldValue, backgroundMaxValue);
+    }
+
+    public int getBackgroundTolValue() {
+        return backgroundTolValue;
+    }
+
+    public void setBackgroundTolValue(int backgroundTolValue) {
+        Object oldValue = this.backgroundTolValue;
+        this.backgroundTolValue = backgroundTolValue;
+        firePropertyChange("backgroundTolValue", oldValue, backgroundTolValue);
     }
 
     public String getBackgroundDiagnostics() {

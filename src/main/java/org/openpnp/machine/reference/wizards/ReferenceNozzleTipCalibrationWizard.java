@@ -55,6 +55,7 @@ import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration.BackgroundCalibrationMethod;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration.RecalibrationTrigger;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -109,14 +110,18 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(50dlu;default)"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(50dlu;default)"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(96dlu;default)"),
                 FormSpecs.UNRELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC,
@@ -142,6 +147,26 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         btnCalibrateCamera = new JButton("Calibrate Camera Position and Rotation");
         panelTop.add(btnCalibrateCamera, "8, 4");
         btnCalibrateCamera.setToolTipText("<html>\r\nCalibrate the bottom vision camera position and rotation <br />\r\naccording to a pattern of measured nozzle positions.\r\n</html>");
+
+        lblRecalibration = new JLabel("Auto Recalibration");
+        panelTop.add(lblRecalibration, "2, 6, right, default");
+        lblRecalibration.setToolTipText("<html>\r\n<p>Determines when a recalibration is automatically executed:</p>\r\n<p><ul><li>On each nozzle tip change.</li>\r\n<li>On each nozzle tip change but only in Jobs.</li>\r\n<li>On machine homing and when first loaded. </li></ul></p>\r\n<p>Manual with stored calibration (only recommended for machines <br /> \r\nwith C axis homing).</p>\r\n</html>");
+
+        recalibrationCb = new JComboBox(ReferenceNozzleTipCalibration.RecalibrationTrigger.values());
+        panelTop.add(recalibrationCb, "4, 6, 3, 1");
+
+        lblFailHoming = new JLabel("Fail Homing?");
+        panelTop.add(lblFailHoming, "2, 8, right, default");
+        lblFailHoming.setToolTipText(
+                "When the calibration fails during homing, also fail the homing cycle.");
+
+        failHoming = new JCheckBox("");
+        panelTop.add(failHoming, "4, 8");
+        recalibrationCb.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                adaptDialog();
+            }
+        });
         btnCalibrateCamera.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 calibrateCamera();
@@ -172,28 +197,26 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.UNRELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
 
         lblCalibrationInfo = new JLabel("Status");
@@ -221,7 +244,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(lblOffsetThreshold, "2, 6, right, default");
 
         offsetThresholdTf = new JTextField();
-        panelCalibration.add(offsetThresholdTf, "4, 6, left, default");
+        panelCalibration.add(offsetThresholdTf, "4, 6, fill, default");
         offsetThresholdTf.setColumns(10);
 
         lblCalibrationZOffset = new JLabel("Calibration Z Offset");
@@ -237,49 +260,29 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelCalibration.add(lblNozzleTipDiameter, "2, 8, right, default");
 
         calibrationTipDiameter = new JTextField();
-        panelCalibration.add(calibrationTipDiameter, "4, 8, left, default");
+        panelCalibration.add(calibrationTipDiameter, "4, 8, fill, default");
         calibrationTipDiameter.setColumns(10);
 
-        lblRecalibration = new JLabel("Automatic Recalibration");
-        lblRecalibration.setToolTipText("<html>\r\n<p>Determines when a recalibration is automatically executed:</p>\r\n<p><ul><li>On each nozzle tip change.</li>\r\n<li>On each nozzle tip change but only in Jobs.</li>\r\n<li>On machine homing and when first loaded. </li></ul></p>\r\n<p>Manual with stored calibration (only recommended for machines <br /> \r\nwith C axis homing).</p>\r\n</html>");
-        panelCalibration.add(lblRecalibration, "2, 10, right, default");
+        lblNewLabel = new JLabel("Pipeline");
+        panelCalibration.add(lblNewLabel, "2, 12, right, default");
 
-        recalibrationCb = new JComboBox(ReferenceNozzleTipCalibration.RecalibrationTrigger.values());
-        recalibrationCb.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
-                adaptDialog();
+        btnEditPipeline = new JButton("Edit");
+        panelCalibration.add(btnEditPipeline, "4, 12");
+
+        btnResetPipeline = new JButton("Reset");
+        panelCalibration.add(btnResetPipeline, "6, 12");
+        btnResetPipeline.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                resetCalibrationPipeline();
             }
         });
-        panelCalibration.add(recalibrationCb, "4, 10, 3, 1, fill, default");
-                
-                        lblFailHoming = new JLabel("Fail Homing?");
-                        lblFailHoming.setToolTipText(
-                                "When the calibration fails during homing, also fail the homing cycle.");
-                        panelCalibration.add(lblFailHoming, "2, 12, right, default");
-                
-                        failHoming = new JCheckBox("");
-                        panelCalibration.add(failHoming, "4, 12");
-        
-                lblNewLabel = new JLabel("Pipeline");
-                panelCalibration.add(lblNewLabel, "2, 14, right, default");
-                
-                        btnEditPipeline = new JButton("Edit");
-                        panelCalibration.add(btnEditPipeline, "4, 14");
-                        
-                                btnResetPipeline = new JButton("Reset");
-                                panelCalibration.add(btnResetPipeline, "6, 14");
-                                btnResetPipeline.addActionListener(new ActionListener() {
-                                    public void actionPerformed(ActionEvent e) {
-                                        resetCalibrationPipeline();
-                                    }
-                                });
-                        btnEditPipeline.addActionListener(new ActionListener() {
-                            public void actionPerformed(ActionEvent e) {
-                                UiUtils.messageBoxOnException(() -> {
-                                    editCalibrationPipeline();
-                                });
-                            }
-                        });
+        btnEditPipeline.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                UiUtils.messageBoxOnException(() -> {
+                    editCalibrationPipeline();
+                });
+            }
+        });
 
         nozzleTip.getCalibration().addPropertyChangeListener("calibrationInformation", e -> {
             firePropertyChange("calibrationStatus", null, null);;
@@ -306,28 +309,32 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("max(50dlu;default)"),
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                ColumnSpec.decode("max(70dlu;default)"),},
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        RowSpec.decode("max(50dlu;default)"),
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         lblMethod = new JLabel("Method");
         panelBackground.add(lblMethod, "2, 2, right, default");
@@ -339,7 +346,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
             }
         });
         panelBackground.add(backgroundCalibrationMethod, "4, 2, 3, 1, fill, default");
-        
+
         lblBlowup = new JLabel(" ");
         panelBackground.add(lblBlowup, "10, 2");
 
@@ -351,67 +358,82 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelBackground.add(minimumDetailSize, "4, 4, fill, default");
         minimumDetailSize.setColumns(10);
 
-        lblBrightnessMin = new JLabel("Brightness Min");
-        panelBackground.add(lblBrightnessMin, "2, 6, right, default");
+        lblMinimum = new JLabel("Minimum");
+        panelBackground.add(lblMinimum, "4, 8, center, default");
 
-        backgroundMinValue = new JTextField();
-        backgroundMinValue.setEditable(false);
-        panelBackground.add(backgroundMinValue, "4, 6, fill, default");
-        backgroundMinValue.setColumns(10);
+        lblMaximum = new JLabel("Maximum");
+        panelBackground.add(lblMaximum, "6, 8, center, default");
 
-        lblBrightnessMax = new JLabel("Brightness Max");
-        panelBackground.add(lblBrightnessMax, "6, 6, right, default");
+        lblTolerance = new JLabel("Tolerance");
+        panelBackground.add(lblTolerance, "8, 8, center, default");
 
-        backgroundMaxValue = new JTextField();
-        backgroundMaxValue.setEditable(false);
-        panelBackground.add(backgroundMaxValue, "8, 6, fill, default");
-        backgroundMaxValue.setColumns(10);
-
-        lblHueMin = new JLabel("Hue Min");
-        panelBackground.add(lblHueMin, "2, 8, right, default");
+        lblHue = new JLabel("Hue");
+        lblHue.setToolTipText("Base Color, Hue in the HSV color model");
+        panelBackground.add(lblHue, "2, 10, right, default");
 
         backgroundMinHue = new JTextField();
         backgroundMinHue.setEditable(false);
-        panelBackground.add(backgroundMinHue, "4, 8, fill, default");
+        panelBackground.add(backgroundMinHue, "4, 10, fill, default");
         backgroundMinHue.setColumns(10);
-
-        lblHueMax = new JLabel("Hue Max");
-        panelBackground.add(lblHueMax, "6, 8, right, default");
 
         backgroundMaxHue = new JTextField();
         backgroundMaxHue.setEditable(false);
-        panelBackground.add(backgroundMaxHue, "8, 8, fill, default");
+        panelBackground.add(backgroundMaxHue, "6, 10, fill, default");
         backgroundMaxHue.setColumns(10);
 
-        lblSaturationMin = new JLabel("Saturation Min");
-        panelBackground.add(lblSaturationMin, "2, 10, right, default");
+        backgroundTolHue = new JTextField();
+        panelBackground.add(backgroundTolHue, "8, 10, fill, default");
+        backgroundTolHue.setColumns(10);
+
+        lblSaturation = new JLabel("Saturation");
+        lblSaturation.setToolTipText("Saturation in the HSV color model");
+        panelBackground.add(lblSaturation, "2, 12, right, default");
 
         backgroundMinSaturation = new JTextField();
         backgroundMinSaturation.setEditable(false);
-        panelBackground.add(backgroundMinSaturation, "4, 10, fill, default");
+        panelBackground.add(backgroundMinSaturation, "4, 12, fill, default");
         backgroundMinSaturation.setColumns(10);
-
-        lblSaturationMax = new JLabel("Saturation Max");
-        panelBackground.add(lblSaturationMax, "6, 10, right, default");
 
         backgroundMaxSaturation = new JTextField();
         backgroundMaxSaturation.setEditable(false);
-        panelBackground.add(backgroundMaxSaturation, "8, 10, fill, default");
+        panelBackground.add(backgroundMaxSaturation, "6, 12, fill, default");
         backgroundMaxSaturation.setColumns(10);
 
+        backgroundTolSaturation = new JTextField();
+        panelBackground.add(backgroundTolSaturation, "8, 12, fill, default");
+        backgroundTolSaturation.setColumns(10);
+
+        lblBrightness = new JLabel("Value");
+        lblBrightness.setToolTipText("Brightness, Value in the HSV color model");
+        panelBackground.add(lblBrightness, "2, 14, right, default");
+
+        backgroundMinValue = new JTextField();
+        backgroundMinValue.setEditable(false);
+        panelBackground.add(backgroundMinValue, "4, 14, fill, default");
+        backgroundMinValue.setColumns(10);
+
+        backgroundMaxValue = new JTextField();
+        backgroundMaxValue.setEditable(false);
+        panelBackground.add(backgroundMaxValue, "6, 14, fill, default");
+        backgroundMaxValue.setColumns(10);
+
+        backgroundTolValue = new JTextField();
+        panelBackground.add(backgroundTolValue, "8, 14, fill, default");
+        backgroundTolValue.setColumns(10);
+
         hsvIndicator = new HsvIndicator();
-        panelBackground.add(hsvIndicator, "4, 12, 3, 3");
+        panelBackground.add(hsvIndicator, "4, 16, 3, 3");
 
         backgroundDiagnostics = new JLabel("No diagnostics yet.");
-        panelBackground.add(backgroundDiagnostics, "8, 12, 3, 1");
-        
+        panelBackground.add(backgroundDiagnostics, "8, 16, 3, 1");
+
         btnShowProblems = new JButton("Show Problems");
         btnShowProblems.addActionListener(new ActionListener() {
-           public void actionPerformed(ActionEvent arg0) {
+            public void actionPerformed(ActionEvent arg0) {
                 showBackgroundProblems(nozzleTip);
             }
         });
-        panelBackground.add(btnShowProblems, "8, 14");
+        panelBackground.add(btnShowProblems, "8, 18, 3, 1");
 
         adaptDialog();
     }
@@ -438,9 +460,10 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                     || comp == lblMethod) { 
                 comp.setEnabled(enabled); 
             }
-            else if (comp == backgroundMinValue || comp == backgroundMaxValue
+            else if (comp == backgroundMinValue || comp == backgroundMaxValue || comp == backgroundTolValue
                     || comp == minimumDetailSize
-                    || comp == lblBrightnessMin || comp == lblBrightnessMax
+                    || comp == lblMaximum || comp == lblMinimum || comp == lblTolerance
+                    || comp == lblBrightness
                     || comp == lblDetailSize
                     || comp == hsvIndicator
                     || comp == backgroundDiagnostics
@@ -488,17 +511,14 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private JComboBox backgroundCalibrationMethod;
     private JLabel lblDetailSize;
     private JTextField minimumDetailSize;
-    private JLabel lblBrightnessMin;
+    private JLabel lblBrightness;
     private JTextField backgroundMinValue;
-    private JLabel lblHueMin;
-    private JLabel lblHueMax;
+    private JLabel lblHue;
     private JTextField backgroundMinHue;
     private JTextField backgroundMaxHue;
-    private JLabel lblSaturationMin;
-    private JLabel lblSaturationMax;
+    private JLabel lblSaturation;
     private JTextField backgroundMinSaturation;
     private JTextField backgroundMaxSaturation;
-    private JLabel lblBrightnessMax;
     private JTextField backgroundMaxValue;
     private HsvIndicator hsvIndicator;
     private JPanel panel_2;
@@ -509,6 +529,12 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     private Timer timer;
 
     private int imageCount;
+    private JLabel lblMinimum;
+    private JLabel lblMaximum;
+    private JLabel lblTolerance;
+    private JTextField backgroundTolHue;
+    private JTextField backgroundTolSaturation;
+    private JTextField backgroundTolValue;
 
     public static ReferenceNozzle getUiCalibrationNozzle(ReferenceNozzleTip nozzleTip) throws Exception {
         ReferenceNozzle refNozzle; 
@@ -563,7 +589,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
 
     private void resetCalibrationPipeline() {
         nozzleTip.getCalibration()
-                 .resetPipeline();
+        .resetPipeline();
     }
 
     private void editCalibrationPipeline() throws Exception {
@@ -574,8 +600,9 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         Location location = nozzle.getLocation();
         Location distance = location.subtract(camera.getLocation());
         if (Math.abs(distance.getLengthX().divide(camera.getUnitsPerPixelAtZ().getLengthX())) >= camera.getWidth()/2
-            || Math.abs(distance.getLengthY().divide(camera.getUnitsPerPixelAtZ().getLengthY())) >= camera.getHeight()/2) {
-            // Outside the camera view, need to move to the center.
+                || Math.abs(distance.getLengthY().divide(camera.getUnitsPerPixelAtZ().getLengthY())) >= camera.getHeight()/2
+                || Math.abs(distance.getLengthZ().convertToUnits(LengthUnit.Millimeters).getValue()) >= 0.1) {
+            // Outside the camera view, or Z not set, need to move to the center.
             location = calibration.getCalibrationLocation(camera, nozzle);
         }
 
@@ -596,7 +623,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         applyAction.actionPerformed(null);
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrate(getUiCalibrationNozzle(nozzleTip));
+            .calibrate(getUiCalibrationNozzle(nozzleTip));
         });
     }
 
@@ -604,7 +631,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         applyAction.actionPerformed(null);
         UiUtils.submitUiMachineTask(() -> {
             nozzleTip.getCalibration()
-                .calibrateCamera(getUiCalibrationNozzle(nozzleTip));
+            .calibrateCamera(getUiCalibrationNozzle(nozzleTip));
         });
     }
 
@@ -612,7 +639,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
         LengthConverter lengthConverter = new LengthConverter();
-        
+
         addWrappedBinding(nozzleTip.getCalibration(), "enabled", calibrationEnabledCheckbox,
                 "selected");
         addWrappedBinding(nozzleTip.getCalibration(), "failHoming", failHoming,
@@ -643,30 +670,39 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "text", intConverter);
         addWrappedBinding(nozzleTip.getCalibration(), "backgroundMaxValue", backgroundMaxValue,
                 "text", intConverter);
+        addWrappedBinding(nozzleTip.getCalibration(), "backgroundTolValue", backgroundTolValue,
+                "text", intConverter);
         addWrappedBinding(nozzleTip.getCalibration(), "backgroundMinSaturation", backgroundMinSaturation,
                 "text", intConverter);
         addWrappedBinding(nozzleTip.getCalibration(), "backgroundMaxSaturation", backgroundMaxSaturation,
+                "text", intConverter);
+        addWrappedBinding(nozzleTip.getCalibration(), "backgroundTolSaturation", backgroundTolSaturation,
                 "text", intConverter);
         addWrappedBinding(nozzleTip.getCalibration(), "backgroundMinHue", backgroundMinHue,
                 "text", intConverter);
         addWrappedBinding(nozzleTip.getCalibration(), "backgroundMaxHue", backgroundMaxHue,
                 "text", intConverter);
+        addWrappedBinding(nozzleTip.getCalibration(), "backgroundTolHue", backgroundTolHue,
+                "text", intConverter);
 
-        bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "backgroundMinHue", hsvIndicator, "minHue");
-        bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "backgroundMaxHue", hsvIndicator, "maxHue");
-        bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "backgroundMinSaturation", hsvIndicator, "minSaturation");
-        bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "backgroundMaxSaturation", hsvIndicator, "maxSaturation");
-        bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "backgroundMinValue", hsvIndicator, "minValue");
-        bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "backgroundMaxValue", hsvIndicator, "maxValue");
+        bind(UpdateStrategy.READ, backgroundMinHue, "text", hsvIndicator, "minHue");
+        bind(UpdateStrategy.READ, backgroundMaxHue, "text", hsvIndicator, "maxHue");
+        bind(UpdateStrategy.READ, backgroundMinSaturation, "text", hsvIndicator, "minSaturation");
+        bind(UpdateStrategy.READ, backgroundMaxSaturation, "text", hsvIndicator, "maxSaturation");
+        bind(UpdateStrategy.READ, backgroundMinValue, "text", hsvIndicator, "minValue");
+        bind(UpdateStrategy.READ, backgroundMaxValue, "text", hsvIndicator, "maxValue");
 
         bind(UpdateStrategy.READ, nozzleTip.getCalibration(), "backgroundDiagnostics", backgroundDiagnostics, "text");
 
         ComponentDecorators.decorateWithAutoSelect(backgroundMinValue);
         ComponentDecorators.decorateWithAutoSelect(backgroundMaxValue);
+        ComponentDecorators.decorateWithAutoSelect(backgroundTolValue);
         ComponentDecorators.decorateWithAutoSelect(backgroundMinSaturation);
         ComponentDecorators.decorateWithAutoSelect(backgroundMaxSaturation);
+        ComponentDecorators.decorateWithAutoSelect(backgroundTolSaturation);
         ComponentDecorators.decorateWithAutoSelect(backgroundMinHue);
         ComponentDecorators.decorateWithAutoSelect(backgroundMaxHue);
+        ComponentDecorators.decorateWithAutoSelect(backgroundTolHue);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(offsetThresholdTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationZOffsetTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationTipDiameter);
