@@ -104,7 +104,7 @@ The default pipeline is described below:
 3. BlurGaussian: Performs minor blurring on the input image. This is used to reduce noise in the image.
 4. MaskCircle: Blacks out everything outside of a circle of a given diameter. On the development machine this circle represents a "safe" area in the image where nothing is visible except the nozzle.
 5. ConvertColor: Convert from RGB color to HSV color, which is required for the next stage.
-6. MaskHsv: Searches the image for any pixels that match a certain hue (the H in HSV) and turns them black. The purpose of this is to remove green and "greenish" pixels from the image. Green is the color of the nozzle holder. This is similar to the concept of "green screening".
+6. MaskHsv: Searches the image for any pixels that match a certain hue (the H in HSV) and turns them black. The purpose of this is to remove green and "greenish" pixels from the image. Green is the color of the nozzle holder. This is similar to the concept of "green screening". See also the [[Nozzle Tip Background Calibration]].
 7. ConvertColor: Convert back from HSV to RGB. This is required by the next stage.
 8. ConvertColor: Convert from RGB to grayscale.
 9. Threshold: Turns the image into a binary image - meaning that it has only two colors: white and black. Any gray pixels that are darker than the threshold value turn black and any lighter turn white.
