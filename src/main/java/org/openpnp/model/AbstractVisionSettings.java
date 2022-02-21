@@ -3,6 +3,7 @@ package org.openpnp.model;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -16,6 +17,7 @@ import org.openpnp.util.XmlSerialize;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Serializer;
 
 public abstract class AbstractVisionSettings extends AbstractModelObject implements VisionSettings {
@@ -24,7 +26,7 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     public static final String DEFAULT_BOTTOM_ID = "BVS_Default";
     public static final String DEFAULT_FIDUCIAL_ID = "FVS_Default";
 
-    @Attribute()
+    @Attribute
     private String id;
 
     @Attribute(required = false)
@@ -33,8 +35,11 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     @Attribute
     protected boolean enabled;
 
-    @Element()
+    @Element
     private CvPipeline cvPipeline;
+
+    @ElementMap(required = false)
+    private Map<String, Object> pipelineParameterAssignments;
 
     protected AbstractVisionSettings() {
     }
@@ -65,7 +70,7 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
         firePropertyChange("name", oldValue, name);
     }
 
-    public CvPipeline getCvPipeline() {
+    public CvPipeline getPipeline() {
         if (cvPipeline == null) {
             cvPipeline = new CvPipeline();
         }
@@ -73,10 +78,18 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
         return cvPipeline;
     }
 
-    public void setCvPipeline(CvPipeline cvPipeline) {
-        Object oldValue = this.cvPipeline;
+    public void setPipeline(CvPipeline cvPipeline) {
         this.cvPipeline = cvPipeline;
-        firePropertyChange("cvPipeline", oldValue, cvPipeline);
+        firePropertyChange("pipeline", null, cvPipeline);
+    }
+
+    public Map<String, Object> getPipelineParameterAssignments() {
+        return pipelineParameterAssignments;
+    }
+
+    public void setPipelineParameterAssignments(Map<String, Object> pipelineParameterAssignments) {
+        this.pipelineParameterAssignments = pipelineParameterAssignments;
+        firePropertyChange("pipelineParameterAssignments", null, pipelineParameterAssignments);
     }
 
     public boolean isEnabled() {

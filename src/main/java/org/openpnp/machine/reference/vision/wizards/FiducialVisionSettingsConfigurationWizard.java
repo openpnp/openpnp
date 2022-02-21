@@ -203,7 +203,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
             if (result == JOptionPane.YES_OPTION) {
                 UiUtils.messageBoxOnException(() -> {
                     ReferenceBottomVision fiducialVision = ReferenceBottomVision.getDefault();
-                    visionSettings.setCvPipeline(fiducialVision.getBottomVisionSettings().getCvPipeline().clone());
+                    visionSettings.setPipeline(fiducialVision.getBottomVisionSettings().getPipeline().clone());
                     editPipeline();
                 });
             }
@@ -302,7 +302,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
     }
 
     private void editPipeline() throws Exception {
-        CvPipeline pipeline = visionSettings.getCvPipeline();
+        CvPipeline pipeline = visionSettings.getPipeline();
         pipeline.setProperty("camera", fiducialLocator.getVisionCamera());
 
         CvPipelineEditor editor = new CvPipelineEditor(pipeline);

@@ -179,6 +179,7 @@ public class MaskHsv extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
+        commit();
         Mat mat = pipeline.getWorkingImage();
         Mat mask = mat.clone();
         Mat masked = mat.clone();

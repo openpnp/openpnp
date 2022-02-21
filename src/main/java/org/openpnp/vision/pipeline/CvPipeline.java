@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -141,7 +142,19 @@ public class CvPipeline implements AutoCloseable {
         }
         return null;
     }
-    
+
+    /**
+     * @return Active parameter stages used to control select pipeline stage properties. 
+     */
+    public List<CvAbstractParamStage> getParameterStages() {
+        return stages
+                .stream()
+                .filter(p -> p.isEnabled() && p instanceof CvAbstractParamStage)
+                .map(p -> (CvAbstractParamStage) p)
+                .filter(p -> p.getParameterName() != null && !p.getParameterName().isEmpty())
+                .collect(Collectors.toList());
+    }
+
     /**
      * Get the Result returned by the CvStage with the given name. May return null if the stage did
      * not return a result.
@@ -316,6 +329,16 @@ public class CvPipeline implements AutoCloseable {
     }
 
     /**
+     * Reset all the modified parameters to default values
+     * (we do not want the parameters to permanently modify the pipeline). 
+     */
+    public void resetToDefaults() {
+        for (CvAbstractParamStage stage : getParameterStages()) {
+            stage.resetValue(this);
+        }
+    }
+
+    /**
      * Release any temporary resources associated with the processing of the pipeline. Should be
      * called when the pipeline is no longer needed. This is primarily to release retained native
      * resources from OpenCV.
@@ -352,6 +375,7 @@ public class CvPipeline implements AutoCloseable {
      * @throws Exception
      */
     public String toXmlString() throws Exception {
+        resetToDefaults();
         Serializer ser = createSerializer();
         StringWriter sw = new StringWriter();
         ser.write(this, sw);
@@ -401,7 +425,13 @@ public class CvPipeline implements AutoCloseable {
     public void setProperty(String name, Object value) {
         properties.put(name, value);
     }
-    
+
+    public void setProperties(Map<String, Object> pipelineParameterAssignments) {
+        if (pipelineParameterAssignments != null) {
+            properties.putAll(pipelineParameterAssignments);
+        }
+    }
+
     private static Serializer createSerializer() {
         Style style = new HyphenStyle();
         Format format = new Format(style);

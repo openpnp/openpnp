@@ -395,7 +395,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                     "Package %s fidcuial vision settings %s are disabled.",
                     pkg.getId(), visionSettings.getName()));
         }
-        CvPipeline pipeline = visionSettings.getCvPipeline(); 
+        CvPipeline pipeline = visionSettings.getPipeline(); 
 
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("part", partSettingsHolder);
@@ -627,7 +627,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     public Wizard getPartConfigurationWizard(PartSettingsHolder partSettingsHolder) {
         FiducialVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
         try {
-            visionSettings.getCvPipeline().setProperty("camera", getVisionCamera());
+            visionSettings.getPipeline().setProperty("camera", getVisionCamera());
         }
         catch (Exception e) {
         }
@@ -690,7 +690,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         FiducialVisionSettings stockFiducialVisionSettings = createStockFiducialVisionSettings();
         configuration.addVisionSettings(stockFiducialVisionSettings);
         PartSettings equivalentPartSettings = new PartSettings();
-        equivalentPartSettings.setPipeline(stockFiducialVisionSettings.getCvPipeline());
+        equivalentPartSettings.setPipeline(stockFiducialVisionSettings.getPipeline());
         fiducialVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), stockFiducialVisionSettings);
         // Migrate the default settings.
         FiducialVisionSettings defaultFiducialVisionSettings = new FiducialVisionSettings(AbstractVisionSettings.DEFAULT_FIDUCIAL_ID);
@@ -698,14 +698,14 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         defaultFiducialVisionSettings.setEnabled(true);
         configuration.addVisionSettings(defaultFiducialVisionSettings);
         if(pipeline != null) {
-            defaultFiducialVisionSettings.setCvPipeline(pipeline);
+            defaultFiducialVisionSettings.setPipeline(pipeline);
             pipeline = null;
         }
         else {
-            defaultFiducialVisionSettings.setCvPipeline(stockFiducialVisionSettings.getCvPipeline());
+            defaultFiducialVisionSettings.setPipeline(stockFiducialVisionSettings.getPipeline());
         }
         setFiducialVisionSettings(defaultFiducialVisionSettings);
-        equivalentPartSettings.setPipeline(defaultFiducialVisionSettings.getCvPipeline());
+        equivalentPartSettings.setPipeline(defaultFiducialVisionSettings.getPipeline());
         fiducialVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), defaultFiducialVisionSettings);
         for (Part part: configuration.getParts()) {
             part.setFiducialVisionSettings(null);
@@ -752,7 +752,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             fiducialVisionSettings = new FiducialVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_ID);
             fiducialVisionSettings.setName("- Stock Fiducial Vision Settings -");
             fiducialVisionSettings.setEnabled(true);
-            fiducialVisionSettings.setCvPipeline(createStockPipeline());
+            fiducialVisionSettings.setPipeline(createStockPipeline());
             return fiducialVisionSettings;
         }
         catch (Exception e) {

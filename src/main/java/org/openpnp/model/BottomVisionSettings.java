@@ -46,7 +46,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     public BottomVisionSettings(PartSettings partSettings) {
         this();
         this.setEnabled(partSettings.isEnabled());
-        this.setCvPipeline(partSettings.getPipeline());
+        this.setPipeline(partSettings.getPipeline());
         this.preRotateUsage = partSettings.getPreRotateUsage();
         this.checkPartSizeMethod = partSettings.getCheckPartSizeMethod();
         this.checkSizeTolerancePercent = partSettings.getCheckSizeTolerancePercent();
@@ -107,7 +107,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     public void setValues(BottomVisionSettings another) {
         setEnabled(another.isEnabled());
         try {
-            setCvPipeline(another.getCvPipeline().clone());
+            setPipeline(another.getPipeline().clone());
         }
         catch (CloneNotSupportedException e) {
         }
