@@ -21,13 +21,13 @@
 
 package org.openpnp.vision.pipeline.stages;
 
-import org.openpnp.vision.pipeline.CvAbstractParamStage;
+import org.openpnp.vision.pipeline.CvAbstractScalarParameterStage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 
 @Stage(description="Exposes an Integer stage property as an external parameter to this pipeline.")
-public class ExposeParameterInteger extends CvAbstractParamStage {
+public class ParameterInteger extends CvAbstractScalarParameterStage {
 
     @Attribute(required = false)
     @Property(description = "Minimum value of the parameter.")
@@ -40,16 +40,6 @@ public class ExposeParameterInteger extends CvAbstractParamStage {
     @Attribute(required = false)
     @Property(description = "Default value of the parameter.")
     private int defaultValue = 128;
-
-    enum ScaleFunction {
-        ScaleNormal,
-        ScaleReverse,
-        ScaleSquared
-    };
-
-    @Attribute(required = false)
-    @Property(description = "The transformation function applied to the parameter, before it is assigned to the stage property.")
-    private ScaleFunction scaleFuntion = ScaleFunction.ScaleNormal;
 
     public int getMinimumValue() {
         return minimumValue;
@@ -76,29 +66,57 @@ public class ExposeParameterInteger extends CvAbstractParamStage {
         this.defaultValue = defaultValue;
     }
 
-    public ScaleFunction getScaleFuntion() {
-        return scaleFuntion;
-    }
-
-    public void setScaleFuntion(ScaleFunction scaleFuntion) {
-        this.scaleFuntion = scaleFuntion;
-    }
-
     @Override
     protected Class<?> getParameterValueType() {
         return Integer.class;
     }
 
+    private boolean isReversed() {
+        return getMinimumValue() > getMaximumValue();
+    }
+
     @Override
-    protected
-    Object transformValue(Object value) {
-        switch (getScaleFuntion()) {
-            case ScaleReverse:
-                return getMinimumValue() + getMaximumValue() - (int)value;
-            case ScaleSquared:
-                return (int)value*(int)value;
-            default:
-                return value;
+    public int getMinimumScalar() {
+        if (isReversed()) {
+            return getMaximumValue();
         }
+        else {
+            return getMinimumValue();
+        }
+    }
+
+    @Override
+    public int getMaximumScalar() {
+        if (isReversed()) {
+            return getMinimumValue();
+        }
+        else {
+            return getMaximumValue();
+        }
+    }
+
+    @Override
+    public int convertToScalar(Object value) {
+        if (isReversed()) {
+            return super.convertToScalar(getMinimumScalar() + (getMaximumScalar() - (int)value));
+        }
+        else {
+            return super.convertToScalar((int)value);
+        }
+    }
+
+    @Override
+    public Object convertToValue(int scalar) {
+        if (isReversed()) {
+            return getMinimumValue() + (getMaximumValue() - scalar);
+        }
+        else {
+            return scalar;
+        }
+    }
+
+    @Override
+    public String displayValue(Object value) {
+        return String.valueOf(value);
     }
 }

@@ -478,6 +478,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         @Override
                         public void pipelineChanged() {
                             super.pipelineChanged();
+                            // We need to make sure, the settings is recognized as a change, otherwise 
+                            // somehow the firePropertyChange() will not be propagated. 
+                            visionSettings.setPipeline(null);
                             visionSettings.setPipeline(pipeline);
                         }
                     };

@@ -266,7 +266,7 @@ public abstract class AbstractVisionSettings extends AbstractModelObject impleme
     }
 
     public boolean isStockSetting() {
-        return getId().equals(STOCK_BOTTOM_ID) || getId().equals(STOCK_FIDUCIAL_ID);
+        return getId().contains("Stock");
     }
 
     public static String createSettingsFingerprint(Object partSettings) {

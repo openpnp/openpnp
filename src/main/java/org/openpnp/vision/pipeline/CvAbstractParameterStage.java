@@ -28,8 +28,7 @@ import java.lang.reflect.Method;
 
 import org.simpleframework.xml.Attribute;
 
-@Stage(description="Exposes a stage property as an external parameter to this pipeline.")
-public abstract class CvAbstractParamStage extends CvStage {
+public abstract class CvAbstractParameterStage extends CvStage {
 
     @Attribute(required = false)
     @Property(description = "Name of the parameter.")
@@ -104,7 +103,7 @@ public abstract class CvAbstractParamStage extends CvStage {
     }
 
     public abstract Object getDefaultValue();
-
+    public abstract String displayValue(Object value);
     protected abstract Class<?> getParameterValueType();
 
     @Override
@@ -124,7 +123,7 @@ public abstract class CvAbstractParamStage extends CvStage {
         }
         Object value = getPossiblePipelinePropertyOverride(getDefaultValue(), pipeline, getParameterName(), 
                 getParameterValueType());
-        invokeSetter(stage, propertyName, transformValue(value));
+        invokeSetter(stage, propertyName, value);
         return null;
     }
 
@@ -141,15 +140,11 @@ public abstract class CvAbstractParamStage extends CvStage {
         return getter.invoke(obj);
     }
 
-    protected Object transformValue(Object value) {
-        return value;
-    }
-
     void resetValue(CvPipeline pipeline) {
         CvStage stage = pipeline.getStage(stageName);
         if (stage != null) {
             try {
-                invokeSetter(stage, propertyName, transformValue(getDefaultValue()));
+                invokeSetter(stage, propertyName, getDefaultValue());
             }
             catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
                     | IntrospectionException e) {

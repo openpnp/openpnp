@@ -400,7 +400,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     }
 
     public static void preparePipeline(CvPipeline pipeline, Camera camera, Nozzle nozzle, BottomVisionSettings bottomVisionSettings) {
-        pipeline.setProperties(bottomVisionSettings.getPipelineParameterAssignments());
         pipeline.setProperty("camera", camera);
         // Set the footprint.
         if (nozzle.getPart() != null && nozzle.getPart().getPackage() != null) {
@@ -433,6 +432,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         Math.min(255, calibration.getBackgroundMaxValue() +  calibration.getBackgroundTolValue()));
             }
         }
+        pipeline.setProperties(bottomVisionSettings.getPipelineParameterAssignments());
     }
 
     private static RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,

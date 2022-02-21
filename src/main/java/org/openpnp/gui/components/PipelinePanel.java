@@ -46,11 +46,12 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
-import org.openpnp.vision.pipeline.CvAbstractParamStage;
+import org.openpnp.vision.pipeline.CvAbstractParameterStage;
+import org.openpnp.vision.pipeline.CvAbstractScalarParameterStage;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
-import org.openpnp.vision.pipeline.stages.ExposeParameterInteger;
+import org.openpnp.vision.pipeline.stages.ParameterInteger;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -134,7 +135,7 @@ public abstract class PipelinePanel extends JPanel {
     public abstract void editPipeline() throws Exception;
     public abstract void resetPipeline() throws Exception;
 
-    private Object getParameterValue(CvAbstractParamStage paramStage) {
+    private Object getParameterValue(CvAbstractParameterStage paramStage) {
         if (pipelineParameterAssignments != null 
                 && pipelineParameterAssignments.containsKey(paramStage.getParameterName())) {
             return pipelineParameterAssignments.get(paramStage.getParameterName());
@@ -142,7 +143,7 @@ public abstract class PipelinePanel extends JPanel {
         return paramStage.getDefaultValue();
     }
 
-    private void setParameterValue(CvAbstractParamStage paramStage, Object value) {
+    private void setParameterValue(CvAbstractParameterStage paramStage, Object value) {
         if (value != null
                 && !value.equals(getParameterValue(paramStage))) {
             Map<String, Object> newMap = new HashMap<>();
@@ -154,18 +155,20 @@ public abstract class PipelinePanel extends JPanel {
         }
     }
 
-    protected void previewParameterChangeEffect(CvAbstractParamStage paramStage, Object value) {
+    protected void previewParameterChangeEffect(CvAbstractParameterStage paramStage, Object value) {
         if (!value.equals(getParameterValue(paramStage))) {
             // Value has changed since the invokeLater call, no point in previewing.
             return;
         }
-        boolean hasEffectStage = paramStage.getEffectStageName() != null && !paramStage.getEffectStageName().isEmpty();
-        if (paramStage.isPreviewResult()
-                || hasEffectStage) {
+        boolean hasEffectStage = paramStage.getEffectStageName() != null 
+                && !paramStage.getEffectStageName().isEmpty();
+        if (hasEffectStage || paramStage.isPreviewResult()) {
             if (timer != null) {
+                // If another preview is triggered, while a former preview timer is still running, the former is stopped.  
                 timer.stop();
                 timer = null;
             }
+            // Process the pipeline to show preview images. 
             try (CvPipeline pipeline = getPipeline()) {
                 preparePipeline();
                 pipeline.setProperties(pipelineParameterAssignments);
@@ -188,24 +191,23 @@ public abstract class PipelinePanel extends JPanel {
                     image.release();
                 }
                 if (showImages.size() > 0) {
-                    cameraView.showFilteredImage(showImages.get(0), paramStage.getParameterName()+" = "+value, 3000);
+                    // Show the first image directly.
+                    cameraView.showFilteredImage(showImages.get(0), paramStage.getParameterName()+" = "+paramStage.displayValue(value), 3000);
                     showImages.remove(0);
                     if (showImages.size() > 0) {
+                        // Show subsequent images with a timer.
                         timer = new Timer(1000, e -> {
-                            // Parameter was stable all that time: also display the pipeline end image. 
                             cameraView.showFilteredImage(showImages.get(0), 
-                                    paramStage.getParameterName()+" = "+value, 3000);
+                                    paramStage.getParameterName()+" = "+paramStage.displayValue(value), 3000);
                             showImages.remove(0);
                             if (showImages.isEmpty()) {
+                                // No more images, stop.
                                 timer.stop();
                                 timer = null;
                             }
                         });
                         timer.start();
                     }
-                }
-                else if (paramStage.isPreviewResult()) {
-                    cameraView.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()), paramStage.getParameterName()+" = "+value, 3000);
                 }
             }
             catch (Exception e) {
@@ -215,7 +217,7 @@ public abstract class PipelinePanel extends JPanel {
     }
 
     public PipelinePanel() { 
-        //rebuildUi();
+        rebuildUi();
     }
 
     private RowSpec[] dynamicRowspec(int rows) {
@@ -227,13 +229,15 @@ public abstract class PipelinePanel extends JPanel {
         return rowspec;
     }
 
+    private int invokation = 0;
     private void rebuildUi() {
-        org.pmw.tinylog.Logger.trace("rebuild "+hashCode());
         removeAll();
-        List<CvAbstractParamStage> parameterStages = getPipeline() != null ? 
+        invokation++;
+        JPanel panel = this;
+        List<CvAbstractParameterStage> parameterStages = getPipeline() != null ? 
                 getPipeline().getParameterStages() : new ArrayList<>();
         int rows = 1 + parameterStages.size();
-        setLayout(new FormLayout(new ColumnSpec[] {
+        panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -252,7 +256,7 @@ public abstract class PipelinePanel extends JPanel {
         } : dynamicRowspec(rows)));
 
         JLabel lblPipeline = new JLabel("Pipeline");
-        add(lblPipeline, "2, 2, right, default");
+        panel.add(lblPipeline, "2, 2, right, default");
 
         btnEdit = new JButton("Edit");
         btnEdit.setEnabled(isEnabled());
@@ -262,7 +266,7 @@ public abstract class PipelinePanel extends JPanel {
                 UiUtils.messageBoxOnException(() -> editPipeline());
             }
         });
-        add(btnEdit, "4, 2");
+        panel.add(btnEdit, "4, 2");
 
         btnReset = new JButton("Reset");
         btnReset.setEnabled(isEnabled());
@@ -272,30 +276,29 @@ public abstract class PipelinePanel extends JPanel {
                 UiUtils.messageBoxOnException(() -> resetPipeline());
             }
         });
-        add(btnReset, "6, 2");
+        panel.add(btnReset, "6, 2");
 
         int formRow = 2;
-        for (CvAbstractParamStage stage : parameterStages) {
-            org.pmw.tinylog.Logger.trace("rebuild "+stage.getParameterName());
-            if (stage instanceof ExposeParameterInteger) {
-                ExposeParameterInteger stageInteger = (ExposeParameterInteger) stage;
+        for (CvAbstractParameterStage parameter : parameterStages) {
+            //org.pmw.tinylog.Logger.trace("rebuild "+stage.getParameterName()+" invokation "+invokation);
+            if (parameter instanceof CvAbstractScalarParameterStage) {
+                CvAbstractScalarParameterStage scalarParameter = (ParameterInteger) parameter;
                 try {
-                    JLabel lbl = new JLabel(stage.getParameterName());
-                    lbl.setToolTipText(stage.getParameterDescription());
+                    JLabel lbl = new JLabel(parameter.getParameterName());
+                    lbl.setToolTipText(parameter.getParameterDescription());
                     lbl.setEnabled(isEnabled());
-                    add(lbl, "2, "+(formRow*2)+", right, default");
-                    int parameterValue = Math.max(stageInteger.getMinimumValue(), 
-                            Math.min(stageInteger.getMaximumValue(),
-                                    (int)getParameterValue(stage)));
+                    panel.add(lbl, "2, "+(formRow*2)+", right, default");
                     JSlider slider = new JSlider(JSlider.HORIZONTAL,
-                            stageInteger.getMinimumValue(), stageInteger.getMaximumValue(), 
-                            parameterValue);
+                            scalarParameter.getMinimumScalar(), scalarParameter.getMaximumScalar(), 
+                            scalarParameter.convertToScalar(getParameterValue(parameter)));
                     slider.setEnabled(isEnabled());
                     slider.addChangeListener(new ChangeListener() {
                         public void stateChanged(ChangeEvent e) {
-                            int value = (int) slider.getValue();
-                            setParameterValue(stage, value);
-                            int newValue = (int)getParameterValue(stage);
+                            int value = slider.getValue();
+                            // Store as value.
+                            setParameterValue(parameter, scalarParameter.convertToValue(value));
+                            // Convert back, it may have been sanitized.
+                            int newValue = scalarParameter.convertToScalar(getParameterValue(parameter));
                             if (newValue != value) {
                                 slider.setValue(newValue);
                             }
@@ -306,13 +309,13 @@ public abstract class PipelinePanel extends JPanel {
                         @Override
                         public void mousePressed(MouseEvent e) {
                             int value = (int) slider.getValue();
-                            SwingUtilities.invokeLater(() -> previewParameterChangeEffect(stage, value));
+                            SwingUtilities.invokeLater(() -> previewParameterChangeEffect(parameter, scalarParameter.convertToValue(value)));
                             super.mousePressed(e);
                         }
                     });
-                    slider.setToolTipText(stage.getParameterDescription());
+                    slider.setToolTipText(parameter.getParameterDescription());
                     slider.setEnabled(isEnabled());
-                    add(slider, "4, "+(formRow*2)+", 3, 1, fill, default");
+                    panel.add(slider, "4, "+(formRow*2)+", 3, 1, fill, default");
                 }
                 catch (Exception e) {
                     Logger.warn(e);
@@ -320,6 +323,7 @@ public abstract class PipelinePanel extends JPanel {
             }
             formRow++;
         }
-        SwingUtilities.invokeLater(() -> { validate(); });
+        revalidate();
+        repaint();
     }
 }

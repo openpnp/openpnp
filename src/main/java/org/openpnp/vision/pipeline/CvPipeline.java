@@ -146,11 +146,11 @@ public class CvPipeline implements AutoCloseable {
     /**
      * @return Active parameter stages used to control select pipeline stage properties. 
      */
-    public List<CvAbstractParamStage> getParameterStages() {
+    public List<CvAbstractParameterStage> getParameterStages() {
         return stages
                 .stream()
-                .filter(p -> p.isEnabled() && p instanceof CvAbstractParamStage)
-                .map(p -> (CvAbstractParamStage) p)
+                .filter(p -> p.isEnabled() && p instanceof CvAbstractParameterStage)
+                .map(p -> (CvAbstractParameterStage) p)
                 .filter(p -> p.getParameterName() != null && !p.getParameterName().isEmpty())
                 .collect(Collectors.toList());
     }
@@ -333,7 +333,7 @@ public class CvPipeline implements AutoCloseable {
      * (we do not want the parameters to permanently modify the pipeline). 
      */
     public void resetToDefaults() {
-        for (CvAbstractParamStage stage : getParameterStages()) {
+        for (CvAbstractParameterStage stage : getParameterStages()) {
             stage.resetValue(this);
         }
     }
