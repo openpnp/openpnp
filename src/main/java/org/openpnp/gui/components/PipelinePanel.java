@@ -53,7 +53,6 @@ import org.openpnp.vision.pipeline.CvAbstractScalarParameterStage;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
-import org.openpnp.vision.pipeline.stages.ParameterInteger;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
 import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 import org.pmw.tinylog.Logger;
@@ -205,7 +204,7 @@ public abstract class PipelinePanel extends JPanel {
                 && pipelineParameterAssignments.containsKey(paramStage.getParameterName())) {
             return pipelineParameterAssignments.get(paramStage.getParameterName());
         }
-        return paramStage.getDefaultValue();
+        return paramStage.getDefaultParameterValue();
     }
 
     private void setParameterValue(CvAbstractParameterStage paramStage, Object value) {
@@ -348,7 +347,7 @@ public abstract class PipelinePanel extends JPanel {
         for (CvAbstractParameterStage parameter : parameterStages) {
             //org.pmw.tinylog.Logger.trace("rebuild "+stage.getParameterName()+" invokation "+invokation);
             if (parameter instanceof CvAbstractScalarParameterStage) {
-                CvAbstractScalarParameterStage scalarParameter = (ParameterInteger) parameter;
+                CvAbstractScalarParameterStage scalarParameter = (CvAbstractScalarParameterStage) parameter;
                 try {
                     JLabel lbl = new JLabel(parameter.getParameterName());
                     lbl.setToolTipText(parameter.getParameterDescription());

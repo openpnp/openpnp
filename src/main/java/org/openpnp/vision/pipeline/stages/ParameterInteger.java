@@ -22,11 +22,12 @@
 package org.openpnp.vision.pipeline.stages;
 
 import org.openpnp.vision.pipeline.CvAbstractScalarParameterStage;
+import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
 import org.simpleframework.xml.Attribute;
 
-@Stage(description="Exposes an Integer stage property as an external parameter to this pipeline.")
+@Stage(description="Exposes an integer stage property as an external parameter to this pipeline.")
 public class ParameterInteger extends CvAbstractScalarParameterStage {
 
     @Attribute(required = false)
@@ -57,13 +58,22 @@ public class ParameterInteger extends CvAbstractScalarParameterStage {
         this.maximumValue = maximumValue;
     }
 
-    @Override
-    public Integer getDefaultValue() {
+    public int getDefaultValue() {
         return defaultValue;
     }
 
-    public void setDefaultValue(Integer defaultValue) {
+    public void setDefaultValue(int defaultValue) {
         this.defaultValue = defaultValue;
+    }
+
+    @Override
+    public Integer getDefaultParameterValue() {
+        return defaultValue;
+    }
+
+    @Override
+    public Integer getAppliedValue(CvPipeline pipeline, Object value) {
+        return (int)value;
     }
 
     @Override
@@ -119,4 +129,5 @@ public class ParameterInteger extends CvAbstractScalarParameterStage {
     public String displayValue(Object value) {
         return String.valueOf(value);
     }
+
 }

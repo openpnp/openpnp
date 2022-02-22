@@ -102,7 +102,8 @@ public abstract class CvAbstractParameterStage extends CvStage {
         this.previewResult = previewResult;
     }
 
-    public abstract Object getDefaultValue();
+    public abstract Object getAppliedValue(CvPipeline pipeline, Object value);
+    public abstract Object getDefaultParameterValue();
     public abstract String displayValue(Object value);
     protected abstract Class<?> getParameterValueType();
 
@@ -121,30 +122,36 @@ public abstract class CvAbstractParameterStage extends CvStage {
         if (stage == null) {
             throw new Exception("Stage \""+stageName+"\" not found");
         }
-        Object value = getPossiblePipelinePropertyOverride(getDefaultValue(), pipeline, getParameterName(), 
-                getParameterValueType());
-        invokeSetter(stage, propertyName, value);
+        Object value = pipeline.getProperty(getParameterName());
+        if (value == null) {
+            value = getDefaultParameterValue();
+        }
+        invokeSetter(stage, propertyName, getAppliedValue(pipeline, value));
         return null;
     }
 
-    protected void invokeSetter(Object obj, String propertyName, Object variableValue) throws IntrospectionException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    protected void invokeSetter(Object obj, String propertyName, Object variableValue) 
+            throws IntrospectionException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         PropertyDescriptor pd;
         pd = new PropertyDescriptor(propertyName, obj.getClass());
+        // Implicitly cast double to int.
+        if (pd.getPropertyType() == int.class
+                && variableValue instanceof Double) {
+            variableValue = (int)Math.round((double)variableValue);
+        }
+        else if (pd.getPropertyType() == Integer.class
+                && variableValue instanceof Double) {
+            variableValue = (Integer)(int)Math.round((double)variableValue);
+        }
         Method setter = pd.getWriteMethod();
         setter.invoke(obj, variableValue);
-    }
-
-    protected Object invokeGetter(Object obj, String variableName) throws IntrospectionException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        PropertyDescriptor pd = new PropertyDescriptor(variableName, obj.getClass());
-        Method getter = pd.getReadMethod();
-        return getter.invoke(obj);
     }
 
     void resetValue(CvPipeline pipeline) {
         CvStage stage = pipeline.getStage(stageName);
         if (stage != null) {
             try {
-                invokeSetter(stage, propertyName, getDefaultValue());
+                invokeSetter(stage, propertyName, getAppliedValue(pipeline, getDefaultParameterValue()));
             }
             catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
                     | IntrospectionException e) {
