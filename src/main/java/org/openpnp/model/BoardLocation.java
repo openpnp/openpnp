@@ -76,7 +76,8 @@ public class BoardLocation extends FiducialLocatableLocation {
     
     @Persist
     private void persist() {
-        if (MainFrame.get().getJobTab().getJob().getPanelLocations().get(parentId) == null) {
+//        if (MainFrame.get().getJobTab().getJob().getPanelLocations().get(parentId) == null) {
+        if (parentId == null) {
             parentId = "Root";
         }
     }

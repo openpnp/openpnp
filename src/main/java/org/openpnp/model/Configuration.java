@@ -45,6 +45,7 @@ import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.ThemeInfo;
 import org.openpnp.gui.components.ThemeSettingsPanel;
+import org.openpnp.model.Board.Side;
 import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.IdentifiableList;
@@ -711,7 +712,7 @@ public class Configuration extends AbstractModelObject {
         resolveBoards(job);
 
         job.setDirty(false);
-
+        
         return job;
     }
 
@@ -721,12 +722,16 @@ public class Configuration extends AbstractModelObject {
         }
     }
     
-    private void resolveBoard(Job job, BoardLocation boardLocation) throws Exception {
+    public void resolveBoard(Job job, BoardLocation boardLocation) throws Exception {
         String boardFilename = boardLocation.getBoardFile();
         // First see if we can find the board at the given filename
         // If the filename is not absolute this will be relative
         // to the working directory
         File boardFile = new File(boardFilename);
+        if (!boardFile.exists() && boardLocation.getParent() != null) {
+            //If that didn't work, try to find it in the parent panel directory
+            boardFile = new File(boardLocation.getParent().getFiducialLocatable().getFile().getParentFile(), boardFilename);
+        }
         if (!boardFile.exists()) {
             // If that fails, see if we can find it relative to the
             // directory the job was in
@@ -739,15 +744,19 @@ public class Configuration extends AbstractModelObject {
         boardLocation.setBoard(board);
     }
     
-    private void resolvePanels(Job job, List<PanelLocation> panelLocations) throws Exception {
+    public void resolvePanels(Job job, List<PanelLocation> panelLocations) throws Exception {
         if (panelLocations == null || panelLocations.isEmpty()) {
             return;
         }
         for (FiducialLocatableLocation panelLocation : panelLocations) {
             Panel panel;
-            if (panelLocation.getFiducialLocatable() == null) {
+            if (panelLocation.getFiducialLocatable() == null  || ((Panel) panelLocation.getFiducialLocatable()).getVersion() != null) {
                 String panelFileName = panelLocation.getFileName();
                 File panelFile = new File(panelFileName);
+                if (!panelFile.exists() && panelLocation.getParent() != null) {
+                    //If that didn't work, try to find it in the parent panel directory
+                    panelFile = new File(panelLocation.getParent().getFiducialLocatable().getFile().getParentFile(), panelFileName);
+                }
                 if (!panelFile.exists()) {
                     // If that fails, see if we can find it relative to the
                     // directory the job was in
@@ -801,31 +810,28 @@ public class Configuration extends AbstractModelObject {
                     rootDims.getLengthY().add(panel.yGap).multiply(panel.rows).subtract(panel.yGap),
                     null, null));
                 
-                //Remove the deprecated elements from the panel
-                panel.xGap = null;
-                panel.yGap = null;
-                panel.rows = null;
-                panel.columns = null;
-                
                 //Remove all the old boards from the job - they will get added back below
                 job.removeAllBoards();
             }
             
-            AffineTransform localToRootTransform = ((PanelLocation) panelLocation).getLocalToRootTransform();
-            
-            Location newPanelLocation = Utils2D.calculateBoardPlacementLocation(panelLocation, new Placement("Dummy"));
-            newPanelLocation = newPanelLocation.convertToUnits(panelLocation.getLocation().getUnits());
-            newPanelLocation = newPanelLocation.derive(null, null, panelLocation.getLocation().getZ(), null);
-
-            
             List<PanelLocation> childPanelLocations = new IdentifiableList<>();
             for (FiducialLocatableLocation child : panel.getChildren()) {
                 if (child instanceof PanelLocation) {
-                    childPanelLocations.add((PanelLocation) child);
+                    PanelLocation panelLoc = new PanelLocation((PanelLocation) child);
+                    panelLoc.setParentId(panelLocation.getId());
+                    panelLoc.setParent(panelLocation);
+                    if (panelLocation.getSide() == Side.Bottom) {
+                        panelLoc.flipSide();
+                    }
+                    childPanelLocations.add(panelLoc);
                 }
                 if (child instanceof BoardLocation) {
                     BoardLocation boardLocation = new BoardLocation((BoardLocation) child);
                     boardLocation.setParentId(panelLocation.getId());
+                    boardLocation.setParent(panelLocation);
+                    if (panelLocation.getSide() == Side.Bottom) {
+                        boardLocation.flipSide();
+                    }
                     resolveBoard(job, boardLocation);
                     Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(panelLocation, boardLocation);
                     boardLocation.setLocation(newBoardLocation);

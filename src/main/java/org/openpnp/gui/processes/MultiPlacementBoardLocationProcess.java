@@ -30,6 +30,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -71,7 +72,7 @@ public class MultiPlacementBoardLocationProcess {
     private List<Location> measuredLocations;
     private int nPlacements;
     private int idxPlacement = 0;
-    private BoardLocation boardLocation;
+    private FiducialLocatableLocation boardLocation;
     private Side boardSide;
     private Location savedBoardLocation;
     private AffineTransform savedPlacementTransform;
@@ -101,11 +102,11 @@ public class MultiPlacementBoardLocationProcess {
         
         //Save the current board location and transform in case it needs to be restored
         savedBoardLocation = boardLocation.getLocation();
-        savedPlacementTransform = boardLocation.getPlacementTransform();
+        savedPlacementTransform = boardLocation.getLocalToParentTransform();
         
         // Clear the current transform so it doesn't potentially send us to the wrong spot
         // to find the placements.
-        boardLocation.setPlacementTransform(null);
+        boardLocation.setLocalToParentTransform(null);
 
         props = (MultiPlacementBoardLocationProperties) Configuration.get().getMachine().
                     getProperty("MultiPlacementBoardLocationProperties");
@@ -176,7 +177,7 @@ public class MultiPlacementBoardLocationProcess {
             //Move the camera near the first placement's location
             UiUtils.submitUiMachineTask(() -> {
                 Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                        placements.get(0));
+                        placements.get(0).getLocation());
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
                 MovableUtils.fireTargetedUserAction(camera);
             });
@@ -213,7 +214,7 @@ public class MultiPlacementBoardLocationProcess {
                 setBoardLocationAndPlacementTransform();
                 
                 //Clear the placement transform so we don't mix results with different transforms
-                boardLocation.setPlacementTransform(null);
+                boardLocation.setLocalToParentTransform(null);
 
                 //Turn-on auto move
                 autoMove = true;
@@ -237,7 +238,7 @@ public class MultiPlacementBoardLocationProcess {
                 //Move the camera near the next placement's expected location
                 UiUtils.submitUiMachineTask(() -> {
                     Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                            placements.get(idxPlacement) );
+                            placements.get(idxPlacement).getLocation());
                     MovableUtils.moveToLocationAtSafeZ(camera, location);
                     MovableUtils.fireTargetedUserAction(camera);
                 });
@@ -256,7 +257,7 @@ public class MultiPlacementBoardLocationProcess {
             double boardOffset = boardLocation.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(savedBoardLocation);
             Logger.info("Board origin offset distance: " + boardOffset + " mm");
            
-            Utils2D.AffineInfo ai = Utils2D.affineInfo(boardLocation.getPlacementTransform());
+            Utils2D.AffineInfo ai = Utils2D.affineInfo(boardLocation.getLocalToParentTransform());
             Logger.info("Placement affine transform: " + ai);
             
             String errString = "";
@@ -305,16 +306,12 @@ public class MultiPlacementBoardLocationProcess {
         AffineTransform tx = Utils2D.deriveAffineTransform(expectedLocations, measuredLocations);
         
         //Set the transform
-        boardLocation.setPlacementTransform(tx);
+        boardLocation.setLocalToParentTransform(tx);
         
         // Compute the compensated board location
-//        Location origin = new Location(LengthUnit.Millimeters);
-//        if (boardSide == Side.Bottom) {
-//            origin = origin.add(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
-//        }
-        Placement origin = new Placement("dummy");
+        Location origin = new Location(LengthUnit.Millimeters);
         if (boardSide == Side.Bottom) {
-            origin.setLocation(boardLocation.getBoard().getDimensions().derive(null, 0., 0., 0.));
+            origin = origin.add(boardLocation.getFiducialLocatable().getDimensions().derive(null, 0., 0., 0.));
         }
         Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
         newBoardLocation = newBoardLocation.convertToUnits(boardLocation.getLocation().getUnits());
@@ -326,7 +323,7 @@ public class MultiPlacementBoardLocationProcess {
         //Need to set transform again because setting the location clears the transform - shouldn't the 
         //BoardLocation.setPlacementTransform method perform the above calculations and set the location
         //itself since it already has all the needed information???
-        boardLocation.setPlacementTransform(tx);
+        boardLocation.setLocalToParentTransform(tx);
         
         return newBoardLocation;
     }
@@ -338,7 +335,7 @@ public class MultiPlacementBoardLocationProcess {
                 new TravellingSalesman.Locator<Placement>() { 
                     @Override
                     public Location getLocation(Placement locatable) {
-                        return Utils2D.calculateBoardPlacementLocation(boardLocation, locatable);
+                        return Utils2D.calculateBoardPlacementLocation(boardLocation, locatable.getLocation());
                     }
                 }, 
                 // start from current camera location
@@ -355,7 +352,7 @@ public class MultiPlacementBoardLocationProcess {
     private void cancel() {
         //Restore the old settings
         boardLocation.setLocation(savedBoardLocation);
-        boardLocation.setPlacementTransform(savedPlacementTransform);
+        boardLocation.setLocalToParentTransform(savedPlacementTransform);
         jobPanel.refreshSelectedRow();
         
         mainFrame.hideInstructions();

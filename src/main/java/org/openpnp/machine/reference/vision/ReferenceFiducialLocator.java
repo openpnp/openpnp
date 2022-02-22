@@ -136,7 +136,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
 
         if (fiducials.size() < 2) {
             throw new Exception(String.format(
-                    "The board side contains only %d placements marked as fiducials, but at least 2 are required.",
+                    "The panel/board side contains only %d placements marked as fiducials, but at least 2 are required.",
                     fiducials.size()));
         }
 
@@ -158,7 +158,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                 new TravellingSalesman.Locator<Placement>() { 
                     @Override
                     public Location getLocation(Placement locatable) {
-                        return Utils2D.calculateBoardPlacementLocation(fiducialLocatableLocation, locatable);
+                        return Utils2D.calculateBoardPlacementLocation(fiducialLocatableLocation, locatable.getLocation());
                     }
                 }, 
                 // start from current camera location
@@ -190,13 +190,9 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         fiducialLocatableLocation.setLocalToParentTransform(tx);
         
         // Return the compensated board location
-//        Location origin = new Location(LengthUnit.Millimeters);
-//        if (fiducialLocatableLocation.getSide() == Side.Bottom) {
-//            origin = origin.add(fiducialLocatableLocation.getFiducialLocatable().getDimensions().derive(null, 0., 0., 0.));
-//        }
-        Placement origin = new Placement("dummy");
+        Location origin = new Location(LengthUnit.Millimeters);
         if (fiducialLocatableLocation.getSide() == Side.Bottom) {
-            origin.setLocation(fiducialLocatableLocation.getFiducialLocatable().getDimensions().derive(null, 0., 0., 0.));
+            origin = origin.add(fiducialLocatableLocation.getFiducialLocatable().getDimensions().derive(null, 0., 0., 0.));
         }
         Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(fiducialLocatableLocation, origin);
         newBoardLocation = newBoardLocation.convertToUnits(fiducialLocatableLocation.getLocation().getUnits());
@@ -364,7 +360,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
 
         Location location =
-                Utils2D.calculateBoardPlacementLocation(boardLocation, fid);
+                Utils2D.calculateBoardPlacementLocation(boardLocation, fid.getLocation());
 
         return getFiducialLocation(location, part);
     }

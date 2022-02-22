@@ -106,7 +106,7 @@ public class DlgPanelXOut extends JDialog {
             }
 
             jobPanel.refresh();
-            Helpers.selectFirstTableRow(jobPanel.getBoardLocationsTable());
+            Helpers.selectFirstTableRow(jobPanel.getFiducialLocatableLocationsTable());
 
             setVisible(false);
         }

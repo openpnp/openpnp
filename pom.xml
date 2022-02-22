@@ -18,6 +18,11 @@
 		<openpnp.version>${maven.build.timestamp}.${buildNumber}</openpnp.version>
 	</properties>
 	<dependencies>
+        <dependency>
+          <groupId>de.javagl</groupId>
+          <artifactId>treetable</artifactId>
+          <version>0.0.1</version>
+        </dependency>
 		<dependency>
 		  <groupId>net.java.dev.jna</groupId>
 		  <artifactId>jna</artifactId>

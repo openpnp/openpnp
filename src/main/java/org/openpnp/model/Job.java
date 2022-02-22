@@ -37,16 +37,16 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 /**
- * A Job specifies a list of one or more BoardLocations.
+ * A Job specifies a list of one or more PanelLocations and/or BoardLocations.
  */
 @Root(name = "openpnp-job")
 public class Job extends AbstractModelObject implements PropertyChangeListener {
     @ElementList(required = false)
-    protected IdentifiableList<PanelLocation> panelLocations = new IdentifiableList<>();
+    protected List<PanelLocation> panelLocations = new ArrayList<>();
 
     @Deprecated
     @ElementList(required = false)
-    protected IdentifiableList<Panel> panels = new IdentifiableList<>();
+    protected List<Panel> panels = new ArrayList<>();
 
     @ElementList
     private ArrayList<BoardLocation> boardLocations = new ArrayList<>();
@@ -71,32 +71,9 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         //Convert deprecated list of Panels to list of PanelLocations
         if (panels != null && !panels.isEmpty()) {
             Panel panel = panels.get(0);
-//            String boardFileName = boardLocations.get(0).getBoardFile();
-//            String panelFileName = boardFileName.substring(0, boardFileName.indexOf(".board.xml")) + ".panel.xml";
             PanelLocation panelLocation = new PanelLocation(panel);
-//            panelLocation.setPanelFile(panelFileName);
             panelLocation.setParent(null);
             panelLocation.setLocation(boardLocations.get(0).getLocation());
-            panelLocation.setId(panel.getId());
-//            AffineTransform panelLocalToRoot = panelLocation.getLocalToRootTransform();
-//            for (BoardLocation boardLocation : boardLocations) {
-//                
-//                AffineTransform boardLocalToPanel = Utils2D.getDefaultBoardPlacementLocationTransform(boardLocation);
-//                try {
-//                    boardLocalToPanel.concatenate(panelLocalToRoot.createInverse());
-//                }
-//                catch (NoninvertibleTransformException e) {
-//                    // TODO Auto-generated catch block
-//                    e.printStackTrace();
-//                }
-//                boardLocation.setLocalToParentTransform(boardLocalToPanel);
-//                Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, Location.origin);
-//                newBoardLocation = newBoardLocation.convertToUnits(boardLocation.getLocation().getUnits());
-//                newBoardLocation = newBoardLocation.derive(null, null, boardLocation.getLocation().getZ(), null);
-//                boardLocation.setLocation(newBoardLocation);
-//                panelLocation.getPanel().getChildren().add(boardLocation);
-//            }
-//            boardLocations.clear();
             panelLocation.addPropertyChangeListener(this);
             panelLocations.add(panelLocation);
             panels = null;
@@ -142,7 +119,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         panels.clear();
     }
 
-    public IdentifiableList<Panel> getPanels() {
+    public List<Panel> getPanels() {
         return panels;
     }
 
@@ -162,14 +139,79 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         return false;
     }
 
-    public IdentifiableList<PanelLocation> getPanelLocations() {
-        return panelLocations;
+    public List<PanelLocation> getPanelLocations() {
+        return Collections.unmodifiableList(panelLocations);
     }
 
-    public void setPanelLocations(IdentifiableList<PanelLocation> panelLocations) {
-        Object oldValue = this.panelLocations;
-        this.panelLocations = panelLocations;
+    public void addPanelLocation(PanelLocation panelLocation) {
+        Object oldValue = panelLocations;
+        panelLocations = new ArrayList<>(panelLocations);
+        panelLocations.add(panelLocation);
         firePropertyChange("panelLocations", oldValue, panelLocations);
+        panelLocation.addPropertyChangeListener(this);
+    }
+
+    public void removePanelLocation(PanelLocation panelLocation) {
+        Object oldValue = panelLocations;
+        panelLocations = new ArrayList<>(panelLocations);
+        panelLocations.remove(panelLocation);
+        firePropertyChange("boardLocations", oldValue, boardLocations);
+        panelLocation.removePropertyChangeListener(this);
+    }
+
+    public void removeAllPanelLocations() {
+        List<PanelLocation> oldValue = panelLocations;
+        panelLocations = new ArrayList<>();
+
+        firePropertyChange("panelLocations", (Object) oldValue, panelLocations);
+
+        for (int i = 0; i < oldValue.size(); i++) {
+            oldValue.get(i).removePropertyChangeListener(this);
+        }
+    }
+
+    public List<FiducialLocatableLocation> getFiducialLocatableLocations() {
+        List<FiducialLocatableLocation> retList = new ArrayList<>();
+        //First add the panels and any boards that belong to the panels
+        for (PanelLocation panelLocation : panelLocations) {
+            retList.add(panelLocation);
+            for (BoardLocation boardLocation : boardLocations) {
+                if (boardLocation.isDecendantOf(panelLocation)) {
+                    retList.add(boardLocation);
+                }
+            }
+        }
+        //Now add any boards that are part of the job but are not part of any panel
+        for (BoardLocation boardLocation : boardLocations) {
+            if (boardLocation.getParent() == null) {
+                retList.add(boardLocation);
+            }
+        }
+        return Collections.unmodifiableList(retList);
+    }
+    
+    public void addFiducialLocatableLocation(FiducialLocatableLocation fiducialLocatableLocation) {
+        if (fiducialLocatableLocation instanceof PanelLocation) {
+            addPanelLocation((PanelLocation) fiducialLocatableLocation);
+        }
+        else if (fiducialLocatableLocation instanceof BoardLocation) {
+            addBoardLocation((BoardLocation) fiducialLocatableLocation);
+        }
+        else {
+            throw new UnsupportedOperationException("Instance type " + fiducialLocatableLocation.getClass() + " not supported.");
+        }
+    }
+
+    public void removeFiducialLocatableLocation(FiducialLocatableLocation fiducialLocatableLocation) {
+        if (fiducialLocatableLocation instanceof PanelLocation) {
+            removePanelLocation((PanelLocation) fiducialLocatableLocation);
+        }
+        else if (fiducialLocatableLocation instanceof BoardLocation) {
+            removeBoardLocation((BoardLocation) fiducialLocatableLocation);
+        }
+        else {
+            throw new UnsupportedOperationException("Instance type " + fiducialLocatableLocation.getClass() + " not supported.");
+        }
     }
 
     public File getFile() {

@@ -26,8 +26,8 @@ import org.simpleframework.xml.core.Commit;
 
 public class PanelLocation extends FiducialLocatableLocation {
 
-    PanelLocation() {
-        setLocation(new Location(LengthUnit.Millimeters));
+    public PanelLocation() {
+        super();
     }
 
     // Copy constructor needed for deep copy of object.

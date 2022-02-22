@@ -237,12 +237,12 @@ public class DlgAutoPanelize extends JDialog {
         partsComboBox.setLightWeightPopupEnabled(false);
         partsComboBox.setMaximumRowCount(7);
         jPanel.add(partsComboBox, "4, 18, 7, 1, fill, fill");
-        partsComboBox.setSelectedItem(pcbPanel.getFiducialPart());
+        partsComboBox.setSelectedItem(pcbPanel.getDefaultFiducialPart());
         partsComboBox.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                pcbPanel.setFiducialPart((Part)partsComboBox.getSelectedItem());
+                pcbPanel.setDefaultFiducialPart((Part)partsComboBox.getSelectedItem());
             }
             
         });
@@ -382,7 +382,7 @@ public class DlgAutoPanelize extends JDialog {
                     validatePanel();
                     jobPanel.getJob().removeAllPanels();
                     jobPanel.getJob().addPanel(pcbPanel);
-                    jobPanel.populatePanelSettingsIntoBoardLocations();
+//                    jobPanel.populatePanelSettingsIntoBoardLocations();
                     setVisible(false);
                 }
             });
@@ -410,7 +410,7 @@ public class DlgAutoPanelize extends JDialog {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Placement newFiducial = new Placement(pcbPanel.getPlacements().createId("PanelFid"));
-            newFiducial.setPart(pcbPanel.getFiducialPart());
+            newFiducial.setPart(pcbPanel.getDefaultFiducialPart());
             newFiducial.setType(Placement.Type.Fiducial);
             pcbPanel.getFiducials().add(newFiducial);
             tableModel.fireTableDataChanged();

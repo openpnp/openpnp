@@ -203,13 +203,17 @@ public class Utils2D {
     }
 
     public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl) {
+        return calculateBoardPlacementLocation(bl, Location.origin);
+    }
+    
+    public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl, Location location) {
         Placement p = new Placement("dummy");
+        p.setLocation(location);
         return calculateBoardPlacementLocation(bl, p);
     }
     
     public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl,
             AbstractLocatable locatable) {
-//            Location placementLocation) {
         
         Location placementLocation = null;
         if (locatable instanceof Placement) {
@@ -218,13 +222,14 @@ public class Utils2D {
         else if (locatable instanceof FiducialLocatableLocation) {
             FiducialLocatableLocation fiducialLocatableLocation = (FiducialLocatableLocation) locatable;
             Placement dummy = new Placement("dummy");
-            Location dims = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
-            Location loc = fiducialLocatableLocation.getLocation();
-            dummy.setLocation(dims.derive(null, 0.0, 0.0, 0.0).invert(false, false, false, false));
+            if (bl.getSide() != fiducialLocatableLocation.getSide()) {
+                Location dims = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
+                dummy.setLocation(dims.derive(null, 0.0, 0.0, 0.0));
+            }
             placementLocation = calculateBoardPlacementLocation(fiducialLocatableLocation, dummy);
         }
         else {
-            throw new UnsupportedOperationException("Unable calculate location for type " + locatable.getClass());
+            throw new UnsupportedOperationException("Unable to calculate location for type " + locatable.getClass());
         }
         
         AffineTransform tx = bl.getLocalToParentTransform();        
@@ -322,8 +327,8 @@ public class Utils2D {
 
         // Calculate the ideal placement locations. This is where we would expect the
         // placements to be if the board was at 0,0,0,0.
-        Location idealA = calculateBoardPlacementLocation(bl, placementA);
-        Location idealB = calculateBoardPlacementLocation(bl, placementB);
+        Location idealA = calculateBoardPlacementLocation(bl, placementA.getLocation());
+        Location idealB = calculateBoardPlacementLocation(bl, placementB.getLocation());
 
         // Just rename a couple variables to make the code easier to read.
         Location actualA = observedLocationA;

@@ -71,6 +71,7 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 
+@SuppressWarnings("serial")
 public class JobPlacementsPanel extends JPanel {
     private JTable table;
     private PlacementsTableModel tableModel;
@@ -124,11 +125,11 @@ public class JobPlacementsPanel extends JPanel {
         JComboBox<Type> typesComboBox = new JComboBox(new Type[] { Type.Placement, Type.Fiducial });
         JComboBox<Type> errorHandlingComboBox = new JComboBox(ErrorHandling.values());
         
-                setLayout(new BorderLayout(0, 0));
+        setLayout(new BorderLayout(0, 0));
         tableModel = new PlacementsTableModel(configuration);
         tableSorter = new TableRowSorter<>(tableModel);
         
-                table = new AutoSelectTextTable(tableModel);
+        table = new AutoSelectTextTable(tableModel);
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -497,7 +498,7 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                        getSelection());
+                        getSelection().getLocation());
 
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
@@ -528,7 +529,7 @@ public class JobPlacementsPanel extends JPanel {
                 Helpers.selectNextTableRow(table);
                 comp.requestFocus();
                 Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                        getSelection());
+                        getSelection().getLocation());
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
                 MovableUtils.moveToLocationAtSafeZ(camera, location);
@@ -551,7 +552,7 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                    getSelection());
+                    getSelection().getLocation());
 
             Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
             UiUtils.submitUiMachineTask(() -> {

@@ -151,7 +151,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     throws Exception {
         double wantedAngle = placement.getLocation().getRotation();
         if (boardLocation != null) {
-            wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placement)
+            wantedAngle = Utils2D.calculateBoardPlacementLocation(boardLocation, placement.getLocation())
                     .getRotation();
         }
         wantedAngle = Utils2D.angleNorm(wantedAngle, 180.);

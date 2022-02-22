@@ -2,6 +2,7 @@ package org.openpnp.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +23,11 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
     @ElementList(required = false)
     protected IdentifiableList<Placement> placements = new IdentifiableList<>();
 
+    protected transient File file;
+    
+    protected transient boolean dirty;
+
+
     public FiducialLocatable() {
     }
     
@@ -29,6 +35,8 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
         this.name = fiducialLocatable.name;
         this.dimensions = fiducialLocatable.dimensions;
         placements.addAll(fiducialLocatable.placements);
+        file = fiducialLocatable.file;
+        dirty = fiducialLocatable.dirty;
     }
     
     public String getName() {
@@ -85,9 +93,31 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
         }
     }
 
+    public File getFile() {
+        return file;
+    }
+
+    void setFile(File file) {
+        Object oldValue = this.file;
+        this.file = file;
+        firePropertyChange("file", oldValue, file);
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        boolean oldValue = this.dirty;
+        this.dirty = dirty;
+        firePropertyChange("dirty", oldValue, dirty);
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        // TODO Auto-generated method stub
+        if (evt.getSource() != FiducialLocatable.this || !evt.getPropertyName().equals("dirty")) {
+            setDirty(true);
+        }
     }
 
 }

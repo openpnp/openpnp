@@ -13,16 +13,20 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 @Root(name = "openpnp-panel")
-public class Panel extends FiducialLocatable implements PropertyChangeListener, Identifiable {
-    @Element
-    private String id;
-
+public class Panel extends FiducialLocatable implements PropertyChangeListener {
+    public static final String LATEST_VERSION = "1.0";
+    
+    @Attribute(required = false)
+    private String version = null;
+    
     @Deprecated
     @Element(required = false)
     public Integer columns = 1;
@@ -35,9 +39,12 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener, 
     @Deprecated
     @Element(required = false)
     public Length yGap;
-
+    @Deprecated
     @Element(required=false)
     private String partId;
+    
+    @Element(required=false)
+    private String defaultFiducialPartId;
     
     @Element
     private boolean checkFids;
@@ -52,30 +59,39 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener, 
     @ElementList(required = false)
     protected List<FiducialLocatableLocation> children = new ArrayList<>();
     
-    private transient File file;
-    private transient boolean dirty;
-
     @Commit
     private void commit() {
         //Converted deprecated elements
         if (fiducials != null) {
+            defaultFiducialPartId = partId;
             placements.addAll(fiducials);
-            fiducials = null;
         }
-//        columns = null;
-//        rows = null;
-//        xGap = null;
-//        yGap = null;
     }
     
-    public Panel(File file) {
-        setFile(file);
-        addPropertyChangeListener(this);
+    @Persist
+    private void persist() {
+        if (version == null || !version.equals(LATEST_VERSION)) {
+            version = LATEST_VERSION;
+        }
+        
+        //Remove deprecated elements
+        columns = null;
+        rows = null;
+        xGap = null;
+        yGap = null;
+        fiducials = null;
+        partId = null;
     }
-
+    
     @SuppressWarnings("unused")
     public Panel() {
-//        fiducials = new IdentifiableList<>();
+        super();
+    }
+
+    public Panel(File file) {
+        super();
+        setFile(file);
+        addPropertyChangeListener(this);
     }
 
     /**
@@ -84,14 +100,15 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener, 
      */
     public Panel(Panel panel) {
         super(panel);
-        this.id = panel.id;
+        this.version = panel.version;
         this.partId = panel.partId;
         this.checkFids = panel.checkFids;
+        this.children.addAll(panel.getChildren());
     }
     
     public Panel(String id) {
         this();
-        this.id = id;
+        this.version = LATEST_VERSION;
     }
 
     /**
@@ -125,26 +142,26 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener, 
         this.children = children;
     }
 
-    public String getPartId() {
-        return this.partId;
+    public String getDefaultFiducialPartId() {
+        return this.defaultFiducialPartId;
     }
 
-    public void setPartId(String partId) {
-        this.partId = partId;
+    public void setDefaultFiducialPartId(String defaultFiducialPartId) {
+        this.defaultFiducialPartId = defaultFiducialPartId;
     }
     
-    public Part getFiducialPart() {
-        if (getPartId() == null) {
+    public Part getDefaultFiducialPart() {
+        if (defaultFiducialPartId == null) {
             return null;
         }
-        return Configuration.get().getPart(getPartId());
+        return Configuration.get().getPart(defaultFiducialPartId);
     }
     
-    public void setFiducialPart(Part fiducialPart) {
+    public void setDefaultFiducialPart(Part fiducialPart) {
         if (fiducialPart == null) {
-            setPartId(null);
+            setDefaultFiducialPartId(null);
         }
-        setPartId(fiducialPart.getId());
+        setDefaultFiducialPartId(fiducialPart.getId());
     }
 
     public boolean isCheckFiducials() {
@@ -155,40 +172,17 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener, 
         this.checkFids = checkFiducials;
     }
 
-    @Override
-    public String getId() {
-        return id;
+    public String getVersion() {
+        return version;
     }
-
+    
+    public void setVersion(String version) {
+        this.version = version;
+    }
+    
     @Override
     public String toString() {
-        return String.format("Panel: id %s, fiducial Count: %d", id, fiducials.size());
-    }
-
-    public File getFile() {
-        return file;
-    }
-
-    void setFile(File file) {
-        Object oldValue = this.file;
-        this.file = file;
-        firePropertyChange("file", oldValue, file);
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void setDirty(boolean dirty) {
-        boolean oldValue = this.dirty;
-        this.dirty = dirty;
-        firePropertyChange("dirty", oldValue, dirty);
-    }
-
-    public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getSource() != Panel.this || !evt.getPropertyName().equals("dirty")) {
-            setDirty(true);
-        }
+        return String.format("Panel: file %s, fiducial count: %d, children: %d", file, placements.size(), children.size());
     }
 
     public void setLocation(Job job) {

@@ -18,7 +18,7 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
     protected String fileName;
 
     @Attribute(required = false)
-    protected String parentId = new String("Root");
+    protected String parentId = "Root";
 
     @Attribute(required = false)
     protected boolean checkFiducials;
@@ -86,6 +86,15 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
         Object oldValue = this.side;
         this.side = side;
         firePropertyChange("side", oldValue, side);
+    }
+    
+    public void flipSide() {
+        if (side == Side.Top) {
+            setSide(Side.Bottom);
+        }
+        else {
+            setSide(Side.Top);
+        }
     }
 
     public FiducialLocatable getFiducialLocatable() {
@@ -175,6 +184,16 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
     @Override
     public String getId() {
         return id;
+    }
+    
+    public boolean isDecendantOf(FiducialLocatableLocation potentialAncestor) {
+        FiducialLocatableLocation ancestor = parent;
+        while (ancestor != null) {
+            if (ancestor.getFileName().equals(potentialAncestor.getFileName())) {
+                return true;
+            }
+        }
+        return false;
     }
     
 }

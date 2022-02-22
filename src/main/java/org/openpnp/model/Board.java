@@ -62,8 +62,8 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
     @ElementList(required = false)
     private ArrayList<BoardPad> solderPastePads = new ArrayList<>();
 
-    private transient File file;
-    private transient boolean dirty;
+//    private transient File file;
+//    private transient boolean dirty;
 
     public Board() {
         this(null);
@@ -172,29 +172,29 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
 //        firePropertyChange("name", oldValue, name);
 //    }
 
-    public File getFile() {
-        return file;
-    }
-
-    void setFile(File file) {
-        Object oldValue = this.file;
-        this.file = file;
-        firePropertyChange("file", oldValue, file);
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void setDirty(boolean dirty) {
-        boolean oldValue = this.dirty;
-        this.dirty = dirty;
-        firePropertyChange("dirty", oldValue, dirty);
-    }
-
-    public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getSource() != Board.this || !evt.getPropertyName().equals("dirty")) {
-            setDirty(true);
-        }
-    }
+//    public File getFile() {
+//        return file;
+//    }
+//
+//    void setFile(File file) {
+//        Object oldValue = this.file;
+//        this.file = file;
+//        firePropertyChange("file", oldValue, file);
+//    }
+//
+//    public boolean isDirty() {
+//        return dirty;
+//    }
+//
+//    public void setDirty(boolean dirty) {
+//        boolean oldValue = this.dirty;
+//        this.dirty = dirty;
+//        firePropertyChange("dirty", oldValue, dirty);
+//    }
+//
+//    public void propertyChange(PropertyChangeEvent evt) {
+//        if (evt.getSource() != Board.this || !evt.getPropertyName().equals("dirty")) {
+//            setDirty(true);
+//        }
+//    }
 }

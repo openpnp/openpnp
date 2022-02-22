@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Tony Luken <tonyluken62+openpnp@gmail.com>
+ * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
  * 
  * This file is part of OpenPnP.
  * 
@@ -25,26 +25,30 @@ import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board.Side;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
-import org.openpnp.model.PanelLocation;
 
-public class PanelLocationsTableModel extends AbstractTableModel {
+import de.javagl.treetable.JTreeTable;
+import de.javagl.treetable.AbstractTreeTableModel;
+
+@SuppressWarnings("serial")
+public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
 
-    private String[] columnNames = new String[] {"Panel", "Width", "Length", "Side", "X", "Y", "Z",
+    private String[] columnNames = new String[] {"Panel/Board", "Width", "Length", "Side", "X", "Y", "Z",
             "Rot.", "Enabled?", "Check Fids?"};
 
+    @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
             LengthCellValue.class, String.class, Boolean.class, Boolean.class};
 
     private Job job;
 
-    public PanelLocationsTableModel(Configuration configuration) {
+    public FiducialLocatableLocationsTableModel(Configuration configuration) {
         this.configuration = configuration;
     }
 
@@ -57,8 +61,8 @@ public class PanelLocationsTableModel extends AbstractTableModel {
         return job;
     }
 
-    public PanelLocation getPanelLocation(int index) {
-        return job.getPanelLocations().get(index);
+    public FiducialLocatableLocation getFiducialLocatableLocation(int index) {
+        return job.getFiducialLocatableLocations().get(index);
     }
 
     @Override
@@ -74,7 +78,7 @@ public class PanelLocationsTableModel extends AbstractTableModel {
         if (job == null) {
             return 0;
         }
-        return job.getPanelLocations().size();
+        return job.getFiducialLocatableLocations().size();
     }
 
     @Override
@@ -84,71 +88,78 @@ public class PanelLocationsTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return (columnIndex != 0);
+        if (columnIndex == 0) {
+            return false;
+        }
+        if ((job.getFiducialLocatableLocations().get(rowIndex).getParent() == null) ||
+                (columnIndex == 3) || (columnIndex == 8) ||(columnIndex == 8)) {
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            PanelLocation panelLocation = job.getPanelLocations().get(rowIndex);
+            FiducialLocatableLocation fiducialLocatableLocation = job.getFiducialLocatableLocations().get(rowIndex);
             if (columnIndex == 0) {
-                panelLocation.getPanel().setName((String) aValue);
+                fiducialLocatableLocation.getFiducialLocatable().setName((String) aValue);
             }
             else if (columnIndex == 1) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = panelLocation.getPanel().getDimensions();
+                Location location = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
-                panelLocation.getPanel().setDimensions(location);
+                fiducialLocatableLocation.getFiducialLocatable().setDimensions(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = panelLocation.getPanel().getDimensions();
+                Location location = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
-                panelLocation.getPanel().setDimensions(location);
+                fiducialLocatableLocation.getFiducialLocatable().setDimensions(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
-                panelLocation.setSide((Side) aValue);
+                fiducialLocatableLocation.setSide((Side) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = panelLocation.getLocation();
+                Location location = fiducialLocatableLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
-                panelLocation.setLocation(location);
+                fiducialLocatableLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = panelLocation.getLocation();
+                Location location = fiducialLocatableLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
-                panelLocation.setLocation(location);
+                fiducialLocatableLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 6) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = panelLocation.getLocation();
+                Location location = fiducialLocatableLocation.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Z);
-                panelLocation.setLocation(location);
+                fiducialLocatableLocation.setLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 7) {
-                panelLocation.setLocation(panelLocation.getLocation().derive(null, null, null,
+                fiducialLocatableLocation.setLocation(fiducialLocatableLocation.getLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 8) {
-                panelLocation.setEnabled((Boolean) aValue);
+                fiducialLocatableLocation.setEnabled((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 9) {
-                panelLocation.setCheckFiducials((Boolean) aValue);
+                fiducialLocatableLocation.setCheckFiducials((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
         }
@@ -158,18 +169,18 @@ public class PanelLocationsTableModel extends AbstractTableModel {
     }
 
     public Object getValueAt(int row, int col) {
-        PanelLocation panelLocation = job.getPanelLocations().get(row);
-        Location loc = panelLocation.getLocation();
-        Location dim = panelLocation.getPanel().getDimensions();
+        FiducialLocatableLocation fiducialLocatableLocation = job.getFiducialLocatableLocations().get(row);
+        Location loc = fiducialLocatableLocation.getLocation();
+        Location dim = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
         switch (col) {
             case 0:
-                return panelLocation.getPanel().getName();
+                return fiducialLocatableLocation.getFiducialLocatable().getName();
             case 1:
                 return new LengthCellValue(dim.getLengthX());
             case 2:
                 return new LengthCellValue(dim.getLengthY());
             case 3:
-                return panelLocation.getSide();
+                return fiducialLocatableLocation.getSide();
             case 4:
                 return new LengthCellValue(loc.getLengthX());
             case 5:
@@ -180,9 +191,9 @@ public class PanelLocationsTableModel extends AbstractTableModel {
                 return String.format(Locale.US, configuration.getLengthDisplayFormat(),
                         loc.getRotation(), "");
             case 8:
-                return panelLocation.isEnabled();
+                return fiducialLocatableLocation.isEnabled();
             case 9:
-                return panelLocation.isCheckFiducials();
+                return fiducialLocatableLocation.isCheckFiducials();
             default:
                 return null;
         }
