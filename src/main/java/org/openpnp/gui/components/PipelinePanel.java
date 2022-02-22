@@ -43,7 +43,9 @@ import javax.swing.event.ChangeListener;
 
 import org.opencv.core.Mat;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.HeadMountable;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvAbstractParameterStage;
@@ -52,6 +54,8 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.CvStage.Result;
 import org.openpnp.vision.pipeline.stages.ParameterInteger;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
+import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -131,9 +135,70 @@ public abstract class PipelinePanel extends JPanel {
         super.setEnabled(enabled);
     }
 
+    /**
+     * Override this method to prepare the pipeline properties. As a minimum the "camera" property must be set.
+     * Use getPipeline() and getPipelineParameterAssignments() and pass them to the preparation function.
+     * 
+     * @throws Exception
+     */
     public abstract void preparePipeline() throws Exception;
+    /**
+     * Override this method to edit the pipeline. 
+     * Use getPipeline() and getPipelineParameterAssignments() and pass them to the edit function.
+     * You can call the {@link #openPipelineEditor} method handle the Editor dialog and all the 
+     * necessary before and after handling.
+     * 
+     * @throws Exception
+     */
     public abstract void editPipeline() throws Exception;
+    /**
+     * Override this method to reset the pipeline to the default.
+     * 
+     * @throws Exception
+     */
     public abstract void resetPipeline() throws Exception;
+
+    /**
+     * Open the Pipeline Editor with all the necessary handling before/after.
+     * Including to move the camera or subject (Nozzle) to the right location before the editing takes place. 
+     * The user is asked to confirm and can also skip the move. 
+     * 
+     * @param pipelineTitle
+     * @param pipeline
+     * @param moveBeforeEditDescription
+     * @param movable
+     * @param location
+     */
+    public void openPipelineEditor(String pipelineTitle, CvPipeline pipeline,
+            String moveBeforeEditDescription, HeadMountable movable, Location location) {
+        UiUtils.confirmMoveToLocationAndAct(getTopLevelAncestor(), 
+                moveBeforeEditDescription, 
+                movable, 
+                location, true, () -> {
+                    CvPipelineEditor editor = new CvPipelineEditor(pipeline);
+                    CvPipelineEditorDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), pipelineTitle, editor) {
+
+                        @Override
+                        public void pipelineChanged() {
+                            super.pipelineChanged();
+                            // We need to make sure, the settings is recognized as a change, otherwise 
+                            // somehow the firePropertyChange() will not be propagated. 
+                            setPipeline(pipeline);
+                        }
+                    };
+                    dialog.setVisible(true);
+                });
+    }
+
+    /**
+     * Open the Pipeline Editor with all the necessary handling before/after.
+     * 
+     * @param pipelineTitle
+     * @param pipeline
+     */
+    public void openPipelineEditor(String pipelineTitle, CvPipeline pipeline) {
+        openPipelineEditor(pipelineTitle, pipeline, null, null, null);
+    }
 
     private Object getParameterValue(CvAbstractParameterStage paramStage) {
         if (pipelineParameterAssignments != null 
@@ -147,7 +212,9 @@ public abstract class PipelinePanel extends JPanel {
         if (value != null
                 && !value.equals(getParameterValue(paramStage))) {
             Map<String, Object> newMap = new HashMap<>();
-            newMap.putAll(this.pipelineParameterAssignments);
+            if (this.pipelineParameterAssignments != null) {
+                newMap.putAll(this.pipelineParameterAssignments);
+            }
             this.pipelineParameterAssignments = newMap;
             pipelineParameterAssignments.put(paramStage.getParameterName(), value);
             firePropertyChange("pipelineParameterAssignments", null, pipelineParameterAssignments);
@@ -171,7 +238,6 @@ public abstract class PipelinePanel extends JPanel {
             // Process the pipeline to show preview images. 
             try (CvPipeline pipeline = getPipeline()) {
                 preparePipeline();
-                pipeline.setProperties(pipelineParameterAssignments);
                 Camera camera = (Camera) pipeline.getProperty("camera");
                 CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera); 
                 pipeline.process();

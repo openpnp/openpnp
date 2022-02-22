@@ -399,7 +399,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
     }
 
-    public static void preparePipeline(CvPipeline pipeline, Camera camera, Nozzle nozzle, BottomVisionSettings bottomVisionSettings) {
+    public static void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, 
+            Camera camera, Nozzle nozzle, BottomVisionSettings bottomVisionSettings) {
         pipeline.setProperty("camera", camera);
         // Set the footprint.
         if (nozzle.getPart() != null && nozzle.getPart().getPackage() != null) {
@@ -432,12 +433,12 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         Math.min(255, calibration.getBackgroundMaxValue() +  calibration.getBackgroundTolValue()));
             }
         }
-        pipeline.setProperties(bottomVisionSettings.getPipelineParameterAssignments());
+        pipeline.setProperties(pipelineParameterAssignments);
     }
 
     private static RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
             Nozzle nozzle, BottomVisionSettings bottomVisionSettings) throws Exception {
-        preparePipeline(pipeline, camera, nozzle, bottomVisionSettings);
+        preparePipeline(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, nozzle, bottomVisionSettings);
         pipeline.process();
 
         Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
@@ -689,11 +690,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     protected void migratePartSettings(Configuration configuration) {
         if (partSettingsByPartId == null) {
-            if (configuration.getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID) == null) {
+            AbstractVisionSettings stockVisionSettings = configuration.getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID);
+            if (stockVisionSettings == null) {
                 // Fresh configuration: need to migrate the stock and default settings, even if no partSettingsById are present.  
                 partSettingsByPartId = new HashMap<>();
             }
             else { 
+                // Just reassign the stock pipeline.
+                stockVisionSettings.setPipeline(createStockPipeline());
                 return;
             }
         }

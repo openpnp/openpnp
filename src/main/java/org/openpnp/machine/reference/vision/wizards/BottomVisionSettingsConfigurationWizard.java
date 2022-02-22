@@ -2,11 +2,11 @@ package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.Component;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -39,8 +39,6 @@ import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -240,30 +238,36 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         pipelinePanel = new PipelinePanel() {
 
             @Override
+            public void preparePipeline() throws Exception {
+                pipelineOperation(getPipeline(), getPipelineParameterAssignments(), false);
+            }
+
+            @Override
             public void editPipeline() throws Exception {
                 UiUtils.messageBoxOnException(() -> {
                     applyAction.actionPerformed(null);
-                    BottomVisionSettingsConfigurationWizard.this.editPipeline();
+                    pipelineOperation(getPipeline(), getPipelineParameterAssignments(), true);
                 });
             }
 
             @Override
             public void resetPipeline() throws Exception {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will replace the Pipeline with the built-in default. Are you sure??", null,
+                        "This will replace the Pipeline with the default. Are you sure??", null,
                         JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     UiUtils.messageBoxOnException(() -> {
                         applyAction.actionPerformed(null);
                         ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
-                        visionSettings.setPipeline(bottomVision.getBottomVisionSettings().getPipeline().clone());
+                        if (bottomVision.getBottomVisionSettings() == visionSettings) {
+                            // Already the default. Set stock.
+                            pipelinePanel.setPipeline(ReferenceBottomVision.createStockPipeline());
+                        }
+                        else {
+                            pipelinePanel.setPipeline(bottomVision.getBottomVisionSettings().getPipeline().clone());
+                        }
                     });
                 }
-            }
-
-            @Override
-            public void preparePipeline() throws Exception {
-                BottomVisionSettingsConfigurationWizard.this.preparePipeline();
             }
         };
         pipelinePanel.setResetable(true);
@@ -397,7 +401,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         addWrappedBinding(bottomVision, "testAlignmentAngle", testAlignmentAngle, "text", doubleConverter);
 
-        addWrappedBinding(visionSettings, "pipeline", pipelinePanel, "pipeline");
+        bind(UpdateStrategy.READ_WRITE, visionSettings, "pipeline", pipelinePanel, "pipeline");
         addWrappedBinding(visionSettings, "pipelineParameterAssignments", pipelinePanel, "pipelineParameterAssignments");
 
         ComponentDecorators.decorateWithAutoSelect(textPartSizeTolerance);
@@ -448,44 +452,23 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         RowSpec.decode("default:grow"),}));
     }
 
-    private CvPipeline preparePipeline() throws Exception {
-        CvPipeline pipeline = visionSettings.getPipeline();
+    private void pipelineOperation(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-        ReferenceBottomVision.preparePipeline(pipeline, camera, nozzle, visionSettings);
-        return pipeline;
-    }
+        ReferenceBottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, nozzle, visionSettings);
+        
+        if (edit) {
+            // Nominal position of the part over camera center
+            double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
+                    .convertReverse(testAlignmentAngle.getText());
+            Location location = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), 
+                    camera,
+                    nozzle, angle);
 
-    private void editPipeline() throws Exception {
-        CvPipeline pipeline = visionSettings.getPipeline();
-        Camera camera = VisionUtils.getBottomVisionCamera();
-        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-        ReferenceBottomVision.preparePipeline(pipeline, camera, nozzle, visionSettings);
-        // Nominal position of the part over camera center
-        double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
-                .convertReverse(testAlignmentAngle.getText());
-        Location alignmentLocation = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), 
-                camera,
-                nozzle, angle);
-
-        UiUtils.confirmMoveToLocationAndAct(getTopLevelAncestor(), 
-                "move nozzle "+nozzle.getName()+" to the camera alignment location before editing the pipeline", 
-                nozzle, 
-                alignmentLocation, true, () -> {
-                    CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-                    JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor) {
-
-                        @Override
-                        public void pipelineChanged() {
-                            super.pipelineChanged();
-                            // We need to make sure, the settings is recognized as a change, otherwise 
-                            // somehow the firePropertyChange() will not be propagated. 
-                            visionSettings.setPipeline(null);
-                            visionSettings.setPipeline(pipeline);
-                        }
-                    };
-                    dialog.setVisible(true);
-                });
+            pipelinePanel.openPipelineEditor("Bottom Vision Pipeline", pipeline, 
+                    "move nozzle "+nozzle.getName()+" to the camera alignment location before editing the pipeline", 
+                    nozzle, location);
+        }
     }
 
     private void testAlignment(boolean centerAfterTest) throws Exception {

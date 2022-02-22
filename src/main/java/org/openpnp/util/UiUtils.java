@@ -144,7 +144,7 @@ public class UiUtils {
             Location location, boolean allowWithoutMove,
             final Thrunnable actionThrunnable) {
         messageBoxOnException(() -> {
-            if (location.equals(movable.getLocation())) {
+            if (movable == null || location == null || location.equals(movable.getLocation())) {
                 // Already there, just act.
                 actionThrunnable.thrun();
             }
