@@ -72,6 +72,10 @@ public abstract class PipelinePanel extends JPanel {
     private boolean resetable = true;
     private Timer timer;
 
+    public PipelinePanel() { 
+        rebuildUi();
+    }
+
     public CvPipeline getPipeline() {
         return pipeline;
     }
@@ -135,21 +139,19 @@ public abstract class PipelinePanel extends JPanel {
     }
 
     /**
-     * Override this method to prepare the pipeline properties. As a minimum the "camera" property must be set.
-     * Use getPipeline() and getPipelineParameterAssignments() and pass them to the preparation function.
+     * Override this method to prepare the pipeline properties the same way as it will be done when the pipeline is used
+     * for vision operations. Typically a common method should be called, which takes the same pipeline and 
+     * pipelineParameterAssignments parameters. 
+     * As a minimum the "camera" property must be set, and pipeline.setProperties(pipelineParameterAssignments) should be 
+     * called to propagate the parameters. 
      * 
+     * @param pipeline 
+     * @param pipelineParameterAssignments 
+     * @param edit If true, open the Pipeline Editor using {@link #openPipelineEditor}. 
      * @throws Exception
      */
-    public abstract void preparePipeline() throws Exception;
-    /**
-     * Override this method to edit the pipeline. 
-     * Use getPipeline() and getPipelineParameterAssignments() and pass them to the edit function.
-     * You can call the {@link #openPipelineEditor} method handle the Editor dialog and all the 
-     * necessary before and after handling.
-     * 
-     * @throws Exception
-     */
-    public abstract void editPipeline() throws Exception;
+    public abstract void configurePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception;
+
     /**
      * Override this method to reset the pipeline to the default.
      * 
@@ -236,7 +238,7 @@ public abstract class PipelinePanel extends JPanel {
             }
             // Process the pipeline to show preview images. 
             try (CvPipeline pipeline = getPipeline()) {
-                preparePipeline();
+                configurePipeline(pipeline, getPipelineParameterAssignments(), false);
                 Camera camera = (Camera) pipeline.getProperty("camera");
                 CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera); 
                 pipeline.process();
@@ -257,13 +259,13 @@ public abstract class PipelinePanel extends JPanel {
                 }
                 if (showImages.size() > 0) {
                     // Show the first image directly.
-                    cameraView.showFilteredImage(showImages.get(0), paramStage.getParameterName()+" = "+paramStage.displayValue(value), 3000);
+                    cameraView.showFilteredImage(showImages.get(0), paramStage.getParameterLabel()+" = "+paramStage.displayValue(value), 3000);
                     showImages.remove(0);
                     if (showImages.size() > 0) {
                         // Show subsequent images with a timer.
                         timer = new Timer(1000, e -> {
                             cameraView.showFilteredImage(showImages.get(0), 
-                                    paramStage.getParameterName()+" = "+paramStage.displayValue(value), 3000);
+                                    paramStage.getParameterLabel()+" = "+paramStage.displayValue(value), 3000);
                             showImages.remove(0);
                             if (showImages.isEmpty()) {
                                 // No more images, stop.
@@ -279,10 +281,6 @@ public abstract class PipelinePanel extends JPanel {
                 Logger.warn(e);
             }
         }
-    }
-
-    public PipelinePanel() { 
-        rebuildUi();
     }
 
     private RowSpec[] dynamicRowspec(int rows) {
@@ -324,16 +322,18 @@ public abstract class PipelinePanel extends JPanel {
         panel.add(lblPipeline, "2, 2, right, default");
 
         btnEdit = new JButton("Edit");
+        btnEdit.setToolTipText("Edit the pipeline in the Pipeline Editor");
         btnEdit.setEnabled(isEnabled());
         btnEdit.setVisible(editable);
         btnEdit.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
-                UiUtils.messageBoxOnException(() -> editPipeline());
+                UiUtils.messageBoxOnException(() -> configurePipeline(getPipeline(), getPipelineParameterAssignments(), true));
             }
         });
         panel.add(btnEdit, "4, 2");
 
         btnReset = new JButton("Reset");
+        btnReset.setToolTipText("Reset the pipeline to the default.");
         btnReset.setEnabled(isEnabled());
         btnReset.setVisible(resetable);
         btnReset.addActionListener(new ActionListener() {
@@ -349,7 +349,7 @@ public abstract class PipelinePanel extends JPanel {
             if (parameter instanceof CvAbstractScalarParameterStage) {
                 CvAbstractScalarParameterStage scalarParameter = (CvAbstractScalarParameterStage) parameter;
                 try {
-                    JLabel lbl = new JLabel(parameter.getParameterName());
+                    JLabel lbl = new JLabel(parameter.getParameterLabel());
                     lbl.setToolTipText(parameter.getParameterDescription());
                     lbl.setEnabled(isEnabled());
                     panel.add(lbl, "2, "+(formRow*2)+", right, default");

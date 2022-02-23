@@ -238,15 +238,13 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         pipelinePanel = new PipelinePanel() {
 
             @Override
-            public void preparePipeline() throws Exception {
-                pipelineOperation(getPipeline(), getPipelineParameterAssignments(), false);
-            }
-
-            @Override
-            public void editPipeline() throws Exception {
+            public void configurePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
                 UiUtils.messageBoxOnException(() -> {
-                    applyAction.actionPerformed(null);
-                    pipelineOperation(getPipeline(), getPipelineParameterAssignments(), true);
+                    if (edit) {
+                        // Accept changes before edit.
+                        applyAction.actionPerformed(null);
+                    }
+                    pipelineConfiguration(pipeline,pipelineParameterAssignments, edit);
                 });
             }
 
@@ -452,11 +450,11 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         RowSpec.decode("default:grow"),}));
     }
 
-    private void pipelineOperation(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
+    private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
         ReferenceBottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, nozzle, visionSettings);
-        
+
         if (edit) {
             // Nominal position of the part over camera center
             double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())

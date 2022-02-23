@@ -151,7 +151,7 @@ public class CvPipeline implements AutoCloseable {
                 .stream()
                 .filter(p -> p.isEnabled() && p instanceof CvAbstractParameterStage)
                 .map(p -> (CvAbstractParameterStage) p)
-                .filter(p -> p.getParameterName() != null && !p.getParameterName().isEmpty())
+                .filter(p -> p.getParameterName() != null)
                 .collect(Collectors.toList());
     }
 
@@ -334,7 +334,7 @@ public class CvPipeline implements AutoCloseable {
      */
     public void resetToDefaults() {
         for (CvAbstractParameterStage stage : getParameterStages()) {
-            stage.resetValue(this);
+            stage.resetParameterValue(this);
         }
     }
 

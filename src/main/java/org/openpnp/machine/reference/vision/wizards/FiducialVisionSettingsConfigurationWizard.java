@@ -163,7 +163,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                     + subjects
                     + " with the "+ settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".<br/>"
                     + "This will unassign any special Fiducial Vision Settings on "+subjects+" and delete those<br/>"
-                            + "Fiducial Vision Settings that are no longer used elsewhere.</html>");
+                    + "Fiducial Vision Settings that are no longer used elsewhere.</html>");
         }
 
         JButton resetButton = new JButton("Reset to Default");
@@ -189,15 +189,13 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         pipelinePanel = new PipelinePanel() {
 
             @Override
-            public void preparePipeline() throws Exception {
-                pipelineOperation(getPipeline(), getPipelineParameterAssignments(), false);
-            }
-
-            @Override
-            public void editPipeline() throws Exception {
+            public void configurePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
                 UiUtils.messageBoxOnException(() -> {
-                    applyAction.actionPerformed(null);
-                    pipelineOperation(getPipeline(), getPipelineParameterAssignments(), true);
+                    if (edit) {
+                        // Accept changes before edit.
+                        applyAction.actionPerformed(null);
+                    }
+                    pipelineConfiguration(getPipeline(), getPipelineParameterAssignments(), edit);
                 });
             }
 
@@ -239,23 +237,23 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                 new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 0),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
-                JButton btnTestFiducialLocator = new JButton("Test Fiducial Locator");
-                panelAlign.add(btnTestFiducialLocator, "4, 2");
-                btnTestFiducialLocator.addActionListener((e) -> {
-                    UiUtils.submitUiMachineTask(() -> {
-                        testFiducialLocation();
-                    });
-                });
-                // Only available on Part or Package (it needs the footprint).
-                btnTestFiducialLocator.setEnabled(
-                        settingsHolder instanceof Part 
-                        || settingsHolder instanceof org.openpnp.model.Package);
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
+        JButton btnTestFiducialLocator = new JButton("Test Fiducial Locator");
+        panelAlign.add(btnTestFiducialLocator, "4, 2");
+        btnTestFiducialLocator.addActionListener((e) -> {
+            UiUtils.submitUiMachineTask(() -> {
+                testFiducialLocation();
+            });
+        });
+        // Only available on Part or Package (it needs the footprint).
+        btnTestFiducialLocator.setEnabled(
+                settingsHolder instanceof Part 
+                || settingsHolder instanceof org.openpnp.model.Package);
     }
 
     @Override
@@ -285,7 +283,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("right:max(70dlu;default):grow"),
+                ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -315,11 +313,11 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                 FormSpecs.DEFAULT_ROWSPEC,}));
     }
 
-    private void pipelineOperation(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
+    private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
         fiducialLocator.preparePipeline(pipeline, pipelineParameterAssignments, fiducialLocator.getVisionCamera(), settingsHolder);
 
         if (edit) {
-           pipelinePanel.openPipelineEditor("Fiducial Vision Pipeline", pipeline);
+            pipelinePanel.openPipelineEditor("Fiducial Vision Pipeline", pipeline);
         }
     }
 

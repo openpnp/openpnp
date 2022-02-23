@@ -31,8 +31,8 @@ import org.simpleframework.xml.Attribute;
 public abstract class CvAbstractParameterStage extends CvStage {
 
     @Attribute(required = false)
-    @Property(description = "Name of the parameter.")
-    protected String parameterName = null;
+    @Property(description = "Label of the parameter.")
+    protected String parameterLabel = null;
 
     @Attribute(required = false)
     @Property(description = "Description of the parameter (for tooltip).")
@@ -54,12 +54,12 @@ public abstract class CvAbstractParameterStage extends CvStage {
     @Property(description = "Preview the pipeline result image.")
     protected boolean previewResult = true;
 
-    public String getParameterName() {
-        return parameterName;
+    public String getParameterLabel() {
+        return parameterLabel;
     }
 
-    public void setParameterName(String parameterName) {
-        this.parameterName = parameterName;
+    public void setParameterLabel(String parameterLabel) {
+        this.parameterLabel = parameterLabel;
     }
 
     public String getStageName() {
@@ -109,7 +109,11 @@ public abstract class CvAbstractParameterStage extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (parameterName == null || parameterName.isEmpty()) {
+        if (getParameterName() == null) {
+            throw new Exception("Please assign a stable name to the stage. This name will be used as parameter name "
+                    + "and should not be changed later, or assigned data will be lost. Names starting with digits are not allowed.");
+        }
+        if (parameterLabel == null || parameterLabel.isEmpty()) {
             return null;
         }
         if (stageName == null || stageName.isEmpty()) {
@@ -147,7 +151,12 @@ public abstract class CvAbstractParameterStage extends CvStage {
         setter.invoke(obj, variableValue);
     }
 
-    void resetValue(CvPipeline pipeline) {
+    /**
+     * Reset the assigned parameter value back to the default, to keep the pipeline unchanged.
+     * 
+     * @param pipeline
+     */
+    void resetParameterValue(CvPipeline pipeline) {
         CvStage stage = pipeline.getStage(stageName);
         if (stage != null) {
             try {
@@ -159,4 +168,17 @@ public abstract class CvAbstractParameterStage extends CvStage {
         }
     }
 
+    /**
+     * @return The parameter name, which is the stage name, but properly validated. Otherwise null is returned.
+     */
+    public String getParameterName() {
+        if (getName() == null || getName().isEmpty()) {
+            return null;
+        }
+        if ("-0123456789".contains(getName().substring(0, 1))) {
+            // Do not allow a number as first letter, such as when the sequential number given by the Editor is still present.
+            return null;
+        }
+        return getName();
+    }
 }
