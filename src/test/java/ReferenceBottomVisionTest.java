@@ -13,6 +13,8 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.openpnp.util.VisionUtils;
+import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
 
 import com.google.common.io.Files;
 
@@ -38,6 +40,11 @@ public class ReferenceBottomVisionTest {
         Configuration.get().load();
         // Save migrated.
         Configuration.get().save();
+
+        Configurator
+        .currentConfig()
+        .level(Level.INFO) // change this for other log levels.
+        .activate();
 
         Machine machine = Configuration.get().getMachine();
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
