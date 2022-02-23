@@ -37,11 +37,14 @@ If you want to proceed, follow these steps:
 
 # Notes
 
-- The drag pin will burn if operated for more then a few seconds at 100%. If operated using a PWM signal it can be switched to ~10% holding current after enabling and then keeps cool over longer periods. This has been integrated into the example machine.xml and the linked firmware.
-- The blower will burn out if operated over a longer time at 100% (can on a hours/days scale). The original firmware operates it at 2% using a 16kHz PWM. In the example machine.xml the blower is configured as Double actuator and the default ON value set accordingly. The blower is not yet operated as part of normal machine operation and hence has to be switch on manually.
+- The drag pin will burn if operated for more then a few seconds at 100%. Using a PWM signal it can be switched to ~10% holding current after an initial push and then keeps cool over longer periods. This has been integrated into the example machine.xml and the linked firmware.
+- The blower will burn if operated over a longer time at 100% (can on a hours/days scale). The original firmware operates it at 2% using a 16kHz PWM. In the example machine.xml the blower is configured as Double actuator and the default ON value set accordingly. The blower is not yet operated as part of normal machine operation and hence has to be switch on manually.
 - The vacuum pump is operated at 50% by the original software using a 16kHz PWM. This is reflected by the example machine.xml.
-- The homing direction and the parking position are in the opposite corners, hence it is recommended to make sure soft limits on the axis are configured conservatively and/or automatic park after home is disabled.
+- The homing direction and the parking position are in the opposite corners, hence it is recommended to make sure soft limits on the axis are configured conservatively and/or automatic park after home is disabled before first start.
 - The Z axis can move faster then the spring retracting the nozzle. Keep acceleration limits low to avoid nozzle tip damages.
+- The serial input is isolated and requires an external 5V supply. On the original design this is generated using the camera switcher board in the back left. In order to remove it, a serial adapter with power is required like [FTDI's USB-RS232-WE-1800-BT_5.0](https://ftdichip.com/products/usb-rs232-we-1800-bt_5-0/).
+- The ticks/mm setting can be adjusted at runtime using M92. This is not really needed, as small errors are don't care, and PCBs are usually corrected using calibration fiducials. In the example machine.xml the values are adjusted as part of the ENABLE command.
+- The Z-axis homing uses just one edge of a metal blade going thru a light barrier. This results in an asymmetric home position. To center the axis and retract both nozzles an offset can be applied using M92. This has been done in the sample machine.xml as part of the HOME command.
 
 This documentation is incomplete and can use your help! Anyone with a GitHub account can edit this page and improve it. Please consider adding your experiences and findings here.
 
