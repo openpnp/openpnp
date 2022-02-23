@@ -33,7 +33,6 @@ import org.openpnp.vision.pipeline.CvAbstractScalarParameterStage;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
-import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 @Stage(description="Exposes a numeric stage property as an external parameter to this pipeline.")
@@ -52,7 +51,8 @@ public class ParameterNumeric extends CvAbstractScalarParameterStage {
     private double defaultValue = 0.5;
 
     enum NumericType {
-        Plain(Double.class),
+        Integer(Integer.class),
+        Double(Double.class),
         Squared(Double.class), 
         Exponential(Double.class), 
         Millimeters(Length.class), 
@@ -88,6 +88,8 @@ public class ParameterNumeric extends CvAbstractScalarParameterStage {
         }
         Object asTyped(double value) {
             switch (this) {
+                case Integer: 
+                    return (int)Math.round(value);
                 case Millimeters:
                 case MillimetersToPixels:
                     return new Length(value, LengthUnit.Millimeters);
@@ -102,7 +104,7 @@ public class ParameterNumeric extends CvAbstractScalarParameterStage {
 
     @Attribute(required = false)
     @Property(description = "Type and unit of numeric.")
-    private NumericType numericType = NumericType.Plain;
+    private NumericType numericType = NumericType.Double;
 
     public double getMinimumValue() {
         return minimumValue;
@@ -129,12 +131,12 @@ public class ParameterNumeric extends CvAbstractScalarParameterStage {
     }
 
     @Override
-    public Object getDefaultParameterValue() {
+    public Object defaultParameterValue() {
         return defaultValue;
     }
 
     @Override
-    public Object getAppliedValue(CvPipeline pipeline, Object value) {
+    public Object appliedValue(CvPipeline pipeline, Object value) {
         switch (numericType) {
             case MillimetersToPixels:
             case SquareMillimetersToPixels:
@@ -150,7 +152,7 @@ public class ParameterNumeric extends CvAbstractScalarParameterStage {
     }
 
     @Override
-    protected Class<?> getParameterValueType() {
+    protected Class<?> parameterValueType() {
         return numericType.type;
     }
 
@@ -163,12 +165,12 @@ public class ParameterNumeric extends CvAbstractScalarParameterStage {
     }
 
     @Override
-    public int getMinimumScalar() {
+    public int minimumScalar() {
         return 0;
     }
 
     @Override
-    public int getMaximumScalar() {
+    public int maximumScalar() {
         return 1000;
     }
 
@@ -177,8 +179,8 @@ public class ParameterNumeric extends CvAbstractScalarParameterStage {
         double num = asNumeric(value);
         // map it to 0..1
         double ratio = (numericType.fnScalar((double)num) - numericType.fnScalar(getMinimumValue()))/(numericType.fnScalar(getMaximumValue()) - numericType.fnScalar(getMinimumValue()));
-        int scalar = getMinimumScalar() + (int)Math.round(ratio*(getMaximumScalar() - getMinimumScalar()));
-        Logger.trace(String.valueOf(value)+ " -> scalar "+scalar);
+        int scalar = minimumScalar() + (int)Math.round(ratio*(maximumScalar() - minimumScalar()));
+        //Logger.trace(String.valueOf(value)+ " -> scalar "+scalar);
         return super.convertToScalar(scalar);
     }
 
@@ -204,9 +206,9 @@ public class ParameterNumeric extends CvAbstractScalarParameterStage {
 
     @Override
     public Object convertToValue(int scalar) {
-        double ratio = (double)(scalar - getMinimumScalar())/(getMaximumScalar() - getMinimumScalar());
+        double ratio = (double)(scalar - minimumScalar())/(maximumScalar() - minimumScalar());
         double value = numericType.fnValue(numericType.fnScalar(getMinimumValue()) + ratio*(numericType.fnScalar(getMaximumValue()) - numericType.fnScalar(getMinimumValue())));
-        Logger.trace("scalar "+scalar+" -> "+String.valueOf(value));
+        //Logger.trace("scalar "+scalar+" -> "+String.valueOf(value));
         return numericType.asTyped(value);
     }
 

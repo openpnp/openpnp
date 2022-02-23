@@ -111,6 +111,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         }
         catch (CloneNotSupportedException e) {
         }
+        setPipelineParameterAssignments(another.getPipelineParameterAssignments());
         setPreRotateUsage(another.getPreRotateUsage());
         setCheckPartSizeMethod(another.checkPartSizeMethod);
         setMaxRotation(another.getMaxRotation());

@@ -102,10 +102,10 @@ public abstract class CvAbstractParameterStage extends CvStage {
         this.previewResult = previewResult;
     }
 
-    public abstract Object getAppliedValue(CvPipeline pipeline, Object value);
-    public abstract Object getDefaultParameterValue();
+    public abstract Object appliedValue(CvPipeline pipeline, Object value);
+    public abstract Object defaultParameterValue();
     public abstract String displayValue(Object value);
-    protected abstract Class<?> getParameterValueType();
+    protected abstract Class<?> parameterValueType();
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
@@ -124,9 +124,9 @@ public abstract class CvAbstractParameterStage extends CvStage {
         }
         Object value = pipeline.getProperty(getParameterName());
         if (value == null) {
-            value = getDefaultParameterValue();
+            value = defaultParameterValue();
         }
-        invokeSetter(stage, propertyName, getAppliedValue(pipeline, value));
+        invokeSetter(stage, propertyName, appliedValue(pipeline, value));
         return null;
     }
 
@@ -151,7 +151,7 @@ public abstract class CvAbstractParameterStage extends CvStage {
         CvStage stage = pipeline.getStage(stageName);
         if (stage != null) {
             try {
-                invokeSetter(stage, propertyName, getAppliedValue(pipeline, getDefaultParameterValue()));
+                invokeSetter(stage, propertyName, appliedValue(pipeline, defaultParameterValue()));
             }
             catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
                     | IntrospectionException e) {

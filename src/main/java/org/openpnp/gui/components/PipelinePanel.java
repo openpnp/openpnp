@@ -204,7 +204,7 @@ public abstract class PipelinePanel extends JPanel {
                 && pipelineParameterAssignments.containsKey(paramStage.getParameterName())) {
             return pipelineParameterAssignments.get(paramStage.getParameterName());
         }
-        return paramStage.getDefaultParameterValue();
+        return paramStage.defaultParameterValue();
     }
 
     private void setParameterValue(CvAbstractParameterStage paramStage, Object value) {
@@ -354,7 +354,7 @@ public abstract class PipelinePanel extends JPanel {
                     lbl.setEnabled(isEnabled());
                     panel.add(lbl, "2, "+(formRow*2)+", right, default");
                     JSlider slider = new JSlider(JSlider.HORIZONTAL,
-                            scalarParameter.getMinimumScalar(), scalarParameter.getMaximumScalar(), 
+                            scalarParameter.minimumScalar(), scalarParameter.maximumScalar(), 
                             scalarParameter.convertToScalar(getParameterValue(parameter)));
                     slider.setEnabled(isEnabled());
                     slider.addChangeListener(new ChangeListener() {

@@ -27,11 +27,11 @@ package org.openpnp.vision.pipeline;
  */
 public abstract class CvAbstractScalarParameterStage extends CvAbstractParameterStage {
 
-    abstract public int getMinimumScalar();
-    abstract public int getMaximumScalar();
+    abstract public int minimumScalar();
+    abstract public int maximumScalar();
     public int convertToScalar(Object value) {
-        return Math.max(getMinimumScalar(), 
-                Math.min(getMaximumScalar(),
+        return Math.max(minimumScalar(), 
+                Math.min(maximumScalar(),
                         (int)value));
     }
     abstract public Object convertToValue(int scalar);
