@@ -3,10 +3,10 @@ package org.openpnp.machine.reference.vision.wizards;
 import java.awt.Color;
 import java.awt.Component;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -16,9 +16,8 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.components.PipelinePanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.Configuration;
@@ -30,8 +29,6 @@ import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -55,6 +52,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
 
     private JButton btnSpecializeSetting;
     private JButton btnGeneralizeSettings;
+    private PipelinePanel pipelinePanel;
 
     public FiducialVisionSettingsConfigurationWizard(FiducialVisionSettings visionSettings, 
             PartSettingsHolder settingsHolder) {
@@ -165,7 +163,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                     + subjects
                     + " with the "+ settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".<br/>"
                     + "This will unassign any special Fiducial Vision Settings on "+subjects+" and delete those<br/>"
-                            + "Fiducial Vision Settings that are no longer used elsewhere.</html>");
+                    + "Fiducial Vision Settings that are no longer used elsewhere.</html>");
         }
 
         JButton resetButton = new JButton("Reset to Default");
@@ -188,27 +186,42 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 8");
 
-        JLabel lblPipeline = new JLabel("Pipeline");
-        panel.add(lblPipeline, "2, 12, right, default");
+        pipelinePanel = new PipelinePanel() {
 
-        JButton editPipelineButton = new JButton("Edit");
-        editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
-        panel.add(editPipelineButton, "4, 12, 3, 1");
-
-        JButton resetPipelineButton = new JButton("Reset Pipeline to Default");
-        resetPipelineButton.addActionListener(e -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the Pipeline with the default. Are you sure??", null,
-                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
+            @Override
+            public void configurePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
                 UiUtils.messageBoxOnException(() -> {
-                    ReferenceBottomVision fiducialVision = ReferenceBottomVision.getDefault();
-                    visionSettings.setCvPipeline(fiducialVision.getBottomVisionSettings().getCvPipeline().clone());
-                    editPipeline();
+                    if (edit) {
+                        // Accept changes before edit.
+                        applyAction.actionPerformed(null);
+                    }
+                    pipelineConfiguration(getPipeline(), getPipelineParameterAssignments(), edit);
                 });
             }
-        });
-        panel.add(resetPipelineButton, "8, 12, 3, 1");
+
+            @Override
+            public void resetPipeline() throws Exception {
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "This will replace the Pipeline with the default. Are you sure??", null,
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    UiUtils.messageBoxOnException(() -> {
+                        applyAction.actionPerformed(null);
+                        ReferenceFiducialLocator fiducialLocator = ReferenceFiducialLocator.getDefault();
+                        if (fiducialLocator.getFiducialVisionSettings() == visionSettings) {
+                            // Already the default. Set stock.
+                            pipelinePanel.setPipeline(ReferenceFiducialLocator.createStockPipeline());
+                        }
+                        else {
+                            pipelinePanel.setPipeline(fiducialLocator.getFiducialVisionSettings().getPipeline().clone());
+                        }
+                    });
+                }
+            }
+        };
+        pipelinePanel.setResetable(true);
+        pipelinePanel.setEditable(true);
+        panel.add(pipelinePanel, "1, 12, 14, 1, fill, fill");
 
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);
@@ -224,23 +237,23 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                 new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 0),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
-        
-                JButton btnTestFiducialLocator = new JButton("Test Fiducial Locator");
-                panelAlign.add(btnTestFiducialLocator, "4, 2");
-                btnTestFiducialLocator.addActionListener((e) -> {
-                    UiUtils.submitUiMachineTask(() -> {
-                        testFiducialLocation();
-                    });
-                });
-                // Only available on Part or Package (it needs the footprint).
-                btnTestFiducialLocator.setEnabled(
-                        settingsHolder instanceof Part 
-                        || settingsHolder instanceof org.openpnp.model.Package);
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
+        JButton btnTestFiducialLocator = new JButton("Test Fiducial Locator");
+        panelAlign.add(btnTestFiducialLocator, "4, 2");
+        btnTestFiducialLocator.addActionListener((e) -> {
+            UiUtils.submitUiMachineTask(() -> {
+                testFiducialLocation();
+            });
+        });
+        // Only available on Part or Package (it needs the footprint).
+        btnTestFiducialLocator.setEnabled(
+                settingsHolder instanceof Part 
+                || settingsHolder instanceof org.openpnp.model.Package);
     }
 
     @Override
@@ -259,6 +272,9 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         bind(UpdateStrategy.READ, visionSettings, "usedFiducialVisionIn", usedIn, "text", 
                 new AbstractVisionSettings.ListConverter(true, settingsHolder));
         addWrappedBinding(visionSettings, "enabled", enabledCheckbox, "selected");
+
+        bind(UpdateStrategy.READ_WRITE, visionSettings, "pipeline", pipelinePanel, "pipeline");
+        addWrappedBinding(visionSettings, "pipelineParameterAssignments", pipelinePanel, "pipelineParameterAssignments");
     }
 
     private void createPanel() {
@@ -292,22 +308,17 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
+                RowSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
     }
 
-    private void editPipeline() throws Exception {
-        CvPipeline pipeline = visionSettings.getCvPipeline();
-        pipeline.setProperty("camera", fiducialLocator.getVisionCamera());
+    private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
+        fiducialLocator.preparePipeline(pipeline, pipelineParameterAssignments, fiducialLocator.getVisionCamera(), settingsHolder);
 
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Fiducial Vision Pipeline", editor);
-        dialog.setVisible(true);
+        if (edit) {
+            pipelinePanel.openPipelineEditor("Fiducial Vision Pipeline", pipeline);
+        }
     }
 
     private void testFiducialLocation() throws Exception {

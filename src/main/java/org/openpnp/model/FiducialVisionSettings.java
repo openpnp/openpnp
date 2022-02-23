@@ -26,13 +26,13 @@ public class FiducialVisionSettings extends AbstractVisionSettings {
     public FiducialVisionSettings(PartSettings partSettings) {
         this();
         this.setEnabled(true);// Enabled state was not actually used.
-        this.setCvPipeline(partSettings.getPipeline());
+        this.setPipeline(partSettings.getPipeline());
     }
 
     public void setValues(FiducialVisionSettings another) {
         setEnabled(another.isEnabled());
         try {
-            setCvPipeline(another.getCvPipeline().clone());
+            setPipeline(another.getPipeline().clone());
         }
         catch (CloneNotSupportedException e) {
         }

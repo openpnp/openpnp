@@ -29,6 +29,7 @@ import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.SwingUtilities;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.gui.components.AutoSelectTextTable;
@@ -95,24 +96,26 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
                 return;
             }
 
-            AbstractVisionSettings selectedVisionSettings = getSelection();
-            if (selectedVisionSettings != null) {
-                this.selectedVisionSettings = selectedVisionSettings;
-            }
-            tabbedPane.removeAll();
-
-            if (selectedVisionSettings != null) {
-                Wizard wizard = selectedVisionSettings.getConfigurationWizard();
-                if (wizard != null) {
-                    JPanel panel = new JPanel();
-                    panel.setLayout(new BorderLayout());
-                    panel.add(wizard.getWizardPanel());
-                    tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
-                    wizard.setWizardContainer(VisionSettingsPanel.this);
+            SwingUtilities.invokeLater(() -> {
+                AbstractVisionSettings selectedVisionSettings = getSelection();
+                if (selectedVisionSettings != null) {
+                    this.selectedVisionSettings = selectedVisionSettings;
                 }
-            }
-            revalidate();
-            repaint();
+                tabbedPane.removeAll();
+
+                if (selectedVisionSettings != null) {
+                    Wizard wizard = selectedVisionSettings.getConfigurationWizard();
+                    if (wizard != null) {
+                        JPanel panel = new JPanel();
+                        panel.setLayout(new BorderLayout());
+                        panel.add(wizard.getWizardPanel());
+                        tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                        wizard.setWizardContainer(VisionSettingsPanel.this);
+                    }
+                }
+                revalidate();
+                repaint();
+            });
         });
         tableModel.addTableModelListener(e -> {
             if (selectedVisionSettings != null) { 

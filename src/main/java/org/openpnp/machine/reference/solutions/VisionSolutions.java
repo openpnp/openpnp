@@ -1592,7 +1592,7 @@ public class VisionSolutions implements Solutions.Subject {
         String xml = IOUtils.toString(ReferenceBottomVision.class
                 .getResource("ReferenceFiducialLocator-CircularSymmetryPipeline.xml"));
         CvPipeline pipeline = new CvPipeline(xml);
-        visionSettings.setCvPipeline(pipeline);
+        visionSettings.setPipeline(pipeline);
     }
 
     public Length getHomingFiducialDiameter() {

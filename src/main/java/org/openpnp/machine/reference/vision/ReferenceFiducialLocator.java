@@ -364,48 +364,57 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     }
 
     public CvPipeline getFiducialPipeline(Camera camera, PartSettingsHolder partSettingsHolder) throws Exception {
-        org.openpnp.model.Package pkg = null;
-        if (partSettingsHolder instanceof Part) {
-            pkg = ((Part) partSettingsHolder).getPackage();
-        }
-        else if (partSettingsHolder instanceof org.openpnp.model.Package) {
-            pkg = (org.openpnp.model.Package) partSettingsHolder;
-        }
-        if (pkg == null) {
-            throw new Exception(
-                    String.format("%s %s does not have a valid package assigned.", partSettingsHolder.getClass().getSimpleName(), partSettingsHolder.getShortName()));
-        }
-
-        Footprint footprint = pkg.getFootprint();
-        if (footprint == null) {
-            throw new Exception(String.format(
-                    "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
-                    pkg.getId()));
-        }
-
-        if (footprint.getShape() == null) {
-            throw new Exception(String.format(
-                    "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
-                    pkg.getId()));
-        }
-
         FiducialVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
         if (!visionSettings.isEnabled()) {
             throw new  Exception(String.format(
-                    "Package %s fidcuial vision settings %s are disabled.",
-                    pkg.getId(), visionSettings.getName()));
+                    "%s %s fidcuial vision settings %s are disabled.",
+                    partSettingsHolder.getClass().getSimpleName(), partSettingsHolder.getShortName(), visionSettings.getName()));
         }
-        CvPipeline pipeline = visionSettings.getCvPipeline(); 
+        CvPipeline pipeline = visionSettings.getPipeline(); 
+        preparePipeline(pipeline, visionSettings.getPipelineParameterAssignments(), camera, partSettingsHolder);
+        return pipeline;
+    }
 
+    public void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, Camera camera,
+            PartSettingsHolder partSettingsHolder) throws Exception {
+        org.openpnp.model.Package pkg = null;
+        Footprint footprint = null;
+        if (partSettingsHolder != null) {
+            if (partSettingsHolder instanceof Part) {
+                pkg = ((Part) partSettingsHolder).getPackage();
+            }
+            else if (partSettingsHolder instanceof org.openpnp.model.Package) {
+                pkg = (org.openpnp.model.Package) partSettingsHolder;
+            }
+            if (pkg == null) {
+                throw new Exception(
+                        String.format("%s %s does not have a valid package associated.", partSettingsHolder.getClass().getSimpleName(), partSettingsHolder.getShortName()));
+            }
+
+            footprint = pkg.getFootprint();
+            if (footprint == null) {
+                throw new Exception(String.format(
+                        "Package %s does not have a valid footprint. See https://github.com/openpnp/openpnp/wiki/Fiducials.",
+                        pkg.getId()));
+            }
+
+            if (footprint.getShape() == null) {
+                throw new Exception(String.format(
+                        "Package %s has an invalid or empty footprint.  See https://github.com/openpnp/openpnp/wiki/Fiducials.",
+                        pkg.getId()));
+            }
+        }
         pipeline.setProperty("camera", camera);
         pipeline.setProperty("part", partSettingsHolder);
         pipeline.setProperty("package", pkg);
-        pipeline.setProperty("footprint", footprint);
-        Rectangle2D bounds = footprint.getPadsShape().getBounds2D();
-        Length diameter = new Length(Math.max(bounds.getWidth(), bounds.getHeight()), footprint.getUnits());
-        pipeline.setProperty("fiducial.diameter", diameter);
-        pipeline.setProperty("fiducial.maxDistance", getMaxDistance());
-        return pipeline;
+        if (footprint != null) {
+            pipeline.setProperty("footprint", footprint);
+            Rectangle2D bounds = footprint.getPadsShape().getBounds2D();
+            Length diameter = new Length(Math.max(bounds.getWidth(), bounds.getHeight()), footprint.getUnits());
+            pipeline.setProperty("fiducial.diameter", diameter);
+            pipeline.setProperty("fiducial.maxDistance", getMaxDistance());
+        }
+        pipeline.setProperties(pipelineParameterAssignments);
     }
 
     public Location getFiducialLocation(Location nominalLocation, PartSettingsHolder partSettingsHolder) throws Exception {
@@ -549,11 +558,22 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     public void setPipeline(CvPipeline pipeline) {
         this.pipeline = pipeline;
     }
-    
+
     public static CvPipeline createStockPipeline() {
         try {
             String xml = IOUtils.toString(ReferenceBottomVision.class
                     .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
+            return new CvPipeline(xml);
+        }
+        catch (Exception e) {
+            throw new Error(e);
+        }
+    }
+
+    public static CvPipeline createTemplatePipeline() {
+        try {
+            String xml = IOUtils.toString(ReferenceBottomVision.class
+                    .getResource("ReferenceFiducialLocator-TemplatePipeline.xml"));
             return new CvPipeline(xml);
         }
         catch (Exception e) {
@@ -627,7 +647,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     public Wizard getPartConfigurationWizard(PartSettingsHolder partSettingsHolder) {
         FiducialVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
         try {
-            visionSettings.getCvPipeline().setProperty("camera", getVisionCamera());
+            visionSettings.getPipeline().setProperty("camera", getVisionCamera());
         }
         catch (Exception e) {
         }
@@ -676,11 +696,20 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
 
     protected void migratePartSettings(Configuration configuration) {
         if (partSettingsByPartId == null) {
-            if (configuration.getVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_ID) == null) {
+            AbstractVisionSettings stockVisionSettings = configuration.getVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_ID);
+            if (stockVisionSettings == null) {
                 // Fresh configuration: need to migrate the stock and default settings, even if no partSettingsById are present.  
                 partSettingsByPartId = new HashMap<>();
             }
             else { 
+                // Just reassign the stock pipeline.
+                stockVisionSettings.setPipeline(createStockPipeline());
+                // Add the template pipeline, if missing.
+                AbstractVisionSettings templateFiducialVisionSettings = configuration.getVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_TEMPLATE_ID);
+                if (templateFiducialVisionSettings == null) {
+                    templateFiducialVisionSettings = createTemplateFiducialVisionSettings();
+                    configuration.addVisionSettings(templateFiducialVisionSettings);
+                }
                 return;
             }
         }
@@ -689,8 +718,10 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         // Create the factory stock settings.
         FiducialVisionSettings stockFiducialVisionSettings = createStockFiducialVisionSettings();
         configuration.addVisionSettings(stockFiducialVisionSettings);
+        FiducialVisionSettings templateFiducialVisionSettings = createTemplateFiducialVisionSettings();
+        configuration.addVisionSettings(templateFiducialVisionSettings);
         PartSettings equivalentPartSettings = new PartSettings();
-        equivalentPartSettings.setPipeline(stockFiducialVisionSettings.getCvPipeline());
+        equivalentPartSettings.setPipeline(stockFiducialVisionSettings.getPipeline());
         fiducialVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), stockFiducialVisionSettings);
         // Migrate the default settings.
         FiducialVisionSettings defaultFiducialVisionSettings = new FiducialVisionSettings(AbstractVisionSettings.DEFAULT_FIDUCIAL_ID);
@@ -698,14 +729,14 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         defaultFiducialVisionSettings.setEnabled(true);
         configuration.addVisionSettings(defaultFiducialVisionSettings);
         if(pipeline != null) {
-            defaultFiducialVisionSettings.setCvPipeline(pipeline);
+            defaultFiducialVisionSettings.setPipeline(pipeline);
             pipeline = null;
         }
         else {
-            defaultFiducialVisionSettings.setCvPipeline(stockFiducialVisionSettings.getCvPipeline());
+            defaultFiducialVisionSettings.setPipeline(stockFiducialVisionSettings.getPipeline());
         }
         setFiducialVisionSettings(defaultFiducialVisionSettings);
-        equivalentPartSettings.setPipeline(defaultFiducialVisionSettings.getCvPipeline());
+        equivalentPartSettings.setPipeline(defaultFiducialVisionSettings.getPipeline());
         fiducialVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), defaultFiducialVisionSettings);
         for (Part part: configuration.getParts()) {
             part.setFiducialVisionSettings(null);
@@ -747,17 +778,28 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     }
 
     private FiducialVisionSettings createStockFiducialVisionSettings() {
-        FiducialVisionSettings fiducialVisionSettings;
+        CvPipeline stockPipeline = createStockPipeline();
+        return createStockFiducialVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_ID, "- Stock Fiducial Vision Settings -", stockPipeline);
+    }
+
+    protected FiducialVisionSettings createStockFiducialVisionSettings(String settingsId,
+            String settingsName, CvPipeline stockPipeline) throws Error {
         try {
-            fiducialVisionSettings = new FiducialVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_ID);
-            fiducialVisionSettings.setName("- Stock Fiducial Vision Settings -");
+            FiducialVisionSettings fiducialVisionSettings;
+            fiducialVisionSettings = new FiducialVisionSettings(settingsId);
+            fiducialVisionSettings.setName(settingsName);
             fiducialVisionSettings.setEnabled(true);
-            fiducialVisionSettings.setCvPipeline(createStockPipeline());
+            fiducialVisionSettings.setPipeline(stockPipeline);
             return fiducialVisionSettings;
         }
         catch (Exception e) {
             throw new Error(e);
         }
+    }
+
+    private FiducialVisionSettings createTemplateFiducialVisionSettings() {
+        CvPipeline stockPipeline = createTemplatePipeline();
+        return createStockFiducialVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_TEMPLATE_ID, "- Footprint Fiducial Vision Settings -", stockPipeline);
     }
 
     public void optimizeVisionSettings(Configuration configuration) {
