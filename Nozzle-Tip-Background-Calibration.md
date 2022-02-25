@@ -27,6 +27,8 @@ There is a new Background Calibration section on the Calibration tab:
 
 ![Screenshot_20220219_154325](https://user-images.githubusercontent.com/9963310/154806475-db1c38d9-7be9-44f7-8bd4-86e06fbdcba4.png)
 
+### Selecting the Method
+
 **Method** controls the Background Calibration:
 
 ![Screenshot_20220219_160944](https://user-images.githubusercontent.com/9963310/154806671-75d40a06-bd88-42d1-b309-517f283cc75a.png)
@@ -36,6 +38,8 @@ There is a new Background Calibration section on the Calibration tab:
 - **BrightnessAndKeyColor** determines both the nozzle tip key color, and the remaining background cutoff brightness. 
 
 Once you have selected the **Method**, you can test the calibration by pressing the **Calibrate** button. During normal use, you should not need to care about recalibration, it will be re-triggered together with the Nozzle Tip Calibration, as described in the [Calibration Operating Principle](#calibration-operating-principle) section. 
+
+### Advanced Settings
 
 **Minimum Detail Size** (in system units) configures the smallest valid detail of a part to be detected in bottom vision, such as the smallest dimension of a pad, pin, ball of a package. All smaller image details like image noise, textures, dirt etc. are considered irrelevant for detection. The **Minimum Detail Size** controls a blurring filter to suppress these artifacts.
 
