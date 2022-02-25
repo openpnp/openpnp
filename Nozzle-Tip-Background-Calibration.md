@@ -35,6 +35,8 @@ There is a new Background Calibration section on the Calibration tab:
 - **Brightness** only determines the cutoff brightness of the nozzle tip and background, no key color is assumed to be present. 
 - **BrightnessAndKeyColor** determines both the nozzle tip key color, and the remaining background cutoff brightness. 
 
+Once you have selected the **Method**, you can test the calibration by pressing the **Calibrate** button. During normal use, you should not need to care about recalibration, it will be re-triggered together with the Nozzle Tip Calibration, as described in the [Calibration Operating Principle](#calibration-operating-principle) section. 
+
 **Minimum Detail Size** (in system units) configures the smallest valid detail of a part to be detected in bottom vision, such as the smallest dimension of a pad, pin, ball of a package. All smaller image details like image noise, textures, dirt etc. are considered irrelevant for detection. The **Minimum Detail Size** controls a blurring filter to suppress these artifacts.
 
 **Minimum** and **Maximum** columns in the **Hue** (base color), **Saturation**, **Value** (Brightness) [HSV color model](https://en.wikipedia.org/wiki/HSL_and_HSV) indicate the calibrated bounding box of the key color (if enabled). 
