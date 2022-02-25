@@ -39,7 +39,7 @@ There is a new Background Calibration section on the Calibration tab:
 
 Once you have selected the **Method**, you can test the calibration by pressing the **Calibrate** button. During normal use, you should not need to care about recalibration, it will be re-triggered together with the Nozzle Tip Calibration, as described in the [Calibration Operating Principle](#calibration-operating-principle) section. 
 
-### Advanced Settings
+### Other Settings
 
 **Minimum Detail Size** (in system units) configures the smallest valid detail of a part to be detected in bottom vision, such as the smallest dimension of a pad, pin, ball of a package. All smaller image details like image noise, textures, dirt etc. are considered irrelevant for detection. The **Minimum Detail Size** controls a blurring filter to suppress these artifacts.
 
