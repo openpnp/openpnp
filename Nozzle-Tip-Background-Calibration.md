@@ -37,19 +37,24 @@ There is a new Background Calibration section on the Calibration tab:
 - **Brightness** only determines the cutoff brightness of the nozzle tip and background, no key color is assumed to be present. 
 - **BrightnessAndKeyColor** determines both the nozzle tip key color, and the remaining background cutoff brightness. 
 
-Once you have selected the **Method**, you can test the calibration by pressing the **Calibrate** button. During normal use, you should not need to care about recalibration, it will be re-triggered together with the Nozzle Tip Calibration, as described in the [Calibration Operating Principle](#calibration-operating-principle) section. 
 
 ### Other Settings
 
 **Minimum Detail Size** (in system units) configures the smallest valid detail of a part to be detected in bottom vision, such as the smallest dimension of a pad, pin, ball of a package. All smaller image details like image noise, textures, dirt etc. are considered irrelevant for detection. The **Minimum Detail Size** controls a blurring filter to suppress these artifacts.
 
-**Minimum** and **Maximum** columns in the **Hue** (base color), **Saturation**, **Value** (Brightness) [HSV color model](https://en.wikipedia.org/wiki/HSL_and_HSV) indicate the calibrated bounding box of the key color (if enabled). 
+**Minimum** and **Maximum** columns in the **Hue** (base color), **Saturation**, **Value** (Brightness) [HSV color model](https://en.wikipedia.org/wiki/HSL_and_HSV) indicate the calibrated bounding box of the key color (if enabled). These values will be computed by the calibration.
 
-The HSV color model can be illustrated like this (Wikipedia):
+The HSV color model can be illustrated like this ([Wikipedia](https://en.wikipedia.org/wiki/HSL_and_HSV)):
 
 ![image](https://user-images.githubusercontent.com/9963310/154807032-f8de9cd1-daf9-4de3-8fb2-02884266c4e7.png)
 
 **Tolerance** can be used for each channel, to expand the detected bounding box. This provides robustness against changing ambient lighting, shadows cast by the picked parts, etc. Note: practical tolerance values are yet to be determined in testing. The tolerance is applied to both sides of the channel bounds, except for Saturation Maximum, and Value Minimum which are both  left unlimited in the bottom vision `MaskHSV` stage. OpenPnP assumes both darker and more vivid (greener) pixels are always part of the background, even if they were not detected, or cut off in the calibration. 
+
+Note, the Tolerance is (currently) not shown in the graphical HSV color indicator. 
+
+### Performing the Background Calibration
+
+Once you have selected **Method** and **Minimum Detail Size**, you can test the calibration by pressing the **Calibrate** button. During operational use, the Background Calibration will be re-triggered together with the Nozzle Tip Calibration, as described in the [Calibration Operating Principle](#calibration-operating-principle) section. 
 
 ## Application
 
