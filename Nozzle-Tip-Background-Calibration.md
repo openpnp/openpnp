@@ -58,9 +58,15 @@ Once you have selected **Method** and **Minimum Detail Size**, you can test the 
 
 ## Application
 
-The Background Calibration data is then used to automatically parametrize the bottom vision operation. If the Background Calibration **Method** is not **None**, the relevant stage properties in the pipeline are fully controlled. If the background was successfully calibrated, the knockout should now be perfect:
+Calibrated background removal does only work, if your pipeline actually has a `MaskHsv` stage. This is the case with the OpenPnP stock pipeline. However, perhaps you modified the pipeline and removed it, so you may need to [activate the stock pipeline](/openpnp/openpnp/wiki/Computer-Vision#using-new-stock-pipelines) to get the functionality.
+
+The Background Calibration data is then used to automatically parametrize the bottom vision operation. If the Background Calibration **Method** is set (not **None**), the relevant stage properties in the pipeline are fully controlled, as described in the [Calibration Operating Principle](#calibration-operating-principle) section. 
+
+If the background was successfully calibrated (i.e. no problems indicated), the knockout should now be perfect:
 
 ![nozzle-tip-background-knockout](https://user-images.githubusercontent.com/9963310/154805842-e565ec69-a890-4757-963c-2ffe603cdf3f.gif)
+
+Otherwise see the [Trouble Shooting section](#trouble-shooting).
 
 As the Nozzle Tip Calibration is typically renewed at least whenever the machine was homed, or even with each nozzle tip change, the calibration data should be adaptive to changing ambient light and other conditions. A manual recalibration can also always be triggered, if needed.
 
