@@ -174,7 +174,15 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                         JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     ReferenceFiducialLocator fiducialVision = ReferenceFiducialLocator.getDefault();
-                    visionSettings.setValues(fiducialVision.getFiducialVisionSettings());
+                    if (fiducialVision.getFiducialVisionSettings() == visionSettings) {
+                        // Already the default. Set stock.
+                        FiducialVisionSettings stockVisionSettings = (FiducialVisionSettings) Configuration.get()
+                                .getVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_ID);
+                        visionSettings.setValues(stockVisionSettings);
+                    }
+                    else {
+                        visionSettings.setValues(fiducialVision.getFiducialVisionSettings());
+                    }
                 }
             });
         });

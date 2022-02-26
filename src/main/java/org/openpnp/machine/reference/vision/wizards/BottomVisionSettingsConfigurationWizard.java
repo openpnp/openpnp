@@ -197,7 +197,15 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
-                    visionSettings.setValues(bottomVision.getBottomVisionSettings());
+                    if (bottomVision.getBottomVisionSettings() == visionSettings) {
+                        // Already the default. Set stock.
+                        BottomVisionSettings stockVisionSettings = (BottomVisionSettings) Configuration.get()
+                                .getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID);
+                        visionSettings.setValues(stockVisionSettings);
+                    }
+                    else {
+                        visionSettings.setValues(bottomVision.getBottomVisionSettings());
+                    }
                 }
             });
         });
