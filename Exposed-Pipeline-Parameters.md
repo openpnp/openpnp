@@ -2,23 +2,19 @@
 
 In OpenPnP [[Computer Vision]] operations can be defined with so-called Pipelines. Authoring these Pipelines is quite a complex expert task, described on the [[CvPipeline]] page. Users normally need not author their own pipelines, they can use the built-in pipelines shipped with OpenPnP. However, because machines, cameras, lights and parts can all be different, they often need to tweak some of the _properties_ of the pipeline stages. Among the many stages and properties in a Pipeline, there are often only _very few_ essential properties that need this tweaking. But those are hard to find and often even harder to understand and adjust. 
 
-This is where the exposed Pipeline Parameters described on this page come in. These can now be singled out by the Pipeline author and they are exposed as GUI controls on the vision settings, complete with a custom label and tooltip to explain what they do. The exposed Pipeline Parameters can therefore cleanly separate _authoring_ from _tweaking_, so that users of the pipeline need not understand the pipeline and its workings, but get the right small number of parameters singled out, ready to tweak. 
-
-Without ever going into the Pipeline Editor, users get the crucial parameters presented as sliders, which they can then interactively adjust: 
+This is where the exposed Pipeline Parameters described on this page come in. These can now be singled out by the Pipeline author and they are exposed as GUI controls on the vision settings, complete with a custom label and tooltip to explain what they do. The exposed Pipeline Parameters can therefore cleanly separate _authoring_ from _tweaking_, so that users of the pipeline need no longer understand the pipeline, its workings and how to use the Pipeline Editor. Instead, without ever going into the Pipeline Editor, users get the essential parameters presented as sliders, which they can then interactively tweak: 
 
 ![Sliders](https://user-images.githubusercontent.com/9963310/155244204-5df01b2c-02be-4475-92b4-4063c36e7acc.png)
-
-## Application
 
 The effect of the tweaking is directly shown in the Camera Preview. As configured in the parameter, the slider previews the stage that best shows the effect of any adjustments. In addition, if users stop dragging the slider, the pipeline end result is displayed with a slight delay. Watch it in action in the animation:
 
 ![Parametric-Pipeline](https://user-images.githubusercontent.com/9963310/155286493-f074b6b0-74c2-4d2e-ac30-3619a70f424d.GIF)
 
-## Using New Stock Pipeline
+## Using New Stock Bottom Vision Pipeline
 
-The new stock Bottom Vision pipeline has the parameters shown here already implemented. To activate it, proceed as follows:
+The new Stock Bottom Vision pipeline has the parameters (shown in the animation above) already implemented. To activate it, proceed as follows:
 
-1. If you're sure you want the new stock pipeline, just jump to step **7.** If you want to test first, proceed as follows:
+1. If you're sure you want the new stock pipeline, just jump to step **7.**, otherwise we'll test it first, as follows:
 1. Go to the **Vision** tab and press the **Copy** button on the Stock settings.
   
    ![Press Copy](https://user-images.githubusercontent.com/9963310/155680959-790b3784-137a-4f60-bb10-b89668c0ae81.png)
