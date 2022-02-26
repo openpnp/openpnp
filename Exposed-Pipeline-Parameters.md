@@ -12,7 +12,7 @@ The effect of the tweaking is directly shown in the Camera Preview. As configure
 
 ## Using New Stock Bottom Vision Pipeline
 
-The new Stock Bottom Vision pipeline has the parameters (shown in the animation above) already implemented. To activate it, proceed as follows:
+If you already see the sliders (shown in the animation above), you're all set and you can skip this section. If not, you now need to activate the new Stock Bottom Vision pipeline that has the parameters implemented. To activate it, proceed as follows:
 
 1. If you're sure you want the new stock pipeline, just jump to step **7.**, otherwise we'll test it first, as follows:
 1. Go to the **Vision** tab and press the **Copy** button on the Stock settings.
@@ -33,7 +33,6 @@ The new Stock Bottom Vision pipeline has the parameters (shown in the animation 
 
    ![Set Default to Stock](https://user-images.githubusercontent.com/9963310/155681138-2087b511-46fa-48c6-9fe3-61ba0be88aa4.png)
     
-   (Note: I just found a refresh bug there. The parameters do not appear immediately. You need to quickly select a different list entry, and back. I'll fix that)
 
 ## Configuration of the Pipeline (Advanced Users)
 
