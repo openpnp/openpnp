@@ -22,6 +22,10 @@
 package org.openpnp.gui.components;
 
 import java.awt.Component;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -32,8 +36,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
@@ -43,6 +50,8 @@ import javax.swing.event.ChangeListener;
 
 import org.opencv.core.Mat;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
@@ -294,6 +303,9 @@ public abstract class PipelinePanel extends JPanel {
     }
 
     private int invokation = 0;
+    private JButton btnCopy;
+    private JButton btnPaste;
+
     private void rebuildUi() {
         removeAll();
         invokation++;
@@ -310,17 +322,13 @@ public abstract class PipelinePanel extends JPanel {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.UNRELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                getPipeline() == null ? new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC, 
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, 
-                        FormSpecs.DEFAULT_ROWSPEC
-        } : dynamicRowspec(rows)));
+            dynamicRowspec(rows)));
 
         JLabel lblPipeline = new JLabel("Pipeline");
+        lblPipeline.setEnabled(isEnabled());
         panel.add(lblPipeline, "2, 2, right, default");
 
         btnEdit = new JButton("Edit");
@@ -332,7 +340,7 @@ public abstract class PipelinePanel extends JPanel {
                 UiUtils.messageBoxOnException(() -> configurePipeline(getPipeline(), getPipelineParameterAssignments(), true));
             }
         });
-        panel.add(btnEdit, "4, 2");
+        panel.add(btnEdit, "4, 2, default, fill");
 
         btnReset = new JButton("Reset");
         btnReset.setToolTipText("Reset the pipeline to the default.");
@@ -343,7 +351,15 @@ public abstract class PipelinePanel extends JPanel {
                 UiUtils.messageBoxOnException(() -> resetPipeline());
             }
         });
-        panel.add(btnReset, "6, 2");
+        panel.add(btnReset, "6, 2, default, fill");
+
+        btnCopy = new JButton(copyAction);
+        add(btnCopy, "8, 2, right, default");
+
+        btnPaste = new JButton(pasteAction);
+        btnPaste.setEnabled(isEnabled());
+        btnPaste.setVisible(editable);
+        add(btnPaste, "10, 2, left, default");
 
         int formRow = 2;
         for (CvAbstractParameterStage parameter : parameterStages) {
@@ -382,7 +398,7 @@ public abstract class PipelinePanel extends JPanel {
                     });
                     slider.setToolTipText(parameter.getParameterDescription());
                     slider.setEnabled(isEnabled());
-                    panel.add(slider, "4, "+(formRow*2)+", 3, 1, fill, default");
+                    panel.add(slider, "4, "+(formRow*2)+", 7, 1, fill, default");
                 }
                 catch (Exception e) {
                     Logger.warn(e);
@@ -393,4 +409,55 @@ public abstract class PipelinePanel extends JPanel {
         revalidate();
         repaint();
     }
+    public final Action copyAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.copy);
+            //putValue(NAME, "Copy pipeline to clipboard");
+            putValue(SHORT_DESCRIPTION, "Copy the pipeline to the clipboard in text format.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                StringSelection stringSelection =
+                        new StringSelection(getPipeline().toXmlString());
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(stringSelection, null);
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy failed", e);
+            }
+        }
+    };
+
+    public final Action pasteAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.paste);
+            //putValue(NAME, "Create pipeline from clipboard");
+            putValue(SHORT_DESCRIPTION,
+                    "Create a new pipeline from a definition on the clipboard.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            try {
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "This will replace the Pipeline with the one on the clipboard.\n\nAre you sure?", null,
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    String s = (String) clipboard.getData(DataFlavor.stringFlavor);
+                    CvPipeline pipeline = getPipeline();
+                    pipeline.fromXmlString(s);
+                    setPipeline(null);
+                    setPipeline(pipeline);
+                }
+            }
+            catch (Exception e) {
+                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste failed", e);
+            }
+        }
+    };
+
+
 }
