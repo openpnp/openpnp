@@ -37,9 +37,9 @@ Some essential tweaking parameters can be exposed from a pipeline. See the [[Exp
 
 The usage of the Pipeline Editor UI in general is explained on the [[CvPipeline]] page.
 
-# Bottom Vision Background Calibration
+# Bottom Vision Background Removal
 
-OpenPnP can automatically calibrate the background with the empty nozzle tip for bottom vision. See the [[Nozzle Tip Background Calibration]] page.
+OpenPnP can automatically calibrate the background (with empty nozzle tip) for bottom vision background removal. See the [[Nozzle Tip Background Calibration]] page.
 
 # Stages
 
