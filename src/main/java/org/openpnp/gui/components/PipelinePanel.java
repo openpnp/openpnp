@@ -182,8 +182,9 @@ public abstract class PipelinePanel extends JPanel {
                         @Override
                         public void pipelineChanged() {
                             super.pipelineChanged();
-                            // We need to make sure, the settings is recognized as a change, otherwise 
-                            // somehow the firePropertyChange() will not be propagated. 
+                            // We need to make sure, the settings is recognized as a "deep" change, otherwise 
+                            // somehow the firePropertyChange() will not be propagated. So toggle to null first.
+                            setPipeline(null);
                             setPipeline(pipeline);
                         }
                     };
@@ -296,6 +297,7 @@ public abstract class PipelinePanel extends JPanel {
     private void rebuildUi() {
         removeAll();
         invokation++;
+        //Logger.trace("rebuild "+this.hashCode()+" invokation "+invokation);
         JPanel panel = this;
         List<CvAbstractParameterStage> parameterStages = getPipeline() != null ? 
                 getPipeline().getParameterStages() : new ArrayList<>();
@@ -345,7 +347,7 @@ public abstract class PipelinePanel extends JPanel {
 
         int formRow = 2;
         for (CvAbstractParameterStage parameter : parameterStages) {
-            //org.pmw.tinylog.Logger.trace("rebuild "+stage.getParameterName()+" invokation "+invokation);
+            //Logger.trace("    rebuild "+parameter.getParameterName()+" invokation "+invokation);
             if (parameter instanceof CvAbstractScalarParameterStage) {
                 CvAbstractScalarParameterStage scalarParameter = (CvAbstractScalarParameterStage) parameter;
                 try {
