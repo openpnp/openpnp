@@ -6,7 +6,7 @@ Background Calibration analyzes the empty nozzle tip and background in the botto
 
 The new Background Calibration reuses the images that are already captured by the [[Nozzle Tip Calibration|Nozzle-Tip-Calibration-Setup]], so no extra machine time and motion is needed to obtain them. It analyzes these background images for the **Key Color** (Chroma Key) of the Juki (or similar) nozzle tip. Any dominant, vivid color is automatically detected and a likely bounding box computed in the [HSV Color Model](https://en.wikipedia.org/wiki/HSL_and_HSV). 
 
-Furthermore, a cutoff brightness is determined where the non-color-keyed parts of the background must all be darker. This indicates the minimum brightness applicable typically in a `Threshold` stage (the subject of an upcoming PR). 
+Furthermore, a cutoff brightness is determined where the non-color-keyed parts of the background must all be darker. This indicates the minimum brightness applicable typically in a `Threshold` stage. 
 
 The background calibration automatically blots out the center piece in the calibration image, where the nozzle tip was detected. This will eliminate any shiny elements that are typically present (needles, scraped off points etc.). OpenPnP assumes this center part to be always covered by the picked part, i.e. there is no need to include its color in the background calibration, _nor_ these shiny elements treated as a problem (see Trouble Shooting). The blotted-out disc has a size of **Vision Diameter** + 2 x **Minimum Detail Size** (see Configuration).
 
