@@ -48,7 +48,7 @@ The **parameterDescription** determines the tool-tip of the parameter, when it i
 
 The **stageName** identifies the target stage that is controlled by this parameter. It is recommended to properly name the target stage and then copy the name over here. **Note:** The identified target stage must come _after_ this parameter stage.
 
-The **propertyName** identifies the property in the target stage. This property must be numeric in nature (hence it is called "ParameterNumeric"). Future development may cover additional property types.  
+The **propertyName** identifies the property in the target stage. The identified property must be of numeric type (hence our stage is called "ParameterNumeric"). Future development may cover additional property types.  
 
 The **numericType** sets the type and unit of the target property. Even though these properties are "all just numbers", there are some nuances to be distinguished:
 
