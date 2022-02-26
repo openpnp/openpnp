@@ -2,11 +2,19 @@
 
 Computer Vision is used throughout OpenPnP to detect exactly where things are in relation to the cameras, sometimes to just determine _if_ they are there, and sometimes to read text (OCR) or codes (QR-Codes). Computer vision mostly uses a facility called Pipeline to perform the detection. The Pipeline is structured in so-called Stages that the user can configure in a special Pipeline Editor. 
 
-This page links to detailed instructions for some stages. 
+This page links to detailed instructions for some tasks around Computer Vision. 
 
 # Editing Pipelines
 
 The usage of the Pipeline Editor UI in general is explained on the [[CvPipeline]] page.
+
+# Pipeline Parameters
+
+Some essential tweaking parameters can be exposed from a pipeline. See the [[Exposed Pipeline Parameters]] page. 
+
+# Bottom Vision Background Calibration
+
+OpenPnP can automatically calibrate the background with the empty nozzle tip for bottom vision. See the [[Nozzle Tip Background Calibration]] page.
 
 # Stages
 
