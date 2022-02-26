@@ -54,7 +54,7 @@ Note, the Tolerance is (currently) not shown in the graphical HSV color indicato
 
 ### Performing the Background Calibration
 
-Once you have selected **Method** and **Minimum Detail Size**, you can test the calibration by pressing the **Calibrate** button. During operational use, the Background Calibration will be re-triggered together with the Nozzle Tip Calibration, as described in the [Calibration Operating Principle](#calibration-operating-principle) section. 
+Once you have selected **Method** and **Minimum Detail Size**, you can test the calibration by pressing the **Calibrate** button. In production use the Background Calibration will be re-triggered together with the Nozzle Tip Calibration, as described in the [Calibration Operating Principle](#calibration-operating-principle) section. 
 
 ## Application
 
