@@ -6,39 +6,13 @@ This is where the exposed Pipeline Parameters described on this page come in. Th
 
 ## Application of the Parameters
 
-Without ever going into the Pipeline Editor, users get the essential parameters presented as sliders, which they can then interactively tweak: 
+Without ever going into the Pipeline Editor, users get the essential parameters presented as sliders, which they can then interactively tweak. If you don't see any parameters in your Bottom Vision settings, you probably need to [activate the new stock pipeline](/openpnp/openpnp/wiki/Computer-Vision#using-new-stock-pipelines).
 
 ![Sliders](https://user-images.githubusercontent.com/9963310/155244204-5df01b2c-02be-4475-92b4-4063c36e7acc.png)
 
 The effect of the tweaking is directly shown in the Camera Preview. As configured in the parameter, the slider previews the stage that best shows the effect of any adjustments. In addition, if users stop dragging the slider, the pipeline end result is displayed with a slight delay. Watch it in action in the animation:
 
 ![Parametric-Pipeline](https://user-images.githubusercontent.com/9963310/155286493-f074b6b0-74c2-4d2e-ac30-3619a70f424d.GIF)
-
-## Using New Stock Bottom Vision Pipeline
-
-If you already see the sliders (shown in the animation above), you're all set and you can skip this section. 
-
-If not, you need to activate the new Stock Bottom Vision pipeline that has the parameters implemented. To activate it, proceed as follows:
-
-1. If you're sure you want the new stock pipeline, just jump to step **7.**, otherwise we'll test it first, as follows:
-1. Go to the **Vision** tab and press the **Copy** button on the Stock settings.
-  
-   ![Press Copy](https://user-images.githubusercontent.com/9963310/155680959-790b3784-137a-4f60-bb10-b89668c0ae81.png)
-
-1. Then press the **Paste** button.
-1. Give it a telling name.
-   
-   ![Name new vision settings](https://user-images.githubusercontent.com/9963310/155681016-e6d26551-8807-42fc-b6ab-7701b6cefb93.png)
-
-1. Then go to a test Part or Package and assign it in the **BottomVision** column of the list:
-
-   ![Assign to part](https://user-images.githubusercontent.com/9963310/155681065-aaf69d58-5d74-40d5-a6f6-b244b414116f.png)
-
-1. Then test the new settings by using **Test Align** etc. 
-1. You can also _directly_ set the new Stock pipeline on the "Default Machine Bottom Vision" settings by pressing the **Reset** button:
-
-   ![Set Default to Stock](https://user-images.githubusercontent.com/9963310/155681138-2087b511-46fa-48c6-9fe3-61ba0be88aa4.png)
-    
 
 ## Configuration of the Pipeline (Advanced Users)
 
