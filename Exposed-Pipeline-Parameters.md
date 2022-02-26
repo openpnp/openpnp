@@ -2,7 +2,11 @@
 
 In OpenPnP [[Computer Vision]] operations can be defined with so-called Pipelines. Authoring these Pipelines is quite a complex expert task, described on the [[CvPipeline]] page. Users normally need not author their own pipelines, they can use the built-in pipelines shipped with OpenPnP. However, because machines, cameras, lights and parts can all be different, they often need to tweak some of the _properties_ of the pipeline stages. Among the many stages and properties in a Pipeline, there are often only _very few_ essential properties that need this tweaking. But those are hard to find and often even harder to understand and adjust. 
 
-This is where the exposed Pipeline Parameters described on this page come in. These can now be singled out by the Pipeline author and they are exposed as GUI controls on the vision settings, complete with a custom label and tooltip to explain what they do. The exposed Pipeline Parameters can therefore cleanly separate _authoring_ from _tweaking_, so that users of the pipeline need no longer understand the pipeline, its workings and how to use the Pipeline Editor. Instead, without ever going into the Pipeline Editor, users get the essential parameters presented as sliders, which they can then interactively tweak: 
+This is where the exposed Pipeline Parameters described on this page come in. These can now be singled out by the Pipeline author and they are exposed as GUI controls on the vision settings, complete with a custom label and tooltip to explain what they do. The exposed Pipeline Parameters can therefore cleanly separate _authoring_ from _tweaking_, so that users of the pipeline need no longer understand the pipeline, its workings and how to use the Pipeline Editor. Application is now much easier.
+
+## Application of the Parameters
+
+Without ever going into the Pipeline Editor, users get the essential parameters presented as sliders, which they can then interactively tweak: 
 
 ![Sliders](https://user-images.githubusercontent.com/9963310/155244204-5df01b2c-02be-4475-92b4-4063c36e7acc.png)
 
@@ -12,7 +16,9 @@ The effect of the tweaking is directly shown in the Camera Preview. As configure
 
 ## Using New Stock Bottom Vision Pipeline
 
-If you already see the sliders (shown in the animation above), you're all set and you can skip this section. If not, you now need to activate the new Stock Bottom Vision pipeline that has the parameters implemented. To activate it, proceed as follows:
+If you already see the sliders (shown in the animation above), you're all set and you can skip this section. 
+
+If not, you need to activate the new Stock Bottom Vision pipeline that has the parameters implemented. To activate it, proceed as follows:
 
 1. If you're sure you want the new stock pipeline, just jump to step **7.**, otherwise we'll test it first, as follows:
 1. Go to the **Vision** tab and press the **Copy** button on the Stock settings.
@@ -38,7 +44,7 @@ If you already see the sliders (shown in the animation above), you're all set an
 
 ### Parametric Control of a Stage 
 
-In our example we want to control a `MaskHSV` stage named "threshold", and in it the "valueMax" property: 
+In our example we want to control a `MaskHsv` stage named "threshold", and in it the "valueMax" property: 
 
 ![target stage](https://user-images.githubusercontent.com/9963310/155367133-c5e76f86-1995-4084-a81e-70918c521a04.png)
 
