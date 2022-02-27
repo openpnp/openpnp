@@ -69,6 +69,7 @@ import org.openpnp.vision.pipeline.stages.MinAreaRectContours;
 import org.openpnp.vision.pipeline.stages.MinEnclosingCircle;
 import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.OrientRotatedRects;
+import org.openpnp.vision.pipeline.stages.ParameterBool;
 import org.openpnp.vision.pipeline.stages.ParameterNumeric;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
 import org.openpnp.vision.pipeline.stages.ReadPartTemplateImage;
@@ -101,6 +102,7 @@ public class CvPipelineEditor extends JPanel {
         stageClasses = new HashSet<>();
         // Parameter stages.
         registerStageClass(ParameterNumeric.class);
+        registerStageClass(ParameterBool.class);
         // Vision stages.
         registerStageClass(BlurMedian.class);
         registerStageClass(BlurGaussian.class);
