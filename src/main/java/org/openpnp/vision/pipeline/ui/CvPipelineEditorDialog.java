@@ -3,13 +3,11 @@ package org.openpnp.vision.pipeline.ui;
 import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.Rectangle;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
-
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 public class CvPipelineEditorDialog extends JDialog {
     private CvPipelineEditor editor;
@@ -32,6 +30,7 @@ public class CvPipelineEditorDialog extends JDialog {
                         case JOptionPane.YES_OPTION:
                             super.windowClosing(e);
                             CvPipelineEditorDialog.this.dispose();
+                            pipelineChanged();
                             return;
                         case JOptionPane.NO_OPTION:
                             editor.undoEdits();
@@ -61,8 +60,12 @@ public class CvPipelineEditorDialog extends JDialog {
         this.editor = editor;
     }
 
+    @Override
     public void setVisible(boolean b) {
         super.setVisible(b);
         editor.initializeFocus();
+    }
+
+    public void pipelineChanged() {
     }
 }

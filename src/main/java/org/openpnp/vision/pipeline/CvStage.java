@@ -7,6 +7,7 @@ import java.beans.EventSetDescriptor;
 import java.beans.Introspector;
 import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.util.List;
 
 import org.opencv.core.Mat;
@@ -86,13 +87,20 @@ public abstract class CvStage {
     }
 
     public String getDescription(String propertyName) {
-        try {
-            Property a = getClass().getDeclaredField(propertyName).getAnnotation(Property.class);
-            return a.description();
+        // Find the annotation in any of the super classes.
+        Class<?> cls = getClass();
+        while (cls != null) {
+            Field fld = null;
+            try {
+                fld = cls.getDeclaredField(propertyName);
+                Property a = fld.getAnnotation(Property.class);
+                return a.description();
+            }
+            catch (Exception e) {
+            }
+            cls = cls.getSuperclass();
         }
-        catch (Exception e) {
-            return null;
-        }
+        return null;
     }
 
     // a stage may optionally define a length unit which is handled in the pipeline editor's 

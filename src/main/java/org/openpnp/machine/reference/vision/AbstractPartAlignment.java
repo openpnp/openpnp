@@ -89,7 +89,7 @@ public abstract class AbstractPartAlignment extends AbstractPartSettingsHolder i
     public Wizard getPartConfigurationWizard(PartSettingsHolder partSettingsHolder) {
         BottomVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
         try {
-            visionSettings.getCvPipeline().setProperty("camera", VisionUtils.getBottomVisionCamera());
+            visionSettings.getPipeline().setProperty("camera", VisionUtils.getBottomVisionCamera());
         }
         catch (Exception e) {
         }

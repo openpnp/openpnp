@@ -121,7 +121,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     public Location getCameraLocationAtPartHeight(Part part, Camera camera, Nozzle nozzle, double angle) throws Exception {
         if (part == null) {
-            throw new Exception("There is no part on nozzle "+nozzle.getName()+".");
+            // No part height accounted for.
+            return camera.getLocation(nozzle)
+                    .derive(null, null, null, angle);
         }
         if (part.isPartHeightUnknown()) {
             if (camera.getFocusProvider() != null
@@ -168,7 +170,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         MovableUtils.moveToLocationAtSafeZ(nozzle, nozzleLocation);
         final Location center = new Location(maxLinearOffset.getUnits());
 
-        try (CvPipeline pipeline = bottomVisionSettings.getCvPipeline()) {
+        try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
 
             // The running, iterative offset.
             Location offsets = new Location(nozzleLocation.getUnits());
@@ -263,7 +265,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
         MovableUtils.moveToLocationAtSafeZ(nozzle, wantedLocation);
 
-        try (CvPipeline pipeline = bottomVisionSettings.getCvPipeline()) {
+        try (CvPipeline pipeline = bottomVisionSettings.getPipeline()) {
             RotatedRect rect = processPipelineAndGetResult(pipeline, camera, part, nozzle, wantedLocation, bottomVisionSettings);
             camera=(Camera)pipeline.getProperty("camera");
 
@@ -377,13 +379,15 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         }
     }
 
-    public void preparePipeline(CvPipeline pipeline, Camera camera, Nozzle nozzle, 
-        Part part, Location wantedLocation, BottomVisionSettings bottomVisionSettings) {
+    public void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, 
+            Camera camera, Nozzle nozzle, Location wantedLocation, BottomVisionSettings bottomVisionSettings) {
         pipeline.setProperty("camera", camera);
+        Location partSize = null;
         // Set the footprint.
         if (nozzle.getPart() != null && nozzle.getPart().getPackage() != null) {
             Footprint footprint = nozzle.getPart().getPackage().getFootprint();
             pipeline.setProperty("footprint", footprint);
+            partSize = bottomVisionSettings.getPartCheckSize(nozzle.getPart());
         }
         // Set the background removal properties.
         if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) { 
@@ -393,10 +397,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             if (calibration != null 
                     && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
                 pipeline.setProperty("BlurGaussian.kernelSize", calibration.getMinimumDetailSize());
-// TODO: use a new minimumDetailSize property on the bottomVisionSettings (will be introduced a as new PR)
-//                pipeline.setProperty("FilterContours.minArea", 
-//                        bottomVisionSettings.getMinimumDetailSize()
-//                        .multiply(bottomVisionSettings.getMinimumDetailSize()));
                 pipeline.setProperty("MaskHsv.hueMin", 
                         Math.max(0, calibration.getBackgroundMinHue() - calibration.getBackgroundTolHue()));
                 pipeline.setProperty("MaskHsv.hueMax", 
@@ -404,17 +404,17 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 pipeline.setProperty("MaskHsv.saturationMin", 
                         Math.max(0, calibration.getBackgroundMinSaturation() - calibration.getBackgroundTolSaturation()));
                 pipeline.setProperty("MaskHsv.saturationMax", 255);  
-                        // no need to restrict: Math.min(255, calibration.getBackgroundMaxSaturation() + calibration.getBackgroundTolSaturation()));
+                // no need to restrict to this: Math.min(255, calibration.getBackgroundMaxSaturation() + calibration.getBackgroundTolSaturation()));
                 pipeline.setProperty("MaskHsv.valueMin", 0); 
-                        // no need to restrict: Math.max(0, calibration.getBackgroundMinValue() - calibration.getBackgroundTolValue()));
+                // no need to restrict to this: Math.max(0, calibration.getBackgroundMinValue() - calibration.getBackgroundTolValue()));
                 pipeline.setProperty("MaskHsv.valueMax", 
                         Math.min(255, calibration.getBackgroundMaxValue() +  calibration.getBackgroundTolValue()));
             }
         }
+        // Set alignment parameters.
         pipeline.setProperty("alignment.center", wantedLocation);
         pipeline.setProperty("alignment.expectedAngle", wantedLocation.getRotation());
         pipeline.setProperty("alignment.searchDistance", getMaxSearchDistance());
-        Location partSize = bottomVisionSettings.getPartCheckSize(part);
         if (partSize != null) {
             pipeline.setProperty("alignment.maxWidth", partSize.getLengthX());
             pipeline.setProperty("alignment.maxHeight", partSize.getLengthY());
@@ -425,11 +425,12 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             pipeline.setProperty("alignment.maxHeight", maxPartDiameter);
         }
         
+        pipeline.setProperties(pipelineParameterAssignments);
     }
 
     private RotatedRect processPipelineAndGetResult(CvPipeline pipeline, Camera camera, Part part,
             Nozzle nozzle, Location wantedLocation, BottomVisionSettings bottomVisionSettings) throws Exception {
-        preparePipeline(pipeline, camera, nozzle, part, wantedLocation, bottomVisionSettings);
+        preparePipeline(pipeline, bottomVisionSettings.getPipelineParameterAssignments(), camera, nozzle, wantedLocation, bottomVisionSettings);
         pipeline.process();
 
         Result result = pipeline.getResult(VisionUtils.PIPELINE_RESULTS_NAME);
@@ -481,7 +482,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             bottomVisionSettings = new BottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID);
             bottomVisionSettings.setName("- Stock Bottom Vision Settings -");
             bottomVisionSettings.setEnabled(true);
-            bottomVisionSettings.setCvPipeline(createStockPipeline());
+            bottomVisionSettings.setPipeline(createStockPipeline());
             return bottomVisionSettings;
         }
         catch (Exception e) {
@@ -689,11 +690,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     protected void migratePartSettings(Configuration configuration) {
         if (partSettingsByPartId == null) {
-            if (configuration.getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID) == null) {
+            AbstractVisionSettings stockVisionSettings = configuration.getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID);
+            if (stockVisionSettings == null) {
                 // Fresh configuration: need to migrate the stock and default settings, even if no partSettingsById are present.  
                 partSettingsByPartId = new HashMap<>();
             }
             else { 
+                // Just reassign the stock pipeline.
+                stockVisionSettings.setPipeline(createStockPipeline());
                 return;
             }
         }
@@ -703,7 +707,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         BottomVisionSettings stockBottomVisionSettings = createStockBottomVisionSettings();
         configuration.addVisionSettings(stockBottomVisionSettings);
         PartSettings equivalentPartSettings = new PartSettings();
-        equivalentPartSettings.setPipeline(stockBottomVisionSettings.getCvPipeline());
+        equivalentPartSettings.setPipeline(stockBottomVisionSettings.getPipeline());
         bottomVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), stockBottomVisionSettings);
         // Migrate the default settings.
         BottomVisionSettings defaultBottomVisionSettings = new BottomVisionSettings(AbstractVisionSettings.DEFAULT_BOTTOM_ID);
@@ -711,14 +715,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         defaultBottomVisionSettings.setEnabled(enabled);
         configuration.addVisionSettings(defaultBottomVisionSettings);
         if(pipeline != null) {
-            defaultBottomVisionSettings.setCvPipeline(pipeline);
+            defaultBottomVisionSettings.setPipeline(pipeline);
             pipeline = null;
         }
         else {
-            defaultBottomVisionSettings.setCvPipeline(stockBottomVisionSettings.getCvPipeline());
+            defaultBottomVisionSettings.setPipeline(stockBottomVisionSettings.getPipeline());
         }
         setBottomVisionSettings(defaultBottomVisionSettings);
-        equivalentPartSettings.setPipeline(defaultBottomVisionSettings.getCvPipeline());
+        equivalentPartSettings.setPipeline(defaultBottomVisionSettings.getPipeline());
         bottomVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), defaultBottomVisionSettings);
         for (Part part: configuration.getParts()) {
             part.setBottomVisionSettings(null);

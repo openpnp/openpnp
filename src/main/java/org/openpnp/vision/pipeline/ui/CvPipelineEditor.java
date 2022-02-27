@@ -69,6 +69,7 @@ import org.openpnp.vision.pipeline.stages.MinAreaRectContours;
 import org.openpnp.vision.pipeline.stages.MinEnclosingCircle;
 import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.OrientRotatedRects;
+import org.openpnp.vision.pipeline.stages.ParameterNumeric;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
 import org.openpnp.vision.pipeline.stages.ReadPartTemplateImage;
 import org.openpnp.vision.pipeline.stages.Rotate;
@@ -81,6 +82,7 @@ import org.openpnp.vision.pipeline.stages.SizeCheck;
 import org.openpnp.vision.pipeline.stages.Threshold;
 import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
 import org.openpnp.vision.pipeline.stages.WritePartTemplateImage;
+import org.pmw.tinylog.Logger;
 
 /**
  * A JPanel based component for editing a CvPipeline. Allows the user to add and remove stages,
@@ -97,6 +99,9 @@ import org.openpnp.vision.pipeline.stages.WritePartTemplateImage;
 public class CvPipelineEditor extends JPanel {
     static {
         stageClasses = new HashSet<>();
+        // Parameter stages.
+        registerStageClass(ParameterNumeric.class);
+        // Vision stages.
         registerStageClass(BlurMedian.class);
         registerStageClass(BlurGaussian.class);
         registerStageClass(ClosestModel.class);
@@ -230,6 +235,7 @@ public class CvPipelineEditor extends JPanel {
         }
         catch (Exception e) {
             // Do nothing
+            Logger.warn(e);
         }
         return !editedVersion.equals(originalVersion);
     }
