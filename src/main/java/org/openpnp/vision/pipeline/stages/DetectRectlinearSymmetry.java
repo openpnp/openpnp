@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 <mark@makr.zone>
+ * Copyright (C) 2022 <mark@makr.zone>
  * 
  * This file is part of OpenPnP.
  * 
@@ -76,21 +76,15 @@ public class DetectRectlinearSymmetry extends CvStage {
     private double minFeatureSize = 40;
 
     @Attribute(required = false)
-    @Property(description = "Determines how the cross-section across the width of the detected subject is evaluated.<br/><ul>"
-            + "<li><strong>FullSymmetry</strong> looks for full inner and outline symmetry. Use for truly symmetric subjects and best precision.</li>"
-            + "<li><strong>EdgeSymmetry</strong> looks for full inner and outline symmetry of edges. Use for partially "
-            + "symmetric subjects, where some, but not all features are present on both sides, or where shades differ.</li>"
-            + "<li><strong>OutlineSymmetry</strong> looks for outline symmetry only. Used for subjects that are symmetric "
-            + "on their outline, but not on the inside.</li>"
-            + "<li><strong>OutlineEdgeSymmetry</strong> looks for outline symmetry of edges only. Used for subjects that are symmetric "
-            + "on their outline, but not on the inside, and where some, but not all features are present on both sides, or where shades differ.</li>"
-            + "<li><strong>OutlineSymmetryMasked</strong> looks for outline mask symmetry only. Use for quite asymmetric subjects. "
-            + "Requires an input image that was masked with a Threshold, MaskHSV stage, etc., i.e. where background pixels are truly black.<br/>"
-            + "</li></ul>")
-    private SymmetryFunction symmetryAcrossWidth = SymmetryFunction.FullSymmetry;
+    @Property(description = "Tells the stage whether the part is symmetric across its width. The stage then either takes the symmetricFunction, or the asymmetricFunction.")
+    private boolean symmetricAcrossWidth = true;
 
     @Attribute(required = false)
-    @Property(description = "Determines how the cross-section across the height of the detected subject is evaluated.<br/><ul>"
+    @Property(description = "Tells the stage whether the part is symmetric across its height. The stage then either takes the symmetricFunction, or the asymmetricFunction.")
+    private boolean symmetricAcrossHeight = true;
+
+    @Attribute(required = false)
+    @Property(description = "Determines how the cross-section is evaluated for <strong>symmetric</strong> parts.<br/><ul>"
             + "<li><strong>FullSymmetry</strong> looks for full inner and outline symmetry. Use for truly symmetric subjects and best precision.</li>"
             + "<li><strong>EdgeSymmetry</strong> looks for full inner and outline symmetry of edges. Use for partially "
             + "symmetric subjects, where some, but not all features are present on both sides, or where shades differ.</li>"
@@ -99,9 +93,23 @@ public class DetectRectlinearSymmetry extends CvStage {
             + "<li><strong>OutlineEdgeSymmetry</strong> looks for outline symmetry of edges only. Used for subjects that are symmetric "
             + "on their outline, but not on the inside, and where some, but not all features are present on both sides, or where shades differ.</li>"
             + "<li><strong>OutlineSymmetryMasked</strong> looks for outline mask symmetry only. Use for quite asymmetric subjects. "
-            + "Requires an input image that was masked with a Threshold, MaskHSV stage, etc., i.e. where background pixels are truly black.<br/>"
+            + "Requires setting a mask <strong>threshold</strong>.<br/>"
             + "</li></ul>")
-    private SymmetryFunction symmetryAcrossHeight = SymmetryFunction.FullSymmetry;
+    private SymmetryFunction symmetricFunction = SymmetryFunction.FullSymmetry;
+
+    @Attribute(required = false)
+    @Property(description = "Determines how the cross-section is evaluated for <strong>asymmetric</strong> parts.<br/><ul>"
+            + "<li><strong>FullSymmetry</strong> looks for full inner and outline symmetry. Use for truly symmetric subjects and best precision.</li>"
+            + "<li><strong>EdgeSymmetry</strong> looks for full inner and outline symmetry of edges. Use for partially "
+            + "symmetric subjects, where some, but not all features are present on both sides, or where shades differ.</li>"
+            + "<li><strong>OutlineSymmetry</strong> looks for outline symmetry only. Used for subjects that are symmetric "
+            + "on their outline, but not on the inside.</li>"
+            + "<li><strong>OutlineEdgeSymmetry</strong> looks for outline symmetry of edges only. Used for subjects that are symmetric "
+            + "on their outline, but not on the inside, and where some, but not all features are present on both sides, or where shades differ.</li>"
+            + "<li><strong>OutlineSymmetryMasked</strong> looks for outline mask symmetry only. Use for quite asymmetric subjects. "
+            + "Requires setting a mask <strong>threshold</strong>.<br/>"
+            + "</li></ul>")
+    private SymmetryFunction asymmetricFunction = SymmetryFunction.OutlineSymmetryMasked;
 
     @Attribute(required = false)
     @Property(description = "Minimum relative symmetry. Values larger than 1.0 indicate symmetry.")
@@ -129,6 +137,10 @@ public class DetectRectlinearSymmetry extends CvStage {
     @Property(description = "Gamma to be applied to the image. The input signal is raised to the power gamma. "
             + "With gammas > 1.0 the bright image parts are emphasized.")
     private int gamma = 2;
+
+    @Attribute(required = false)
+    @Property(description = "Luminance threshold to be used for masking in the OutlineSymmetryMasked option.")
+    private int threshold = 128;
 
     @Attribute(required = false)
     @Property(description = "Property name as controlled by the vision operation using this pipeline.<br/>"
@@ -200,20 +212,36 @@ public class DetectRectlinearSymmetry extends CvStage {
         this.minFeatureSize = minFeatureSize;
     }
 
-    public SymmetryFunction getSymmetryAcrossWidth() {
-        return symmetryAcrossWidth;
+    public SymmetryFunction getSymmetricFunction() {
+        return symmetricFunction;
     }
 
-    public void setSymmetryAcrossWidth(SymmetryFunction symmetryAcrossWidth) {
-        this.symmetryAcrossWidth = symmetryAcrossWidth;
+    public void setSymmetricFunction(SymmetryFunction symmetryAcrossWidth) {
+        this.symmetricFunction = symmetryAcrossWidth;
     }
 
-    public SymmetryFunction getSymmetryAcrossHeight() {
-        return symmetryAcrossHeight;
+    public SymmetryFunction getAsymmetricFunction() {
+        return asymmetricFunction;
     }
 
-    public void setSymmetryAcrossHeight(SymmetryFunction symmetryAcrossHeight) {
-        this.symmetryAcrossHeight = symmetryAcrossHeight;
+    public void setAsymmetricFunction(SymmetryFunction symmetryAcrossHeight) {
+        this.asymmetricFunction = symmetryAcrossHeight;
+    }
+
+    public boolean isSymmetricAcrossWidth() {
+        return symmetricAcrossWidth;
+    }
+
+    public void setSymmetricAcrossWidth(boolean symmetricAcrossWidth) {
+        this.symmetricAcrossWidth = symmetricAcrossWidth;
+    }
+
+    public boolean isSymmetricAcrossHeight() {
+        return symmetricAcrossHeight;
+    }
+
+    public void setSymmetricAcrossHeight(boolean symmetricAcrossHeight) {
+        this.symmetricAcrossHeight = symmetricAcrossHeight;
     }
 
     public double getMinSymmetry() {
@@ -256,6 +284,14 @@ public class DetectRectlinearSymmetry extends CvStage {
         this.gamma = gamma;
     }
 
+    public int getThreshold() {
+        return threshold;
+    }
+
+    public void setThreshold(int threshold) {
+        this.threshold = threshold;
+    }
+
     public String getPropertyName() {
         return propertyName;
     }
@@ -281,6 +317,20 @@ public class DetectRectlinearSymmetry extends CvStage {
     }
 
 
+    /**
+     * Determines how the cross-section across the height of the detected subject is evaluated.<br/><ul>
+     * <li><strong>FullSymmetry</strong> looks for full inner and outline symmetry. Use for truly symmetric subjects and best precision.</li>
+     * <li><strong>EdgeSymmetry</strong> looks for full inner and outline symmetry of edges. Use for partially 
+     * symmetric subjects, where some, but not all features are present on both sides, or where shades differ.</li>
+     * <li><strong>OutlineSymmetry</strong> looks for outline symmetry only. Used for subjects that are symmetric 
+     * on their outline, but not on the inside.</li>
+     * <li><strong>OutlineEdgeSymmetry</strong> looks for outline symmetry of edges only. Used for subjects that are symmetric 
+     * on their outline, but not on the inside, and where some, but not all features are present on both sides, or where shades differ.</li>
+     * <li><strong>OutlineSymmetryMasked</strong> looks for outline mask symmetry only. Use for quite asymmetric subjects. 
+     * Requires an input image that was masked with a Threshold, MaskHSV stage, etc., i.e. where background pixels are truly black.<br/>
+     * </li></ul>
+     *
+     */
     public enum SymmetryFunction {
         FullSymmetry,
         EdgeSymmetry,
@@ -348,8 +398,9 @@ public class DetectRectlinearSymmetry extends CvStage {
         double maxHeight = getMaxHeight();
         double margin = getMargin();
         double minFeatureSize = getMinFeatureSize();
-        SymmetryFunction xSymmetryFunction = symmetryAcrossWidth;
-        SymmetryFunction ySymmetryFunction = symmetryAcrossHeight;
+        int threshold = getThreshold();
+        boolean symmetricAcrossWidth = isSymmetricAcrossWidth();
+        boolean symmetricAcrossHeight = isSymmetricAcrossHeight();
 
         if (!propertyName.isEmpty()) {
 
@@ -378,18 +429,24 @@ public class DetectRectlinearSymmetry extends CvStage {
             minFeatureSize = getPossiblePipelinePropertyOverride(minFeatureSize, pipeline, 
                     propertyName + ".minFeatureSize", Double.class, Integer.class, Length.class);
 
-            xSymmetryFunction = getPossiblePipelinePropertyOverride(xSymmetryFunction, pipeline, 
-                    propertyName + ".xSymmetryFunction");
+            threshold = getPossiblePipelinePropertyOverride(threshold, pipeline, 
+                    propertyName + ".threshold", Integer.class);
 
-            ySymmetryFunction = getPossiblePipelinePropertyOverride(ySymmetryFunction, pipeline, 
-                    propertyName + ".ySymmetryFunction");
+            symmetricAcrossWidth = getPossiblePipelinePropertyOverride(symmetricAcrossWidth, pipeline, 
+                    propertyName + ".symmetricAcrossWidth");
+
+            symmetricAcrossHeight = getPossiblePipelinePropertyOverride(symmetricAcrossHeight, pipeline, 
+                    propertyName + ".symmetricAcrossHeight");
         }
 
         RotatedRect rect = findReclinearSymmetry(mat, (int)center.x, (int)center.y, expectedAngle, 
                 maxWidth+margin, maxHeight+margin, searchDistance, searchAngle, 
-                minSymmetry, xSymmetryFunction, ySymmetryFunction, minFeatureSize,
+                minSymmetry, 
+                symmetricAcrossWidth ? getSymmetricFunction() :  getAsymmetricFunction(), 
+                symmetricAcrossHeight ? getSymmetricFunction() :  getAsymmetricFunction(), 
+                minFeatureSize,
                 subSampling, superSampling, smoothing, gamma,
-                diagnostics, diagnosticsMap, new ScoreRange());
+                threshold, diagnostics, diagnosticsMap, new ScoreRange());
         return new Result(null, rect);
     }
 
@@ -447,6 +504,7 @@ public class DetectRectlinearSymmetry extends CvStage {
      * @param gaussianSmoothing     Cross-sections are subject to pixel grid interferences if the sampling angle is at 45° multiples. Using Gaussian
      *                              smoothing with a kernel of this size, this is remedied. 
      * @param gamma                 Pixel luminance is raised to the power of gamma. Choosing > 1 gammas allows for boosting bright areas.
+     * @param threshold             Pixel luminance threshold for the {@link SymmetryFunction} OutlineSymmetryMasked option.
      * @param diagnostics           Overlay diagnostic cross-hairs and bounds on top of the image.
      * @param diagnosticMap         Overlay diagnostic maps for angular contrast and cross-section profiles on top of the image.
      * @param scoreRange            Returns symmetry score ranges.
@@ -457,7 +515,7 @@ public class DetectRectlinearSymmetry extends CvStage {
             double maxWidth, double maxHeight, double searchDistance, double searchAngle,  
             double minSymmetry, SymmetryFunction xSymmetryFunction, SymmetryFunction ySymmetryFunction, double minFeatureSize,
             int subSampling, int superSampling, int gaussianSmoothing, double gamma,
-            boolean diagnostics, boolean diagnosticMap, ScoreRange scoreRange) throws Exception {
+            int threshold, boolean diagnostics, boolean diagnosticMap, ScoreRange scoreRange) throws Exception {
         boolean innermost = subSampling <= Math.max(1, -superSampling);
         // Image properties.
         final int channels = image.channels();
@@ -524,6 +582,7 @@ public class DetectRectlinearSymmetry extends CvStage {
             angleScore = new TreeMap<>();
         }
         double[] kernel = KernelUtils.getGaussianKernel(superSamplingEff, 0, (gaussianSmoothing*superSamplingEff)|1);
+        double thresholdLuminance = Math.pow(threshold, gamma)*channels;
 
         // Determine the angle with the largest rectlinear cross-section contrast.
         for (double angle = a0; angle <= a1; angle += angleStep) {
@@ -585,7 +644,7 @@ public class DetectRectlinearSymmetry extends CvStage {
                                 xCrossSectionN[ixCross - 1] += xWeight0;
                                 yCrossSectionN[iyCross] += yWeight1;
                                 yCrossSectionN[iyCross - 1] += yWeight0;
-                                if (luminance > 0) {
+                                if (luminance > thresholdLuminance) {
                                     xCrossSectionMasked[ixCross] += xWeight1;
                                     xCrossSectionMasked[ixCross - 1] += xWeight0;
                                     yCrossSectionMasked[iyCross] += yWeight1;
@@ -704,7 +763,7 @@ public class DetectRectlinearSymmetry extends CvStage {
                         Math.toDegrees(angleError)*iterationAngle,  
                         minSymmetry, xSymmetryFunction, ySymmetryFunction, minFeatureSize,
                         subSamplingEff/iterationDivision, superSampling, gaussianSmoothing, gamma,  
-                        diagnostics, diagnosticMap, scoreRange);
+                        threshold, diagnostics, diagnosticMap, scoreRange);
             }
         }
         // Draw the diagnostic info onto the working image.
