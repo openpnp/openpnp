@@ -267,7 +267,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
                         if (bottomVision.getBottomVisionSettings() == visionSettings) {
                             // Already the default. Set stock.
-                            pipelinePanel.setPipeline(ReferenceBottomVision.createStockPipeline());
+                            pipelinePanel.setPipeline(ReferenceBottomVision.createStockPipeline("Default"));
                         }
                         else {
                             pipelinePanel.setPipeline(bottomVision.getBottomVisionSettings().getPipeline().clone());

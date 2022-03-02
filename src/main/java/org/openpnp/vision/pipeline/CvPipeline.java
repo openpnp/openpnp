@@ -151,7 +151,7 @@ public class CvPipeline implements AutoCloseable {
                 .stream()
                 .filter(p -> p.isEnabled() && p instanceof CvAbstractParameterStage)
                 .map(p -> (CvAbstractParameterStage) p)
-                .filter(p -> p.getParameterName() != null)
+                .filter(p -> p.parameterName() != null)
                 .collect(Collectors.toList());
     }
 

@@ -416,15 +416,15 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         pipeline.setProperty("alignment.expectedAngle", wantedLocation.getRotation());
         pipeline.setProperty("alignment.searchDistance", getMaxSearchDistance());
         if (partSize != null) {
-            pipeline.setProperty("alignment.maxWidth", partSize.getLengthX());
-            pipeline.setProperty("alignment.maxHeight", partSize.getLengthY());
+            pipeline.setProperty("alignment.maxWidth", partSize.getLengthX().add(getMaxSearchDistance()));
+            pipeline.setProperty("alignment.maxHeight", partSize.getLengthY().add(getMaxSearchDistance()));
         }
-        else {
+        else if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) {
             Length maxPartDiameter = ((ReferenceNozzleTip) nozzle.getNozzleTip()).getMaxPartDiameter();
             pipeline.setProperty("alignment.maxWidth", maxPartDiameter);
             pipeline.setProperty("alignment.maxHeight", maxPartDiameter);
         }
-        
+
         pipeline.setProperties(pipelineParameterAssignments);
     }
 
@@ -476,13 +476,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         return false;
     }
 
-    private BottomVisionSettings createStockBottomVisionSettings() {
+    private BottomVisionSettings createBottomVisionSettings(String id, String name, CvPipeline pipeline) {
         BottomVisionSettings bottomVisionSettings;
         try {
-            bottomVisionSettings = new BottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID);
-            bottomVisionSettings.setName("- Stock Bottom Vision Settings -");
+            bottomVisionSettings = new BottomVisionSettings(id);
+            bottomVisionSettings.setName(name);
             bottomVisionSettings.setEnabled(true);
-            bottomVisionSettings.setPipeline(createStockPipeline());
+            bottomVisionSettings.setPipeline(pipeline);
             return bottomVisionSettings;
         }
         catch (Exception e) {
@@ -580,10 +580,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         return "Bottom Vision";
     }
 
-    public static CvPipeline createStockPipeline() {
+    public static CvPipeline createStockPipeline(String variant) {
         try {
             String xml = IOUtils.toString(ReferenceBottomVision.class
-                    .getResource("ReferenceBottomVision-DefaultPipeline.xml"));
+                    .getResource("ReferenceBottomVision-"+variant+"Pipeline.xml"));
             return new CvPipeline(xml);
         }
         catch (Exception e) {
@@ -696,8 +696,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 partSettingsByPartId = new HashMap<>();
             }
             else { 
-                // Just reassign the stock pipeline.
-                stockVisionSettings.setPipeline(createStockPipeline());
+                // Reassign the stock pipeline.
+                stockVisionSettings.setPipeline(createStockPipeline("Default"));
+                // Add the reclinear symmetry pipeline if missing.
+                AbstractVisionSettings rectlinearVisionSettings = configuration.getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_RECTLINEAR_ID);
+                if (rectlinearVisionSettings == null) {
+                    rectlinearVisionSettings = createRectlinearBottomVisionSettings();
+                    configuration.addVisionSettings(rectlinearVisionSettings);
+                }
+                // Reassign the stock pipeline.
+                rectlinearVisionSettings.setPipeline(createStockPipeline("Rectlinear"));
                 return;
             }
         }
@@ -706,6 +714,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         // Create the factory stock settings.
         BottomVisionSettings stockBottomVisionSettings = createStockBottomVisionSettings();
         configuration.addVisionSettings(stockBottomVisionSettings);
+        BottomVisionSettings rectlinearBottomVisionSettings = createRectlinearBottomVisionSettings();
+        configuration.addVisionSettings(rectlinearBottomVisionSettings);
         PartSettings equivalentPartSettings = new PartSettings();
         equivalentPartSettings.setPipeline(stockBottomVisionSettings.getPipeline());
         bottomVisionSettingsHashMap.put(AbstractVisionSettings.createSettingsFingerprint(equivalentPartSettings), stockBottomVisionSettings);
@@ -761,6 +771,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         partSettingsByPartId = null;
 
         optimizeVisionSettings(configuration);
+    }
+
+    protected BottomVisionSettings createRectlinearBottomVisionSettings() {
+        return createBottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_RECTLINEAR_ID, 
+                "- Rectlinear Symmetry Bottom Vision Settings -", createStockPipeline("Rectlinear"));
+    }
+
+    protected BottomVisionSettings createStockBottomVisionSettings() {
+        return createBottomVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID, 
+                "- Stock Bottom Vision Settings -", createStockPipeline("Default"));
     }
 
     public void optimizeVisionSettings(Configuration configuration) {

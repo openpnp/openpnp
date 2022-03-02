@@ -35,17 +35,18 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
-import org.openpnp.vision.pipeline.stages.DetectRectlinearSymmetry.SymmetryFunction;
 import org.simpleframework.xml.Attribute;
 
 /**
  * Finds the object and angle with maximum rectlinear symmetry. 
  */
-@Stage(description="Finds the object and angle with maximum rectlinear symmetry in the working image.")
+@Stage(description="Finds the subject and angle with maximum rectlinear symmetry in the working image. This is achieved by first computing reclinear, i.e. "
+        + "horizontal and vertical cross-sections at various angles. The angle with the largest contrasts is then used.<br/>"
+        + "As a second step, the mid-points with the largest symmetry in the horizontal and vertical cross-sections is determined to detect the subject center.")
 public class DetectRectlinearSymmetry extends CvStage {
 
     @Attribute(required = false)
-    @Property(description = "Expected angle.")
+    @Property(description = "Expected angle of the detected rectangular subject.")
     private double expectedAngle = 0;
 
     @Attribute(required = false)
@@ -53,7 +54,7 @@ public class DetectRectlinearSymmetry extends CvStage {
     private double searchDistance = 100;
 
     @Attribute(required = false)
-    @Property(description = "Search angle, two-sided around expected angle.")
+    @Property(description = "Search angle, two-sided around the expected angle.")
     private double searchAngle = 45;
 
     @Attribute(required = false)
@@ -65,23 +66,14 @@ public class DetectRectlinearSymmetry extends CvStage {
     private double maxHeight = 100;
 
     @Attribute(required = false)
-    @Property(description = "Margin around the detected object, used to detect edges.")
-    private int margin = 40;
+    @Property(description = "Tells the stage whether the part is left/right-symmetric (in the sense as seen at 0° subject rotation). "
+            + "According to this switch, the stage either takes the <strong>symmetricFunction</strong>, or the <strong>asymmetricFunction</strong>.")
+    private boolean symmetricLeftRight = true;
 
     @Attribute(required = false)
-    @Property(description = "When finding symmetry, a cross-section pixel count of less than the <strong>minFeatureSize</strong> is ignored.<br/>"
-            + "This is used to remove masking imperfections, i.e. specks up to a certain size and frequency in a masked image. "
-            + "Requires an input image that was masked with a Threshold, MaskHSV stage, etc., i.e. where background pixels are truly black.<br/>"
-            + "This is only relevant, when <strong>OutlineSymmetryMasked</strong> is used.")
-    private double minFeatureSize = 40;
-
-    @Attribute(required = false)
-    @Property(description = "Tells the stage whether the part is symmetric across its width. The stage then either takes the symmetricFunction, or the asymmetricFunction.")
-    private boolean symmetricAcrossWidth = true;
-
-    @Attribute(required = false)
-    @Property(description = "Tells the stage whether the part is symmetric across its height. The stage then either takes the symmetricFunction, or the asymmetricFunction.")
-    private boolean symmetricAcrossHeight = true;
+    @Property(description = "Tells the stage whether the part is upper/lower-symmetric (in the sense as as seen at 0° subject rotation). "
+            + "According to this switch, the stage either takes the <strong>symmetricFunction</strong>, or the <strong>asymmetricFunction</strong>.")
+    private boolean symmetricUpperLower = true;
 
     @Attribute(required = false)
     @Property(description = "Determines how the cross-section is evaluated for <strong>symmetric</strong> parts.<br/><ul>"
@@ -113,12 +105,12 @@ public class DetectRectlinearSymmetry extends CvStage {
 
     @Attribute(required = false)
     @Property(description = "Minimum relative symmetry. Values larger than 1.0 indicate symmetry.")
-    private double minSymmetry = 1.2;
+    private double minSymmetry = 10;
 
     @Attribute(required = false)
     @Property(description = "To speed things up, only one pixel out of a square of subSampling × subSampling pixels is sampled. "
             + "The best region is then locally searched using iteration with smaller and smaller subSampling size.<br/>"
-            + "The subSampling value will automatically be reduced. "
+            + "The subSampling value will automatically be reduced when other search properties require it. "
             + "Use BlurGaussian before this stage if subSampling suffers from moiré effects.")
     private int subSampling = 8;
 
@@ -139,8 +131,16 @@ public class DetectRectlinearSymmetry extends CvStage {
     private int gamma = 2;
 
     @Attribute(required = false)
-    @Property(description = "Luminance threshold to be used for masking in the OutlineSymmetryMasked option.")
+    @Property(description = "When the <strong>OutlineSymmetryMasked</strong> function is used, only pixels with luminance greater"
+            + "than the <strong>threshold</strong> are considered when determining the outline of the part.")
     private int threshold = 128;
+
+    @Attribute(required = false)
+    @Property(description = "When the <strong>OutlineSymmetryMasked</strong> function is used, pixels are masked by the <strong>threshold</strong> property. "
+            + "A cross-section pixel count over these masked pixels is then determined. A cross-section bin only counts as \"detected\" when "
+            + "the pixel count is larger than <strong>minFeatureSize</strong>.<br/>"
+            + "This is used to remove masking imperfections, i.e. image specks and impurities up to a certain size and frequency.")
+    private double minFeatureSize = 40;
 
     @Attribute(required = false)
     @Property(description = "Property name as controlled by the vision operation using this pipeline.<br/>"
@@ -148,7 +148,7 @@ public class DetectRectlinearSymmetry extends CvStage {
     private String propertyName = "alignment";
 
     @Attribute(required = false)
-    @Property(description = "Display the match with cross-hairs and bounds.")
+    @Property(description = "Display the detection with cross-hairs and bounds.")
     private boolean diagnostics = false;
 
     @Attribute(required = false)
@@ -196,14 +196,6 @@ public class DetectRectlinearSymmetry extends CvStage {
         this.maxHeight = maxHeight;
     }
 
-    public int getMargin() {
-        return margin;
-    }
-
-    public void setMargin(int margin) {
-        this.margin = margin;
-    }
-
     public double getMinFeatureSize() {
         return minFeatureSize;
     }
@@ -228,20 +220,20 @@ public class DetectRectlinearSymmetry extends CvStage {
         this.asymmetricFunction = symmetryAcrossHeight;
     }
 
-    public boolean isSymmetricAcrossWidth() {
-        return symmetricAcrossWidth;
+    public boolean isSymmetricLeftRight() {
+        return symmetricLeftRight;
     }
 
-    public void setSymmetricAcrossWidth(boolean symmetricAcrossWidth) {
-        this.symmetricAcrossWidth = symmetricAcrossWidth;
+    public void setSymmetricLeftRight(boolean symmetricLeftRight) {
+        this.symmetricLeftRight = symmetricLeftRight;
     }
 
-    public boolean isSymmetricAcrossHeight() {
-        return symmetricAcrossHeight;
+    public boolean isSymmetricUpperLower() {
+        return symmetricUpperLower;
     }
 
-    public void setSymmetricAcrossHeight(boolean symmetricAcrossHeight) {
-        this.symmetricAcrossHeight = symmetricAcrossHeight;
+    public void setSymmetricUpperLower(boolean symmetricUpperLower) {
+        this.symmetricUpperLower = symmetricUpperLower;
     }
 
     public double getMinSymmetry() {
@@ -396,11 +388,10 @@ public class DetectRectlinearSymmetry extends CvStage {
         double searchDistance = getSearchDistance();
         double maxWidth = getMaxWidth();
         double maxHeight = getMaxHeight();
-        double margin = getMargin();
         double minFeatureSize = getMinFeatureSize();
         int threshold = getThreshold();
-        boolean symmetricAcrossWidth = isSymmetricAcrossWidth();
-        boolean symmetricAcrossHeight = isSymmetricAcrossHeight();
+        boolean symmetricLeftRight = isSymmetricLeftRight();
+        boolean symmetricUpperLower = isSymmetricUpperLower();
 
         if (!propertyName.isEmpty()) {
 
@@ -423,27 +414,24 @@ public class DetectRectlinearSymmetry extends CvStage {
             maxHeight = getPossiblePipelinePropertyOverride(maxHeight, pipeline, 
                     propertyName + ".maxHeight", Double.class, Integer.class, Length.class);
 
-            margin = getPossiblePipelinePropertyOverride(margin, pipeline, 
-                    propertyName + ".margin", Double.class, Integer.class, Length.class);
-
             minFeatureSize = getPossiblePipelinePropertyOverride(minFeatureSize, pipeline, 
                     propertyName + ".minFeatureSize", Double.class, Integer.class, Length.class);
 
             threshold = getPossiblePipelinePropertyOverride(threshold, pipeline, 
                     propertyName + ".threshold", Integer.class);
 
-            symmetricAcrossWidth = getPossiblePipelinePropertyOverride(symmetricAcrossWidth, pipeline, 
-                    propertyName + ".symmetricAcrossWidth");
+            symmetricLeftRight = getPossiblePipelinePropertyOverride(symmetricLeftRight, pipeline, 
+                    propertyName + ".symmetricLeftRight");
 
-            symmetricAcrossHeight = getPossiblePipelinePropertyOverride(symmetricAcrossHeight, pipeline, 
-                    propertyName + ".symmetricAcrossHeight");
+            symmetricUpperLower = getPossiblePipelinePropertyOverride(symmetricUpperLower, pipeline, 
+                    propertyName + ".symmetricUpperLower");
         }
 
         RotatedRect rect = findReclinearSymmetry(mat, (int)center.x, (int)center.y, expectedAngle, 
-                maxWidth+margin, maxHeight+margin, searchDistance, searchAngle, 
+                maxWidth, maxHeight, searchDistance, searchAngle, 
                 minSymmetry, 
-                symmetricAcrossWidth ? getSymmetricFunction() :  getAsymmetricFunction(), 
-                symmetricAcrossHeight ? getSymmetricFunction() :  getAsymmetricFunction(), 
+                (symmetricLeftRight ? getSymmetricFunction() :  getAsymmetricFunction()), 
+                (symmetricUpperLower ? getSymmetricFunction() :  getAsymmetricFunction()), 
                 minFeatureSize,
                 subSampling, superSampling, smoothing, gamma,
                 threshold, diagnostics, diagnosticsMap, new ScoreRange());
@@ -746,24 +734,26 @@ public class DetectRectlinearSymmetry extends CvStage {
             int hBest = findCrossSectionBounds(channels, ys, symmetryHeight, yBestCrossSection);
             wBest = wBest*subSamplingEff/superSamplingEff + 2;
             hBest = hBest*subSamplingEff/superSamplingEff + 2;
-
-            // Compose result.
-            org.opencv.core.Point pt = new org.opencv.core.Point(xBest, yBest);
-            Size sz = new Size(wBest, hBest);
-            rect = new RotatedRect(pt, sz, Math.toDegrees(-angleBest)); 
-            if (!innermost) {
-                // Recursion into finer subSampling and local search.
-                // Need to assess the maximum error angle by the detected subject size, i.e. if a very small
-                // subject is detected with large maxSpan, the detected angle can be off considerably.    
-                double angleError = angleStep*maxSpan/Math.max(wBest, hBest);
-                rect = findReclinearSymmetry(image, (int)xBest, (int)yBest,  Math.toDegrees(angleBest), 
-                        Math.min(maxWidth, wBest+subSamplingEff*iterationRadius*2), 
-                        Math.min(maxHeight, hBest+subSamplingEff*iterationRadius*2), 
-                        subSamplingEff*iterationRadius, 
-                        Math.toDegrees(angleError)*iterationAngle,  
-                        minSymmetry, xSymmetryFunction, ySymmetryFunction, minFeatureSize,
-                        subSamplingEff/iterationDivision, superSampling, gaussianSmoothing, gamma,  
-                        threshold, diagnostics, diagnosticMap, scoreRange);
+            if (wBest < maxWidth - subSamplingEff*4
+                    || hBest < maxHeight - subSamplingEff*4) {
+                // Compose result.
+                org.opencv.core.Point pt = new org.opencv.core.Point(xBest, yBest);
+                Size sz = new Size(wBest, hBest);
+                rect = new RotatedRect(pt, sz, Math.toDegrees(-angleBest)); 
+                if (!innermost) {
+                    // Recursion into finer subSampling and local search.
+                    // Need to assess the maximum error angle by the detected subject size, i.e. if a very small
+                    // subject is detected with large maxSpan, the detected angle can be off considerably.    
+                    double angleError = angleStep*maxSpan/Math.max(wBest, hBest);
+                    rect = findReclinearSymmetry(image, (int)xBest, (int)yBest,  Math.toDegrees(angleBest), 
+                            Math.min(maxWidth, wBest+subSamplingEff*iterationRadius*2), 
+                            Math.min(maxHeight, hBest+subSamplingEff*iterationRadius*2), 
+                            subSamplingEff*iterationRadius, 
+                            Math.toDegrees(angleError)*iterationAngle,  
+                            minSymmetry, xSymmetryFunction, ySymmetryFunction, minFeatureSize,
+                            subSamplingEff/iterationDivision, superSampling, gaussianSmoothing, gamma,  
+                            threshold, diagnostics, diagnosticMap, scoreRange);
+                }
             }
         }
         // Draw the diagnostic info onto the working image.
