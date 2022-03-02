@@ -8,6 +8,8 @@ import java.beans.Introspector;
 import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import org.opencv.core.Mat;
@@ -86,8 +88,11 @@ public abstract class CvStage {
         }
     }
 
+    /**
+     * @param propertyName
+     * @return The @Property.description annotation of the given field name.
+     */
     public String getDescription(String propertyName) {
-        // Find the annotation in any of the super classes.
         Class<?> cls = getClass();
         while (cls != null) {
             Field fld = null;
@@ -98,9 +103,35 @@ public abstract class CvStage {
             }
             catch (Exception e) {
             }
+            // Also look in super classes.
             cls = cls.getSuperclass();
         }
         return null;
+    }
+
+    /**
+     * @param propertyName
+     * @return A declaration sequence index for the given field name. It is used for sorting the properties in the order of declaration.
+     */
+    public int getPropertySequence(String propertyName) {
+        int index = 1000000;
+        Class<?> cls = getClass();
+        while (cls != null) {
+            try {
+                for (Field field : cls.getDeclaredFields()) {
+                    index++;
+                    if (field.getName().equals(propertyName)) {
+                        return index;
+                    }
+                }
+            }
+            catch (SecurityException e) {
+            }
+            // Also look in super classes.
+            cls = cls.getSuperclass();
+            index = (index/1000 - 1)*1000;
+        }
+        return 0;
     }
 
     // a stage may optionally define a length unit which is handled in the pipeline editor's 
@@ -151,6 +182,15 @@ public abstract class CvStage {
             for (PropertyDescriptor pd : pds) {
                 pd.setShortDescription(CvStage.this.getDescription(pd.getName()));
             }
+            // Sort by declaration sequence. 
+            Arrays.sort(pds, new Comparator<PropertyDescriptor>() {
+                @Override
+                public int compare(PropertyDescriptor o1,
+                        PropertyDescriptor o2) {
+                    return CvStage.this.getPropertySequence(o1.getName()) 
+                            - CvStage.this.getPropertySequence(o2.getName());
+                }
+            });
             return pds;
         }
 
