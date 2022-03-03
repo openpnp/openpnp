@@ -1,11 +1,13 @@
-## Example Duet3D config.g File
+## Example Duet3D config.g File for Openpnp
 The following is basic working config.g file for the 6HC or Mini 5+. This config allows Openpnp to fully drive calibrate a machine with the following;
 * 5 Axis machine; linear XYZ, rotational AB
 * Single head, CAM driven dual nozzle with -180+180 rotation
 * XYZ Limit switches
 * x2 Analog inputs for nozzle pressure
-* x1 binary input for drag pin state detection
-* x7 Outputs PWM 20k to drive; x2 LED array, x2pumps, x2 pneumatic valves and x1 drag pin solenoid.
+* x1 Digital input for drag pin state detection
+* x7 PWM Outputs @20k to drive; x2 LED array, x2pumps, x2 pneumatic valves and x1 drag pin solenoid.
+
+Following the config.g is a practical wiring example using this config on a 6HC to replace the main control board of a Charmhigh 36VA machine.
 ```
 ;***Display initial welcome message
 ;-M291: Display message and optionally wait for response \ https://duet3d.dozuki.com/Wiki/M291
@@ -42,7 +44,7 @@ M569 P41.0 S1 R1 	; change enable polarity, active = disable drive
 ;ZUV (ZAB) driven on board
 M569 P0 S1      	; Z 
 M569 P1 S0	        ; U
-M569 P3 S0      	; V P2 skipped 2nd "Winding Ground Fault" reported on that driver
+M569 P3 S0      	; V P2 skipped 2nd "Winding Ground Fault" reported on that driver for this specific board
 ;-M584: Set drive mapping \ https://duet3d.dozuki.com/Wiki/M584
 M584 X40.0 R0	; X LIN R0 = LINEAR, R1 = ROTATION
 M584 Y41.0 R0	; Y LIN R0 = LINEAR, R1 = ROTATION
@@ -126,31 +128,79 @@ M308 S1 P"temp1" Y"linear-analog" A"Pressure_2" F0 B0 C4095
 ;***End of config.g
 
 ```
+## Example Schematic for wiring a 6HC to a CHMT-36VA
 
 ![Schematic_36VA_2022-02-14](https://user-images.githubusercontent.com/72060223/153997525-25ea2149-ba17-4b97-9615-c6fbbb237899.png)
 
-## Example Duet/Openpnp GCode Commands
+## Interfacing The above configured 6HC to Openpnp via GCode
+Openpnp is very flexible in that most if not all communication between itself as the motion planner and the hardware driver such the Duet control board is user defined. Like most modern machine control, Duet/RRF uses GCode type command syntax.
 
-### Read Sensor Values. 
-For the config above, S0 refers to Analog Sensor 0 which reads the pressure of Nozzle 1. Within Openpnp > Drivers > Gcode Driver > Gcode locate/select the 'Actuator' from the dropdown box. Once the actuator is selected move to the 'Setting' dropdown box and select 'ACTUATOR_READ_COMMAND'. Now enter the GCode command M308 https://duet3d.dozuki.com/Wiki/M308 to read the value...
+The first step is to define the individual axis's and their parameters via the 'Machine Setup' tab.
+
+Second step is to add and configure the "Actuators" within Openpnp. Actuators are essentially the inputs and outputs already configured on the 6HC within the config.g file. These are added as the axis's were via the 'Machine Setup' tab. Once added, actuators behavior is configured via GCode Settings tab.
+
+### Example Actuator Gcode driver example
+As an example we will look at the Actuator, 'N1VAC'. N1VAC is a user defined Openpn actuator comprised of two elements, A binary controlled valve to control vacuum to nozzle 1 and vacuum sensor the read the actual vacuum of nozzle 1. Referring to the Duet config.g file we are using P5 for the valve and S0 for the sensor.
+
 ```
-M308 S0
+//Within our config.g file
+M950 P5 C"out5" Q20000		;Valve 1
+M308 S0 P"temp0" Y"linear-analog" A"Pressure_1" F0 B0 C4095
 ```
-![image](https://user-images.githubusercontent.com/72060223/154172184-a4327c65-c6fb-4850-b568-6393efed1930.png)
-
-Now set the read REGEX
+In order for Openpnp to trigger the valve as needed we need to set the GCode ACTUATE_BOOLEAN_COMMAND setting of P5 in syntax the Duet/RRF understands as;
 ```
-.*reading (?<Value>-?\d+\.\d+).*
+M42 P5 S{True:1}{False:0}
 ```
-![image](https://user-images.githubusercontent.com/72060223/154172656-d00dd468-dac2-4de6-84a5-99573637f819.png)
+![image](https://user-images.githubusercontent.com/72060223/156489615-21bc98ec-89e2-4a98-896d-cfdae0af4c91.png)
 
-Now test. Open the dialog box for declared actuator in Openpnp and click the read button. You should find a reasonable value within the texbox as show here.
+Now when Openpnp needs to actuate or deactivate the N1VAC valve it will send; 
 
-![image](https://user-images.githubusercontent.com/72060223/154172964-a90d0331-6a11-4a21-8440-f1e6f7d668cd.png)
+```
+M42 P5 S1 ; for true
+M42 P5 S0 ; for false
+```
+That was for the valve, now we need to setup the Gcode ACTUATOR_READ_COMMAND so Openpnp can send a sensor reading request. Again, the sensor we are addressing is S0 in Duet/RRF so we send the following.
+```
+M118 P1 S{sensors\u002Eanalog[0]\u002ElastReading} 
+//NOTE \u002 is used to Prevent Openpnp from eliminating '.' when using Gcode Compression.
+//If Gcode Compression is not set the correct command would be
+//M118 P1 S{sensors.analog[0].lastReading} 
+```
+![image](https://user-images.githubusercontent.com/72060223/156490976-5b8b0e89-85ea-426f-9030-afcf57fa04a9.png)
 
-### Write Outputs. 
-As above choose an actuator and set the boolean and or the double value GCode commands. In this instance P5 is the vacuum valve for nozzle 1 and is set/reset or PWM value via M42 https://duet3d.dozuki.com/Wiki/M42 as seen here...
+Now in order for Openpn to understand the expected response we need to set up the correct ACTUATOR_READ_REGEX. Since we are expecting a decimal value the Regex is as;
+```
+(?<Value>-?\d+\.\d+).*
+```
+As seen via the Openpnp GUI;
 
-![image](https://user-images.githubusercontent.com/72060223/154173678-ed90293f-b960-43b1-9103-7b7b8f4c3296.png)
+![image](https://user-images.githubusercontent.com/72060223/156491597-f00091c5-fa59-4a2c-b799-e554fa051c2a.png)
 
+This can now be tested within Openpnp Machine Controls tab and accessing the correct actuator button as in the following
+
+![image](https://user-images.githubusercontent.com/72060223/156492072-a353dacb-18c9-4896-818f-e635e49ed83b.png)
+
+If for some reason the valve or sensor does not respond in a predicted manner. Use Openpnp's trace log to determine exactly what the communication issue potentially is as; 
+
+```
+2022-03-02 19:48:46.793 GcodeAsyncDriver DEBUG: serial://COM13 commandQueue.offer(M118 P1 S{sensors\u002Eanalog[0]\u002ElastReading}, 5000)...
+2022-03-02 19:48:46.794 GcodeAsyncDriver$WriterThread TRACE: [serial://COM13] >> M118P1S{sensors.analog[0].lastReading}
+2022-03-02 19:48:46.795 GcodeDriver$ReaderThread TRACE: [serial://COM13] << 2007.8
+2022-03-02 19:48:46.795 GcodeDriver$ReaderThread TRACE: [serial://COM13] << ok
+2022-03-02 19:48:46.795 GcodeDriver TRACE: actuatorRead response: 2007.8
+2022-03-02 19:48:46.795 ReferenceActuator DEBUG: N1VAC.read(): 2007.8
+2022-03-02 19:48:46.796 GcodeAsyncDriver DEBUG: serial://COM13 commandQueue.offer(M400 ; Wait for moves to complete before returning, 7143)...
+2022-03-02 19:48:46.796 GcodeAsyncDriver DEBUG: serial://COM13 commandQueue.offer(M114 ; get position, -1)...
+2022-03-02 19:48:46.796 GcodeAsyncDriver$WriterThread TRACE: [serial://COM13] >> M400; Wait for moves to complete before returning
+2022-03-02 19:48:46.796 GcodeAsyncDriver$WriterThread TRACE: [serial://COM13] >> M114; get position
+2022-03-02 19:48:46.797 GcodeDriver$ReaderThread TRACE: [serial://COM13] << ok
+2022-03-02 19:48:46.798 GcodeDriver$ReaderThread TRACE: [serial://COM13] << X:394.358 Y:54.861 Z:0.000 U:-0.009 V:0.000 D:30.000 E:0.000 Count 15774 2194 0 0 0 2078 Machine 394.358 54.861 0.000 -0.009 0.000 30.000 Bed comp 0.000
+2022-03-02 19:48:46.798 GcodeDriver TRACE: Position report: X:394.358 Y:54.861 Z:0.000 U:-0.009 V:0.000 D:30.000 E:0.000 Count 15774 2194 0 0 0 2078 Machine 394.358 54.861 0.000 -0.009 0.000 30.000 Bed comp 0.000
+2022-03-02 19:48:46.798 GcodeDriver$ReaderThread TRACE: [serial://COM13] << ok
+2022-03-02 19:48:46.798 GcodeDriver TRACE: GcodeAsyncDriver got lastReportedLocation (X:394.358000, Y:54.861000, Z:0.000000, A:-0.009000, B:0.000000)
+2022-03-02 19:48:46.798 GcodeAsyncDriver TRACE: GcodeAsyncDriver confirmation complete.
+
+```
+
+Once your first actuator is congfigured within Duet/RRF and added/set and working correctly within Openpnp apply this to the rest of your actuators. Once all Axis's and Actuators are set follow Openpnp's Issues and Solutions guide to finish configuring and tuning your machine.
 
