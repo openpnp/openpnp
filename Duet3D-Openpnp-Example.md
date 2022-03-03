@@ -162,7 +162,8 @@ M42 P5 S0 ; for false
 That was for the valve, now we need to setup the Gcode ACTUATOR_READ_COMMAND so Openpnp can send a sensor reading request. Again, the sensor we are addressing is S0 in Duet/RRF so we send the following.
 ```
 M118 P1 S{sensors\u002Eanalog[0]\u002ElastReading} 
-//NOTE \u002 is used to Prevent Openpnp from eliminating '.' when using Gcode Compression.
+//NOTE \u002E is a Backslash char used to Prevent Openpnp from eliminating '.' when using Gcode Compression.
+//to work properly check Backslash and Gcode Compression within the Gcod Driver Settings
 //If Gcode Compression is not set the correct command would be
 //M118 P1 S{sensors.analog[0].lastReading} 
 ```
