@@ -140,7 +140,7 @@ The first step is to define the individual axis's and their parameters via the '
 Second step is to add and configure the "Actuators" within Openpnp. Actuators are essentially the inputs and outputs already configured on the 6HC within the config.g file. These are added as the axis's were via the 'Machine Setup' tab. Once added, actuators behavior is configured via GCode Settings tab.
 
 ### Example Actuator Gcode driver example
-As an example we will look at the Actuator, 'N1VAC'. N1VAC is a user defined Openpn actuator comprised of two elements, A binary controlled valve to control vacuum to nozzle 1 and vacuum sensor the read the actual vacuum of nozzle 1. Referring to the Duet config.g file we are using P5 for the valve and S0 for the sensor.
+As an example we will look at the Actuator, 'N1VAC'. N1VAC is a user defined Openpnp actuator comprised of two elements, A binary controlled valve to control vacuum to nozzle 1 and vacuum sensor the read the actual vacuum of nozzle 1. Referring to the Duet config.g file we are using P5 for the valve and S0 for the sensor.
 
 ```
 //Within our config.g file
@@ -168,7 +168,7 @@ M118 P1 S{sensors\u002Eanalog[0]\u002ElastReading}
 ```
 ![image](https://user-images.githubusercontent.com/72060223/156490976-5b8b0e89-85ea-426f-9030-afcf57fa04a9.png)
 
-Now in order for Openpn to understand the expected response we need to set up the correct ACTUATOR_READ_REGEX. Since we are expecting a decimal value the Regex is as;
+Now in order for Openpnp to understand the expected response we need to set up the correct ACTUATOR_READ_REGEX. Since we are expecting a decimal value the Regex is as;
 ```
 (?<Value>-?\d+\.\d+).*
 ```
