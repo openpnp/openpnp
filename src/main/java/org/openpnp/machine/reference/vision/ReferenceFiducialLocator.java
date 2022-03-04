@@ -120,19 +120,10 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         List<Placement> fiducials;
 
         Side boardSide = fiducialLocatableLocation.getSide();  // save for later
-        Location savedBoardLocation = fiducialLocatableLocation.getLocation();
+        Location savedBoardLocation = fiducialLocatableLocation.getGlobalLocation();
         AffineTransform savedPlacementTransform = fiducialLocatableLocation.getLocalToParentTransform();
        
-//        if (checkPanel) {
-//            Panel panel = MainFrame.get().getJobTab().getJob().getPanels()
-//                    .get(fiducialLocatableLocation.getOwnerId());
-//            fiducials = panel.getEnabledFiducials();
-//            // If we are looking for panel fiducials, we need to treat the board as top side
-//            fiducialLocatableLocation.setSide(Side.Top);
-//        }
-//        else {
-            fiducials = getFiducials(fiducialLocatableLocation);
-//        }
+        fiducials = getFiducials(fiducialLocatableLocation);
 
         if (fiducials.size() < 2) {
             throw new Exception(String.format(
@@ -186,22 +177,22 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         // Calculate the transform.
         AffineTransform tx = Utils2D.deriveAffineTransform(expectedLocations, measuredLocations);
         
+        if (boardSide == Side.Bottom) {
+            tx.scale(-1, 1);
+        }
+        
         // Set the transform.
-        fiducialLocatableLocation.setLocalToParentTransform(tx);
+        fiducialLocatableLocation.setLocalToGlobalTransform(tx);
         
         // Return the compensated board location
         Location origin = new Location(LengthUnit.Millimeters);
-        if (fiducialLocatableLocation.getSide() == Side.Bottom) {
+        if (boardSide == Side.Bottom) {
             origin = origin.add(fiducialLocatableLocation.getFiducialLocatable().getDimensions().derive(null, 0., 0., 0.));
         }
         Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(fiducialLocatableLocation, origin);
         newBoardLocation = newBoardLocation.convertToUnits(fiducialLocatableLocation.getLocation().getUnits());
         newBoardLocation = newBoardLocation.derive(null, null, fiducialLocatableLocation.getLocation().getZ(), null);
 
-        if (checkPanel) {
-            fiducialLocatableLocation.setSide(boardSide);	// restore side
-        }
-        
         Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
         Logger.info("Fiducial results: " + ai);
         
@@ -210,9 +201,13 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         
         //Check for out-of-nominal conditions
         String errString = "";
-        if (Math.abs(ai.xScale-1) > tolerances.scalingTolerance) {
+        if (ai.xScale > 0 && Math.abs(ai.xScale-1) > tolerances.scalingTolerance) {
             errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
                     String.format("%.5f", 1-tolerances.scalingTolerance) + ", " + String.format("%.5f", 1+tolerances.scalingTolerance) + "], ";
+        }
+        else if (ai.xScale < 0 && Math.abs(ai.xScale+1) > tolerances.scalingTolerance) {
+            errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
+                    String.format("-%.5f", 1+tolerances.scalingTolerance) + ", " + String.format("-%.5f", 1-tolerances.scalingTolerance) + "], ";
         }
         if (Math.abs(ai.yScale-1) > tolerances.scalingTolerance) {
             errString += "the y scaling = " + String.format("%.5f", ai.yScale) + " which is outside the expected range of [" +

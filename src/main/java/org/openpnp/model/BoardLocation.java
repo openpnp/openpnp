@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Placement.Type;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
@@ -40,6 +41,10 @@ public class BoardLocation extends FiducialLocatableLocation {
     @Attribute(required = false)
     private String panelId; 
 
+    @Deprecated
+    @Attribute(required = false)
+    private Boolean enabled; 
+
     @ElementMap(required = false)
     private Map<String, Boolean> placed = new HashMap<>();
 
@@ -48,9 +53,12 @@ public class BoardLocation extends FiducialLocatableLocation {
     }
 
     // Copy constructor needed for deep copy of object.
-    public BoardLocation(BoardLocation obj) {
-        super(obj);
-        this.placed = obj.placed;
+    public BoardLocation(BoardLocation boardLocation) {
+        super(boardLocation);
+        if (boardLocation.getBoard() != null) {
+            setBoard(new Board(boardLocation.getBoard()));
+        }
+        this.placed = boardLocation.placed;
     }
 
     public BoardLocation(Board board) {
@@ -59,27 +67,23 @@ public class BoardLocation extends FiducialLocatableLocation {
     }
 
     @Commit
-    private void commit() {
-        setLocation(location);
-        setFiducialLocatable((Board) fiducialLocatable);
+    protected void commit() {
+        super.commit();
         
         //Converted deprecated attributes/elements
         if (boardFile != null) {
             setFileName(boardFile);
             boardFile = null;
         }
-        if (panelId != null) {
-            setParentId(panelId);
-            panelId = null;
+        if (enabled != null) {
+            setLocallyEnabled(enabled);
+            enabled = null;
         }
     }
     
     @Persist
     private void persist() {
 //        if (MainFrame.get().getJobTab().getJob().getPanelLocations().get(parentId) == null) {
-        if (parentId == null) {
-            parentId = "Root";
-        }
     }
     
     public int getTotalActivePlacements(){
@@ -113,8 +117,8 @@ public class BoardLocation extends FiducialLocatableLocation {
     	return counter;
     }
 
-    public FiducialLocatable getBoard() {
-        return getFiducialLocatable();
+    public Board getBoard() {
+        return (Board) getFiducialLocatable();
     }
 
     public void setBoard(Board board) {
@@ -129,13 +133,13 @@ public class BoardLocation extends FiducialLocatableLocation {
         setFileName(boardFile);
     }
 
-    public String getPanelId() {
-        return getParentId();
-    }
-
-    public void setPanelId(String id) {
-        setParentId(id);
-    }
+//    public String getPanelId() {
+//        return getParentId();
+//    }
+//
+//    public void setPanelId(String id) {
+//        setParentId(id);
+//    }
 
     public void setPlaced(String placementId, boolean placed) {
         this.placed.put(placementId, placed);
@@ -166,6 +170,11 @@ public class BoardLocation extends FiducialLocatableLocation {
 
     @Override
     public String toString() {
-        return String.format("board (%s), location (%s), side (%s)", getFileName(), location, side);
+        return String.format("board (%s), location (%s), side (%s)", getFileName(), getLocation(), side);
     }
+    
+    public void dump(String leader) {
+        Logger.trace(String.format("%s@%08x BoardLocation:%s location=%s side=%s (%s)", leader,  this.hashCode(),  fileName, getLocation(), side, getBoard() == null ? "Null" : getBoard().toString()));
+    }
+
 }

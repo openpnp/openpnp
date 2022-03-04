@@ -103,7 +103,7 @@ public class Placement extends AbstractLocatable implements Identifiable {
     @SuppressWarnings("unused")
     @Commit
     private void commit() {
-        setLocation(location);
+        setLocation(getLocation());
         if (getPart() == null) {
             setPart(Configuration.get().getPart(partId));
         }
@@ -192,7 +192,7 @@ public class Placement extends AbstractLocatable implements Identifiable {
 
     @Override
     public String toString() {
-        return String.format("id %s, location %s, side %s, part %s, type %s", id, location, side,
+        return String.format("id %s, location %s, side %s, part %s, type %s", id, getLocation(), side,
                 part, type);
     }
 }

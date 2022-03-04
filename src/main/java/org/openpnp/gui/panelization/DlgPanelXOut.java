@@ -102,7 +102,7 @@ public class DlgPanelXOut extends JDialog {
             for (int i = 0; i < checkBoxPanel.getComponentCount(); i++) {
                 JCheckBox cb = (JCheckBox) checkBoxPanel.getComponent(i);
                 int index = (int) cb.getClientProperty("index");
-                jobPanel.getJob().getBoardLocations().get(index).setEnabled(!cb.isSelected());
+                jobPanel.getJob().getBoardLocations().get(index).setLocallyEnabled(!cb.isSelected());
             }
 
             jobPanel.refresh();

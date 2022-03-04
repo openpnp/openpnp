@@ -148,7 +148,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 8) {
-                boardLocation.setEnabled((Boolean) aValue);
+                boardLocation.setLocallyEnabled((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 9) {

@@ -1,16 +1,15 @@
 package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 
 import org.openpnp.model.Board.Side;
+import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
 
-public class FiducialLocatableLocation extends AbstractLocatable implements Identifiable {
+public class FiducialLocatableLocation extends AbstractLocatable {
 
-    @Attribute(required = false)
-    String id;
-    
     @Attribute
     protected Side side = Side.Top;
 
@@ -18,15 +17,12 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
     protected String fileName;
 
     @Attribute(required = false)
-    protected String parentId = "Root";
-
-    @Attribute(required = false)
     protected boolean checkFiducials;
 
     @Attribute(required = false)
-    protected boolean enabled = true;
+    protected boolean locallyEnabled = true;
 
-    protected FiducialLocatableLocation parent;
+    protected PanelLocation parent;
     protected FiducialLocatable fiducialLocatable;
 
     /**
@@ -35,8 +31,8 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
     protected AffineTransform localToParentTransform;
     
     @Commit
-    private void commit() {
-        setLocation(location);
+    protected void commit() {
+        setLocation(getLocation());
         setFiducialLocatable(fiducialLocatable);
     }
     
@@ -46,18 +42,11 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
     
     public FiducialLocatableLocation(FiducialLocatableLocation fiducialLocatableLocation) {
         super(fiducialLocatableLocation.getLocation());
-        this.id = fiducialLocatableLocation.id;
         this.side = fiducialLocatableLocation.side;
         this.fileName = fiducialLocatableLocation.fileName;
-        this.parentId = fiducialLocatableLocation.parentId;
         this.checkFiducials = fiducialLocatableLocation.checkFiducials;
-        this.enabled = fiducialLocatableLocation.enabled;
-        if (fiducialLocatableLocation.parent != null) {
-            this.parent = new FiducialLocatableLocation(fiducialLocatableLocation.parent);
-        }
-        else {
-            this.parent = null;
-        }
+        this.locallyEnabled = fiducialLocatableLocation.locallyEnabled;
+        this.parent = fiducialLocatableLocation.parent;
         if (fiducialLocatableLocation.fiducialLocatable != null) {
             this.fiducialLocatable = new FiducialLocatable(fiducialLocatableLocation.fiducialLocatable);
         }
@@ -78,23 +67,18 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
         setFiducialLocatable(fiducialLocatable);
     }
 
-    public Side getSide() {
+    public Side getLocalSide() {
         return side;
     }
     
-    public void setSide(Side side) {
+    public void setLocalSide(Side side) {
         Object oldValue = this.side;
         this.side = side;
         firePropertyChange("side", oldValue, side);
     }
     
     public void flipSide() {
-        if (side == Side.Top) {
-            setSide(Side.Bottom);
-        }
-        else {
-            setSide(Side.Top);
-        }
+        side = side.flip();
     }
 
     public FiducialLocatable getFiducialLocatable() {
@@ -117,16 +101,6 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
         firePropertyChange("fileName", oldValue, fileName);
     }
 
-    public String getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(String parentId) {
-        String oldValue = this.parentId;
-        this.parentId = parentId;
-        firePropertyChange("parentId", oldValue, parentId);
-    }
-
     public boolean isCheckFiducials() {
         return checkFiducials;
     }
@@ -137,25 +111,39 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
         firePropertyChange("checkFiducials", oldValue, checkFiducials);
     }
 
+    public boolean isParentBranchEnabled() {
+        if (parent != null) {
+           return getParent().isEnabled();
+        }
+        return true;
+    }
+    
+    public boolean isLocallyEnabled() {
+        return locallyEnabled;
+    }
+
+    public void setLocallyEnabled(boolean enabled) {
+        boolean oldValue = this.locallyEnabled;
+        this.locallyEnabled = enabled;
+        firePropertyChange("locallyEnabled", oldValue, enabled);
+    }
+
     public boolean isEnabled() {
-        return enabled;
+        return locallyEnabled && isParentBranchEnabled();
     }
 
-    public void setEnabled(boolean enabled) {
-        boolean oldValue = this.enabled;
-        this.enabled = enabled;
-        firePropertyChange("enabled", oldValue, enabled);
-    }
-
-    public FiducialLocatableLocation getParent() {
+    public PanelLocation getParent() {
         return parent;
     }
 
-    public void setParent(FiducialLocatableLocation parent) {
+    public void setParent(PanelLocation parent) {
         this.parent = parent;
     }
 
     public AffineTransform getLocalToParentTransform() {
+        if (localToParentTransform == null && fiducialLocatable != null) {
+            localToParentTransform = Utils2D.getDefaultBoardPlacementLocationTransform(this);
+        }
         return localToParentTransform;
     }
 
@@ -166,24 +154,61 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
     }
 
     public void setLocation(Location location) {
-        Location oldValue = this.location;
+        Location oldValue = getLocation();
         super.setLocation(location);
         // If the location is changing, it is not possible for the transform to still be valid, so
         //clear it.
-        if (!this.location.equals(oldValue)) {
+        if (!getLocation().equals(oldValue)) {
             setLocalToParentTransform(null);
         }
     }
 
-    public void setId(String id) {
-        String oldValue = this.id;
-        this.id = id;
-        firePropertyChange("id", oldValue, id);
+    public AffineTransform getLocalToGlobalTransform() {
+        AffineTransform at = new AffineTransform(getLocalToParentTransform());
+        if (parent != null) {
+            at.preConcatenate(parent.getLocalToGlobalTransform());
+        }
+        return at;
     }
     
-    @Override
-    public String getId() {
-        return id;
+    public void setLocalToGlobalTransform(AffineTransform localToGlobalTransform) throws NoninvertibleTransformException {
+        AffineTransform ltg = new AffineTransform(localToGlobalTransform);
+        if (parent != null) {
+            ltg.preConcatenate(parent.getLocalToGlobalTransform().createInverse());
+        }
+        setLocalToParentTransform(ltg);
+    }
+    
+    public Location getGlobalLocation() {
+        if (parent != null) {
+            return Utils2D.calculateBoardPlacementLocation(parent, this);
+        }
+        return getLocation();
+    }
+    
+    public void setGlobalLocation(Location globalLocation) {
+        if (parent != null) {
+            setLocation(Utils2D.calculateBoardPlacementLocationInverse(parent, globalLocation));
+        }
+        else {
+            setLocation(globalLocation);
+        }
+    }
+    
+    public Side getSide() {
+        if (parent != null && parent.getSide() == Side.Bottom) {
+            return side.flip();
+        }
+        return side;
+    }
+    
+    public void setSide(Side side) {
+        if (parent != null && parent.getSide() == Side.Bottom) {
+            this.side = side.flip();
+        }
+        else {
+            this.side = side;
+        }
     }
     
     public boolean isDecendantOf(FiducialLocatableLocation potentialAncestor) {
@@ -192,8 +217,8 @@ public class FiducialLocatableLocation extends AbstractLocatable implements Iden
             if (ancestor.getFileName().equals(potentialAncestor.getFileName())) {
                 return true;
             }
+            ancestor = ancestor.getParent();
         }
         return false;
     }
-    
 }

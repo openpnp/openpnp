@@ -25,14 +25,12 @@ import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board.Side;
+import org.pmw.tinylog.Logger;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
-
-import de.javagl.treetable.JTreeTable;
-import de.javagl.treetable.AbstractTreeTableModel;
 
 @SuppressWarnings("serial")
 public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
@@ -91,8 +89,8 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
         if (columnIndex == 0) {
             return false;
         }
-        if ((job.getFiducialLocatableLocations().get(rowIndex).getParent() == null) ||
-                (columnIndex == 3) || (columnIndex == 8) ||(columnIndex == 8)) {
+        if ((job.getFiducialLocatableLocations().get(rowIndex).getParent() == job.getRootPanelLocation()) ||
+                (columnIndex == 8) || (columnIndex == 9)) {
             return true;
         }
         return false;
@@ -122,41 +120,50 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
-                fiducialLocatableLocation.setSide((Side) aValue);
-                fireTableCellUpdated(rowIndex, columnIndex);
+                Side oldSide = fiducialLocatableLocation.getSide();
+                Side newSide = (Side) aValue;
+                if (newSide != oldSide) {
+                    Location savedLocation = fiducialLocatableLocation.getGlobalLocation();
+                    fiducialLocatableLocation.setSide(newSide);
+                    if (fiducialLocatableLocation.getParent() == job.getRootPanelLocation()) {
+                        fiducialLocatableLocation.setGlobalLocation(savedLocation);
+                    }
+                    fiducialLocatableLocation.setLocalToParentTransform(null);
+                }
+                fireTableDataChanged();
             }
             else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = fiducialLocatableLocation.getLocation();
+                Location location = fiducialLocatableLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
-                fiducialLocatableLocation.setLocation(location);
-                fireTableCellUpdated(rowIndex, columnIndex);
+                fiducialLocatableLocation.setGlobalLocation(location);
+                fireTableDataChanged();
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = fiducialLocatableLocation.getLocation();
+                Location location = fiducialLocatableLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
-                fiducialLocatableLocation.setLocation(location);
+                fiducialLocatableLocation.setGlobalLocation(location);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 6) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = fiducialLocatableLocation.getLocation();
+                Location location = fiducialLocatableLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Z);
-                fiducialLocatableLocation.setLocation(location);
-                fireTableCellUpdated(rowIndex, columnIndex);
+                fiducialLocatableLocation.setGlobalLocation(location);
+                fireTableDataChanged();
             }
             else if (columnIndex == 7) {
-                fiducialLocatableLocation.setLocation(fiducialLocatableLocation.getLocation().derive(null, null, null,
+                fiducialLocatableLocation.setGlobalLocation(fiducialLocatableLocation.getGlobalLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
-                fireTableCellUpdated(rowIndex, columnIndex);
+                fireTableDataChanged();
             }
             else if (columnIndex == 8) {
-                fiducialLocatableLocation.setEnabled((Boolean) aValue);
-                fireTableCellUpdated(rowIndex, columnIndex);
+                fiducialLocatableLocation.setLocallyEnabled((Boolean) aValue);
+                fireTableDataChanged();
             }
             else if (columnIndex == 9) {
                 fiducialLocatableLocation.setCheckFiducials((Boolean) aValue);
@@ -170,7 +177,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
 
     public Object getValueAt(int row, int col) {
         FiducialLocatableLocation fiducialLocatableLocation = job.getFiducialLocatableLocations().get(row);
-        Location loc = fiducialLocatableLocation.getLocation();
+        Location loc = fiducialLocatableLocation.getGlobalLocation();
         Location dim = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
         switch (col) {
             case 0:

@@ -29,6 +29,9 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     
     @Deprecated
     @Element(required = false)
+    public String id;
+    @Deprecated
+    @Element(required = false)
     public Integer columns = 1;
     @Deprecated
     @Element(required = false)
@@ -66,6 +69,7 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
             defaultFiducialPartId = partId;
             placements.addAll(fiducials);
         }
+        id = null;
     }
     
     @Persist
@@ -83,13 +87,13 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         partId = null;
     }
     
-    @SuppressWarnings("unused")
     public Panel() {
         super();
     }
 
     public Panel(File file) {
         super();
+        this.version = LATEST_VERSION;
         setFile(file);
         addPropertyChangeListener(this);
     }
@@ -101,13 +105,13 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     public Panel(Panel panel) {
         super(panel);
         this.version = panel.version;
-        this.partId = panel.partId;
+        this.defaultFiducialPartId = panel.defaultFiducialPartId;
         this.checkFids = panel.checkFids;
         this.children.addAll(panel.getChildren());
     }
     
     public Panel(String id) {
-        this();
+        super();
         this.version = LATEST_VERSION;
     }
 
@@ -142,6 +146,10 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         this.children = children;
     }
 
+    public void addChild(FiducialLocatableLocation child) {
+        children.add(child);
+    }
+    
     public String getDefaultFiducialPartId() {
         return this.defaultFiducialPartId;
     }
@@ -182,7 +190,7 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     
     @Override
     public String toString() {
-        return String.format("Panel: file %s, fiducial count: %d, children: %d", file, placements.size(), children.size());
+        return String.format("Panel: file %s, dims: %sx%s, fiducial count: %d, children: %d", file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size(), children.size());
     }
 
     public void setLocation(Job job) {

@@ -106,12 +106,13 @@ public class Utils2D {
         AffineTransform tx = new AffineTransform();
         tx.translate(l.getX(), l.getY());
         tx.rotate(Math.toRadians(l.getRotation()));
-        if (bl.getSide() == Side.Bottom) {
+        if (bl.getLocalSide() == Side.Bottom) {
             /**
              * Translate by the board width. This is used to support the "New" Board Location
              * system ala https://github.com/openpnp/openpnp/wiki/Board-Locations.
              */
             tx.translate(bl.getFiducialLocatable().getDimensions().convertToUnits(LengthUnit.Millimeters).getX(), 0);
+            tx.scale(-1, 1);
         }
         return tx;
     }
@@ -160,13 +161,15 @@ public class Utils2D {
         double[] m = new double[6];
         tx.getMatrix(m); //m00 m10 m01 m11 m02 m12 
         
-        double theta = Math.atan2(m[1],m[0]);
+        double xSign = Math.signum(m[0]*m[3] - m[1]*m[2]);
+
+        double theta = Math.atan2(xSign*m[1], xSign*m[0]);
         affineInfo.rotationAngleDeg = Math.toDegrees(theta);
         
         double sinTheta = Math.sin(theta);
         double cosTheta = Math.cos(theta);
         
-        affineInfo.xScale = Math.sqrt(m[0]*m[0] + m[1]*m[1]);
+        affineInfo.xScale = xSign * Math.sqrt(m[0]*m[0] + m[1]*m[1]);
         
         double shsy = m[2]*cosTheta + m[3]*sinTheta;
         
@@ -211,9 +214,14 @@ public class Utils2D {
         p.setLocation(location);
         return calculateBoardPlacementLocation(bl, p);
     }
-    
+
     public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl,
             AbstractLocatable locatable) {
+        return calculateBoardPlacementLocation(bl, locatable, false);
+    }
+    
+    public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl,
+            AbstractLocatable locatable, boolean local) {
         
         Location placementLocation = null;
         if (locatable instanceof Placement) {
@@ -222,17 +230,23 @@ public class Utils2D {
         else if (locatable instanceof FiducialLocatableLocation) {
             FiducialLocatableLocation fiducialLocatableLocation = (FiducialLocatableLocation) locatable;
             Placement dummy = new Placement("dummy");
-            if (bl.getSide() != fiducialLocatableLocation.getSide()) {
+            if (fiducialLocatableLocation.getSide() == Side.Bottom) {
                 Location dims = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
                 dummy.setLocation(dims.derive(null, 0.0, 0.0, 0.0));
             }
-            placementLocation = calculateBoardPlacementLocation(fiducialLocatableLocation, dummy);
+            placementLocation = calculateBoardPlacementLocation(fiducialLocatableLocation, dummy, true);
         }
         else {
             throw new UnsupportedOperationException("Unable to calculate location for type " + locatable.getClass());
         }
         
-        AffineTransform tx = bl.getLocalToParentTransform();        
+        AffineTransform tx;
+        if (local) {
+            tx = bl.getLocalToParentTransform();
+        }
+        else {
+            tx = bl.getLocalToGlobalTransform();
+        }
         if (tx == null) {
             tx = getDefaultBoardPlacementLocationTransform(bl);
         }
@@ -244,10 +258,6 @@ public class Utils2D {
         Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
         placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
 
-        if (bl.getSide() == Side.Bottom) {
-        	placementLocation = placementLocation.invert(true, false, false, false);
-        }
-
         double angle = getTransformAngle(tx);
         
         Point2D p = new Point2D.Double(placementLocation.getX(), placementLocation.getY());
@@ -258,15 +268,15 @@ public class Utils2D {
         Location l = new Location(LengthUnit.Millimeters, 
                 p.getX(), 
                 p.getY(), 
-                boardLocation.getZ(), 
+                boardLocation.getZ() + placementLocation.getZ(), 
                 angle + placementLocation.getRotation());
         l = l.convertToUnits(placementUnits);
         return l;
     }
 
-    public static Location calculateBoardPlacementLocationInverse(BoardLocation bl,
+    public static Location calculateBoardPlacementLocationInverse(FiducialLocatableLocation bl,
             Location placementLocation) {
-        AffineTransform tx = bl.getPlacementTransform();
+        AffineTransform tx = bl.getLocalToGlobalTransform();
         if (tx == null) {
             tx = getDefaultBoardPlacementLocationTransform(bl);
         }
@@ -282,6 +292,7 @@ public class Utils2D {
         // before we start calculating and then we'll convert it back to the original
         // units at the end.
         LengthUnit placementUnits = placementLocation.getUnits();
+        Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
         placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
 
         double angle = getTransformAngle(tx);
@@ -291,10 +302,15 @@ public class Utils2D {
         
         // The final result is the transformed X,Y, Z = 0, and the
         // transform angle + placement angle.
+//        Location l = new Location(LengthUnit.Millimeters, 
+//                bl.getSide() == Side.Bottom ? -p.getX() : p.getX(), 
+//                p.getY(), 
+//                0., 
+//                angle + placementLocation.getRotation());
         Location l = new Location(LengthUnit.Millimeters, 
-                bl.getSide() == Side.Bottom ? -p.getX() : p.getX(), 
+                p.getX(), 
                 p.getY(), 
-                0., 
+                boardLocation.getZ() + placementLocation.getZ(), 
                 angle + placementLocation.getRotation());
         l = l.convertToUnits(placementUnits);
         return l;

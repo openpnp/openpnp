@@ -34,11 +34,11 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
     final Panel panel;
 
     private String[] columnNames =
-            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y"};
+            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot."};
 
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class,
-            Side.class, LengthCellValue.class, LengthCellValue.class};
+            Side.class, LengthCellValue.class, LengthCellValue.class, Double.class};
 
     public PanelFiducialsTableModel(Panel panel) {
         this.panel = panel;
@@ -90,6 +90,7 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
             }
             else if (columnIndex == 3) {
                 placement.setSide((Side) aValue);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -99,6 +100,7 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
                 location = Length.setLocationField(Configuration.get(), location, length,
                         Length.Field.X, true);
                 placement.setLocation(location);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -108,6 +110,13 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
                 location = Length.setLocationField(Configuration.get(), location, length,
                         Length.Field.Y, true);
                 placement.setLocation(location);
+                fireTableCellUpdated(rowIndex, columnIndex);
+            }
+            else if (columnIndex == 6) {
+                Location location = placement.getLocation();
+                double rotation = Double.parseDouble(aValue.toString());
+                placement.setLocation(location.derive(null, null, null, rotation));
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
         }
         catch (Exception e) {
@@ -131,6 +140,8 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
                 return new LengthCellValue(loc.getLengthX(), true);
             case 5:
                 return new LengthCellValue(loc.getLengthY(), true);
+            case 6:
+                return loc.getRotation();
             default:
                 return null;
         }

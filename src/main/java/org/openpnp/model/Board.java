@@ -41,7 +41,16 @@ import org.simpleframework.xml.core.Commit;
 @Root(name = "openpnp-board")
 public class Board extends FiducialLocatable implements PropertyChangeListener {
     public enum Side {
-        Bottom, Top
+        Bottom, Top;
+        
+        public Side flip() {
+            if (this.equals(Side.Top)) {
+                return Side.Bottom;
+            }
+            else {
+                return Side.Top;
+            }
+        }
     }
 
     @Version(revision=1.1)
@@ -66,11 +75,19 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
 //    private transient boolean dirty;
 
     public Board() {
-        this(null);
+        setFile(null);
+        addPropertyChangeListener(this);
     }
 
     public Board(File file) {
         setFile(file);
+        addPropertyChangeListener(this);
+    }
+    
+    public Board(Board board) {
+        super(board);
+        this.fiducials = new ArrayList<>(board.fiducials);
+        this.solderPastePads = new ArrayList<>(board.solderPastePads);
         addPropertyChangeListener(this);
     }
 
@@ -161,6 +178,10 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
         }
     }
 
+    @Override
+    public String toString() {
+        return String.format("Board: file %s, dims: %sx%s, placements count: %d", file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
+    }
 
 //    public String getName() {
 //        return name;

@@ -20,8 +20,10 @@
 package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
+import java.util.List;
 
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.core.Commit;
 
 public class PanelLocation extends FiducialLocatableLocation {
@@ -33,6 +35,12 @@ public class PanelLocation extends FiducialLocatableLocation {
     // Copy constructor needed for deep copy of object.
     public PanelLocation(PanelLocation panelLocation) {
         super(panelLocation);
+        if (panelLocation.getPanel() != null) {
+            setPanel(new Panel(panelLocation.getPanel()));
+            for (FiducialLocatableLocation child : getChildren()) {
+                child.setParent(this);
+            }
+        }
     }
 
     public PanelLocation(Panel panel) {
@@ -41,13 +49,16 @@ public class PanelLocation extends FiducialLocatableLocation {
     }
 
     @Commit
-    private void commit() {
-        setLocation(location);
-        setFiducialLocatable(fiducialLocatable);
+    protected void commit() {
+        super.commit();
     }
     
     public Panel getPanel() {
-        return (Panel) getFiducialLocatable();
+        FiducialLocatable panel = getFiducialLocatable();
+        if (panel instanceof Panel) {
+            return (Panel) panel;
+        }
+        return null;
     }
 
     public void setPanel(Panel panel) {
@@ -62,26 +73,46 @@ public class PanelLocation extends FiducialLocatableLocation {
         setFileName(panelFile);
     }
 
-//    public String getPanelId() {
-//        return getParentId();
-//    }
-//
-//    public void setPanelId(String id) {
-//        setParentId(id);
-//    }
-
-    public AffineTransform getLocalToRootTransform() {
-        AffineTransform localToRootTransform = Utils2D.getDefaultBoardPlacementLocationTransform(this);
-        PanelLocation parent = (PanelLocation) getParent();
-        if (parent != null) {
-            localToRootTransform.preConcatenate(parent.getLocalToRootTransform());
+    public void addChild(FiducialLocatableLocation child) {
+        child.setParent(this);
+        getPanel().addChild(child);
+    }
+    
+    public List<FiducialLocatableLocation> getChildren() {
+        return getPanel().getChildren();
+    }
+    
+    public void flipSide() {
+        super.flipSide();
+        for (FiducialLocatableLocation child : getChildren()) {
+            child.flipSide();
         }
-        return localToRootTransform;
+    }
+    
+    public void setLocalToParentTransform(AffineTransform localToParentTransform) {
+        super.setLocalToParentTransform(localToParentTransform);
+        for (FiducialLocatableLocation child : getChildren()) {
+            child.setLocalToParentTransform(null);
+        }
     }
     
     @Override
     public String toString() {
-        return String.format("Panel (%s), location (%s), side (%s)", fileName, location, side);
+        return String.format("Panel (%s), location (%s), side (%s)", fileName, getLocation(), side);
     }
 
+    public void dump(String leader) {
+        Logger.trace(String.format("%s@%08x PanelLocation:%s location=%s side=%s (%s)", leader,  this.hashCode(),  fileName, getLocation(), side, getPanel() == null ? "Null" : getPanel().toString()));
+        if (getPanel() != null) {
+            leader = leader + "    ";
+            for (FiducialLocatableLocation child : getPanel().getChildren()) {
+                if (child instanceof PanelLocation) {
+                    ((PanelLocation) child).dump(leader);
+                }
+                if (child instanceof BoardLocation) {
+                    ((BoardLocation) child).dump(leader);
+                }
+            }
+        }
+    }
 }

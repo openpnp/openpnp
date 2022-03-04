@@ -5,7 +5,7 @@ import org.simpleframework.xml.Element;
 public abstract class AbstractLocatable extends AbstractModelObject {
 
     @Element
-    protected Location location;
+    private Location location;
 
     AbstractLocatable(AbstractLocatable abstractLocatable) {
         super();
