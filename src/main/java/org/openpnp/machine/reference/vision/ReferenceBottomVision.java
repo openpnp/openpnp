@@ -70,6 +70,13 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     @Element(required = false)
     protected Length maxSearchDistance = new Length(2, LengthUnit.Millimeters);
 
+    /**
+     * Edge detection pixels. These must correspond to the maximum subSampling in stages
+     * and/or to the MJPEG compression block artifact size. Typically 8.
+     */
+    @Attribute(required = false)
+    private int edgeDetectionPixels = 8;
+
     @Deprecated
     @ElementMap(required = false)
     protected Map<String, PartSettings> partSettingsByPartId = null;
@@ -311,7 +318,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     private boolean partSizeCheck(Part part, BottomVisionSettings bottomVisionSettings, RotatedRect partRect, Camera camera) {
         // Check if this test needs to be done
-        Location partSize = bottomVisionSettings.getPartCheckSize(part);
+        Location partSize = bottomVisionSettings.getPartCheckSize(part, false);
         if (partSize == null) {
             return true;
         }
@@ -387,7 +394,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         if (nozzle.getPart() != null && nozzle.getPart().getPackage() != null) {
             Footprint footprint = nozzle.getPart().getPackage().getFootprint();
             pipeline.setProperty("footprint", footprint);
-            partSize = bottomVisionSettings.getPartCheckSize(nozzle.getPart());
+            partSize = bottomVisionSettings.getPartCheckSize(nozzle.getPart(), true);
         }
         // Set the background removal properties.
         if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) { 
@@ -416,13 +423,20 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         pipeline.setProperty("alignment.expectedAngle", wantedLocation.getRotation());
         pipeline.setProperty("alignment.searchDistance", getMaxSearchDistance());
         if (partSize != null) {
-            pipeline.setProperty("alignment.maxWidth", partSize.getLengthX().add(getMaxSearchDistance()));
-            pipeline.setProperty("alignment.maxHeight", partSize.getLengthY().add(getMaxSearchDistance()));
+            // Add a margin for edge detection.
+            Location upp = camera.getUnitsPerPixelAtZ();
+            pipeline.setProperty("alignment.maxWidth", partSize.getLengthX()
+                    .add(upp.getLengthX().multiply(edgeDetectionPixels*2)));
+            pipeline.setProperty("alignment.maxHeight", partSize.getLengthY()
+                    .add(upp.getLengthY().multiply(edgeDetectionPixels*2)));
         }
         else if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) {
+            // No part size available. Use the maximum diameter, but allow for the max-search distance around the part. 
             Length maxPartDiameter = ((ReferenceNozzleTip) nozzle.getNozzleTip()).getMaxPartDiameter();
-            pipeline.setProperty("alignment.maxWidth", maxPartDiameter);
-            pipeline.setProperty("alignment.maxHeight", maxPartDiameter);
+            pipeline.setProperty("alignment.maxWidth", maxPartDiameter
+                    .subtract(getMaxSearchDistance().multiply(2)));
+            pipeline.setProperty("alignment.maxHeight", maxPartDiameter
+                    .subtract(getMaxSearchDistance().multiply(2)));
         }
 
         pipeline.setProperties(pipelineParameterAssignments);

@@ -122,7 +122,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
         Configuration.get().fireVisionSettingsChanged();
     }
 
-    public Location getPartCheckSize(Part part) {
+    public Location getPartCheckSize(Part part, boolean addTolerance) {
         Footprint footprint = part.getPackage().getFootprint();
         double checkWidth = 0.0;
         double checkHeight = 0.0;
@@ -141,7 +141,8 @@ public class BottomVisionSettings extends AbstractVisionSettings {
                 checkHeight = bounds.getHeight();
                 break;
         }
-        return new Location(footprint.getUnits(), checkWidth, checkHeight, 0, 0);
+        double factor = addTolerance ? checkSizeTolerancePercent*0.01+1.0 : 1.0;
+        return new Location(footprint.getUnits(), checkWidth*factor, checkHeight*factor, 0, 0);
     }
 
 }
