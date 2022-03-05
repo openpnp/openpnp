@@ -234,22 +234,19 @@ public class MaskHsv extends CvStage {
             double complementFactor = 1 - softFactor;
             byte floor = (byte) (complementFactor*255.999);
             boolean factorOne = softFactor == 1.0;
-            int hueMinE = hueMin == 0 ? hueMin - softEdge : hueMin;
-            int hueMaxE = hueMax == 255 ? hueMax + softEdge : hueMax;
+            boolean hueAll = (hueMin == 0 && hueMax == 255);
             int saturationMinE = saturationMin == 0 ? saturationMin - softEdge : saturationMin;
             int saturationMaxE = saturationMax == 255 ? saturationMax + softEdge : saturationMax;
             int valueMinE = valueMin == 0 ? valueMin - softEdge : valueMin;
             int valueMaxE = valueMax == 255 ? valueMax + softEdge : valueMax;
-            
-            int hueMid = hueMinE <= hueMaxE ? (hueMinE + hueMaxE)/2 : (((256 + hueMinE + hueMaxE)/2)&0xFF);
-            int hueSpan = (((hueMaxE - hueMinE)&0xFF) + 1 )/2  - softEdge;
+            int hueMid = hueAll ? 128 : hueMin <= hueMax ? (hueMin + hueMax)/2 : (((256 + hueMin + hueMax)/2)&0xFF);
+            int hueSpan = hueAll ? 128 : Math.max(0, (((hueMax - hueMin)&0xFF) + 1 )/2  - softEdge/2);
             int saturationMid = (saturationMinE + saturationMaxE)/2;
-            int saturationSpan = (saturationMaxE - saturationMinE + 1)/2 - softEdge;
+            int saturationSpan = Math.max(0, (saturationMaxE - saturationMinE + 1)/2 - softEdge/2);
             int valueMid = (valueMinE + valueMaxE)/2;
-            int valueSpan = (valueMaxE - valueMinE + 1)/2 - softEdge;
-            int softEdgeSq = 3*softEdge*softEdge;
-            double softEdgeD = Math.sqrt(softEdgeSq);
-            
+            int valueSpan =  Math.max(0, (valueMaxE - valueMinE + 1)/2 - softEdge/2);
+            int softEdgeSq = softEdge*softEdge;
+
             mat.get(0, 0, pixelSamples);
             for (int i = 0, j = 0; i < linearSize; i += channels, j++) {
                 int hue = Byte.toUnsignedInt(pixelSamples[i]);
@@ -275,7 +272,8 @@ public class MaskHsv extends CvStage {
                 }
                 else {
                     // Inside soft edge.
-                    double d = ((double)sq)/softEdgeSq;
+                    double d = //Math.sqrt(sq)/softEdge;
+                            Math.cos(Math.PI*Math.sqrt(sq)/softEdge)*-0.5+0.5;
                     if (invert) {
                         d = 1 - d;
                     }
