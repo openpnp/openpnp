@@ -35,7 +35,6 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.openpnp.vision.pipeline.Property;
 import org.openpnp.vision.pipeline.Stage;
-import org.openpnp.vision.pipeline.stages.DetectRectlinearSymmetry.SymmetryFunction;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -129,7 +128,7 @@ public class DetectRectlinearSymmetry extends CvStage {
     @Attribute(required = false)
     @Property(description = "Gamma to be applied to the image. The input signal is raised to the power gamma. "
             + "With gammas > 1.0 the bright image parts are emphasized.")
-    private int gamma = 3;
+    private double gamma = 2.5;
 
     @Attribute(required = false)
     @Property(description = "When the <strong>OutlineSymmetryMasked</strong> function is used, only pixels with luminance greater"
@@ -269,11 +268,11 @@ public class DetectRectlinearSymmetry extends CvStage {
         this.smoothing = smoothing;
     }
 
-    public int getGamma() {
+    public double getGamma() {
         return gamma;
     }
 
-    public void setGamma(int gamma) {
+    public void setGamma(double gamma) {
         this.gamma = gamma;
     }
 
