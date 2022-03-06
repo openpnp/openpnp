@@ -30,52 +30,18 @@ Rect-linear symmetry does not imply a rectangular contact arrangement, parts cou
 
 ![Semi-asymmetric](https://user-images.githubusercontent.com/9963310/156913390-152f11be-314e-4dbf-9b40-a6397744441e.png)
 
-## Asymmetric Parts
-
-Some parts are not symmetric. For those, the stage can be made to work with some extra tweaking. However, because there is no symmetry, we lose the self-tuning property. We must adjust the threshold and optionally the minimum detail size:
-
-![Asymmetric-rectlinear](https://user-images.githubusercontent.com/9963310/156898693-71453ea2-43ad-4bd6-b102-64453e6c22e8.gif)
-
-1. Specialize the asymmetric part or package or create a new Vision Setting to handle all these together.
-2. Switch the left-right and/or upper/lower symmetry off. 
-3. Adjust the **Threshold** to capture the span of the asymmetric dimension.
-4. Optionally adjust the **Min. Detail Size** to suppress artifacts that are not relevant.
-
-
-
-## Pipeline Stage Properties in Sequence
-
-In previous versions, the pipeline stage properties were always sorted alphabetically, which often resulted in a strange order ("Max" came before "Min" etc.). This has been fixed, properties now appear as intended by the stage author. You can press the **A-Z** button to sort them alphabetically as before:
-
-![stage-properties](https://user-images.githubusercontent.com/9963310/156915677-1d6f3c67-4e6d-434e-a473-5e68df879ac8.gif)
 
 ## Nozzle Tip Configuration
 
-As a prerequisite for proper Bottom Vision, you need to configure two new settings on each nozzle tip: 
+As a prerequisite for Bottom Vision, you need to configure two (new) settings on each nozzle tip: 
 
 ![Max. Pick Tolerance](https://user-images.githubusercontent.com/9963310/156925117-1c2fbd35-3003-4354-96bd-6481b9920342.png)
 
-**Min. Part Diameter** sets the minimum part dimension assumed to be picked with this nozzle tip. This diameter is used to calculate an _inner_ diameter of the nozzle tip that will always be covered by the part (**Min. Part Diameter** minus two times the **Maximum Pick Tolerance**). The pixels in the _inner_ diameter are then disregarded/blotted-out  by the Background Calibration.
+**Min. Part Diameter** sets the minimum part dimension assumed to be picked with this nozzle tip. This diameter is used to calculate an _inner_ diameter of the nozzle tip that will always be covered by the part (**Min. Part Diameter** minus two times the **Maximum Pick Tolerance**). The pixels in the _inner_ diameter are then disregarded/blotted-out  by the [Background Calibration](/openpnp/openpnp/wiki/Nozzle-Tip-Background-Calibration).
 
 **Maximum Pick Tolerance** sets the maximum allowed distance of the detected part, from its expected location. If it is larger than the given distance, an error will be thrown. This also controls the pipeline, by limiting the maximum search distance and lessening the computational cost. 
 
-
-## ImageRead Stage Simulates Camera Capture
-
-To facilitate testing with pre-captured images, potentially from other users, the ImageRead stage can now emulate a camera-captured image: 
-
-![image](https://user-images.githubusercontent.com/9963310/156917949-f338f79a-fbb9-4f62-bef8-828a4702abdd.png)
-
-**handleAsCaptured**, if enabled, handles the loaded image as if captured by the camera. The image resolution and aspect ratio will be adapted, and if information is present (in a upp.txt file side-by-side with the image), the image is scaled to camera Units per Pixel. Any pixel coordinates obtained from the image are therefore correctly interpreted, as they would from a camera captured image. The image is also registered as the pipeline captured image.
-
-Images are scaled, cropped and/or extended with black borders, as needed. 
-
-# Justification
-Make bottom vision tuning free, at least for symmetric parts. 
-
-# Instructions for Use
-
-## Using the new Rectlinear Pipeline Pipeline
+## Getting the new Rectlinear Pipeline
 
 Go to the Vision tab, select the Rectlinear Symmetry entry and copy the pipeline:
 
@@ -87,6 +53,23 @@ Then paste the pipeline:
 
 ![Paste](https://user-images.githubusercontent.com/9963310/156918295-473d96c6-5e18-40c6-b9b3-297c916f7404.png)
 
+## Using with Symmetric Parts
+
+For symmetric parts, this should be all that is needed. The part detection should just work! This is sort of a "bold promise 😁", please report any problem to the [OpenPnP discussion group](http://groups.google.com/group/openpnp). 
+
+## Using with Asymmetric Parts
+
+There seems to be a trend towards more symmetry, as parts get miniaturized and large current pins are implemented by just using _many_ regular pins/pads/balls. So if you have an asymmetric part, maybe checking for new packages could be a sensible first step.
+
+Unfortunately, some parts just aren't symmetric and never will be. For those, the stage can be made to work with some extra tweaking. Because there is no symmetry, we lose the self-tuning property, i.e., we must adjust the threshold and optionally the minimum detail size, as shown in the animation below:
+
+![Asymmetric-rectlinear](https://user-images.githubusercontent.com/9963310/156898693-71453ea2-43ad-4bd6-b102-64453e6c22e8.gif)
+
+1. Specialize the asymmetric part or package or create a new Vision Setting to handle all these together.
+2. Switch the left-right and/or upper/lower symmetry off. 
+3. Adjust the **Threshold** to capture the span of the asymmetric dimension.
+4. Optionally adjust the **Min. Detail Size** to suppress artifacts that are not relevant.
+
 ## Bottom Vision Pipeline Control
 
 The Bottom Vision pipeline is parametrized by OpenPnP, so that some stage properties are controlled from the calling function:
@@ -94,10 +77,7 @@ The Bottom Vision pipeline is parametrized by OpenPnP, so that some stage proper
 - Background removal is controlled as described on the [Nozzle Tip Background Calibration page](https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Background-Calibration#calibration-pipeline-control)
 - The location where the DetectRectlinearSymmetry stage searches for the part is controlled through the "alignment.center" pipeline property. Typically just the center of the camera. 
 - The **expectedAngle** property of the DetectRectlinearSymmetry stage is controlled through the "alignment.expectedAngle" pipeline property. This is set to the nominal alignment angle.
-- The **searchDistance** property of the DetectRectlinearSymmetry stage is controlled through the "alignment.searchDistance" pipeline property. This is taken from the Nozzle Tip configuration, **Max. Pick Tolerance**:
-
-    ![Max. Pick Tolerance](https://user-images.githubusercontent.com/9963310/156925117-1c2fbd35-3003-4354-96bd-6481b9920342.png)
-
+- The **searchDistance** property of the DetectRectlinearSymmetry stage is controlled through the "alignment.searchDistance" pipeline property. This is taken from the Nozzle Tip configuration, **Max. Pick Tolerance**, [see above]().
 -  The **maxWidth** and **maxHeight** properties of the DetectRectlinearSymmetry stage are controlled through the "alignment.maxWidth" and "alignment.maxHeight" pipeline properties, respectively. If the **Part size check** is enabled on the Vision Settings, the effective part size is taken (with the **Size tolerance** added). If no part size info is present, the **Max. Part Diameter** from the nozzle tip is taken. 
 
 ## Configuring the DetectRectlinearSymmetry Stage
