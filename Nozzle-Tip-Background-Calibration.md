@@ -8,7 +8,7 @@ The new Background Calibration reuses the images that are already captured by th
 
 Furthermore, a cutoff brightness is determined where the non-color-keyed parts of the background must all be darker. This indicates the minimum brightness applicable typically in a `Threshold` stage. 
 
-The background calibration automatically blots out the center piece in the calibration image, where the nozzle tip was detected. This will eliminate any shiny elements that are typically present (needles, scraped off points etc.). OpenPnP assumes this center part to be always covered by the picked part, i.e. there is no need to include its color in the background calibration, _nor_ these shiny elements treated as a problem (see Trouble Shooting). The blotted-out disc has a size of **Vision Diameter** + 2 x **Minimum Detail Size** (see Configuration).
+The background calibration automatically blots out the center piece in the calibration image, where the nozzle tip was detected. This will eliminate any shiny elements that are typically present (needles, scraped off points etc.). OpenPnP assumes this center part to be always covered by the picked part, i.e. there is no need to include its color in the background calibration, _nor_ these shiny elements treated as a problem (see the [Trouble Shooting](#trouble-shooting) section). The blotted-out disc has a size of **Min. Part Diamater** - 2 x **Max. Pick Tolerance** (see the [Nozzle Tip Configuration for bottom vision](https://github.com/openpnp/openpnp/wiki/DetectRectlinearSymmetry#nozzle-tip-configuration)).
 
 The resulting calibration is also validated, and if the detected quality is not good, diagnostic guidance and visual feed-back is provided for users to remedy the situation (see section Trouble Shooting below).
 
