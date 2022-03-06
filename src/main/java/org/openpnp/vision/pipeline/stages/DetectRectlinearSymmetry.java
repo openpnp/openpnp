@@ -466,6 +466,10 @@ public class DetectRectlinearSymmetry extends CvStage {
      */
     static final private int iterationDivision = 4;
     /**
+     * Minimum subject size in pixels. Very small subject need to be kept larger in iteration.
+     */
+    static final private int iterationMinSize = 64;
+    /**
      * Some extra debugging stuff used for development, that might be useful again in the future. DEBUG has levels 1 and 2.  
      */
     static final int DEBUG = 0;
@@ -746,8 +750,8 @@ public class DetectRectlinearSymmetry extends CvStage {
                     // subject is detected with large maxSpan, the detected angle can be off considerably.    
                     double angleError = angleStep*maxSpan/Math.max(wBest, hBest);
                     rect = findReclinearSymmetry(image, (int)xBest, (int)yBest,  Math.toDegrees(angleBest), 
-                            Math.min(maxWidth, wBest+subSamplingEff*iterationRadius*2), 
-                            Math.min(maxHeight, hBest+subSamplingEff*iterationRadius*2), 
+                            Math.min(maxWidth, Math.max(iterationMinSize, wBest)+subSamplingEff*iterationRadius*2), 
+                            Math.min(maxHeight, Math.max(iterationMinSize, hBest)+subSamplingEff*iterationRadius*2), 
                             subSamplingEff*iterationRadius, 
                             Math.toDegrees(angleError)*iterationAngle,  
                             minSymmetry, xSymmetryFunction, ySymmetryFunction, minFeatureSize,
