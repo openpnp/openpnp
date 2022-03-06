@@ -7,9 +7,9 @@ This page links to detailed instructions for some tasks around Computer Vision.
 
 # Stages
 
-* [[DetectCircularSymmetry]] searched the image for Circular Symmetry. It can be used to detect round things, regardless of their color, brightness, contrast, even if sharp edges are absent. The stage is very robust and self-tuning. 
+* [[DetectCircularSymmetry]] searches the image for Circular Symmetry. It can be used to detect round things, regardless of their color, brightness, contrast, even if sharp edges are absent. The stage is very robust and self-tuning. 
 
-* [[DetectRectlinearSymmetry]] searched the image for Rec-linear Symmetry. It can be used to detect left-right and/or upper/lower symmetric things, obviously electronic parts. The stage is very robust and self-tuning. 
+* [[DetectRectlinearSymmetry]] searches the image for Rec-linear Symmetry. It can be used to detect left-right and/or upper/lower symmetric things, obviously electronic parts. The stage is very robust and self-tuning. 
 
 * [[MaskHsv]] suppresses certain ranges of colors in the image. It is typically used for "green-screening" in bottom vision or for the [[BlindsFeeder]].
 
