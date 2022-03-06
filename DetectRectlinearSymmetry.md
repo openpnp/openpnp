@@ -55,7 +55,9 @@ Then paste the pipeline:
 
 ## Using with Symmetric Parts
 
-For symmetric parts, this should be all that is needed. The part detection should just work! This is sort of a "bold promise 😁", please report any problem to the [OpenPnP discussion group](http://groups.google.com/group/openpnp). 
+For symmetric parts, assigning the pipeline should be all that is needed. The part detection should just work! 
+
+OK, I know, this is a "bold promise 😁", please report any problem to the [OpenPnP discussion group](http://groups.google.com/group/openpnp). 
 
 ## Using with Asymmetric Parts
 
