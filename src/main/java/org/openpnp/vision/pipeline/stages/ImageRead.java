@@ -31,8 +31,11 @@ public class ImageRead extends CvStage {
     private ColorSpace colorSpace = ColorSpace.Bgr;
     
     @Attribute(required=false)
-    @Property(description="Handle the loaded image as if captured by the camera. The image resolution and aspect ratio will be adapted, so any "
-            + "pixel coordinates are correctly interpreted. The image is also registered as the pipeline captured image.")
+    @Property(description="Handle the loaded image as if captured by the camera. The image resolution and aspect ratio will be adapted, and "
+            + "if information is present (upp.txt), the image is scaled to camera Units per Pixel.<br/>"
+            + "Any pixel coordinates obtained from the image are therefore correctly interpreted, as they would from a "
+            + "camera captured image.<br/>"
+            + "The image is also registered as the pipeline captured image.")
     private boolean handleAsCaptured = false;
 
     public File getFile() {

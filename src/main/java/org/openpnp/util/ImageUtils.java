@@ -61,7 +61,7 @@ public class ImageUtils {
      * @param imageFile
      * @return
      */
-    public static Location getImageFileUnitsPerPixel(File imageFile) {
+    public static Location getUnitsPerPixel(File imageFile) {
         Location upp = null;
         // Try look for units per pixel manifest in the same directory as the image.
         try {
@@ -80,10 +80,10 @@ public class ImageUtils {
     }
 
     /**
-     * Emulate an image captured by the given camera but read it from a file. 
-     * The image is adapted to the camera resolution and to Units per Pixel if a upp.txt manifest is present 
+     * Emulate an image captured by the given camera, but read it from a file. 
+     * The image is adapted to the camera resolution, aspect ratio and to Units per Pixel if a upp.txt manifest is present 
      * side-by-side with the image file. This allows for pixel to lengths conversions typically performed by pipeline
-     * stages and pipeline callers to be accurate.
+     * stages and pipeline callers to be accurate. The returned image is extend/cropped as needed.
      * 
      * @param camera
      * @param file
@@ -91,7 +91,7 @@ public class ImageUtils {
      */
     public static Mat emulateCameraCapture(Camera camera, File file) {
         Mat image = Imgcodecs.imread(file.getAbsolutePath());
-        Location upp = ImageUtils.getImageFileUnitsPerPixel(file);
+        Location upp = ImageUtils.getUnitsPerPixel(file);
         double fx;
         double fy;
         if (upp == null) {
