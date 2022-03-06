@@ -70,15 +70,17 @@ Unfortunately, some parts just aren't symmetric and never will be. For those, th
 3. Adjust the **Threshold** to capture the span of the asymmetric dimension.
 4. Optionally adjust the **Min. Detail Size** to suppress artifacts that are not relevant.
 
-## Bottom Vision Pipeline Control
+## Automatic Bottom Vision Pipeline Control
 
-The Bottom Vision pipeline is parametrized by OpenPnP, so that some stage properties are controlled from the calling function:
+The Bottom Vision pipeline is parametrized by OpenPnP, i.e. some stage properties are controlled from the calling function:
 
 - Background removal is controlled as described on the [Nozzle Tip Background Calibration page](https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Background-Calibration#calibration-pipeline-control)
 - The location where the DetectRectlinearSymmetry stage searches for the part is controlled through the "alignment.center" pipeline property. Typically just the center of the camera. 
 - The **expectedAngle** property of the DetectRectlinearSymmetry stage is controlled through the "alignment.expectedAngle" pipeline property. This is set to the nominal alignment angle.
-- The **searchDistance** property of the DetectRectlinearSymmetry stage is controlled through the "alignment.searchDistance" pipeline property. This is taken from the Nozzle Tip configuration, **Max. Pick Tolerance**, [see above]().
--  The **maxWidth** and **maxHeight** properties of the DetectRectlinearSymmetry stage are controlled through the "alignment.maxWidth" and "alignment.maxHeight" pipeline properties, respectively. If the **Part size check** is enabled on the Vision Settings, the effective part size is taken (with the **Size tolerance** added). If no part size info is present, the **Max. Part Diameter** from the nozzle tip is taken. 
+- The **searchDistance** property of the DetectRectlinearSymmetry stage is controlled through the "alignment.searchDistance" pipeline property. This is taken from the Nozzle Tip Configuration **Max. Pick Tolerance**, [see above](#nozzle-tip-configuration).
+-  The **maxWidth** and **maxHeight** properties of the DetectRectlinearSymmetry stage are controlled through the "alignment.maxWidth" and "alignment.maxHeight" pipeline properties, respectively. If the **Part size check** is enabled on the Vision Settings, the effective part size is taken (with the **Size tolerance** added). If no part size info is present, the **Max. Part Diameter** from the nozzle tip is taken.
+
+In addition, the visible parameters are obviously controlled too. Please consult the [Pipeline Parameters](https://github.com/openpnp/openpnp/wiki/Exposed-Pipeline-Parameters) inside the pipeline to see how.
 
 ## Configuring the DetectRectlinearSymmetry Stage
 
