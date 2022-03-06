@@ -36,7 +36,6 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
     private JTextField textFieldMaxVisionPasses;
     private JTextField textFieldMaxLinearOffset;
     private JTextField textFieldMaxAngularOffset;
-    private JTextField maxSearchDistance;
     private JComboBox visionSettings;
     private boolean reloadWizard = false;
 
@@ -67,8 +66,6 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblEnabled = new JLabel("Enabled?");
@@ -76,17 +73,9 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
 
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
-        
-        JLabel lblMaxSearchDistance = new JLabel("Max. allowed distance");
-        lblMaxSearchDistance.setToolTipText("<html>Maximum allowed distance of parts to be detected.<br/>\r\nAlso used by some pipelines for better performance.</html>");
-        panel.add(lblMaxSearchDistance, "2, 4, right, default");
-        
-        maxSearchDistance = new JTextField();
-        panel.add(maxSearchDistance, "4, 4, fill, default");
-        maxSearchDistance.setColumns(10);
 
         JLabel lblBottomVision = new JLabel("Bottom Vision Settings");
-        panel.add(lblBottomVision, "2, 6, right, default");
+        panel.add(lblBottomVision, "2, 4, right, default");
                 
                 visionSettings = new JComboBox(new VisionSettingsComboBoxModel(BottomVisionSettings.class));
                 visionSettings.setMaximumRowCount(20);
@@ -96,37 +85,37 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                         reloadWizard = true;
                     }
                 });
-                panel.add(visionSettings, "4, 6, 3, 1, fill, default");
+                panel.add(visionSettings, "4, 4, 3, 1, fill, default");
 
         JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
         lblPreRot.setToolTipText("Pre-rotate default setting for bottom vision. Can be overridden on individual parts.");
-        panel.add(lblPreRot, "2, 8");
+        panel.add(lblPreRot, "2, 6");
 
         preRotCheckbox = new JCheckBox("");
-        panel.add(preRotCheckbox, "4, 8");
+        panel.add(preRotCheckbox, "4, 6");
         
         JLabel lblMaxVisionPasses = new JLabel("Max. vision passes");
         lblMaxVisionPasses.setToolTipText("The maximum number of bottom vision passes performed to get a good fix on the part.");
-        panel.add(lblMaxVisionPasses, "2, 10, right, default");
+        panel.add(lblMaxVisionPasses, "2, 8, right, default");
         
         textFieldMaxVisionPasses = new JTextField();
-        panel.add(textFieldMaxVisionPasses, "4, 10");
+        panel.add(textFieldMaxVisionPasses, "4, 8");
         textFieldMaxVisionPasses.setColumns(10);
         
         JLabel lblMaxLinearOffset = new JLabel("Max. linear offset");
         lblMaxLinearOffset.setToolTipText("The maximum linear part offset accepted as a good fix i.e. where no additional vision pass is needed.");
-        panel.add(lblMaxLinearOffset, "2, 12, right, default");
+        panel.add(lblMaxLinearOffset, "2, 10, right, default");
         
         textFieldMaxLinearOffset = new JTextField();
-        panel.add(textFieldMaxLinearOffset, "4, 12, fill, default");
+        panel.add(textFieldMaxLinearOffset, "4, 10, fill, default");
         textFieldMaxLinearOffset.setColumns(10);
         
         JLabel lblMaxAngularOffset = new JLabel("Max. angular offset");
         lblMaxAngularOffset.setToolTipText("The maximum angular part offset accepted as a good fix i.e. where no additional vision pass is needed.");
-        panel.add(lblMaxAngularOffset, "6, 12, right, default");
+        panel.add(lblMaxAngularOffset, "6, 10, right, default");
         
         textFieldMaxAngularOffset = new JTextField();
-        panel.add(textFieldMaxAngularOffset, "8, 12, fill, default");
+        panel.add(textFieldMaxAngularOffset, "8, 10, fill, default");
         textFieldMaxAngularOffset.setColumns(10);
 
         preRotCheckbox.addActionListener(new ActionListener()
@@ -165,13 +154,10 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         addWrappedBinding(bottomVision, "enabled", enabledCheckbox, "selected");
         addWrappedBinding(bottomVision, "preRotate", preRotCheckbox, "selected");
 
-        addWrappedBinding(bottomVision, "maxSearchDistance", maxSearchDistance, "text", lengthConverter);
-        
         addWrappedBinding(bottomVision, "maxVisionPasses", textFieldMaxVisionPasses, "text", intConverter);
         addWrappedBinding(bottomVision, "maxLinearOffset", textFieldMaxLinearOffset, "text", lengthConverter);
         addWrappedBinding(bottomVision, "maxAngularOffset", textFieldMaxAngularOffset, "text", doubleConverter);
 
-        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxSearchDistance);
         ComponentDecorators.decorateWithAutoSelect(textFieldMaxVisionPasses);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldMaxLinearOffset);
         ComponentDecorators.decorateWithAutoSelect(textFieldMaxAngularOffset);

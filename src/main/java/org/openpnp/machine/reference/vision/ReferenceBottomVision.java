@@ -10,6 +10,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
@@ -66,9 +67,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     @Attribute(required = false)
     protected double testAlignmentAngle = 0.0;
-
-    @Element(required = false)
-    protected Length maxSearchDistance = new Length(2, LengthUnit.Millimeters);
 
     /**
      * Edge detection pixels. These must correspond to the maximum subSampling in stages
@@ -140,7 +138,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         .derive(null, null, null, angle);
                 Location location0 = location1.add(new Location(nt.getMaxPartHeight().getUnits(), 
                         0, 0, nt.getMaxPartHeight().getValue(), 0));
-                Location focus = camera.getFocusProvider().autoFocus(camera, nozzle, nt.getMaxPartDiameter(), location0, location1);
+                Location focus = camera.getFocusProvider().autoFocus(camera, nozzle, nt.getMaxPartDiameterWithTolerance(), location0, location1);
                 Length partHeight = focus.getLengthZ().subtract(location1.getLengthZ());
                 if (partHeight.getValue() <= 0.001) {
                     throw new Exception("Auto focus part height determination failed. Camera seems to have focused on nozzle tip.");
@@ -257,8 +255,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // subtract visionCenterOffset
             offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(wantedAngle));
 
-            Logger.debug("Final offsets {}", offsets);
             displayResult(pipeline, part, offsets, camera, nozzle);
+            offsetsCheck(part, nozzle, offsets);
+
             return new PartAlignment.PartAlignmentOffset(offsets, true);
         }
     }
@@ -295,10 +294,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             }
 
             if (!partSizeCheck(part, bottomVisionSettings, rect, camera) ) {
-                throw new Exception(String.format(
-                        "ReferenceBottomVision (%s): Incorrect part size.",
-                        part.getId() 
-                        ));          	
+                
             }
 
             // Set the angle on the offsets.
@@ -307,16 +303,26 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             // subtract visionCenterOffset
             offsets = offsets.subtract(bottomVisionSettings.getVisionOffset().rotateXy(offsets.getRotation()));
 
-            Logger.debug("Final offsets {}", offsets);
-
             displayResult(pipeline, part, offsets, camera, nozzle);
+            offsetsCheck(part, nozzle, offsets);
 
             return new PartAlignmentOffset(offsets, false);
         }
     }
 
+    protected void offsetsCheck(Part part, Nozzle nozzle, Location offsets) throws Exception {
+        if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) {
+            Length offsetsLength = offsets.getLinearLengthTo(Location.origin);
+            Length maxPickTolerance = ((ReferenceNozzleTip) nozzle.getNozzleTip()).getMaxPickTolerance();
+            if (offsetsLength.compareTo(maxPickTolerance) > 0) {
+                LengthConverter lengthConverter = new LengthConverter(); 
+                throw new Exception("Part "+part.getId()+" bottom vision offsets length "+lengthConverter.convertForward(offsetsLength)
+                +" larger than allowed "+lengthConverter.convertForward(maxPickTolerance));
+            }
+        }
+    }
 
-    private boolean partSizeCheck(Part part, BottomVisionSettings bottomVisionSettings, RotatedRect partRect, Camera camera) {
+    private boolean partSizeCheck(Part part, BottomVisionSettings bottomVisionSettings, RotatedRect partRect, Camera camera) throws Exception {
         // Check if this test needs to be done
         Location partSize = bottomVisionSettings.getPartCheckSize(part, false);
         if (partSize == null) {
@@ -346,28 +352,48 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         double pxMinWidth = pxWidth - widthTolerance;
         double pxMaxHeight = pxHeight + heightTolerance;
         double pxMinHeight = pxHeight - heightTolerance;
-
+        boolean ret;
+        Location upp = camera.getUnitsPerPixelAtZ();
+        LengthConverter lengthConverter = new LengthConverter();
+        String measuredWidth = lengthConverter.convertForward(upp.getLengthX().multiply(measuredSize.width));
+        String measuredHeight = lengthConverter.convertForward(upp.getLengthY().multiply(measuredSize.height));
+        String nominalWidth = lengthConverter.convertForward(partSize.getLengthX());
+        String nominalHeight = lengthConverter.convertForward(partSize.getLengthY());
+        String msg;
         if (measuredSize.width > pxMaxWidth) {
-            Logger.debug("Package pixel width {} : limit {} : measured {}", pxWidth, pxMaxWidth, measuredSize.width);
-            return false;
+            msg = String.format("Part %s width too large: nominal %s, limit %s, measured %s", part.getId(), 
+                    nominalWidth, lengthConverter.convertForward(upp.getLengthX().multiply(pxMaxWidth)), 
+                    measuredWidth);
+            ret = false;
         } else if (measuredSize.width < pxMinWidth) {
-            Logger.debug("Package pixel width {} : limit {} : measured {}", pxWidth, pxMinWidth, measuredSize.width);
-            return false;
+            msg = String.format("Part %s width too small: nominal %s, limit %s, measured %s", part.getId(), 
+                    nominalWidth, lengthConverter.convertForward(upp.getLengthX().multiply(pxMinWidth)), 
+                    measuredWidth);
+            ret = false;
         } else if (measuredSize.height > pxMaxHeight) {
-            Logger.debug("Package pixel height {} : limit {} : measured {}", pxHeight, pxMaxHeight,
-                    measuredSize.height);
-            return false;
+            msg = String.format("Part %s height too large: nominal %s, limit %s, measured %s", part.getId(), 
+                    nominalHeight, lengthConverter.convertForward(upp.getLengthY().multiply(pxMaxHeight)),
+                    measuredHeight);
+            ret = false;
         } else if (measuredSize.height < pxMinHeight) {
-            Logger.debug("Package pixel height {} : limit {} : measured {}", pxHeight, pxMinHeight,
-                    measuredSize.height);
-            return false;
+            msg = String.format("Part %s height too small: nominal %s, limit %s, measured %s", part.getId(), 
+                    nominalHeight, lengthConverter.convertForward(upp.getLengthY().multiply(pxMinHeight)),
+                    measuredHeight);
+            ret = false;
         }
-
-        Logger.debug("Package {} pixel size ok. Width {}, Height {}", part.getId(), measuredSize.width, measuredSize.height);
+        else {
+            msg = String.format("Part %s size ok. Width %s, Height %s", part.getId(), measuredWidth, measuredHeight);
+            ret = true;
+        }
+        Logger.debug(msg);
+        if (! ret) {
+            throw new Exception(msg);
+        }
         return true;
     }
 
     private static void displayResult(CvPipeline pipeline, Part part, Location offsets, Camera camera, Nozzle nozzle) {
+        Logger.debug("Final offsets {}, distance {}", offsets, offsets.getLinearDistanceTo(Location.origin));
         MainFrame mainFrame = MainFrame.get();
         if (mainFrame != null) {
             try {
@@ -396,10 +422,15 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             pipeline.setProperty("footprint", footprint);
             partSize = bottomVisionSettings.getPartCheckSize(nozzle.getPart(), true);
         }
+        // Set alignment parameters.
+        pipeline.setProperty("alignment.center", wantedLocation);
+        pipeline.setProperty("alignment.expectedAngle", wantedLocation.getRotation());
         // Set the background removal properties.
         if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) { 
             ReferenceNozzleTip referenceNozzleTip = (ReferenceNozzleTip) nozzle.getNozzleTip();
-            pipeline.setProperty("MaskCircle.diameter", referenceNozzleTip.getMaxPartDiameter());
+            pipeline.setProperty("alignment.searchDistance", referenceNozzleTip.getMaxPickTolerance()
+                    .multiply(1.2)); // Allow for some tolerance, we will check the result later.
+            pipeline.setProperty("MaskCircle.diameter", referenceNozzleTip.getMaxPartDiameterWithTolerance());
             ReferenceNozzleTipCalibration calibration = referenceNozzleTip.getCalibration();
             if (calibration != null 
                     && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
@@ -418,10 +449,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         Math.min(255, calibration.getBackgroundMaxValue() +  calibration.getBackgroundTolValue()));
             }
         }
-        // Set alignment parameters.
-        pipeline.setProperty("alignment.center", wantedLocation);
-        pipeline.setProperty("alignment.expectedAngle", wantedLocation.getRotation());
-        pipeline.setProperty("alignment.searchDistance", getMaxSearchDistance());
         if (partSize != null) {
             // Add a margin for edge detection.
             Location upp = camera.getUnitsPerPixelAtZ();
@@ -431,12 +458,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                     .add(upp.getLengthY().multiply(edgeDetectionPixels*2)));
         }
         else if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) {
-            // No part size available. Use the maximum diameter, but allow for the max-search distance around the part. 
+            // No part size available. Use the maximum diameter. 
             Length maxPartDiameter = ((ReferenceNozzleTip) nozzle.getNozzleTip()).getMaxPartDiameter();
-            pipeline.setProperty("alignment.maxWidth", maxPartDiameter
-                    .subtract(getMaxSearchDistance().multiply(2)));
-            pipeline.setProperty("alignment.maxHeight", maxPartDiameter
-                    .subtract(getMaxSearchDistance().multiply(2)));
+            pipeline.setProperty("alignment.maxWidth", maxPartDiameter);
+            pipeline.setProperty("alignment.maxHeight", maxPartDiameter);
         }
 
         pipeline.setProperties(pipelineParameterAssignments);
@@ -579,14 +604,6 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         Object oldValue = this.testAlignmentAngle; 
         this.testAlignmentAngle = testAlignmentAngle;
         firePropertyChange("testAlignmentAngle", oldValue, testAlignmentAngle);
-    }
-
-    public Length getMaxSearchDistance() {
-        return maxSearchDistance;
-    }
-
-    public void setMaxSearchDistance(Length maxSearchDistance) {
-        this.maxSearchDistance = maxSearchDistance;
     }
 
     @Override

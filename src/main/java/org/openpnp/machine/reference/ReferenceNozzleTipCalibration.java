@@ -910,7 +910,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         return new Location(LengthUnit.Millimeters, 0, 0, 0, 0);
     }
 
-    private Location findCircle(Nozzle nozzle, Location measureLocation, boolean calibrateCamera) throws Exception {
+    private Location findCircle(ReferenceNozzle nozzle, Location measureLocation, boolean calibrateCamera) throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
         try (CvPipeline pipeline = getPipeline(camera, nozzle, measureLocation)) {
             
@@ -990,21 +990,27 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         }
     }
 
-    private void addBackgroundImage(Camera camera, Nozzle nozzle, BufferedImage bufferedImage, Location location) {
+    private void addBackgroundImage(Camera camera, ReferenceNozzle nozzle, BufferedImage bufferedImage, Location location) {
         if (bufferedImage != null
                 && getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
             Mat image = OpenCvUtils.toMat(bufferedImage);
-            // Blot out the nozzle tip.
-            Point center = VisionUtils.getLocationPixels(camera, location.add(camera.getLocation()));
-            org.opencv.core.Point center2 = new org.opencv.core.Point(center.x, center.y);
-            int radius = (int)Math.ceil(getCalibrationTipDiameter()
-                    .add(getMinimumDetailSize().multiply(2))
-                    .divide(camera.getUnitsPerPixel().getLengthX())
-                    *0.5);
-            Imgproc.circle(image, center2, 
-                    radius, 
-                    FluentCv.colorToScalar(new Color(0, 0, 0)),
-                    Imgproc.FILLED, 8, 0);
+            ReferenceNozzleTip nozzleTip = nozzle.getCalibrationNozzleTip();
+            if (nozzleTip != null) {
+                // Blot out the nozzle tip center part.
+                Point center = VisionUtils.getLocationPixels(camera, location.add(camera.getLocation()));
+                org.opencv.core.Point center2 = new org.opencv.core.Point(center.x, center.y);
+                Length minPartDiameter = nozzleTip.getMinPartDiameterWithTolerance();
+                if (minPartDiameter.compareTo(getCalibrationTipDiameter()) < 0) {
+                    minPartDiameter = getCalibrationTipDiameter();
+                }
+                int radius = (int)Math.ceil(minPartDiameter
+                        .divide(camera.getUnitsPerPixel().getLengthX())
+                        *0.5);
+                Imgproc.circle(image, center2, 
+                        radius, 
+                        FluentCv.colorToScalar(new Color(0, 0, 0)),
+                        Imgproc.FILLED, 8, 0);
+            }
             // Blur.
             int kernelSize = ((int)getMinimumDetailSize()
                     .divide(camera.getUnitsPerPixel().getLengthX()))|1;
@@ -1032,8 +1038,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             if (nozzleTip != null 
                     && backgroundImages.size() > 3) {
                 double t0 = NanosecondTime.getRuntimeSeconds();
-                int maskSq = (int)Math.pow(nozzleTip.getMaxPartDiameter()
-                        .divide(camera.getUnitsPerPixel().getLengthX())*0.5, 2);
+                double maskDiameterPixels = nozzleTip.getMaxPartDiameterWithTolerance()
+                        .divide(camera.getUnitsPerPixel().getLengthX())*0.5;
+                int maskSq = (int)Math.pow(maskDiameterPixels, 2);
                 int rows = backgroundImageRows, cols = backgroundImageCols, ch = backgroundImageChannels;
                 if (getBackgroundCalibrationMethod() == BackgroundCalibrationMethod.BrightnessAndKeyColor) {
                     int histogramHueValue[] = new int[256*256];
