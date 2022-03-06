@@ -25,6 +25,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
@@ -109,6 +110,8 @@ public class PipelinePanel extends JPanel {
         splitPaneStages.setRightComponent(scrollPaneDescription);
         scrollPaneDescription.setMinimumSize(new Dimension(50, 50));
         descriptionTa = new JEditorPane("text/html", "<html/>");
+        descriptionTa.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
+        descriptionTa.setBackground(UIManager.getColor("Panel.background")); //$NON-NLS-1$
         scrollPaneDescription.setViewportView(descriptionTa);
         descriptionTa.setText("");
         descriptionTa.setEditable(false);

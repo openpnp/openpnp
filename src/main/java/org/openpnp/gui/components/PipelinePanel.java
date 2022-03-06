@@ -213,8 +213,8 @@ public abstract class PipelinePanel extends JPanel {
 
     private Object getParameterValue(CvAbstractParameterStage paramStage) {
         if (pipelineParameterAssignments != null 
-                && pipelineParameterAssignments.containsKey(paramStage.getParameterName())) {
-            return pipelineParameterAssignments.get(paramStage.getParameterName());
+                && pipelineParameterAssignments.containsKey(paramStage.parameterName())) {
+            return pipelineParameterAssignments.get(paramStage.parameterName());
         }
         return paramStage.defaultParameterValue();
     }
@@ -227,7 +227,7 @@ public abstract class PipelinePanel extends JPanel {
                 newMap.putAll(this.pipelineParameterAssignments);
             }
             this.pipelineParameterAssignments = newMap;
-            pipelineParameterAssignments.put(paramStage.getParameterName(), value);
+            pipelineParameterAssignments.put(paramStage.parameterName(), value);
             firePropertyChange("pipelineParameterAssignments", null, pipelineParameterAssignments);
             SwingUtilities.invokeLater(() -> previewParameterChangeEffect(paramStage, value));
         }

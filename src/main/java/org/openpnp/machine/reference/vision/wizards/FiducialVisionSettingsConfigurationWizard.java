@@ -218,7 +218,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                         ReferenceFiducialLocator fiducialLocator = ReferenceFiducialLocator.getDefault();
                         if (fiducialLocator.getFiducialVisionSettings() == visionSettings) {
                             // Already the default. Set stock.
-                            pipelinePanel.setPipeline(ReferenceFiducialLocator.createStockPipeline());
+                            pipelinePanel.setPipeline(ReferenceFiducialLocator.createStockPipeline("Default"));
                         }
                         else {
                             pipelinePanel.setPipeline(fiducialLocator.getFiducialVisionSettings().getPipeline().clone());

@@ -559,21 +559,10 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         this.pipeline = pipeline;
     }
 
-    public static CvPipeline createStockPipeline() {
+    public static CvPipeline createStockPipeline(String name) {
         try {
             String xml = IOUtils.toString(ReferenceBottomVision.class
-                    .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
-            return new CvPipeline(xml);
-        }
-        catch (Exception e) {
-            throw new Error(e);
-        }
-    }
-
-    public static CvPipeline createTemplatePipeline() {
-        try {
-            String xml = IOUtils.toString(ReferenceBottomVision.class
-                    .getResource("ReferenceFiducialLocator-TemplatePipeline.xml"));
+                    .getResource("ReferenceFiducialLocator-"+name+"Pipeline.xml"));
             return new CvPipeline(xml);
         }
         catch (Exception e) {
@@ -702,14 +691,15 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
                 partSettingsByPartId = new HashMap<>();
             }
             else { 
-                // Just reassign the stock pipeline.
-                stockVisionSettings.setPipeline(createStockPipeline());
+                // Reassign the stock pipeline.
+                stockVisionSettings.setPipeline(createStockPipeline("Default"));
                 // Add the template pipeline, if missing.
                 AbstractVisionSettings templateFiducialVisionSettings = configuration.getVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_TEMPLATE_ID);
                 if (templateFiducialVisionSettings == null) {
                     templateFiducialVisionSettings = createTemplateFiducialVisionSettings();
                     configuration.addVisionSettings(templateFiducialVisionSettings);
                 }
+                templateFiducialVisionSettings.setPipeline(createStockPipeline("Template"));
                 return;
             }
         }
@@ -778,7 +768,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     }
 
     private FiducialVisionSettings createStockFiducialVisionSettings() {
-        CvPipeline stockPipeline = createStockPipeline();
+        CvPipeline stockPipeline = createStockPipeline("Default");
         return createStockFiducialVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_ID, "- Stock Fiducial Vision Settings -", stockPipeline);
     }
 
@@ -798,7 +788,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     }
 
     private FiducialVisionSettings createTemplateFiducialVisionSettings() {
-        CvPipeline stockPipeline = createTemplatePipeline();
+        CvPipeline stockPipeline = createStockPipeline("Template");
         return createStockFiducialVisionSettings(AbstractVisionSettings.STOCK_FIDUCIAL_TEMPLATE_ID, "- Footprint Fiducial Vision Settings -", stockPipeline);
     }
 

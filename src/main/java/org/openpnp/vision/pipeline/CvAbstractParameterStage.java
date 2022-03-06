@@ -109,7 +109,7 @@ public abstract class CvAbstractParameterStage extends CvStage {
 
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
-        if (getParameterName() == null) {
+        if (parameterName() == null) {
             throw new Exception("Please assign a stable name to the stage. This name will be used as parameter name "
                     + "and should not be changed later, or assigned data will be lost. Names starting with digits are not allowed.");
         }
@@ -126,7 +126,7 @@ public abstract class CvAbstractParameterStage extends CvStage {
         if (stage == null) {
             throw new Exception("Stage \""+stageName+"\" not found");
         }
-        Object value = pipeline.getProperty(getParameterName());
+        Object value = pipeline.getProperty(parameterName());
         if (value == null) {
             value = defaultParameterValue();
         }
@@ -171,7 +171,7 @@ public abstract class CvAbstractParameterStage extends CvStage {
     /**
      * @return The parameter name, which is the stage name, but properly validated. Otherwise null is returned.
      */
-    public String getParameterName() {
+    public String parameterName() {
         if (getName() == null || getName().isEmpty()) {
             return null;
         }

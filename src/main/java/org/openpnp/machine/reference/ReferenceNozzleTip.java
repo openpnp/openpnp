@@ -162,10 +162,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     private boolean templateLocked = false;
 
     @Element(required = false)
+    private Length minPartDiameter = new Length(0, LengthUnit.Millimeters);
+
+    @Element(required = false)
     private Length maxPartDiameter = new Length(20, LengthUnit.Millimeters);
 
     @Element(required = false)
     private Length maxPartHeight = new Length(10, LengthUnit.Millimeters);
+
+    @Element(required = false)
+    protected Length maxPickTolerance = new Length(1, LengthUnit.Millimeters);
 
     @Element(required = false)
     private ReferenceNozzleTipCalibration calibration = new ReferenceNozzleTipCalibration();
@@ -351,6 +357,32 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public void setMaxPartDiameter(Length maxPartDiameter) {
         this.maxPartDiameter = maxPartDiameter;
+    }
+
+    public Length getMinPartDiameter() {
+        return minPartDiameter;
+    }
+
+    public void setMinPartDiameter(Length minPartDiameter) {
+        this.minPartDiameter = minPartDiameter;
+    }
+
+    public Length getMaxPickTolerance() {
+        return maxPickTolerance;
+    }
+
+    public void setMaxPickTolerance(Length maxPickTolerance) {
+        this.maxPickTolerance = maxPickTolerance;
+    }
+
+    public Length getMinPartDiameterWithTolerance() {
+        return getMinPartDiameter()
+                .subtract(getMaxPickTolerance().multiply(2.0));
+    }
+
+    public Length getMaxPartDiameterWithTolerance() {
+        return getMaxPartDiameter()
+                .add(getMaxPickTolerance().multiply(2.0));
     }
 
     public int getPickDwellMilliseconds() {

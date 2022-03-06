@@ -2,6 +2,7 @@ package org.openpnp.vision.pipeline.stages;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -54,10 +55,18 @@ public class MaskHsv extends CvStage {
     @Property(description="Maximum value to be masked.  Note values range from 0 to 255 (inclusive). Setting valueMax less than valueMin will result in no pixels being masked.")
     private int valueMax = 255;
 
+    @Attribute(required = false)
+    @Property(description = "Soft edge of the HSV mask bounding box. If not 0, the mask is computed and applied with gradual impact, creating a more natural result.")
+    private int softEdge = 0;
+
+    @Attribute(required = false)
+    @Property(description = "Soft factor, i.e. how strongly the mask is applied, from 0 ... 1.0.")
+    private double softFactor = 1;
+
     @Attribute(required=false)
     @Property(description="Inverts the selection of pixels to mask.")
     private Boolean invert;
-    
+
     @Attribute(required = false)
     @Property(description = "If set, the mask is returned directly as a grayscale image with the masked area black, the unmasked white. Otherwise the masked area is blackened in the source image.")
     private boolean binaryMask = false;
@@ -132,6 +141,22 @@ public class MaskHsv extends CvStage {
         this.valueMax = valueMax;
     }
 
+    public int getSoftEdge() {
+        return softEdge;
+    }
+
+    public void setSoftEdge(int softEdge) {
+        this.softEdge = softEdge;
+    }
+
+    public double getSoftFactor() {
+        return softFactor;
+    }
+
+    public void setSoftFactor(double softFactor) {
+        this.softFactor = softFactor;
+    }
+
     public Boolean getInvert() {
         return invert;
     }
@@ -162,7 +187,6 @@ public class MaskHsv extends CvStage {
         //each maskHsv and converts any that are in the old format (without an invert flag) to the new format (with an
         //invert flag) correcting hue limits if needed.  This will make the new format backward compatible with old format.
         if (invert == null) {
-            Logger.trace( "Old format found in .xml file, converting to new format..." );
             if (hueMin > hueMax) {
                 Logger.trace( "    Swapping hue limits and setting invert to true." );
                 int temp = hueMax;
@@ -180,10 +204,12 @@ public class MaskHsv extends CvStage {
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         commit();
+        softFactor = Math.max(0, softFactor);
+
         Mat mat = pipeline.getWorkingImage();
-        Mat mask = mat.clone();
         Mat masked = mat.clone();
         Scalar color = FluentCv.colorToScalar(Color.black);
+        Mat mask = mat.clone();
         mask.setTo(color);
         masked.setTo(color);
 
@@ -197,47 +223,124 @@ public class MaskHsv extends CvStage {
         int valueMin = getPossiblePipelinePropertyOverride(this.valueMin, pipeline, propertyName+".valueMin");
         int valueMax = getPossiblePipelinePropertyOverride(this.valueMax, pipeline, propertyName+".valueMax");
 
-        // FCA Change to have the possibility to work inside the interval or outside (when min>max)
-        Scalar min;
-        Scalar max;
-        if (hueMin <= hueMax) {
-            min = new Scalar(hueMin, saturationMin, valueMin);
-            max = new Scalar(hueMax, saturationMax, valueMax);
-            Core.inRange(mat, min, max, mask);
+        if (softEdge > 0 || softFactor < 1) {
+            int cols = mat.cols();
+            int rows = mat.rows();
+            int channels = mat.channels();
+            int linearSize = cols*rows*channels;
+            byte[] pixelSamples = new byte[linearSize]; 
+            byte[] pixelMask = new byte[cols*rows];
+            Arrays.fill(pixelMask, (byte)255);
+            double complementFactor = 1 - softFactor;
+            byte floor = (byte) (complementFactor*255.999);
+            boolean factorOne = softFactor == 1.0;
+            boolean hueAll = (hueMin == 0 && hueMax == 255);
+            int saturationMinE = saturationMin == 0 ? saturationMin - softEdge : saturationMin;
+            int saturationMaxE = saturationMax == 255 ? saturationMax + softEdge : saturationMax;
+            int valueMinE = valueMin == 0 ? valueMin - softEdge : valueMin;
+            int valueMaxE = valueMax == 255 ? valueMax + softEdge : valueMax;
+            int hueMid = hueAll ? 128 : hueMin <= hueMax ? (hueMin + hueMax)/2 : (((256 + hueMin + hueMax)/2)&0xFF);
+            int hueSpan = hueAll ? 128 : Math.max(0, (((hueMax - hueMin)&0xFF) + 1 )/2  - softEdge/2);
+            int saturationMid = (saturationMinE + saturationMaxE)/2;
+            int saturationSpan = Math.max(0, (saturationMaxE - saturationMinE + 1)/2 - softEdge/2);
+            int valueMid = (valueMinE + valueMaxE)/2;
+            int valueSpan =  Math.max(0, (valueMaxE - valueMinE + 1)/2 - softEdge/2);
+            int softEdgeSq = softEdge*softEdge;
+
+            mat.get(0, 0, pixelSamples);
+            for (int i = 0, j = 0; i < linearSize; i += channels, j++) {
+                int hue = Byte.toUnsignedInt(pixelSamples[i]);
+                int saturation = Byte.toUnsignedInt(pixelSamples[i+1]);
+                int value = Byte.toUnsignedInt(pixelSamples[i+2]);
+                int hueDS = Math.abs(hue - hueMid);
+                int hueD = Math.max(0, (hueDS < 128 ? hueDS : 256 - hueDS) - hueSpan);
+                int saturationD = Math.max(0, Math.abs(saturation - saturationMid) - saturationSpan);
+                int valueD = Math.max(0, Math.abs(value - valueMid) - valueSpan);
+                int sq = hueD*hueD + saturationD*saturationD + valueD*valueD;
+                if (sq >= softEdgeSq || sq == 0) {
+                    if (sq == 0 ^ invert) {
+                        // Inside mask.
+                        if (factorOne) {
+                            hue = saturation = value = 0;
+                        }
+                        else {
+                            //saturation = (byte)(saturation*complementFactor);
+                            value = (byte)(value*complementFactor);
+                        }
+                        pixelMask[j] = floor;
+                    }
+                }
+                else {
+                    // Inside soft edge.
+                    double d = //Math.sqrt(sq)/softEdge;
+                            Math.cos(Math.PI*Math.sqrt(sq)/softEdge)*-0.5+0.5;
+                    if (invert) {
+                        d = 1 - d;
+                    }
+                    double f = softFactor*d + complementFactor;
+                    //saturation = (int) (value*f);
+                    value = (int) (value*f);
+                    pixelMask[j] = (byte) (255.999*f);
+                }
+                pixelSamples[i] = (byte) hue;
+                pixelSamples[i+1] = (byte) saturation;
+                pixelSamples[i+2] = (byte) value;
+            }
+            if (binaryMask) {
+                masked.release();
+                mask.release();
+                mask = new Mat(rows, cols, CvType.CV_8U);
+                mask.put(0, 0, pixelMask);
+                return new Result(mask, ColorSpace.Gray);
+            }
+            else {
+                mask.release();
+                masked.put(0, 0, pixelSamples);
+                return new Result(masked);
+            }
         }
         else {
-            //Hue range wraps past 255 back through 0 so the mask needs to include the range from hueMin
-            //to 255 in addition to the range from 0 to hueMax.  To accomplish this, a mask for each separate
-            //range is created and then ORed together to form the actual mask.
-            min = new Scalar(hueMin, saturationMin, valueMin);
-            max = new Scalar(255, saturationMax, valueMax);
-            Core.inRange(mat, min, max, mask);
-            
-            Mat mask2 = mask.clone();
-            mask2.setTo(color);
-            min = new Scalar(0, saturationMin, valueMin);
-            max = new Scalar(hueMax, saturationMax, valueMax);
-            Core.inRange(mat, min, max, mask2);
-          
-            Core.bitwise_or(mask, mask2, mask);
-            mask2.release();
-        }
+            // Change to have the possibility to work inside the interval or outside (when min>max)
+            Scalar min;
+            Scalar max;
+            if (hueMin <= hueMax) {
+                min = new Scalar(hueMin, saturationMin, valueMin);
+                max = new Scalar(hueMax, saturationMax, valueMax);
+                Core.inRange(mat, min, max, mask);
+            }
+            else {
+                //Hue range wraps past 255 back through 0 so the mask needs to include the range from hueMin
+                //to 255 in addition to the range from 0 to hueMax.  To accomplish this, a mask for each separate
+                //range is created and then ORed together to form the actual mask.
+                min = new Scalar(hueMin, saturationMin, valueMin);
+                max = new Scalar(255, saturationMax, valueMax);
+                Core.inRange(mat, min, max, mask);
 
-        //The mask is normally inverted because it is used to copy the unmasked portions of the
-        //image into the final result.
-        if (!invert) {
-            Core.bitwise_not(mask, mask);
-        }
+                Mat mask2 = mask.clone();
+                mask2.setTo(color);
+                min = new Scalar(0, saturationMin, valueMin);
+                max = new Scalar(hueMax, saturationMax, valueMax);
+                Core.inRange(mat, min, max, mask2);
 
-        double fractionActuallyMasked = 1.0 - Core.countNonZero(mask) / (double) ( mat.rows() * mat.cols() ) ;
-        Logger.trace( "Fraction actually masked = " + fractionActuallyMasked );
-        if (binaryMask) {
-            masked.release();
-            return new Result(mask, ColorSpace.Gray);
-        } else {
-            mat.copyTo(masked, mask);
-            mask.release();
-            return new Result(masked);
+                Core.bitwise_or(mask, mask2, mask);
+                mask2.release();
+            }
+
+            //The mask is normally inverted because it is used to copy the unmasked portions of the
+            //image into the final result.
+            if (!invert) {
+                Core.bitwise_not(mask, mask);
+            }
+            double fractionActuallyMasked = 1.0 - Core.countNonZero(mask) / (double) ( mat.rows() * mat.cols() ) ;
+            Logger.trace( "Fraction actually masked = " + fractionActuallyMasked );
+            if (binaryMask) {
+                masked.release();
+                return new Result(mask, ColorSpace.Gray);
+            } else {
+                mat.copyTo(masked, mask);
+                mask.release();
+                return new Result(masked);
+            }
         }
     }
 

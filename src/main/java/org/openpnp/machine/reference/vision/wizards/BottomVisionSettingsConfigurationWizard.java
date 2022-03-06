@@ -267,7 +267,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
                         if (bottomVision.getBottomVisionSettings() == visionSettings) {
                             // Already the default. Set stock.
-                            pipelinePanel.setPipeline(ReferenceBottomVision.createStockPipeline());
+                            pipelinePanel.setPipeline(ReferenceBottomVision.createStockPipeline("Default"));
                         }
                         else {
                             pipelinePanel.setPipeline(bottomVision.getBottomVisionSettings().getPipeline().clone());
@@ -461,16 +461,16 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-        ReferenceBottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, nozzle, visionSettings);
+        // Nominal position of the part over camera center
+        double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
+                .convertReverse(testAlignmentAngle.getText());
+        Location location = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), 
+                camera,
+                nozzle, angle);
+        bottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, nozzle, location, visionSettings);
 
         if (edit) {
-            // Nominal position of the part over camera center
-            double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
-                    .convertReverse(testAlignmentAngle.getText());
-            Location location = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), 
-                    camera,
-                    nozzle, angle);
-
+            
             pipelinePanel.openPipelineEditor("Bottom Vision Pipeline", pipeline, 
                     "move nozzle "+nozzle.getName()+" to the camera alignment location before editing the pipeline", 
                     nozzle, location);
