@@ -33,7 +33,7 @@ Rect-linear symmetry does not imply a rectangular contact arrangement, parts cou
 
 ## Nozzle Tip Configuration
 
-As a prerequisite for Bottom Vision, you need to configure two (new) settings on each nozzle tip: 
+As a prerequisite, you need to configure two (new) settings on each nozzle tip: 
 
 ![Max. Pick Tolerance](https://user-images.githubusercontent.com/9963310/156925117-1c2fbd35-3003-4354-96bd-6481b9920342.png)
 
