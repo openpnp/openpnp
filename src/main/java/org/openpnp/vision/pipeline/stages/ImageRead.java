@@ -3,13 +3,8 @@ package org.openpnp.vision.pipeline.stages;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.Rect;
-import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
-import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.ImageUtils;
 import org.openpnp.util.OpenCvUtils;
@@ -69,48 +64,22 @@ public class ImageRead extends CvStage {
         if (!file.exists()) {
             return null;
         }
-        Mat image = Imgcodecs.imread(file.getAbsolutePath());
+        Mat image;
         if (handleAsCaptured) {
             // Try to emulate camera capturing by adapting the read image to the camera resolution and units per pixel.
             Camera camera  = (Camera) pipeline.getProperty("camera");
-            Location upp = ImageUtils.getUnitsPerPixel(file);
-            double fx;
-            double fy;
-            if (upp == null) {
-                // No UPP given, all we can do is resize to camera dimensions.
-                fx = fy = Math.min(((double)camera.getWidth())/image.cols(), ((double)camera.getHeight())/image.rows());
-            }
-            else {
-                // Scale according to UPP from file against that of the camera.
-                Location uppCamera = camera.getUnitsPerPixelAtZ();
-                fx = upp.getLengthX().divide(uppCamera.getLengthX());
-                fy = upp.getLengthY().divide(uppCamera.getLengthY());
-            }
-            Imgproc.resize(image, image, new Size(), fx, fy, Imgproc.INTER_LANCZOS4);
-            int bx = Math.max(0, camera.getWidth() - image.cols())/2;
-            int by = Math.max(0, camera.getHeight() - image.rows())/2;
-            if (bx > 0 || by > 0) {
-                Core.copyMakeBorder(image, image, by, by, bx, bx, Core.BORDER_CONSTANT);
-            }
-            int cx = Math.max(0, image.cols() - camera.getWidth())/2;
-            int cy = Math.max(0, image.rows() - camera.getHeight())/2;
-            if (cx > 0 || cy > 0) {
-                Rect roi = new Rect(
-                        cx,
-                        cy,
-                        camera.getWidth(),
-                        camera.getHeight());
-                Mat tmp = new Mat(image, roi);
-                image.release();
-                image = tmp;
-            }
+            image = ImageUtils.emulateCameraCapture(camera, file);
             // Register as captured.
             BufferedImage bufferedImage = OpenCvUtils.toBufferedImage(image);
             pipeline.setLastCapturedImage(bufferedImage);
+        }
+        else  {
+            image = Imgcodecs.imread(file.getAbsolutePath());
         }
         if (image.channels() == 1) {
             colorSpace = ColorSpace.Gray;
         }
         return new Result(image, colorSpace);
     }
+
 }

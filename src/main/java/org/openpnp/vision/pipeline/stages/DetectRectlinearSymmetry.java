@@ -46,7 +46,7 @@ import org.simpleframework.xml.Attribute;
 public class DetectRectlinearSymmetry extends CvStage {
 
     @Attribute(required = false)
-    @Property(description = "Expected angle of the detected rectangular subject.")
+    @Property(description = "Expected angle of the subject to be detected.")
     private double expectedAngle = 0;
 
     @Attribute(required = false)
@@ -58,25 +58,25 @@ public class DetectRectlinearSymmetry extends CvStage {
     private double searchAngle = 45;
 
     @Attribute(required = false)
-    @Property(description = "Maximum rectangular width of the detected object.")
+    @Property(description = "Maximum cross-section width of the subject to be detected.")
     private double maxWidth = 100;
 
     @Attribute(required = false)
-    @Property(description = "Maximum rectangular height of the detected object.")
+    @Property(description = "Maximum cross-section height of the subject to be detected.")
     private double maxHeight = 100;
 
     @Attribute(required = false)
-    @Property(description = "Tells the stage whether the part is left/right-symmetric (in the sense as seen at 0° subject rotation). "
+    @Property(description = "Tells the stage whether the subject is left/right-symmetric (in the sense as seen at 0° subject rotation). "
             + "According to this switch, the stage either takes the <strong>symmetricFunction</strong>, or the <strong>asymmetricFunction</strong>.")
     private boolean symmetricLeftRight = true;
 
     @Attribute(required = false)
-    @Property(description = "Tells the stage whether the part is upper/lower-symmetric (in the sense as as seen at 0° subject rotation). "
+    @Property(description = "Tells the stage whether the subject is upper/lower-symmetric (in the sense as as seen at 0° subject rotation). "
             + "According to this switch, the stage either takes the <strong>symmetricFunction</strong>, or the <strong>asymmetricFunction</strong>.")
     private boolean symmetricUpperLower = true;
 
     @Attribute(required = false)
-    @Property(description = "Determines how the cross-section is evaluated for <strong>symmetric</strong> parts.<br/><ul>"
+    @Property(description = "Determines how the cross-section is evaluated for <strong>symmetric</strong> subjects.<br/><ul>"
             + "<li><strong>FullSymmetry</strong> looks for full inner and outline symmetry. Use for truly symmetric subjects and best precision.</li>"
             + "<li><strong>EdgeSymmetry</strong> looks for full inner and outline symmetry of edges. Use for partially "
             + "symmetric subjects, where some, but not all features are present on both sides, or where shades differ.</li>"
@@ -90,7 +90,7 @@ public class DetectRectlinearSymmetry extends CvStage {
     private SymmetryFunction symmetricFunction = SymmetryFunction.FullSymmetry;
 
     @Attribute(required = false)
-    @Property(description = "Determines how the cross-section is evaluated for <strong>asymmetric</strong> parts.<br/><ul>"
+    @Property(description = "Determines how the cross-section is evaluated for <strong>asymmetric</strong> subjects.<br/><ul>"
             + "<li><strong>FullSymmetry</strong> looks for full inner and outline symmetry. Use for truly symmetric subjects and best precision.</li>"
             + "<li><strong>EdgeSymmetry</strong> looks for full inner and outline symmetry of edges. Use for partially "
             + "symmetric subjects, where some, but not all features are present on both sides, or where shades differ.</li>"
@@ -131,20 +131,21 @@ public class DetectRectlinearSymmetry extends CvStage {
     private double gamma = 2.5;
 
     @Attribute(required = false)
-    @Property(description = "When the <strong>OutlineSymmetryMasked</strong> function is used, only pixels with luminance greater"
+    @Property(description = "When the <strong>OutlineSymmetryMasked</strong> function is used, only pixels with luminance greater "
             + "than the <strong>threshold</strong> are considered when determining the outline of the part.")
     private int threshold = 128;
 
     @Attribute(required = false)
-    @Property(description = "When the <strong>OutlineSymmetryMasked</strong> function is used, pixels are masked by the <strong>threshold</strong> property. "
-            + "A cross-section pixel count over these masked pixels is then determined. A cross-section bin only counts as \"detected\" when "
-            + "the pixel count is larger than <strong>minFeatureSize</strong>.<br/>"
+    @Property(description = "When the <strong>OutlineSymmetryMasked</strong> function is used, pixels are masked by the "
+            + "<strong>threshold</strong> property. A cross-section pixel count over these masked pixels is then determined. "
+            + "A cross-section bin only counts as \"detected\" when the pixel count is larger than "
+            + "<strong>minFeatureSize</strong>.<br/>"
             + "This is used to remove masking imperfections, i.e. image specks and impurities up to a certain size and frequency.")
     private double minFeatureSize = 40;
 
     @Attribute(required = false)
-    @Property(description = "Property name as controlled by the vision operation using this pipeline.<br/>"
-            + "If set, these will override the properties configured here.")
+    @Property(description = "determines the pipeline property name under which this stage is controlled by the vision operation. "
+            + "If set, these will override some of the properties configured here. Defaults to \"alignment\" for Bottom Vision.")
     private String propertyName = "alignment";
 
     @Attribute(required = false)
