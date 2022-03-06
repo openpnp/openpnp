@@ -72,6 +72,8 @@ Unfortunately, some parts just aren't symmetric and never will be. For those, th
 3. Adjust the **Threshold** to capture the span of the asymmetric dimension.
 4. Optionally adjust the **Min. Detail Size** to suppress artifacts that are not relevant.
 
+# Advanced Use and Authoring
+
 ## Automatic Bottom Vision Pipeline Control
 
 The Bottom Vision pipeline is parametrized by OpenPnP, i.e. some stage properties are controlled from the calling function:
