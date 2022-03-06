@@ -11,6 +11,8 @@ This page links to detailed instructions for some tasks around Computer Vision.
 
 * [[DetectRectlinearSymmetry]] searched the image for Rec-linear Symmetry. It can be used to detect left-right and/or upper/lower symmetric things, obviously electronic parts. The stage is very robust and self-tuning. 
 
+* [[MaskHsv]] 
+
 ## Using New Stock Pipelines
 
 OpenPnP ships with stock pipelines that you can use or adapt to your liking. When you update OpenPnP the newest stock pipeline is made available, but it is not automatically replacing your pipelines, as this would likely break your adaptations, of course. Therefore, if you want to upgrade to the newest stock pipeline, and replace yours, it takes a few steps. This is explained for the Bottom Vision pipeline here, but it is similar with other vision settings. 
