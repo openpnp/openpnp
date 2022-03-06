@@ -2,15 +2,18 @@ import java.io.File;
 
 import org.junit.jupiter.api.Test;
 import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Configurator;
@@ -53,7 +56,12 @@ public class ReferenceBottomVisionTest {
         ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
         NullDriver driver = (NullDriver) ((ReferenceMachine) machine).getDefaultDriver();
         driver.setFeedRateMmPerMinute(0);
-        
+
+        // Set nozzle tip pick tolerances for large offsets.
+        for (NozzleTip tip : Configuration.get().getMachine().getNozzleTips()) {
+            ((ReferenceNozzleTip) tip).setMaxPickTolerance(new Length(3, LengthUnit.Millimeters));
+        }
+
         camera.setErrorOffsets(error);
         machine.setEnabled(true);
         machine.execute(() -> {
