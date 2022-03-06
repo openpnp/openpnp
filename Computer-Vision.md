@@ -4,6 +4,13 @@ Computer Vision is used throughout OpenPnP to detect exactly where things are in
 
 This page links to detailed instructions for some tasks around Computer Vision. 
 
+
+# Stages
+
+* [[DetectCircularSymmetry]] searched the image for Circular Symmetry. It can be used to detect round things, regardless of their color, brightness, contrast, even if sharp edges are absent. The stage is very robust and self-tuning. 
+
+* [[DetectRectlinearSymmetry]] searched the image for Rec-linear Symmetry. It can be used to detect left-right and/or upper/lower symmetric things, obviously electronic parts. The stage is very robust and self-tuning. 
+
 ## Using New Stock Pipelines
 
 OpenPnP ships with stock pipelines that you can use or adapt to your liking. When you update OpenPnP the newest stock pipeline is made available, but it is not automatically replacing your pipelines, as this would likely break your adaptations, of course. Therefore, if you want to upgrade to the newest stock pipeline, and replace yours, it takes a few steps. This is explained for the Bottom Vision pipeline here, but it is similar with other vision settings. 
@@ -38,12 +45,6 @@ The usage of the Pipeline Editor UI in general is explained on the [[CvPipeline]
 # Bottom Vision Background Removal
 
 OpenPnP can automatically calibrate the background (with empty nozzle tip) for bottom vision background removal. See the [[Nozzle Tip Background Calibration]] page.
-
-# Stages
-
-* [[DetectCircularSymmetry]] searched the image for Circular Symmetry. It can be used to detect round things, regardless of their color, brightness, contrast, even if sharp edges are absent. The stage is very robust and self-tuning. 
-
-
 
 ___
 
