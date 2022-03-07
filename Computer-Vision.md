@@ -13,6 +13,8 @@ This page links to detailed instructions for some tasks around Computer Vision.
 
 * [[MaskHsv]] suppresses certain ranges of colors in the image. It is typically used for "green-screening" in bottom vision or for the [[BlindsFeeder]].
 
+* [[ImageRead]] reads an image into the pipeline. It can be used as a template, or to simulate a captured image for testing.
+
 ## Using New Stock Pipelines
 
 OpenPnP ships with stock pipelines that you can use or adapt to your liking. When you update OpenPnP the newest stock pipeline is made available, but it is not automatically replacing your pipelines, as this would likely break your adaptations, of course. Therefore, if you want to upgrade to the newest stock pipeline, and replace yours, it takes a few steps. This is explained for the Bottom Vision pipeline here, but it is similar with other vision settings. 
