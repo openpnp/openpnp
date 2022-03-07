@@ -12,4 +12,4 @@ To facilitate testing with pre-captured images, which may come from other users/
 
 Images are scaled, cropped and/or extended with black borders, as needed. 
 
-The Units per Pixel information is given in a `upp.txt` file which must reside side-by-side with the image file. The `upp.txt` simply contains two millimeter values, separated by a space. This is the convention, as adopted in the [openpnp-test-images](https://github.com/openpnp/openpnp-test-images) repository.
+The Units per Pixel information is given in a `upp.txt` file which must reside side-by-side with the image file. The `upp.txt` simply contains the horizontal (X) and vertical (Y) UPP millimeter values, separated by a space. This is the convention, as adopted in the [openpnp-test-images](https://github.com/openpnp/openpnp-test-images) repository for user test images.
