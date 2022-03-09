@@ -144,17 +144,17 @@ public class DetectRectlinearSymmetry extends CvStage {
     private double minFeatureSize = 40;
 
     @Attribute(required = false)
-    @Property(description = "determines the pipeline property name under which this stage is controlled by the vision operation. "
-            + "If set, these will override some of the properties configured here. Defaults to \"alignment\" for Bottom Vision.")
-    private String propertyName = "alignment";
-
-    @Attribute(required = false)
     @Property(description = "Display the detection with cross-hairs and bounds.")
     private boolean diagnostics = false;
 
     @Attribute(required = false)
     @Property(description = "Overlay a diagnostic map indicating the angular reclinear contrast and rectlinear cross-section.")
     private boolean diagnosticsMap = false;
+
+    @Attribute(required = false)
+    @Property(description = "determines the pipeline property name under which this stage is controlled by the vision operation. "
+            + "If set, these will override some of the properties configured here. Use \"DetectRectlinearSymmetry\" for default control.")
+    private String propertyName = "DetectRectlinearSymmetry";
 
 
     public double getExpectedAngle() {
@@ -393,8 +393,14 @@ public class DetectRectlinearSymmetry extends CvStage {
         int threshold = getThreshold();
         boolean symmetricLeftRight = isSymmetricLeftRight();
         boolean symmetricUpperLower = isSymmetricUpperLower();
+        int subSampling = getSubSampling();
+        int superSampling = getSuperSampling();
 
         if (!propertyName.isEmpty()) {
+            if (propertyName.equals("alignment")) {
+                // legacy upgrade.
+                propertyName = "DetectRectlinearSymmetry";
+            }
 
             center = getPossiblePipelinePropertyOverride(center, pipeline, 
                     propertyName + ".center", Point.class, org.opencv.core.Point.class, 
@@ -426,6 +432,12 @@ public class DetectRectlinearSymmetry extends CvStage {
 
             symmetricUpperLower = getPossiblePipelinePropertyOverride(symmetricUpperLower, pipeline, 
                     propertyName + ".symmetricUpperLower");
+
+            subSampling = getPossiblePipelinePropertyOverride(subSampling, pipeline, 
+                    propertyName + ".subSampling", Integer.class, Double.class, Length.class);
+
+            superSampling = getPossiblePipelinePropertyOverride(superSampling, pipeline, 
+                    propertyName + ".superSampling", Integer.class, Double.class, Length.class);
         }
 
         RotatedRect rect = findReclinearSymmetry(mat, (int)center.x, (int)center.y, expectedAngle, 

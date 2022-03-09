@@ -423,18 +423,19 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             partSize = bottomVisionSettings.getPartCheckSize(nozzle.getPart(), true);
         }
         // Set alignment parameters.
-        pipeline.setProperty("alignment.center", wantedLocation);
-        pipeline.setProperty("alignment.expectedAngle", wantedLocation.getRotation());
+        pipeline.setProperty("DetectRectlinearSymmetry.center", wantedLocation);
+        pipeline.setProperty("DetectRectlinearSymmetry.expectedAngle", wantedLocation.getRotation());
         // Set the background removal properties.
         if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) { 
             ReferenceNozzleTip referenceNozzleTip = (ReferenceNozzleTip) nozzle.getNozzleTip();
-            pipeline.setProperty("alignment.searchDistance", referenceNozzleTip.getMaxPickTolerance()
+            pipeline.setProperty("DetectRectlinearSymmetry.searchDistance", referenceNozzleTip.getMaxPickTolerance()
                     .multiply(1.2)); // Allow for some tolerance, we will check the result later.
             pipeline.setProperty("MaskCircle.diameter", referenceNozzleTip.getMaxPartDiameterWithTolerance());
             ReferenceNozzleTipCalibration calibration = referenceNozzleTip.getCalibration();
             if (calibration != null 
                     && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
                 pipeline.setProperty("BlurGaussian.kernelSize", calibration.getMinimumDetailSize());
+                pipeline.setProperty("DetectRectlinearSymmetry.subSampling", calibration.getMinimumDetailSize());
                 pipeline.setProperty("MaskHsv.hueMin", 
                         Math.max(0, calibration.getBackgroundMinHue() - calibration.getBackgroundTolHue()));
                 pipeline.setProperty("MaskHsv.hueMax", 
@@ -452,16 +453,16 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
         if (partSize != null) {
             // Add a margin for edge detection.
             Location upp = camera.getUnitsPerPixelAtZ();
-            pipeline.setProperty("alignment.maxWidth", partSize.getLengthX()
+            pipeline.setProperty("DetectRectlinearSymmetry.maxWidth", partSize.getLengthX()
                     .add(upp.getLengthX().multiply(edgeDetectionPixels*2)));
-            pipeline.setProperty("alignment.maxHeight", partSize.getLengthY()
+            pipeline.setProperty("DetectRectlinearSymmetry.maxHeight", partSize.getLengthY()
                     .add(upp.getLengthY().multiply(edgeDetectionPixels*2)));
         }
         else if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) {
             // No part size available. Use the maximum diameter. 
             Length maxPartDiameter = ((ReferenceNozzleTip) nozzle.getNozzleTip()).getMaxPartDiameter();
-            pipeline.setProperty("alignment.maxWidth", maxPartDiameter);
-            pipeline.setProperty("alignment.maxHeight", maxPartDiameter);
+            pipeline.setProperty("DetectRectlinearSymmetry.maxWidth", maxPartDiameter);
+            pipeline.setProperty("DetectRectlinearSymmetry.maxHeight", maxPartDiameter);
         }
 
         pipeline.setProperties(pipelineParameterAssignments);
