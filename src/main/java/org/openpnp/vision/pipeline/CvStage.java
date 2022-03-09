@@ -4,13 +4,16 @@ import java.awt.Image;
 import java.beans.BeanDescriptor;
 import java.beans.BeanInfo;
 import java.beans.EventSetDescriptor;
+import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.opencv.core.Mat;
 import org.openpnp.model.Area;
@@ -34,7 +37,9 @@ public abstract class CvStage {
 
     @Attribute(required = false)
     private boolean enabled = true;
-    
+
+    private Map<String, Object> propertyOverrides;
+
     /**
      * Perform an operation in a pipeline. Typical implementations will call
      * CvPipeline#getWorkingImage(), perform some type of operation on the image and will return a
@@ -52,6 +57,10 @@ public abstract class CvStage {
      */
     public abstract Result process(CvPipeline pipeline) throws Exception;
 
+    void processPrepare(CvPipeline cvPipeline) {
+        propertyOverrides = new HashMap<>();
+    }
+
     public String getName() {
         return name;
     }
@@ -66,6 +75,10 @@ public abstract class CvStage {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    private Object getPropertyOverride(String name) {
+        return propertyOverrides == null ? null : propertyOverrides.get(name);
     }
 
     public String getCategory() {
@@ -113,7 +126,7 @@ public abstract class CvStage {
      * @param propertyName
      * @return A declaration sequence index for the given field name. It is used for sorting the properties in the order of declaration.
      */
-    public int getPropertySequence(String propertyName) {
+    private int getPropertySequence(String propertyName) {
         int index = 1000000;
         Class<?> cls = getClass();
         while (cls != null) {
@@ -180,7 +193,21 @@ public abstract class CvStage {
         public PropertyDescriptor[] getPropertyDescriptors() {
             PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
             for (PropertyDescriptor pd : pds) {
-                pd.setShortDescription(CvStage.this.getDescription(pd.getName()));
+                String propertyName = pd.getName();
+                Object overrideProperty = getPropertyOverride(propertyName);
+                String description = CvStage.this.getDescription(propertyName);
+                if (overrideProperty != null) {
+                    try {
+                        pd.setReadMethod(null);
+                        pd.setWriteMethod(null);
+                    }
+                    catch (IntrospectionException e) {
+                    }
+                    description = "<strong color=\"red\">Controlled by pipeline caller: "+propertyName+"="+overrideProperty+"</strong>"
+                            + "<br/><br/>"
+                            +description;
+                }
+                pd.setShortDescription(description);
             }
             // Sort by declaration sequence. 
             Arrays.sort(pds, new Comparator<PropertyDescriptor>() {
@@ -446,7 +473,7 @@ public abstract class CvStage {
      * 
      * @param parameter - the generic parameter value to be possibly overridden
      * @param pipeline - the pipeline with the overriding property
-     * @param propertyName - the name of the overriding property
+     * @param pipelinePropertyName - the name of the overriding pipeline property
      * @param acceptablePropertyTypes - Zero or more acceptable types for the overriding property, 
      * if none are specified, the only acceptable type is the same type as the input parameter
      * @return the overridden parameter value if a pipeline property override was found, otherwise 
@@ -455,62 +482,78 @@ public abstract class CvStage {
      * could not be converted to the type of the input parameter
      */
     @SuppressWarnings("unchecked")
-    public static <T> T getPossiblePipelinePropertyOverride(T parameter, CvPipeline pipeline, 
-            String propertyName, Class<?>... acceptablePropertyTypes) throws Exception {
-        Object propertyObject = pipeline.getProperty(propertyName);
-        if (propertyObject == null) {
+    public <T> T getPossiblePipelinePropertyOverride(T parameter, String stagePropertyName, CvPipeline pipeline, 
+            String pipelinePropertyName, Class<?>... acceptablePropertyTypes) throws Exception {
+        Object pipelineProperty = pipeline.getProperty(pipelinePropertyName);
+        if (pipelineProperty == null) {
             return parameter;
         }
+        else {
+            
+        }
+        T stageProperty = getConvertedPipelineProperty(parameter, pipeline, pipelinePropertyName,
+                pipelineProperty, acceptablePropertyTypes);
+        recordPropertyOverride(stagePropertyName, stageProperty);
+        return stageProperty;
+    }
+
+    private void recordPropertyOverride(String stagePropertyName, Object stageProperty) {
+        propertyOverrides .put(stagePropertyName, stageProperty);
+    }
+
+    private <T> T getConvertedPipelineProperty(T parameter, CvPipeline pipeline,
+            String pipelinePropertyName, Object pipelineProperty, Class<?>... acceptablePropertyTypes)
+            throws Exception {
         if (acceptablePropertyTypes.length == 0) {
             acceptablePropertyTypes = new Class<?>[] {parameter.getClass()};
         }
         Camera camera = (Camera) pipeline.getProperty("camera");
         String acceptableTypeList = "";
         for (Class<?> acceptablePropertyClass : acceptablePropertyTypes) {
-            if (acceptablePropertyClass.isInstance(propertyObject)) {
-                if (parameter.getClass().isInstance(propertyObject)) {
+            if (acceptablePropertyClass.isInstance(pipelineProperty)) {
+                if (parameter.getClass().isInstance(pipelineProperty)) {
                     // No conversion needed.
-                    return (T) propertyObject;
+                    return (T) pipelineProperty;
                 }
                 else if (acceptablePropertyClass == Double.class) {
                     if (parameter instanceof Integer) {
-                        return (T) (Integer) ((Long) Math.round((Double) propertyObject)).intValue();
+                        return (T) (Integer) ((Long) Math.round((Double) pipelineProperty)).intValue();
                     }
                     if (parameter instanceof Long) {
-                        return (T) (Long) Math.round((Double) propertyObject);
+                        return (T) (Long) Math.round((Double) pipelineProperty);
                     }
                 }
                 else if (acceptablePropertyClass == Integer.class) {
                     if (parameter instanceof Double) {
-                        return (T) (Double) ((Integer) propertyObject).doubleValue();
+                        return (T) (Double) ((Integer) pipelineProperty).doubleValue();
                     }
                     if (parameter instanceof Long) {
-                        return (T) (Long) ((Integer) propertyObject).longValue();
+                        return (T) (Long) ((Integer) pipelineProperty).longValue();
                     }
                 }
                 else if (acceptablePropertyClass == Long.class) {
                     if (parameter instanceof Double) {
-                        return (T) (Double) ((Long) propertyObject).doubleValue();
+                        return (T) (Double) ((Long) pipelineProperty).doubleValue();
                     }
                     if (parameter instanceof Integer) {
-                        return (T) (Integer) ((Long) propertyObject).intValue();
+                        return (T) (Integer) ((Long) pipelineProperty).intValue();
                     }
                 }
                 else if (acceptablePropertyClass == org.opencv.core.Point.class) {
                     if (parameter instanceof org.openpnp.model.Point) {
-                        return (T) org.openpnp.model.Point.fromOpencv((org.opencv.core.Point) propertyObject);
+                        return (T) org.openpnp.model.Point.fromOpencv((org.opencv.core.Point) pipelineProperty);
                     }
                 }
                 else if (acceptablePropertyClass == org.openpnp.model.Point.class) {
                     if (parameter instanceof org.opencv.core.Point) {
-                        return (T) ((org.openpnp.model.Point) propertyObject).toOpencv();
+                        return (T) ((org.openpnp.model.Point) pipelineProperty).toOpencv();
                     }
                 }
                 else if (acceptablePropertyClass == Area.class) {
                     if (camera == null) {
                         throw new Exception("Unable to convert to pixels because pipeline property \"camera\" is not set");
                     }
-                    double p = VisionUtils.toPixels((Area) propertyObject, camera);
+                    double p = VisionUtils.toPixels((Area) pipelineProperty, camera);
                     if (parameter instanceof Double) {
                         return (T) (Double) p;
                     }
@@ -525,7 +568,7 @@ public abstract class CvStage {
                     if (camera == null) {
                         throw new Exception("Unable to convert to pixels because pipeline property \"camera\" is not set");
                     }
-                    double p = VisionUtils.toPixels((Length) propertyObject, camera);
+                    double p = VisionUtils.toPixels((Length) pipelineProperty, camera);
                     if (parameter instanceof Double) {
                         return (T) (Double) p;
                     }
@@ -540,7 +583,7 @@ public abstract class CvStage {
                     if (camera == null) {
                         throw new Exception("Unable to convert to pixels because pipeline property \"camera\" is not set");
                     }
-                    org.openpnp.model.Point p = VisionUtils.getLocationPixels(camera, (Location) propertyObject);
+                    org.openpnp.model.Point p = VisionUtils.getLocationPixels(camera, (Location) pipelineProperty);
                     if (parameter instanceof org.opencv.core.Point) {
                         return (T) new org.opencv.core.Point(p.x, p.y);
                     }
@@ -548,11 +591,33 @@ public abstract class CvStage {
                         return (T) p;
                     }
                 }
-                throw new Exception("Can't convert pipeline property \"" + propertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + parameter.getClass() + "\"");
+                throw new Exception("Can't convert pipeline property \"" + pipelinePropertyName + "\" of type \"" + acceptablePropertyClass + "\" to type \"" + parameter.getClass() + "\"");
             }
             acceptableTypeList += (acceptableTypeList.length() != 0 ? " or \"" : "\"") + acceptablePropertyClass.getName() + "\"";
         }
-        throw new Exception("Pipeline property \"" + propertyName + "\" must be of type " + acceptableTypeList);
+        throw new Exception("Pipeline property \"" + pipelinePropertyName + "\" must be of type " + acceptableTypeList);
     }
 
+    /**
+     * Calls {@link #getPossiblePipelinePropertyOverride(Object, String, CvPipeline, String, Class...)} with the
+     * stagePropertyName deducted from the pipelinePropertyName. 
+     * 
+     * @param <T>
+     * @param parameter
+     * @param pipeline
+     * @param pipelinePropertyName
+     * @param acceptablePropertyTypes
+     * @return
+     * @throws Exception
+     */
+    public <T> T getPossiblePipelinePropertyOverride(T parameter, CvPipeline pipeline, 
+            String pipelinePropertyName, Class<?>... acceptablePropertyTypes) throws Exception {
+        // Deduct the stage property name from the pipeline property name, according to convention.
+        String stagePropertyName = pipelinePropertyName;
+        int pos = stagePropertyName.lastIndexOf(".");
+        if (pos > 0) {
+            stagePropertyName = stagePropertyName.substring(pos+1);
+        }
+        return getPossiblePipelinePropertyOverride(parameter, stagePropertyName, pipeline, pipelinePropertyName, acceptablePropertyTypes);
+    }
 }
