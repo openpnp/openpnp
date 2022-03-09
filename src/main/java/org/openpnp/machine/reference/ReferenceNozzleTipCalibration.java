@@ -526,7 +526,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     private BackgroundCalibrationMethod backgroundCalibrationMethod = BackgroundCalibrationMethod.None;
 
     @Element(required = false)
-    private Length minimumDetailSize = new Length(0.1, LengthUnit.Millimeters);
+    private Length minimumDetailSize = new Length(0.2, LengthUnit.Millimeters);
 
     @Attribute(required = false)
     private int backgroundMinHue; 

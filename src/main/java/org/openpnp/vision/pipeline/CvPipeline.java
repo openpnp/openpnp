@@ -257,6 +257,9 @@ public class CvPipeline implements AutoCloseable {
         totalProcessingTimeNs = 0;
         release();
         for (CvStage stage : stages) {
+            stage.processPrepare(this);
+        }
+        for (CvStage stage : stages) {
             // Process and time the stage and get the result.
             long processingTimeNs = System.nanoTime();
             Result result = null;

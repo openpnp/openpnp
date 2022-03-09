@@ -29,8 +29,9 @@ import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 
 public class VisionUtils {
-    public static String PIPELINE_RESULTS_NAME = "results";
-    
+    final public static String PIPELINE_RESULTS_NAME = "results";
+    final public static String PIPELINE_CONTROL_PROPERTY_NAME = "propertyName";
+
     /**
      * Given pixel coordinates within the frame of the Camera's image, get the offsets from Camera
      * center to the coordinates in Camera space and units. The resulting value is the distance the
