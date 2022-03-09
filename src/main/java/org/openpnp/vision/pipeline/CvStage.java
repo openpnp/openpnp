@@ -58,7 +58,8 @@ public abstract class CvStage {
     public abstract Result process(CvPipeline pipeline) throws Exception;
 
     void processPrepare(CvPipeline cvPipeline) {
-        propertyOverrides = new HashMap<>();
+        // Reset any property overrides.
+        propertyOverrides = null;
     }
 
     public String getName() {
@@ -498,7 +499,10 @@ public abstract class CvStage {
     }
 
     private void recordPropertyOverride(String stagePropertyName, Object stageProperty) {
-        propertyOverrides .put(stagePropertyName, stageProperty);
+        if (propertyOverrides == null) {
+            propertyOverrides = new HashMap<>();
+        }
+        propertyOverrides.put(stagePropertyName, stageProperty);
     }
 
     private <T> T getConvertedPipelineProperty(T parameter, CvPipeline pipeline,

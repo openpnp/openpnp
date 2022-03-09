@@ -351,7 +351,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         panelBackground.add(lblBlowup, "10, 2");
 
         lblDetailSize = new JLabel("Minimum Detail Size");
-        lblDetailSize.setToolTipText("<html>\n<p>Specify the size of the smallest details in the image that are considered a<br/>\nmeaningfull part of the shape to be detected.<br/>\nSmaller specks and artifacts, such as image noise, textures, markings, or dirt on<br/>\nobjects, are considered irrelevant for image processing, which means that<br/>\nfilters can be applied to suppress them in the image. </p> \n</html>");
+        lblDetailSize.setToolTipText("<html>\n<p>Specify the size of the smallest details in the image that are considered a<br/>\nmeaningfull part of the shape to be detected, like the smallest contacts etc.<br/>\nSmaller specks and artifacts, such as image noise, textures, markings, or dirt on<br/>\nobjects, are considered irrelevant for image processing, which means that<br/>\nfilters can be applied to suppress them in the image. </p> \n<p><strong>Note:</strong> the <strong>Minimum Detail Size</strong> can also\naffect the computation cost of some<br/>\npipelines/stages. Small details cause high computation cost.</p>\n</html>");
         panelBackground.add(lblDetailSize, "2, 4, right, default");
 
         minimumDetailSize = new JTextField();

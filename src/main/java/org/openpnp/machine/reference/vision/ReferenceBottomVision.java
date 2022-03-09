@@ -68,12 +68,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
     @Attribute(required = false)
     protected double testAlignmentAngle = 0.0;
 
-    /**
-     * Edge detection pixels. These must correspond to the maximum subSampling in stages
-     * and/or to the MJPEG compression block artifact size. Typically 8.
-     */
     @Attribute(required = false)
-    private int edgeDetectionPixels = 8;
+    @Deprecated
+    private Integer edgeDetectionPixels = null;
 
     @Deprecated
     @ElementMap(required = false)
@@ -222,13 +219,9 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 Location corner = VisionUtils.getPixelCenterOffsets(camera, corners[0].x, corners[0].y)
                         .convertToUnits(maxLinearOffset.getUnits());
                 Location cornerWithAngularOffset = corner.rotateXy(angleOffset);
-                if (!partSizeCheck(part, bottomVisionSettings, rect, camera) ) {
-                    throw new Exception(String.format(
-                            "ReferenceBottomVision (%s): Incorrect part size.",
-                            part.getId() 
-                            )); 
-                }
-                else if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
+                partSizeCheck(part, bottomVisionSettings, rect, camera);
+
+                if (center.getLinearDistanceTo(offsets) > getMaxLinearOffset().getValue()) {
                     Logger.debug("Offsets too large {} : center offset {} > {}", 
                             offsets, center.getLinearDistanceTo(offsets), getMaxLinearOffset().getValue()); 
                 } 
@@ -293,9 +286,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                 angleOffset = Utils2D.angleNorm(angleOffset, 180);
             }
 
-            if (!partSizeCheck(part, bottomVisionSettings, rect, camera) ) {
-                
-            }
+            partSizeCheck(part, bottomVisionSettings, rect, camera);
 
             // Set the angle on the offsets.
             offsets = offsets.derive(null, null, null, angleOffset);
@@ -414,8 +405,10 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     public void preparePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, 
             Camera camera, Nozzle nozzle, Location wantedLocation, BottomVisionSettings bottomVisionSettings) {
+        Location upp = camera.getUnitsPerPixelAtZ();
         pipeline.setProperty("camera", camera);
         Location partSize = null;
+        Length samplingSize = new Length(0.1, LengthUnit.Millimeters); // Default, if no setting on nozzle tip. 
         // Set the footprint.
         if (nozzle.getPart() != null && nozzle.getPart().getPackage() != null) {
             Footprint footprint = nozzle.getPart().getPackage().getFootprint();
@@ -434,8 +427,7 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             ReferenceNozzleTipCalibration calibration = referenceNozzleTip.getCalibration();
             if (calibration != null 
                     && calibration.getBackgroundCalibrationMethod() != BackgroundCalibrationMethod.None) {
-                pipeline.setProperty("BlurGaussian.kernelSize", calibration.getMinimumDetailSize());
-                pipeline.setProperty("DetectRectlinearSymmetry.subSampling", calibration.getMinimumDetailSize());
+                samplingSize = calibration.getMinimumDetailSize().multiply(0.5);
                 pipeline.setProperty("MaskHsv.hueMin", 
                         Math.max(0, calibration.getBackgroundMinHue() - calibration.getBackgroundTolHue()));
                 pipeline.setProperty("MaskHsv.hueMax", 
@@ -450,13 +442,20 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
                         Math.min(255, calibration.getBackgroundMaxValue() +  calibration.getBackgroundTolValue()));
             }
         }
+        if (samplingSize.compareTo(upp.getLengthX().multiply(2)) < 0) {
+            // We want the sampling size to at least be 2 pixels, otherwise subSampling will be too costly. 
+            // This means: a camera with less than 4 pixels per smallest contact size, is likely to cause problems
+            // but that's to be expected anyways.
+            samplingSize = upp.getLengthX().multiply(2);
+        }
+        pipeline.setProperty("BlurGaussian.kernelSize", samplingSize);
+        pipeline.setProperty("DetectRectlinearSymmetry.subSampling", samplingSize);
         if (partSize != null) {
             // Add a margin for edge detection.
-            Location upp = camera.getUnitsPerPixelAtZ();
             pipeline.setProperty("DetectRectlinearSymmetry.maxWidth", partSize.getLengthX()
-                    .add(upp.getLengthX().multiply(edgeDetectionPixels*2)));
+                    .add(samplingSize.multiply(2)));
             pipeline.setProperty("DetectRectlinearSymmetry.maxHeight", partSize.getLengthY()
-                    .add(upp.getLengthY().multiply(edgeDetectionPixels*2)));
+                    .add(samplingSize.multiply(2)));
         }
         else if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) {
             // No part size available. Use the maximum diameter. 
