@@ -134,21 +134,22 @@ public abstract class CvAbstractParameterStage extends CvStage {
         return null;
     }
 
-    protected void invokeSetter(Object obj, String propertyName, Object variableValue) 
+    protected void invokeSetter(CvStage stage, String propertyName, Object parameterValue) 
             throws IntrospectionException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         PropertyDescriptor pd;
-        pd = new PropertyDescriptor(propertyName, obj.getClass());
+        pd = new PropertyDescriptor(propertyName, stage.getClass());
         // Implicitly cast double to int.
         if (pd.getPropertyType() == int.class
-                && variableValue instanceof Double) {
-            variableValue = (int)Math.round((double)variableValue);
+                && parameterValue instanceof Double) {
+            parameterValue = (int)Math.round((double)parameterValue);
         }
         else if (pd.getPropertyType() == Integer.class
-                && variableValue instanceof Double) {
-            variableValue = (Integer)(int)Math.round((double)variableValue);
+                && parameterValue instanceof Double) {
+            parameterValue = (Integer)(int)Math.round((double)parameterValue);
         }
         Method setter = pd.getWriteMethod();
-        setter.invoke(obj, variableValue);
+        setter.invoke(stage, parameterValue);
+        stage.recordPropertyOverride(propertyName, parameterValue);
     }
 
     /**

@@ -498,7 +498,13 @@ public abstract class CvStage {
         return stageProperty;
     }
 
-    private void recordPropertyOverride(String stagePropertyName, Object stageProperty) {
+    /**
+     * Record the override of a stage property. This is used to indicate it on the property editor UI.
+     * 
+     * @param stagePropertyName
+     * @param stageProperty
+     */
+    public void recordPropertyOverride(String stagePropertyName, Object stageProperty) {
         if (propertyOverrides == null) {
             propertyOverrides = new HashMap<>();
         }
