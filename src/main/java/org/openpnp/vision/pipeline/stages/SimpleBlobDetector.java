@@ -36,6 +36,7 @@ import org.openpnp.model.Area;
 import org.openpnp.model.Length;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
+import org.openpnp.vision.pipeline.Property;
 import org.simpleframework.xml.Attribute;
 
 
@@ -79,6 +80,10 @@ public class SimpleBlobDetector extends CvStage {
     private double convexityMin = 9.4999998807907104E-001;
     @Attribute(required=false)
     private double convexityMax = -1;
+
+    @Attribute(required = false)
+    @Property(description = "Name of the property through which OpenPnP controls this stage. Use \"SimpleBlobDetector\" for standard control.")
+    private String propertyName = "SimpleBlobDetector";
 
     public double getThresholdStep() {
         return thresholdStep;
@@ -233,6 +238,14 @@ public class SimpleBlobDetector extends CvStage {
         convexityMax = val;
     }
 
+    public String getPropertyName() {
+        return propertyName;
+    }
+
+    public void setPropertyName(String propertyName) {
+        this.propertyName = propertyName;
+    }
+
     private void writeToFile(File file, String data) throws Exception {
         FileOutputStream stream = new FileOutputStream(file);
         OutputStreamWriter outputStreamWriter = new OutputStreamWriter(stream);
@@ -249,10 +262,10 @@ public class SimpleBlobDetector extends CvStage {
         double areaMin = this.areaMin;
 
         distBetweenBlobs = getPossiblePipelinePropertyOverride(distBetweenBlobs, pipeline, 
-                "SimpleBlobDetector.distBetweenBlobs", Double.class, Integer.class, Length.class);
+                propertyName+".distBetweenBlobs", Double.class, Integer.class, Length.class);
         
         overrideArea = getPossiblePipelinePropertyOverride(overrideArea, pipeline, 
-                "SimpleBlobDetector.area", Double.class, Integer.class, Area.class);
+                propertyName+".area", Double.class, Integer.class, Area.class);
         if (Double.isFinite(overrideArea)) {
             //If the area is specified on the pipeline, use the areaMax and areaMin fields as 
             //fractional margins above and below the specified area
