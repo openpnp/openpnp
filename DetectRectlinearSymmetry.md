@@ -6,7 +6,7 @@ By default this is done by isolating the brightest elements of the part (the shi
 
 This stage adds a new way to detect the parts that does not rely on specific thresholds etc. It exploits the fact, that in typical projects, an _overwhelming majority_ of the parts/packages have a large degree of mirror symmetry (or [reflection symmetry](https://en.wikipedia.org/wiki/Reflection_symmetry)), i.e. their left side is a mirror image of the right side, and/or their upper side is a mirror image of the lower side. 
 
-Symmetry has the nice property that it is self-contained, i.e. we only needs to compare the image to itself, no outside information (thresholds, template images, etc.) is needed and fewer assumptions (that contacts always appear bright, that the overall outline is well defined by a bounding rectangle etc.) are required to be true.
+Symmetry has the nice property that it is self-contained, i.e. we only need to compare the image to itself, no outside information (thresholds, template images, etc.) is needed and fewer assumptions (that contacts always appear bright, that the overall outline is well defined by a bounding rectangle etc.) are required to be true.
 
 The mirror symmetry is present left-right and upper-lower, i.e. in the two 90° dimensions of the part, hence we call it Rectlinear Symmetry. 
 
