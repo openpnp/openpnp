@@ -20,7 +20,7 @@ The new stage basically works in two phases:
 
 2. Secondly, the resulting cross-sections (at the best angle) are analyzed for symmetry. The stage will select a mid-point for each 90° cross-section that shows the best-matching left-right and upper-lower mirror image. 
 
-For truly symmetric parts, the stage is completely tuning free. Assuming there are no disruptive patterns in the background (and we took care of that in #1383) it will be very robust in determining the alignment. 
+For truly symmetric parts, the stage is completely tuning free. Assuming there are no disruptive patterns in the background (and we took care of that in [[Nozzle Tip Background Calibration]]) it will be very robust in determining the alignment. 
 
 The stage is robust against irregularities, because it works in a _probabilistic_ way. There are no hard edges and thresholds involved where the image is broken down into either black or white. Instead, the _most likely_ match is detected from the _integral_ image information. For this reason the bent pin in the following example will not disrupt the bounding box, as it would in the default OpenPnP pipeline. These irregularities, and their robust suppression can make a crucial difference in placement accuracy: 
 
