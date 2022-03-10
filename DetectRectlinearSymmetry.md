@@ -39,7 +39,7 @@ As a prerequisite, you need to configure (new) settings on each nozzle tip:
 
 **Min. Part Diameter** sets the minimum part dimension assumed to be picked with this nozzle tip. This diameter is used to calculate an _inner_ diameter of the nozzle tip that will always be covered by the part (**Min. Part Diameter** minus two times the **Maximum Pick Tolerance**). The pixels in the _inner_ diameter are then disregarded/blotted-out  by the [Background Calibration](/openpnp/openpnp/wiki/Nozzle-Tip-Background-Calibration).
 
-**Max. Part Diameter** sets the maximum part dimensions (diagonal) assumed to be picked with this nozzle tip. This diameter is used to limit the image area that is taken into consideration. This is also shown as a black mask using MaskCircle. 
+**Max. Part Diameter** sets the maximum part dimensions (diagonal) assumed to be picked with this nozzle tip. This diameter is used to limit the image area that is taken into consideration. This is also shown as a black mask using MaskCircle. Note: this diameter is also important to limit the computation time of the stage. You should really reduce it as far as possible. 
 
 **Maximum Pick Tolerance** sets the maximum allowed distance of the detected part, from its expected location. If it is larger than the given distance, an error will be thrown. This also controls the pipeline, by limiting the maximum search distance and lessening the computational cost. 
 
