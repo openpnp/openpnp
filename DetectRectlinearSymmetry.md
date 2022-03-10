@@ -49,7 +49,7 @@ Go to the Vision tab, select the Rectlinear Symmetry entry and copy the pipeline
 
 ![Copy](https://user-images.githubusercontent.com/9963310/156918197-942066ff-f217-45c3-a522-b3d00fc07aa6.png)
 
-Then go to the part where you want to try this, and press **Specialize for ...**.
+Then go to the Part, Package where you want to try this, and press **Specialize for ...**. Or create a new Vision Setting for it.
 
 Then paste the pipeline:
 
