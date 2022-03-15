@@ -7,6 +7,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.openpnp.model.Board.Side;
@@ -70,6 +71,9 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
             placements.addAll(fiducials);
         }
         id = null;
+        for (FiducialLocatableLocation child : children) {
+            child.addPropertyChangeListener(this);
+        }
     }
     
     @Persist
@@ -89,6 +93,7 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     
     public Panel() {
         super();
+        addPropertyChangeListener(this);
     }
 
     public Panel(File file) {
@@ -107,31 +112,21 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         this.version = panel.version;
         this.defaultFiducialPartId = panel.defaultFiducialPartId;
         this.checkFids = panel.checkFids;
-        this.children.addAll(panel.getChildren());
+        for (FiducialLocatableLocation child : panel.getChildren()) {
+            if (child instanceof PanelLocation) {
+                this.addChild(new PanelLocation((PanelLocation) child));
+            }
+            else if (child instanceof BoardLocation) {
+                this.addChild(new BoardLocation((BoardLocation) child));
+            }
+        }
+        addPropertyChangeListener(this);
     }
     
     public Panel(String id) {
         super();
         this.version = LATEST_VERSION;
-    }
-
-    /**
-     * Constructs a pcb panel with no defined fiducials
-     * @param id - the id of the panel
-     * @param cols - the number of boards in the panel's X direction
-     * @param rows - the number of boards in the panel's Y direction
-     * @param xGap - the gap between boards in the panel's X direction
-     * @param yGap - the gap between boards in the panel's Y direction
-     */
-    public Panel(String id, int cols, int rows, Length xGap, Length yGap, Location boardDimensions) {
-        this(id);
-        this.checkFids = false;
-        this.partId = "";
-        LengthUnit units = boardDimensions.getUnits();
-        this.dimensions = new Location(units).deriveLengths(
-                boardDimensions.getLengthX().add(xGap).multiply(cols).subtract(xGap),
-                boardDimensions.getLengthY().add(yGap).multiply(rows).subtract(yGap),
-                null, null);
+        addPropertyChangeListener(this);
     }
 
     public List<Placement> getFiducials() {
@@ -139,7 +134,7 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     }
     
     public List<FiducialLocatableLocation> getChildren() {
-        return children;
+        return Collections.unmodifiableList(children);
     }
 
     public void setChildren(List<FiducialLocatableLocation> children) {
@@ -147,7 +142,23 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     }
 
     public void addChild(FiducialLocatableLocation child) {
+        Object oldValue = children;
+        children = new ArrayList<>(children);
         children.add(child);
+        firePropertyChange("children", oldValue, children);
+        if (child != null) {
+            child.addPropertyChangeListener(this);
+        }
+    }
+    
+    public void removeChild(FiducialLocatableLocation child) {
+        Object oldValue = children;
+        children = new ArrayList<>(children);
+        children.remove(child);
+        firePropertyChange("children", oldValue, children);
+        if (child != null) {
+            child.removePropertyChangeListener(this);
+        }
     }
     
     public String getDefaultFiducialPartId() {
@@ -155,7 +166,9 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     }
 
     public void setDefaultFiducialPartId(String defaultFiducialPartId) {
+        Object oldValue = this.defaultFiducialPartId;
         this.defaultFiducialPartId = defaultFiducialPartId;
+        firePropertyChange("defaultFiducialPartId", oldValue, defaultFiducialPartId);
     }
     
     public Part getDefaultFiducialPart() {
@@ -176,8 +189,10 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         return this.checkFids;
     }
 
-    public void setCheckFiducials(boolean checkFiducials) {
-        this.checkFids = checkFiducials;
+    public void setCheckFiducials(boolean checkFids) {
+        Object oldValue = this.checkFids;
+        this.checkFids = checkFids;
+        firePropertyChange("checkFids", oldValue, checkFids);
     }
 
     public String getVersion() {
@@ -185,7 +200,9 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     }
     
     public void setVersion(String version) {
+        Object oldValue = this.version;
         this.version = version;
+        firePropertyChange("version", oldValue, version);
     }
     
     @Override
@@ -193,60 +210,4 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         return String.format("Panel: file %s, dims: %sx%s, fiducial count: %d, children: %d", file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size(), children.size());
     }
 
-    public void setLocation(Job job) {
-//        LengthUnit mm = LengthUnit.Millimeters;
-//        
-//        BoardLocation rootPcb = job.getBoardLocations().get(0);
-//        Logger.trace("rootPcb = " + rootPcb);
-//
-//        Location rootDims = rootPcb.getBoard().getDimensions().convertToUnits(mm);
-//        
-//        if (rootPcbOffset == null) {
-//            Logger.trace("Updating an old panelization to new format");
-//            originalRootPcbLocation = rootPcb;
-//            rootPcbOffset = new Location(mm);
-//            location = rootPcb.getLocation();
-//            dimensions = new Location(mm);
-//            dimensions = dimensions.deriveLengths(
-//                    rootDims.getLengthX().add(xGap).multiply(getColumns()).subtract(xGap),
-//                    rootDims.getLengthY().add(yGap).multiply(getRows()).subtract(yGap),
-//                    null, null);
-//        }
-//        
-//        job.removeAllBoards();
-//        
-//        AffineTransform transformRootPcbToMachine = rootPcb.getPlacementTransform();
-//        if (transformRootPcbToMachine == null) {
-//            transformRootPcbToMachine = Utils2D.getDefaultBoardPlacementLocationTransform(rootPcb);
-//        }
-//
-//        double pcbStepX = rootDims.getLengthX().add(xGap).getValue();
-//        double pcbStepY = rootDims.getLengthY().add(yGap).getValue();
-//        
-//        for (int j = 0; j < getRows(); j++) {
-//            for (int i = 0; i < getColumns(); i++) {
-//                // deep copy the existing rootPcb
-//                BoardLocation newPcb = new BoardLocation(rootPcb);
-//
-//                AffineTransform transformNewPcbToMachine = new AffineTransform();
-//                transformNewPcbToMachine.setToTranslation(pcbStepX*i, pcbStepY*j); //really transformNewPcbToRootPcb
-//                transformNewPcbToMachine.preConcatenate(transformRootPcbToMachine); //now its transformNewPcbToMachine
-//                newPcb.setPlacementTransform(transformNewPcbToMachine);
-//                
-//                // Return the compensated board location
-//                Location origin = new Location(LengthUnit.Millimeters);
-//                if (rootPcb.getSide() == Side.Bottom) {
-//                    origin = origin.add(rootPcb.getBoard().getDimensions().derive(null, 0., 0., 0.));
-//                }
-//                Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(newPcb, origin);
-//                newBoardLocation = newBoardLocation.convertToUnits(newPcb.getLocation().getUnits());
-//                newBoardLocation = newBoardLocation.derive(null, null, newPcb.getLocation().getZ(), null);
-//
-//                newPcb.setLocation(newBoardLocation);
-//                newPcb.setPlacementTransform(transformNewPcbToMachine);
-//                
-//                job.addBoardLocation(newPcb);
-//            }
-//        }
-    }
 }

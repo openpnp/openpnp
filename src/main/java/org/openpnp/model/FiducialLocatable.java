@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.openpnp.util.IdentifiableList;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -115,9 +116,11 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getSource() != FiducialLocatable.this || !evt.getPropertyName().equals("dirty")) {
-            setDirty(true);
+        Logger.trace("PropertyChangeEvent = " + evt);
+        if (evt.getSource() != FiducialLocatable.this && evt.getPropertyName() != "dirty") {
+            dirty = true;
         }
+        
     }
 
 }

@@ -714,9 +714,11 @@ public class Configuration extends AbstractModelObject {
 
         for (PanelLocation panelLocation : job.panelLocations) {
             job.getRootPanelLocation().addChild(new PanelLocation(panelLocation));
+//            job.getRootPanelLocation().addChild(panelLocation);
         }
         for (BoardLocation boardLocation : job.getBoardLocations()) {
             job.getRootPanelLocation().addChild(new BoardLocation(boardLocation));
+//            job.getRootPanelLocation().addChild(boardLocation);
         }
         
         Logger.trace("Dump of the job panelLocations");
@@ -832,7 +834,7 @@ public class Configuration extends AbstractModelObject {
                                     pcbStepX * i,
                                     pcbStepY * j, 0, 0)));
                     
-                    panel.getChildren().add(newPcb);
+                    panel.addChild(newPcb);
                 }
             }
             panel.setDimensions(Location.origin.deriveLengths(

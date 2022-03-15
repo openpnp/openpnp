@@ -43,6 +43,14 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
     public enum Side {
         Bottom, Top;
         
+        public Side flip(boolean value) {
+            if (value) {
+                return flip();
+            }
+            else {
+                return this;
+            }
+        }
         public Side flip() {
             if (this.equals(Side.Top)) {
                 return Side.Bottom;
@@ -183,39 +191,4 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
         return String.format("Board: file %s, dims: %sx%s, placements count: %d", file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
     }
 
-//    public String getName() {
-//        return name;
-//    }
-//
-//    public void setName(String name) {
-//        Object oldValue = this.name;
-//        this.name = name;
-//        firePropertyChange("name", oldValue, name);
-//    }
-
-//    public File getFile() {
-//        return file;
-//    }
-//
-//    void setFile(File file) {
-//        Object oldValue = this.file;
-//        this.file = file;
-//        firePropertyChange("file", oldValue, file);
-//    }
-//
-//    public boolean isDirty() {
-//        return dirty;
-//    }
-//
-//    public void setDirty(boolean dirty) {
-//        boolean oldValue = this.dirty;
-//        this.dirty = dirty;
-//        firePropertyChange("dirty", oldValue, dirty);
-//    }
-//
-//    public void propertyChange(PropertyChangeEvent evt) {
-//        if (evt.getSource() != Board.this || !evt.getPropertyName().equals("dirty")) {
-//            setDirty(true);
-//        }
-//    }
 }

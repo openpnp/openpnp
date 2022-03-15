@@ -31,6 +31,7 @@ import java.util.List;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.ResourceUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.core.Commit;
@@ -246,10 +247,11 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     public void setRootPanelLocation(PanelLocation rootPanel) {
         PanelLocation oldValue = this.rootPanelLocation;
         this.rootPanelLocation = rootPanel;
-        firePropertyChange("rootPanel", oldValue, rootPanel);
+        firePropertyChange("rootPanelLocation", oldValue, rootPanel);
     }
 
     public void propertyChange(PropertyChangeEvent evt) {
+        Logger.trace("PropertyChangeEvent = " + evt);
         if (evt.getSource() != Job.this || !evt.getPropertyName().equals("dirty")) {
             setDirty(true);
         }

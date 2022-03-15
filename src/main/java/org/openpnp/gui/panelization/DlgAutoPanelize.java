@@ -103,10 +103,10 @@ public class DlgAutoPanelize extends JDialog {
         
         // Specify a placeholder panel for now if we don't have one already
         if (jobPanel.getJob().getPanels() == null || jobPanel.getJob().getPanels().isEmpty()) {
-            jobPanel.getJob().addPanel(
-                    new Panel("Panel1", 3, 3, new Length(0, LengthUnit.Millimeters),
-                            new Length(0, LengthUnit.Millimeters),
-                            jobPanel.getJob().getBoardLocations().get(0).getBoard().getDimensions()));
+//            jobPanel.getJob().addPanel(
+//                    new Panel("Panel1", 3, 3, new Length(0, LengthUnit.Millimeters),
+//                            new Length(0, LengthUnit.Millimeters),
+//                            jobPanel.getJob().getBoardLocations().get(0).getBoard().getDimensions()));
         }
 
         //Make a copy of the current panel

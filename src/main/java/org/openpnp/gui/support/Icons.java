@@ -48,6 +48,7 @@ public class Icons {
     public static Icon autoPanelize = getIcon("/icons/panelize.svg");
     public static Icon autoPanelizeXOut = getIcon("/icons/panelize_xout.svg");
     public static Icon autoPanelizeFidCheck = getIcon("/icons/panelize_fiducialcheck.svg");
+    public static Icon useChildFiducial = getIcon("/icons/panelize_use_board_fiducial.svg");
 
     public static Icon feed = getIcon("/icons/feeder-feed.svg");
     public static Icon pick = getIcon("/icons/pick.svg");

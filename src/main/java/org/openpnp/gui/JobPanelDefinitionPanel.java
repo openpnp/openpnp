@@ -6,14 +6,20 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.prefs.Preferences;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.AbstractAction;
@@ -23,6 +29,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -40,10 +47,13 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Translations;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
 import org.openpnp.gui.support.Helpers;
@@ -52,6 +62,8 @@ import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
+import org.openpnp.gui.tablemodel.FiducialLocatableLocationsTableModel;
+import org.openpnp.gui.tablemodel.PanelFiducialsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
@@ -59,7 +71,10 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
+import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.Location;
+import org.openpnp.model.Panel;
+import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.ErrorHandling;
@@ -67,370 +82,428 @@ import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
+
+import javax.swing.JSplitPane;
+import javax.swing.border.EtchedBorder;
+import java.awt.Dimension;
+import java.awt.FileDialog;
+import java.awt.FlowLayout;
 
 @SuppressWarnings("serial")
-public class JobPanelDefinitionPanel extends JPanel {
-    private JTable table;
-    private PlacementsTableModel tableModel;
-    private TableRowSorter<PlacementsTableModel> tableSorter;
-    private ActionGroup boardLocationSelectionActionGroup;
-    private ActionGroup singleSelectionActionGroup;
-    private ActionGroup multiSelectionActionGroup;
-    private ActionGroup captureAndPositionActionGroup;
-    private BoardLocation boardLocation;
+public class JobPanelDefinitionPanel extends JPanel implements PropertyChangeListener {
+    private static final String PREF_DIVIDER_POSITION = "JobPanelDefinitionPanel.dividerPosition"; //$NON-NLS-1$
+    private static final int PREF_DIVIDER_POSITION_DEF = -1;
+    
+    private Preferences prefs = Preferences.userNodeForPackage(JobPanelDefinitionPanel.class);
+    
+    private AutoSelectTextTable fiducialTable;
+    private PanelFiducialsTableModel fiducialTableModel;
+    private TableRowSorter<PanelFiducialsTableModel> fiducialTableSorter;
+    
+    private ActionGroup fiducialSingleSelectionActionGroup;
+    private ActionGroup fiducialMultiSelectionActionGroup;
+    
+    private AutoSelectTextTable childrenTable;
+    private FiducialLocatableLocationsTableModel childrenTableModel;
+    private TableRowSorter<FiducialLocatableLocationsTableModel> childrenTableSorter;
+    
+    private ActionGroup childrenSingleSelectionActionGroup;
+    private ActionGroup childrenMultiSelectionActionGroup;
+    
+    private PanelLocation rootPanelLocation = new PanelLocation();
     private JobPanel jobPanel;
-
-    private static Color typeColorFiducial = new Color(157, 188, 255);
-    private static Color typeColorPlacement = new Color(255, 255, 255);
-    private static Color statusColorWarning = new Color(252, 255, 157);
-    private static Color statusColorReady = new Color(157, 255, 168);
-    private static Color statusColorError = new Color(255, 157, 157);
-    private static Color statusColorDisabled = new Color(180, 180, 180);
+    
+    private JSplitPane splitPane;
+    private MainFrame frame;
+    private Configuration configuration;
+    private Panel originalPanel;
+    private boolean dirty;
 
     public JobPanelDefinitionPanel(JobPanel jobPanel) {
     	this.jobPanel = jobPanel;
+    	frame = MainFrame.get();
+    	configuration = Configuration.get();
         createUi();
     }
+    
     private void createUi() {
         setBorder(new TitledBorder(null, "Panel Definition", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
         Configuration configuration = Configuration.get();
         
-        boardLocationSelectionActionGroup = new ActionGroup(newAction);
-        boardLocationSelectionActionGroup.setEnabled(false);
-
-        singleSelectionActionGroup = new ActionGroup(removeAction, editPlacementFeederAction,
-                setTypeAction, setSideAction, setPlacedAction, setErrorHandlingAction,
+        fiducialSingleSelectionActionGroup = new ActionGroup(removeFiducialAction, setSideAction, 
                 setEnabledAction);
-        singleSelectionActionGroup.setEnabled(false);
+        fiducialSingleSelectionActionGroup.setEnabled(false);
 
-        multiSelectionActionGroup = new ActionGroup(removeAction, setTypeAction, setSideAction,
-                setPlacedAction, setErrorHandlingAction, setEnabledAction);
-        multiSelectionActionGroup.setEnabled(false);
+        fiducialMultiSelectionActionGroup = new ActionGroup(removeFiducialAction, setSideAction,
+                setEnabledAction);
+        fiducialMultiSelectionActionGroup.setEnabled(false);
 
-        captureAndPositionActionGroup = new ActionGroup(captureCameraPlacementLocation,
-                captureToolPlacementLocation, moveCameraToPlacementLocation,
-                moveCameraToPlacementLocationNext, moveToolToPlacementLocation);
-        captureAndPositionActionGroup.setEnabled(false);
+        childrenSingleSelectionActionGroup = new ActionGroup(removeChildAction, setSideAction,  
+                setEnabledAction, setCheckFidsAction, createArrayAction, useChildFiducialAction);
+        childrenSingleSelectionActionGroup.setEnabled(false);
+
+        childrenMultiSelectionActionGroup = new ActionGroup(removeChildAction, setSideAction,
+                setEnabledAction, setCheckFidsAction);
+        childrenMultiSelectionActionGroup.setEnabled(false);
 
         JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
         partsComboBox.setMaximumRowCount(20);
         partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
         JComboBox<Side> sidesComboBox = new JComboBox(Side.values());
-        // Note we don't use Type.values() here because there are a couple Types that are only
-        // there for backwards compatibility and we don't want them in the list.
-        JComboBox<Type> typesComboBox = new JComboBox(new Type[] { Type.Placement, Type.Fiducial });
-        JComboBox<Type> errorHandlingComboBox = new JComboBox(ErrorHandling.values());
         
         setLayout(new BorderLayout(0, 0));
-        tableModel = new PlacementsTableModel(configuration);
-        tableSorter = new TableRowSorter<>(tableModel);
         
-        table = new AutoSelectTextTable(tableModel);
-        table.setRowSorter(tableSorter);
-        table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
-        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        table.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
-        table.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
-        table.setDefaultEditor(Type.class, new DefaultCellEditor(typesComboBox));
-        table.setDefaultEditor(ErrorHandling.class, new DefaultCellEditor(errorHandlingComboBox));
-        table.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
-        table.setDefaultRenderer(PlacementsTableModel.Status.class, new StatusRenderer());
-        table.setDefaultRenderer(Placement.Type.class, new TypeRenderer());
-        table.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
-//        tableModel.setJobPlacementsPanel(this);
-        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        splitPane = new JSplitPane();
+        splitPane.setResizeWeight(0.5);
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setBorder(null);
+        splitPane.setContinuousLayout(true);
+        add(splitPane, BorderLayout.CENTER);
+        
+        JPanel pnlChildren = new JPanel();
+        pnlChildren.setBorder(new TitledBorder(null, "Panel Children", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        splitPane.setLeftComponent(pnlChildren);
+        pnlChildren.setLayout(new BorderLayout(0, 0));
+        
+        JPanel pnlChildrenToolbar = new JPanel();
+        pnlChildren.add(pnlChildrenToolbar, BorderLayout.NORTH);
+        pnlChildrenToolbar.setLayout(new BorderLayout(0, 0));
+        
+        JToolBar toolBarChildren = new JToolBar();
+        toolBarChildren.setFloatable(false);
+        pnlChildrenToolbar.add(toolBarChildren);
+        
+        JButton btnAddChild = new JButton(addChildAction);
+        btnAddChild.setToolTipText("Add a new or existing panel or board to this panel.");
+        btnAddChild.setText("Add Panel or Board");
+        btnAddChild.setHideActionText(true);
+        btnAddChild.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                JPopupMenu menu = new JPopupMenu();
+                menu.add(new JMenuItem(addNewBoardAction));
+                menu.add(new JMenuItem(addExistingBoardAction));
+                menu.addSeparator();
+                menu.add(new JMenuItem(addNewPanelAction));
+                menu.add(new JMenuItem(addExistingPanelAction));
+                menu.show(btnAddChild, (int) btnAddChild.getWidth(), (int) btnAddChild.getHeight());
+            }
+        });
+        toolBarChildren.add(btnAddChild);
+        
+        JButton btnRemoveChild = new JButton(removeChildAction);
+        btnRemoveChild.setToolTipText("Remove the currently selected panel(s) and/or board(s) from this panel.");
+        btnRemoveChild.setText("Remove Panel(s) and/or Board(s)");
+        btnRemoveChild.setHideActionText(true);
+        toolBarChildren.add(btnRemoveChild);
+        toolBarChildren.addSeparator();
+        
+        JButton btnCreateArray = new JButton(createArrayAction);
+        btnCreateArray.setToolTipText("Create an array of children from the selected child.");
+        btnCreateArray.setText("Create Array");
+        btnCreateArray.setHideActionText(true);
+        toolBarChildren.add(btnCreateArray);
+        
+        childrenTableModel = new FiducialLocatableLocationsTableModel(configuration);
+        childrenTableModel.setRootPanelLocation(rootPanelLocation);
+        childrenTableSorter = new TableRowSorter<>(childrenTableModel);
+        
+        childrenTable = new AutoSelectTextTable(childrenTableModel);
+        TableColumnModel tcm = childrenTable.getColumnModel();
+        tcm.removeColumn(tcm.getColumn(6)); //remove Z column
+
+        childrenTable.setRowSorter(childrenTableSorter);
+        childrenTable.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+        childrenTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        childrenTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
+        childrenTable.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
+        childrenTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (e.getValueIsAdjusting()) {
                     return;
                 }
 
-                if (getSelections().size() > 1) {
+                if (getChildrenSelections().size() > 1) {
                     // multi select
-                    singleSelectionActionGroup.setEnabled(false);
-                    captureAndPositionActionGroup.setEnabled(false);
-                    multiSelectionActionGroup.setEnabled(true);
+                    childrenSingleSelectionActionGroup.setEnabled(false);
+                    childrenMultiSelectionActionGroup.setEnabled(true);
                 }
                 else {
                     // single select, or no select
-                    multiSelectionActionGroup.setEnabled(false);
-                    singleSelectionActionGroup.setEnabled(getSelection() != null);
-                    captureAndPositionActionGroup.setEnabled(getSelection() != null
-                            && getSelection().getSide() == boardLocation.getSide());
-                    Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
-                            boardLocation, JobPanelDefinitionPanel.this));
-                    MainFrame mainFrame = MainFrame.get();
-                    if (getSelection() != null
-                            && mainFrame.getTabs().getSelectedComponent() == mainFrame.getJobTab() 
-                            && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
-                        Part selectedPart = getSelection().getPart();
-                        mainFrame.getPartsTab().selectPartInTable(selectedPart);
-                        mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
-                        mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
-                        mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(selectedPart);
-                    }
+                    childrenMultiSelectionActionGroup.setEnabled(false);
+                    childrenSingleSelectionActionGroup.setEnabled(getChildrenSelection() != null);
                 }
             }
         });
-        table.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent mouseEvent) {
-                if (mouseEvent.getClickCount() != 2) {
-                    return;
-                }
-                int row = table.rowAtPoint(new Point(mouseEvent.getX(), mouseEvent.getY()));
-                int col = table.columnAtPoint(new Point(mouseEvent.getX(), mouseEvent.getY()));
-                if (tableModel.getColumnClass(col) == Status.class) {
-                    Status status = (Status) tableModel.getValueAt(row, col);
-                    // TODO: This is some sample code for handling the user
-                    // wishing to do something with the status. Not using it
-                    // right now but leaving it here for the future.
-                    System.out.println(status);
-                }
-            }
-        });
-        table.addKeyListener(new KeyAdapter() {
+        childrenTable.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
                 if (e.getKeyChar() == ' ') {
-                    Placement placement = getSelection();
-                    placement.setEnabled(!placement.isEnabled());
+                    FiducialLocatableLocation child = getChildrenSelection();
+                    child.setLocallyEnabled(!child.isLocallyEnabled());
                     refreshSelectedRow();
-                    updateActivePlacements();
                 }
                 else {
                     super.keyTyped(e);
                 }
             }
         });
-        
-        JPopupMenu popupMenu = new JPopupMenu();
 
-        JMenu setTypeMenu = new JMenu(setTypeAction);
-        setTypeMenu.add(new SetTypeAction(Placement.Type.Placement));
-        setTypeMenu.add(new SetTypeAction(Placement.Type.Fiducial));
-        popupMenu.add(setTypeMenu);
+        JPopupMenu childrenPopupMenu = new JPopupMenu();
 
-        JMenu setSideMenu = new JMenu(setSideAction);
+        JMenu setChildrenSideMenu = new JMenu(setSideAction);
         for (Board.Side side : Board.Side.values()) {
-            setSideMenu.add(new SetSideAction(side));
+            setChildrenSideMenu.add(new SetChildrenSideAction(side));
         }
-        popupMenu.add(setSideMenu);
+        childrenPopupMenu.add(setChildrenSideMenu);
 
-        JMenu setPlacedMenu = new JMenu(setPlacedAction);
-        setPlacedMenu.add(new SetPlacedAction(true));
-        setPlacedMenu.add(new SetPlacedAction(false));
-        popupMenu.add(setPlacedMenu);
-
-        JMenu setEnabledMenu = new JMenu(setEnabledAction);
-        setEnabledMenu.add(new SetEnabledAction(true));
-        setEnabledMenu.add(new SetEnabledAction(false));
-        popupMenu.add(setEnabledMenu);
-
-        JMenu setErrorHandlingMenu = new JMenu(setErrorHandlingAction);
-        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Alert));
-        setErrorHandlingMenu.add(new SetErrorHandlingAction(ErrorHandling.Defer));
-        popupMenu.add(setErrorHandlingMenu);
-
-        table.setComponentPopupMenu(popupMenu);
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        add(scrollPane, BorderLayout.CENTER);
+        JMenu setChildrenEnabledMenu = new JMenu(setEnabledAction);
+        setChildrenEnabledMenu.add(new SetChildrenEnabledAction(true));
+        setChildrenEnabledMenu.add(new SetChildrenEnabledAction(false));
+        childrenPopupMenu.add(setChildrenEnabledMenu);
         
-        JPanel panel = new JPanel();
-        add(panel, BorderLayout.NORTH);
-        panel.setLayout(new BorderLayout(0, 0));
-        JToolBar toolBarPlacements = new JToolBar();
-        panel.add(toolBarPlacements);
+        JMenu setChildrenCheckFidsMenu = new JMenu(setCheckFidsAction);
+        setChildrenCheckFidsMenu.add(new SetCheckFidsAction(true));
+        setChildrenCheckFidsMenu.add(new SetCheckFidsAction(false));
+        childrenPopupMenu.add(setChildrenCheckFidsMenu);
         
-        toolBarPlacements.setFloatable(false);
-        JButton btnNewPlacement = new JButton(newAction);
-        btnNewPlacement.setHideActionText(true);
-        toolBarPlacements.add(btnNewPlacement);
-        JButton btnRemovePlacement = new JButton(removeAction);
-        btnRemovePlacement.setHideActionText(true);
-        toolBarPlacements.add(btnRemovePlacement);
-        toolBarPlacements.addSeparator();
+        childrenTable.setComponentPopupMenu(childrenPopupMenu);
+
+        JScrollPane scrollPaneChildren = new JScrollPane(childrenTable);
+        pnlChildren.add(scrollPaneChildren);
+
         
-        JButton btnPositionCameraPositionLocation = new JButton(moveCameraToPlacementLocation);
-        btnPositionCameraPositionLocation.setHideActionText(true);
-        toolBarPlacements.add(btnPositionCameraPositionLocation);
         
-        JButton btnPositionCameraPositionNextLocation =
-                new JButton(moveCameraToPlacementLocationNext);
-        btnPositionCameraPositionNextLocation.setHideActionText(true);
-        toolBarPlacements.add(btnPositionCameraPositionNextLocation);
-
-        JButton btnPositionToolPositionLocation = new JButton(moveToolToPlacementLocation);
-        btnPositionToolPositionLocation.setHideActionText(true);
-        toolBarPlacements.add(btnPositionToolPositionLocation);
-
-        toolBarPlacements.addSeparator();
-
-        JButton btnCaptureCameraPlacementLocation = new JButton(captureCameraPlacementLocation);
-        btnCaptureCameraPlacementLocation.setHideActionText(true);
-        toolBarPlacements.add(btnCaptureCameraPlacementLocation);
-
-        JButton btnCaptureToolPlacementLocation = new JButton(captureToolPlacementLocation);
-        btnCaptureToolPlacementLocation.setHideActionText(true);
-        toolBarPlacements.add(btnCaptureToolPlacementLocation);
-
-        toolBarPlacements.addSeparator();
-
-        JButton btnEditFeeder = new JButton(editPlacementFeederAction);
-        btnEditFeeder.setHideActionText(true);
-        toolBarPlacements.add(btnEditFeeder);
-
-        JPanel panel_1 = new JPanel();
-        panel.add(panel_1, BorderLayout.EAST);
-
-        JLabel lblNewLabel = new JLabel("Search");
-        panel_1.add(lblNewLabel);
-
-        searchTextField = new JTextField();
-        searchTextField.getDocument().addDocumentListener(new DocumentListener() {
+        JPanel pnlFiducials = new JPanel();
+        pnlFiducials.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)), "Panel Fiducials", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        splitPane.setRightComponent(pnlFiducials);
+        pnlFiducials.setLayout(new BorderLayout(0, 0));
+        
+        JPanel pnlFiducialsToolbar = new JPanel();
+        pnlFiducials.add(pnlFiducialsToolbar, BorderLayout.NORTH);
+        pnlFiducialsToolbar.setLayout(new BorderLayout(0, 0));
+        
+        JToolBar toolBarFiducials = new JToolBar();
+        toolBarFiducials.setFloatable(false);
+        pnlFiducialsToolbar.add(toolBarFiducials, BorderLayout.CENTER);
+        
+        JButton btnAddFiducial = new JButton(addFiducialAction);
+        btnAddFiducial.setToolTipText("Add a fiducial to this panel.");
+        btnAddFiducial.setHideActionText(true);
+        toolBarFiducials.add(btnAddFiducial);
+        
+        JButton btnRemoveFiducial = new JButton(removeFiducialAction);
+        btnRemoveFiducial.setToolTipText("Remove the selected fiducial(s) from this panel.");
+        btnRemoveFiducial.setHideActionText(true);
+        toolBarFiducials.add(btnRemoveFiducial);
+        
+        JButton btnUseChildFiducial = new JButton(useChildFiducialAction);
+        btnUseChildFiducial.setToolTipText("Use a child's fiducial as this panel's fiducial.");
+        btnUseChildFiducial.setHideActionText(true);
+        toolBarFiducials.add(btnUseChildFiducial);
+        
+        fiducialTableModel = new PanelFiducialsTableModel(rootPanelLocation.getPanel());
+        fiducialTableSorter = new TableRowSorter<>(fiducialTableModel);
+        
+        fiducialTable = new AutoSelectTextTable(fiducialTableModel);
+        
+        fiducialTable.setRowSorter(fiducialTableSorter);
+        fiducialTable.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+        fiducialTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        fiducialTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
+        fiducialTable.setDefaultEditor(Part.class, new DefaultCellEditor(partsComboBox));
+        fiducialTable.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
+        fiducialTable.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
+        fiducialTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
-            public void removeUpdate(DocumentEvent e) {
-                search();
-            }
-
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                search();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                search();
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+                if (getFiducialSelections().size() > 1) {
+                    // multi select
+                    fiducialSingleSelectionActionGroup.setEnabled(false);
+                    fiducialMultiSelectionActionGroup.setEnabled(true);
+                }
+                else {
+                    // single select, or no select
+                    fiducialMultiSelectionActionGroup.setEnabled(false);
+                    fiducialSingleSelectionActionGroup.setEnabled(getFiducialSelection() != null);
+                }
             }
         });
-        panel_1.add(searchTextField);
-        searchTextField.setColumns(15);
+
+        JPopupMenu fiducialPopupMenu = new JPopupMenu();
+
+        JMenu setFiducialSideMenu = new JMenu(setSideAction);
+        for (Board.Side side : Board.Side.values()) {
+            setFiducialSideMenu.add(new SetFiducialSideAction(side));
+        }
+        fiducialPopupMenu.add(setFiducialSideMenu);
+
+        JMenu setFiducialEnabledMenu = new JMenu(setEnabledAction);
+        setFiducialEnabledMenu.add(new SetFiducialEnabledAction(true));
+        setFiducialEnabledMenu.add(new SetFiducialEnabledAction(false));
+        fiducialPopupMenu.add(setFiducialEnabledMenu);
+        
+        fiducialTable.setComponentPopupMenu(fiducialPopupMenu);
+
+
+        JScrollPane scrollPaneFiducials = new JScrollPane(fiducialTable);
+        pnlFiducials.add(scrollPaneFiducials, BorderLayout.CENTER);
+        
+        
+        splitPane.setDividerLocation(prefs.getInt(PREF_DIVIDER_POSITION, PREF_DIVIDER_POSITION_DEF));
+        splitPane.addPropertyChangeListener("dividerLocation", new PropertyChangeListener() { //$NON-NLS-1$
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                prefs.putInt(PREF_DIVIDER_POSITION, splitPane.getDividerLocation());
+            }
+        });
+        
+        
+        
+        
+        JPanel panel = new JPanel();
+        FlowLayout flowLayout = (FlowLayout) panel.getLayout();
+        flowLayout.setAlignment(FlowLayout.RIGHT);
+        add(panel, BorderLayout.SOUTH);
+        
+        JButton btnApply = new JButton("Apply");
+        btnApply.setEnabled(false);
+        btnApply.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                PanelLocation jobPanelLocation = (PanelLocation) jobPanel.getSelection();
+//                jobPanel.getJob().removePanelLocation(jobPanelLocation);
+                jobPanelLocation.setPanel(new Panel(rootPanelLocation.getPanel()));
+                for (FiducialLocatableLocation child : jobPanelLocation.getChildren()) {
+                    child.setParent(jobPanelLocation);
+                }
+//                jobPanel.getJob().addPanelLocation(jobPanelLocation);
+                
+                jobPanel.refresh();
+                originalPanel = jobPanelLocation.getPanel();
+                setDirty(false);
+            }
+            
+        });
+        panel.add(btnApply);
+        
+        JButton btnReset = new JButton("Reset");
+        btnReset.setEnabled(false);
+        btnReset.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setPanel(originalPanel);
+                setDirty(false);
+            }
+            
+        });
+        panel.add(btnReset);
+                
+        addPropertyChangeListener("dirty", new PropertyChangeListener( ) {
+
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                btnApply.setEnabled(dirty);
+                btnReset.setEnabled(dirty);
+            }
+            
+        });
     }
     
-    private void search() {
-        updateRowFilter();
+    public void setPanel(Panel panel) {
+        originalPanel = panel;
+        if (panel != null) {
+            Panel newPanel = new Panel(panel);
+            newPanel.addPropertyChangeListener(this);
+            rootPanelLocation.setSide(Side.Top);
+            rootPanelLocation.setPanel(newPanel);
+            for (FiducialLocatableLocation child : rootPanelLocation.getChildren()) {
+                child.setParent(rootPanelLocation);
+                child.addPropertyChangeListener(this);
+            }
+            childrenTableModel.setFiducialLocatableLocations(rootPanelLocation.getChildren());
+            fiducialTableModel.setPanel(newPanel);
+        }
+        else {
+            rootPanelLocation.setPanel(null);
+        }
+        setDirty(false);
+        fiducialTableModel.fireTableDataChanged();
+        childrenTableModel.fireTableDataChanged();
     }
     
     public void refresh() {
-        tableModel.fireTableDataChanged();
-        updateActivePlacements();
+        childrenTableModel.fireTableDataChanged();
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        boolean oldValue = this.dirty;
+        this.dirty = dirty;
+        firePropertyChange("dirty", oldValue, dirty);
     }
 
     public void refreshSelectedRow() {
-        int index = table.convertRowIndexToModel(table.getSelectedRow());
-        tableModel.fireTableRowsUpdated(index, index);
+        int index = childrenTable.convertRowIndexToModel(childrenTable.getSelectedRow());
+        childrenTableModel.fireTableRowsUpdated(index, index);
     }
 
-    public void selectPlacement(Placement placement) {
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
-            if (tableModel.getRowObjectAt(i) == placement) {
-                int index = table.convertRowIndexToView(i);
-                table.getSelectionModel().setSelectionInterval(index, index);
-                table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
-                break;
-            }
-        }
-    }
-    
-    // TODO STOPSHIP This is called all over the place and it's likely to rot - need to find
-    // a listener or something it can use.
-    public void updateActivePlacements() {
-        int activePlacements = 0;
-        int totalActivePlacements = 0;
-        
-        List<BoardLocation> boardLocations = this.jobPanel.getJob().getBoardLocations();
-        for (BoardLocation boardLocation : boardLocations) {
-            if (boardLocation.isEnabled()) {
-                activePlacements += boardLocation.getActivePlacements();
-                totalActivePlacements += boardLocation.getTotalActivePlacements();
-            }
-        }
-        
-        int blTotalActivePlacements = 0;
-        int blActivePlacements = 0;
-        
-        if (boardLocation != null) {
-            blTotalActivePlacements = boardLocation.getTotalActivePlacements();
-            blActivePlacements = boardLocation.getActivePlacements();
-        }
-        
-        MainFrame.get().setPlacementCompletionStatus(totalActivePlacements - activePlacements, 
-                totalActivePlacements, 
-                blTotalActivePlacements - blActivePlacements, 
-                blTotalActivePlacements);
-    }
-    
-    private void updateRowFilter() {
-        List<RowFilter<PlacementsTableModel, Integer>> filters = new ArrayList<>();
-        
-        RowFilter<PlacementsTableModel, Integer> sideFilter = new RowFilter<PlacementsTableModel, Integer>() {
-            public boolean include(Entry<? extends PlacementsTableModel, ? extends Integer> entry) {
-                if (boardLocation == null) {
-                    return false;
-                }
-                PlacementsTableModel model = entry.getModel();
-                Placement placement = model.getRowObjectAt(entry.getIdentifier());
-                return placement.getSide() == boardLocation.getSide();
-            }
-        };
-        filters.add(sideFilter);
-        
-        try {
-            RowFilter<PlacementsTableModel, Integer> searchFilter = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
-            filters.add(searchFilter);
-        }
-        catch (PatternSyntaxException e) {
-        }
-        
-        tableSorter.setRowFilter(RowFilter.andFilter(filters));
-    }
-    
-    
-    public void setBoardLocation(BoardLocation boardLocation) {
-        this.boardLocation = boardLocation;
-        if (boardLocation == null) {
-            tableModel.setBoardLocation(null);
-            boardLocationSelectionActionGroup.setEnabled(false);
-        }
-        else {
-            tableModel.setBoardLocation(boardLocation);
-            boardLocationSelectionActionGroup.setEnabled(true);
-
-            updateRowFilter();
-        }
-        updateActivePlacements();
-    }
-
-    public Placement getSelection() {
-        List<Placement> selectedPlacements = getSelections();
-        if (selectedPlacements.isEmpty()) {
+    public Placement getFiducialSelection() {
+        List<Placement> selectedFiducials = getFiducialSelections();
+        if (selectedFiducials.isEmpty()) {
             return null;
         }
-        return selectedPlacements.get(0);
+        return selectedFiducials.get(0);
     }
 
-    public List<Placement> getSelections() {
-        ArrayList<Placement> placements = new ArrayList<>();
-        if (boardLocation == null) {
-            return placements;
-        }
-        int[] selectedRows = table.getSelectedRows();
+    public List<Placement> getFiducialSelections() {
+        List<Placement> fiducials = new ArrayList<>();
+        int[] selectedRows = fiducialTable.getSelectedRows();
         for (int selectedRow : selectedRows) {
-            selectedRow = table.convertRowIndexToModel(selectedRow);
-            placements.add(boardLocation.getBoard().getPlacements().get(selectedRow));
+            selectedRow = fiducialTable.convertRowIndexToModel(selectedRow);
+            fiducials.add(rootPanelLocation.getPanel().getPlacements().get(selectedRow));
         }
-        return placements;
+        return fiducials;
     }
 
-    public final Action newAction = new AbstractAction() {
+    public FiducialLocatableLocation getChildrenSelection() {
+        List<FiducialLocatableLocation> selectedChildren = getChildrenSelections();
+        if (selectedChildren.isEmpty()) {
+            return null;
+        }
+        return selectedChildren.get(0);
+    }
+
+    public List<FiducialLocatableLocation> getChildrenSelections() {
+        List<FiducialLocatableLocation> selectedChildren = new ArrayList<>();
+        int[] selectedRows = childrenTable.getSelectedRows();
+        for (int selectedRow : selectedRows) {
+            selectedRow = childrenTable.convertRowIndexToModel(selectedRow);
+            selectedChildren.add(rootPanelLocation.getPanel().getChildren().get(selectedRow));
+        }
+        return selectedChildren;
+    }
+
+    public final Action addFiducialAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Placement");
-            putValue(SHORT_DESCRIPTION, "Create a new placement and add it to the board.");
+            putValue(NAME, "Add Fiducial");
+            putValue(SHORT_DESCRIPTION, "Add a fiducial part to this panel.");
         }
 
         @Override
@@ -442,401 +515,438 @@ public class JobPanelDefinitionPanel extends JPanel {
             }
 
             String id = JOptionPane.showInputDialog(getTopLevelAncestor(),
-                    "Please enter an ID for the new placement.");
+                    "Please enter an ID for the new fiducial.");
             if (id == null) {
                 return;
             }
             
             // Check if the new placement ID is unique
-            for(Placement compareplacement : boardLocation.getBoard().getPlacements()) {
-            	if (compareplacement.getId().equals(id)) {
-            		MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                            "The ID for the new placement already exists");
+            for(Placement compareplacement : rootPanelLocation.getPanel().getPlacements()) {
+                if (compareplacement.getId().equals(id)) {
+                    MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
+                            "The ID for the new fiducial already exists");
                     return;
-            	}
+                }
             }
             
             Placement placement = new Placement(id);
 
             placement.setPart(Configuration.get().getParts().get(0));
             placement.setLocation(new Location(Configuration.get().getSystemUnits()));
-            placement.setSide(boardLocation.getSide());
+            placement.setSide(rootPanelLocation.getSide());
 
-            boardLocation.getBoard().addPlacement(placement);
-            tableModel.fireTableDataChanged();
-            updateActivePlacements();
-            boardLocation.setPlaced(placement.getId(), false);
-            Helpers.selectLastTableRow(table);
+            rootPanelLocation.getPanel().addPlacement(placement);
+            fiducialTableModel.fireTableDataChanged();
+            Helpers.selectLastTableRow(fiducialTable);
         }
     };
 
-    public final Action removeAction = new AbstractAction() {
+    public final Action removeFiducialAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Remove Placement(s)");
-            putValue(SHORT_DESCRIPTION, "Remove the currently selected placement(s).");
+            putValue(NAME, "Remove Fiducial(s)");
+            putValue(SHORT_DESCRIPTION, "Remove the currently selected fiducial(s).");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (Placement placement : getSelections()) {
-                boardLocation.getBoard().removePlacement(placement);
+            for (Placement placement : getFiducialSelections()) {
+                rootPanelLocation.getPanel().removePlacement(placement);
             }
-            tableModel.fireTableDataChanged();
-            updateActivePlacements();
+            fiducialTableModel.fireTableDataChanged();
         }
     };
 
-    public final Action moveCameraToPlacementLocation = new AbstractAction() {
+    public final Action useChildFiducialAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.centerCamera);
-            putValue(NAME, "Move Camera To Placement Location");
-            putValue(SHORT_DESCRIPTION, "Position the camera at the placement's location.");
+            putValue(SMALL_ICON, Icons.autoPanelizeFidCheck);
+            putValue(NAME, "Use Child Fiducial");
+            putValue(SHORT_DESCRIPTION, "Use a child's fiducial as a panel fiducial.");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                        getSelection().getLocation());
-
-                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
-                        .getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(camera, location);
-                MovableUtils.fireTargetedUserAction(camera);
-
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("camera", camera);
-                Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-            });
-        }
-    };
-    public final Action moveCameraToPlacementLocationNext = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.centerCameraMoveNext);
-            putValue(NAME, "Move Camera To Next Placement Location ");
-            putValue(SHORT_DESCRIPTION,
-                    "Position the camera at the next placements location.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                // Need to keep current focus owner so that the space bar can be
-                // used after the initial click. Otherwise, button focus is lost
-                // when table is updated
-                Component comp = MainFrame.get().getFocusOwner();
-                Helpers.selectNextTableRow(table);
-                comp.requestFocus();
-                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                        getSelection().getLocation());
-                Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
-                        .getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(camera, location);
-                MovableUtils.fireTargetedUserAction(camera);
-
-                Map<String, Object> globals = new HashMap<>();
-                globals.put("camera", camera);
-                Configuration.get().getScripting().on("Camera.AfterPosition", globals);
-            });
-        };
-    };
-
-    public final Action moveToolToPlacementLocation = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.centerTool);
-            putValue(NAME, "Move Tool To Placement Location");
-            putValue(SHORT_DESCRIPTION, "Position the tool at the placement's location.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
-                    getSelection().getLocation());
-
-            Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-            UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
-                MovableUtils.fireTargetedUserAction(nozzle);
-            });
-        }
-    };
-
-    public final Action captureCameraPlacementLocation = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.captureCamera);
-            putValue(NAME, "Capture Camera Placement Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Set the placement's location to the camera's current position.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
-                HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
-                Camera camera = tool.getHead().getDefaultCamera();
-                Location placementLocation = Utils2D.calculateBoardPlacementLocationInverse(
-                        boardLocation, camera.getLocation());
-                getSelection().setLocation(placementLocation);
-                table.repaint();
-            });
-        }
-    };
-
-    public final Action captureToolPlacementLocation = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.captureTool);
-            putValue(NAME, "Capture Tool Placement Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Set the placement's location to the tool's current position.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.messageBoxOnException(() -> {
-                Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-                Location placementLocation = Utils2D
-                        .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());
-                getSelection().setLocation(placementLocation);
-                table.repaint();
-            });
-        }
-    };
-
-    public final Action editPlacementFeederAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.editFeeder);
-            putValue(NAME, "Edit Placement Feeder");
-            putValue(SHORT_DESCRIPTION, "Edit the placement's associated feeder definition.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            Placement placement = getSelection();
-            MainFrame.get().getFeedersTab().showFeederForPart(placement.getPart());
-        }
-    };
-
-    public final Action setTypeAction = new AbstractAction() {
-        {
-            putValue(NAME, "Set Type");
-            putValue(SHORT_DESCRIPTION, "Set placement type(s) to...");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {}
-    };
-
-    class SetTypeAction extends AbstractAction {
-        final Placement.Type type;
-
-        public SetTypeAction(Placement.Type type) {
-            this.type = type;
-            putValue(NAME, type.toString());
-            putValue(SHORT_DESCRIPTION, "Set placement type(s) to " + type.toString());
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            for (Placement placement : getSelections()) {
-                placement.setType(type);
-                tableModel.fireTableDataChanged();
-                updateActivePlacements();
+            FiducialLocatableLocation child = getChildrenSelection();
+            Side childLocalSide = child.getLocalSide();
+            Side childGlobalSide = child.getSide();
+            List<Placement> childPlacements = child.getFiducialLocatable().getPlacements();
+            IdentifiableList<Placement> fiducials = rootPanelLocation.getPanel().getPlacements();
+            for (Placement placement : childPlacements) {
+                if (placement.getType() == Type.Fiducial) {
+                    Logger.trace("placement = " + placement);
+                    Placement newFiducial = new Placement(fiducials.createId(placement.getId() + "-"));
+                    newFiducial.setType(Type.Fiducial);
+                    newFiducial.setEnabled(true);
+                    newFiducial.setPart(placement.getPart());
+                    newFiducial.setLocation(Utils2D.calculateBoardPlacementLocation(child, placement));
+                    newFiducial.setSide(placement.getSide().flip(childGlobalSide == Side.Bottom));
+                    Logger.trace("newFiducial = " + newFiducial);
+                    rootPanelLocation.getPanel().addPlacement(newFiducial);
+                }
             }
+            fiducialTableModel.fireTableDataChanged();
+        }
+    };
+
+    public final Action addChildAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.add);
+            putValue(NAME, "New Child");
+            putValue(SHORT_DESCRIPTION, "Add a new or existing panel or board to this panel.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+        }
+    };
+
+    public final Action addNewBoardAction = new AbstractAction() {
+        {
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.AddBoard.NewBoard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.AddBoard.NewBoard.Description")); //$NON-NLS-1$
+            putValue(MNEMONIC_KEY, KeyEvent.VK_N);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            FileDialog fileDialog = new FileDialog(frame, "Save New Board As...", FileDialog.SAVE); //$NON-NLS-1$
+            fileDialog.setFilenameFilter(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.toLowerCase().endsWith(".board.xml"); //$NON-NLS-1$
+                }
+            });
+            fileDialog.setFile("*.board.xml");
+            fileDialog.setVisible(true);
+            try {
+                String filename = fileDialog.getFile();
+                if (filename == null) {
+                    return;
+                }
+                if (!filename.toLowerCase().endsWith(".board.xml")) { //$NON-NLS-1$
+                    filename = filename + ".board.xml"; //$NON-NLS-1$
+                }
+                File file = new File(new File(fileDialog.getDirectory()), filename);
+
+                addBoard(file);
+
+                Helpers.selectLastTableRow(childrenTable);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                MessageBoxes.errorBox(frame, "Unable to create new board", e.getMessage()); //$NON-NLS-1$
+            }
+        }
+    };
+
+    public final Action addExistingBoardAction = new AbstractAction() {
+        {
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
+            putValue(MNEMONIC_KEY, KeyEvent.VK_E);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            FileDialog fileDialog = new FileDialog(frame);
+            fileDialog.setFilenameFilter(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.toLowerCase().endsWith(".board.xml"); //$NON-NLS-1$
+                }
+            });
+            fileDialog.setFile("*.board.xml");
+            fileDialog.setVisible(true);
+            try {
+                if (fileDialog.getFile() == null) {
+                    return;
+                }
+                File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
+
+                addBoard(file);
+
+                Helpers.selectLastTableRow(childrenTable);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                MessageBoxes.errorBox(frame, "Board load failed", e.getMessage()); //$NON-NLS-1$
+            }
+        }
+    };
+
+    protected void addBoard(File file) throws Exception {
+        Board board = configuration.getBoard(file);
+        BoardLocation boardLocation = new BoardLocation(board);
+        boardLocation.addPropertyChangeListener(this);
+        rootPanelLocation.addChild(boardLocation);
+        childrenTableModel.fireTableDataChanged();
+    }
+    
+    public final Action addNewPanelAction = new AbstractAction() {
+        {
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.AddBoard.NewPanel")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.AddBoard.NewPanel.Description")); //$NON-NLS-1$
+//            putValue(MNEMONIC_KEY, KeyEvent.VK_N);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            FileDialog fileDialog = new FileDialog(frame, "Save New Panel As...", FileDialog.SAVE); //$NON-NLS-1$
+            fileDialog.setFilenameFilter(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.toLowerCase().endsWith(".panel.xml"); //$NON-NLS-1$
+                }
+            });
+            fileDialog.setFile("*.panel.xml");
+            fileDialog.setVisible(true);
+            try {
+                String filename = fileDialog.getFile();
+                if (filename == null) {
+                    return;
+                }
+                if (!filename.toLowerCase().endsWith(".panel.xml")) { //$NON-NLS-1$
+                    filename = filename + ".panel.xml"; //$NON-NLS-1$
+                }
+                File file = new File(new File(fileDialog.getDirectory()), filename);
+
+                Panel panel = configuration.getPanel(file);
+                PanelLocation panelLocation = new PanelLocation(panel);
+                verifyNoCircularReferences(rootPanelLocation, panelLocation);
+                
+                panelLocation.addPropertyChangeListener(JobPanelDefinitionPanel.this);
+                rootPanelLocation.addChild(panelLocation);
+                childrenTableModel.fireTableDataChanged();
+
+                Helpers.selectLastTableRow(childrenTable);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                MessageBoxes.errorBox(frame, "Unable to create new panel", e.getMessage()); //$NON-NLS-1$
+            }
+        }
+    };
+
+    public final Action addExistingPanelAction = new AbstractAction() {
+        {
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.AddBoard.ExistingPanel")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.AddBoard.ExistingPanel.Description")); //$NON-NLS-1$
+//            putValue(MNEMONIC_KEY, KeyEvent.VK_E);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            FileDialog fileDialog = new FileDialog(frame);
+            fileDialog.setFilenameFilter(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.toLowerCase().endsWith(".panel.xml"); //$NON-NLS-1$
+                }
+            });
+            fileDialog.setFile("*.panel.xml");
+            fileDialog.setVisible(true);
+            try {
+                if (fileDialog.getFile() == null) {
+                    return;
+                }
+                File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
+
+                PanelLocation panelLocation = new PanelLocation();
+                panelLocation.setFileName(file.getAbsolutePath());
+                configuration.resolvePanel(jobPanel.getJob(), panelLocation);
+                verifyNoCircularReferences(rootPanelLocation, panelLocation);
+                
+                panelLocation.addPropertyChangeListener(JobPanelDefinitionPanel.this);
+                rootPanelLocation.addChild(panelLocation);
+                childrenTableModel.fireTableDataChanged();
+
+                Helpers.selectLastTableRow(childrenTable);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                MessageBoxes.errorBox(frame, "Panel load failed", e.getMessage()); //$NON-NLS-1$
+            }
+        }
+    };
+
+    private void verifyNoCircularReferences(PanelLocation root, PanelLocation decendant) throws Exception {
+        if (decendant.getPanel().getFile().equals(root.getPanel().getFile())) {
+            throw new Exception("A panel can't be made a decendant of itself.");
+        }
+        for (FiducialLocatableLocation child : decendant.getChildren()) {
+            if (child instanceof PanelLocation) {
+                verifyNoCircularReferences(root, (PanelLocation) child);
+            }
+        }
+    }
+    
+    public final Action removeChildAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.delete);
+            putValue(NAME, "Remove Child(ren)");
+            putValue(SHORT_DESCRIPTION, "Remove the currently selected panel(s) and/or board(s) from this panel.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (FiducialLocatableLocation child : getChildrenSelections()) {
+                rootPanelLocation.getPanel().removeChild(child);
+                child.removePropertyChangeListener(JobPanelDefinitionPanel.this);
+            }
+            childrenTableModel.fireTableDataChanged();
+        }
+    };
+
+    public final Action createArrayAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.autoPanelize);
+            putValue(NAME, "Create array of children");
+            putValue(SHORT_DESCRIPTION, "Created an array of children from the selected child.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+//            for (Placement placement : getSelections()) {
+//                boardLocation.getBoard().removePlacement(placement);
+//            }
+//            tableModel.fireTableDataChanged();
+//            updateActivePlacements();
+//            setDirty(true);
         }
     };
 
     public final Action setSideAction = new AbstractAction() {
         {
             putValue(NAME, "Set Side");
-            putValue(SHORT_DESCRIPTION, "Set placement side(s) to...");
+            putValue(SHORT_DESCRIPTION, "Set side(s) to...");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {}
     };
 
-    class SetSideAction extends AbstractAction {
+    class SetFiducialSideAction extends AbstractAction {
         final Board.Side side;
 
-        public SetSideAction(Board.Side side) {
+        public SetFiducialSideAction(Board.Side side) {
             this.side = side;
             putValue(NAME, side.toString());
-            putValue(SHORT_DESCRIPTION, "Set placement side(s) to " + side.toString());
+            putValue(SHORT_DESCRIPTION, "Set fiducial side(s) to " + side.toString());
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (Placement placement : getSelections()) {
-                placement.setSide(side);
-                tableModel.fireTableDataChanged();
-                updateActivePlacements();
+            for (Placement fiducial : getFiducialSelections()) {
+                fiducial.setSide(side);
+                fiducialTableModel.fireTableDataChanged();
             }
         }
     };
     
-    public final Action setErrorHandlingAction = new AbstractAction() {
-        {
-            putValue(NAME, "Set Error Handling");
-            putValue(SHORT_DESCRIPTION, "Set placement error handling(s) to...");
-        }
+    class SetChildrenSideAction extends AbstractAction {
+        final Board.Side side;
 
-        @Override
-        public void actionPerformed(ActionEvent arg0) {}
-    };
-
-    class SetErrorHandlingAction extends AbstractAction {
-        Placement.ErrorHandling errorHandling;
-
-        public SetErrorHandlingAction(Placement.ErrorHandling errorHandling) {
-            this.errorHandling = errorHandling;
-            putValue(NAME, errorHandling.toString());
-            putValue(SHORT_DESCRIPTION, "Set placement error handling(s) to " + errorHandling.toString());
+        public SetChildrenSideAction(Board.Side side) {
+            this.side = side;
+            putValue(NAME, side.toString());
+            putValue(SHORT_DESCRIPTION, "Set children side(s) to " + side.toString());
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (Placement placement : getSelections()) {
-                placement.setErrorHandling(errorHandling);
-                tableModel.fireTableDataChanged();
-                updateActivePlacements();
+            for (FiducialLocatableLocation child : getChildrenSelections()) {
+                child.setSide(side);
+                childrenTableModel.fireTableDataChanged();
             }
         }
     };
     
-    public final Action setPlacedAction = new AbstractAction() {
-        {
-            putValue(NAME, "Set Placed");
-            putValue(SHORT_DESCRIPTION, "Set placed to...");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {}
-    };
-
-    class SetPlacedAction extends AbstractAction {
-        final Boolean placed;
-
-        public SetPlacedAction(Boolean placed) {
-            this.placed = placed;
-            String name = placed ? "Placed" : "Not Placed";
-            putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, "Set placed to " + name);
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            for (Placement placement : getSelections()) {
-                boardLocation.setPlaced(placement.getId(), placed);
-                tableModel.fireTableDataChanged();   
-                updateActivePlacements();
-            }
-        }
-    };
-
     public final Action setEnabledAction = new AbstractAction() {
         {
             putValue(NAME, "Set Enabled");
-            putValue(SHORT_DESCRIPTION, "Set placement enabled to...");
+            putValue(SHORT_DESCRIPTION, "Set enabled to...");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {}
     };
-    private JTextField searchTextField;
 
-    class SetEnabledAction extends AbstractAction {
+    class SetFiducialEnabledAction extends AbstractAction {
         final Boolean enabled;
 
-        public SetEnabledAction(Boolean enabled) {
+        public SetFiducialEnabledAction(Boolean enabled) {
             this.enabled = enabled;
             String name = enabled ? "Enabled" : "Disabled";
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, "Set placement enabled to " + name);
+            putValue(SHORT_DESCRIPTION, "Set enabled to " + name);
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (Placement placement : getSelections()) {
-                placement.setEnabled(enabled);
-                tableModel.fireTableDataChanged();   
-                updateActivePlacements();
+            for (Placement fiducial : getFiducialSelections()) {
+                fiducial.setEnabled(enabled);
             }
+            fiducialTableModel.fireTableDataChanged();   
         }
     };
 
-    static class TypeRenderer extends DefaultTableCellRenderer {
-        @Override
-        public void setValue(Object value) {
-            if (value == null) {
-                return;
-            }
-            Type type = (Type) value;
-            setText(type.name());
+    class SetChildrenEnabledAction extends AbstractAction {
+        final Boolean enabled;
+
+        public SetChildrenEnabledAction(Boolean enabled) {
+            this.enabled = enabled;
+            String name = enabled ? "Enabled" : "Disabled";
+            putValue(NAME, name);
+            putValue(SHORT_DESCRIPTION, "Set enabled to " + name);
         }
 
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                                                       boolean isSelected, boolean hasFocus, int row, int column) {
-            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            Color alternateRowColor = UIManager.getColor("Table.alternateRowColor");
-            if (value == Type.Fiducial) {
-                c.setForeground(Color.black);
-                c.setBackground(typeColorFiducial);
-            } else if (isSelected) {
-                c.setForeground(table.getSelectionForeground());
-                c.setBackground(table.getSelectionBackground());
-            } else {
-                c.setForeground(table.getForeground());
-                c.setBackground(row%2==0 ? table.getBackground() : alternateRowColor);
+        public void actionPerformed(ActionEvent arg0) {
+            for (FiducialLocatableLocation child : getChildrenSelections()) {
+                child.setLocallyEnabled(enabled);
             }
+            childrenTableModel.fireTableDataChanged();   
+        }
+    };
 
-            return c;
+    public final Action setCheckFidsAction = new AbstractAction() {
+        {
+            putValue(NAME, "Set Check Fids");
+            putValue(SHORT_DESCRIPTION, "Set check fids to...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {}
+    };
+
+    class SetCheckFidsAction extends AbstractAction {
+        final Boolean value;
+
+        public SetCheckFidsAction(Boolean value) {
+            this.value = value;
+            String name = value ? "Check" : "Don't Check";
+            putValue(NAME, name);
+            putValue(SHORT_DESCRIPTION, "Set check fids to " + value);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            for (FiducialLocatableLocation child : getChildrenSelections()) {
+                child.setCheckFiducials(value);
+            }
+            childrenTableModel.fireTableDataChanged();   
         }
     }
 
-    static class StatusRenderer extends DefaultTableCellRenderer {
-        public void setValue(Object value) {
-            if (value == null) {
-                return;
-            }
-            Status status = (Status) value; 
-            if (status == Status.Ready) {
-                setBorder(new LineBorder(getBackground()));
-                setForeground(Color.black);
-                setBackground(statusColorReady);
-                setText("Ready");
-            }
-            else if (status == Status.MissingFeeder) {
-                setBorder(new LineBorder(getBackground()));
-                setForeground(Color.black);
-                setBackground(statusColorError);
-                setText("Missing Feeder");
-            }
-            else if (status == Status.ZeroPartHeight) {
-                setBorder(new LineBorder(getBackground()));
-                setForeground(Color.black);
-                setBackground(statusColorWarning);
-                setText("Part Height");
-            }
-            else if (status == Status.MissingPart) {
-                setBorder(new LineBorder(getBackground()));
-                setForeground(Color.black);
-                setBackground(statusColorError);
-                setText("Missing Part");
-            }
-            else if (status == Status.Disabled) {
-                setBorder(new LineBorder(getBackground()));
-                setForeground(Color.black);
-                setBackground(statusColorDisabled);
-                setText("Disabled");
-            }
-            else {
-                setBorder(new LineBorder(getBackground()));
-                setForeground(Color.black);
-                setBackground(statusColorError);
-                setText(status.toString());
-            }
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        Logger.trace("PropertyChangeEvent = " + evt);
+        if (evt.getPropertyName() == "children") {
+            childrenTableModel.setFiducialLocatableLocations(rootPanelLocation.getChildren());
+            childrenTableModel.fireTableDataChanged();   
+        }
+        if (evt.getSource() != this && evt.getPropertyName() != "dirty") {
+            setDirty(true);
         }
     }
 }

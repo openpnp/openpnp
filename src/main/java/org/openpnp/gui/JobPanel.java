@@ -67,7 +67,7 @@ import javax.swing.table.TableRowSorter;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.Translations;
-import org.openpnp.events.BoardLocationSelectedEvent;
+import org.openpnp.events.FiducialLocatableLocationSelectedEvent;
 import org.openpnp.events.JobLoadedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
@@ -108,6 +108,8 @@ import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 
 import com.google.common.eventbus.Subscribe;
+import java.awt.FlowLayout;
+import java.awt.CardLayout;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
@@ -130,7 +132,7 @@ public class JobPanel extends JPanel {
     private static final String PREF_RECENT_FILES = "JobPanel.recentFiles"; //$NON-NLS-1$
     private static final int PREF_RECENT_FILES_MAX = 10;
 
-    private FiducialLocatableLocationsTableModel JobTableModel;
+    private FiducialLocatableLocationsTableModel jobTableModel;
     private JTable jobTable;
     private JSplitPane splitPane;
 
@@ -163,22 +165,23 @@ public class JobPanel extends JPanel {
                 new ActionGroup(removeBoardAction, captureCameraBoardLocationAction,
                         captureToolBoardLocationAction, moveCameraToBoardLocationAction,
                         moveCameraToBoardLocationNextAction, moveToolToBoardLocationAction,
-                        twoPointLocateBoardLocationAction, fiducialCheckAction, panelizeAction,
+                        twoPointLocateBoardLocationAction, fiducialCheckAction, /*panelizeAction,*/
                         setEnabledAction,setCheckFidsAction, setSideAction);
         singleSelectionActionGroup.setEnabled(false);
         
         multiSelectionActionGroup = new ActionGroup(removeBoardAction, setEnabledAction, setCheckFidsAction, setSideAction);
         multiSelectionActionGroup.setEnabled(false);
         
-        panelizeXOutAction.setEnabled(false);
-        panelizeFiducialCheck.setEnabled(false);
-        JobTableModel = new FiducialLocatableLocationsTableModel(configuration);
+//        panelizeXOutAction.setEnabled(false);
+//        panelizeFiducialCheck.setEnabled(false);
+        jobTableModel = new FiducialLocatableLocationsTableModel(configuration);
+
 
         // Suppress because adding the type specifiers breaks WindowBuilder.
         @SuppressWarnings({"unchecked", "rawtypes"})
         JComboBox sidesComboBox = new JComboBox(Side.values());
 
-        jobTable = new AutoSelectTextTable(JobTableModel) {
+        jobTable = new AutoSelectTextTable(jobTableModel) {
             @Override
             public String getToolTipText(MouseEvent e) {
 
@@ -190,7 +193,7 @@ public class JobPanel extends JPanel {
                     if (col == 0) {
                         row = jobTable.convertRowIndexToModel(row);
                         FiducialLocatableLocation fiducialLocatableLocation =
-                                JobTableModel.getFiducialLocatableLocation(row);
+                                jobTableModel.getFiducialLocatableLocation(row);
                         if (fiducialLocatableLocation != null) {
                             return fiducialLocatableLocation.getFiducialLocatable()
                                                 .getFile()
@@ -215,6 +218,12 @@ public class JobPanel extends JPanel {
         jobTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
+                Logger.trace("TableModelEvent = " +
+                    "col:" + e.getColumn() +
+                    " firstRow:" + e.getFirstRow() +
+                    " lastRow:" + e.getLastRow() +
+                    " source:" + e.getSource() +
+                    " type:" + e.getType() );
                 SwingUtilities.invokeLater(() -> {
                     // One of 3 things can be happening here:
                     // First is row 0 is being edited. In normal mode, nothing
@@ -246,17 +255,19 @@ public class JobPanel extends JPanel {
                     else if (e.getFirstRow() == 0 && e.getLastRow() == Integer.MAX_VALUE) {
                         // A generic table update in response to TableDataChange
                         // event
-                        updatePanelizationIconState();
+                        Logger.trace("Job table row count = " + jobTableModel.getRowCount());
+//                        updatePanelizationIconState();
                     }
-                    if (getSelection() instanceof BoardLocation) {
-                        showLowerPanel(jobPlacementsPanel);
-                        jobPlacementsPanel.setBoardLocation((BoardLocation) getSelection());
-                        jobPanelDefinitionPanel.setVisible(false);
-                    }
-                    else if (getSelection() instanceof PanelLocation) {
-                        showLowerPanel(jobPanelDefinitionPanel);
-                        jobPlacementsPanel.setBoardLocation(null);
-                    }
+//                    if (getSelection() instanceof BoardLocation) {
+//                        jobPlacementsPanel.setBoardLocation((BoardLocation) getSelection());
+//                        jobPanelDefinitionPanel.setPanel(null);
+//                        showLowerPanel("jobPlacementsPanel");
+//                    }
+//                    else if (getSelection() instanceof PanelLocation) {
+//                        jobPanelDefinitionPanel.setPanel(((PanelLocation) getSelection()).getPanel());
+//                        jobPlacementsPanel.setBoardLocation(null);
+//                        showLowerPanel("jobPanelDefinitionPanel");
+//                    }
                 });
             }
         });
@@ -274,33 +285,39 @@ public class JobPanel extends JPanel {
                             singleSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(false);
                             jobPlacementsPanel.setBoardLocation(null);
+                            showLowerPanel("jobPlacementsPanel");
                             Configuration.get().getBus()
-                                .post(new BoardLocationSelectedEvent(null, JobPanel.this));
+                                .post(new FiducialLocatableLocationSelectedEvent(null, JobPanel.this));
                         }
                         else if (selections.size() == 1) {
                             multiSelectionActionGroup.setEnabled(false);
                             singleSelectionActionGroup.setEnabled(true);
                             if (selections.get(0) instanceof BoardLocation) {
-                                showLowerPanel(jobPlacementsPanel);
                                 jobPlacementsPanel.setBoardLocation((BoardLocation) selections.get(0));
+                                jobPanelDefinitionPanel.setPanel(null);
+                                showLowerPanel("jobPlacementsPanel");
                                 Configuration.get().getBus()
-                                    .post(new BoardLocationSelectedEvent((BoardLocation) selections.get(0), JobPanel.this));
+                                    .post(new FiducialLocatableLocationSelectedEvent((BoardLocation) selections.get(0), JobPanel.this));
                             }
                             else if (selections.get(0) instanceof PanelLocation) {
-                                showLowerPanel(jobPanelDefinitionPanel);
+                                jobPanelDefinitionPanel.setPanel(((PanelLocation) selections.get(0)).getPanel());
                                 jobPlacementsPanel.setBoardLocation(null);
+                                showLowerPanel("jobPanelDefinitionPanel");
+                                Configuration.get().getBus()
+                                .post(new FiducialLocatableLocationSelectedEvent((PanelLocation) selections.get(0), JobPanel.this));
                             }
                         }
                         else {
                             singleSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(true);
                             jobPlacementsPanel.setBoardLocation(null);
-                            showLowerPanel(null);
+                            jobPanelDefinitionPanel.setPanel(null);
+                            showLowerPanel("jobPlacementsPanel");
                             Configuration.get().getBus()
-                                .post(new BoardLocationSelectedEvent(null, JobPanel.this));
+                                .post(new FiducialLocatableLocationSelectedEvent(null, JobPanel.this));
                         }
 
-                        updatePanelizationIconState();
+//                        updatePanelizationIconState();
                     }
                 });
 
@@ -394,28 +411,30 @@ public class JobPanel extends JPanel {
         toolBarBoards.add(btnFiducialCheck);
         btnFiducialCheck.setHideActionText(true);
         toolBarBoards.addSeparator();
-        JButton btnPanelize = new JButton(panelizeAction);
-        toolBarBoards.add(btnPanelize);
-        btnPanelize.setHideActionText(true);
-        JButton btnPanelizeXOut = new JButton(panelizeXOutAction);
-        toolBarBoards.add(btnPanelizeXOut);
-        btnPanelizeXOut.setHideActionText(true);
-        JButton btnPanelizeFidCheck = new JButton(panelizeFiducialCheck);
-        toolBarBoards.add(btnPanelizeFidCheck);
-        btnPanelizeFidCheck.setHideActionText(true);
+//        JButton btnPanelize = new JButton(panelizeAction);
+//        toolBarBoards.add(btnPanelize);
+//        btnPanelize.setHideActionText(true);
+//        JButton btnPanelizeXOut = new JButton(panelizeXOutAction);
+//        toolBarBoards.add(btnPanelizeXOut);
+//        btnPanelizeXOut.setHideActionText(true);
+//        JButton btnPanelizeFidCheck = new JButton(panelizeFiducialCheck);
+//        toolBarBoards.add(btnPanelizeFidCheck);
+//        btnPanelizeFidCheck.setHideActionText(true);
 
         pnlBoards.add(new JScrollPane(jobTable));
         pnlLower = new JPanel();
-        pnlLower.setLayout(new BorderLayout(0, 0));
 
         splitPane.setLeftComponent(pnlBoards);
         splitPane.setRightComponent(pnlLower);
+        pnlLower.setLayout(new CardLayout(0, 0));
 
         jobPlacementsPanel = new JobPlacementsPanel(this);
+        pnlLower.add(jobPlacementsPanel, "jobPlacementsPanel");
 
         jobPanelDefinitionPanel = new JobPanelDefinitionPanel(this);
-        
-        showLowerPanel(jobPlacementsPanel);
+        pnlLower.add(jobPanelDefinitionPanel, "jobPanelDefinitionPanel");
+
+        showLowerPanel("jobPlacementsPanel");
         
         add(splitPane);
 
@@ -461,12 +480,10 @@ public class JobPanel extends JPanel {
         Configuration.get().getBus().register(this);
     }
     
-    private void showLowerPanel(JPanel jPanel) {
-        pnlLower.removeAll();
-        if (jPanel != null) {
-            pnlLower.add(jPanel, BorderLayout.CENTER);
-        }
-        pnlLower.repaint();
+    private void showLowerPanel(String panelName) {
+        SwingUtilities.invokeLater(() -> {
+            ((CardLayout) pnlLower.getLayout()).show(pnlLower, panelName);
+        });
     }
     
     void setState(State newState) {
@@ -479,14 +496,14 @@ public class JobPanel extends JPanel {
     }
 
     @Subscribe
-    public void boardLocationSelected(BoardLocationSelectedEvent event) {
+    public void fiducialLocatableLocationSelected(FiducialLocatableLocationSelectedEvent event) {
         if (event.source == this) {
             return;
         }
         SwingUtilities.invokeLater(() -> {
             MainFrame.get().showTab("Job"); //$NON-NLS-1$
 
-            selectFiducialLocatableLocation(event.boardLocation);
+            selectFiducialLocatableLocation(event.fiducialLocatableLocation);
         });
     }
 
@@ -505,8 +522,8 @@ public class JobPanel extends JPanel {
     }
 
     private void selectFiducialLocatableLocation(FiducialLocatableLocation fiducialLocatableLocation) {
-        for (int i = 0; i < JobTableModel.getRowCount(); i++) {
-            if (JobTableModel.getFiducialLocatableLocation(i) == fiducialLocatableLocation) {
+        for (int i = 0; i < jobTableModel.getRowCount(); i++) {
+            if (jobTableModel.getFiducialLocatableLocation(i) == fiducialLocatableLocation) {
                 int index = jobTable.convertRowIndexToView(i);
                 jobTable.getSelectionModel().setSelectionInterval(index, index);
                 jobTable.scrollRectToVisible(
@@ -526,7 +543,8 @@ public class JobPanel extends JPanel {
             this.job.removePropertyChangeListener("file", titlePropertyChangeListener); //$NON-NLS-1$
         }
         this.job = job;
-        JobTableModel.setJob(job);
+        jobTableModel.setRootPanelLocation(job.getRootPanelLocation());
+        jobTableModel.setFiducialLocatableLocations(job.getFiducialLocatableLocations());
         job.addPropertyChangeListener("dirty", titlePropertyChangeListener); //$NON-NLS-1$
         job.addPropertyChangeListener("file", titlePropertyChangeListener); //$NON-NLS-1$
         updateTitle();
@@ -584,12 +602,13 @@ public class JobPanel extends JPanel {
     }
 
     public void refresh() {
-        JobTableModel.fireTableDataChanged();
+//        jobTableModel.setFiducialLocatableLocations(job.getFiducialLocatableLocations());
+        jobTableModel.fireTableDataChanged();
     }
 
     public void refreshSelectedRow() {
         int index = jobTable.convertRowIndexToModel(jobTable.getSelectedRow());
-        JobTableModel.fireTableRowsUpdated(index, index);
+        jobTableModel.fireTableRowsUpdated(index, index);
     }
 
     public FiducialLocatableLocation getSelection() {
@@ -990,45 +1009,45 @@ public class JobPanel extends JPanel {
         });
     }
     
-    private void updatePanelizationIconState() {
-    	// If more than board is in the job list, then autopanelize isn't allowed
-        if (getJob().isUsingPanel() == false && jobTable.getRowCount() > 1){
-        	panelizeAction.setEnabled(false);
-        	panelizeFiducialCheck.setEnabled(false);
-            panelizeXOutAction.setEnabled(false);	
-        }
-        
-        if (getJob().getBoardLocations() == null) {
-            panelizeFiducialCheck.setEnabled(false);
-            panelizeXOutAction.setEnabled(false);
-        }
-
-        // The add existing/new PC icons are only enabled IF
-        // 1. The autopanelize feature is not in use
-        if (getJob().isUsingPanel() == false) {
-            panelizeFiducialCheck.setEnabled(false);
-            panelizeXOutAction.setEnabled(false);
-            addNewBoardAction.setEnabled(true);
-            addBoardAction.setEnabled(true);            
-        }
-        else {
-            addNewBoardAction.setEnabled(false);
-            addBoardAction.setEnabled(false);
-            panelizeFiducialCheck.setEnabled(true);
-            panelizeXOutAction.setEnabled(true);
-        }
-
-        // The delete PCB icon is only enabled IF
-        // 1. autopanelize is not in use OR
-        // 2. autopanelize is in use and row 0 (first pcb) is selected
-        if (getJob().isUsingPanel() == false
-                || (getJob().isUsingPanel() && jobTable.getSelectedRow() == 0)) {
-            removeBoardAction.setEnabled(true);
-        }
-        else {
-            removeBoardAction.setEnabled(false);
-        }
-    }
+//    private void updatePanelizationIconState() {
+//    	// If more than board is in the job list, then autopanelize isn't allowed
+//        if (getJob().isUsingPanel() == false && jobTable.getRowCount() > 1){
+//        	panelizeAction.setEnabled(false);
+//        	panelizeFiducialCheck.setEnabled(false);
+//            panelizeXOutAction.setEnabled(false);	
+//        }
+//        
+//        if (getJob().getBoardLocations() == null) {
+//            panelizeFiducialCheck.setEnabled(false);
+//            panelizeXOutAction.setEnabled(false);
+//        }
+//
+//        // The add existing/new PC icons are only enabled IF
+//        // 1. The autopanelize feature is not in use
+//        if (getJob().isUsingPanel() == false) {
+//            panelizeFiducialCheck.setEnabled(false);
+//            panelizeXOutAction.setEnabled(false);
+//            addNewBoardAction.setEnabled(true);
+//            addBoardAction.setEnabled(true);            
+//        }
+//        else {
+//            addNewBoardAction.setEnabled(false);
+//            addBoardAction.setEnabled(false);
+//            panelizeFiducialCheck.setEnabled(true);
+//            panelizeXOutAction.setEnabled(true);
+//        }
+//
+//        // The delete PCB icon is only enabled IF
+//        // 1. autopanelize is not in use OR
+//        // 2. autopanelize is in use and row 0 (first pcb) is selected
+//        if (getJob().isUsingPanel() == false
+//                || (getJob().isUsingPanel() && jobTable.getSelectedRow() == 0)) {
+//            removeBoardAction.setEnabled(true);
+//        }
+//        else {
+//            removeBoardAction.setEnabled(false);
+//        }
+//    }
 
 //    public void populatePanelSettingsIntoBoardLocations() {
 //        if (getJob().isUsingPanel()) {
@@ -1173,7 +1192,7 @@ public class JobPanel extends JPanel {
                 e.printStackTrace();
                 MessageBoxes.errorBox(frame, "Unable to create new board", e.getMessage()); //$NON-NLS-1$
             }
-            updatePanelizationIconState();
+//            updatePanelizationIconState();
         }
     };
 
@@ -1208,7 +1227,7 @@ public class JobPanel extends JPanel {
                 e.printStackTrace();
                 MessageBoxes.errorBox(frame, "Board load failed", e.getMessage()); //$NON-NLS-1$
             }
-            updatePanelizationIconState();
+//            updatePanelizationIconState();
         }
     };
 
@@ -1217,7 +1236,7 @@ public class JobPanel extends JPanel {
         BoardLocation boardLocation = new BoardLocation(board);
         getJob().addBoardLocation(boardLocation);
         // TODO: Move to a list property listener.
-        JobTableModel.fireTableDataChanged();
+        jobTableModel.fireTableDataChanged();
     }
     
     public final Action addNewPanelAction = new AbstractAction() {
@@ -1251,7 +1270,7 @@ public class JobPanel extends JPanel {
                 Panel panel = configuration.getPanel(file);
                 PanelLocation panelLocation = new PanelLocation(panel);
                 getJob().addPanelLocation(panelLocation);
-                JobTableModel.fireTableDataChanged();
+                jobTableModel.fireTableDataChanged();
 
                 Helpers.selectLastTableRow(jobTable);
             }
@@ -1259,7 +1278,7 @@ public class JobPanel extends JPanel {
                 e.printStackTrace();
                 MessageBoxes.errorBox(frame, "Unable to create new panel", e.getMessage()); //$NON-NLS-1$
             }
-            updatePanelizationIconState();
+//            updatePanelizationIconState();
         }
     };
 
@@ -1293,7 +1312,7 @@ public class JobPanel extends JPanel {
                 configuration.resolvePanels(job, job.getPanelLocations());
                 
                 // TODO: Move to a list property listener.
-                JobTableModel.fireTableDataChanged();
+                jobTableModel.fireTableDataChanged();
 
                 Helpers.selectLastTableRow(jobTable);
             }
@@ -1301,7 +1320,7 @@ public class JobPanel extends JPanel {
                 e.printStackTrace();
                 MessageBoxes.errorBox(frame, "Panel load failed", e.getMessage()); //$NON-NLS-1$
             }
-            updatePanelizationIconState();
+//            updatePanelizationIconState();
         }
     };
 
@@ -1318,7 +1337,7 @@ public class JobPanel extends JPanel {
             if (getJob().isUsingPanel()) {
                 getJob().removeAllBoards();
                 getJob().removeAllPanels();
-                JobTableModel.fireTableDataChanged();
+                jobTableModel.fireTableDataChanged();
                 addNewBoardAction.setEnabled(true);
                 addExistingBoardAction.setEnabled(true);
                 removeBoardAction.setEnabled(true);
@@ -1327,9 +1346,9 @@ public class JobPanel extends JPanel {
                 for (FiducialLocatableLocation selection : getSelections()) {
                     getJob().removeFiducialLocatableLocation(selection);
                 }
-                JobTableModel.fireTableDataChanged();
+                jobTableModel.fireTableDataChanged();
             }
-            updatePanelizationIconState();
+//            updatePanelizationIconState();
         }
     };
 
@@ -1507,77 +1526,77 @@ public class JobPanel extends JPanel {
         }
     };
 
-    public final Action panelizeAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.autoPanelize);
-            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.Panelize")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.Panelize.Description")); //$NON-NLS-1$
-        }
+//    public final Action panelizeAction = new AbstractAction() {
+//        {
+//            putValue(SMALL_ICON, Icons.autoPanelize);
+//            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.Panelize")); //$NON-NLS-1$
+//            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.Panelize.Description")); //$NON-NLS-1$
+//        }
+//
+//        @Override
+//        public void actionPerformed(ActionEvent arg0) {
+//
+//            if (job.isUsingPanel() == false) {
+//                if (job.getBoardLocations().size() > 1) {
+//                    MessageBoxes.errorBox(frame,
+//                            Translations.getString("JobPanel.Action.Job.Board.Panelize.Error"), //$NON-NLS-1$
+//                            Translations.getString("JobPanel.Action.Job.Board.Panelize.Error.Description")); //$NON-NLS-1$
+//                    return;
+//                }
+//            }
+//
+//            DlgAutoPanelize dlg = new DlgAutoPanelize(frame, JobPanel.this);
+//            dlg.setVisible(true);
+//        }
+//    };
 
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-
-            if (job.isUsingPanel() == false) {
-                if (job.getBoardLocations().size() > 1) {
-                    MessageBoxes.errorBox(frame,
-                            Translations.getString("JobPanel.Action.Job.Board.Panelize.Error"), //$NON-NLS-1$
-                            Translations.getString("JobPanel.Action.Job.Board.Panelize.Error.Description")); //$NON-NLS-1$
-                    return;
-                }
-            }
-
-            DlgAutoPanelize dlg = new DlgAutoPanelize(frame, JobPanel.this);
-            dlg.setVisible(true);
-        }
-    };
-
-    public final Action panelizeXOutAction = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.autoPanelizeXOut);
-            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.Panelize.SkipBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.Panelize.SkipBoard.Description")); //$NON-NLS-1$
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            DlgPanelXOut dlg = new DlgPanelXOut(frame, JobPanel.this);
-            dlg.setVisible(true);
-        }
-    };
-
-    public final Action panelizeFiducialCheck = new AbstractAction() {
-        {
-            putValue(SMALL_ICON, Icons.autoPanelizeFidCheck);
-            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.Panelize.FiducialCheck")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION,
-                    Translations.getString("JobPanel.Action.Job.Board.Panelize.FiducialCheck.Description")); //$NON-NLS-1$
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            UiUtils.submitUiMachineTask(() -> {
-                Helpers.selectFirstTableRow(jobTable);
-                Location location = Configuration.get().getMachine().getFiducialLocator()
-                        .locateBoard(getSelection(), true);
-
-                /**
-                 * Set the panel's location to the one returned from the fiducial check. We have
-                 * to store and restore the placement transform because setting the location
-                 * clears it.
-                 */
-                AffineTransform tx = getSelection().getLocalToParentTransform();
-                getSelection().setLocation(location);
-                getSelection().setLocalToParentTransform(tx);
-                refreshSelectedRow();
-                
-                HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
-                Camera camera = tool.getHead().getDefaultCamera();
-                MovableUtils.moveToLocationAtSafeZ(camera, location);
-                MovableUtils.fireTargetedUserAction(camera);
-            });
-        }
-
-    };
+//    public final Action panelizeXOutAction = new AbstractAction() {
+//        {
+//            putValue(SMALL_ICON, Icons.autoPanelizeXOut);
+//            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.Panelize.SkipBoard")); //$NON-NLS-1$
+//            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.Panelize.SkipBoard.Description")); //$NON-NLS-1$
+//        }
+//
+//        @Override
+//        public void actionPerformed(ActionEvent arg0) {
+//            DlgPanelXOut dlg = new DlgPanelXOut(frame, JobPanel.this);
+//            dlg.setVisible(true);
+//        }
+//    };
+//
+//    public final Action panelizeFiducialCheck = new AbstractAction() {
+//        {
+//            putValue(SMALL_ICON, Icons.autoPanelizeFidCheck);
+//            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.Panelize.FiducialCheck")); //$NON-NLS-1$
+//            putValue(SHORT_DESCRIPTION,
+//                    Translations.getString("JobPanel.Action.Job.Board.Panelize.FiducialCheck.Description")); //$NON-NLS-1$
+//        }
+//
+//        @Override
+//        public void actionPerformed(ActionEvent arg0) {
+//            UiUtils.submitUiMachineTask(() -> {
+//                Helpers.selectFirstTableRow(jobTable);
+//                Location location = Configuration.get().getMachine().getFiducialLocator()
+//                        .locateBoard(getSelection(), true);
+//
+//                /**
+//                 * Set the panel's location to the one returned from the fiducial check. We have
+//                 * to store and restore the placement transform because setting the location
+//                 * clears it.
+//                 */
+//                AffineTransform tx = getSelection().getLocalToParentTransform();
+//                getSelection().setLocation(location);
+//                getSelection().setLocalToParentTransform(tx);
+//                refreshSelectedRow();
+//                
+//                HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
+//                Camera camera = tool.getHead().getDefaultCamera();
+//                MovableUtils.moveToLocationAtSafeZ(camera, location);
+//                MovableUtils.fireTargetedUserAction(camera);
+//            });
+//        }
+//
+//    };
     
     public final Action setEnabledAction = new AbstractAction() {
         {

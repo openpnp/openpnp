@@ -19,8 +19,11 @@
 
 package org.openpnp.gui.tablemodel;
 
+import java.util.Locale;
+
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
+import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -31,19 +34,28 @@ import org.openpnp.model.Placement;
 
 @SuppressWarnings("serial")
 public class PanelFiducialsTableModel extends AbstractObjectTableModel {
-    final Panel panel;
+    private Panel panel;
 
     private String[] columnNames =
             new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot."};
 
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class,
-            Side.class, LengthCellValue.class, LengthCellValue.class, Double.class};
+            Side.class, LengthCellValue.class, LengthCellValue.class, RotationCellValue.class};
 
     public PanelFiducialsTableModel(Panel panel) {
         this.panel = panel;
     }
     
+    public Panel getPanel() {
+        return panel;
+    }
+
+    public void setPanel(Panel panel) {
+        this.panel = panel;
+        fireTableDataChanged();
+    }
+
     @Override
     public Placement getRowObjectAt(int index) {
         return panel.getFiducials().get(index);
@@ -141,7 +153,7 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
             case 5:
                 return new LengthCellValue(loc.getLengthY(), true);
             case 6:
-                return loc.getRotation();
+                return new RotationCellValue(loc.getRotation(), true);
             default:
                 return null;
         }

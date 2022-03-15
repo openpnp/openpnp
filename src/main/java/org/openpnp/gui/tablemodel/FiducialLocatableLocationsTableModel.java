@@ -19,6 +19,7 @@
 
 package org.openpnp.gui.tablemodel;
 
+import java.util.List;
 import java.util.Locale;
 
 import javax.swing.table.AbstractTableModel;
@@ -31,6 +32,7 @@ import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.PanelLocation;
 
 @SuppressWarnings("serial")
 public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
@@ -44,23 +46,47 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
             LengthCellValue.class, String.class, Boolean.class, Boolean.class};
 
-    private Job job;
+//    private Job job;
+
+    private PanelLocation rootPanelLocation;
+
+    private List<FiducialLocatableLocation> fiducialLocatableLocations;
 
     public FiducialLocatableLocationsTableModel(Configuration configuration) {
         this.configuration = configuration;
+//        this.rootPanelLocation = rootPanelLocation;
+//        this.fiducialLocatableLocations = fiducialLocatableLocations;
     }
 
-    public void setJob(Job job) {
-        this.job = job;
+//    public void setJob(Job job) {
+//        this.job = job;
+//        fireTableDataChanged();
+//    }
+//
+//    public Job getJob() {
+//        return job;
+//    }
+
+    public PanelLocation getRootPanelLocation() {
+        return rootPanelLocation;
+    }
+
+    public void setRootPanelLocation(PanelLocation rootPanelLocation) {
+        this.rootPanelLocation = rootPanelLocation;
         fireTableDataChanged();
     }
 
-    public Job getJob() {
-        return job;
+    public List<FiducialLocatableLocation> getFiducialLocatableLocations() {
+        return fiducialLocatableLocations;
+    }
+
+    public void setFiducialLocatableLocations(List<FiducialLocatableLocation> fiducialLocatableLocations) {
+        this.fiducialLocatableLocations = fiducialLocatableLocations;
+        fireTableDataChanged();
     }
 
     public FiducialLocatableLocation getFiducialLocatableLocation(int index) {
-        return job.getFiducialLocatableLocations().get(index);
+        return fiducialLocatableLocations.get(index);
     }
 
     @Override
@@ -73,10 +99,10 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
     }
 
     public int getRowCount() {
-        if (job == null) {
+        if (fiducialLocatableLocations == null) {
             return 0;
         }
-        return job.getFiducialLocatableLocations().size();
+        return fiducialLocatableLocations.size();
     }
 
     @Override
@@ -89,7 +115,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
         if (columnIndex == 0) {
             return false;
         }
-        if ((job.getFiducialLocatableLocations().get(rowIndex).getParent() == job.getRootPanelLocation()) ||
+        if ((fiducialLocatableLocations.get(rowIndex).getParent() == rootPanelLocation) ||
                 (columnIndex == 8) || (columnIndex == 9)) {
             return true;
         }
@@ -99,7 +125,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            FiducialLocatableLocation fiducialLocatableLocation = job.getFiducialLocatableLocations().get(rowIndex);
+            FiducialLocatableLocation fiducialLocatableLocation = fiducialLocatableLocations.get(rowIndex);
             if (columnIndex == 0) {
                 fiducialLocatableLocation.getFiducialLocatable().setName((String) aValue);
             }
@@ -125,7 +151,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
                 if (newSide != oldSide) {
                     Location savedLocation = fiducialLocatableLocation.getGlobalLocation();
                     fiducialLocatableLocation.setSide(newSide);
-                    if (fiducialLocatableLocation.getParent() == job.getRootPanelLocation()) {
+                    if (fiducialLocatableLocation.getParent() == rootPanelLocation) {
                         fiducialLocatableLocation.setGlobalLocation(savedLocation);
                     }
                     fiducialLocatableLocation.setLocalToParentTransform(null);
@@ -176,7 +202,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
     }
 
     public Object getValueAt(int row, int col) {
-        FiducialLocatableLocation fiducialLocatableLocation = job.getFiducialLocatableLocations().get(row);
+        FiducialLocatableLocation fiducialLocatableLocation = fiducialLocatableLocations.get(row);
         Location loc = fiducialLocatableLocation.getGlobalLocation();
         Location dim = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
         switch (col) {
