@@ -69,6 +69,7 @@ public class LocationButtonsPanel extends JPanel {
     private JButton buttonCenterCamera;
 
     private Location baseLocation;
+    private boolean baseLocationVectorial;
     private boolean contactProbeReference;
 
     public LocationButtonsPanel(JTextField textFieldX, JTextField textFieldY, JTextField textFieldZ,
@@ -116,6 +117,14 @@ public class LocationButtonsPanel extends JPanel {
 
     public void setBaseLocation(Location baseLocation) {
         this.baseLocation = baseLocation;
+    }
+
+    public boolean isBaseLocationVectorial() {
+        return baseLocationVectorial;
+    }
+
+    public void setBaseLocationVectorial(boolean baseLocationVectorial) {
+        this.baseLocationVectorial = baseLocationVectorial;
     }
 
     @Override
@@ -262,7 +271,9 @@ public class LocationButtonsPanel extends JPanel {
                         }
                         if (baseLocation != null) {
                             l = l.subtractWithRotation(baseLocation);
-                            l = l.rotateXy(-baseLocation.getRotation());
+                            if (!isBaseLocationVectorial()) {
+                                l = l.rotateXy(-baseLocation.getRotation());
+                            }
                         }
                         final Location lf = l;
                         SwingUtilities.invokeAndWait(() -> {
@@ -289,7 +300,9 @@ public class LocationButtonsPanel extends JPanel {
                         Location l = getTool().getLocation();
                         if (baseLocation != null) {
                             l = l.subtractWithRotation(baseLocation);
-                            l = l.rotateXy(-baseLocation.getRotation());
+                            if (!isBaseLocationVectorial()) {
+                                l = l.rotateXy(-baseLocation.getRotation());
+                            }
                         }
                         final Location lf = l;
                         SwingUtilities.invokeAndWait(() -> {
@@ -317,7 +330,9 @@ public class LocationButtonsPanel extends JPanel {
                         Location l = actuator.getLocation();
                         if (baseLocation != null) {
                             l = l.subtractWithRotation(baseLocation);
-                            l = l.rotateXy(-baseLocation.getRotation());
+                            if (!isBaseLocationVectorial()) {
+                                l = l.rotateXy(-baseLocation.getRotation());
+                            }
                         }
                         final Location lf = l;
                         SwingUtilities.invokeAndWait(() -> {
@@ -342,7 +357,9 @@ public class LocationButtonsPanel extends JPanel {
                         Camera camera = getCamera();
                         Location location = getParsedLocation();
                         if (baseLocation != null) {
-                            location = location.rotateXy(baseLocation.getRotation());
+                            if (!isBaseLocationVectorial()) {
+                                location = location.rotateXy(baseLocation.getRotation());
+                            }
                             location = location.addWithRotation(baseLocation);
                         }
                         MovableUtils.moveToLocationAtSafeZ(camera, location);
@@ -367,7 +384,9 @@ public class LocationButtonsPanel extends JPanel {
                 HeadMountable tool = getTool();
                 Location location = getParsedLocation();
                 if (baseLocation != null) {
-                    location = location.rotateXy(baseLocation.getRotation());
+                    if (!isBaseLocationVectorial()) {
+                        location = location.rotateXy(baseLocation.getRotation());
+                    }
                     location = location.addWithRotation(baseLocation);
                 }
                 MovableUtils.moveToLocationAtSafeZ(tool, location);
@@ -389,7 +408,9 @@ public class LocationButtonsPanel extends JPanel {
                 HeadMountable tool = getTool();
                 Location location = getParsedLocation();
                 if (baseLocation != null) {
-                    location = location.rotateXy(baseLocation.getRotation());
+                    if (!isBaseLocationVectorial()) {
+                        location = location.rotateXy(baseLocation.getRotation());
+                    }
                     location = location.addWithRotation(baseLocation);
                 }
                 tool.moveTo(location);
@@ -461,7 +482,9 @@ public class LocationButtonsPanel extends JPanel {
                 Actuator actuator = getActuator();
                 Location location = getParsedLocation();
                 if (baseLocation != null) {
-                    location = location.rotateXy(baseLocation.getRotation());
+                    if (!isBaseLocationVectorial()) {
+                        location = location.rotateXy(baseLocation.getRotation());
+                    }
                     location = location.addWithRotation(baseLocation);
                 }
                 MovableUtils.moveToLocationAtSafeZ(actuator, location);
@@ -483,7 +506,9 @@ public class LocationButtonsPanel extends JPanel {
                 Actuator actuator = getActuator();
                 Location location = getParsedLocation();
                 if (baseLocation != null) {
-                    location = location.rotateXy(baseLocation.getRotation());
+                    if (!isBaseLocationVectorial()) {
+                        location = location.rotateXy(baseLocation.getRotation());
+                    }
                     location = location.addWithRotation(baseLocation);
                 }
                 actuator.moveTo(location);
