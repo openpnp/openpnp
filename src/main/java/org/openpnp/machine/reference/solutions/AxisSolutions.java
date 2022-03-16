@@ -41,6 +41,7 @@ import org.openpnp.model.Solutions.Subject;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.Nozzle.RotationMode;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.base.AbstractControllerAxis;
@@ -236,36 +237,39 @@ public class AxisSolutions implements Solutions.Subject {
                     }
                 }
                 if (isUnlimitedArticulation) {
-                    if (!axis.isWrapAroundRotation()) {
-                        solutions.add(new Solutions.Issue(
-                                axis, 
-                                "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
-                                "Enable Wrap Around.", 
-                                Severity.Suggestion,
-                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                    if (axis.getDefaultHeadMountable() instanceof Nozzle) {
+                        // Axis is used on nozzle, suggest some optimizations.
+                        if (!axis.isWrapAroundRotation()) {
+                            solutions.add(new Solutions.Issue(
+                                    axis, 
+                                    "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
+                                    "Enable Wrap Around.", 
+                                    Severity.Suggestion,
+                                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
-                            @Override
-                            public void setState(Solutions.State state) throws Exception {
-                                axis.setWrapAroundRotation((state == Solutions.State.Solved));
-                                super.setState(state);
-                            }
-                        });
-                    }
-                    if (!axis.isLimitRotation()) {
-                        solutions.add(new Solutions.Issue(
-                                axis, 
-                                "Rotation can be optimized by limiting angles to ±180°. "
-                                        + "Best combined with Wrap Around.", 
-                                        "Enable Limit to Range.", 
-                                        Severity.Suggestion,
-                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                                @Override
+                                public void setState(Solutions.State state) throws Exception {
+                                    axis.setWrapAroundRotation((state == Solutions.State.Solved));
+                                    super.setState(state);
+                                }
+                            });
+                        }
+                        if (!axis.isLimitRotation()) {
+                            solutions.add(new Solutions.Issue(
+                                    axis, 
+                                    "Rotation can be optimized by limiting angles to ±180°. "
+                                            + "Best combined with Wrap Around.", 
+                                            "Enable Limit to Range.", 
+                                            Severity.Suggestion,
+                                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
-                            @Override
-                            public void setState(Solutions.State state) throws Exception {
-                                axis.setLimitRotation((state == Solutions.State.Solved));
-                                super.setState(state);
-                            }
-                        });
+                                @Override
+                                public void setState(Solutions.State state) throws Exception {
+                                    axis.setLimitRotation((state == Solutions.State.Solved));
+                                    super.setState(state);
+                                }
+                            });
+                        }
                     }
                 }
                 else {
