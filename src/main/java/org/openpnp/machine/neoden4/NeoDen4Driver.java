@@ -836,13 +836,9 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
          
          double x = location.getCoordinate(location.getAxis(this, Axis.Type.X), units);
          double y = location.getCoordinate(location.getAxis(this, Axis.Type.Y), units);
-         double z = location.getCoordinate(location.getAxis(this, Axis.Type.Z), units);
-         double c = location.getCoordinate(location.getAxis(this, Axis.Type.Rotation), units);
+         double z = 0;
+         double c = 0;
 
-         if(z >= 0 ) {
-         	z = 0;
-         }
-         
          // TODO: remove NaN handling. It is already done outside of the driver.
          
          // Handle NaNs, which means don't move this axis for this move. We just copy the existing
@@ -852,50 +848,44 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
 
          double minZ = 0.;
          double maxZ = -13.;
-
+         
          switch (hm.getId()) {
              case "N1":
-                 c = Double.isNaN(c) ? this.c1 : c;
+                 c = location.getCoordinate(location.getAxisByVariable(this,  "rotationN1"));
                  c = Math.max(c, -180.);
                  c = Math.min(c, 180.);                
                  if (Math.abs(c-this.c1)>0.001) {
                      moveC(1, c);
-//                     moveC(1, c);
                      this.c1 = c;
                      isDelayNeeded = true;
                  }
                  break;
              case "N2":
-
-                 c = Double.isNaN(c) ? this.c2 : c;
+                 c = location.getCoordinate(location.getAxisByVariable(this,  "rotationN2"));
                  c = Math.max(c, -180.);
                  c = Math.min(c, 180.);                
                  if (Math.abs(c-this.c2)>0.001) {
                      moveC(2, c);
-//                     moveC(2, c);
                      this.c2 = c;
                      isDelayNeeded = true;
                  }
                  break;
              case "N3":
-                 c = Double.isNaN(c) ? this.c3 : c;
+                 c = location.getCoordinate(location.getAxisByVariable(this,  "rotationN3"));
                  c = Math.max(c, -180.);
                  c = Math.min(c, 180.);                
                  if (Math.abs(c-this.c3)>0.001) {
                      moveC(3, c);
-//                     moveC(3, c);
                      this.c3 = c;
                      isDelayNeeded = true;
                  }
                  break;
              case "N4":
-         
-                 c = Double.isNaN(c) ? this.c4 : c;
+                 c = location.getCoordinate(location.getAxisByVariable(this,  "rotationN4"));
                  c = Math.max(c, -180.);
                  c = Math.min(c, 180.);                
                  if (Math.abs(c-this.c4)>0.001) {
                      moveC(4, c);
-//                     moveC(4, c);
                      this.c4 = c;
                      isDelayNeeded = true;
                  }
@@ -926,7 +916,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
          
          switch (hm.getId()) {
          case "N1":
-             z = Double.isNaN(z) ? this.z1 : z;
+             z = location.getCoordinate(location.getAxisByVariable(this,  "zN1"));
              z = Math.min(z, minZ);
              z = Math.max(z, maxZ);
              if (Math.abs(z-this.z1)>0.001) {
@@ -937,7 +927,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
              break;
              
          case "N2":
-             z = Double.isNaN(z) ? this.z2 : z;
+             z = location.getCoordinate(location.getAxisByVariable(this,  "zN2"));
              z = Math.min(z, minZ);
              z = Math.max(z, maxZ);
              if (Math.abs(z-this.z2)>0.001) {
@@ -948,7 +938,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
              break;
              
          case "N3":
-             z = Double.isNaN(z) ? this.z3 : z;
+             z = location.getCoordinate(location.getAxisByVariable(this,  "zN3"));
              z = Math.min(z, minZ);
              z = Math.max(z, maxZ);
              if (Math.abs(z-this.z3)>0.001) {
@@ -959,7 +949,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
              break;
              
          case "N4":
-             z = Double.isNaN(z) ? this.z4 : z;
+             z = location.getCoordinate(location.getAxisByVariable(this,  "zN4"));
              z = Math.min(z, minZ);
              z = Math.max(z, maxZ);
              if (Math.abs(z-this.z4)>0.001) {
@@ -1283,7 +1273,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         	catch (Exception e){
         		Thread.sleep(1000);
         		flushInput();
-        		Logger.warn("Recovered actuate");
+        		Logger.warn(String.format("actuate: try %d, exception %s, [%s]", i, e.toString(), actuator.toString()));
         		Thread.sleep(1000);
         	}
     	}
@@ -1461,6 +1451,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
 
     @Override
     public boolean isUsingLetterVariables() {
-        return false;
+        return true;
     }
 }
