@@ -655,9 +655,12 @@ extends AbstractConfigurationWizard {
             Actuator feedActuator = null;
             try {
                 head = Configuration.get().getMachine().getDefaultHead();
-                feedActuator = head.getActuatorByName((String) actuator.getSelectedItem());
-                // Take the rotation from the actuator.
-                baseLocation = feedActuator.getLocation().multiply(0, 0, 0, 1);
+                String actuatorName = (String) actuator.getSelectedItem();
+                if (actuatorName != null && !actuatorName.isEmpty()) {
+                    feedActuator = head.getActuatorByName(actuatorName);
+                    // Take the rotation from the actuator.
+                    baseLocation = feedActuator.getLocation().multiply(0, 0, 0, 1);
+                }
             }
             catch (Exception e) {
                 Logger.error(e, "Cannot determine base location of actuator.");
