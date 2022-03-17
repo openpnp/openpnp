@@ -243,6 +243,7 @@ All these Locations are handled like the Pick and Sprocket Hole Locations discus
 Cover tape peeling can be done using motion that is coordinated with the push-pull articulation, as needed for drag feeders etc. This allows for an elaborate and coordinated motion pattern. Furthermore, it performs the peeling motion _in parallel_ with the other feeding articulation, potentially saving time. 
 
 #### Peeler Axis
+
 Create a rotation axis for the peeler. Make sure to _disable_ the **Limit to Range** and **Wrap Around** options, as we want continuous wind-up of the peeled-off cover tape:
 
 ![Rotation Axis](https://user-images.githubusercontent.com/9963310/158563357-84e92d16-36d0-4ecb-a56a-63e8c6f3701e.png)
@@ -251,7 +252,9 @@ Assign the created axis to the push-pull actuator:
 
 ![Assign to Actuator](https://user-images.githubusercontent.com/9963310/158563736-3c94a813-d7ef-43c6-bf0e-9a9ce76aa34d.png)
 
-Do not forget to use [[Issues and Solutions]] to generate new G-code fragments for your drivers, i.e. to include the new axis. Be sure to press **Find Issues & Solutions** freshly, after having defined and assigned the new axis. 
+#### Driver G-code for the new Peeler Axis
+
+Do not forget to use [[Issues and Solutions]] to generate new G-code fragments for your drivers, i.e. to include the new axis. Be sure to press **Find Issues & Solutions** freshly, after having defined and assigned the new axis in the **Machine Setup**. 
 
 #### Configure Coordinated Peeling
 On the `ReferencePushPullFeeder` use the new **Rotation** column to configure the peeling coordinates. 
