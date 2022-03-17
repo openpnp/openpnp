@@ -251,6 +251,8 @@ Assign the created axis to the push-pull actuator:
 
 ![Assign to Actuator](https://user-images.githubusercontent.com/9963310/158563736-3c94a813-d7ef-43c6-bf0e-9a9ce76aa34d.png)
 
+Do not forget to use [[Issues and Solutions]] to generate new G-code fragments for your drivers, i.e. to include the new axis. Be sure to press **Find Issues & Solutions** freshly, after having defined and assigned the new axis. 
+
 #### Configure Coordinated Peeling
 On the `ReferencePushPullFeeder` use the new **Rotation** column to configure the peeling coordinates. 
 
