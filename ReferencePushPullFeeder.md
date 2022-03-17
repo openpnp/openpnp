@@ -254,7 +254,7 @@ Assign the created axis to the push-pull actuator:
 
 #### Driver G-code for the new Peeler Axis
 
-Do not forget to use [[Issues and Solutions]] to generate new G-code fragments for your drivers, i.e. to include the new axis. Be sure to press **Find Issues & Solutions** freshly, after having defined and assigned the new axis in the **Machine Setup**. 
+Do not forget to use [[Issues and Solutions]] to generate new G-code fragments and regular expressions for your drivers, i.e. to include the new axis in them. Be sure to press **Find Issues & Solutions** freshly, after having defined and assigned the new axis in the **Machine Setup**. 
 
 #### Configure Coordinated Peeling
 On the `ReferencePushPullFeeder` use the new **Rotation** column to configure the peeling coordinates. 
