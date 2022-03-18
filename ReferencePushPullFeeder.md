@@ -265,7 +265,7 @@ Some feeders need multi-actuation, for instance if the part pitch in the tape is
 
 The **Reset** button can be used to reset the starting point to the current peeler axis coordinate. After pressing it, you can use the capture and positioning buttons to get and test the _additive/relative_ locations of the push-pull motion, _including_ the peel.
 
-![Push-pull motion with Rotation](https://user-images.githubusercontent.com/9963310/158595210-0505cb15-ffbc-4aea-8645-ce34407202a2.png)
+![Push-pull motion with Rotation](https://user-images.githubusercontent.com/9963310/159045634-fd7ff079-0e69-4fde-b36d-1bfbddca30bd.png)
 
 ## The next Feeder
 
