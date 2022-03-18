@@ -46,6 +46,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferencePushPullFeederConfigurationWizard;
 import org.openpnp.machine.reference.feeder.wizards.ReferencePushPullMotionConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -53,11 +54,13 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.MotionPlanner;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
@@ -101,6 +104,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Attribute(required = false)
     protected boolean usedAsTemplate = false; 
+
+    @Attribute(required = false)
+    protected boolean calibrateMotionX = true; 
+    @Attribute(required = false)
+    protected boolean calibrateMotionY = true; 
 
     @Element
     protected Location feedStartLocation = new Location(LengthUnit.Millimeters);
@@ -375,7 +383,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             assertCalibrated(false);
 
             // Create the effective feed locations, applying the vision offset.
-            Location visionOffsets = getVisionOffset();
+            Location visionOffsets = getVisionOffset()
+                    .multiply(
+                            (isCalibrateMotionX() ? 1 : 0),
+                            (isCalibrateMotionY() ? 1 : 0), 
+                            1,  // Z currently not used, but maybe later?
+                            0); // Make sure there is no rotation.
             Location feedStartLocation = getFeedStartLocation()
                     .subtractWithRotation(visionOffsets);
             Location feedMid1Location = getFeedMid1Location()
@@ -387,16 +400,17 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             Location feedEndLocation = getFeedEndLocation()
                     .subtractWithRotation(visionOffsets);
 
-            Location additiveBase = Location.origin;
-            if (isAdditiveRotation()) {
-                // Get the current base rotation, so given angles will be additive.
-                additiveBase = new Location(LengthUnit.Millimeters,
-                        0, 0, 0, actuator.getLocation().getRotation());
+            MotionPlanner motionPlanner = Configuration.get().getMachine().getMotionPlanner();
+            if (actuator.getAxisRotation() != null && isAdditiveRotation()) {
+                // Reset to the rotation axis to zero.
+                AxesLocation rotation = actuator.toRaw(actuator.toHeadLocation(
+                        actuator.getLocation().multiply(1, 1, 1, 0)))
+                        .byType(Axis.Type.Rotation); 
+                motionPlanner.setGlobalOffsets(rotation);
             }
 
             // Move to the Feed Start Location
-            MovableUtils.moveToLocationAtSafeZ(actuator, feedStartLocation
-                    .addWithRotation(additiveBase));
+            MovableUtils.moveToLocationAtSafeZ(actuator, feedStartLocation);
             double baseSpeed = actuator.getHead().getMachine().getSpeed();
 
             long feedsPerPart = (long)Math.ceil(getPartPitch().divide(getFeedPitch()));
@@ -411,20 +425,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
                 // Push the lever by following the path of locations
                 if (includedPush1 && (isFirst || includedMulti1)) {
-                    actuator.moveTo(feedMid1Location
-                            .addWithRotation(additiveBase), feedSpeedPush1*baseSpeed);
+                    actuator.moveTo(feedMid1Location, feedSpeedPush1*baseSpeed);
                 }
                 if (includedPush2 && (isFirst || includedMulti2)) {
-                    actuator.moveTo(feedMid2Location
-                            .addWithRotation(additiveBase), feedSpeedPush2*baseSpeed);
+                    actuator.moveTo(feedMid2Location, feedSpeedPush2*baseSpeed);
                 }
                 if (includedPush3 && (isFirst || includedMulti3)) {
-                    actuator.moveTo(feedMid3Location
-                            .addWithRotation(additiveBase), feedSpeedPush3*baseSpeed);
+                    actuator.moveTo(feedMid3Location, feedSpeedPush3*baseSpeed);
                 }
                 if (includedPushEnd && (isFirst || includedMultiEnd)) {
-                    actuator.moveTo(feedEndLocation
-                            .addWithRotation(additiveBase), feedSpeedPushEnd*baseSpeed);
+                    actuator.moveTo(feedEndLocation, feedSpeedPushEnd*baseSpeed);
                 }
 
                 // Start the take up actuator
@@ -434,20 +444,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
                 // Now move back to the start location to move the tape.
                 if (includedPull3 && (isLast || includedMulti3)) {
-                    actuator.moveTo(feedMid3Location
-                            .addWithRotation(additiveBase), feedSpeedPull3 * baseSpeed);
+                    actuator.moveTo(feedMid3Location, feedSpeedPull3 * baseSpeed);
                 }
                 if (includedPull2 && (isLast || includedMulti2)) {
-                    actuator.moveTo(feedMid2Location
-                            .addWithRotation(additiveBase), feedSpeedPull2 * baseSpeed);
+                    actuator.moveTo(feedMid2Location, feedSpeedPull2 * baseSpeed);
                 }
                 if (includedPull1 && (isLast || includedMulti1)) {
-                    actuator.moveTo(feedMid1Location
-                            .addWithRotation(additiveBase), feedSpeedPull1*baseSpeed);
+                    actuator.moveTo(feedMid1Location, feedSpeedPull1*baseSpeed);
                 }
                 if (includedPull0 && (isLast || includedMulti0)) {
-                    actuator.moveTo(feedStartLocation
-                            .addWithRotation(additiveBase), feedSpeedPull0*baseSpeed);
+                    actuator.moveTo(feedStartLocation, feedSpeedPull0*baseSpeed);
                 }
 
                 // Stop the take up actuator
@@ -459,11 +465,22 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 actuator.actuate(false);
 
                 if (isAdditiveRotation()) {
-                    // Get the current base rotation, so given angles will be additive
-                    // in the next iteration.
-                    additiveBase = new Location(LengthUnit.Millimeters,
-                            0, 0, 0, actuator.getLocation().getRotation());
+                    // Reset to the rotation axis to zero for the next iteration. 
+                    AxesLocation rotation = actuator.toRaw(actuator.toHeadLocation(
+                            actuator.getLocation().multiply(1, 1, 1, 0)))
+                            .byType(Axis.Type.Rotation); 
+                    motionPlanner.setGlobalOffsets(rotation);
                 }
+
+                // Note, the feedStartLocation can be thought a) to be the target of the pull or 
+                // b) the starting point of the next push. So we need to look at it a second time 
+                // here, AFTER having disabled the actuators, and AFTER having reset the rotation 
+                // coordinate. 
+                // Well, this is what you need for a multi-actuation feed in a drag pin & peeler scenario.
+                if (includedMulti0 && !(isLast || includedPull0)) {
+                    actuator.moveTo(feedStartLocation, feedSpeedPull0*baseSpeed);
+                }
+
             }
 
             head.moveToSafeZ();
@@ -580,6 +597,26 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("usedAsTemplate", oldValue, usedAsTemplate);
         // this also changes the status implicitly 
         firePropertyChange("cloneTemplateStatus", "", getCloneTemplateStatus());
+    }
+
+    public boolean isCalibrateMotionX() {
+        return calibrateMotionX;
+    }
+
+    public void setCalibrateMotionX(boolean calibrateMotionX) {
+        Object oldValue = this.calibrateMotionX;
+        this.calibrateMotionX = calibrateMotionX;
+        firePropertyChange("calibrateMotionX", oldValue, calibrateMotionX);
+    }
+
+    public boolean isCalibrateMotionY() {
+        return calibrateMotionY;
+    }
+
+    public void setCalibrateMotionY(boolean calibrateMotionY) {
+        Object oldValue = this.calibrateMotionY;
+        this.calibrateMotionY = calibrateMotionY;
+        firePropertyChange("calibrateMotionY", oldValue, calibrateMotionY);
     }
 
     public Location getFeedStartLocation() {
@@ -2033,6 +2070,17 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             setHole2Location(relocatedXyLocation(templateFeeder.getHole2Location(), oldTransform, newTransform));
         }
         if (pushPull) {
+            if (Math.abs(Math.sin(Math.toRadians(oldTransform.getRotation() - newTransform.getRotation()))) 
+                    > Math.sin(Math.toRadians(45))) {
+                // Rotated, flip the switches.
+                setCalibrateMotionX(templateFeeder.isCalibrateMotionY());
+                setCalibrateMotionY(templateFeeder.isCalibrateMotionX());
+            }
+            else {
+                setCalibrateMotionX(templateFeeder.isCalibrateMotionX());
+                setCalibrateMotionY(templateFeeder.isCalibrateMotionY());
+            }
+            setAdditiveRotation(templateFeeder.isAdditiveRotation());
             setFeedStartLocation(relocatedLocation(templateFeeder.getFeedStartLocation(), oldTransform, newTransform));
             setFeedMid1Location(relocatedLocation(templateFeeder.getFeedMid1Location(), oldTransform, newTransform));
             setFeedMid2Location(relocatedLocation(templateFeeder.getFeedMid2Location(), oldTransform, newTransform));
