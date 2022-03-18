@@ -259,11 +259,11 @@ Do not forget to use [[Issues and Solutions]] to generate new G-code fragments a
 #### Configure Coordinated Peeling
 On the `ReferencePushPullFeeder` use the new **Rotation** column to configure the peeling coordinates. 
 
-For a typical configuration, the **Additive** switch needs to be enabled, so the peeling motion is _additive/relative_ to the starting point. The starting point is the peeler axis coordinate, right before the feed actuation. If **Additive** is enabled, you cannot use bidirectional motion, obviously (it would go back), you need to define the feed articulation using the forward-going way-points only, i.e., be sure to disable all the ↑↓ and ↑ column check-boxes. If the five way-points are not enough, please report to the [discussion group](http://groups.google.com/group/openpnp). 
+For a typical configuration, the **Additive** switch needs to be enabled, so the peeling motion is _additive/relative_ to the starting point. The starting point is the peeler axis coordinate, right before the feed actuation. If **Additive** is enabled, you cannot use bidirectional motion, obviously (it would go back), you need to define the feed articulation using the forward-going way-points only, i.e., be sure to disable all the ↑ column check-boxes. If the five way-points are not enough, please report to the [discussion group](http://groups.google.com/group/openpnp). 
 
-Note that for multi-actuation/multi-feed, the additive behavior is _for each_ actuation.
+Some feeders need multi-actuation, for instance if the part pitch in the tape is larger than the maximum tape feed that can be done by the mechanical motion. To enable multi-actuation together with additive rotation, you can enable the ↑↓ column check-boxes. But you still should **not** enable the ↑ column ones.
 
-The **= 0°** button can be used to reset the starting point to the current peeler axis coordinate. After pressing it, you can use the capture and positioning buttons to get and test the _additive/relative_ locations of the push-pull motion, _including_ the peel.
+The **Reset** button can be used to reset the starting point to the current peeler axis coordinate. After pressing it, you can use the capture and positioning buttons to get and test the _additive/relative_ locations of the push-pull motion, _including_ the peel.
 
 ![Push-pull motion with Rotation](https://user-images.githubusercontent.com/9963310/158595210-0505cb15-ffbc-4aea-8645-ce34407202a2.png)
 
