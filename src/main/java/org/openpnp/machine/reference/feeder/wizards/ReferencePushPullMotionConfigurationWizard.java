@@ -54,10 +54,12 @@ import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Head;
+import org.openpnp.spi.Machine;
 import org.pmw.tinylog.Logger;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -133,7 +135,10 @@ extends AbstractConfigurationWizard {
     private JTextField textFieldFeedMid3C;
     private JTextField textFieldFeedEndC;
     private JCheckBox additiveRotation;
-    private JButton btnRotationBase;
+    private JButton btnRotationReset;
+    private JCheckBox calibrateMotionX;
+    private JLabel lblCalibrate;
+    private JCheckBox calibrateMotionY;
 
     public ReferencePushPullMotionConfigurationWizard(ReferencePushPullFeeder feeder) {
         super();
@@ -171,33 +176,37 @@ extends AbstractConfigurationWizard {
                 ColumnSpec.decode("max(100dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("left:max(100dlu;default):grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                RowSpec.decode("default:grow"),}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         Head head = null;
         try {
@@ -214,15 +223,12 @@ extends AbstractConfigurationWizard {
         actuator = new JComboBox();
         actuator.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
-                applyBaseLocations();
+                resetRotation();
             }
         });
         panelPushPull.add(actuator, "4, 2, 3, 1");
         actuator.setMaximumRowCount(15);
         actuator.setModel(new ActuatorsComboBoxModel(head));
-        
-                lblRotation = new JLabel("Rotation");
-                panelPushPull.add(lblRotation, "10, 2, center, default");
 
 
         lblPeelOffActuatorId = new JLabel("Auxiliary Actuator");
@@ -233,271 +239,284 @@ extends AbstractConfigurationWizard {
         panelPushPull.add(actuator2, "4, 4, 3, 1");
         actuator2.setMaximumRowCount(15);
         actuator2.setModel(new ActuatorsComboBoxModel(head));
-        
-                additiveRotation = new JCheckBox("Additive");
-                additiveRotation.addItemListener(new ItemListener() {
-                    public void itemStateChanged(ItemEvent arg0) {
-                        applyBaseLocations();
-                    }
-                });
-                additiveRotation.setToolTipText("<html>Before the feed is performed, the current coordinate of the Rotation axis is taken.<br/>\nRotations stated below are then added to that base angle.<br/>\nThis is typically used for peeling axes, creating a continuous cover tape spool wind-up.\n</html>");
-                panelPushPull.add(additiveRotation, "10, 4, center, default");
 
         JLabel lblX = new JLabel("X");
-        panelPushPull.add(lblX, "4, 6, center, default");
+        panelPushPull.add(lblX, "4, 8, center, default");
 
         JLabel lblY = new JLabel("Y");
-        panelPushPull.add(lblY, "6, 6, center, default");
+        panelPushPull.add(lblY, "6, 8, center, default");
 
         JLabel lblZ = new JLabel("Z");
-        panelPushPull.add(lblZ, "8, 6, center, default");
-        
-                btnRotationBase = new JButton(actionRotationBase);
-                panelPushPull.add(btnRotationBase, "10, 6, fill, default");
+        panelPushPull.add(lblZ, "8, 8, center, default");
+
+        lblRotation = new JLabel("Rotation");
+        panelPushPull.add(lblRotation, "10, 8, center, default");
 
         lblPush = new JLabel("↓");
         lblPush.setToolTipText("Locations that are included when pushing.");
-        panelPushPull.add(lblPush, "12, 6, center, default");
+        panelPushPull.add(lblPush, "12, 8, center, default");
 
         lblMulti = new JLabel("↑↓");
         lblMulti.setToolTipText("<html>Locations that are included, when actuating multiple times.<br/>\r\nThe combination with the push ↓ and pull ↑ switch is taken.</html>");
-        panelPushPull.add(lblMulti, "14, 6, 3, 1, center, default");
+        panelPushPull.add(lblMulti, "14, 8, 3, 1, center, default");
 
         lblPull = new JLabel("↑");
         lblPull.setToolTipText("Locations that are included when pulling.");
-        panelPushPull.add(lblPull, "18, 6, center, default");
+        panelPushPull.add(lblPull, "18, 8, center, default");
+
+        lblCalibrate = new JLabel("Vision Calibrate?");
+        lblCalibrate.setToolTipText("Apply the offsets obtained from Vision Calibration");
+        panelPushPull.add(lblCalibrate, "2, 10, right, default");
+
+        calibrateMotionX = new JCheckBox("");
+        panelPushPull.add(calibrateMotionX, "4, 10, center, default");
+
+        calibrateMotionY = new JCheckBox("");
+        panelPushPull.add(calibrateMotionY, "6, 10, center, default");
+
+        additiveRotation = new JCheckBox("Additive");
+        additiveRotation.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent arg0) {
+                resetRotation();
+            }
+        });
+        additiveRotation.setToolTipText("<html>Before the feed is performed, the current coordinate of the Rotation axis is taken.<br/>\nRotations stated below are then added to that base angle.<br/>\nThis is typically used for peeling axes, creating a continuous cover tape spool wind-up.\n</html>");
+        panelPushPull.add(additiveRotation, "10, 10, center, default");
 
         JLabel lblFeedStartLocation = new JLabel("Start Location");
-        panelPushPull.add(lblFeedStartLocation, "2, 8, right, default");
+        panelPushPull.add(lblFeedStartLocation, "2, 12, right, default");
 
         textFieldFeedStartX = new JTextField();
-        panelPushPull.add(textFieldFeedStartX, "4, 8");
+        panelPushPull.add(textFieldFeedStartX, "4, 12");
         textFieldFeedStartX.setColumns(8);
 
         textFieldFeedStartY = new JTextField();
-        panelPushPull.add(textFieldFeedStartY, "6, 8");
+        panelPushPull.add(textFieldFeedStartY, "6, 12");
         textFieldFeedStartY.setColumns(8);
 
         textFieldFeedStartZ = new JTextField();
-        panelPushPull.add(textFieldFeedStartZ, "8, 8");
+        panelPushPull.add(textFieldFeedStartZ, "8, 12");
         textFieldFeedStartZ.setColumns(8);
 
         textFieldFeedStartC = new JTextField();
-        panelPushPull.add(textFieldFeedStartC, "10, 8, fill, default");
+        panelPushPull.add(textFieldFeedStartC, "10, 12, fill, default");
         textFieldFeedStartC.setColumns(8);
 
         chckbxMulti0 = new JCheckBox("");
         chckbxMulti0.setToolTipText("Include the Start Location in multi-actuating motion (if the pull switch is also set).");
         chckbxMulti0.setSelected(true);
-        panelPushPull.add(chckbxMulti0, "14, 8, 3, 1, center, default");
+        panelPushPull.add(chckbxMulti0, "14, 12, 3, 1, center, default");
 
         chckbxPull0 = new JCheckBox("");
         chckbxPull0.setToolTipText("Go to the Start Location when pulling.");
         chckbxPull0.setSelected(true);
-        panelPushPull.add(chckbxPull0, "18, 8, center, default");
+        panelPushPull.add(chckbxPull0, "18, 12, center, default");
 
         locationButtonsPanelFeedStart = new LocationButtonsPanel(textFieldFeedStartX,
                 textFieldFeedStartY, textFieldFeedStartZ, textFieldFeedStartC);
         locationButtonsPanelFeedStart.setShowPositionToolNoSafeZ(true);
         locationButtonsPanelFeedStart.setBaseLocationVectorial(true);
-        panelPushPull.add(locationButtonsPanelFeedStart, "20, 8, fill, default");
+        panelPushPull.add(locationButtonsPanelFeedStart, "20, 12, fill, default");
 
         lblFeedSpeed0_1 = new JLabel("Speed ↕");
-        panelPushPull.add(lblFeedSpeed0_1, "10, 10, right, default");
+        panelPushPull.add(lblFeedSpeed0_1, "10, 14, right, default");
 
         textFieldFeedPush1 = new JTextField();
-        panelPushPull.add(textFieldFeedPush1, "12, 10, 3, 1");
+        panelPushPull.add(textFieldFeedPush1, "12, 14, 3, 1");
         textFieldFeedPush1.setColumns(10);
 
         textFieldFeedPull0 = new JTextField();
-        panelPushPull.add(textFieldFeedPull0, "16, 10, 3, 1");
+        panelPushPull.add(textFieldFeedPull0, "16, 14, 3, 1");
         textFieldFeedPull0.setColumns(10);
 
         lblFeedMid1Location = new JLabel("Mid 1 Location");
-        panelPushPull.add(lblFeedMid1Location, "2, 12, right, default");
+        panelPushPull.add(lblFeedMid1Location, "2, 16, right, default");
 
         textFieldFeedMid1X = new JTextField();
-        panelPushPull.add(textFieldFeedMid1X, "4, 12");
+        panelPushPull.add(textFieldFeedMid1X, "4, 16");
         textFieldFeedMid1X.setColumns(10);
 
         textFieldFeedMid1Y = new JTextField();
-        panelPushPull.add(textFieldFeedMid1Y, "6, 12");
+        panelPushPull.add(textFieldFeedMid1Y, "6, 16");
         textFieldFeedMid1Y.setColumns(10);
 
         textFieldFeedMid1Z = new JTextField();
-        panelPushPull.add(textFieldFeedMid1Z, "8, 12");
+        panelPushPull.add(textFieldFeedMid1Z, "8, 16");
         textFieldFeedMid1Z.setColumns(10);
 
         textFieldFeedMid1C = new JTextField();
-        panelPushPull.add(textFieldFeedMid1C, "10, 12, fill, default");
+        panelPushPull.add(textFieldFeedMid1C, "10, 16, fill, default");
         textFieldFeedMid1C.setColumns(8);
 
         chckbxPush1 = new JCheckBox("");
         chckbxPush1.setToolTipText("Go to the Mid 1 Location when pushing.");
         chckbxPush1.setSelected(true);
-        panelPushPull.add(chckbxPush1, "12, 12, center, default");
+        panelPushPull.add(chckbxPush1, "12, 16, center, default");
 
         chckbxMulti1 = new JCheckBox("");
         chckbxMulti1.setToolTipText("Include the Mid 1 Location in multi-actuation motion (if the push/pull switch is also set).");
         chckbxMulti1.setSelected(true);
-        panelPushPull.add(chckbxMulti1, "14, 12, 3, 1, center, default");
+        panelPushPull.add(chckbxMulti1, "14, 16, 3, 1, center, default");
 
         chckbxPull1 = new JCheckBox("");
         chckbxPull1.setToolTipText("Go to the Mid 1 Location when pulling.");
         chckbxPull1.setSelected(true);
-        panelPushPull.add(chckbxPull1, "18, 12, center, default");
+        panelPushPull.add(chckbxPull1, "18, 16, center, default");
 
         locationButtonsPanelFeedMid1 = new LocationButtonsPanel(textFieldFeedMid1X, textFieldFeedMid1Y, textFieldFeedMid1Z, textFieldFeedMid1C);
         locationButtonsPanelFeedMid1.setShowPositionToolNoSafeZ(true);
         locationButtonsPanelFeedMid1.setBaseLocationVectorial(true);
-        panelPushPull.add(locationButtonsPanelFeedMid1, "20, 12, fill, default");
+        panelPushPull.add(locationButtonsPanelFeedMid1, "20, 16, fill, default");
 
         lblFeedSpeed1_2 = new JLabel("Speed ↕");
-        panelPushPull.add(lblFeedSpeed1_2, "10, 14, right, default");
+        panelPushPull.add(lblFeedSpeed1_2, "10, 18, right, default");
 
         textFieldFeedPush2 = new JTextField();
-        panelPushPull.add(textFieldFeedPush2, "12, 14, 3, 1");
+        panelPushPull.add(textFieldFeedPush2, "12, 18, 3, 1");
         textFieldFeedPush2.setColumns(10);
 
         textFieldFeedPull1 = new JTextField();
         textFieldFeedPull1.setColumns(10);
-        panelPushPull.add(textFieldFeedPull1, "16, 14, 3, 1");
+        panelPushPull.add(textFieldFeedPull1, "16, 18, 3, 1");
 
         lblFeedMid2Location = new JLabel("Mid 2 Location");
-        panelPushPull.add(lblFeedMid2Location, "2, 16, right, default");
+        panelPushPull.add(lblFeedMid2Location, "2, 20, right, default");
 
         textFieldFeedMid2X = new JTextField();
-        panelPushPull.add(textFieldFeedMid2X, "4, 16");
+        panelPushPull.add(textFieldFeedMid2X, "4, 20");
         textFieldFeedMid2X.setColumns(10);
 
         textFieldFeedMid2Y = new JTextField();
-        panelPushPull.add(textFieldFeedMid2Y, "6, 16");
+        panelPushPull.add(textFieldFeedMid2Y, "6, 20");
         textFieldFeedMid2Y.setColumns(10);
 
         textFieldFeedMid2Z = new JTextField();
-        panelPushPull.add(textFieldFeedMid2Z, "8, 16");
+        panelPushPull.add(textFieldFeedMid2Z, "8, 20");
         textFieldFeedMid2Z.setColumns(10);
 
         textFieldFeedMid2C = new JTextField();
-        panelPushPull.add(textFieldFeedMid2C, "10, 16, fill, default");
+        panelPushPull.add(textFieldFeedMid2C, "10, 20, fill, default");
         textFieldFeedMid2C.setColumns(8);
 
         chckbxPush2 = new JCheckBox("");
         chckbxPush2.setToolTipText("Go to the Mid 2 Location when pushing.");
         chckbxPush2.setSelected(true);
-        panelPushPull.add(chckbxPush2, "12, 16, center, default");
+        panelPushPull.add(chckbxPush2, "12, 20, center, default");
 
         chckbxMulti2 = new JCheckBox("");
         chckbxMulti2.setToolTipText("Include the Mid 2 Location in multi-actuation motion (if the push/pull switch is also set).");
         chckbxMulti2.setSelected(true);
-        panelPushPull.add(chckbxMulti2, "14, 16, 3, 1, center, default");
+        panelPushPull.add(chckbxMulti2, "14, 20, 3, 1, center, default");
 
         chckbxPull2 = new JCheckBox("");
         chckbxPull2.setToolTipText("Go to the Mid 2 Location when pulling.");
         chckbxPull2.setSelected(true);
-        panelPushPull.add(chckbxPull2, "18, 16, center, default");
+        panelPushPull.add(chckbxPull2, "18, 20, center, default");
 
         locationButtonsPanelFeedMid2 = new LocationButtonsPanel(textFieldFeedMid2X, textFieldFeedMid2Y, textFieldFeedMid2Z, textFieldFeedMid2C);
         locationButtonsPanelFeedMid2.setShowPositionToolNoSafeZ(true);
         locationButtonsPanelFeedMid2.setBaseLocationVectorial(true);
-        panelPushPull.add(locationButtonsPanelFeedMid2, "20, 16, fill, default");
+        panelPushPull.add(locationButtonsPanelFeedMid2, "20, 20, fill, default");
 
         lblFeedSpeed2_3 = new JLabel("Speed ↕");
-        panelPushPull.add(lblFeedSpeed2_3, "10, 18, right, default");
+        panelPushPull.add(lblFeedSpeed2_3, "10, 22, right, default");
 
         textFieldFeedPush3 = new JTextField();
-        panelPushPull.add(textFieldFeedPush3, "12, 18, 3, 1");
+        panelPushPull.add(textFieldFeedPush3, "12, 22, 3, 1");
         textFieldFeedPush3.setColumns(10);
 
         textFieldFeedPull2 = new JTextField();
         textFieldFeedPull2.setColumns(10);
-        panelPushPull.add(textFieldFeedPull2, "16, 18, 3, 1");
+        panelPushPull.add(textFieldFeedPull2, "16, 22, 3, 1");
 
         lblFeedMid3Location = new JLabel("Mid 3 Location");
-        panelPushPull.add(lblFeedMid3Location, "2, 20, right, default");
+        panelPushPull.add(lblFeedMid3Location, "2, 24, right, default");
 
         textFieldFeedMid3X = new JTextField();
-        panelPushPull.add(textFieldFeedMid3X, "4, 20");
+        panelPushPull.add(textFieldFeedMid3X, "4, 24");
         textFieldFeedMid3X.setColumns(10);
 
         textFieldFeedMid3Y = new JTextField();
-        panelPushPull.add(textFieldFeedMid3Y, "6, 20");
+        panelPushPull.add(textFieldFeedMid3Y, "6, 24");
         textFieldFeedMid3Y.setColumns(10);
 
         textFieldFeedMid3Z = new JTextField();
-        panelPushPull.add(textFieldFeedMid3Z, "8, 20, fill, default");
+        panelPushPull.add(textFieldFeedMid3Z, "8, 24, fill, default");
         textFieldFeedMid3Z.setColumns(10);
 
         textFieldFeedMid3C = new JTextField();
         textFieldFeedMid3C.setText("");
-        panelPushPull.add(textFieldFeedMid3C, "10, 20, fill, default");
+        panelPushPull.add(textFieldFeedMid3C, "10, 24, fill, default");
         textFieldFeedMid3C.setColumns(8);
 
         chckbxPush3 = new JCheckBox("");
         chckbxPush3.setToolTipText("Go to the Mid 3 Location when pushing.");
         chckbxPush3.setSelected(true);
-        panelPushPull.add(chckbxPush3, "12, 20, center, default");
+        panelPushPull.add(chckbxPush3, "12, 24, center, default");
 
         chckbxMulti3 = new JCheckBox("");
         chckbxMulti3.setToolTipText("Include the Mid 3 Location in multi-actuation motion (if the push/pull switch is also set).");
         chckbxMulti3.setSelected(true);
-        panelPushPull.add(chckbxMulti3, "14, 20, 3, 1, center, default");
+        panelPushPull.add(chckbxMulti3, "14, 24, 3, 1, center, default");
 
         chckbxPull3 = new JCheckBox("");
         chckbxPull3.setToolTipText("Go to the Mid 3 Location when pulling.");
         chckbxPull3.setSelected(true);
-        panelPushPull.add(chckbxPull3, "18, 20, center, default");
+        panelPushPull.add(chckbxPull3, "18, 24, center, default");
 
         locationButtonsPanelFeedMid3 = new LocationButtonsPanel(textFieldFeedMid3X, textFieldFeedMid3Y, textFieldFeedMid3Z, textFieldFeedMid3C);
         locationButtonsPanelFeedMid3.setShowPositionToolNoSafeZ(true);
         locationButtonsPanelFeedMid3.setBaseLocationVectorial(true);
-        panelPushPull.add(locationButtonsPanelFeedMid3, "20, 20, fill, default");
+        panelPushPull.add(locationButtonsPanelFeedMid3, "20, 24, fill, default");
 
         lblFeedSpeed3_4 = new JLabel("Speed ↕");
-        panelPushPull.add(lblFeedSpeed3_4, "10, 22, right, default");
+        panelPushPull.add(lblFeedSpeed3_4, "10, 26, right, default");
 
         textFieldFeedPush4 = new JTextField();
-        panelPushPull.add(textFieldFeedPush4, "12, 22, 3, 1");
+        panelPushPull.add(textFieldFeedPush4, "12, 26, 3, 1");
         textFieldFeedPush4.setColumns(10);
 
         textFieldFeedPull3 = new JTextField();
         textFieldFeedPull3.setColumns(10);
-        panelPushPull.add(textFieldFeedPull3, "16, 22, 3, 1");
+        panelPushPull.add(textFieldFeedPull3, "16, 26, 3, 1");
 
         JLabel lblFeedEndLocation = new JLabel("End Location");
-        panelPushPull.add(lblFeedEndLocation, "2, 24, right, default");
+        panelPushPull.add(lblFeedEndLocation, "2, 28, right, default");
 
         textFieldFeedEndX = new JTextField();
-        panelPushPull.add(textFieldFeedEndX, "4, 24");
+        panelPushPull.add(textFieldFeedEndX, "4, 28");
         textFieldFeedEndX.setColumns(8);
 
         textFieldFeedEndY = new JTextField();
-        panelPushPull.add(textFieldFeedEndY, "6, 24");
+        panelPushPull.add(textFieldFeedEndY, "6, 28");
         textFieldFeedEndY.setColumns(8);
 
         textFieldFeedEndZ = new JTextField();
-        panelPushPull.add(textFieldFeedEndZ, "8, 24");
+        panelPushPull.add(textFieldFeedEndZ, "8, 28");
         textFieldFeedEndZ.setColumns(8);
 
         textFieldFeedEndC = new JTextField();
-        panelPushPull.add(textFieldFeedEndC, "10, 24, fill, default");
+        panelPushPull.add(textFieldFeedEndC, "10, 28, fill, default");
         textFieldFeedEndC.setColumns(8);
 
         chckbxPushEnd = new JCheckBox("");
         chckbxPushEnd.setToolTipText("Go to the End Location when pushing.");
         chckbxPushEnd.setSelected(true);
-        panelPushPull.add(chckbxPushEnd, "12, 24, center, default");
+        panelPushPull.add(chckbxPushEnd, "12, 28, center, default");
 
         chckbxMultiEnd = new JCheckBox("");
         chckbxMultiEnd.setToolTipText("Include the End Location in multi-actuation motion (if the push switch is also set).");
         chckbxMultiEnd.setSelected(true);
-        panelPushPull.add(chckbxMultiEnd, "14, 24, 3, 1, center, default");
+        panelPushPull.add(chckbxMultiEnd, "14, 28, 3, 1, center, default");
 
         locationButtonsPanelFeedEnd = new LocationButtonsPanel(textFieldFeedEndX, textFieldFeedEndY,
                 textFieldFeedEndZ, textFieldFeedEndC);
         locationButtonsPanelFeedEnd.setShowPositionToolNoSafeZ(true);
         locationButtonsPanelFeedEnd.setBaseLocationVectorial(true);
-        panelPushPull.add(locationButtonsPanelFeedEnd, "20, 24, fill, default");
+        panelPushPull.add(locationButtonsPanelFeedEnd, "20, 28, fill, default");
+
+        btnRotationReset = new JButton(actionRotationReset);
+        panelPushPull.add(btnRotationReset, "10, 30, left, default");
 
         // Compose a font list of the system, the one currently selected, even if the system does not know it (yet), and the empty selection 
         List<String> systemFontList = Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment()
@@ -530,6 +549,9 @@ extends AbstractConfigurationWizard {
 
         addWrappedBinding(feeder, "actuator", actuator, "selectedItem", actuatorConverter);
         addWrappedBinding(feeder, "actuator2", actuator2, "selectedItem", actuatorConverter);
+
+        addWrappedBinding(feeder, "calibrateMotionX", calibrateMotionX, "selected");
+        addWrappedBinding(feeder, "calibrateMotionY", calibrateMotionY, "selected");
 
         addWrappedBinding(feeder, "feedSpeedPush1", textFieldFeedPush1, "text", doubleConverter);
         addWrappedBinding(feeder, "feedSpeedPush2", textFieldFeedPush2, "text", doubleConverter);
@@ -644,46 +666,46 @@ extends AbstractConfigurationWizard {
         bind(UpdateStrategy.READ, actuator, "selectedItem", locationButtonsPanelFeedMid3, "actuatorName");
         bind(UpdateStrategy.READ, actuator, "selectedItem", locationButtonsPanelFeedEnd, "actuatorName");
 
-        applyBaseLocations();
+        resetRotation();
     }
 
-    private void applyBaseLocations() {
+    private void resetRotation() {
         boolean additive = additiveRotation.isSelected();
-        Location baseLocation = null;
+        btnRotationReset.setVisible(additive);
         if (additive) {
-            Head head = null;
-            Actuator feedActuator = null;
             try {
-                head = Configuration.get().getMachine().getDefaultHead();
                 String actuatorName = (String) actuator.getSelectedItem();
                 if (actuatorName != null && !actuatorName.isEmpty()) {
-                    feedActuator = head.getActuatorByName(actuatorName);
-                    // Take the rotation from the actuator.
-                    baseLocation = feedActuator.getLocation().multiply(0, 0, 0, 1);
+                    Machine machine = Configuration.get().getMachine();
+                    machine.executeIfEnabled(() -> {
+                        Head head = machine.getDefaultHead();
+                        Actuator feedActuator = head.getActuatorByName(actuatorName);
+                        // Reset the rotation axis to zero.
+                        AxesLocation rotation = feedActuator.toRaw(feedActuator.toHeadLocation(
+                                feedActuator.getLocation().multiply(1, 1, 1, 0)))
+                                .byType(Axis.Type.Rotation); 
+                        machine.getMotionPlanner().setGlobalOffsets(rotation);
+                        return true;
+                    });
                 }
             }
             catch (Exception e) {
-                Logger.error(e, "Cannot determine base location of actuator.");
+                Logger.error(e, "Cannot reset actuator rotation axis.");
             }
         }
-        locationButtonsPanelFeedStart.setBaseLocation(baseLocation);
-        locationButtonsPanelFeedMid1.setBaseLocation(baseLocation);
-        locationButtonsPanelFeedMid2.setBaseLocation(baseLocation);
-        locationButtonsPanelFeedMid3.setBaseLocation(baseLocation);
-        locationButtonsPanelFeedEnd.setBaseLocation(baseLocation);
-        actionRotationBase.setEnabled(additive);
     }
-    private final Action actionRotationBase = new AbstractAction() {
+
+    private final Action actionRotationReset = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.axisRotation);
-            putValue(NAME, "= 0°");
+            putValue(NAME, "Reset");
             putValue(SHORT_DESCRIPTION, "<html>"
-                    + "Reset the current rotation axis to <strong>additive 0°</strong> for subsequent<br/>"
-                    + "capturing/positioning using the location buttons."
+                    + "Reset the current rotation axis to <strong>0°</strong> for subsequent<br/>"
+                    + "capturing/positioning using the location buttons in additive mode."
                     + "</html>");
         }
         public void actionPerformed(ActionEvent e) {
-            applyBaseLocations();
+            resetRotation();
         }
     };
 }
