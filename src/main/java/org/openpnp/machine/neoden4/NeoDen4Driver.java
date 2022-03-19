@@ -11,13 +11,11 @@ import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
-import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.driver.AbstractReferenceDriver;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
 import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
@@ -382,16 +380,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
 
     @Override
     public void home(Machine machine) throws Exception {
-        if (machine instanceof SimulationModeMachine) {
-            Location homingError = ((SimulationModeMachine) machine).getHomingError(); 
-            homingOffsets = new AxesLocation(machine, this, (axis) 
-                    -> (axis.getType() == Axis.Type.X ? homingError.getLengthX() :
-                        axis.getType() == Axis.Type.Y ? homingError.getLengthY() : 
-                            null));
-        }
-        else {
-            homingOffsets = new AxesLocation();
-        }
+        homingOffsets = new AxesLocation();
+
         //comment this to force neoden home every time
         if(isAlreadyHomed) {
             return;
@@ -462,13 +452,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     private void retractNozzles() throws Exception {
-        for(int index = 0; index < 4; index++)
+        for(int index = 0; index < 4; index++) {
             if(z[index] < 0)
             {
                 moveZ(index, 0);
                 this.z[index] = 0;
                 Thread.sleep(300);
             }
+        }
     }
 
     private void moveXy(double x, double y) throws Exception {
@@ -554,8 +545,9 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         moveC(0,0);
 
         //This will force nozzle to move on next MoveTo
-        for(int index = 0; index < 4; index++)
+        for(int index = 0; index < 4; index++) {
             this.c[index] = 360;
+        }
     }
 
     private void moveC(int nozzle, double c) throws Exception {
