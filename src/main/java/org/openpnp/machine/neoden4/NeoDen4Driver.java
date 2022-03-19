@@ -127,8 +127,8 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
 
     private AxesLocation homingOffsets = new AxesLocation();
 
-    double[] z = {0,0,0,0};
-    double[] c = {0,0,0,0};
+    double[] z = {0,0,0,0,0};
+    double[] c = {0,0,0,0,0};
 
     private int xMs = 0, yMs = 0;
     public int getXms() { return this.xMs; }
@@ -452,7 +452,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     private void retractNozzles() throws Exception {
-        for(int index = 0; index < 4; index++) {
+        for(int index = 1; index <= 4; index++) {
             if(z[index] < 0)
             {
                 moveZ(index, 0);
@@ -545,7 +545,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         moveC(0,0);
 
         //This will force nozzle to move on next MoveTo
-        for(int index = 0; index < 4; index++) {
+        for(int index = 1; index <= 4; index++) {
             this.c[index] = 360;
         }
     }
@@ -778,9 +778,9 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
 
             if (index < 1 || index > 4) {
                 throw new Exception("Invalid axis letter "+axis.getLetter()
-                    +" for rortation axis "+axis.getName());
+                    +" for nozzle rotation axis "+axis.getName());
             }
-            this.c[index-1] = location1.getCoordinate(axis, getUnits());
+            this.c[index] = location1.getCoordinate(axis, getUnits());
             moveC(index, location1.getCoordinate(axis, getUnits()));
             isDelayNeeded = true;
         }
@@ -800,9 +800,9 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
 
             if ((index < 1) || (index > 4)) {
                 throw new Exception("Invalid axis letter "+axis.getLetter()
-                +" for rortation axis "+axis.getName());
+                +" for nozzle z axis "+axis.getName());
             }
-            this.z[index-1] = location1.getCoordinate(axis, getUnits());
+            this.z[index] = location1.getCoordinate(axis, getUnits());
             moveZ(index, location1.getCoordinate(axis, getUnits()));
             isDelayNeeded = true;
         }
@@ -812,40 +812,40 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             isDelayNeeded = false;
         }
 
-         // Drive XY axes
-         double feedRate = move.getFeedRatePerSecond();
-         // Reconstruct speed factor from "virtual" feed-rate assuming the default 
-         // 250mm/s axes feedrate.
-         // TODO: better solution than just assuming 250. 
-         double speed = Math.max(0.0, Math.min(1.0, feedRate/250.0));
+        // Drive XY axes
+        double feedRate = move.getFeedRatePerSecond();
+        // Reconstruct speed factor from "virtual" feed-rate assuming the default 
+        // 250mm/s axes feedrate.
+        // TODO: better solution than just assuming 250. 
+        double speed = Math.max(0.0, Math.min(1.0, feedRate/250.0));
 
-         double x = location1.getCoordinate(location1.getAxis(this, Axis.Type.X), units);
-         double y = location1.getCoordinate(location1.getAxis(this, Axis.Type.Y), units);
-         double deltaX = displacement.getCoordinate(displacement.getAxis(Axis.Type.X));         
-         double deltaY = displacement.getCoordinate(displacement.getAxis(Axis.Type.Y));
+        double x = location1.getCoordinate(location1.getAxis(this, Axis.Type.X), units);
+        double y = location1.getCoordinate(location1.getAxis(this, Axis.Type.Y), units);
+        double deltaX = displacement.getCoordinate(displacement.getAxis(Axis.Type.X));         
+        double deltaY = displacement.getCoordinate(displacement.getAxis(Axis.Type.Y));
 
-         if(distance(deltaX, deltaY) > 0.0001) {
-            if(distance(deltaX, deltaY) <= 10.1) {
-                speed = 0.2;
-            }
-            setMoveSpeed(speed);
+        if(distance(deltaX, deltaY) > 0.0001) {
+           if(distance(deltaX, deltaY) <= 10.1) {
+               speed = 0.2;
+           }
+           setMoveSpeed(speed);
 
-            x -= homingOffsets.getCoordinate(homingOffsets.getAxis(Axis.Type.X));
-            y -= homingOffsets.getCoordinate(homingOffsets.getAxis(Axis.Type.Y));
+           x -= homingOffsets.getCoordinate(homingOffsets.getAxis(Axis.Type.X));
+           y -= homingOffsets.getCoordinate(homingOffsets.getAxis(Axis.Type.Y));
 
-            //allow moves max 3mm with nozzles lowered
-            if(distance(deltaX, deltaY) > 3.1) {
-                retractNozzles();
-            }
+           //allow moves max 3mm with nozzles lowered
+           if(distance(deltaX, deltaY) > 3.1) {
+               retractNozzles();
+           }
 
-            Logger.debug(String.format("Neoden move to to %.3f,%.3f", x, y));
+           Logger.debug(String.format("Neoden move to to %.3f,%.3f", x, y));
 
-            double comp = backlashCompensation;
-            moveXy(x+comp, y+comp);
-            setMoveSpeed(0.05);
-            moveXy(x,y);
+           double comp = backlashCompensation;
+           moveXy(x+comp, y+comp);
+           setMoveSpeed(0.05);
+           moveXy(x,y);
 
-            isDelayNeeded = true;
+           isDelayNeeded = true;
         }
 
         if(isDelayNeeded) {
