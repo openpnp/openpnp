@@ -991,14 +991,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         disconnectRequested = true;
         connected = false;
 
-        disconnectThreads();
-
         try {
             getCommunications().disconnect();
         }
         catch (Exception e) {
             Logger.error(e, "disconnect()");
         }
+
+        disconnectThreads();
 
         closeGcodeLogger();
     }
@@ -1058,7 +1058,8 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
         Logger.debug("[{}] >> {}, {}", getCommunications().getConnectionName(), command, timeout);
         command = preProcessCommand(command);
-        if (command == "") {
+        if (command.isEmpty()) {
+            Logger.debug("{} empty command after pre process", getCommunications().getConnectionName());
             return;
         }
 
@@ -1283,7 +1284,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 }
                 catch (IOException e) {
                     if (disconnectRequested) {
-                        Logger.trace(e, "Read error while disconnecting");
+                        Logger.trace("Read error while disconnecting (normal)");
                         return;
                     }
                     else {
@@ -1392,8 +1393,6 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
         return false;
     }
-
-
 
     @Override
     public PropertySheet[] getPropertySheets() {
@@ -1527,6 +1526,23 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         firePropertyChange("firmwareConfiguration", null, getFirmwareConfiguration());
     }
 
+    public List<String> getReportedAxesLetters() {
+        List<String> reportedLetters = new ArrayList<>();
+        if (getReportedAxes() == null) {
+            return reportedLetters;
+        }
+        Pattern p = Pattern.compile("(?<letter>[A-Z]):-?\\d+.\\d+");
+        Matcher m = p.matcher(getReportedAxes());
+        while (m.find()) {
+            String letter = m.group("letter");
+            if (!reportedLetters.contains(letter) // No duplicates.
+                    && (!letter.equals("E") || reportedLetters.contains("A"))) { // Not E, if solo.
+                reportedLetters.add(letter);
+            }
+        }
+        return reportedLetters;
+    }
+
     public String getConfiguredAxes() {
         return configuredAxes;
     }
@@ -1576,6 +1592,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
 
         try {
+            Logger.debug("Detecting firmware and position reporting, please ignore any errors and warnings.");
             sendCommand("M115");
             String firmware = receiveSingleResponse("^.*FIRMWARE.*");
             if (firmware != null) {
@@ -1608,6 +1625,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             else {
                 setReportedAxes("");
             }
+            Logger.debug("End detecting firmware and position reporting.");
         }
         finally {
             if (!wasConnected) {
@@ -1627,7 +1645,18 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 String value;
                 int pos = matcher.end();
                 if (matcher.find()) {
-                    value = detectedFirmware.substring(pos, matcher.start()-1);
+                    if (matcher.start() <= pos) {
+                        // Likely an illegal value with ':' in it, like an URL.
+                        if (matcher.find()) {
+                            value = detectedFirmware.substring(pos, matcher.start()-1);
+                        }
+                        else {
+                            value = detectedFirmware.substring(pos);
+                        }
+                    }
+                    else {
+                        value = detectedFirmware.substring(pos, matcher.start()-1);
+                    }
                 }
                 else {
                     value = detectedFirmware.substring(pos);

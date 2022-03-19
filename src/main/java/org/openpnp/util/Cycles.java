@@ -29,7 +29,7 @@ public class Cycles {
      * @throws Exception
      */
     public static Location zProbe(Location l) throws Exception {
-        Actuator zProbe = Configuration.get().getMachine().getDefaultHead().getZProbe();
+        Actuator zProbe = Configuration.get().getMachine().getDefaultHead().getzProbeActuator();
         if (zProbe == null) {
             return null;
         }

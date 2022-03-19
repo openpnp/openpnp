@@ -65,18 +65,21 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
+import org.openpnp.gui.support.NamedListCellRenderer;
+import org.openpnp.gui.support.NamedTableCellRenderer;
 import org.openpnp.gui.support.PackagesComboBoxModel;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.gui.tablemodel.PartsTableModel;
+import org.openpnp.model.AbstractVisionSettings;
+import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.Location;
+import org.openpnp.model.Configuration.TablesLinked;
+import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
-import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
-import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Serializer;
@@ -98,6 +101,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     private JTable table;
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
+    private JTabbedPane tabbedPane;
+    private Part selectedPart;
 
     public PartsPanel(Configuration configuration, Frame frame) {
         this.configuration = configuration;
@@ -163,7 +168,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         });
         add(splitPane, BorderLayout.CENTER);
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 
         table = new AutoSelectTextTable(tableModel);
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -171,6 +176,23 @@ public class PartsPanel extends JPanel implements WizardContainer {
                 new DefaultCellEditor(packagesCombo));
         table.setDefaultRenderer(org.openpnp.model.Package.class,
                 new IdentifiableTableCellRenderer<org.openpnp.model.Package>());
+
+        JComboBox<BottomVisionSettings> bottomVisionCombo = new JComboBox<>(
+                new VisionSettingsComboBoxModel(BottomVisionSettings.class));
+        bottomVisionCombo.setMaximumRowCount(20);
+        bottomVisionCombo.setRenderer(new NamedListCellRenderer<>());
+        table.setDefaultEditor(BottomVisionSettings.class,
+                new DefaultCellEditor(bottomVisionCombo));
+
+        JComboBox<FiducialVisionSettings> fiducialVisionCombo = new JComboBox<>(
+                new VisionSettingsComboBoxModel(FiducialVisionSettings.class));
+        fiducialVisionCombo.setMaximumRowCount(20);
+        fiducialVisionCombo.setRenderer(new NamedListCellRenderer<>());
+        table.setDefaultEditor(FiducialVisionSettings.class,
+                new DefaultCellEditor(fiducialVisionCombo));
+
+        table.setDefaultRenderer(AbstractVisionSettings.class,
+                new NamedTableCellRenderer<AbstractVisionSettings>());
 
         table.setRowSorter(tableSorter);
         table.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
@@ -198,54 +220,22 @@ public class PartsPanel extends JPanel implements WizardContainer {
                     return;
                 }
 
-                List<Part> selections = getSelections();
+                firePartSelectionChanged();
+            }
+        });
 
-                if (selections.size() > 1) {
-                    singleSelectionActionGroup.setEnabled(false);
-                    multiSelectionActionGroup.setEnabled(true);
-                }
-                else {
-                    multiSelectionActionGroup.setEnabled(false);
-                    singleSelectionActionGroup.setEnabled(!selections.isEmpty());
-                }
+        Configuration.get().addPropertyChangeListener("visionSettings", new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                // Handle vision settings changes like selection changes, as the inherited settings might change. 
+                firePartSelectionChanged();
+            }
+        });
 
-                Part part = getSelection();
-
-                int selectedTab = tabbedPane.getSelectedIndex();
-                tabbedPane.removeAll();
-
-                if (part != null) {
-                    tabbedPane.add("Settings", new JScrollPane(new PartSettingsPanel(part)));
-
-                    for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
-                        Wizard wizard = partAlignment.getPartConfigurationWizard(part);
-                        if (wizard != null) {
-                            JPanel panel = new JPanel();
-                            panel.setLayout(new BorderLayout());
-                            panel.add(wizard.getWizardPanel());
-                            tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
-                            wizard.setWizardContainer(PartsPanel.this);
-                        }
-                    }
-                    
-                    FiducialLocator fiducialLocator =
-                            Configuration.get().getMachine().getFiducialLocator();
-                    Wizard wizard = fiducialLocator.getPartConfigurationWizard(part);
-                    if (wizard != null) {
-                        JPanel panel = new JPanel();
-                        panel.setLayout(new BorderLayout());
-                        panel.add(wizard.getWizardPanel());
-                        tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
-                        wizard.setWizardContainer(PartsPanel.this);
-                    }
-                }
-
-                if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
-                    tabbedPane.setSelectedIndex(selectedTab);
-                }
-
-                revalidate();
-                repaint();
+        tableModel.addTableModelListener(e -> {
+            if (selectedPart != null) { 
+                // Reselect previously selected settings.
+                Helpers.selectObjectTableRow(table, selectedPart);
             }
         });
     }
@@ -262,7 +252,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         List<Part> selections = new ArrayList<>();
         for (int selectedRow : table.getSelectedRows()) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            selections.add(tableModel.getPart(selectedRow));
+            selections.add(tableModel.getRowObjectAt(selectedRow));
         }
         return selections;
     }
@@ -308,7 +298,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
                 configuration.addPart(part);
                 tableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(table);
+                Helpers.selectObjectTableRow(table, part);
                 break;
             }
         }
@@ -429,7 +419,78 @@ public class PartsPanel extends JPanel implements WizardContainer {
             }
         }
     };
-    
+    private int selectedTab;
+
+    public void firePartSelectionChanged() {
+        List<Part> selections = getSelections();
+
+        if (selections.size() > 1) {
+            singleSelectionActionGroup.setEnabled(false);
+            multiSelectionActionGroup.setEnabled(true);
+        }
+        else {
+            multiSelectionActionGroup.setEnabled(false);
+            singleSelectionActionGroup.setEnabled(!selections.isEmpty());
+        }
+
+        Part selectedPart = getSelection();
+        if (selectedPart != null) {
+            this.selectedPart = selectedPart;
+        }
+
+        if (tabbedPane.getTabCount() > 0) {
+            selectedTab = tabbedPane.getSelectedIndex();
+        }
+        tabbedPane.removeAll();
+
+        if (selectedPart != null) {
+            tabbedPane.add("Settings", new JScrollPane(new PartSettingsPanel(selectedPart)));
+
+            for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {
+                Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPart);
+                if (wizard != null) {
+                    JPanel panel = new JPanel();
+                    panel.setLayout(new BorderLayout());
+                    panel.add(wizard.getWizardPanel());
+                    tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                    wizard.setWizardContainer(PartsPanel.this);
+                }
+            }
+            
+            FiducialLocator fiducialLocator =
+                    Configuration.get().getMachine().getFiducialLocator();
+            Wizard wizard = fiducialLocator.getPartConfigurationWizard(selectedPart);
+            if (wizard != null) {
+                JPanel panel = new JPanel();
+                panel.setLayout(new BorderLayout());
+                panel.add(wizard.getWizardPanel());
+                tabbedPane.add(wizard.getWizardName(), new JScrollPane(panel));
+                wizard.setWizardContainer(PartsPanel.this);
+            }
+            MainFrame mainFrame = MainFrame.get();
+            if (mainFrame.getTabs().getSelectedComponent() == mainFrame.getPartsTab() 
+                    && Configuration.get().getTablesLinked() == TablesLinked.Linked) {
+                mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
+                mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
+                mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(selectedPart);
+            }
+        }
+
+        if (selectedTab >= 0 && selectedTab < tabbedPane.getTabCount()) {
+            tabbedPane.setSelectedIndex(selectedTab);
+        }
+
+        revalidate();
+        repaint();
+
+    }
+
+    public void selectPartInTable(Part part) {
+        if (getSelection() != part) {
+            Helpers.selectObjectTableRow(table, part);
+        }
+    }
+
     @Override
     public void wizardCompleted(Wizard wizard) {}
 

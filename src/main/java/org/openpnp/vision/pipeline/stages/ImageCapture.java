@@ -86,6 +86,9 @@ public class ImageCapture extends CvStage {
             camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
             try {
                 BufferedImage bufferedImage = (settleFirst ? camera.settleAndCapture() : camera.capture()); 
+                // Remember the last captured image. This specifically records the native camera image, 
+                // i.e. it does not apply averaging (we want an unaltered raw image for analysis purposes).
+                pipeline.setLastCapturedImage(bufferedImage);
                 Mat image = OpenCvUtils.toMat(bufferedImage);
                 if (count <= 1) { 
                     return new Result(image, ColorSpace.Bgr);

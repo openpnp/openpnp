@@ -134,6 +134,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, MotionOption... options) throws Exception {
+        if (speed <= 0) {
+            throw new Exception("Speed must be greater than 0.");
+        }
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
 
@@ -613,22 +616,25 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         Location location = hm.toTransformed(axesLocation);
         location = hm.toHeadMountableLocation(location);
         double limitedRotation = location.getRotation();
-        double limit0 = -180;
-        double limit1 = 180;
-        if (axis.isSoftLimitLowEnabled()) {
-            AxesLocation axesLimit = axesLocation
-                    .put(new AxesLocation(axis, axis.getSoftLimitLow()));
-            Location limit = hm.toTransformed(axesLimit, LocationOption.Quiet);
-            limit = hm.toHeadMountableLocation(limit, LocationOption.Quiet);
-            limit0 = limit.getRotation();
-        }
-        if (axis.isSoftLimitHighEnabled()) {
-            AxesLocation axesLimit = axesLocation
-                    .put(new AxesLocation(axis, axis.getSoftLimitHigh()));
-            Location limit = hm.toTransformed(axesLimit, LocationOption.Quiet);
-            limit = hm.toHeadMountableLocation(limit, LocationOption.Quiet);
-            limit1 = limit.getRotation();
-        }
+        // Lower limit.
+        AxesLocation axesLimitLow = axesLocation
+                .put(new AxesLocation(axis, 
+                        (axis.isSoftLimitLowEnabled() 
+                                ? axis.getSoftLimitLow() 
+                                : new Length(-180, AxesLocation.getUnits()))));
+        Location limitLow = hm.toTransformed(axesLimitLow, LocationOption.Quiet);
+        limitLow = hm.toHeadMountableLocation(limitLow, LocationOption.Quiet);
+        double limit0 = limitLow.getRotation();
+        // Higher limit.
+        AxesLocation axesLimitHigh = axesLocation
+                .put(new AxesLocation(axis, 
+                        (axis.isSoftLimitHighEnabled() 
+                                ? axis.getSoftLimitHigh() 
+                                : new Length(180, AxesLocation.getUnits()))));
+        Location limitHigh = hm.toTransformed(axesLimitHigh, LocationOption.Quiet);
+        limitHigh = hm.toHeadMountableLocation(limitHigh, LocationOption.Quiet);
+        double limit1 = limitHigh.getRotation();
+        // Swap if necessary.
         if (limit0 > limit1) {
             // Transformation must have negated the coordinates.
             double swap = limit0;
@@ -657,7 +663,7 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             }
             else {
                 throw new Exception("Axis "+axis.getName()+" with limited articulation cannot rotate to "+
-                        axesLocation.getCoordinate(axis)+" ("+hm.getName()+" at "+location.getRotation()+"°)");
+                        limitedAxesLocation.getCoordinate(axis)+" ("+hm.getName()+" to "+location.getRotation()+"°)");
             }
         }
         return limitedAxesLocation;
@@ -773,17 +779,29 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         }
     }
 
+    /**
+     * Wait for the drivers.
+     * 
+     * @param hm
+     * @param completionType
+     * @throws Exception
+     */
     protected void waitForDriverCompletion(HeadMountable hm, CompletionType completionType)
             throws Exception {
-        // Wait for the driver(s).
         ReferenceMachine machine = getMachine();
-        // If the hm is given, we just wait for the drivers of that hm, otherwise we wait for all drivers of the machine axes.
-        AxesLocation mappedAxes = (hm != null ? 
-                hm.getMappedAxes(machine) 
-                : new AxesLocation(machine));
-        if (!mappedAxes.isEmpty()) {
-            for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
-                driver.waitForCompletion((ReferenceHeadMountable) hm, completionType);
+        // If the hm is given, we just wait for the drivers of that hm, otherwise we wait for all drivers,
+        // including those that do not have any axes attached.
+        if (hm != null) {
+            AxesLocation mappedAxes = hm.getMappedAxes(machine);
+            if (!mappedAxes.isEmpty()) {
+                for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
+                    driver.waitForCompletion((ReferenceHeadMountable) hm, completionType);
+                }
+            }
+        }
+        else {
+            for (Driver driver : machine.getDrivers()) {
+                driver.waitForCompletion(null, completionType);
             }
         }
     }

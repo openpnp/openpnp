@@ -95,8 +95,8 @@
             <head-offsets units="Millimeters" x="118.799" y="7.117" z="0.0" rotation="0.0"/>
             <safe-z value="0.0" units="Millimeters"/>
             <calibration enabled="false">
-               <camera-matrix length="9">3.5E-323, 0.0, 2.5E-323, NaN, 6.93224685617292E-310, 6.932247478583E-310, 0.0, 0.0, 0.0</camera-matrix>
-               <distortion-coefficients length="5">NaN, 0.0, 0.0, 0.0, 0.0</distortion-coefficients>
+               <camera-matrix length="9">0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</camera-matrix>
+               <distortion-coefficients length="5">0.0, 0.0, 0.0, 0.0, 0.0</distortion-coefficients>
             </calibration>
          </camera>
       </cameras>

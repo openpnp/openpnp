@@ -53,10 +53,10 @@ import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
-import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.camera.calibration.LensCalibrationParams;
 import org.openpnp.machine.reference.camera.wizards.ReferenceCameraWhiteBalanceConfigurationWizard;
+import org.openpnp.machine.reference.solutions.ActuatorSolutions;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationConfigurationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraCalibrationWizard;
 import org.openpnp.machine.reference.wizards.ReferenceCameraPositionConfigurationWizard;
@@ -581,16 +581,13 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
 
             if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings()) {
                 //Skip all the old style image transforms and distortion corrections except for 
-                //deinterlacing and cropping
+                //deinterlacing, cropping, and white balancing
                 if (isDeinterlaced() || isCropped() || isWhiteBalanced() || advancedCalibration.isEnabled()) {
                     Mat mat = OpenCvUtils.toMat(image);
                     mat = deinterlace(mat);
                     mat = crop(mat);
-                    if (advancedCalibration.isEnabled()) {
-                        //Use the new advanced image transformation and distortion correction
-                        mat = advancedUndistort(mat);
-                    }
                     mat = whiteBalance(mat);
+                    mat = advancedUndistort(mat);
                     image = OpenCvUtils.toBufferedImage(mat);
                     mat.release();
                 }
@@ -646,10 +643,11 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     }
 
     @Override
-    public Location getUnitsPerPixel(Length viewingPlaneZ) {
+    public synchronized Location getUnitsPerPixel(Length viewingPlaneZ) {
         if (advancedCalibration.isOverridingOldTransformsAndDistortionCorrectionSettings() && 
                 advancedCalibration.isValid()) {
-            double upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
+            double upp = 0;
+            upp = advancedCalibration.getDistanceToCameraAtZ(viewingPlaneZ).
                         convertToUnits(LengthUnit.Millimeters).getValue() / 
                         advancedCalibration.getVirtualCameraMatrix().get(0, 0)[0];
             upp = Double.isFinite(upp) ? upp : 0;
@@ -658,15 +656,21 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return super.getUnitsPerPixel(viewingPlaneZ);
     }
 
-    private Mat advancedUndistort(Mat mat) {
+    private synchronized Mat advancedUndistort(Mat mat) {
+        if (!advancedCalibration.isEnabled()) {
+            return mat;
+        }
+        Mat dst = mat.clone();
         if (undistortionMap1 == null || undistortionMap2 == null) {
-            undistortionMap1 = new Mat();
-            undistortionMap2 = new Mat();
+            if (undistortionMap1 == null) {
+                undistortionMap1 = new Mat();
+            }
+            if (undistortionMap2 == null) {
+                undistortionMap2 = new Mat();
+            }
             advancedCalibration.initUndistortRectifyMap(mat.size(), 
                     undistortionMap1, undistortionMap2);
         }
-        
-        Mat dst = mat.clone();
         Imgproc.remap(mat, dst, undistortionMap1, undistortionMap2, Imgproc.INTER_LINEAR);
         mat.release();
 
@@ -1111,6 +1115,12 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return calibration.isEnabled();
     }
 
+    /**
+     * Flips the image. NOTE!!!!! - flipX means to flip about the x-axis which is a vertical flip
+     * and flipY means to flip about the y-axis which is a horizontal flip
+     * @param mat
+     * @return
+     */
     protected Mat flip(Mat mat) {
         if (isFlipped()) {
             int flipCode;
@@ -1273,6 +1283,7 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
         if (solutions.isTargeting(Milestone.Vision)) {
+            /* replaced by more advanced solutions
             if (getLooking() == Looking.Up
                     && isFlipX() == isFlipY()
                     && ! (this instanceof SimulatedUpCamera)) {
@@ -1283,7 +1294,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                         Severity.Warning,
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms"));
             }
-            /*duplicate
             if (getUnitsPerPixel().getX() == 0 && getUnitsPerPixel().getY() == 0) {
                 solutions.add(new Solutions.PlainIssue(
                         this, 
@@ -1360,6 +1370,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                         }
                     });
                 }
+            }
+            if (getLightActuator() != null) {
+                ActuatorSolutions.findActuateIssues(solutions, this, this.getLightActuator(), "camera light",
+                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
             }
         }
     }

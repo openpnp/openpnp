@@ -82,7 +82,7 @@ public class ActuatorControlDialog extends JDialog {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
                     AbstractActuator.assertOnOffDefined(actuator);
-                    actuator.actuate(actuator.getDefaultOnValue());
+                    actuator.actuate(true);
                 });
             }
         });
@@ -93,7 +93,7 @@ public class ActuatorControlDialog extends JDialog {
             public void actionPerformed(ActionEvent e) {
                 UiUtils.submitUiMachineTask(() -> {
                     AbstractActuator.assertOnOffDefined(actuator);
-                    actuator.actuate(actuator.getDefaultOffValue());
+                    actuator.actuate(false);
                 });
             }
         });

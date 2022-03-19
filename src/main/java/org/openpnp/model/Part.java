@@ -20,6 +20,7 @@
 package org.openpnp.model;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persist;
 
@@ -28,7 +29,7 @@ import org.simpleframework.xml.core.Persist;
  * from one or more Feeders and is placed at a Placement as part of a Job. Parts can be used across
  * many boards and should generally represent a single part in the real world.
  */
-public class Part extends AbstractModelObject implements Identifiable {
+public class Part extends AbstractPartSettingsHolder {
     @Attribute
     private String id;
     @Attribute(required = false)
@@ -50,7 +51,6 @@ public class Part extends AbstractModelObject implements Identifiable {
     @Attribute(required = false)
     private int pickRetryCount = 0;
 
-
     @SuppressWarnings("unused")
     private Part() {
         this(null);
@@ -60,10 +60,8 @@ public class Part extends AbstractModelObject implements Identifiable {
         this.id = id;
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
-            public void configurationLoaded(Configuration configuration) throws Exception {
-                if (getPackage() == null) {
-                    setPackage(configuration.getPackage(packageId));
-                }
+            public void configurationLoaded(Configuration configuration) {
+                packag = configuration.getPackage(packageId);
             }
         });
     }

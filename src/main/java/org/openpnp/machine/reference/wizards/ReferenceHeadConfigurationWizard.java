@@ -40,7 +40,9 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.spi.Actuator;
 import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.openpnp.util.UiUtils;
 
@@ -333,8 +335,9 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         addWrappedBinding(head, "calibrationSecondaryFiducialDiameter", calibrationSecondaryFiducialDiameter, "text", lengthConverter);
         addWrappedBinding(head, "calibrationTestObjectDiameter", calibrationTestObjectDiameter, "text", lengthConverter);
 
-        addWrappedBinding(head, "zProbeActuatorName", comboBoxZProbeActuator, "selectedItem");
-        addWrappedBinding(head, "pumpActuatorName", comboBoxPumpActuator, "selectedItem");
+        NamedConverter<Actuator> actuatorConverter = (new NamedConverter<>(head.getActuators()));
+        addWrappedBinding(head, "zProbeActuator", comboBoxZProbeActuator, "selectedItem", actuatorConverter);
+        addWrappedBinding(head, "pumpActuator", comboBoxPumpActuator, "selectedItem", actuatorConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homingFiducialX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homingFiducialY);

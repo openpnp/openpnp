@@ -12,6 +12,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Axis;
@@ -21,6 +22,7 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementList;
 
@@ -113,20 +115,24 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         if (coordinateAxis instanceof ReferenceControllerAxis) {
             ReferenceControllerAxis refAxis = (ReferenceControllerAxis) coordinateAxis;
             if (refAxis.isLimitRotation()) {
-                if (refAxis.isSoftLimitLowEnabled()) {
-                    AxesLocation axesLimit = getMappedAxes(getMachine())
-                            .put(new AxesLocation(refAxis, refAxis.getSoftLimitLow()));
-                    Location limit = toTransformed(axesLimit, LocationOption.Quiet);
-                    limit = toHeadMountableLocation(limit, LocationOption.Quiet);
-                    limit0 = limit.getRotation();
-                }
-                if (refAxis.isSoftLimitHighEnabled()) {
-                    AxesLocation axesLimit = getMappedAxes(getMachine())
-                            .put(new AxesLocation(refAxis, refAxis.getSoftLimitHigh()));
-                    Location limit = toTransformed(axesLimit, LocationOption.Quiet);
-                    limit = toHeadMountableLocation(limit, LocationOption.Quiet);
-                    limit1 = limit.getRotation();
-                }
+                // Lower limit.
+                AxesLocation axesLimitLow = getMappedAxes(getMachine())
+                        .put(new AxesLocation(refAxis, 
+                                (refAxis.isSoftLimitLowEnabled() 
+                                        ? refAxis.getSoftLimitLow() 
+                                        : new Length(-180, AxesLocation.getUnits()))));
+                Location limitLow = toTransformed(axesLimitLow, LocationOption.Quiet);
+                limitLow = toHeadMountableLocation(limitLow, LocationOption.Quiet);
+                limit0 = limitLow.getRotation();
+                // Higher limit.
+                AxesLocation axesLimitHigh = getMappedAxes(getMachine())
+                        .put(new AxesLocation(refAxis, 
+                                (refAxis.isSoftLimitHighEnabled() 
+                                        ? refAxis.getSoftLimitHigh() 
+                                        : new Length(180, AxesLocation.getUnits()))));
+                Location limitHigh = toTransformed(axesLimitHigh, LocationOption.Quiet);
+                limitHigh = toHeadMountableLocation(limitHigh, LocationOption.Quiet);
+                limit1 = limitHigh.getRotation();
             }
         }
         if (limit0 <= limit1) {
@@ -191,6 +197,7 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         Object oldValue = this.rotationModeOffset;
         this.rotationModeOffset = rotationModeOffset;
         firePropertyChange("rotationModeOffset", oldValue, rotationModeOffset);
+        Logger.trace("Set rotation mode offset: "+(rotationModeOffset != null ? rotationModeOffset+"°." : "none."));
         // Note, we do not 
         //  fireMachineHeadActivity(head); 
         // as only the upcoming coordinate changes will really make sense and matter.

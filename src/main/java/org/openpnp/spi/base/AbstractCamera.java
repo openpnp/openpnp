@@ -1075,7 +1075,7 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
                     && camera.getLooking() != this.getLooking()) {
                 Actuator lightActuator = camera.getLightActuator();
                 if (lightActuator != null 
-                        && lightActuator.isActuated()) {
+                        && (lightActuator.isActuated() == null || lightActuator.isActuated())) {
                     AbstractActuator.assertOnOffDefined(lightActuator);
                     actuateLight(lightActuator, lightActuator.getDefaultOffValue());
                 }
