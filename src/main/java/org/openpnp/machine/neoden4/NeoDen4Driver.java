@@ -772,13 +772,15 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         // Drive rotation axes.
         for(ControllerAxis axis : displacement.byType(Axis.Type.Rotation)
                 .getControllerAxes()){
-        // map from axis letter to driver index.
-            int index = 1+"ABCD".indexOf(axis.getLetter());
+            // map from axis letter to driver index.
+            int index = axis.getLetter().indexOf("C");
+            index = Character.getNumericValue(axis.getLetter().charAt(index + 1));
+
             if (index < 1 || index > 4) {
                 throw new Exception("Invalid axis letter "+axis.getLetter()
                     +" for rortation axis "+axis.getName());
             }
-            this.c[index] = location1.getCoordinate(axis, getUnits());
+            this.c[index-1] = location1.getCoordinate(axis, getUnits());
             moveC(index, location1.getCoordinate(axis, getUnits()));
             isDelayNeeded = true;
         }
@@ -791,13 +793,16 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         // Drive Z axes
         for(ControllerAxis axis : displacement.byType(Axis.Type.Z)
                 .getControllerAxes()){
+
             // map from axis letter to driver index.
-            int index = 1+"ABCD".indexOf(axis.getLetter());
-            if (index < 1 || index > 4) {
+            int index = axis.getLetter().indexOf("Z");
+            index = Character.getNumericValue(axis.getLetter().charAt(index + 1));
+
+            if ((index < 1) || (index > 4)) {
                 throw new Exception("Invalid axis letter "+axis.getLetter()
                 +" for rortation axis "+axis.getName());
             }
-            this.z[index] = location1.getCoordinate(axis, getUnits());
+            this.z[index-1] = location1.getCoordinate(axis, getUnits());
             moveZ(index, location1.getCoordinate(axis, getUnits()));
             isDelayNeeded = true;
         }
