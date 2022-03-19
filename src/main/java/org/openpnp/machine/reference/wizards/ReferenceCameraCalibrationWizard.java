@@ -31,6 +31,7 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
@@ -51,6 +52,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.components.VerticalLabel;
 import org.openpnp.gui.processes.CalibrateCameraProcess;
+import org.openpnp.gui.processes.CalibrateCameraProcess.CameraCalibrationProcessProperties;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
@@ -101,6 +103,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
     private Location secondaryLocation;
     private double primaryDiameter;
     private double secondaryDiameter;
+    private Machine machine;
+    private CameraCalibrationProcessProperties props;
 
 
     /**
@@ -152,6 +156,16 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
 
     public ReferenceCameraCalibrationWizard(ReferenceCamera referenceCamera) {
         this.referenceCamera = referenceCamera;
+        
+        machine = Configuration.get().getMachine();
+        props = (CameraCalibrationProcessProperties) machine.getProperty("CameraCalibrationProcessProperties");
+        
+        if (props == null) {
+            props = new CameraCalibrationProcessProperties();
+            machine.setProperty("CameraCalibrationProcessProperties", props);
+        }
+
+
         setName(referenceCamera.getName());
         referenceHead = (ReferenceHead) referenceCamera.getHead();
         isMovable = referenceHead != null;
@@ -201,7 +215,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 secondaryZ = new Length(advCal.getSavedTestPattern3dPointsList()[1][0][2], LengthUnit.Millimeters);
             }
             else {
-                secondaryZ = primaryLocation.getLengthZ().multiply(0.5); //default to half-way between primaryZ and 0 <- TODO: use Nozzle SafeZ ! 
+                secondaryZ = primaryLocation.getLengthZ().add(new Length(props.defaultUpLookingSecondaryOffsetZMm, LengthUnit.Millimeters));
             }
             secondaryLocation = primaryLocation.deriveLengths(null, null, secondaryZ, null);
             
@@ -983,6 +997,10 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite Primary and Secondary Calibration Z values before starting calibration.");
                 return;
             }
+            if (advCal.getPrimaryLocation().getZ() == advCal.getSecondaryLocation().getZ()) {
+                MessageBoxes.errorBox(MainFrame.get(), "Error", "Primary and Secondary Calibration Z values must be different.");
+                return;
+            }
             if (referenceCamera.getDefaultZ() == null || !Double.isFinite(referenceCamera.getDefaultZ().getValue())) {
                 MessageBoxes.errorBox(MainFrame.get(), "Error", "Must define finite Default Working Plane Z value before starting calibration.");
                 return;
@@ -1133,10 +1151,16 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         updateDiagnosticsDisplay();
         
         if (isMovable && referenceCamera.getHead().getDefaultCamera() == referenceCamera) {
-            UiUtils.submitUiMachineTask(() -> {
-                Machine machine = Configuration.get().getMachine();
-                machine.home();
-            });
+            int ans = JOptionPane.showConfirmDialog(MainFrame.get(), 
+                    "Calibration of the head's default camera is complete and the machine should "
+                    + "be re-homed before any new locations are captured/examined. Home the machine now?", 
+                    "Calibration Complete", JOptionPane.YES_NO_OPTION);
+            if (ans == JOptionPane.YES_OPTION) {
+                UiUtils.submitUiMachineTask(() -> {
+                    Machine machine = Configuration.get().getMachine();
+                    machine.home();
+                });
+            }
         }
     }
     

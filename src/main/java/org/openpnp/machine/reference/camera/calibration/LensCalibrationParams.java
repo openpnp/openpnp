@@ -19,9 +19,11 @@
 
 package org.openpnp.machine.reference.camera.calibration;
 
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.openpnp.model.AbstractModelObject;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.core.Commit;
@@ -37,12 +39,17 @@ public class LensCalibrationParams extends AbstractModelObject {
     @Element(name = "distortionCoefficients", required = false)
     private double[] distortionCoefficientsArr = new double[5];
 
-    protected Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
-    protected Mat distortionCoefficients = new Mat(5, 1, CvType.CV_64FC1);
+    protected Mat cameraMatrix = Mat.zeros(3, 3, CvType.CV_64FC1);
+    protected Mat distortionCoefficients = Mat.zeros(5, 1, CvType.CV_64FC1);
 
     @Commit void commit() {
         cameraMatrix.put(0, 0, cameraMatrixArr);
         distortionCoefficients.put(0, 0, distortionCoefficientsArr);
+        if (!Core.checkRange(distortionCoefficients, true, -10e6, +10e6)) {
+            Logger.warn("distortionCoefficients = " + distortionCoefficients.dump());
+            Logger.warn("Distortion Coefficients have extreme values - resetting all to zero");
+            distortionCoefficients.put(0, 0, new double[5] );
+        }
     }
 
     @Persist void persist() {

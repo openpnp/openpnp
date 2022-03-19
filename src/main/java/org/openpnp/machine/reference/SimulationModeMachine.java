@@ -34,7 +34,6 @@ import org.openpnp.machine.reference.camera.ImageCamera;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.driver.ReferenceDriverCommunications;
-import org.openpnp.machine.reference.driver.SimulatedCommunications;
 import org.openpnp.machine.reference.feeder.BlindsFeeder;
 import org.openpnp.machine.reference.feeder.ReferenceStripFeeder;
 import org.openpnp.machine.reference.wizards.SimulationModeMachineConfigurationWizard;
@@ -400,7 +399,8 @@ public class SimulationModeMachine extends ReferenceMachine {
     public static Location getSimulatedPhysicalLocation(HeadMountable hm, Looking looking) {
         // Use ideal location as a default, used in case this fails (not a place to throw).
         Location location = hm.getLocation().convertToUnits(AxesLocation.getUnits());
-        if (Configuration.get().getMachine() == null) {
+        Machine plainMachine = Configuration.get().getMachine();
+        if (plainMachine == null) {
             // Uninitialized (Unit Test). 
             return location;
         }
@@ -408,12 +408,17 @@ public class SimulationModeMachine extends ReferenceMachine {
         SimulationModeMachine machine = getSimulationModeMachine();
         if (machine == null || machine.getSimulationMode() == SimulationMode.Off) {
             // Not a simulation machine. Just take the momentary nominal location.
-            if (Configuration.get().getMachine() instanceof ReferenceMachine) {
+            if (plainMachine instanceof ReferenceMachine) {
                 double cameraTime = NanosecondTime.getRuntimeSeconds();
-                Motion momentary = ((ReferenceMachine)Configuration.get()
-                        .getMachine()).getMotionPlanner()
+                Motion momentary = ((ReferenceMachine)plainMachine).getMotionPlanner()
                         .getMomentaryMotion(cameraTime);
                 AxesLocation axesLocation = momentary.getMomentaryLocation(cameraTime - momentary.getPlannedTime0());
+                try {
+                    axesLocation = applyHomingOffsets(plainMachine, axesLocation, hm.getMappedAxes(plainMachine), looking);
+                }
+                catch (Exception e) {
+                    //Logger.trace(e);
+                }
                 location = hm.toTransformed(axesLocation);
                 location = hm.toHeadMountableLocation(location, 
                         LocationOption.SuppressCameraCalibration);
@@ -430,25 +435,7 @@ public class SimulationModeMachine extends ReferenceMachine {
                 double cameraTime = NanosecondTime.getRuntimeSeconds() - lag;
                 AxesLocation axesLocation = getMomentaryVector(machine, cameraTime, (m, time) -> m.getMomentaryLocation(time));
                 AxesLocation mappedAxes = hm.getMappedAxes(machine);
-                if (looking == Looking.Down) {
-                    // This is a down-looking camera, apply the homing error. 
-                    for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
-                        if (driver instanceof NullDriver) {
-                            AxesLocation homingOffsets = ((NullDriver)driver).getHomingOffsets();
-                            // Apply homing offset
-                            axesLocation = axesLocation.subtract(homingOffsets);
-                        }
-                        else if (driver instanceof GcodeDriver) {
-                            ReferenceDriverCommunications comms = ((GcodeDriver) driver).getCommunications();
-                            if (comms instanceof SimulatedCommunications) {
-                                GcodeServer server = ((SimulatedCommunications) comms).getGcodeServer();
-                                AxesLocation homingOffsets = server.getHomingOffsets();
-                                // Apply homing offset
-                                axesLocation = axesLocation.subtract(homingOffsets);
-                            }
-                        }
-                    }
-                }
+                axesLocation = applyHomingOffsets(machine, axesLocation, mappedAxes, looking);
                 if (machine.getSimulationMode().isDynamicallyImperfectMachine()) {
                     // Add vibrations
                     double amplitude = machine.getSimulatedVibrationAmplitude();
@@ -528,6 +515,30 @@ public class SimulationModeMachine extends ReferenceMachine {
         return location;
     }
 
+    protected static AxesLocation applyHomingOffsets(Machine machine,
+            AxesLocation axesLocation, AxesLocation mappedAxes, Looking looking) throws Exception {
+        if (looking == Looking.Down) {
+            // This is a down-looking camera, apply the homing error. 
+            for (Driver driver : mappedAxes.getAxesDrivers(machine)) {
+                if (driver instanceof NullDriver) {
+                    AxesLocation homingOffsets = ((NullDriver)driver).getHomingOffsets();
+                    // Apply homing offset
+                    axesLocation = axesLocation.subtract(homingOffsets);
+                }
+                else if (driver instanceof GcodeDriver) {
+                    ReferenceDriverCommunications comms = ((GcodeDriver) driver).getCommunications();
+                    GcodeServer server = comms.getGcodeServer();
+                    if (server != null) {
+                        AxesLocation homingOffsets = server.getHomingOffsets();
+                        // Apply homing offset
+                        axesLocation = axesLocation.subtract(homingOffsets);
+                    }
+                }
+            }
+        }
+        return axesLocation;
+    }
+
     public static AxesLocation getMomentaryVector(SimulationModeMachine machine,
             double cameraTime, BiFunction<Motion, Double, AxesLocation> function) throws Exception {
         // First take it from the motion planner.
@@ -538,8 +549,8 @@ public class SimulationModeMachine extends ReferenceMachine {
         for (Driver driver : machine.getDrivers()) {
             if (driver instanceof GcodeDriver) {
                 ReferenceDriverCommunications comms = ((GcodeDriver) driver).getCommunications();
-                if (comms instanceof SimulatedCommunications) {
-                    GcodeServer server = ((SimulatedCommunications) comms).getGcodeServer();
+                GcodeServer server = comms.getGcodeServer();
+                if (server != null) {
                     momentary = server
                             .getMomentaryMotion(cameraTime);
                     AxesLocation driverLocation = function.apply(momentary, cameraTime - momentary.getPlannedTime0());
@@ -554,7 +565,7 @@ public class SimulationModeMachine extends ReferenceMachine {
     public void fireMachineActuatorActivity(Actuator actuator) {
         super.fireMachineActuatorActivity(actuator);
         ActuatorHistory history = getActuatorHistory(actuator);
-        history.put(NanosecondTime.getRuntimeSeconds(), actuator.isActuated());
+        history.put(NanosecondTime.getRuntimeSeconds(), actuator.isActuated() != null && actuator.isActuated());
     }
 
     private static class ActuatorHistory  {

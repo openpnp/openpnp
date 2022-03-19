@@ -1,11 +1,8 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
-import java.util.regex.Pattern;
 
 import org.simpleframework.xml.Attribute;
 
@@ -110,7 +107,7 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
             serialPort.setRTS();
         }
         serialPort.setComPortTimeouts(
-                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 500, 0);
+                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0);
     }
 
     public synchronized void disconnect() throws Exception {

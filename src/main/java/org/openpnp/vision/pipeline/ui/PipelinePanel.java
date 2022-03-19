@@ -25,6 +25,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
@@ -36,6 +38,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 
@@ -109,6 +112,8 @@ public class PipelinePanel extends JPanel {
         splitPaneStages.setRightComponent(scrollPaneDescription);
         scrollPaneDescription.setMinimumSize(new Dimension(50, 50));
         descriptionTa = new JEditorPane("text/html", "<html/>");
+        descriptionTa.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
+        descriptionTa.setBackground(UIManager.getColor("Panel.background")); //$NON-NLS-1$
         scrollPaneDescription.setViewportView(descriptionTa);
         descriptionTa.setText("");
         descriptionTa.setEditable(false);
@@ -184,9 +189,13 @@ public class PipelinePanel extends JPanel {
         property.writeToObject(getSelectedStage());
 
         editor.process();
+        if (property.getName().equals(VisionUtils.PIPELINE_CONTROL_PROPERTY_NAME)) {
+            // If the control property (a special name by convention) was changed, this means the stage will be 
+            // controlled/not controlled by the pipeline caller, and we need to refresh the properties altogether. 
+            SwingUtilities.invokeLater(() -> refreshProperties());
+        }
     }
-    
-   
+
     private void refreshProperties() {
         CvStage stage = getSelectedStage();
         if (stage == null) {

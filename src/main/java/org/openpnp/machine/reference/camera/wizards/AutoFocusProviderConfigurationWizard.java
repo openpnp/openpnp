@@ -191,7 +191,7 @@ public class AutoFocusProviderConfigurationWizard extends AbstractConfigurationW
                 Length maxPartHeight = nt.getMaxPartHeight();
                 Location location0 = location1.add(new Location(maxPartHeight.getUnits(), 
                         0, 0, maxPartHeight.getValue(), 0));
-                Location focus = focusProvider.autoFocus(camera, nozzle, nt.getMaxPartDiameter(), location0, location1);
+                Location focus = focusProvider.autoFocus(camera, nozzle, nt.getMaxPartDiameterWithTolerance(), location0, location1);
                 setLastFocusDistance(focus.getXyzLengthTo(location1));
                 MovableUtils.fireTargetedUserAction(camera);
             });

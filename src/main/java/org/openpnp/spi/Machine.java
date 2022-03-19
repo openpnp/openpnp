@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
+import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
 
@@ -356,4 +357,27 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * @return True if the tool in machine controls should be auto-selected based on targeted user action.
      */
     public boolean isAutoToolSelect();
+
+    /**
+     * @return True if the Z Park button should move all other HeadMountables to Safe Z. 
+     */
+    public boolean isSafeZPark();
+    
+    /**
+     * @return True if the machine heads should be parked after the machine was homed.
+     */
+    public boolean isParkAfterHomed();
+    
+    /**
+     * 
+     * Virtual Z axes (typically on cameras) are invisible, therefore it can easily be overlooked 
+     * by users that it is at unsafe Z. When they later press the Move tool to camera location button, 
+     * an unexpected Z down-move will result, potentially crashing the tool. 
+     * The maximum allowable roaming distance at unsafe Z therefore limits the jogging area 
+     * within which an unsafe virtual Z is kept. It should be enough to fine-adjust a captured
+     * location, but jogging further away will automatically move the virtual axis to Safe Z.
+     * 
+     * @return Maximum allowable roaming distance at unsafe Z. 
+     */
+    public Length getUnsafeZRoamingDistance();
 }

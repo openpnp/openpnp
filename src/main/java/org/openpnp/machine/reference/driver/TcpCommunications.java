@@ -8,7 +8,6 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeoutException;
 
-import org.openpnp.machine.reference.driver.ReferenceDriverCommunications.LineEndingType;
 import org.openpnp.util.GcodeServer;
 import org.simpleframework.xml.Attribute;
 
@@ -106,6 +105,10 @@ public class TcpCommunications extends ReferenceDriverCommunications {
     public void setDriver(AbstractReferenceDriver driver) {
         this.driver = driver;
     }
-    
+
+    @Override
+    public GcodeServer getGcodeServer() {
+        return gcodeServer;
+    }
 }
 

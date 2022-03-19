@@ -27,6 +27,8 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
+import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Length;
@@ -42,6 +44,7 @@ import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.base.AbstractHeadMountable;
 import org.pmw.tinylog.Logger;
 
 /**
@@ -81,14 +84,17 @@ public class KinematicSolutions implements Solutions.Subject {
                                         new Solutions.Issue.Choice(true, 
                                                 "<html><h3>Dynamic Safe Z</h3>"
                                                         + "<p>If a part is on the nozzle, the nozzle is lifted to Safe Z <strong>+</strong> part height.</p><br/>"
-                                                        + "Safe Z must only account for the tallest obstacle.</p>"
+                                                        + "<p>Safe Z must only account for the tallest obstacle.</p><br/>"
+                                                        + "<p>This will result in faster, more optimized machine motion.</p><br/>"
+                                                        + "<p><strong>Recommended.</strong>.</p><br/>"
                                                         + "</html>",
                                                         Icons.safeZDynamic),
                                         new Solutions.Issue.Choice(false, 
                                                 "<html><h3>Fixed Safe Z</h3>"
                                                         + "<p>Safe Z is always at a fixed level.</p><br/>"
-                                                        + " Safe Z must account for <em>both</em> the tallest "
-                                                        + "obstacle <em>and</em> the tallest part on the nozzle.</p>"
+                                                        + "<p>Safe Z must account for <em>both</em> the tallest "
+                                                        + "obstacle <em>and</em> the tallest part on the nozzle.</p><br/>"
+                                                        + "<p>This will result in slower, less optimized machine motion.</p>"
                                                         + "</html>",
                                                         Icons.safeZFixed),
                                 };
@@ -135,63 +141,204 @@ public class KinematicSolutions implements Solutions.Subject {
                                     final boolean oldEnableLow = axisZ.isSafeZoneLowEnabled(); 
                                     final boolean oldEnableHigh = axisZ.isSafeZoneHighEnabled();  
 
-                                    solutions.add(new Solutions.Issue(
-                                            hm, 
-                                            "Set Safe Z of "+hm.getName()+".", 
-                                            "Jog "+hm.getName()+" over the tallest obstacle and capture.", 
-                                            Solutions.Severity.Fundamental,
-                                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
-
-                                        @Override 
-                                        public void activate() throws Exception {
-                                            MainFrame.get().getMachineControls().setSelectedTool(hm);
-                                        }
-
-                                        @Override 
-                                        public String getExtendedDescription() {
-                                            return "<html>"
-                                                    + "<p>Jog "+hm.getName()+" over the tallest obstacle on your machine.</p><br/>"
-                                                    + "<p>Then lower it down so it  still has sufficient clearance"
-                                                    + (partClearance ? " even with the tallest part on the nozzle" : "")
-                                                    +".</p><br/>"
-                                                    + "<p>Then press Accept to capture the Safe Z.</p>"
-                                                    + "</html>";
-                                        }
-
-                                        @Override
-                                        public Icon getExtendedIcon() {
-                                            return partClearance ? Icons.safeZFixed : Icons.safeZCapture;
-                                        }
-
-
-                                        @Override
-                                        public void setState(Solutions.State state) throws Exception {
-                                            Length newLimit = axisZ.getDriverLengthCoordinate();
-                                            if (limitLow) {
-                                                axisZ.setSafeZoneLow((state == State.Solved) ? newLimit : oldLimitLow);
-                                                axisZ.setSafeZoneLowEnabled((state == State.Solved) ? true : oldEnableLow);
-                                                if (!isShared) {
-                                                    axisZ.setSafeZoneHighEnabled((state == State.Solved) ? false : oldEnableHigh);
-                                                }
+                                    if (axisZ.isSafeZoneLowEnabled() && axisZ.isSafeZoneHighEnabled()
+                                            && axisZ.getSafeZoneLow().compareTo(axisZ.getSafeZoneHigh()) > 0) {
+                                        solutions.add(new Solutions.Issue(
+                                                axisZ, 
+                                                "Invalid Safe Z Zone on "+axisZ.getName()+".", 
+                                                "The Save Z Zone of "+axisZ.getName()+" is invalid (lower limit > higher limit). Start fresh configuration.", 
+                                                Solutions.Severity.Error,
+                                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
+                                            @Override
+                                            public void setState(Solutions.State state) throws Exception {
+                                                axisZ.setSafeZoneLowEnabled(state != State.Solved);
+                                                axisZ.setSafeZoneHighEnabled(state != State.Solved);
+                                                MainFrame.get().getIssuesAndSolutionsTab().findIssuesAndSolutions();
                                             }
-                                            else {
-                                                axisZ.setSafeZoneHigh((state == State.Solved) ? newLimit : oldLimitHigh);
-                                                axisZ.setSafeZoneHighEnabled((state == State.Solved) ? true : oldEnableHigh);
-                                                if (!isShared) {
-                                                    axisZ.setSafeZoneLowEnabled((state == State.Solved) ? false : oldEnableLow);
-                                                }
+                                        });
+                                    }
+                                    else {
+
+                                        solutions.add(new Solutions.Issue(
+                                                hm, 
+                                                "Set Safe Z of "+hm.getName()+".", 
+                                                "Jog "+hm.getName()+" over the tallest obstacle and capture.", 
+                                                Solutions.Severity.Fundamental,
+                                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
+
+                                            @Override 
+                                            public void activate() throws Exception {
+                                                MainFrame.get().getMachineControls().setSelectedTool(hm);
                                             }
-                                            // This is a permanently available solution and we need to save state.
-                                            solutions.setSolutionsIssueSolved(this, (state == State.Solved));
-                                            super.setState(state);
-                                        }
-                                    });
+
+                                            @Override 
+                                            public String getExtendedDescription() {
+                                                return "<html>"
+                                                        + "<p>Jog "+hm.getName()+" over the tallest obstacle on your machine.</p><br/>"
+                                                        + "<p>Then lower it down so it still has sufficient clearance"
+                                                        + (partClearance ? " even with the tallest part on the nozzle" : "")
+                                                        + ".</p><br/>"
+                                                        + "<p>Then press Accept to capture the Safe Z.</p>"
+                                                        + (head.getNozzles().size() > 1 ? 
+                                                                "<br/><p>Note: optimizing Safe Z will improve your overall motion speed, "
+                                                                + "however your nozzles may appear unbalanced and they will sometimes see-saw "
+                                                                + "during motion. If you rather prefer a strictly symmetric appearance, you might "
+                                                                + "want to dismiss this solution, and setup Safe Z manually.</p>":
+                                                            "")
+                                                        + "</html>";
+                                            }
+
+                                            @Override
+                                            public Icon getExtendedIcon() {
+                                                return partClearance ? Icons.safeZFixed : Icons.safeZCapture;
+                                            }
+
+                                            @Override
+                                            public boolean isForcedUnsolved() {
+                                                // Always show this as unsolved, if 
+                                                return !(limitLow ? axisZ.isSafeZoneLowEnabled() : axisZ.isSafeZoneHighEnabled()); 
+                                            }
+
+                                            @Override
+                                            public void setState(Solutions.State state) throws Exception {
+                                                Length newLimit = axisZ.getDriverLengthCoordinate();
+                                                if (limitLow) {
+                                                    axisZ.setSafeZoneLow((state == State.Solved) ? newLimit : oldLimitLow);
+                                                    axisZ.setSafeZoneLowEnabled((state == State.Solved) ? true : oldEnableLow);
+                                                    if (!isShared) {
+                                                        axisZ.setSafeZoneHighEnabled((state == State.Solved) ? false : oldEnableHigh);
+                                                    }
+                                                }
+                                                else {
+                                                    axisZ.setSafeZoneHigh((state == State.Solved) ? newLimit : oldLimitHigh);
+                                                    axisZ.setSafeZoneHighEnabled((state == State.Solved) ? true : oldEnableHigh);
+                                                    if (!isShared) {
+                                                        axisZ.setSafeZoneLowEnabled((state == State.Solved) ? false : oldEnableLow);
+                                                    }
+                                                }
+                                                // This is a permanently available solution and we need to save state.
+                                                solutions.setSolutionsIssueSolved(this, (state == State.Solved));
+                                                super.setState(state);
+                                            }
+                                        });
+                                    }
                                 }
                                 catch (Exception e) {
                                     Logger.warn(e);
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // Cam Transform axes.
+            for (Axis axis : machine.getAxes()) {
+                if (axis instanceof ReferenceCamClockwiseAxis
+                        && axis.getType() == Type.Z) {
+                    ReferenceCamClockwiseAxis cam2Axis = (ReferenceCamClockwiseAxis) axis;
+                    ReferenceCamCounterClockwiseAxis cam1Axis = cam2Axis.getCounterClockwiseAxis();
+                    AbstractHeadMountable hm1x = null;
+                    AbstractHeadMountable hm2x = null;
+                    for (Head head : machine.getHeads()) {
+                        for (HeadMountable hm : head.getHeadMountables()) {
+                            if (hm.getAxisZ() == cam1Axis) {
+                                hm1x = (AbstractHeadMountable) hm;
+                            }
+                            else if (hm.getAxisZ() == cam2Axis) {
+                                hm2x = (AbstractHeadMountable) hm;
+                            }
+                        }
+                    }
+                    final AbstractHeadMountable hm1 = hm1x;
+                    final AbstractHeadMountable hm2 = hm2x;
+                    final Length oldOffsetZ1 = hm1 != null ? hm1.getHeadOffsets().getLengthZ() : null;
+                    final Length oldOffsetZ2 = hm2 != null ? hm2.getHeadOffsets().getLengthZ() : null;
+                    final Length oldCamWheelRadius = cam1Axis.getCamWheelRadius();
+                    final Length oldCamWheelGap = cam1Axis.getCamWheelGap();
+                    if (oldCamWheelRadius.getValue() != 0 || oldCamWheelGap.getValue() != 0) {
+                        solutions.add(new Solutions.Issue(
+                                cam1Axis, 
+                                "Deprecated cam transform on axis "+cam1Axis.getName()+" detected.", 
+                                "Remove cam transform axis "+cam1Axis.getName()+" "
+                                        + (oldCamWheelRadius.getValue() != 0 ? "wheel radius, " : "")
+                                        + (oldCamWheelGap.getValue() != 0 ? "wheel gap, " : "")
+                                        + "and compensate in nozzle offset.", 
+                                Solutions.Severity.Warning,
+                                "https://github.com/openpnp/openpnp/wiki/Transformed-Axes#referencecamcounterclockwiseaxis") {
+
+                            @Override 
+                            public String getExtendedDescription() {
+                                return "<html>"
+                                        + "<p>The cam transform on axis "+cam1Axis.getName()+" with non-zero "
+                                                + (oldCamWheelRadius.getValue() != 0 ? "wheel radius, " : "")
+                                                + (oldCamWheelGap.getValue() != 0 ? "wheel gap, " : "")
+                                                +" is deprecated.</p><br/>"
+                                                + "<p><strong color=\"red\">CAUTION:</strong> These offsets will create problems when "
+                                                + "Issues & Solutions wants to (re-)reference the Z coordinate system later. Failing "
+                                                + "to accept this solution may ultimately lead to a dead end in the machine setup "
+                                                + "process.</p><br/>"
+                                                + "<p>Press <strong>Accept</strong> to remove the "
+                                                + (oldCamWheelRadius.getValue() != 0 ? "wheel radius, " : "")
+                                                + (oldCamWheelGap.getValue() != 0 ? "wheel gap, " : "")
+                                                + "as recommended."
+                                                + (hm1 != null || hm2 != null ?
+                                                        "</p><br/>"
+                                                        + "<p><strong>Note:</strong> this change will be compensated in the Z head offset of "
+                                                        + (hm1 != null ? hm1.getClass().getSimpleName()+" "+hm1.getName()+", " : "")
+                                                        + (hm2 != null ? hm2.getClass().getSimpleName()+" "+hm2.getName()+", " : "")
+                                                        + "so that Z coordinates captured before effectively remain the same.":
+                                                        "")
+                                                + "</p>"
+                                        + "</html>";
+                            }
+
+                            @Override
+                            public Icon getExtendedIcon() {
+                                return Icons.camAxisTransform ;
+                            }
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                if (state == State.Solved) {
+                                    cam1Axis.setCamWheelRadius(new Length(0, LengthUnit.Millimeters));
+                                    cam1Axis.setCamWheelGap(new Length(0, LengthUnit.Millimeters));
+                                    Location newOffsets1 = hm1.getHeadOffsets()
+                                            .add(new Location(oldCamWheelRadius.getUnits(),
+                                                    0,
+                                                    0,
+                                                    oldCamWheelRadius.add(oldCamWheelGap).getValue(),
+                                                    0));
+                                    Location newOffsets2 = hm2.getHeadOffsets()
+                                            .add(new Location(oldCamWheelRadius.getUnits(),
+                                                    0,
+                                                    0,
+                                                    oldCamWheelRadius.add(oldCamWheelGap).getValue(),
+                                                    0));
+                                    hm1.setHeadOffsets(newOffsets1);
+                                    hm2.setHeadOffsets(newOffsets2);
+                                }
+                                else {
+                                    cam1Axis.setCamWheelRadius(oldCamWheelRadius);
+                                    cam1Axis.setCamWheelGap(oldCamWheelGap);
+                                    Location newOffsets1 = hm1.getHeadOffsets();
+                                    newOffsets1 = newOffsets1
+                                            .derive(null,
+                                                    null,
+                                                    oldOffsetZ1.convertToUnits(newOffsets1.getUnits()).getValue(),
+                                                    null);
+                                    Location newOffsets2 = hm2.getHeadOffsets();
+                                    newOffsets2 = newOffsets2
+                                            .derive(null,
+                                                    null,
+                                                    oldOffsetZ2.convertToUnits(newOffsets2.getUnits()).getValue(),
+                                                    null);
+                                    hm1.setHeadOffsets(newOffsets1);
+                                    hm2.setHeadOffsets(newOffsets2);
+                                }
+                                super.setState(state);
+                            }
+                        });
                     }
                 }
             }

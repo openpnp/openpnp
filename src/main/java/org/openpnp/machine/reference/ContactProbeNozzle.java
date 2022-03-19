@@ -33,6 +33,7 @@ import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.driver.GcodeAsyncDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.solutions.GcodeDriverSolutions;
+import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ContactProbeNozzleWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -53,7 +54,6 @@ import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.base.AbstractActuator;
 import org.openpnp.spi.base.AbstractHead;
-import org.openpnp.spi.base.AbstractPnpJobProcessor;
 import org.openpnp.util.Collect;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
@@ -757,7 +757,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
 
     protected boolean isPartHeightSensingAvailable(Part part, NozzleTip nozzleTip) {
         Machine machine = Configuration.get().getMachine();
-        if (part != null && AbstractPnpJobProcessor.findPartAligner(machine, part) != null) {
+        if (part != null && AbstractPartAlignment.getPartAlignment(part) != null) {
             // Uses Alignment, so it also needs a vision based method.
             Camera camera;
             try {

@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -662,5 +663,28 @@ public class ReferenceActuatorProfiles extends AbstractTableModel {
                 profileActuator.actuate(value);
             }
         }
+    }
+
+    public List<Actuator> getAll() {
+        List<Actuator> list = new ArrayList<>();
+        if (getActuator1() != null) {
+            list.add(getActuator1());
+        }
+        if (getActuator2() != null) {
+            list.add(getActuator2());
+        }
+        if (getActuator3() != null) {
+            list.add(getActuator3());
+        }
+        if (getActuator4() != null) {
+            list.add(getActuator4());
+        }
+        if (getActuator5() != null) {
+            list.add(getActuator5());
+        }
+        if (getActuator6() != null) {
+            list.add(getActuator6());
+        }
+        return list;
     }
 }

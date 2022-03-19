@@ -65,6 +65,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JTextField maxPartHeight;
     private JLabel lblMaxPartDiameter;
     private JTextField maxPartDiameter;
+    private JLabel lblMinPartDiameter;
+    private JTextField minPartDiameter;
+    private JLabel lblMaxPickTolerance;
+    private JTextField maxPickTolerance;
 
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
@@ -184,27 +188,50 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
+        
+        lblMinPartDiameter = new JLabel("Min. Part Diameter");
+        lblMinPartDiameter.setToolTipText("<html>\nMinimum part diameter, to be picked with this the nozzle tip.<br/>\nNote, the <strong>Minimum Part Diameter</strong> minus two times the <strong>Pick Tolerance</strong><br/>\ndetermines the minimum <em>inner</em> diameter of the nozzle tip that<br/>\nis always considered covered by the part. This inner diameter is ignored<br/>\nin the Background Calibration key color analysis and diagnostics.\n</html>");
+        panelPartDimensions.add(lblMinPartDiameter, "2, 2, right, default");
+        
+        minPartDiameter = new JTextField();
+        panelPartDimensions.add(minPartDiameter, "4, 2, fill, default");
+        minPartDiameter.setColumns(10);
 
         lblMaxPartDiameter = new JLabel("Max. Part Diameter");
         lblMaxPartDiameter.setToolTipText(
-                "Maximum diameter/diagonal of parts picked with this nozzle tip. ");
-        panelPartDimensions.add(lblMaxPartDiameter, "2, 2, right, default");
+                "<html>\nMaximum diameter/diagonal of parts picked with this nozzle tip, <br/>\nincluding tolerances.\n</html>\n");
+        panelPartDimensions.add(lblMaxPartDiameter, "2, 4, right, default");
 
         maxPartDiameter = new JTextField();
-        panelPartDimensions.add(maxPartDiameter, "4, 2, fill, default");
+        panelPartDimensions.add(maxPartDiameter, "4, 4, fill, default");
         maxPartDiameter.setColumns(10);
 
         lblMaxPartHeight = new JLabel("Max. Part Height");
         lblMaxPartHeight.setToolTipText(
                 "Maximum part heights picked with this nozzle tip. Used for dynamic safe Z, if part height is unknown.");
-        panelPartDimensions.add(lblMaxPartHeight, "2, 4, right, default");
+        panelPartDimensions.add(lblMaxPartHeight, "2, 6, right, default");
 
         maxPartHeight = new JTextField();
-        panelPartDimensions.add(maxPartHeight, "4, 4, fill, default");
+        panelPartDimensions.add(maxPartHeight, "4, 6, fill, default");
         maxPartHeight.setColumns(10);
+        
+        lblMaxPickTolerance = new JLabel("Max. Pick Tolerance");
+        lblMaxPickTolerance.setToolTipText("<html>\nMaximum assumed pick tolerance allowed with this nozzle tip.<br/>\nThis determines how far away from the nominal location a detected <br/>\nBottom Vision alignment position is accepted. It also reduces the <br/>\ncomputation time of some vision operations by limiting the search range.\n</html>\n\n");
+        panelPartDimensions.add(lblMaxPickTolerance, "2, 8, right, default");
+        
+        maxPickTolerance = new JTextField();
+        maxPickTolerance.setToolTipText("");
+        panelPartDimensions.add(maxPickTolerance, "4, 8, fill, default");
+        maxPickTolerance.setColumns(10);
     }
 
     @Override
@@ -221,8 +248,10 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
 
         addWrappedBinding(nozzleTip, "pushAndDragAllowed", chckbxPushAndDragAllowed, "selected");
 
+        addWrappedBinding(nozzleTip, "minPartDiameter", minPartDiameter, "text", lengthConverter);
         addWrappedBinding(nozzleTip, "maxPartDiameter", maxPartDiameter, "text", lengthConverter);
         addWrappedBinding(nozzleTip, "maxPartHeight", maxPartHeight, "text", lengthConverter);
+        addWrappedBinding(nozzleTip, "maxPickTolerance", maxPickTolerance, "text", lengthConverter);
 
         ComponentDecorators.decorateWithAutoSelect(nameTf);
 
@@ -230,7 +259,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         ComponentDecorators.decorateWithAutoSelect(placeDwellTf);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldLowDiameter);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(minPartDiameter);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxPartDiameter);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxPartHeight);
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(maxPickTolerance);
     }
 }

@@ -17,6 +17,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -28,6 +29,8 @@ import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
+import org.openpnp.vision.FluentCv.ColorCode;
+import org.openpnp.vision.FluentCv.ColorSpace;
 import org.pmw.tinylog.Logger;
 
 public class OpenCvUtils {
@@ -203,6 +206,62 @@ public class OpenCvUtils {
         }
         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_GRAY2RGB);
         return mat;
+    }
+
+
+    /**
+     * Convert the given Mat to True Color RGB from the given ColorSpace. 
+     * Conversion is done in place and if the Mat is already True Color nothing is done.
+     * 
+     * @param image
+     * @param colorSpace
+     * @return
+     * @throws Exception
+     */
+    public static Mat toRGB(Mat image, ColorSpace colorSpace) throws Exception {
+        if (image != null) {
+            if (colorSpace != null) {
+                if ((image.channels() == 3) || (colorSpace == ColorSpace.Gray)) {
+                    switch (colorSpace) {
+                        case Gray :
+                        case Bgr :
+                            //format is already ok for display
+                            break;
+                        case Rgb :
+                            //need to swap channels 0 and 2 to get to Bgr format
+                            Mat rChannel = new Mat();
+                            Mat bChannel = new Mat();
+                            Core.extractChannel(image, rChannel, 0);
+                            Core.extractChannel(image, bChannel, 2);
+                            Core.insertChannel(bChannel, image, 0);
+                            Core.insertChannel(rChannel, image, 2);
+                            rChannel.release();
+                            bChannel.release();
+                            break;
+                        case Hls :
+                            Imgproc.cvtColor(image, image, ColorCode.Hls2Bgr.getCode());
+                            break;
+                        case HlsFull :
+                            Imgproc.cvtColor(image, image, ColorCode.Hls2BgrFull.getCode());
+                            break;
+                        case Hsv :
+                            Imgproc.cvtColor(image, image, ColorCode.Hsv2Bgr.getCode());
+                            break;
+                        case HsvFull :
+                            Imgproc.cvtColor(image, image, ColorCode.Hsv2BgrFull.getCode());
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                else {
+
+                    throw new Exception("Expecting image to be in the " + colorSpace +
+                            " color space but it has only one channel." );
+                }
+            }
+        }
+        return image;
     }
 
     /**

@@ -27,10 +27,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
 
 import javax.swing.Action;
 
@@ -49,6 +46,7 @@ import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferencePushPullFeederConfigurationWizard;
 import org.openpnp.machine.reference.feeder.wizards.ReferencePushPullMotionConfigurationWizard;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -56,11 +54,13 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.MotionPlanner;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.MovableUtils;
@@ -79,7 +79,7 @@ import org.openpnp.vision.pipeline.stages.SimpleOcr;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 public class ReferencePushPullFeeder extends ReferenceFeeder {
 
@@ -104,6 +104,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     @Attribute(required = false)
     protected boolean usedAsTemplate = false; 
+
+    @Attribute(required = false)
+    protected boolean calibrateMotionX = true; 
+    @Attribute(required = false)
+    protected boolean calibrateMotionY = true; 
 
     @Element
     protected Location feedStartLocation = new Location(LengthUnit.Millimeters);
@@ -169,9 +174,17 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected boolean includedPull3 = false; 
 
     @Attribute(required = false)
-    protected String actuatorName;
+    protected boolean additiveRotation = true;
+
     @Attribute(required = false)
-    protected String peelOffActuatorName;
+    private String actuatorName;
+    protected Actuator actuator;
+    /**
+     * "peelOff" is a legacy name, it is now recommened to use the rotation axis for peeling
+     */
+    @Attribute(required = false)
+    private  String peelOffActuatorName;
+    protected Actuator actuator2;
 
     @Attribute(required = false)
     private long feedCount = 0;
@@ -255,8 +268,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     protected CalibrationTrigger calibrationTrigger = CalibrationTrigger.UntilConfident;
 
-    private boolean partsMayContainSpaces = false;
-
     public static final Location nullLocation = new Location(LengthUnit.Millimeters);
 
     private void checkHomedState(Machine machine) {
@@ -266,12 +277,24 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public ReferencePushPullFeeder() {
-        // Listen to the machine become unhomed to invalidate feeder calibration. 
-        // Note that home()  first switches the machine isHomed() state off, then on again, 
-        // so we also catch re-homing. 
         Configuration.get().addListener(new ConfigurationListener.Adapter() {
             @Override
             public void configurationComplete(Configuration configuration) throws Exception {
+                // Resolve the actuators by name (legacy way).
+                Head head = Configuration.get().getMachine().getDefaultHead();
+                try {
+                    actuator = head.getActuatorByName(actuatorName);
+                }
+                catch (Exception e) {
+                }
+                try {
+                    actuator2 = head.getActuatorByName(peelOffActuatorName);
+                }
+                catch (Exception e) {
+                }
+                // Listen to the machine become unhomed to invalidate feeder calibration.
+                // Note that home()  first switches the machine isHomed() state off, then on again, 
+                // so we also catch re-homing.
                 Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
 
                     @Override
@@ -288,8 +311,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         });
     }
 
-    @Commit
-    public void commit() {
+    @Persist
+    private void persist() {
+        // Make sure the newest names are persisted (legacy way).
+        actuatorName = (actuator == null ? null : actuator.getName()); 
+        peelOffActuatorName = (actuator2 == null ? null : actuator2.getName()); 
     }
 
     public Camera getCamera() throws Exception {
@@ -344,18 +370,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void feed(Nozzle nozzle) throws Exception {
         Logger.debug("feed({})", nozzle);
 
-        if (actuatorName == null || actuatorName.isEmpty()) {
-            throw new Exception(String.format("No actuator name set on feeder %s.", getName()));
-        }
-
         Head head = nozzle.getHead();
-        Actuator actuator = head.getActuatorByName(actuatorName);
         if (actuator == null) {
-            throw new Exception(String.format("No Actuator found with name %s on feed Head %s",
-                    actuatorName, head.getName()));
+            throw new Exception(String.format("No feed actuator assigned to feeder %s",
+                    getName()));
         }
-
-        Actuator peelOffActuator = head.getActuatorByName(peelOffActuatorName);
 
         if (getFeedCount() % getPartsPerFeedCycle() == 0) {
             // Modulo of feed count is zero - no more parts there to pick, must feed 
@@ -363,22 +382,32 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // Make sure we're calibrated
             assertCalibrated(false);
 
-            // Create the effective feed locations, keeping the Rotation intact and applying the vision offset.
+            // Create the effective feed locations, applying the vision offset.
+            Location visionOffsets = getVisionOffset()
+                    .multiply(
+                            (isCalibrateMotionX() ? 1 : 0),
+                            (isCalibrateMotionY() ? 1 : 0), 
+                            1,  // Z currently not used, but maybe later?
+                            0); // Make sure there is no rotation.
             Location feedStartLocation = getFeedStartLocation()
-                    .derive(actuator.getLocation(), false, false, false, true)
-                    .subtractWithRotation(getVisionOffset());
+                    .subtractWithRotation(visionOffsets);
             Location feedMid1Location = getFeedMid1Location()
-                    .derive(actuator.getLocation(), false, false, false, true)
-                    .subtractWithRotation(getVisionOffset());
+                    .subtractWithRotation(visionOffsets);
             Location feedMid2Location = getFeedMid2Location()
-                    .derive(actuator.getLocation(), false, false, false, true)
-                    .subtractWithRotation(getVisionOffset());
+                    .subtractWithRotation(visionOffsets);
             Location feedMid3Location = getFeedMid3Location()
-                    .derive(actuator.getLocation(), false, false, false, true)
-                    .subtractWithRotation(getVisionOffset());
+                    .subtractWithRotation(visionOffsets);
             Location feedEndLocation = getFeedEndLocation()
-                    .derive(actuator.getLocation(), false, false, false, true)
-                    .subtractWithRotation(getVisionOffset());
+                    .subtractWithRotation(visionOffsets);
+
+            MotionPlanner motionPlanner = Configuration.get().getMachine().getMotionPlanner();
+            if (actuator.getAxisRotation() != null && isAdditiveRotation()) {
+                // Reset to the rotation axis to zero.
+                AxesLocation rotation = actuator.toRaw(actuator.toHeadLocation(
+                        actuator.getLocation().multiply(1, 1, 1, 0)))
+                        .byType(Axis.Type.Rotation); 
+                motionPlanner.setGlobalOffsets(rotation);
+            }
 
             // Move to the Feed Start Location
             MovableUtils.moveToLocationAtSafeZ(actuator, feedStartLocation);
@@ -386,7 +415,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
             long feedsPerPart = (long)Math.ceil(getPartPitch().divide(getFeedPitch()));
             long n = getFeedMultiplier()*feedsPerPart;
-            for (long i = 0; i < n; i++) {  // perform multiple feeds if required
+            for (long i = 0; i < n; i++) {  // perform multiple feed actuations if required
 
                 boolean isFirst = (i == 0); 
                 boolean isLast = (i == n-1); 
@@ -409,8 +438,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 }
 
                 // Start the take up actuator
-                if (peelOffActuator != null) {
-                    peelOffActuator.actuate(true);
+                if (actuator2 != null) {
+                    actuator2.actuate(true);
                 }
 
                 // Now move back to the start location to move the tape.
@@ -428,12 +457,30 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 }
 
                 // Stop the take up actuator
-                if (peelOffActuator != null) {
-                    peelOffActuator.actuate(false);
+                if (actuator2 != null) {
+                    actuator2.actuate(false);
                 }
 
                 // disable actuator
                 actuator.actuate(false);
+
+                if (isAdditiveRotation()) {
+                    // Reset to the rotation axis to zero for the next iteration. 
+                    AxesLocation rotation = actuator.toRaw(actuator.toHeadLocation(
+                            actuator.getLocation().multiply(1, 1, 1, 0)))
+                            .byType(Axis.Type.Rotation); 
+                    motionPlanner.setGlobalOffsets(rotation);
+                }
+
+                // Note, the feedStartLocation can be thought a) to be the target of the pull or 
+                // b) the starting point of the next push. So we need to look at it a second time 
+                // here, AFTER having disabled the actuators, and AFTER having reset the rotation 
+                // coordinate. 
+                // Well, this is what you need for a multi-actuation feed in a drag pin & peeler scenario.
+                if (includedMulti0 && !(isLast || includedPull0)) {
+                    actuator.moveTo(feedStartLocation, feedSpeedPull0*baseSpeed);
+                }
+
             }
 
             head.moveToSafeZ();
@@ -550,6 +597,26 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("usedAsTemplate", oldValue, usedAsTemplate);
         // this also changes the status implicitly 
         firePropertyChange("cloneTemplateStatus", "", getCloneTemplateStatus());
+    }
+
+    public boolean isCalibrateMotionX() {
+        return calibrateMotionX;
+    }
+
+    public void setCalibrateMotionX(boolean calibrateMotionX) {
+        Object oldValue = this.calibrateMotionX;
+        this.calibrateMotionX = calibrateMotionX;
+        firePropertyChange("calibrateMotionX", oldValue, calibrateMotionX);
+    }
+
+    public boolean isCalibrateMotionY() {
+        return calibrateMotionY;
+    }
+
+    public void setCalibrateMotionY(boolean calibrateMotionY) {
+        Object oldValue = this.calibrateMotionY;
+        this.calibrateMotionY = calibrateMotionY;
+        firePropertyChange("calibrateMotionY", oldValue, calibrateMotionY);
     }
 
     public Location getFeedStartLocation() {
@@ -832,32 +899,34 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("includedPull3", oldValue, includedPull3);
     }
 
-    public String getActuatorName() {
-        return actuatorName;
+    public boolean isAdditiveRotation() {
+        return additiveRotation;
     }
 
-    public void setActuatorName(String actuatorName) {
-        String oldValue = this.actuatorName;
-        this.actuatorName = actuatorName;
-        // Unfortunately, java.beans.PropertyChangeSupport.firePropertyChange(String, Object, Object)
-        // will always treat null property changes as "dirty" signal. So let's handle those as empty Strings. 
-        firePropertyChange("actuatorName", 
-                oldValue == null ? "" : oldValue, 
-                        actuatorName == null ? "" : actuatorName);
+    public void setAdditiveRotation(boolean additiveRotation) {
+        Object oldValue = this.additiveRotation;
+        this.additiveRotation = additiveRotation;
+        firePropertyChange("relativeRotation", oldValue, additiveRotation);
     }
 
-    public String getPeelOffActuatorName() {
-        return peelOffActuatorName;
+    public Actuator getActuator() {
+        return actuator;
     }
 
-    public void setPeelOffActuatorName(String actuatorName) {
-        String oldValue = this.peelOffActuatorName;
-        this.peelOffActuatorName = actuatorName;
-        // Unfortunately, java.beans.PropertyChangeSupport.firePropertyChange(String, Object, Object)
-        // will always treat null property changes as "dirty" signal. So let's handle those as empty Strings. 
-        firePropertyChange("peelOffActuatorName", 
-                oldValue == null ? "" : oldValue, 
-                        actuatorName == null ? "" : actuatorName);
+    public void setActuator(Actuator actuator) {
+        Object oldValue = this.actuator;
+        this.actuator = actuator;
+        firePropertyChange("actuator", oldValue, actuator);
+    }
+
+    public Actuator getActuator2() {
+        return actuator2;
+    }
+
+    public void setActuator2(Actuator actuator2) {
+        Object oldValue = this.actuator2;
+        this.actuator2 = actuator2;
+        firePropertyChange("actuator2", oldValue, actuator2);
     }
 
     public long getFeedCount() {
@@ -1925,8 +1994,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
         if (clonePushPullSettings) {
             // clone the actuators
-            setActuatorName(templateFeeder.getActuatorName());
-            setPeelOffActuatorName(templateFeeder.getPeelOffActuatorName());
+            setActuator(templateFeeder.getActuator());
+            setActuator2(templateFeeder.getActuator2());
             // clone all the speeds
             setFeedSpeedPush1(templateFeeder.getFeedSpeedPush1());
             setFeedSpeedPush2(templateFeeder.getFeedSpeedPush2());
@@ -2001,11 +2070,22 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             setHole2Location(relocatedXyLocation(templateFeeder.getHole2Location(), oldTransform, newTransform));
         }
         if (pushPull) {
-            setFeedStartLocation(relocatedXyzLocation(templateFeeder.getFeedStartLocation(), oldTransform, newTransform));
-            setFeedMid1Location(relocatedXyzLocation(templateFeeder.getFeedMid1Location(), oldTransform, newTransform));
-            setFeedMid2Location(relocatedXyzLocation(templateFeeder.getFeedMid2Location(), oldTransform, newTransform));
-            setFeedMid3Location(relocatedXyzLocation(templateFeeder.getFeedMid3Location(), oldTransform, newTransform));
-            setFeedEndLocation(relocatedXyzLocation(templateFeeder.getFeedEndLocation(), oldTransform, newTransform));
+            if (Math.abs(Math.sin(Math.toRadians(oldTransform.getRotation() - newTransform.getRotation()))) 
+                    > Math.sin(Math.toRadians(45))) {
+                // Rotated, flip the switches.
+                setCalibrateMotionX(templateFeeder.isCalibrateMotionY());
+                setCalibrateMotionY(templateFeeder.isCalibrateMotionX());
+            }
+            else {
+                setCalibrateMotionX(templateFeeder.isCalibrateMotionX());
+                setCalibrateMotionY(templateFeeder.isCalibrateMotionY());
+            }
+            setAdditiveRotation(templateFeeder.isAdditiveRotation());
+            setFeedStartLocation(relocatedLocation(templateFeeder.getFeedStartLocation(), oldTransform, newTransform));
+            setFeedMid1Location(relocatedLocation(templateFeeder.getFeedMid1Location(), oldTransform, newTransform));
+            setFeedMid2Location(relocatedLocation(templateFeeder.getFeedMid2Location(), oldTransform, newTransform));
+            setFeedMid3Location(relocatedLocation(templateFeeder.getFeedMid3Location(), oldTransform, newTransform));
+            setFeedEndLocation(relocatedLocation(templateFeeder.getFeedEndLocation(), oldTransform, newTransform));
         }
         if (vision) {
             if (templateFeeder.getOcrRegion()!= null) {
