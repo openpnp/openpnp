@@ -821,7 +821,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
          // 250mm/s axes feedrate.
          // TODO: better solution than just assuming 250. 
          double speed = Math.max(0.0, Math.min(1.0, feedRate/250.0));
-<<<<<<< HEAD
 
          double x = location1.getCoordinate(location1.getAxis(this, Axis.Type.X), units);
          double y = location1.getCoordinate(location1.getAxis(this, Axis.Type.Y), units);
@@ -859,143 +858,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         // Store the new location to the axes.
         location1.setToDriverCoordinates(this);
         motionPending = true;
-=======
-         
-         double x = location.getCoordinate(location.getAxis(this, Axis.Type.X), units);
-         double y = location.getCoordinate(location.getAxis(this, Axis.Type.Y), units);
-         double z = 0;
-         double c = 0;
-
-         // TODO: remove NaN handling. It is already done outside of the driver.
-         
-         // Handle NaNs, which means don't move this axis for this move. We just copy the existing
-         // coordinate.
-
-         boolean isDelayNeeded = false;
-
-         double minZ = 0.;
-         double maxZ = -13.;
-         
-         switch (hm.getId()) {
-             case "N1":
-                 c = location.getCoordinate(location.getAxisByVariable(this,  "rotationN1"));
-                 c = Math.max(c, -180.);
-                 c = Math.min(c, 180.);                
-                 if (Math.abs(c-this.c1)>0.001) {
-                     moveC(1, c);
-                     this.c1 = c;
-                     isDelayNeeded = true;
-                 }
-                 break;
-             case "N2":
-                 c = location.getCoordinate(location.getAxisByVariable(this,  "rotationN2"));
-                 c = Math.max(c, -180.);
-                 c = Math.min(c, 180.);                
-                 if (Math.abs(c-this.c2)>0.001) {
-                     moveC(2, c);
-                     this.c2 = c;
-                     isDelayNeeded = true;
-                 }
-                 break;
-             case "N3":
-                 c = location.getCoordinate(location.getAxisByVariable(this,  "rotationN3"));
-                 c = Math.max(c, -180.);
-                 c = Math.min(c, 180.);                
-                 if (Math.abs(c-this.c3)>0.001) {
-                     moveC(3, c);
-                     this.c3 = c;
-                     isDelayNeeded = true;
-                 }
-                 break;
-             case "N4":
-                 c = location.getCoordinate(location.getAxisByVariable(this,  "rotationN4"));
-                 c = Math.max(c, -180.);
-                 c = Math.min(c, 180.);                
-                 if (Math.abs(c-this.c4)>0.001) {
-                     moveC(4, c);
-                     this.c4 = c;
-                     isDelayNeeded = true;
-                 }
-                 break;
-         }
-         
-         
-         
-         x = Double.isNaN(x) ? this.x : x;
-         y = Double.isNaN(y) ? this.y : y;
-         if (distance(this.x - x, this.y - y) > 0.0001) {
-         	if(distance(this.x - x, this.y - y) <= 10.1) {
-         		speed = 0.2;
-         	}
-             setMoveSpeed(speed);
-        	 moveXySafe(x, y);
-             Logger.debug("MoveXy");
-             
-             this.x = x;
-             this.y = y;        
-             
-             isDelayNeeded = false;
-         }
-         
-         if(isDelayNeeded) {
-         	Thread.sleep(100);
-         }
-         
-         switch (hm.getId()) {
-         case "N1":
-             z = location.getCoordinate(location.getAxisByVariable(this,  "zN1"));
-             z = Math.min(z, minZ);
-             z = Math.max(z, maxZ);
-             if (Math.abs(z-this.z1)>0.001) {
-                 moveZ(1, z);
-                 this.z1 = z;
-                 isDelayNeeded = true;
-             }
-             break;
-             
-         case "N2":
-             z = location.getCoordinate(location.getAxisByVariable(this,  "zN2"));
-             z = Math.min(z, minZ);
-             z = Math.max(z, maxZ);
-             if (Math.abs(z-this.z2)>0.001) {
-                 moveZ(2, z);
-                 this.z2 = z;
-                 isDelayNeeded = true;
-             }
-             break;
-             
-         case "N3":
-             z = location.getCoordinate(location.getAxisByVariable(this,  "zN3"));
-             z = Math.min(z, minZ);
-             z = Math.max(z, maxZ);
-             if (Math.abs(z-this.z3)>0.001) {
-                 moveZ(3, z);
-                 this.z3 = z;
-                 isDelayNeeded = true;
-             }
-             break;
-             
-         case "N4":
-             z = location.getCoordinate(location.getAxisByVariable(this,  "zN4"));
-             z = Math.min(z, minZ);
-             z = Math.max(z, maxZ);
-             if (Math.abs(z-this.z4)>0.001) {
-                 moveZ(4, z);
-                 this.z4 = z;
-                 isDelayNeeded = true;
-             }
-             break;
-         }
-         
-         
-         if(isDelayNeeded) {
-         	Thread.sleep(200);
-         }
-         
-         // Store the new location to the axes.
-         location.setToDriverCoordinates(this);
-         motionPending = true;
->>>>>>> 7e0c104b4f68e884836af1bf178ec3a1a5713c99
     }
 
     @Override
@@ -1290,26 +1152,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     @Override
     public void actuate(Actuator actuator, double value) throws Exception {
         Logger.trace(String.format("Neoden actuate %s, %f", actuator.getName(), value));
-<<<<<<< HEAD
-        boolean success = false;
-        for(int i=0; i<3; i++) {
-            try {
-                actuateInternal(actuator, value);
-                success = true;
-                break;
-            }
-            catch (Exception e){
-                Thread.sleep(1000);
-                flushInput();
-                Logger.warn(String.format("actuate: try %d, exception %s, [%s]", i, e.toString(), actuator.toString()));
-                Thread.sleep(1000);
-            }
-        }
-        
-        if(!success) {
-            throw new IOException("Actuate error.");
-        }
-=======
     	boolean success = false;
     	for(int i=0; i<3; i++) {
         	try {
@@ -1328,7 +1170,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     	if(!success) {
     		throw new IOException("Actuate error.");
     	}
->>>>>>> 7e0c104b4f68e884836af1bf178ec3a1a5713c99
     }
     
     private int getNozzleAirValue(int nozzleNum) throws Exception {
