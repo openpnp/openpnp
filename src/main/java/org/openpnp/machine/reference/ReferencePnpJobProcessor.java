@@ -39,6 +39,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
+import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Feeder;
@@ -385,19 +386,34 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
         public Step step() throws JobProcessorException {
             FiducialLocator locator = Configuration.get().getMachine().getFiducialLocator();
             
-            if (job.isUsingPanel() && job.getPanels().get(0).isCheckFiducials()){
-                Panel p = job.getPanels().get(0);
-                
-                BoardLocation boardLocation = job.getBoardLocations().get(0);
-                
-                fireTextStatus("Panel fiducial check on %s", boardLocation);
+            for (PanelLocation panelLocation : job.getPanelLocations()) {
+                if (!panelLocation.isEnabled()) {
+                    continue;
+                }
+                if (!panelLocation.isCheckFiducials()) {
+                    continue;
+                }
+                fireTextStatus("Panel fiducial check on %s", panelLocation);
                 try {
-                    locator.locateBoard(boardLocation, p.isCheckFiducials());
+                    locator.locateBoard(panelLocation, false);
                 }
                 catch (Exception e) {
-                    throw new JobProcessorException(boardLocation, e);
+                    throw new JobProcessorException(panelLocation, e);
                 }
             }
+//            if (job.isUsingPanel() && job.getPanels().get(0).isCheckFiducials()){
+//                Panel p = job.getPanels().get(0);
+//                
+//                BoardLocation boardLocation = job.getBoardLocations().get(0);
+//                
+//                fireTextStatus("Panel fiducial check on %s", boardLocation);
+//                try {
+//                    locator.locateBoard(boardLocation, p.isCheckFiducials());
+//                }
+//                catch (Exception e) {
+//                    throw new JobProcessorException(boardLocation, e);
+//                }
+//            }
             
             return new BoardLocationFiducialCheck();
         }

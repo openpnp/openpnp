@@ -54,7 +54,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
 
     private transient File file;
     private transient boolean dirty;
-    private transient PanelLocation rootPanelLocation;
+    private transient final PanelLocation rootPanelLocation;
     
     public Job() {
         rootPanelLocation = new PanelLocation(new Panel("root"));
@@ -63,25 +63,47 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         addPropertyChangeListener(this);
     }
 
-    @SuppressWarnings("unused")
     @Commit
     private void commit() {
-        for (BoardLocation boardLocation : boardLocations) {
-            boardLocation.addPropertyChangeListener(this);
-        }
-        for (PanelLocation panelLocation : panelLocations) {
-            panelLocation.addPropertyChangeListener(this);
-        }
-        
         //Convert deprecated list of Panels to list of PanelLocations
         if (panels != null && !panels.isEmpty()) {
             Panel panel = panels.get(0);
             PanelLocation panelLocation = new PanelLocation(panel);
             panelLocation.setParent(null);
             panelLocation.setLocation(boardLocations.get(0).getLocation());
-            panelLocation.addPropertyChangeListener(this);
             panelLocations.add(panelLocation);
+            boardLocations.clear();
             panels = null;
+        }
+        
+        //Add board and panel locations to the root panel
+        for (BoardLocation boardLocation : boardLocations) {
+            rootPanelLocation.addChild(boardLocation);
+            boardLocation.addPropertyChangeListener(this);
+        }
+        for (PanelLocation panelLocation : panelLocations) {
+            rootPanelLocation.addChild(panelLocation);
+            panelLocation.addPropertyChangeListener(this);
+        }
+        rootPanelLocation.addPropertyChangeListener(this);
+    }
+    
+    @Persist
+    private void persist() {
+        panels = null;
+        //Refresh the panel and board location lists with the children of the root panel
+        panelLocations.clear();
+        boardLocations.clear();
+        for (FiducialLocatableLocation child : rootPanelLocation.getChildren()) {
+            if (child instanceof PanelLocation) {
+                panelLocations.add((PanelLocation) child);
+            }
+            else if (child instanceof BoardLocation) {
+                boardLocations.add((BoardLocation) child);
+            }
+            else {
+                throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
+            }
         }
     }
     
@@ -132,17 +154,17 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     // single panel in use, even though the underlying plumbing supports a list of
     // panels. This function is intended to let the rest of OpenPNP know if the
     // autopanelize function is being used
-    public boolean isUsingPanel() {
-        if (panelLocations == null) {
-            return false;
-        }
-
-        if (panelLocations.size() >= 1) {
-            return true;
-        }
-
-        return false;
-    }
+//    public boolean isUsingPanel() {
+//        if (panels == null) {
+//            return false;
+//        }
+//
+//        if (panels.size() >= 1) {
+//            return true;
+//        }
+//
+//        return false;
+//    }
 
     public List<PanelLocation> getPanelLocations() {
         return Collections.unmodifiableList(panelLocations);
@@ -220,6 +242,25 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         }
     }
 
+    public List<FiducialLocatable> getFiducialLocatableInstancesOf(File file) {
+        List<FiducialLocatable> ret = new ArrayList<>();
+        if (file == null) {
+            return ret;
+        }
+        for (FiducialLocatableLocation fiducialLocatableLocation : getFiducialLocatableLocations()) {
+            if (fiducialLocatableLocation.getFiducialLocatable() != null) {
+                if (file.equals(fiducialLocatableLocation.getFiducialLocatable().getFile())) {
+                    ret.add(fiducialLocatableLocation.getFiducialLocatable());
+                }
+            }
+        }
+        return ret;
+    }
+    
+    public int getNumberOfFiducialLocatableInstancesOf(File file) {
+        return getFiducialLocatableInstancesOf(file).size();
+    }
+    
     public File getFile() {
         return file;
     }
@@ -244,11 +285,11 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         return rootPanelLocation;
     }
 
-    public void setRootPanelLocation(PanelLocation rootPanel) {
-        PanelLocation oldValue = this.rootPanelLocation;
-        this.rootPanelLocation = rootPanel;
-        firePropertyChange("rootPanelLocation", oldValue, rootPanel);
-    }
+//    public void setRootPanelLocation(PanelLocation rootPanel) {
+//        PanelLocation oldValue = this.rootPanelLocation;
+//        this.rootPanelLocation = rootPanel;
+//        firePropertyChange("rootPanelLocation", oldValue, rootPanel);
+//    }
 
     public void propertyChange(PropertyChangeEvent evt) {
         Logger.trace("PropertyChangeEvent = " + evt);

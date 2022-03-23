@@ -83,11 +83,23 @@ public class Placement extends AbstractLocatable implements Identifiable {
     @Attribute(required = false)
     private boolean enabled = true;
 
-    @SuppressWarnings("unused")
     private Placement() {
-        this(null);
+        super(new Location(LengthUnit.Millimeters));
     }
 
+    public Placement(Placement placement) {
+        super(placement.getLocation());
+        this.comments = placement.comments;
+        this.enabled = placement.enabled;
+        this.errorHandling = placement.errorHandling;
+        this.id = placement.id;
+        this.part = placement.part;
+        this.partId = placement.partId;
+        this.side = placement.side;
+        this.type = placement.type;
+        this.version = placement.version;
+    }
+    
     public Placement(String id) {
         super(new Location(LengthUnit.Millimeters));
         this.id = id;
@@ -129,16 +141,6 @@ public class Placement extends AbstractLocatable implements Identifiable {
     public String getId() {
         return id;
     }
-
-//    public Location getLocation() {
-//        return location;
-//    }
-//
-//    public void setLocation(Location location) {
-//        Location oldValue = this.location;
-//        this.location = location;
-//        firePropertyChange("location", oldValue, location);
-//    }
 
     public Side getSide() {
         return side;

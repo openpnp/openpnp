@@ -35,7 +35,21 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
     public FiducialLocatable(FiducialLocatable fiducialLocatable) {
         this.name = fiducialLocatable.name;
         this.dimensions = fiducialLocatable.dimensions;
-        placements.addAll(fiducialLocatable.placements);
+        placements = new IdentifiableList<>();
+        for (Placement placement : fiducialLocatable.placements) {
+            placements.add(new Placement(placement));
+        }
+        file = fiducialLocatable.file;
+        dirty = fiducialLocatable.dirty;
+    }
+    
+    public void setTo(FiducialLocatable fiducialLocatable) {
+        this.name = fiducialLocatable.name;
+        this.dimensions = fiducialLocatable.dimensions;
+        placements = new IdentifiableList<>();
+        for (Placement placement : fiducialLocatable.placements) {
+            placements.add(new Placement(placement));
+        }
         file = fiducialLocatable.file;
         dirty = fiducialLocatable.dirty;
     }
@@ -98,7 +112,7 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
         return file;
     }
 
-    void setFile(File file) {
+    public void setFile(File file) {
         Object oldValue = this.file;
         this.file = file;
         firePropertyChange("file", oldValue, file);
@@ -117,7 +131,7 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         Logger.trace("PropertyChangeEvent = " + evt);
-        if (evt.getSource() != FiducialLocatable.this && evt.getPropertyName() != "dirty") {
+        if (evt.getSource() != FiducialLocatable.this || evt.getPropertyName() != "dirty") {
             dirty = true;
         }
         

@@ -18,6 +18,11 @@
 		<openpnp.version>${maven.build.timestamp}.${buildNumber}</openpnp.version>
 	</properties>
 	<dependencies>
+        <dependency>
+          <groupId>io.github.classgraph</groupId>
+          <artifactId>classgraph</artifactId>
+          <version>4.8.141</version>
+        </dependency>
 		<dependency>
 		  <groupId>net.java.dev.jna</groupId>
 		  <artifactId>jna</artifactId>

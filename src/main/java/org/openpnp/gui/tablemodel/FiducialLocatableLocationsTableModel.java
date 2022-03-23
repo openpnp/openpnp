@@ -35,7 +35,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
 
 @SuppressWarnings("serial")
-public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
+public class FiducialLocatableLocationsTableModel extends AbstractObjectTableModel {
     private final Configuration configuration;
 
     private String[] columnNames = new String[] {"Panel/Board", "Width", "Length", "Side", "X", "Y", "Z",
@@ -46,7 +46,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
             LengthCellValue.class, String.class, Boolean.class, Boolean.class};
 
-//    private Job job;
+    private Job job;
 
     private PanelLocation rootPanelLocation;
 
@@ -54,18 +54,22 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
 
     public FiducialLocatableLocationsTableModel(Configuration configuration) {
         this.configuration = configuration;
-//        this.rootPanelLocation = rootPanelLocation;
-//        this.fiducialLocatableLocations = fiducialLocatableLocations;
     }
 
-//    public void setJob(Job job) {
-//        this.job = job;
-//        fireTableDataChanged();
-//    }
-//
-//    public Job getJob() {
-//        return job;
-//    }
+    public void setJob(Job job) {
+        this.job = job;
+        if (job != null) {
+            rootPanelLocation = job.getRootPanelLocation();
+        }
+        else {
+            rootPanelLocation = null;
+        }
+        fireTableDataChanged();
+    }
+
+    public Job getJob() {
+        return job;
+    }
 
     public PanelLocation getRootPanelLocation() {
         return rootPanelLocation;
@@ -77,7 +81,12 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
     }
 
     public List<FiducialLocatableLocation> getFiducialLocatableLocations() {
-        return fiducialLocatableLocations;
+        if (job != null) {
+            return job.getFiducialLocatableLocations();
+        }
+        else {
+            return fiducialLocatableLocations;
+        }
     }
 
     public void setFiducialLocatableLocations(List<FiducialLocatableLocation> fiducialLocatableLocations) {
@@ -86,7 +95,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
     }
 
     public FiducialLocatableLocation getFiducialLocatableLocation(int index) {
-        return fiducialLocatableLocations.get(index);
+        return getFiducialLocatableLocations().get(index);
     }
 
     @Override
@@ -99,10 +108,10 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
     }
 
     public int getRowCount() {
-        if (fiducialLocatableLocations == null) {
+        if (getFiducialLocatableLocations() == null) {
             return 0;
         }
-        return fiducialLocatableLocations.size();
+        return getFiducialLocatableLocations().size();
     }
 
     @Override
@@ -115,7 +124,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
         if (columnIndex == 0) {
             return false;
         }
-        if ((fiducialLocatableLocations.get(rowIndex).getParent() == rootPanelLocation) ||
+        if ((getFiducialLocatableLocation(rowIndex).getParent() == rootPanelLocation) ||
                 (columnIndex == 8) || (columnIndex == 9)) {
             return true;
         }
@@ -125,24 +134,24 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            FiducialLocatableLocation fiducialLocatableLocation = fiducialLocatableLocations.get(rowIndex);
+            FiducialLocatableLocation fiducialLocatableLocation = getFiducialLocatableLocation(rowIndex);
             if (columnIndex == 0) {
                 fiducialLocatableLocation.getFiducialLocatable().setName((String) aValue);
             }
             else if (columnIndex == 1) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
-                location = Length.setLocationField(configuration, location, length, Length.Field.X);
-                fiducialLocatableLocation.getFiducialLocatable().setDimensions(location);
+                Location dims = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
+                dims = Length.setLocationField(configuration, dims, length, Length.Field.X);
+                fiducialLocatableLocation.getFiducialLocatable().setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
-                location = Length.setLocationField(configuration, location, length, Length.Field.Y);
-                fiducialLocatableLocation.getFiducialLocatable().setDimensions(location);
+                Location dims = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
+                dims = Length.setLocationField(configuration, dims, length, Length.Field.Y);
+                fiducialLocatableLocation.getFiducialLocatable().setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
@@ -156,7 +165,9 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
                     }
                     fiducialLocatableLocation.setLocalToParentTransform(null);
                 }
-                fireTableDataChanged();
+                fireDecendantsCellUpdated(rowIndex, columnIndex);
+                fireDecendantsCellUpdated(rowIndex, 4);
+                fireDecendantsCellUpdated(rowIndex, 5);
             }
             else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -164,7 +175,8 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
                 Location location = fiducialLocatableLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
                 fiducialLocatableLocation.setGlobalLocation(location);
-                fireTableDataChanged();
+                fireDecendantsCellUpdated(rowIndex, columnIndex);
+                fireDecendantsCellUpdated(rowIndex, 5);
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -172,7 +184,8 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
                 Location location = fiducialLocatableLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
                 fiducialLocatableLocation.setGlobalLocation(location);
-                fireTableCellUpdated(rowIndex, columnIndex);
+                fireDecendantsCellUpdated(rowIndex, columnIndex);
+                fireDecendantsCellUpdated(rowIndex, 4);
             }
             else if (columnIndex == 6) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -180,16 +193,18 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
                 Location location = fiducialLocatableLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Z);
                 fiducialLocatableLocation.setGlobalLocation(location);
-                fireTableDataChanged();
+                fireDecendantsCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 7) {
                 fiducialLocatableLocation.setGlobalLocation(fiducialLocatableLocation.getGlobalLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
-                fireTableDataChanged();
+                fireDecendantsCellUpdated(rowIndex, columnIndex);
+                fireDecendantsCellUpdated(rowIndex, 4);
+                fireDecendantsCellUpdated(rowIndex, 5);
             }
             else if (columnIndex == 8) {
                 fiducialLocatableLocation.setLocallyEnabled((Boolean) aValue);
-                fireTableDataChanged();
+                fireDecendantsCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 9) {
                 fiducialLocatableLocation.setCheckFiducials((Boolean) aValue);
@@ -201,8 +216,21 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
         }
     }
 
+    private void fireDecendantsCellUpdated(int rowIndex, int columnIndex) {
+        fireTableCellUpdated(rowIndex, columnIndex);
+        FiducialLocatableLocation fll = getFiducialLocatableLocation(rowIndex);
+        if (fll instanceof PanelLocation) {
+            for (FiducialLocatableLocation child : ((PanelLocation) fll).getChildren()) {
+                int idx = indexOf(child);
+                if (idx >= 0) {
+                    fireDecendantsCellUpdated(idx, columnIndex);
+                }
+            }
+        }
+    }
+    
     public Object getValueAt(int row, int col) {
-        FiducialLocatableLocation fiducialLocatableLocation = fiducialLocatableLocations.get(row);
+        FiducialLocatableLocation fiducialLocatableLocation = getFiducialLocatableLocation(row);
         Location loc = fiducialLocatableLocation.getGlobalLocation();
         Location dim = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
         switch (col) {
@@ -230,5 +258,10 @@ public class FiducialLocatableLocationsTableModel extends AbstractTableModel {
             default:
                 return null;
         }
+    }
+
+    @Override
+    public Object getRowObjectAt(int index) {
+        return getFiducialLocatableLocation(index);
     }
 }

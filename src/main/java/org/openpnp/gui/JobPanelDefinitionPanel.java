@@ -216,6 +216,8 @@ public class JobPanelDefinitionPanel extends JPanel implements PropertyChangeLis
         
         childrenTable = new AutoSelectTextTable(childrenTableModel);
         TableColumnModel tcm = childrenTable.getColumnModel();
+        tcm.removeColumn(tcm.getColumn(9)); //remove Check Fids column
+        tcm.removeColumn(tcm.getColumn(8)); //remove Enabled column
         tcm.removeColumn(tcm.getColumn(6)); //remove Z column
 
         childrenTable.setRowSorter(childrenTableSorter);
@@ -383,12 +385,12 @@ public class JobPanelDefinitionPanel extends JPanel implements PropertyChangeLis
             @Override
             public void actionPerformed(ActionEvent e) {
                 PanelLocation jobPanelLocation = (PanelLocation) jobPanel.getSelection();
-//                jobPanel.getJob().removePanelLocation(jobPanelLocation);
-                jobPanelLocation.setPanel(new Panel(rootPanelLocation.getPanel()));
+                jobPanelLocation.getPanel().setTo(rootPanelLocation.getPanel());
+//                jobPanelLocation.setPanel(new Panel(rootPanelLocation.getPanel()));
                 for (FiducialLocatableLocation child : jobPanelLocation.getChildren()) {
                     child.setParent(jobPanelLocation);
+                    Logger.trace("instance count = " + jobPanel.getJob().getNumberOfFiducialLocatableInstancesOf(child.getFiducialLocatable().getFile()));
                 }
-//                jobPanel.getJob().addPanelLocation(jobPanelLocation);
                 
                 jobPanel.refresh();
                 originalPanel = jobPanelLocation.getPanel();
@@ -405,7 +407,7 @@ public class JobPanelDefinitionPanel extends JPanel implements PropertyChangeLis
             @Override
             public void actionPerformed(ActionEvent e) {
                 setPanel(originalPanel);
-                setDirty(false);
+//                setDirty(false);
             }
             
         });

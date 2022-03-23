@@ -129,6 +129,22 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         addPropertyChangeListener(this);
     }
 
+    public void setTo(Panel panel) {
+        super.setTo(panel);
+        this.version = panel.version;
+        this.defaultFiducialPartId = panel.defaultFiducialPartId;
+        this.checkFids = panel.checkFids;
+        this.children = new ArrayList<>();
+        for (FiducialLocatableLocation child : panel.getChildren()) {
+            if (child instanceof PanelLocation) {
+                this.addChild(new PanelLocation((PanelLocation) child));
+            }
+            else if (child instanceof BoardLocation) {
+                this.addChild(new BoardLocation((BoardLocation) child));
+            }
+        }
+    }
+    
     public List<Placement> getFiducials() {
         return getPlacements();
     }
@@ -208,6 +224,11 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     @Override
     public String toString() {
         return String.format("Panel: file %s, dims: %sx%s, fiducial count: %d, children: %d", file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size(), children.size());
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        super.propertyChange(evt);
     }
 
 }

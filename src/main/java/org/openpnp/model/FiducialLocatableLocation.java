@@ -47,12 +47,13 @@ public class FiducialLocatableLocation extends AbstractLocatable {
         this.checkFiducials = fiducialLocatableLocation.checkFiducials;
         this.locallyEnabled = fiducialLocatableLocation.locallyEnabled;
         this.parent = fiducialLocatableLocation.parent;
-        if (fiducialLocatableLocation.fiducialLocatable != null) {
-            this.fiducialLocatable = new FiducialLocatable(fiducialLocatableLocation.fiducialLocatable);
-        }
-        else {
-            this.fiducialLocatable = null;
-        }
+        this.fiducialLocatable = fiducialLocatableLocation.fiducialLocatable;
+//        if (fiducialLocatableLocation.fiducialLocatable != null) {
+//            this.fiducialLocatable = new FiducialLocatable(fiducialLocatableLocation.fiducialLocatable);
+//        }
+//        else {
+//            this.fiducialLocatable = null;
+//        }
         if (fiducialLocatableLocation.localToParentTransform != null) {
             this.localToParentTransform = new AffineTransform(fiducialLocatableLocation.localToParentTransform);
         }
@@ -183,7 +184,9 @@ public class FiducialLocatableLocation extends AbstractLocatable {
         if (parent != null) {
             return Utils2D.calculateBoardPlacementLocation(parent, this);
         }
-        return getLocation();
+        else {
+            return getLocation();
+        }
     }
     
     public void setGlobalLocation(Location globalLocation) {

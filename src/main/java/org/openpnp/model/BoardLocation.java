@@ -56,7 +56,8 @@ public class BoardLocation extends FiducialLocatableLocation {
     public BoardLocation(BoardLocation boardLocation) {
         super(boardLocation);
         if (boardLocation.getBoard() != null) {
-            setBoard(new Board(boardLocation.getBoard()));
+//            setBoard(new Board(boardLocation.getBoard()));
+            setBoard(boardLocation.getBoard());
         }
         this.placed = boardLocation.placed;
     }
@@ -174,7 +175,12 @@ public class BoardLocation extends FiducialLocatableLocation {
     }
     
     public void dump(String leader) {
-        Logger.trace(String.format("%s@%08x BoardLocation:%s location=%s side=%s (%s)", leader,  this.hashCode(),  fileName, getLocation(), side, getBoard() == null ? "Null" : getBoard().toString()));
+        PanelLocation parentPanelLocation = getParent();
+        int parentHashCode = 0;
+        if (parentPanelLocation != null) {
+            parentHashCode = parentPanelLocation.hashCode();
+        }
+        Logger.trace(String.format("%sBoardLocation:@%08x child of @%08x, %s, location=%s globalLocation=%s, side=%s (%s)", leader,  this.hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getBoard() == null ? "Null" : getBoard().toString()));
     }
 
 }

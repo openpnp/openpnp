@@ -410,6 +410,42 @@ public class Configuration extends AbstractModelObject {
         }
 
         try {
+            File file = new File(configurationDirectory, "boards.xml");
+            if (overrideUserConfig || !file.exists()) {
+                Logger.info("No boards.xml found in configuration directory, loading defaults.");
+                file = File.createTempFile("boards", "xml");
+                FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/boards.xml"), file);
+                forceSave = true;
+            }
+            loadBoards(file);
+        }
+        catch (Exception e) {
+            String message = e.getMessage();
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                message = e.getCause().getMessage();
+            }
+            throw new Exception("Error while reading boards.xml (" + message + ")", e);
+        }
+
+        try {
+            File file = new File(configurationDirectory, "panels.xml");
+            if (overrideUserConfig || !file.exists()) {
+                Logger.info("No panels.xml found in configuration directory, loading defaults.");
+                file = File.createTempFile("panels", "xml");
+                FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/panels.xml"), file);
+                forceSave = true;
+            }
+            loadPanels(file);
+        }
+        catch (Exception e) {
+            String message = e.getMessage();
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                message = e.getCause().getMessage();
+            }
+            throw new Exception("Error while reading panels.xml (" + message + ")", e);
+        }
+
+        try {
             File file = new File(configurationDirectory, "vision-settings.xml");
             if (overrideUserConfig || !file.exists()) {
                 Logger.info("No vision-settings.xml found in configuration directory, loading defaults.");
@@ -484,6 +520,18 @@ public class Configuration extends AbstractModelObject {
         }
         catch (Exception e) {
             throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
+        }
+        try {
+            saveBoards(createBackedUpFile("boards.xml", now));
+        }
+        catch (Exception e) {
+            throw new Exception("Error while saving boards.xml (" + e.getMessage() + ")", e);
+        }
+        try {
+            savePanels(createBackedUpFile("panels.xml", now));
+        }
+        catch (Exception e) {
+            throw new Exception("Error while saving panels.xml (" + e.getMessage() + ")", e);
         }
         try {
             saveVisionSettings(createBackedUpFile("vision-settings.xml", now));
@@ -587,6 +635,10 @@ public class Configuration extends AbstractModelObject {
         return Collections.unmodifiableList(new ArrayList<>(boards.values()));
     }
 
+    public List<Panel> getPanels() {
+        return Collections.unmodifiableList(new ArrayList<>(panels.values()));
+    }
+
     /**
      * Signal that something about the vision settings has changed. Inheritance makes it hard to track how changes affect
      * single properties, therefore this is simply fired globally.
@@ -599,6 +651,16 @@ public class Configuration extends AbstractModelObject {
         return machine;
     }
 
+    public void addPanel(File file) throws Exception {
+        getPanel(file);
+    }
+    
+    public void removePanel(Panel panel) {
+        LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
+        panels.remove(panel.getFile());
+        firePropertyChange("panels", oldValue, panels);
+    }
+    
     public Panel getPanel(File file) throws Exception {
         if (!file.exists()) {
             Panel panel = new Panel(file);
@@ -611,9 +673,26 @@ public class Configuration extends AbstractModelObject {
             return panels.get(file);
         }
         Panel panel = loadPanel(file);
+        LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(file, panel);
-        firePropertyChange("panels", null, panels);
+        firePropertyChange("panels", oldValue, panels);
         return panel;
+    }
+    
+    public void addBoard(Board board) {
+        LinkedHashMap<File, Board> oldValue = new LinkedHashMap<>(boards);
+        boards.put(board.getFile(), board);
+        firePropertyChange("boards", oldValue, boards);
+    }
+    
+    public void addBoard(File file) throws Exception {
+        getBoard(file);
+    }
+    
+    public void removeBoard(Board board) {
+        LinkedHashMap<File, Board> oldValue = new LinkedHashMap<>(boards);
+        boards.remove(board.getFile());
+        firePropertyChange("boards", oldValue, boards);
     }
     
     public Board getBoard(File file) throws Exception {
@@ -628,8 +707,9 @@ public class Configuration extends AbstractModelObject {
             return boards.get(file);
         }
         Board board = loadBoard(file);
+        LinkedHashMap<File, Board> oldValue = new LinkedHashMap<>(boards);
         boards.put(file, board);
-        firePropertyChange("boards", null, boards);
+        firePropertyChange("boards", oldValue, boards);
         return board;
     }
     
@@ -685,6 +765,34 @@ public class Configuration extends AbstractModelObject {
         serializeObject(holder, file);
     }
 
+    private void loadBoards(File file) throws Exception {
+        Serializer serializer = createSerializer();
+        BoardsConfigurationHolder holder = serializer.read(BoardsConfigurationHolder.class, file);
+        for (File boardFile : holder.boards) {
+            addBoard(boardFile);
+        }
+    }
+
+    private void saveBoards(File file) throws Exception {
+        BoardsConfigurationHolder holder = new BoardsConfigurationHolder();
+        holder.boards = new ArrayList<>(boards.keySet());
+        serializeObject(holder, file);
+    }
+
+    private void loadPanels(File file) throws Exception {
+        Serializer serializer = createSerializer();
+        PanelsConfigurationHolder holder = serializer.read(PanelsConfigurationHolder.class, file);
+        for (File panelFile : holder.panels) {
+            addPanel(panelFile);
+        }
+    }
+
+    private void savePanels(File file) throws Exception {
+        PanelsConfigurationHolder holder = new PanelsConfigurationHolder();
+        holder.panels = new ArrayList<>(panels.keySet());
+        serializeObject(holder, file);
+    }
+
     private void loadVisionSettings(File file) throws Exception {
         Serializer serializer = createSerializer();
         VisionSettingsConfigurationHolder holder =
@@ -706,20 +814,20 @@ public class Configuration extends AbstractModelObject {
         job.setFile(file);
 
         
-        resolvePanels(job, job.panelLocations);
+        resolvePanel(job, job.getRootPanelLocation());
         
         // Once the Job is loaded we need to resolve any Boards that it
         // references.
-        resolveBoards(job);
+//        resolveBoards(job);
 
-        for (PanelLocation panelLocation : job.panelLocations) {
-            job.getRootPanelLocation().addChild(new PanelLocation(panelLocation));
+//        for (PanelLocation panelLocation : job.panelLocations) {
+////            job.getRootPanelLocation().addChild(new PanelLocation(panelLocation));
 //            job.getRootPanelLocation().addChild(panelLocation);
-        }
-        for (BoardLocation boardLocation : job.getBoardLocations()) {
-            job.getRootPanelLocation().addChild(new BoardLocation(boardLocation));
+//        }
+//        for (BoardLocation boardLocation : job.getBoardLocations()) {
+////            job.getRootPanelLocation().addChild(new BoardLocation(boardLocation));
 //            job.getRootPanelLocation().addChild(boardLocation);
-        }
+//        }
         
         Logger.trace("Dump of the job panelLocations");
         for (PanelLocation panelLocation : job.panelLocations) {
@@ -764,6 +872,8 @@ public class Configuration extends AbstractModelObject {
         }
         Board board = getBoard(boardFile);
         boardLocation.setBoard(board);
+        
+//        job.getRootPanelLocation().addChild(boardLocation);
     }
 
     public void resolvePanels(Job job, List<PanelLocation> panelLocations) throws Exception {
@@ -780,7 +890,11 @@ public class Configuration extends AbstractModelObject {
             return;
         }
         Panel panel;
-        if (panelLocation.getPanel() == null || panelLocation.getPanel().getVersion() != null) {
+        if (panelLocation == job.getRootPanelLocation()) {
+            panel = panelLocation.getPanel();
+            panel.setFile(job.getFile());
+        }
+        else if (panelLocation.getPanel() == null || panelLocation.getPanel().getVersion() != null) {
             String panelFileName = panelLocation.getFileName();
             File panelFile = new File(panelFileName);
             if (!panelFile.exists() && panelLocation.getParent() != null) {
@@ -846,25 +960,31 @@ public class Configuration extends AbstractModelObject {
             job.removeAllBoards();
         }
         
-        PanelLocation newPanelLocation = new PanelLocation(panelLocation);
+//        job.getRootPanelLocation().addChild(panelLocation);
+
         for (FiducialLocatableLocation child : panel.getChildren()) {
             if (child instanceof PanelLocation) {
-                PanelLocation childPanelLocation = new PanelLocation((PanelLocation) child);
+//                PanelLocation childPanelLocation = new PanelLocation((PanelLocation) child);
+                PanelLocation childPanelLocation = (PanelLocation) child;
                 childPanelLocation.setParent(panelLocation);
+//                child.setParent(panelLocation);
                 
                 resolvePanel(job, childPanelLocation);
                 
-                ((PanelLocation) child).setPanel(childPanelLocation.getPanel());
+//                ((PanelLocation) child).setPanel(childPanelLocation.getPanel());
             }
             if (child instanceof BoardLocation) {
-                BoardLocation boardLocation = new BoardLocation((BoardLocation) child);
+//                BoardLocation boardLocation = new BoardLocation((BoardLocation) child);
+                BoardLocation boardLocation = (BoardLocation) child;
                 boardLocation.setParent(panelLocation);
+//                child.setParent(panelLocation);
 
                 resolveBoard(job, boardLocation);
                 
-                ((BoardLocation) child).setBoard(boardLocation.getBoard());
+//                ((BoardLocation) child).setBoard(boardLocation.getBoard());
             }
         }
+        panel.setDirty(false);
     }
     
     public void saveJob(Job job, File file) throws Exception {
@@ -904,6 +1024,7 @@ public class Configuration extends AbstractModelObject {
                 boardLocation.setBoardFile(board.getFile().getAbsolutePath());
             }
             if (boardLocation.getParent() != null) {
+                Logger.trace("Not saving " + boardLocation + " because it is a child of a panel");
                 job.removeBoardLocation(boardLocation);
             }
         }
@@ -997,6 +1118,24 @@ public class Configuration extends AbstractModelObject {
     public static class PartsConfigurationHolder {
         @ElementList(inline = true, entry = "part", required = false)
         private ArrayList<Part> parts = new ArrayList<>();
+    }
+
+    /**
+     * Used to provide a fixed root for the Boards when serializing.
+     */
+    @Root(name = "openpnp-boards")
+    public static class BoardsConfigurationHolder {
+        @ElementList(inline = true, entry = "board", required = false)
+        private ArrayList<File> boards = new ArrayList<>();
+    }
+
+    /**
+     * Used to provide a fixed root for the Parts when serializing.
+     */
+    @Root(name = "openpnp-panels")
+    public static class PanelsConfigurationHolder {
+        @ElementList(inline = true, entry = "panel", required = false)
+        private ArrayList<File> panels = new ArrayList<>();
     }
 
     /**

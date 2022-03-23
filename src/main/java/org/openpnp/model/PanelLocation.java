@@ -36,7 +36,8 @@ public class PanelLocation extends FiducialLocatableLocation {
     public PanelLocation(PanelLocation panelLocation) {
         super(panelLocation);
         if (panelLocation.getPanel() != null) {
-            setPanel(new Panel(panelLocation.getPanel()));
+//            setPanel(new Panel(panelLocation.getPanel()));
+            setPanel(panelLocation.getPanel());
             for (FiducialLocatableLocation child : getChildren()) {
                 child.setParent(this);
             }
@@ -78,6 +79,10 @@ public class PanelLocation extends FiducialLocatableLocation {
         getPanel().addChild(child);
     }
     
+    public void removeChild(FiducialLocatableLocation child) {
+        getPanel().removeChild(child);
+    }
+    
     public List<FiducialLocatableLocation> getChildren() {
         return getPanel().getChildren();
     }
@@ -102,7 +107,12 @@ public class PanelLocation extends FiducialLocatableLocation {
     }
 
     public void dump(String leader) {
-        Logger.trace(String.format("%s@%08x PanelLocation:%s location=%s side=%s (%s)", leader,  this.hashCode(),  fileName, getLocation(), side, getPanel() == null ? "Null" : getPanel().toString()));
+        PanelLocation parentPanelLocation = getParent();
+        int parentHashCode = 0;
+        if (parentPanelLocation != null) {
+            parentHashCode = parentPanelLocation.hashCode();
+        }
+        Logger.trace(String.format("%sPanelLocation:@%08x child of @%08x, %s, location=%s , globalLocation=%s side=%s (%s)", leader,  this.hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getPanel() == null ? "Null" : getPanel().toString()));
         if (getPanel() != null) {
             leader = leader + "    ";
             for (FiducialLocatableLocation child : getPanel().getChildren()) {

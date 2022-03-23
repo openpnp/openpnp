@@ -64,23 +64,11 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
     @Version(revision=1.1)
     private double version;    
 
-//    @Attribute
-//    private String name;
-
-//    @Element(required = false)
-//    private Location dimensions = new Location(LengthUnit.Millimeters);
-
     @ElementList(required = false)
     private ArrayList<Fiducial> fiducials = new ArrayList<>();
 
-//    @ElementList
-//    private ArrayList<Placement> placements = new ArrayList<>();
-
     @ElementList(required = false)
     private ArrayList<BoardPad> solderPastePads = new ArrayList<>();
-
-//    private transient File file;
-//    private transient boolean dirty;
 
     public Board() {
         setFile(null);
@@ -99,7 +87,6 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
         addPropertyChangeListener(this);
     }
 
-    @SuppressWarnings("unused")
     @Commit
     private void commit() {
         for (Placement placement : placements) {
@@ -114,16 +101,6 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
         return Collections.unmodifiableList(fiducials);
     }
 
-//    public Location getDimensions() {
-//        return dimensions;
-//    }
-//
-//    public void setDimensions(Location location) {
-//        Location oldValue = this.dimensions;
-//        this.dimensions = location;
-//        firePropertyChange("dimensions", oldValue, location);
-//    }
-
     public void addFiducial(Fiducial fiducial) {
         ArrayList<Fiducial> oldValue = fiducials;
         fiducials = new ArrayList<>(fiducials);
@@ -137,30 +114,6 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
         fiducials.remove(fiducial);
         firePropertyChange("fiducials", oldValue, fiducials);
     }
-
-//    public List<Placement> getPlacements() {
-//        return Collections.unmodifiableList(placements);
-//    }
-//
-//    public void addPlacement(Placement placement) {
-//        Object oldValue = placements;
-//        placements = new ArrayList<>(placements);
-//        placements.add(placement);
-//        firePropertyChange("placements", oldValue, placements);
-//        if (placement != null) {
-//            placement.addPropertyChangeListener(this);
-//        }
-//    }
-//
-//    public void removePlacement(Placement placement) {
-//        Object oldValue = placements;
-//        placements = new ArrayList<>(placements);
-//        placements.remove(placement);
-//        firePropertyChange("placements", oldValue, placements);
-//        if (placement != null) {
-//            placement.removePropertyChangeListener(this);
-//        }
-//    }
 
     public List<BoardPad> getSolderPastePads() {
         return Collections.unmodifiableList(solderPastePads);
@@ -188,7 +141,7 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
 
     @Override
     public String toString() {
-        return String.format("Board: file %s, dims: %sx%s, placements count: %d", file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
+        return String.format("Board: file %s, dims: %sx%s, placements: %d", file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
     }
 
 }

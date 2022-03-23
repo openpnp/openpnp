@@ -146,6 +146,7 @@ public class MainFrame extends JFrame {
     private static MainFrame mainFrame;
 
     private MachineControlsPanel machineControlsPanel;
+    private BoardsPanel boardsPanel;
     private PartsPanel partsPanel;
     private PackagesPanel packagesPanel;
     private FeedersPanel feedersPanel;
@@ -202,6 +203,10 @@ public class MainFrame extends JFrame {
 
     public MachineControlsPanel getMachineControls() {
         return machineControlsPanel;
+    }
+
+    public BoardsPanel getBoardsTab() {
+        return boardsPanel;
     }
 
     public PartsPanel getPartsTab() {
@@ -300,6 +305,7 @@ public class MainFrame extends JFrame {
                 prefs.getInt(PREF_WINDOW_WIDTH, PREF_WINDOW_WIDTH_DEF),
                 prefs.getInt(PREF_WINDOW_HEIGHT, PREF_WINDOW_HEIGHT_DEF));
         jobPanel = new JobPanel(configuration, this);
+        boardsPanel = new BoardsPanel(configuration, this);
         partsPanel = new PartsPanel(configuration, this);
         packagesPanel = new PackagesPanel(configuration, this);
         feedersPanel = new FeedersPanel(configuration, this);
@@ -668,6 +674,7 @@ public class MainFrame extends JFrame {
                 });
 
         tabs.addTab("Job", null, jobPanel, null); //$NON-NLS-1$
+        tabs.addTab("Board Definitions", null, boardsPanel, null); //$NON-NLS-1$
         tabs.addTab("Parts", null, partsPanel, null); //$NON-NLS-1$
         tabs.addTab("Packages", null, packagesPanel, null); //$NON-NLS-1$
         tabs.addTab("Vision", null, visionSettingsPanel, null); //$NON-NLS-1$
