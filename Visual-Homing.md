@@ -18,6 +18,12 @@ The fiducial needs to be mounted for "eternity". Choose a location where your ma
 
 Ideally, every relevant location on your machine should be more or less flush with this same Z plane, e.g. feeders should be "sunken" so parts are picked near this Z coordinate. But don't bother if this principle is not perfectly adhered to. OpenPnP has a rich and growing system of calibrations that can compensate out errors.
 
+## Use Issues & Solutions
+
+Use [[Issues and Solutions]] to setup Visual Homing. It will be offered in the right sequence, after you have configured the needed basics. 
+
+The following instructions are for manual setup. 
+
 ## Creating the Fiducial Part
 
 If you started from a standard OpenPnP installation, there is already a fiducial package `FIDUCIAL-1X2` defined. Otherwise, create it with these settings:
