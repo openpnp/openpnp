@@ -18,7 +18,7 @@ In order to perform Visual Calibration, a certain calibration rig is needed. The
 
 Preliminary camera calibration can be performed automatically by looking at a [fiducial](https://en.wikipedia.org/wiki/Fiducial_marker#Printed_circuit_boards) while moving the camera around in a certain pattern. 
 
-The fiducial must be round, ideally it is high contrast, sharp and flat (i.e. with no sunken/raised "3D" structure, it must be an unambiguous circular feature, when seen from the side). Other than these requirements, the fiducial can be anything. The standard fiducial (the same type is used for [[Visual Homing]]) is just any bright 1mm diameter round mark on dark ground. You can simply print the linked PDF, it is recommended to use a high-quality matte photo paper or similar: 
+The fiducial must be round, ideally it is high contrast, sharp and flat (i.e. with no sunken/raised "3D" structure, it must appear as a single unambiguous circular feature, even when seen from the side). Other than these requirements, the fiducial can be anything. The standard fiducial (the same type is used for [[Visual Homing]]) is just any bright 1mm diameter round mark on dark ground. You can simply print the linked PDF, it is recommended to use a high-quality matte photo paper or similar: 
 
 * [FiducialHome.pdf](https://github.com/openpnp/openpnp/files/5542424/FiducialHome.pdf)
 
