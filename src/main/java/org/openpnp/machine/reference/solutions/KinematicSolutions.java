@@ -150,7 +150,7 @@ public class KinematicSolutions implements Solutions.Subject {
                                         solutions.add(new Solutions.Issue(
                                                 axisZ, 
                                                 "Invalid Safe Z Zone on "+axisZ.getName()+".", 
-                                                "The Save Z Zone of "+axisZ.getName()+" is invalid (lower limit > higher limit). Start fresh configuration.", 
+                                                "The Safe Z Zone of "+axisZ.getName()+" is invalid (lower limit > higher limit). Start fresh configuration.", 
                                                 Solutions.Severity.Error,
                                                 "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
                                             @Override
@@ -479,7 +479,7 @@ public class KinematicSolutions implements Solutions.Subject {
                                                 + "<p>Please either enlarge the Safe Z Zone, by reducing the nozzle "+nozzle.getName()+" Z clearance, or reduce "
                                                 + "the <strong>Max. Part Height</strong> on nozzle tip "+nt.getName()+".</p><br/>"
                                                 + "<p>Reducing Z clearance is best done by revisiting the Safe Z solution for nozzle "+nozzle.getName()+". "
-                                                + "Disable the <strong>Save Zone "+(signum1 > 0 ? "Low" : "High")+"  Enabled</strong> checkbox on axis "+rawAxisZ.getName()+", "
+                                                + "Disable the <strong>Safe Zone "+(signum1 > 0 ? "Low" : "High")+"  Enabled</strong> checkbox on axis "+rawAxisZ.getName()+", "
                                                 + "then come back here and press <strong>Find Issues &amp; Solutions</strong>.</p>"
                                                 + "</html>";
                                     }
@@ -526,7 +526,7 @@ public class KinematicSolutions implements Solutions.Subject {
                                                 + nt2.getName()+".</p><br/>"
                                                 + "<p>Reducing Z clearances is best done by revisiting the Safe Z solutions for nozzles "+nozzle.getName()+" and "
                                                 + nozzle2.getName()+". "
-                                                + "Disable the <strong>Save Zone Low / High Enabled</strong> checkbox on axis "+rawAxisZ.getName()+", "
+                                                + "Disable the <strong>Safe Zone Low / High Enabled</strong> checkbox on axis "+rawAxisZ.getName()+", "
                                                 + "then come back here and press <strong>Find Issues &amp; Solutions</strong>.</p>"
                                                 + "</html>";
                                     }
