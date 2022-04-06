@@ -216,53 +216,7 @@ public class HeadSolutions implements Solutions.Subject {
                         addInconsistentAxisIssue(solutions, camera, hm, Axis.Type.X);
                         addInconsistentAxisIssue(solutions, camera, hm, Axis.Type.Y);
                         if (hm instanceof Nozzle) {
-                            if (hm.getAxisZ() == null) {
-                                solutions.add(new Solutions.PlainIssue(
-                                        hm, 
-                                        "Nozzle "+hm.getName()+" does not have a Z axis assigned.", 
-                                        "Please assign a proper Z axis. You might need to create one first.", 
-                                        Severity.Error,
-                                        "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                            }
-                            if (hm.getAxisRotation() == null) {
-                                solutions.add(new Solutions.PlainIssue(
-                                        hm, 
-                                        "Nozzle "+hm.getName()+" does not have a Rotation axis assigned.", 
-                                        "Please assign a proper Rotation axis. You might need to create one first.", 
-                                        Severity.Error,
-                                        "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                            }
-                            if (hm.getAxisZ() != null && hm.getAxisRotation() != null) {
-                                for (Camera camera2 : head.getCameras()) {
-                                    if (camera2.getAxisZ() == hm.getAxisZ()) {
-                                        sameAxisAssignedIssue(solutions, camera2, hm, camera2.getAxisZ(), Axis.Type.Z);
-                                    }
-                                    if (camera2.getAxisRotation() == hm.getAxisRotation()) {
-                                        sameAxisAssignedIssue(solutions, camera2, hm, camera2.getAxisRotation(), Axis.Type.Rotation);
-                                    }
-                                }
-                                for (Nozzle nozzle2 : head.getNozzles()) {
-                                    if (nozzle2 == hm) {
-                                        break;
-                                    }
-                                    if (nozzle2.getAxisZ() == hm.getAxisZ()) {
-                                        solutions.add(new Solutions.PlainIssue(
-                                                head, 
-                                                "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Z axis assigned.", 
-                                                "Please assign a different Z axis.", 
-                                                Severity.Error,
-                                                "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                                    }
-                                    if (nozzle2.getAxisRotation() == hm.getAxisRotation()) {
-                                        solutions.add(new Solutions.PlainIssue(
-                                                head, 
-                                                "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Rotation axis assigned.", 
-                                                "It is OK to share rotation axes. If intentional, just dismiss this issue. Otherwise assign a different Rotation axis.", 
-                                                Severity.Information,
-                                                "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                                    }
-                                }
-                            }
+                            perNozzleSolutions(solutions, (Nozzle) hm);
                         }
                     }
                 }
@@ -274,6 +228,56 @@ public class HeadSolutions implements Solutions.Subject {
                 if (head.getzProbeActuator() != null) {
                     ActuatorSolutions.findActuatorReadIssues(solutions, head, head.getzProbeActuator(), "Z probe",
                         "https://github.com/openpnp/openpnp/wiki/Z-Probing");
+                }
+            }
+        }
+    }
+
+    protected void perNozzleSolutions(Solutions solutions, Nozzle nozzle) {
+        if (nozzle.getAxisZ() == null) {
+            solutions.add(new Solutions.PlainIssue(
+                    nozzle, 
+                    "Nozzle "+nozzle.getName()+" does not have a Z axis assigned.", 
+                    "Please assign a proper Z axis. You might need to create one first.", 
+                    Severity.Error,
+                    "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+        }
+        if (nozzle.getAxisRotation() == null) {
+            solutions.add(new Solutions.PlainIssue(
+                    nozzle, 
+                    "Nozzle "+nozzle.getName()+" does not have a Rotation axis assigned.", 
+                    "Please assign a proper Rotation axis. You might need to create one first.", 
+                    Severity.Error,
+                    "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+        }
+        if (nozzle.getAxisZ() != null && nozzle.getAxisRotation() != null) {
+            for (Camera camera2 : head.getCameras()) {
+                if (camera2.getAxisZ() == nozzle.getAxisZ()) {
+                    sameAxisAssignedIssue(solutions, camera2, nozzle, camera2.getAxisZ(), Axis.Type.Z);
+                }
+                if (camera2.getAxisRotation() == nozzle.getAxisRotation()) {
+                    sameAxisAssignedIssue(solutions, camera2, nozzle, camera2.getAxisRotation(), Axis.Type.Rotation);
+                }
+            }
+            for (Nozzle nozzle2 : head.getNozzles()) {
+                if (nozzle2 == nozzle) {
+                    break;
+                }
+                if (nozzle2.getAxisZ() == nozzle.getAxisZ()) {
+                    solutions.add(new Solutions.PlainIssue(
+                            nozzle, 
+                            "Nozzles "+nozzle2.getName()+" and "+nozzle.getName()+" have the same Z axis assigned.", 
+                            "Please assign a different Z axis.", 
+                            Severity.Error,
+                            "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+                }
+                if (nozzle2.getAxisRotation() == nozzle.getAxisRotation()) {
+                    solutions.add(new Solutions.PlainIssue(
+                            nozzle, 
+                            "Nozzles "+nozzle2.getName()+" and "+nozzle.getName()+" have the same Rotation axis assigned.", 
+                            "It is OK to share rotation axes. If intentional, just dismiss this issue. Otherwise assign a different Rotation axis.", 
+                            Severity.Information,
+                            "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
                 }
             }
         }

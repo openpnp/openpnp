@@ -25,8 +25,10 @@ import javax.swing.Icon;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -37,6 +39,7 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Issue;
 import org.openpnp.model.Solutions.Milestone;
+import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
@@ -44,6 +47,7 @@ import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.base.AbstractHeadMountable;
 import org.pmw.tinylog.Logger;
 
@@ -74,7 +78,7 @@ public class KinematicSolutions implements Solutions.Subject {
                                 "Dynamic Safe Z for "+nozzle.getName()+".", 
                                 "Decide whether "+nozzle.getName()+" has dynamic Safe Z or not.", 
                                 Solutions.Severity.Fundamental,
-                                "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup") {
+                                "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#dynamic-safe-z") {
                             {
                                 setChoice(oldDynamicSafeZ);
                             }
@@ -164,7 +168,7 @@ public class KinematicSolutions implements Solutions.Subject {
                                                 "Set Safe Z of "+hm.getName()+".", 
                                                 "Jog "+hm.getName()+" over the tallest obstacle and capture.", 
                                                 Solutions.Severity.Fundamental,
-                                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
+                                                "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#capture-safe-z") {
 
                                             @Override 
                                             public void activate() throws Exception {
@@ -221,6 +225,22 @@ public class KinematicSolutions implements Solutions.Subject {
                                                 super.setState(state);
                                             }
                                         });
+                                    }
+                                    if (hm instanceof ReferenceNozzle) {
+                                        // try to find a shared Z axis nozzle
+                                        ReferenceNozzle sharedZNozzle = null;
+                                        for (Nozzle nozzle2 : head.getNozzles()) {
+                                            if (nozzle2 instanceof ReferenceNozzle 
+                                                    && nozzle2 != hm) {
+                                                ReferenceNozzle refNozzle2 = (ReferenceNozzle) nozzle2;
+                                                if (refNozzle2.isEnableDynamicSafeZ() 
+                                                        && HeadSolutions.getRawAxis(machine, refNozzle2.getAxisZ()) == axisZ) {
+                                                    sharedZNozzle = refNozzle2;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        dynamicSafeZSolution(solutions, (ReferenceNozzle)hm, sharedZNozzle, axisZ);
                                     }
                                 }
                                 catch (Exception e) {
@@ -360,7 +380,7 @@ public class KinematicSolutions implements Solutions.Subject {
                                         "Set the "+qualifier+" soft limit of "+controllerAxis.getName()+".", 
                                         "Move axis "+controllerAxis.getName()+" to the "+qualifier+" soft limit and capture.", 
                                         Solutions.Severity.Suggestion,
-                                        "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits") {
+                                        "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#capture-soft-limits") {
 
                                     @Override 
                                     public void activate() throws Exception {
@@ -414,4 +434,128 @@ public class KinematicSolutions implements Solutions.Subject {
         }
         return false;
     }
+
+
+    protected void dynamicSafeZSolution(Solutions solutions, ReferenceNozzle nozzle, ReferenceNozzle nozzle2, ReferenceControllerAxis rawAxisZ) 
+            throws Exception {
+        Length [] zoneZ = nozzle.getSafeZZone();
+        Length zone = zoneZ[1].subtract(zoneZ[0]);
+        if (nozzle.isEnableDynamicSafeZ() 
+                && zoneZ[0] != null && zoneZ[1] != null) {
+            LengthConverter lengthConverter = new LengthConverter();
+            for (NozzleTip nt : nozzle.getCompatibleNozzleTips()) {
+                if (nt instanceof ReferenceNozzleTip) {
+                    // Check the maximum part height on a nozzle tip to the Safe Z zone.
+                    Length maxHeight = ((ReferenceNozzleTip) nt).getMaxPartHeight();
+                    Location z0 = new Location(AxesLocation.getUnits(), 
+                            0, 0, nozzle.getSafeZ().convertToUnits(AxesLocation.getUnits()).getValue(), 0);
+                    Location z1 = new Location(AxesLocation.getUnits(), 
+                            0, 0, nozzle.getSafeZ().add(maxHeight).convertToUnits(AxesLocation.getUnits()).getValue(), 0);
+                    AxesLocation az0 = nozzle.toRaw(nozzle.toHeadLocation(z0));
+                    AxesLocation az1 = nozzle.toRaw(nozzle.toHeadLocation(z1));
+                    int signum1 = (int) Math.signum(az0.motionSegmentTo(az1).getCoordinate(rawAxisZ));
+                    AxesLocation az2 = new AxesLocation(rawAxisZ, 
+                            signum1 > 0 ? rawAxisZ.getSafeZoneHigh() : rawAxisZ.getSafeZoneLow());
+                    int signum2 = (int) Math.signum(az1.motionSegmentTo(az2).getCoordinate(rawAxisZ));
+                    if (signum2*signum1 == -1) {
+                        solutions.add(new Solutions.PlainIssue(
+                                nt, 
+                                "Nozzle "+nozzle.getName()+" with tip "+nt.getName()+" Safe Z Zone violation.", 
+                                "With dynamic safe Z, the Max. Part Height of each compatible nozzle tip must be smaller than the axis "+rawAxisZ.getName()+" Safe Z Zone.", 
+                                Severity.Error,
+                                "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#dynamic-safe-z-zone") {
+
+                                    @Override
+                                    public String getExtendedDescription() {
+                                        return "<html>"
+                                                + "<p>With <strong>Dynamic Safe Z</strong> enabled, the nozzle needs a head-room, the so-called Safe Z Zone "
+                                                + "to lift the nozzle higher with taller parts. The maximum expected part height is specified on the "
+                                                + "nozzle tip <strong>Max. Part Height</strong>.</p><br/>"
+                                                + "<p>Nozzle "+nozzle.getName()+" with compatible tip "+nt.getName()+" has a <strong>Max. Part Height</strong> of "
+                                                + lengthConverter.convertForward(maxHeight)+" which is larger than the Safe Z Zone of "
+                                                + lengthConverter.convertForward(zone)+". Note, the safe Z Zone is configured on the "+rawAxisZ.getName()+" axis "
+                                                + "to reach from "+lengthConverter.convertForward(rawAxisZ.getSafeZoneLow())+" to "
+                                                + lengthConverter.convertForward(rawAxisZ.getSafeZoneHigh())+" in (untransformed) coordinates.</p><br/>"
+                                                + "<p>Please either enlarge the Safe Z Zone, by reducing the nozzle "+nozzle.getName()+" Z clearance, or reduce "
+                                                + "the <strong>Max. Part Height</strong> on nozzle tip "+nt.getName()+".</p><br/>"
+                                                + "<p>Reducing Z clearance is best done by revisiting the Safe Z solution for nozzle "+nozzle.getName()+". "
+                                                + "Disable the <strong>Save Zone "+(signum1 > 0 ? "Low" : "High")+"  Enabled</strong> checkbox on axis "+rawAxisZ.getName()+", "
+                                                + "then come back here and press <strong>Find Issues &amp; Solutions</strong>.</p>"
+                                                + "</html>";
+                                    }
+                                    @Override
+                                    public Icon getExtendedIcon() {
+                                        return Icons.safeZDynamic;
+                                    }
+                        });
+                    }
+                    else if (nozzle2 != null) { 
+                        // Check combined nozzle tip max part heights too.
+                        ReferenceNozzleTip nt2 = getCompatibleNozzleTipMaxPartHeight(nozzle2, nt);
+                        if (nt2 != null) {
+                            Length maxHeight2 = nt2.getMaxPartHeight();
+                            Location z3 = new Location(AxesLocation.getUnits(), 
+                                    0, 0, nozzle2.getSafeZ().add(maxHeight2).convertToUnits(AxesLocation.getUnits()).getValue(), 0);
+                            AxesLocation az3 = nozzle2.toRaw(nozzle2.toHeadLocation(z3));
+                            int signum3 = (int) Math.signum(az1.motionSegmentTo(az3).getCoordinate(rawAxisZ));
+                            if (signum3*signum1 == -1) {
+                                solutions.add(new Solutions.PlainIssue(
+                                        nt, 
+                                        "Nozzle "+nozzle.getName()+" with tip "+nt.getName()+" and nozzle "+nozzle2.getName()+" with tip "+nt2.getName()
+                                        +" potential Safe Z Zone violation.", 
+                                        "With dynamic safe Z, the combined Max. Part Heights of compatible nozzle tips must be smaller than the axis "
+                                        +rawAxisZ.getName()+" Safe Z Zone.", 
+                                        Severity.Warning,
+                                        "https://github.com/openpnp/openpnp/wiki/Kinematic-Solutions#dynamic-safe-z-zone") {
+
+                                    @Override
+                                    public String getExtendedDescription() {
+                                        return "<html>"
+                                                + "<p>With <strong>Dynamic Safe Z</strong> enabled, the nozzles need a head-room, the so-called Safe Z Zone to lift "
+                                                + "the nozzles higher with taller parts. On nozzles with shared Z axes the part heights compete for the same head-room. "
+                                                + "The maximum expected part height is specified on the nozzle tip <strong>Max. Part Height</strong>.</p><br/>"
+                                                + "<p>Nozzle "+nozzle.getName()+" with compatible tip "+nt.getName()+" has a <strong>Max. Part Height</strong> of "
+                                                + lengthConverter.convertForward(maxHeight)+", furthermore, nozzle "+nozzle2.getName()+" with compatible tip "
+                                                + nt2.getName()+" has a largest <strong>Max. Part Height</strong> of "+lengthConverter.convertForward(maxHeight2)+", which "
+                                                + "in combination (and after transformation) is larger than the Safe Z Zone of "+lengthConverter.convertForward(zone)+". "
+                                                + "Note, the safe Z Zone is configured on the "+rawAxisZ.getName()+" axis to reach from "
+                                                + lengthConverter.convertForward(rawAxisZ.getSafeZoneLow())+" to "
+                                                + lengthConverter.convertForward(rawAxisZ.getSafeZoneHigh())+" in (untransformed) coordinates.</p><br/>"
+                                                + "<p>Please either enlarge the Safe Z Zone, by reducing the nozzle "+nozzle.getName()+" and "+nozzle2.getName()
+                                                + " Z clearances, or reduce the <strong>Max. Part Height</strong> on nozzle tips "+nt.getName()+" and "
+                                                + nt2.getName()+".</p><br/>"
+                                                + "<p>Reducing Z clearances is best done by revisiting the Safe Z solutions for nozzles "+nozzle.getName()+" and "
+                                                + nozzle2.getName()+". "
+                                                + "Disable the <strong>Save Zone Low / High Enabled</strong> checkbox on axis "+rawAxisZ.getName()+", "
+                                                + "then come back here and press <strong>Find Issues &amp; Solutions</strong>.</p>"
+                                                + "</html>";
+                                    }
+                                    @Override
+                                    public Icon getExtendedIcon() {
+                                        return Icons.safeZDynamic;
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    protected ReferenceNozzleTip getCompatibleNozzleTipMaxPartHeight(ReferenceNozzle nozzle, NozzleTip nt1) {
+        ReferenceNozzleTip ntMax = null;
+        for (NozzleTip nt : nozzle.getCompatibleNozzleTips()) {
+            if (nt instanceof ReferenceNozzleTip
+                    && nt1 != nt) {
+                ReferenceNozzleTip ntRef = (ReferenceNozzleTip) nt;
+                if (ntMax == null 
+                        || ntMax.getMaxPartHeight().compareTo(ntRef.getMaxPartHeight()) < 0) {
+                    ntMax = ntRef;
+                }
+            }
+        }
+        return ntMax;
+    }
+
 }
