@@ -469,7 +469,7 @@ public class KinematicSolutions implements Solutions.Subject {
                                     public String getExtendedDescription() {
                                         return "<html>"
                                                 + "<p>With <strong>Dynamic Safe Z</strong> enabled, the nozzle needs a head-room, the so-called Safe Z Zone "
-                                                + "to lift the nozzle higher with taller parts. The maximum expected part height is specificed on the "
+                                                + "to lift the nozzle higher with taller parts. The maximum expected part height is specified on the "
                                                 + "nozzle tip <strong>Max. Part Height</strong>.</p><br/>"
                                                 + "<p>Nozzle "+nozzle.getName()+" with compatible tip "+nt.getName()+" has a <strong>Max. Part Height</strong> of "
                                                 + lengthConverter.convertForward(maxHeight)+" which is larger than the Safe Z Zone of "
@@ -513,7 +513,7 @@ public class KinematicSolutions implements Solutions.Subject {
                                         return "<html>"
                                                 + "<p>With <strong>Dynamic Safe Z</strong> enabled, the nozzles need a head-room, the so-called Safe Z Zone to lift "
                                                 + "the nozzles higher with taller parts. On nozzles with shared Z axes the part heights compete for the same head-room. "
-                                                + "The maximum expected part height is specificed on the nozzle tip <strong>Max. Part Height</strong>.</p><br/>"
+                                                + "The maximum expected part height is specified on the nozzle tip <strong>Max. Part Height</strong>.</p><br/>"
                                                 + "<p>Nozzle "+nozzle.getName()+" with compatible tip "+nt.getName()+" has a <strong>Max. Part Height</strong> of "
                                                 + lengthConverter.convertForward(maxHeight)+", furthermore, nozzle "+nozzle2.getName()+" with compatible tip "
                                                 + nt2.getName()+" has a largest <strong>Max. Part Height</strong> of "+lengthConverter.convertForward(maxHeight2)+", which "
