@@ -35,6 +35,8 @@ These captured coordinates will set the Safe Z zone as described on the [Machine
 
 If [Dynamic Safe Z](#dynamic-safe-z) is enabled, the nozzle needs headroom inside the Safe Z Zone in order to dynamically adjust the Z higher, if a taller part is on the nozzle tip. Issues & Solutions can detect if the headroom i.e. the Safe Z Zone is too small. You must then either increase the **Safe Z Zone** (if possible) or reduce the **Max. Part Height** on the nozzle tip. 
 
+![Safe Z Zone Isssue](https://user-images.githubusercontent.com/9963310/162012365-124e356a-ee21-4c82-8f48-dd528169d811.png)
+
 See either the [Machine Axes page](https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--axis-limits) or [this section about maximum part dimensions, configured on the Nozzle Tip](https://github.com/openpnp/openpnp/wiki/Contact-Probing-Nozzle#part-dimensions).
 
 
