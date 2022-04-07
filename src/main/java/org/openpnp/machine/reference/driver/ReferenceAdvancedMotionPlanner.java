@@ -349,7 +349,7 @@ public class ReferenceAdvancedMotionPlanner extends AbstractMotionPlanner {
         if (allowUncoordinated) {
             if (location0.isInSafeZone()
                     && location1.isInSafeZone()) {
-                // Both locations are in the Save Zone. Add the uncoordinated flags.
+                // Both locations are in the Safe Zone. Add the uncoordinated flags.
                 options |= MotionOption.UncoordinatedMotion.flag()
                         | MotionOption.LimitToSafeZone.flag()
                         | MotionOption.SynchronizeStraighten.flag()
