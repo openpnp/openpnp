@@ -439,9 +439,9 @@ public class KinematicSolutions implements Solutions.Subject {
     protected void dynamicSafeZSolution(Solutions solutions, ReferenceNozzle nozzle, ReferenceNozzle nozzle2, ReferenceControllerAxis rawAxisZ) 
             throws Exception {
         Length [] zoneZ = nozzle.getSafeZZone();
-        Length zone = zoneZ[1].subtract(zoneZ[0]);
         if (nozzle.isEnableDynamicSafeZ() 
                 && zoneZ[0] != null && zoneZ[1] != null) {
+            Length zone = zoneZ[1].subtract(zoneZ[0]);
             LengthConverter lengthConverter = new LengthConverter();
             for (NozzleTip nt : nozzle.getCompatibleNozzleTips()) {
                 if (nt instanceof ReferenceNozzleTip) {
