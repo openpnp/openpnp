@@ -22,6 +22,8 @@ Ideally, every relevant location on your machine should be more or less flush wi
 
 Use [[Issues and Solutions]] to setup Visual Homing. It will be offered in the right sequence, after you have configured the needed basics. 
 
+![visual-homing-issues-and-solutions](https://user-images.githubusercontent.com/9963310/162245692-1def5213-c72c-4f4d-a646-9361274993b7.gif)
+
 The following instructions are for manual setup. 
 
 ## Creating the Fiducial Part
