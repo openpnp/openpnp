@@ -15,9 +15,9 @@ esac
 
 case "$platform" in
 	mac)
-		java -Xdock:name=OpenPnP -jar $rootdir/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
+		java -Xdock:name=OpenPnP --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED -jar $rootdir/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
 	;;
 	linux)
-		java $1 -jar $rootdir/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
+		java $1 --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED -jar $rootdir/target/openpnp-gui-0.0.1-alpha-SNAPSHOT.jar
 	;;
 esac
