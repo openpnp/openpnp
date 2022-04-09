@@ -147,8 +147,8 @@ This question is impossible to answer, as each machine is different. The problem
    ![Camera Settle Diagnostics](https://user-images.githubusercontent.com/9963310/124281237-d1917b00-db49-11eb-9147-5c3e56c350d9.png)
 
 6. Better yet: do the [[Camera Settling]] setup right now (if you haven't already) and you will get the settling times as an additional _valuable_ indicator. You may see a trade-off between aggressive machine motion and short settling times, because of shaking/vibrations. For simpler machines such as the Liteplacer, this is a significant trade-off i.e time saved on break-neck moves may easily be wasted many times over in longer settle times. Note that long settle times also mean less precision in picking/placing as the nozzle tip may be swinging all over the place for several hundred milliseconds. 
-7. Start with feed-rate 200mm/s, acceleration 500mm/s² and jerk 10000mm/s³ on **SimpleSCurve** controllerd, jerk 0mm/s³ (disabled) on other controllers (see step 3).
-8. Set different step distances (1mm, 10mm, 100mm) in the Machine Controls and for each of those do the following:
+7. On **SimpleSCurve** controllers start with feed-rate 200mm/s, acceleration 500mm/s² and jerk 10000mm/s³. On other controllers feed-rate 200mm/s, acceleration 500mm/s² and jerk 0mm/s³ (disabled) (see step 3).
+8. Set different step distances (1mm, 10mm, 100mm) in the Machine Controls and for each of those do the following steps:
    
    ![Distance Control](https://user-images.githubusercontent.com/9963310/124281344-ea9a2c00-db49-11eb-8dde-19c075f71457.png)
 
