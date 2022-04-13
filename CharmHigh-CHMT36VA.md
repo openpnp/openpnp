@@ -1,20 +1,4 @@
 # Project Status
-___
-**This Wiki page is outdated.** There are newer/better versions of Smoothieware firmware, Smoothieware configurations, and OpenPnP configuration around. This Wiki page should be updated by someone who owns such a machine and is on top of things. 
-
-**HELP WANTED!**
-
-Some pointers (unconfirmed):
-- Discussion and OpenPnP Config:
-  https://groups.google.com/g/desktop-pick-and-place/c/bkAQFhvyEE4/m/yJ9yCGLtAAAJ
-- Smoothieware firmware and config:
-  https://github.com/c-riegel/Smoothieware-CHMT/
-  with these important patches:
-  https://github.com/c-riegel/Smoothieware-CHMT/commits/chmt
-
-_Mark (2021-12-04)
-___
-
 
 The stock firmware on the CHMT36VA turned out to be a dead end. There does not appear to be any command that can be used to rotate the nozzle. The best way forward seems to be to use [Matt Baker's Smoothie port with some enhancements by c-riegel and Jan](https://github.com/janm012012/Smoothieware-CHMT) which can be flashed on the stock main board.
 
