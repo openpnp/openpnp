@@ -36,8 +36,6 @@ This documentation is incomplete and can use your help! Anyone with a GitHub acc
 
 * [The GoFundMe Page](https://www.gofundme.com/help-openpnp-grow)
 * [SparkFun's CHMT36VA Repo](https://github.com/sparkfunX/Desktop-PickAndPlace-CHMT36VA) contains translations, documentation, software, and utilities for working with the machine.
-* [Matt Baker's Smoothie port](https://github.com/mattthebaker/Smoothieware-CHMT) which can be used to flash Smoothie to your CHMT36VA for use with OpenPnP.
-* [Matt Baker's example OpenPnP configuration](https://github.com/mattthebaker/openpnp-config-chmt).
 * [OpenPnP + CHMT Thread](https://groups.google.com/forum/#!msg/desktop-pick-and-place/qaoGrnM7pPw/-2k-5FBHCAAJ) contains tons of good information on making the CHMT work with OpenPnP.
 * [Smoothie on STM32/CHMT Thread](https://groups.google.com/d/msg/desktop-pick-and-place/C-n9dksqhDQ/xZdmKPh3CAAJ)
 * [SwitcherCamera Documentation](https://github.com/openpnp/openpnp/wiki/SwitcherCamera): The SwitcherCamera lets OpenPnP switch the camera board on the CHMT between the top and bottom camera.
