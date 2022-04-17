@@ -303,12 +303,14 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
 
     protected void offsetsCheck(Part part, Nozzle nozzle, Location offsets) throws Exception {
         if (nozzle.getNozzleTip() instanceof ReferenceNozzleTip) {
+            ReferenceNozzleTip nt = (ReferenceNozzleTip) nozzle.getNozzleTip();
             Length offsetsLength = offsets.getLinearLengthTo(Location.origin);
-            Length maxPickTolerance = ((ReferenceNozzleTip) nozzle.getNozzleTip()).getMaxPickTolerance();
+            Length maxPickTolerance = nt.getMaxPickTolerance();
             if (offsetsLength.compareTo(maxPickTolerance) > 0) {
                 LengthConverter lengthConverter = new LengthConverter(); 
                 throw new Exception("Part "+part.getId()+" bottom vision offsets length "+lengthConverter.convertForward(offsetsLength)
-                +" larger than allowed "+lengthConverter.convertForward(maxPickTolerance));
+                +" larger than the allowed Max. Pick Tolerance "+lengthConverter.convertForward(maxPickTolerance)+" set on nozzle tip "
+                + nt.getName()+".");
             }
         }
     }
