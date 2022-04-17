@@ -17,7 +17,7 @@ The resulting calibration is also validated, and if the detected quality is not 
 If the Background Calibration is enabled, the following is controlled in the bottom vision pipeline:
 
 1. The `BlurGaussian` `kernelSize` property is controlled by a new **Minimum Detail Size** field, where the user can enter a length (in system units) that indicates the smallest sensible size of a feature on a part (such as the dimension of a pad, pin, ball of a package). The GaussianBlur is configured accordingly (to half of that size), to suppress image noise, dirt, texture etc. that is not relevant for detection. This is also applied to the Background Calibration itself, to get the same `MaskHSV` input data as the pipeline.
-2. The `MaskCircle` `diameter` property is controlled by the already existing **Max. Part Diameter** field on the Nozzle tip. Peripheral background content that might disrupt the vision operation is masked out. This is also applied to the Background Calibration itself, to get the same `MaskHSV` input data as the pipeline.
+2. The `MaskCircle` `diameter` property is always controlled by the already existing **Max. Part Diameter** field on the Nozzle tip (this is also true, when the background calibration is not enabled). Peripheral background content that might disrupt the vision operation is masked out. This is also applied to the Background Calibration itself, to get the same `MaskHSV` input data as the pipeline.
 3. The `MaskHSV` `hueMin`, `hueMax`, `saturationMin`,  `saturationMax`, `valueMin` and `valueMax` properties are all controlled by the Background Calibration bounding box.  
 
 # Instructions for Use
