@@ -46,6 +46,16 @@ Some essential tweaking parameters can be exposed from a pipeline. See the [[Exp
 
 The usage of the Pipeline Editor UI in general is explained on the [[CvPipeline]] page.
 
+# Overriding Controlled Stage Properties
+
+Some pipeline stage properties are controlled by vision operations in OpenPnP. There are usually very good reasons for the way these are controlled, so you should normally leave this control in place. However, in exotic circumstances it might become necessary to override the control.
+
+The following animation shows, how the stage control can be enabled/disabled by changing the `propertyName` property. A minus sign is added to the well-know property name, which mean that the _control connection_ is lost, and user edits are made possible again. If you are just trying this out, please do not forget to revert the change, to restore the _control connection_:
+
+![disabling-control](https://user-images.githubusercontent.com/9963310/157468527-91be5498-9e59-4d35-ac6b-62899b337904.gif)
+
+This does only work with built-in control. In case of [Exposed Pipeline Parameters](https://github.com/openpnp/openpnp/wiki/Exposed-Pipeline-Parameters) just disable the parameter stage instead.
+
 # Bottom Vision Background Removal
 
 OpenPnP can automatically calibrate the background (with empty nozzle tip) for bottom vision background removal. See the [[Nozzle Tip Background Calibration]] page.
