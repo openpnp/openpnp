@@ -62,8 +62,9 @@ public class CameraCalibrationUtils {
 
     public static final int FIX_ASPECT_RATIO = 1;
     public static final int FIX_PRINCIPAL_POINT = 2;
-    public static final int FIX_DISTORTION_COEFFICENTS = 4;
-    public static final int FIX_ROTATION = 8;
+    public static final int FIX_RADIAL_DISTORTION_COEFFICENTS = 4;
+    public static final int FIX_TILT = 8;
+    public static final int FIX_TANGENTIAL_DISTORTION_COEFFICENTS = 16;
 
     // The following threshold is used to decide if a collected data point is a possible outlier.
     // This assumes the residual errors are bivariate normally distributed. Lower values will cause
@@ -198,8 +199,9 @@ public class CameraCalibrationUtils {
      *        approximately correct values prior to calling this method and upon return of this
      *        method will contain the best fit camera parameters.
      * @param flags - Flags used to force certain parameters be retained from the initial starting
-     *        values. Can be one or more of the follow added together: FIX_ASPECT_RATIO,
-     *        FIX_CENTER_POINT, FIX_DISTORTION_COEFFICENTS, and FIX_ROTATION.
+     *        values. Can be one or more of the follow added/or'ed together: FIX_ASPECT_RATIO,
+     *        FIX_CENTER_POINT, FIX_RADIAL_DISTORTION_COEFFICENTS, FIX_TILT, 
+     *        FIX_TANGENTIAL_DISTORTION_COEFFICENTS.
      * @return the DRMS error in pixels of the model's fit to the data points.
      * @throws Exception 
      */
@@ -256,9 +258,8 @@ public class CameraCalibrationUtils {
                 optimum = optimizer.optimize(lsp);
             }
             catch (TooManyEvaluationsException e) {
-                throw(new Exception("Camera model failed to converge. Double check Camera Lens Z "
-                        + "value, if that appears correct, try increasing the number of Radial "
-                        + "Lines Per Cal Z."));
+                throw(new Exception("Camera model failed to converge. Try increasing the number of "
+                        + "Radial Lines Per Cal Z."));
             }
             Logger.trace("rms error = " + optimum.getRMS());
             Logger.trace("number of evaluations = " + optimum.getEvaluations());
@@ -334,8 +335,9 @@ public class CameraCalibrationUtils {
         double[][][] testPattern3dPoints;
         int totalNumberOfPoints;
         double allowCenterToChange;
-        double allowDistortionToChange;
-        double allowRotationToChange;
+        double allowRadialDistortionToChange;
+        double allowTangentialDistortionToChange;
+        double allowTiltToChange;
         TreeSet<Integer> outlierPoints;
         int flags;
 
@@ -349,7 +351,8 @@ public class CameraCalibrationUtils {
          *        the model
          * @param flags - Flags used to force certain parameters be retained from the initial
          *        starting values. Can be one or more of the follow added together:
-         *        FIX_ASPECT_RATIO, FIX_CENTER_POINT, FIX_DISTORTION_COEFFICENTS, and FIX_ROTATION.
+         *        FIX_ASPECT_RATIO, FIX_CENTER_POINT, FIX_RADIAL_DISTORTION_COEFFICENTS,
+         *        FIX_TILT, FIX_TANGENTIAL_DISTORTION_COEFFICENTS.
          */
         public CalibrationModel(double[][][] testPattern3dPoints, TreeSet<Integer> outlierPoints,
                 int flags) {
@@ -373,17 +376,23 @@ public class CameraCalibrationUtils {
             else {
                 allowCenterToChange = 0;
             }
-            if ((flags & FIX_DISTORTION_COEFFICENTS) == 0) {
-                allowDistortionToChange = 1;
+            if ((flags & FIX_RADIAL_DISTORTION_COEFFICENTS) == 0) {
+                allowRadialDistortionToChange = 1;
             }
             else {
-                allowDistortionToChange = 0;
+                allowRadialDistortionToChange = 0;
             }
-            if ((flags & FIX_ROTATION) == 0) {
-                allowRotationToChange = 1;
+            if ((flags & FIX_TANGENTIAL_DISTORTION_COEFFICENTS) == 0) {
+                allowTangentialDistortionToChange = 1;
             }
             else {
-                allowRotationToChange = 0;
+                allowTangentialDistortionToChange = 0;
+            }
+            if ((flags & FIX_TILT) == 0) {
+                allowTiltToChange = 1;
+            }
+            else {
+                allowTiltToChange = 0;
             }
         }
 
@@ -605,14 +614,14 @@ public class CameraCalibrationUtils {
                         funcJacobian.setEntry(rowIdx, 2, 1 * allowCenterToChange);
                         funcJacobian.setEntry(rowIdx, 3, 0 * allowCenterToChange);
                         funcJacobian.setEntry(rowIdx, 4,
-                                fx * temp004 * temp040 * temp043 * allowDistortionToChange);
+                                fx * temp004 * temp040 * temp043 * allowRadialDistortionToChange);
                         funcJacobian.setEntry(rowIdx, 5,
-                                fx * temp004 * temp042 * temp043 * allowDistortionToChange);
+                                fx * temp004 * temp042 * temp043 * allowRadialDistortionToChange);
                         funcJacobian.setEntry(rowIdx, 6,
-                                2 * fx * temp004 * temp025 * temp033 * allowDistortionToChange);
-                        funcJacobian.setEntry(rowIdx, 7, fx * temp002 * allowDistortionToChange);
+                                2 * fx * temp004 * temp025 * temp033 * allowTangentialDistortionToChange);
+                        funcJacobian.setEntry(rowIdx, 7, fx * temp002 * allowTangentialDistortionToChange);
                         funcJacobian.setEntry(rowIdx, 8,
-                                fx * temp004 * temp039 * temp043 * allowDistortionToChange);
+                                fx * temp004 * temp039 * temp043 * allowRadialDistortionToChange);
                         funcJacobian.setEntry(rowIdx, 9,
                                 (4 * p1 * temp004 * temp033 * temp068 * temp076
                                         - 2 * p1 * temp004 * temp025 * temp046
@@ -623,7 +632,7 @@ public class CameraCalibrationUtils {
                                         - 2 * (3 * temp004 * temp025 * temp061
                                                 - 3 * temp003 * temp068 * temp076 + temp073
                                                 + temp077) * p2)
-                                        * fx * allowRotationToChange);
+                                        * fx * allowTiltToChange);
                         funcJacobian.setEntry(rowIdx, 10,
                                 -(4 * p1 * temp004 * temp033 * temp076 * temp078
                                         + temp004 * temp025 * temp038 * temp078
@@ -634,7 +643,7 @@ public class CameraCalibrationUtils {
                                         + 2 * (3 * temp003 * temp076 * temp078
                                                 - 3 * temp004 * temp025 * temp097 + temp101
                                                 + temp102) * p2)
-                                        * fx * allowRotationToChange);
+                                        * fx * allowTiltToChange);
                         funcJacobian.setEntry(rowIdx, 11,
                                 (4 * p1 * temp004 * temp033 * temp076 * temp104
                                         + temp004 * temp025 * temp038 * temp104
@@ -644,8 +653,7 @@ public class CameraCalibrationUtils {
                                         + 2 * temp004 * temp043 * temp110
                                         + 2 * (3 * temp003 * temp076 * temp104
                                                 + 3 * temp004 * temp025 * temp109 + temp113
-                                                + temp114) * p2)
-                                        * fx * allowRotationToChange);
+                                                + temp114) * p2) * fx);
                         funcJacobian.setEntry(rowIdx, 12,
                                 -(4 * p1 * temp004 * temp031 * temp033 * temp076
                                         - 2 * p1 * temp019 * temp025 * temp033
@@ -697,14 +705,14 @@ public class CameraCalibrationUtils {
                         funcJacobian.setEntry(rowIdx, 2, 0 * allowCenterToChange);
                         funcJacobian.setEntry(rowIdx, 3, 1 * allowCenterToChange);
                         funcJacobian.setEntry(rowIdx, 4,
-                                fy * temp033 * temp040 * temp043 * allowDistortionToChange);
+                                fy * temp033 * temp040 * temp043 * allowRadialDistortionToChange);
                         funcJacobian.setEntry(rowIdx, 5,
-                                fy * temp033 * temp042 * temp043 * allowDistortionToChange);
-                        funcJacobian.setEntry(rowIdx, 6, fy * temp045 * allowDistortionToChange);
+                                fy * temp033 * temp042 * temp043 * allowRadialDistortionToChange);
+                        funcJacobian.setEntry(rowIdx, 6, fy * temp045 * allowTangentialDistortionToChange);
                         funcJacobian.setEntry(rowIdx, 7,
-                                2 * fy * temp004 * temp025 * temp033 * allowDistortionToChange);
+                                2 * fy * temp004 * temp025 * temp033 * allowTangentialDistortionToChange);
                         funcJacobian.setEntry(rowIdx, 8,
-                                fy * temp033 * temp039 * temp043 * allowDistortionToChange);
+                                fy * temp033 * temp039 * temp043 * allowRadialDistortionToChange);
                         funcJacobian.setEntry(rowIdx, 9,
                                 (4 * p2 * temp004 * temp033 * temp068 * temp076
                                         - 2 * p2 * temp004 * temp025 * temp046
@@ -715,7 +723,7 @@ public class CameraCalibrationUtils {
                                         - 2 * (3 * temp025 * temp033 * temp046
                                                 - 3 * temp032 * temp068 * temp076 + temp074
                                                 + temp075) * p1)
-                                        * fy * allowRotationToChange);
+                                        * fy * allowTiltToChange);
                         funcJacobian.setEntry(rowIdx, 10,
                                 -(4 * p2 * temp004 * temp033 * temp076 * temp078
                                         + temp025 * temp033 * temp038 * temp078
@@ -726,7 +734,7 @@ public class CameraCalibrationUtils {
                                         + 2 * (3 * temp032 * temp076 * temp078
                                                 + 3 * temp025 * temp033 * temp086 + temp100
                                                 + temp103) * p1)
-                                        * fy * allowRotationToChange);
+                                        * fy * allowTiltToChange);
                         funcJacobian.setEntry(rowIdx, 11,
                                 (4 * p2 * temp004 * temp033 * temp076 * temp104
                                         + temp025 * temp033 * temp038 * temp104
@@ -736,8 +744,7 @@ public class CameraCalibrationUtils {
                                         + 2 * temp033 * temp043 * temp110
                                         + 2 * (3 * temp032 * temp076 * temp104
                                                 - 3 * temp025 * temp033 * temp106 + temp112
-                                                + temp115) * p1)
-                                        * fy * allowRotationToChange);
+                                                + temp115) * p1) * fy);
                         funcJacobian.setEntry(rowIdx, 12,
                                 -(4 * p2 * temp004 * temp031 * temp033 * temp076
                                         - 2 * p2 * temp019 * temp025 * temp033
@@ -1048,10 +1055,10 @@ public class CameraCalibrationUtils {
         // If principal point was specified, adjust the extremes to keep them centered about the
         // specified point
         if (keepPrincipalPoint) {
-            double outer = Math.max(outerMaxX - centerX, centerX - outerMinX);
+            double outer = Math.max(Math.abs(outerMaxX - centerX), Math.abs(centerX - outerMinX));
             outerMaxX = centerX + outer;
             outerMinX = centerX - outer;
-            outer = Math.max(outerMaxY - centerY, centerY - outerMinY);
+            outer = Math.max(Math.abs(outerMaxY - centerY), Math.abs(centerY - outerMinY));
             outerMaxY = centerY + outer;
             outerMinY = centerY - outer;
         }
@@ -1229,10 +1236,10 @@ public class CameraCalibrationUtils {
     
                 // If the principal point was specified, force the limits to be centered on that point
                 if (keepPrincipalPoint) {
-                    double inner = Math.min(innerMaxX - centerX, centerX - innerMinX);
+                    double inner = Math.min(Math.abs(innerMaxX - centerX), Math.abs(centerX - innerMinX));
                     innerMaxX = centerX + inner;
                     innerMinX = centerX - inner;
-                    inner = Math.min(innerMaxY - centerY, centerY - innerMinY);
+                    inner = Math.min(Math.abs(innerMaxY - centerY), Math.abs(centerY - innerMinY));
                     innerMaxY = centerY + inner;
                     innerMinY = centerY - inner;
                 }

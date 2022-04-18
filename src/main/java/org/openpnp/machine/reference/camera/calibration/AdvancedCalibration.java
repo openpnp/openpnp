@@ -145,6 +145,15 @@ public class AdvancedCalibration extends LensCalibrationParams {
     
     @Attribute(required = false)
     private double virtualHeightFov;
+    
+    @Attribute(required = false)
+    private boolean disableTiltCorrection = false;
+    
+    @Attribute(required = false)
+    private boolean disableDistortionCorrection = false;
+    
+    @Attribute(required = false)
+    private boolean disableTangentialDistortionCorrection = false;
 
     
     private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
@@ -723,6 +732,31 @@ public class AdvancedCalibration extends LensCalibrationParams {
         firePropertyChange("virtualHeightFov", oldSetting, virtualHeightFov);
     }
 
+    public boolean isDisableTiltCorrection() {
+        return disableTiltCorrection;
+    }
+
+    public void setDisableTiltCorrection(boolean disableTiltCorrection) {
+        this.disableTiltCorrection = disableTiltCorrection;
+    }
+
+    public boolean isDisableDistortionCorrection() {
+        return disableDistortionCorrection;
+    }
+
+    public void setDisableDistortionCorrection(boolean disableDistortionCorrection) {
+        this.disableDistortionCorrection = disableDistortionCorrection;
+    }
+
+    public boolean isDisableTangentialDistortionCorrection() {
+        return disableTangentialDistortionCorrection;
+    }
+
+    public void setDisableTangentialDistortionCorrection(
+            boolean disableTangentialDistortionCorrection) {
+        this.disableTangentialDistortionCorrection = disableTangentialDistortionCorrection;
+    }
+
     /**
      * @return the fiducialDiameter
      */
@@ -892,10 +926,19 @@ public class AdvancedCalibration extends LensCalibrationParams {
         //patterns.  Because it has more degrees of freedom than necessary, the RMS error of the
         //model fit may appear good but parameter estimates may in fact be significantly in
         //error.
+        int flags = Calib3d.CALIB_FIX_PRINCIPAL_POINT | Calib3d.CALIB_USE_INTRINSIC_GUESS;
+        if (disableDistortionCorrection) {
+            flags |= Calib3d.CALIB_FIX_K1 | Calib3d.CALIB_FIX_K2 | Calib3d.CALIB_FIX_K3;
+            flags |= Calib3d.CALIB_ZERO_TANGENT_DIST;
+        }
+        else {
+            if (disableTangentialDistortionCorrection) {
+                flags |= Calib3d.CALIB_ZERO_TANGENT_DIST;
+            }
+        }
         double rms = Calib3d.calibrateCamera(testPattern3dPointsList, 
                 testPatternImagePointsList, size,
-                cameraMatrix, distortionCoefficients, rvecs, tvecs, 
-                Calib3d.CALIB_FIX_PRINCIPAL_POINT | Calib3d.CALIB_USE_INTRINSIC_GUESS );
+                cameraMatrix, distortionCoefficients, rvecs, tvecs, flags);
         Logger.trace("Calib3d.calibrateCamera rms = " + rms);
         
         for (Mat tp : testPattern3dPointsList) {
@@ -1013,17 +1056,30 @@ public class AdvancedCalibration extends LensCalibrationParams {
         Mat rvec = new Mat();
         Calib3d.Rodrigues(transformFromMachToPhyCamRefFrame, rvec );
         transformFromMachToPhyCamRefFrame.release();
-        cameraParams[9] = rvec.get(0, 0)[0];
-        cameraParams[10] = rvec.get(1, 0)[0];
+        cameraParams[9] = disableTiltCorrection ? 0 : rvec.get(0, 0)[0];
+        cameraParams[10] = disableTiltCorrection ? 0 : rvec.get(1, 0)[0];
         cameraParams[11] = rvec.get(2, 0)[0];
         rvec.release();
 
         //Compute a new set of camera parameters based on openpnp's more restrictive camera
         //model that avoids the excess degree of freedom problem discussed above
+        flags = CameraCalibrationUtils.FIX_PRINCIPAL_POINT;
+        if (disableDistortionCorrection) {
+            flags |= CameraCalibrationUtils.FIX_RADIAL_DISTORTION_COEFFICENTS;
+            flags |= CameraCalibrationUtils.FIX_TANGENTIAL_DISTORTION_COEFFICENTS;
+        }
+        else {
+            if (disableTangentialDistortionCorrection) {
+                flags |= CameraCalibrationUtils.FIX_TANGENTIAL_DISTORTION_COEFFICENTS;
+            }
+        }
+        if (disableTiltCorrection) {
+            flags |= CameraCalibrationUtils.FIX_TILT;
+        }
         modeledTestPatternImagePointsList = new double[numberOfTestPatterns][][];
         rms = CameraCalibrationUtils.computeBestCameraParameters(
                 testPattern3dPoints, testPatternImagePoints, modeledTestPatternImagePointsList, 
-                outlierPointList, cameraParams, CameraCalibrationUtils.FIX_PRINCIPAL_POINT);
+                outlierPointList, cameraParams, flags);
         setRmsError(rms);
         
         //Use the new estimates for the physical camera's matrix
