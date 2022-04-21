@@ -47,6 +47,12 @@ import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
 public class AdvancedCalibration extends LensCalibrationParams {
+    // Prior to version 1.2, no explicit version attribute existed. Version 1.0 (implicit) was the
+    // initial release of AdvancedCalibration, version 1.1 (implicit) added attributes to disable 
+    // distortion and tilt corrections but were all enabled by default, and version 1.2 disabled
+    // tangential distortion correction by default
+    private static final Double LATEST_VERSION = 1.2;
+    
     @Attribute(required = false)
     private boolean overridingOldTransformsAndDistortionCorrectionSettings = false;
     
@@ -150,10 +156,13 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private boolean disableTiltCorrection = false;
     
     @Attribute(required = false)
-    private boolean disableDistortionCorrection = false;
+    private boolean disableDistortionCorrection = true;
     
     @Attribute(required = false)
     private boolean disableTangentialDistortionCorrection = false;
+    
+    @Attribute(required = false)
+    private Double version;
 
     
     private Mat virtualCameraMatrix = Mat.eye(3, 3, CvType.CV_64FC1);
@@ -255,6 +264,13 @@ public class AdvancedCalibration extends LensCalibrationParams {
         else {
             outlierPointList = new ArrayList<Integer>();
         }
+        
+        //Prior versions didn't have an explicit version number. This fixes any machine.xml
+        //files that may have been updated with the prior version that had enabled tangential
+        //distortion correction by default.  We now want to change it to be disabled by default.
+        if (version == null) {
+            disableTangentialDistortionCorrection = true;
+        }
     }
     
     @Persist
@@ -274,6 +290,10 @@ public class AdvancedCalibration extends LensCalibrationParams {
         else {
             outlierPoints = new Integer[0];
         }
+        
+        //Update to the latest version number.  We need to do this here so that newly instantiated 
+        //cameras will have a version number when they are written to the machine.xml file.
+        version = LATEST_VERSION;
     }
 
     /**
