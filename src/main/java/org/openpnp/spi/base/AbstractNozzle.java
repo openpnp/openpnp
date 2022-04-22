@@ -36,6 +36,22 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
     @Attribute(required = false)
     protected RotationMode rotationMode = RotationMode.AbsolutePartAngle;
 
+    /**
+     * Under limited angular articulation, the nozzle must be prepared for a pick-and-place cycle, including
+     * any angular tolerances in the pick (for feeders with vision) and in the alignment (bottom vision).
+     * The maxPickArticulationAngle gives us the maximum tolerance angle on the pick side.
+     */
+    @Attribute(required = false)
+    protected double maxPickArticulationAngle = 15;
+
+    /**
+     * Under limited angular articulation, the nozzle must be prepared for a pick-and-place cycle, including
+     * any angular tolerances in the pick (for feeders with vision) and in the alignment (bottom vision).
+     * The maxAlignmentArticulationAngle gives us the maximum tolerance angle on the alignment side.
+     */
+    @Attribute(required = false)
+    protected double maxAlignmentArticulationAngle = 30;
+
     @ElementList(required = false)
     protected List<String> compatibleNozzleTipIds = new ArrayList<>();
 
@@ -46,6 +62,7 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
     protected Part part;
 
     protected Double rotationModeOffset;
+
 
     public AbstractNozzle() {
         this.id = Configuration.createId("NOZ");
@@ -164,8 +181,8 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
                 double articulation = rotationLimits[1] - rotationLimits[0];
                 // Axis has limited articulation, rotation is centered around the mid-range. 
                 double pickToPlaceRotation = Utils2D.angleNorm(placementLocation.getRotation() - pickLocation.getRotation(), 180.0);
-                // Allow for an additional 45° for alignment on the pick-to-place rotation. 
-                double maximumRotation = pickToPlaceRotation + Math.signum(pickToPlaceRotation)*45;
+                double maxTolerance = maxPickArticulationAngle + maxAlignmentArticulationAngle;
+                double maximumRotation = pickToPlaceRotation + Math.signum(pickToPlaceRotation)*maxTolerance;
                 double angleStart;
                 if (Math.abs(maximumRotation) < articulation) {
                     // The needed rotation is lower than the available articulation, therefore limit it 
@@ -174,12 +191,14 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
                     angleStart = midPoint - maximumRotation*0.5;
                 }
                 else if (pickToPlaceRotation > 0) {
-                    // A positive rotation is wanted. Start at the axis lower limit.
-                    angleStart = rotationLimits[0];
+                    // A positive rotation is wanted. Start at the axis lower limit, plus proportional pick tolerance.
+                    double availableTolerance = articulation - pickToPlaceRotation;
+                    angleStart = rotationLimits[0] + availableTolerance*maxPickArticulationAngle/maxTolerance;
                 }
                 else {
-                    // A negative rotation is wanted. Start at the axis higher limit.
-                    angleStart = rotationLimits[1];
+                    // A negative rotation is wanted. Start at the axis higher limit, minus proportional pick tolerance.
+                    double availableTolerance = articulation + pickToPlaceRotation;
+                    angleStart = rotationLimits[1] - availableTolerance*maxPickArticulationAngle/maxTolerance;
                 }
                 newRotationModeOffset = 
                         Utils2D.angleNorm(pickLocation.getRotation() - angleStart, 180);
