@@ -1095,7 +1095,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                         df.format(dtSec), 
                         df.format(totalPartsPlaced / (dtSec / 3600.0)));
 
-                Logger.info("Errored Placements:");
+                Logger.info("Errored Placements: "+erroredPlacements.size());
                 for (JobPlacement jobPlacement : erroredPlacements) {
                     Logger.info("{}: {}", jobPlacement, jobPlacement.getError().getMessage());
                 }
@@ -1204,6 +1204,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     case Alert:
                         throw e;
                     case Defer:
+                        if (e.isInterrupting()) {
+                            throw e;
+                        }
                         plannedPlacement.jobPlacement.setError(e);
                         return this;
                     default:
