@@ -820,28 +820,15 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
 
         double x = location1.getCoordinate(location1.getAxis(this, Axis.Type.X), units);
         double y = location1.getCoordinate(location1.getAxis(this, Axis.Type.Y), units);
-        double deltaX = displacement.getCoordinate(displacement.getAxis(Axis.Type.X));         
-        double deltaY = displacement.getCoordinate(displacement.getAxis(Axis.Type.Y));
 
-        if(distance(deltaX, deltaY) > 0.0001) {
-           if(distance(deltaX, deltaY) <= 10.1) {
-               speed = 0.2;
-           }
+        if(displacement.getAxis(Axis.Type.X) != null || displacement.getAxis(Axis.Type.Y) != null)
+        {
            setMoveSpeed(speed);
 
            x -= homingOffsets.getCoordinate(homingOffsets.getAxis(Axis.Type.X));
            y -= homingOffsets.getCoordinate(homingOffsets.getAxis(Axis.Type.Y));
 
-           //allow moves max 3mm with nozzles lowered
-           if(distance(deltaX, deltaY) > 3.1) {
-               retractNozzles();
-           }
-
            Logger.debug(String.format("Neoden move to to %.3f,%.3f", x, y));
-
-           double comp = backlashCompensation;
-           moveXy(x+comp, y+comp);
-           setMoveSpeed(0.05);
            moveXy(x,y);
 
            isDelayNeeded = true;
