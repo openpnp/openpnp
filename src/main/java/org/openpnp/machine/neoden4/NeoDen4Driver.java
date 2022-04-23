@@ -388,7 +388,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         }
 
         /* Make sure *all* nozzles are up before moving */ 
-        for(int index = 0; index < 4; index++)
+        for(int index = 1; index <= 4; index++)
         {
             moveZ(index, 0);
             moveC(index, 0);
@@ -415,7 +415,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
 
         /* Initialize coordinates correctly after home is completed */
         AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> (axis.getHomeCoordinate()));
-        homeLocation.setToDriverCoordinates(this);
 
         // Store the new location to the axes.
         homeLocation.setToDriverCoordinates(this);
@@ -764,7 +763,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
 
         AxesLocation location1 = move.getLocation1();
         AxesLocation location0 = move.getLocation0();
-        
+
         // Take only the changed axes and only those driven by this driver
         AxesLocation displacement = location0.motionSegmentTo(location1)
                 .drivenBy(this);
@@ -773,16 +772,30 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         for(ControllerAxis axis : displacement.byType(Axis.Type.Rotation)
                 .getControllerAxes()){
             // map from axis letter to driver index.
-            int index = axis.getLetter().indexOf("C");
-            index = Character.getNumericValue(axis.getLetter().charAt(index + 1));
+            String axisName = axis.getName();
+            int index = -1;
 
-            if (index < 1 || index > 4) {
-                throw new Exception("Invalid axis letter "+axis.getLetter()
-                    +" for nozzle rotation axis "+axis.getName());
+            if(axisName.equals("A")) {
+                index = 1;
             }
-            this.c[index] = location1.getCoordinate(axis, getUnits());
-            moveC(index, location1.getCoordinate(axis, getUnits()));
-            isDelayNeeded = true;
+            if(axisName.equals("B")) {
+                index = 2;
+            }
+            if(axisName.equals("C")) {
+                index = 3;
+            }
+            if(axisName.equals("D")) {
+                index = 4;
+            }
+            
+            if (index == -1) {
+                throw new Exception("Invalid axis name for nozzle rotation axis " + axisName);
+            }
+            else {
+                this.c[index] = location1.getCoordinate(axis, getUnits());
+                moveC(index, location1.getCoordinate(axis, getUnits()));
+                isDelayNeeded = true;
+            }
         }
 
         if(isDelayNeeded) {
@@ -795,16 +808,30 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
                 .getControllerAxes()){
 
             // map from axis letter to driver index.
-            int index = axis.getLetter().indexOf("Z");
-            index = Character.getNumericValue(axis.getLetter().charAt(index + 1));
+            String axisName = axis.getName();
+            int index = -1;
 
-            if ((index < 1) || (index > 4)) {
-                throw new Exception("Invalid axis letter "+axis.getLetter()
-                +" for nozzle z axis "+axis.getName());
+            if(axisName.equals("Z")) {
+                index = 1;
             }
-            this.z[index] = location1.getCoordinate(axis, getUnits());
-            moveZ(index, location1.getCoordinate(axis, getUnits()));
-            isDelayNeeded = true;
+            if(axisName.equals("U")) {
+                index = 2;
+            }
+            if(axisName.equals("V")) {
+                index = 3;
+            }
+            if(axisName.equals("W")) {
+                index = 4;                
+            }
+
+            if (index == -1) {
+                throw new Exception("Invalid axis name for nozzle Z axis " + axisName);
+            }
+            else {
+                this.z[index] = location1.getCoordinate(axis, getUnits());
+                moveZ(index, location1.getCoordinate(axis, getUnits()));
+                isDelayNeeded = true;
+            }
         }
 
         if(isDelayNeeded) {
@@ -861,6 +888,11 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     public void moveTo(HeadMountable hm, MoveToCommand move)
             throws Exception {
 
+        // Disable movement when not homed
+        if(!isAlreadyHomed) {
+            throw new Exception("NeoDen4Driver moveTo: Machine must be homed before movement");
+        }
+        
         boolean success = false;
         for(int i=0; i<3; i++) {
             try {
