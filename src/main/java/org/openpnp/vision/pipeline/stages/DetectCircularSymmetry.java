@@ -248,6 +248,8 @@ public class DetectCircularSymmetry extends CvStage {
             if (Double.isFinite(diameter)) {
                 minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
                 maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
+                recordPropertyOverride("minDiameter", minDiameter);
+                recordPropertyOverride("maxDiameter", maxDiameter);
             }
 
             maxDistance = getPossiblePipelinePropertyOverride(maxDistance, pipeline, 

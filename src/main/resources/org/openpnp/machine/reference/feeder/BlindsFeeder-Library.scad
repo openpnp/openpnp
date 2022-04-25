@@ -507,7 +507,7 @@ module BlindsFeeder(
                                     
                         if (lane_i == 0 && first) {
                             margin_offset=-0.5*tape_width-wall_width-margin_width;
-                            fiducial_y=-0.5*tape_width+fiducial_dist;
+                            fiducial_y=-0.5*tape_width+fiducial_dist-wall_width+1;
                             difference() {
                                 union()  {
                                     // margin
@@ -558,7 +558,7 @@ module BlindsFeeder(
                         }
                         if (lane_i == tape_lanes-1 && last) {
                             margin_offset=0.5*tape_width+wall_width;
-                            fiducial_y=0.5*tape_width+fiducial_dist+7;
+                            fiducial_y=0.5*tape_width+fiducial_dist+wall_width+6;
                             difference() {
                                 union() {
                                     // margin

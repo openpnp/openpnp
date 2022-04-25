@@ -22,8 +22,9 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
     
     public class JobProcessorException extends Exception {
         private static final long serialVersionUID = 1L;
-        
+
         private final Object source;
+        private boolean interrupting = false;
 
         private static String getThrowableMessage(Throwable throwable) {
             if (throwable.getMessage() != null) {
@@ -40,15 +41,28 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
         public JobProcessorException(Object source, Throwable throwable) {
             super(getThrowableMessage(throwable), throwable);
             this.source = source;
+            if (throwable instanceof JobProcessorException) {
+                this.interrupting = ((JobProcessorException) throwable).isInterrupting();
+            }
         }
 
         public JobProcessorException(Object source, String message) {
             super(message);
             this.source = source;
         }
-        
+
+        public JobProcessorException(Object source, String message, boolean interrupting) {
+            super(message);
+            this.source = source;
+            this.interrupting = interrupting;
+        }
+
         public Object getSource() {
             return source;
+        }
+
+        public boolean isInterrupting() {
+            return interrupting;
         }
     }
 }

@@ -746,7 +746,7 @@ public class VisionSolutions implements Solutions.Subject {
                             nozzle, 
                             "Safe Z of Nozzle "+nozzle.getName()+" lower than "+qualifier+" fiducial Z.", 
                             "Safe Z of Nozzle "+nozzle.getName()+" is lower than the calibration "+qualifier+" fiducial Z. "
-                                    + "Please change the calibration rig "+qualifier+" height or adjust Save Z.", 
+                                    + "Please change the calibration rig "+qualifier+" height or adjust Safe Z.", 
                             Solutions.Severity.Error,
                             "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#nozzle-offsets"));
                 }
@@ -1580,7 +1580,7 @@ public class VisionSolutions implements Solutions.Subject {
         FiducialVisionSettings visionSettings = fiducialLocator.getInheritedVisionSettings(part);
         if (visionSettings.getUsedFiducialVisionIn().size() == 1 
                 && visionSettings.getUsedFiducialVisionIn().get(0) == part) {
-            // Alreday a special setting on the part. Modify it.
+            // Already a special setting on the part. Modify it.
         }
         else {
             FiducialVisionSettings newSettings = new FiducialVisionSettings();
@@ -1588,9 +1588,10 @@ public class VisionSolutions implements Solutions.Subject {
             newSettings.setName(part.getShortName());
             part.setFiducialVisionSettings(newSettings);
             Configuration.get().addVisionSettings(newSettings);
+            visionSettings = newSettings;
         }
         String xml = IOUtils.toString(ReferenceBottomVision.class
-                .getResource("ReferenceFiducialLocator-CircularSymmetryPipeline.xml"));
+                .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
         CvPipeline pipeline = new CvPipeline(xml);
         visionSettings.setPipeline(pipeline);
     }

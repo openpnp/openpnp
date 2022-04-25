@@ -37,6 +37,7 @@ import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.Feeder;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.JobProcessor.JobProcessorException;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -699,7 +700,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                     this.nozzleTip.getCalibration().reset(this);
                 }
                 waitForCompletion(CompletionType.WaitForStillstand);
-                throw new Exception("Manual NozzleTip "+nt.getName()+" load on Nozzle "+getName()+" required!");
+                throw new JobProcessorException(this, 
+                        "Manual NozzleTip "+nt.getName()+" load on Nozzle "+getName()+" required!", 
+                        true);
             }
         }
 
@@ -792,7 +795,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
 
         if (!changerEnabled) {
             waitForCompletion(CompletionType.WaitForStillstand);
-            throw new Exception("Manual NozzleTip "+nt.getName()+" unload from Nozzle "+getName()+" required!");
+            throw new JobProcessorException(this, 
+                    "Manual NozzleTip "+nt.getName()+" unload from Nozzle "+getName()+" required!", 
+                    true);
         }
 
         ensureZCalibrated(true);
