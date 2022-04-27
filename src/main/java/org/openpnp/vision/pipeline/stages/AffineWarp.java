@@ -196,6 +196,14 @@ public class AffineWarp extends CvStage {
                 x2 = roi.getLowerLeftCorner().getX(); 
                 y2 = roi.getLowerLeftCorner().getY();
                 rectify = roi.isRectify();
+                // Record the fact that these individual stage properties are all overridden.
+                recordPropertyOverride("x0", x0);
+                recordPropertyOverride("y0", y0);
+                recordPropertyOverride("x1", x1);
+                recordPropertyOverride("y1", y1);
+                recordPropertyOverride("x2", x2);
+                recordPropertyOverride("y2", y2);
+                recordPropertyOverride("rectify", rectify);
             }
         }
 
