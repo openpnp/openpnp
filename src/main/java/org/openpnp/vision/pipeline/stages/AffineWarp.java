@@ -189,12 +189,12 @@ public class AffineWarp extends CvStage {
             RegionOfInterest roi = (RegionOfInterest) pipeline.getProperty(getRegionOfInterestProperty());
             if (roi != null) {
                 // the region of interest is overridden by the pipeline caller
-                x0 = roi.getUpperLeftCorner().getX(); 
-                y0 = roi.getUpperLeftCorner().getY();
-                x1 = roi.getUpperRightCorner().getX(); 
-                y1 = roi.getUpperRightCorner().getY();
-                x2 = roi.getLowerLeftCorner().getX(); 
-                y2 = roi.getLowerLeftCorner().getY();
+                x0 = roi.getUpperLeftCorner().convertToUnits(lengthUnit).getX(); 
+                y0 = roi.getUpperLeftCorner().convertToUnits(lengthUnit).getY();
+                x1 = roi.getUpperRightCorner().convertToUnits(lengthUnit).getX(); 
+                y1 = roi.getUpperRightCorner().convertToUnits(lengthUnit).getY();
+                x2 = roi.getLowerLeftCorner().convertToUnits(lengthUnit).getX(); 
+                y2 = roi.getLowerLeftCorner().convertToUnits(lengthUnit).getY();
                 rectify = roi.isRectify();
                 // Record the fact that these individual stage properties are all overridden.
                 recordPropertyOverride("x0", x0);
