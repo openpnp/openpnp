@@ -1206,9 +1206,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     protected void setupOcr(Camera camera, CvPipeline pipeline, Location hole1, Location hole2, Location pickLocation) {
         pipeline.setProperty("regionOfInterest", getOcrRegion());
-        pipeline.setProperty("fontName", getOcrFontName());
-        pipeline.setProperty("fontSizePt", getOcrFontSizePt());
-        pipeline.setProperty("alphabet", OcrUtils.getConsolidatedPartsAlphabet(null, "\\"));
+        pipeline.setProperty("SimpleOcr.fontName", getOcrFontName());
+        pipeline.setProperty("SimpleOcr.fontSizePt", getOcrFontSizePt());
+        pipeline.setProperty("SimpleOcr.alphabet", OcrUtils.getConsolidatedPartsAlphabet(null, "\\"));
     }
 
     protected void setupOcr(Camera camera, CvPipeline pipeline) {
@@ -1217,9 +1217,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     protected void disableOcr(Camera camera, CvPipeline pipeline) {
         pipeline.setProperty("regionOfInterest", null);
-        pipeline.setProperty("fontName", null);
-        pipeline.setProperty("fontSizePt", null);
-        pipeline.setProperty("alphabet", ""); // empty alphabet switches OCR off
+        pipeline.setProperty("SimpleOcr.fontName", null);
+        pipeline.setProperty("SimpleOcr.fontSizePt", null);
+        pipeline.setProperty("SimpleOcr.alphabet", ""); // empty alphabet switches OCR off
     }
 
     public CvPipeline getCvPipeline(Camera camera, boolean clone, boolean performOcr, boolean autoSetup) {
