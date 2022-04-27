@@ -456,15 +456,15 @@ public class BlindsFeeder extends ReferenceFeeder {
     private void setupOcr(Camera camera, CvPipeline pipeline, OcrAction ocrAction) {
         if (ocrAction != OcrAction.None) {
             pipeline.setProperty("regionOfInterest", getOcrRegion(camera));
-            pipeline.setProperty("fontName", getOcrFontName());
-            pipeline.setProperty("fontSizePt", getOcrFontSizePt());
-            pipeline.setProperty("alphabet", OcrUtils.getConsolidatedPartsAlphabet(null, "\\"));
+            pipeline.setProperty("SimpleOcr.fontName", getOcrFontName());
+            pipeline.setProperty("SimpleOcr.fontSizePt", getOcrFontSizePt());
+            pipeline.setProperty("SimpleOcr.alphabet", OcrUtils.getConsolidatedPartsAlphabet(null, "\\"));
         }
         else {
             pipeline.setProperty("regionOfInterest", null);
-            pipeline.setProperty("fontName", null);
-            pipeline.setProperty("fontSizePt", null);
-            pipeline.setProperty("alphabet", ""); // empty alphabet switches OCR off
+            pipeline.setProperty("SimpleOcr.fontName", null);
+            pipeline.setProperty("SimpleOcr.fontSizePt", null);
+            pipeline.setProperty("SimpleOcr.alphabet", ""); // empty alphabet switches OCR off
         }
     }
 

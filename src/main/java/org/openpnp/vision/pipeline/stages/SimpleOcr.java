@@ -117,6 +117,12 @@ public class SimpleOcr extends CvStage {
     @Property(description = "Write debug images and messages. Will slow down operation.")
     private boolean debug;
 
+    @Attribute(required = false)
+    @Property(description = "Property name as controlled by the vision operation using this pipeline.<br/>"
+            + "If set, these will override the properties configured here.")
+    private String propertyName = "SimpleOcr";
+
+
     public String getAlphabet() {
         return alphabet;
     }
@@ -179,6 +185,14 @@ public class SimpleOcr extends CvStage {
 
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+
+    public String getPropertyName() {
+        return propertyName;
+    }
+
+    public void setPropertyName(String propertyName) {
+        this.propertyName = propertyName;
     }
 
     protected static class CharacterMatch extends TemplateMatch {
@@ -252,19 +266,15 @@ public class SimpleOcr extends CvStage {
             throw new Exception("Property \"camera\" is required.");
         }
 
-        String alphabet = (String)pipeline.getProperty("alphabet");
-        if (alphabet == null) {
-            alphabet = getAlphabet();
-        }
+        String alphabet = getPossiblePipelinePropertyOverride(this.alphabet, pipeline, 
+                propertyName + ".alphabet");
         if (alphabet == null || alphabet.isEmpty()) {
             // Note: a given empty alphabet is also the signal to conditionally disable the stage
             // from the calling OpenPnP vision code.
             return null;
         }
-        String fontName = (String)pipeline.getProperty("fontName");
-        if (fontName == null) {
-            fontName = getFontName();
-        }
+        String fontName = getPossiblePipelinePropertyOverride(this.fontName, pipeline, 
+                propertyName + ".fontName");
         if (fontName == null || fontName.isEmpty()) {
             return null;
         }
@@ -273,10 +283,8 @@ public class SimpleOcr extends CvStage {
             return decodeBarcode(pipeline);
         }
 
-        Double fontSizePt = (Double)pipeline.getProperty("fontSizePt");
-        if (fontSizePt == null) {
-            fontSizePt = getFontSizePt();
-        }
+        Double fontSizePt =  getPossiblePipelinePropertyOverride(this.fontSizePt, pipeline, 
+                propertyName + ".fontSizePt");
         if (fontSizePt == null || fontSizePt == 0.0) {
             return null;
         }
