@@ -22,9 +22,9 @@ It is also very difficult to know and provoke the worst case scenario in advance
 
 ## The Idea
 
-The Idea is to look at the pictures taken and by comparing each frame with its predecesor, determine when the settling is concluded. So after a brutal machine stop, it might take longer, but "drill-down" micro-move adjustments are very fast. This becomes possible with the advanced Settle Methods (i.e. not Fixed Time).
+The Idea is to look at the pictures taken and by comparing each frame with its predecesor, determine when the settling is concluded. So after a brutal machine stop, it might take longer due to vibration etc., but "drill-down" micro-move adjustments can be very fast. This becomes possible with the advanced Settle Methods (i.e. not Fixed Time).
 
-You can still set a **Settle Timeout (ms)** value, that will end the settling no matter what. You should choose a very conservative time to really cover all the worst case scenarios. The timeout will make sure your Cameras never "hang" when the settle goal (Threshold) is never reached. This could be due to flickering ambient light or a misconfiguration etc.. 
+You can still set a **Settle Timeout (ms)** value, that will end the settling no matter what. You should choose a very conservative time to really cover all the worst case scenarios. The timeout will make sure your Camera never "hangs" when the settle goal (Threshold) is never reached. This could be due to flickering ambient light or a misconfiguration etc.. 
 
 ## Enable Diagnostics
 
