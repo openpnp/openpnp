@@ -3,12 +3,18 @@ package org.openpnp.gui.components;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.EventObject;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowSorter;
+import javax.swing.RowSorter.SortKey;
+import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
@@ -30,6 +36,7 @@ public class AutoSelectTextTable extends JTable {
     private boolean isSelectAllForMouseEvent = true;
     private boolean isSelectAllForActionEvent = true;
     private boolean isSelectAllForKeyEvent = true;
+    private MouseAdapter sortColumnCycler = null;
 
     //
     // Constructors
@@ -230,6 +237,57 @@ public class AutoSelectTextTable extends JTable {
     // editCellAt(row, column);
     // transferFocus();
     // }
+
+    @Override
+    public void setRowSorter(RowSorter<? extends TableModel> sorter) {
+        super.setRowSorter(sorter);
+        // Change the sorting order clicking to work with three states, ASCENDING>DESCENDING>UNSORTED instead of two.
+        if (sortColumnCycler == null) {
+            sortColumnCycler = new MouseAdapter() {
+
+                private List<SortKey> lastSortKeys = new ArrayList<>();
+
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getButton() == MouseEvent.BUTTON1) {
+                        int column = convertColumnIndexToModel(getTableHeader().columnAtPoint(e.getPoint()));
+                        SortOrder sortOrder = SortOrder.ASCENDING;
+                        for (RowSorter.SortKey sortKey : lastSortKeys) {
+                            if (column == sortKey.getColumn()) {
+                                switch (sortKey.getSortOrder()) {
+                                    case UNSORTED:
+                                        sortOrder = SortOrder.ASCENDING;
+                                        break;
+                                    case ASCENDING:
+                                        sortOrder = SortOrder.DESCENDING;
+                                        break;
+                                    case DESCENDING:
+                                        sortOrder = SortOrder.UNSORTED;
+                                        break;
+                                }
+                                break;
+                            }
+                        }
+                        // Create the new sort keys list starting with the newly clicked one.
+                        List<SortKey> sortKeys = new ArrayList<>();
+                        RowSorter.SortKey sortKeyClicked = new RowSorter.SortKey(column, sortOrder);
+                        sortKeys.add(sortKeyClicked);
+                        // Add the rest.
+                        for (RowSorter.SortKey sortKey : lastSortKeys) {
+                            if (column != sortKey.getColumn()) {
+                                sortKeys.add(sortKey);
+                            }
+                        }
+                        RowSorter<?> sorter = getRowSorter();
+                        sorter.setSortKeys(sortKeys);
+                        this.lastSortKeys = sortKeys;
+                    }
+                }
+            };
+        }
+        getTableHeader().removeMouseListener(sortColumnCycler);
+        getTableHeader().addMouseListener(sortColumnCycler);
+    }
 
     //
     // Static, convenience methods
