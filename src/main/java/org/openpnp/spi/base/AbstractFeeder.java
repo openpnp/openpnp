@@ -92,7 +92,7 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Override
     public void setPart(Part part) {
-        Object oldValue = this.part;
+        Part oldValue = this.part;
         this.part = part;
         firePropertyChange("part", oldValue, part);
         if (part != null) {
@@ -100,6 +100,13 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
         }
         else {
             this.partId = "";
+        }
+        // Also notify the old/new part that the feeder count has changed.
+        if (oldValue != null) {
+            oldValue.setAssignedFeeders(-1);
+        }
+        if (part != null) {
+            part.setAssignedFeeders(+1);
         }
     }
 

@@ -21,6 +21,7 @@ package org.openpnp.model;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.vision.AbstractPartSettingsHolder;
+import org.openpnp.spi.Feeder;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Persist;
 
@@ -150,5 +151,37 @@ public class Part extends AbstractPartSettingsHolder {
 
     public boolean isPartHeightUnknown() {
         return getHeight().getValue() <= 0.0;
+    }
+
+    public int getPlacementCount() {
+        int n = 0;
+        for (Board board : Configuration.get().getBoards()) {
+            for (Placement placement : board.getPlacements()) {
+                if (placement.getPart() == this) {
+                    n++;
+                }
+            }
+        }
+        return n;
+    }
+
+    public void setPlacementCount(int placementCount) {
+        // Pseudo-setter just used to fire the property change (no matter what is passed).
+        firePropertyChange("placementCount", null, getPlacementCount());
+    }
+
+    public int getAssignedFeeders() {
+        int n = 0;
+        for (Feeder feeder : Configuration.get().getMachine().getFeeders()) {
+            if (feeder.getPart() == this) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    public void setAssignedFeeders(int assignedFeeders) {
+        // Pseudo-setter just used to fire the property change (no matter what is passed).
+        firePropertyChange("assignedFeeders", null, getAssignedFeeders());
     }
 }
