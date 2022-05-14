@@ -272,13 +272,18 @@ public class RapidFeederConfigurationWizard
                 
                 Machine machine = Configuration.get().getMachine();
                 Camera camera = machine.getDefaultHead().getDefaultCamera();
-                
+
                 /**
-                 * Starting at the startLocation, find any barcodes visible in the frame,
-                 * add the scanIncrement, and repeat until we pass the endLocation.
+                 * Starting at the startLocation, scanning at intervals of the scanIncrement,
+                 * find any barcodes visible in the frame.
                  */
-                Location l = feeder.getScanStartLocation();
-                while (true) {
+                int last = (int)(feeder.getScanStartLocation()
+                        .getLinearLengthTo(feeder.getScanEndLocation())
+                        .divide(feeder.getScanIncrement()) 
+                        + 1e-5); // Round up marginally for binary vs. decimal robustness to include the end point.
+                for (int scan = 0; scan <= last; scan++) {
+                    Location l = Utils2D.getPointAlongLine(feeder.getScanStartLocation(), feeder.getScanEndLocation(), 
+                            feeder.getScanIncrement().multiply(scan));
                     MovableUtils.moveToLocationAtSafeZ(camera, l);
                     try {
                         Set<QrCodeLocation> results = locateQrCodes(camera);
@@ -289,17 +294,6 @@ public class RapidFeederConfigurationWizard
                          * We expect there to be frames with no feeders because there may
                          * be gaps in the installed feeders, so don't sweat it. 
                          */
-                    }
-                    
-                    l = Utils2D.getPointAlongLine(l, feeder.getScanEndLocation(), feeder.getScanIncrement());
-                    /**
-                     * If the distance from the start to the current location is greater than the
-                     * distance from the start to the end then we've passed the end and we're done. 
-                     */
-                    double scanDistance = feeder.getScanStartLocation().getLinearDistanceTo(feeder.getScanEndLocation());
-                    double currentDistance = feeder.getScanStartLocation().getLinearDistanceTo(l);
-                    if (currentDistance > scanDistance) {
-                        break;
                     }
                 }
 
