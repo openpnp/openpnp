@@ -2401,8 +2401,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 setVisionOffset(feature.calibratedVisionOffset);
             }
             if (ocrPass) {
-                Logger.trace("got OCR text "+feature.detectedOcrModel.getText());
-                triggerOcrAction(feature.detectedOcrModel, ocrAction, ocrStop, report);
+                if (feature.detectedOcrModel == null) {
+                    Logger.warn("Feeder "+getName()+" OCR operation expected, but no \"OCR\" stage result obtained from pipeline.");
+                }
+                else {
+                    Logger.trace("got OCR text "+feature.detectedOcrModel.getText());
+                    triggerOcrAction(feature.detectedOcrModel, ocrAction, ocrStop, report);
+                }
             }
             // is it good enough? Compare with running offset.
             if (error.convertToUnits(LengthUnit.Millimeters).getValue() < calibrateToleranceMm) {
