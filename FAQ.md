@@ -5,6 +5,7 @@
 * [How do I start OpenPnP with a JAR File?](#how-do-i-start-openpnp-with-a-jar-file)
 * [How do I use a different config directory](#how-do-i-use-a-different-config-directory)
 * [How do I turn on debug logging?](#how-do-i-turn-on-debug-logging)
+* [What are the newest Features and Bugfixes in OpenPnP?](#what-are-the-newest-features-and-bugfixes-in-openpnp)
 * [How do I troubleshoot GcodeDriver?](#how-do-i-troubleshoot-gcodedriver)
 * [I'm having trouble connecting multiple USB cameras.](#im-having-trouble-connecting-multiple-usb-cameras)
 * [I need help configuring GcodeDriver.](#i-need-help-configuring-gcodedriver)
@@ -72,6 +73,18 @@ java -DconfigDir=src/main/resources/config -jar target/openpnp-gui-0.0.1-alpha-S
 3. Click the dropdown and select Debug or Trace, depending on how much output you want.
 
 Note: Debug is good for general debugging. Trace is good for when you want very low level information such as Gcode commands being sent to the controller.
+
+## What are the newest Features and Bugfixes in OpenPnP?
+
+For the **testing** branch use this link:
+
+https://github.com/openpnp/openpnp/pulls?q=is%3Apr+is%3Amerged+base%3Atest+
+
+Note, these are sorted by opening date, not by merge date, so the sequence might sometimes not reflect the order of adoption. On larger changes, the Description and subsequent discussions might sometimes be a bit "evolving". Look for links to Wiki pages that describe the final instruction for use (they are sometimes at the end of the discussion).
+
+A high level summary is in the Change Log file which you can access from the Help menu, but it is usually not up to date in the testing version, i.e. it is only finalized for the develop version.
+
+After an upgrade, always have a look at [[Issues and Solutions]]. Sometimes new issues/solutions will pop up, hinting at new features.
 
 ## How do I troubleshoot GcodeDriver?
 
