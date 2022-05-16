@@ -166,6 +166,7 @@ public abstract class AbstractReferenceDriver extends AbstractDriver {
         firePropertyChange("connectionKeepAlive", oldValue, connectionKeepAlive);
     }
 
+    @Override
     public boolean isSyncInitialLocation() {
         return syncInitialLocation;
     }

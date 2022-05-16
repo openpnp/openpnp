@@ -201,6 +201,11 @@ public class TestDriver extends AbstractDriver implements Driver {
         public double getMinimumVelocity() {
             return 0;
         }
+
+        @Override
+        public boolean isSyncInitialLocation() {
+            return false;
+        }
    }
 
     @Override
@@ -266,6 +271,11 @@ public class TestDriver extends AbstractDriver implements Driver {
 
     @Override
     public boolean isMotionPending() {
+        return false;
+    }
+
+    @Override
+    public boolean isSyncInitialLocation() {
         return false;
     }
 }

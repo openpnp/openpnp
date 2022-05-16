@@ -1300,6 +1300,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 responseQueue.offer(line);
             }
             Logger.trace("[{}] disconnectRequested, bye-bye.", getCommunications().getConnectionName());
+            if (connected) {
+                connected = false;
+            }
         }
     }
 

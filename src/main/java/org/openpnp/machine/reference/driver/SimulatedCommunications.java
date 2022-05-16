@@ -36,10 +36,12 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
             clientSocket.close();
             input.close();
             output.close();
-            gcodeServer.shutdown();
             input = null;
             output = null;
             clientSocket = null;
+        }
+        if (gcodeServer != null) {
+            gcodeServer.shutdown();
             gcodeServer = null;
         }
     }

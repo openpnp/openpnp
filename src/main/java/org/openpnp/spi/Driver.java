@@ -93,6 +93,11 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
     public AxesLocation getReportedLocation(long timeout) throws Exception;
 
     /**
+     * @return true if the driver should synchronize its initial position after enabling.
+     */
+    boolean isSyncInitialLocation();
+
+    /**
      * @return true if a motion is still assumed to be pending, i.e. waitForCompletion() has not yet been called.  
      * 
      */

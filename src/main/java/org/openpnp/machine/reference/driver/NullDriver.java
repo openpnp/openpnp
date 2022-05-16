@@ -295,4 +295,10 @@ public class NullDriver extends AbstractDriver {
             });
         }
     }
+
+
+    @Override
+    public boolean isSyncInitialLocation() {
+        return false;
+    }
 }

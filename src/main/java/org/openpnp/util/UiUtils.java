@@ -64,6 +64,7 @@ public class UiUtils {
         MessageBoxes.errorBox(MainFrame.get(), "Error", t);
     }
 
+
     /**
      * Functional version of Machine.submit which guarantees that the the onSuccess and onFailure
      * handlers will be run on the Swing event thread.
@@ -75,6 +76,21 @@ public class UiUtils {
      */
     public static <T> Future<T> submitUiMachineTask(final Callable<T> callable,
             final Consumer<T> onSuccess, final Consumer<Throwable> onFailure) {
+        return submitUiMachineTask(callable, onSuccess, onFailure, false);
+    }
+
+    /**
+     * Functional version of Machine.submit which guarantees that the the onSuccess and onFailure
+     * handlers will be run on the Swing event thread. Includes the ignoreEnabled argument.
+     * 
+     * @param callable
+     * @param onSuccess
+     * @param onFailure
+     * @param ignoreEnabled
+     * @return
+     */
+    public static <T> Future<T> submitUiMachineTask(final Callable<T> callable,
+            final Consumer<T> onSuccess, final Consumer<Throwable> onFailure, boolean ignoreEnabled) {
         return Configuration.get().getMachine().submit(callable, new FutureCallback<T>() {
             @Override
             public void onSuccess(T result) {
@@ -95,7 +111,7 @@ public class UiUtils {
                     e.printStackTrace();
                 }
             }
-        });
+        }, ignoreEnabled);
     }
 
     /**
