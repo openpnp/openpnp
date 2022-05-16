@@ -100,6 +100,7 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.MotionPlanner;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor;
@@ -110,6 +111,7 @@ import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.Collect;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -207,11 +209,23 @@ public class ReferenceMachine extends AbstractMachine {
         if (enabled) {
             List<Driver> enabledDrivers = new ArrayList<>();
             try {
+                boolean syncLocation = false;
                 for (Driver driver : getDrivers()) {
                     driver.setEnabled(true);
                     enabledDrivers.add(driver);
+                    if (driver.isSyncInitialLocation()) {
+                        syncLocation = true;
+                    }
                 }
                 this.enabled = true;
+                if (syncLocation) {
+                    // We wait for still-stand, because as a side-effect, it will allow OpenPnP to sync its
+                    // position to the initial reported location (see Driver.isSyncInitialLocation()).
+                    getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
+                }
+                if (getHomeAfterEnabled()) {
+                    UiUtils.submitUiMachineTask(() -> home());
+                }
             }
             catch (Exception e) {
                 // In a multi-driver machine, we must make sure its all-or-nothing, 

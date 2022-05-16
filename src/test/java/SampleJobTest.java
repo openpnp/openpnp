@@ -125,7 +125,7 @@ public class SampleJobTest {
                 //spin
             };
             return null;
-        });
+        }, false, 10000);
         // camera.stopContinuousCapture(encoder);
         // encoder.finish();
     }

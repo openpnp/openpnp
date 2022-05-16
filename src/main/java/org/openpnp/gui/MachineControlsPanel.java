@@ -49,7 +49,6 @@ import org.openpnp.gui.support.ActuatorItem;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.Configuration;
@@ -62,7 +61,6 @@ import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
-import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.MovableUtils;
@@ -285,34 +283,36 @@ public class MachineControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setEnabled(false);
-            // Note: We specifically bypass the machine submit so that this runs immediately.
-            // That's not really thread safe tho, so it's better than nothing, but not much.
-            Thread thread = new Thread(() -> {
-                Machine machine = Configuration.get().getMachine();
-                boolean enable = !machine.isEnabled();
+            final Machine machine = Configuration.get().getMachine();
+            final boolean enable = !machine.isEnabled();
+            Runnable task = () -> {
                 try {
-                    Configuration.get().getMachine().setEnabled(enable);
-                    // TODO STOPSHIP move setEnabled into a binding.
-                    setEnabled(true);
-                    if (machine.isEnabled()) {
-                        UiUtils.submitUiMachineTask(() -> {
-                            // We wait for still-stand, because as a side-effect, it will allow OpenPnP to sync its
-                            // position to the initial reported location (see AbstractReferenceDriver.isSyncInitialLocation()).
-                            machine.getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
-                            if (machine.getHomeAfterEnabled()) {
-                                machine.home();
-                            }
-                        });
-                    }
+                    machine.setEnabled(enable);
                 }
                 catch (Exception t1) {
-                    MessageBoxes.errorBox(MachineControlsPanel.this, "Enable Failure", //$NON-NLS-1$
-                            t1.getMessage());
-                    setEnabled(true);
+                    UiUtils.showError(t1);
                 }
-            });
-            thread.setDaemon(true);
-            thread.start();
+                // TODO STOPSHIP move setEnabled into a binding.
+                SwingUtilities.invokeLater(() -> setEnabled(true));
+            };
+            if (machine.isBusy() && !enable) {
+                // Note: We specifically bypass the machine submit so that this runs immediately 
+                // as an emergency stop.
+                // That's not really thread safe tho, so it's better than nothing, but not much.
+                Thread thread = new Thread(task);
+                thread.setDaemon(true);
+                thread.start();
+            }
+            else {
+                // Not an emergency stop. Run as regular machine task.  
+                UiUtils.submitUiMachineTask(() -> {
+                            task.run();
+                            return null;
+                        }, 
+                        (result) -> {} , 
+                        (t) -> UiUtils.showError(t), 
+                        true); // Allow for disabled machine.
+            }
         }
     };
 
