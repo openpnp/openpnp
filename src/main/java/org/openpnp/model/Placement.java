@@ -136,6 +136,13 @@ public class Placement extends AbstractLocatable implements Identifiable {
         Part oldValue = this.part;
         this.part = part;
         firePropertyChange("part", oldValue, part);
+        // Also notify the old/new part that the placement count has changed.
+        if (oldValue != null) {
+            oldValue.setPlacementCount(-1);
+        }
+        if (part != null) {
+            part.setPlacementCount(+1);
+        }
     }
 
     public String getId() {

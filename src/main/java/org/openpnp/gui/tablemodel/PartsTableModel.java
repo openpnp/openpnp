@@ -36,9 +36,9 @@ import org.openpnp.model.Part;
 @SuppressWarnings("serial")
 public class PartsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
     private String[] columnNames =
-            new String[] {"ID", "Description", "Height", "Package", "Speed %", "BottomVision", "FiducialVision"};
+            new String[] {"ID", "Description", "Height", "Package", "Speed %", "BottomVision", "FiducialVision", "Placements", "Feeders"};
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
-            Package.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class};
+            Package.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class, Integer.class, Integer.class};
     private List<Part> parts;
     private PercentConverter percentConverter = new PercentConverter();
 
@@ -67,7 +67,7 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex != 0;
+        return columnIndex >= 1 && columnIndex <= 6;
     }
 
     @Override
@@ -137,6 +137,10 @@ public class PartsTableModel extends AbstractObjectTableModel implements Propert
                 return part.getBottomVisionSettings();
             case 6:
                 return part.getFiducialVisionSettings();
+            case 7:
+                return part.getPlacementCount();
+            case 8:
+                return part.getAssignedFeeders();
             default:
                 return null;
         }

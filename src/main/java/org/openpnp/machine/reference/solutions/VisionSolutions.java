@@ -641,6 +641,9 @@ public class VisionSolutions implements Solutions.Subject {
                             || camera.getUnitsPerPixelPrimary().getX() <= 0.0 || camera.getUnitsPerPixelPrimary().getY() <= 0.0;
                 }
 
+                private ReferenceNozzleTip referenceNozzleTip = null;
+                private Length oldVisionDiameter = null;
+
                 @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
@@ -648,10 +651,14 @@ public class VisionSolutions implements Solutions.Subject {
                             throw new Exception("The nozzle "+defaultNozzle.getName()+" head offsets are not yet set. "
                                     + "You need to perform the \"Nozzle "+defaultNozzle.getName()+" offsets for the primary fiducial\" calibration first.");
                         }
+                        // Re-evaluate the loaded nozzle tip, the user might have unloaded/loaded since the last findIssues().
+                        // Note the referenceNozzleTip and oldVisionDiameter still need to be stored as members, to support undo.
+                        referenceNozzleTip = (defaultNozzle.getNozzleTip() instanceof ReferenceNozzleTip) ?
+                                (ReferenceNozzleTip)defaultNozzle.getNozzleTip() : null;
                         if (referenceNozzleTip == null) {
                             throw new Exception("The nozzle "+defaultNozzle.getName()+" has no nozzle tip loaded.");
                         }
-
+                        oldVisionDiameter = referenceNozzleTip.getCalibration().getCalibrationTipDiameter();
                         final State oldState = getState();
                         UiUtils.submitUiMachineTask(
                                 () -> {
@@ -683,7 +690,8 @@ public class VisionSolutions implements Solutions.Subject {
                         // Restore the camera offset
                         camera.setHeadOffsets(oldCameraOffsets);
                         cameraCalibrationState.restoreTo(camera);
-                        if (referenceNozzleTip != null) {
+                        if (referenceNozzleTip != null && oldVisionDiameter != null) {
+                            // Restore the old vision diameter.
                             referenceNozzleTip.getCalibration().setCalibrationTipDiameter(oldVisionDiameter);
                         }
                         // Persist this unsolved state.
@@ -738,7 +746,7 @@ public class VisionSolutions implements Solutions.Subject {
                             nozzle, 
                             "Safe Z of Nozzle "+nozzle.getName()+" lower than "+qualifier+" fiducial Z.", 
                             "Safe Z of Nozzle "+nozzle.getName()+" is lower than the calibration "+qualifier+" fiducial Z. "
-                                    + "Please change the calibration rig "+qualifier+" height or adjust Save Z.", 
+                                    + "Please change the calibration rig "+qualifier+" height or adjust Safe Z.", 
                             Solutions.Severity.Error,
                             "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#nozzle-offsets"));
                 }
@@ -1572,7 +1580,7 @@ public class VisionSolutions implements Solutions.Subject {
         FiducialVisionSettings visionSettings = fiducialLocator.getInheritedVisionSettings(part);
         if (visionSettings.getUsedFiducialVisionIn().size() == 1 
                 && visionSettings.getUsedFiducialVisionIn().get(0) == part) {
-            // Alreday a special setting on the part. Modify it.
+            // Already a special setting on the part. Modify it.
         }
         else {
             FiducialVisionSettings newSettings = new FiducialVisionSettings();
@@ -1580,11 +1588,12 @@ public class VisionSolutions implements Solutions.Subject {
             newSettings.setName(part.getShortName());
             part.setFiducialVisionSettings(newSettings);
             Configuration.get().addVisionSettings(newSettings);
+            visionSettings = newSettings;
         }
         String xml = IOUtils.toString(ReferenceBottomVision.class
-                .getResource("ReferenceFiducialLocator-CircularSymmetryPipeline.xml"));
+                .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
         CvPipeline pipeline = new CvPipeline(xml);
-        visionSettings.setCvPipeline(pipeline);
+        visionSettings.setPipeline(pipeline);
     }
 
     public Length getHomingFiducialDiameter() {

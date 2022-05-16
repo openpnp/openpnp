@@ -40,7 +40,9 @@ import org.openpnp.model.Solutions.State;
 import org.openpnp.model.Solutions.Subject;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.Driver.MotionControlType;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.Nozzle.RotationMode;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.base.AbstractControllerAxis;
@@ -126,15 +128,47 @@ public class AxisSolutions implements Solutions.Subject {
             }
         }
         if (solutions.isTargeting(Milestone.Kinematics)) {
-            if (Math.abs(axis.getMotionLimit(1)*2 - axis.getMotionLimit(2)) < 0.1) {
+            if (axis.getMotionLimit(1) > 0 
+                && Math.abs(axis.getMotionLimit(1)*2 - axis.getMotionLimit(2)) < 0.1) {
                 // HACK: migration sets the acceleration to twice the feed-rate, that's our "signal" that the user has not yet
                 // tuned them.
                 solutions.add(new Solutions.PlainIssue(
                         axis, 
                         "Feed-rate, acceleration, jerk etc. can now be set individually per axis.", 
-                        "Tune your machine axes for best speed and acceleration.", 
+                        "Go to Machine Setup / Axes / "+axis.getClass().getSimpleName()+" "+axis.getName()+" and tune "
+                                + "Feed Rate, Acceleration for best performance.", 
                         Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
+            }
+            if (axis.getDriver() != null) {
+                MotionControlType motionControlType = axis.getDriver().getMotionControlType();
+                if (motionControlType.isControllingFeedRate()
+                        && axis.getMotionLimit(1) <= 0) {
+                    solutions.add(new Solutions.PlainIssue(
+                            axis, 
+                            "For motion control type "+motionControlType+" a feed-rate must be set on axis "+axis.getName()+".", 
+                            "Go to Machine Setup / Axes / "+axis.getClass().getSimpleName()+" "+axis.getName()+" and set the Feed Rate.", 
+                            Severity.Error,
+                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
+                }
+                if (motionControlType.isControllingAcceleration()
+                        && axis.getMotionLimit(2) <= 0) {
+                    solutions.add(new Solutions.PlainIssue(
+                            axis, 
+                            "For motion control type "+motionControlType+" an acceleration limit must be set on axis "+axis.getName()+".", 
+                            "Go to Machine Setup / Axes / "+axis.getClass().getSimpleName()+" "+axis.getName()+" and set the Acceleration.", 
+                            Severity.Error,
+                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
+                }
+                if (motionControlType.isControllingJerk()
+                        && axis.getMotionLimit(3) <= 0) {
+                    solutions.add(new Solutions.PlainIssue(
+                            axis, 
+                            "For motion control type "+motionControlType+" a jerk limit must be set on axis "+axis.getName()+".", 
+                            "Go to Machine Setup / Axes / "+axis.getClass().getSimpleName()+" "+axis.getName()+" and set the Jerk.", 
+                            Severity.Error,
+                            "https://github.com/openpnp/openpnp/wiki/Machine-Axes#kinematic-settings--rate-limits"));
+                }
             }
             if (axis.getType() == Type.Rotation) {
                 boolean isUnlimitedArticulation = true;
@@ -156,7 +190,8 @@ public class AxisSolutions implements Solutions.Subject {
                         final RotationMode oldRotationMode = nozzle.getRotationMode();
                         solutions.add(new Solutions.Issue(
                                 nozzle, 
-                                "Rotation axis "+axis.getName()+" is limiting Nozzle "+nozzle.getName()+" to less than 360°. Must use the " + RotationMode.LimitedArticulation + " rotation mode.", 
+                                "Rotation axis "+axis.getName()+" is limiting Nozzle "+nozzle.getName()+" to less than 360°. "
+                                        + "Must use the " + RotationMode.LimitedArticulation + " rotation mode.", 
                                 "Set the " + RotationMode.LimitedArticulation + " rotation mode.", 
                                 Severity.Error,
                                 "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode") {
@@ -236,36 +271,39 @@ public class AxisSolutions implements Solutions.Subject {
                     }
                 }
                 if (isUnlimitedArticulation) {
-                    if (!axis.isWrapAroundRotation()) {
-                        solutions.add(new Solutions.Issue(
-                                axis, 
-                                "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
-                                "Enable Wrap Around.", 
-                                Severity.Suggestion,
-                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                    if (axis.getDefaultHeadMountable() instanceof Nozzle) {
+                        // Axis is used on nozzle, suggest some optimizations.
+                        if (!axis.isWrapAroundRotation()) {
+                            solutions.add(new Solutions.Issue(
+                                    axis, 
+                                    "Rotation can be optimized by wrapping-around the shorter way. Best combined with Limit ±180°.", 
+                                    "Enable Wrap Around.", 
+                                    Severity.Suggestion,
+                                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
-                            @Override
-                            public void setState(Solutions.State state) throws Exception {
-                                axis.setWrapAroundRotation((state == Solutions.State.Solved));
-                                super.setState(state);
-                            }
-                        });
-                    }
-                    if (!axis.isLimitRotation()) {
-                        solutions.add(new Solutions.Issue(
-                                axis, 
-                                "Rotation can be optimized by limiting angles to ±180°. "
-                                        + "Best combined with Wrap Around.", 
-                                        "Enable Limit to Range.", 
-                                        Severity.Suggestion,
-                                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
+                                @Override
+                                public void setState(Solutions.State state) throws Exception {
+                                    axis.setWrapAroundRotation((state == Solutions.State.Solved));
+                                    super.setState(state);
+                                }
+                            });
+                        }
+                        if (!axis.isLimitRotation()) {
+                            solutions.add(new Solutions.Issue(
+                                    axis, 
+                                    "Rotation can be optimized by limiting angles to ±180°. "
+                                            + "Best combined with Wrap Around.", 
+                                            "Enable Limit to Range.", 
+                                            Severity.Suggestion,
+                                    "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings-rotational-axis") {
 
-                            @Override
-                            public void setState(Solutions.State state) throws Exception {
-                                axis.setLimitRotation((state == Solutions.State.Solved));
-                                super.setState(state);
-                            }
-                        });
+                                @Override
+                                public void setState(Solutions.State state) throws Exception {
+                                    axis.setLimitRotation((state == Solutions.State.Solved));
+                                    super.setState(state);
+                                }
+                            });
+                        }
                     }
                 }
                 else {

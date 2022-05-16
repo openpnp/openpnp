@@ -7,6 +7,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.Board;
@@ -14,12 +15,14 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
 import org.openpnp.util.VisionUtils;
 
@@ -55,6 +58,10 @@ public class ReferenceBottomVisionOffsetTest {
     public void before() throws Exception {
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
+        // Set nozzle tip pick tolerances for large offsets.
+        for (NozzleTip tip : Configuration.get().getMachine().getNozzleTips()) {
+            ((ReferenceNozzleTip) tip).setMaxPickTolerance(new Length(2, LengthUnit.Millimeters));
+        }
     }
 
     

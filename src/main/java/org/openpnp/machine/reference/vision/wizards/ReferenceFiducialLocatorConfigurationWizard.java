@@ -5,7 +5,6 @@ import java.awt.event.ItemListener;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -19,15 +18,10 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.NamedListCellRenderer;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
-import org.openpnp.model.Configuration;
 import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.Part;
-import org.openpnp.spi.Camera;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -108,18 +102,6 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         maxDistance.setColumns(10);
 
     }
-    
-    private void editPipeline() throws Exception {
-        CvPipeline pipeline = fiducialLocator.getPipeline();
-        Camera camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
-        pipeline.setProperty("camera", camera);
-        pipeline.setProperty("part", defaultPart);
-        pipeline.setProperty("package", defaultPart.getPackage());
-        pipeline.setProperty("footprint", defaultPart.getPackage().getFootprint());
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Fiducial Locator Pipeline", editor);
-        dialog.setVisible(true);
-}
 
     private static Part createDefaultPart() {
         Pad pad = new Pad();

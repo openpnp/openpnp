@@ -662,8 +662,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 throw new Exception("Axis "+axis.getName()+" with limited articulation must not have Wrap Around option set.");
             }
             else {
-                throw new Exception("Axis "+axis.getName()+" with limited articulation cannot rotate to "+
-                        limitedAxesLocation.getCoordinate(axis)+" ("+hm.getName()+" to "+location.getRotation()+"°)");
+                throw new Exception("Axis "+axis.getName()+" with limited articulation "+
+                        axesLimitLow.getCoordinate(axis)+".."+axesLimitHigh.getCoordinate(axis)+" cannot rotate to "+
+                        limitedAxesLocation.getCoordinate(axis)+" (transformed "+hm.getName()+" to "+location.getRotation()+"°)");
             }
         }
         return limitedAxesLocation;

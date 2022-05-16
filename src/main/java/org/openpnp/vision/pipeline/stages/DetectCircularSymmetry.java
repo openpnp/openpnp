@@ -37,7 +37,7 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 /**
- * Finds the maximum circular symmetry in the working image and stores the results as a single element List<Circle> on the model. 
+ * Finds occurrences of maximum circular symmetry in the working image and stores the results as a List<Circle> on the model. 
  */
 @Stage(description="Finds circular symmetry in the working image. Diameter range and maximum search distance can be specified.")
 public class DetectCircularSymmetry extends CvStage {
@@ -248,6 +248,8 @@ public class DetectCircularSymmetry extends CvStage {
             if (Double.isFinite(diameter)) {
                 minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
                 maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
+                recordPropertyOverride("minDiameter", minDiameter);
+                recordPropertyOverride("maxDiameter", maxDiameter);
             }
 
             maxDistance = getPossiblePipelinePropertyOverride(maxDistance, pipeline, 

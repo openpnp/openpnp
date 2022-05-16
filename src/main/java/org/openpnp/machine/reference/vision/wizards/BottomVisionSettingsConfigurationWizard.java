@@ -2,11 +2,11 @@ package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.Component;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -17,6 +17,7 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.components.PipelinePanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
@@ -33,13 +34,12 @@ import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.model.Placement;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -72,6 +72,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
     private JButton btnSpecializeSetting;
     private JButton btnGeneralizeSettings;
+    private PipelinePanel pipelinePanel;
+    private JPanel panelDetectOffset;
 
     public BottomVisionSettingsConfigurationWizard(BottomVisionSettings visionSettings, 
             PartSettingsHolder settingsHolder) {
@@ -168,7 +170,10 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                                 "Are you sure?", null,
                                 JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
-                    UiUtils.messageBoxOnException(settingsHolder::generalizeBottomVisionSettings);
+                    UiUtils.messageBoxOnException(() -> {
+                        applyAction.actionPerformed(null);
+                        settingsHolder.generalizeBottomVisionSettings();
+                    });
                 }
             });
         });
@@ -182,7 +187,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                     + subjects
                     + " with the "+ settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".<br/>"
                     + "This will unassign any special Bottom Vision Settings on "+subjects+" and delete those<br/>"
-                            + "Bottom Vision Settings that are no longer used elsewhere.</html>");
+                    + "Bottom Vision Settings that are no longer used elsewhere.</html>");
         }
 
         JButton resetButton = new JButton("Reset to Default");
@@ -193,7 +198,15 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
-                    visionSettings.setValues(bottomVision.getBottomVisionSettings());
+                    if (bottomVision.getBottomVisionSettings() == visionSettings) {
+                        // Already the default. Set stock.
+                        BottomVisionSettings stockVisionSettings = (BottomVisionSettings) Configuration.get()
+                                .getVisionSettings(AbstractVisionSettings.STOCK_BOTTOM_ID);
+                        visionSettings.setValues(stockVisionSettings);
+                    }
+                    else {
+                        visionSettings.setValues(bottomVision.getBottomVisionSettings());
+                    }
                 }
             });
         });
@@ -231,55 +244,42 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         textPartSizeTolerance = new JTextField();
         panel.add(textPartSizeTolerance, "4, 16, fill, default");
 
-        JLabel lblX = new JLabel("X");
-        panel.add(lblX, "4, 18, center, default");
+        pipelinePanel = new PipelinePanel() {
 
-        JLabel lblY = new JLabel("Y");
-        panel.add(lblY, "6, 18, center, default");
+            @Override
+            public void configurePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
+                UiUtils.messageBoxOnException(() -> {
+                    if (edit) {
+                        // Accept changes before edit.
+                        applyAction.actionPerformed(null);
+                    }
+                    pipelineConfiguration(pipeline,pipelineParameterAssignments, edit);
+                });
+            }
 
-        JLabel lblVisionCenterOffset = new JLabel("Vision Center Offset");
-        lblVisionCenterOffset.setToolTipText("Offset relative to the pick location/center of the part to the center of the rectangle detected by the bottom vision");
-        panel.add(lblVisionCenterOffset, "2, 20, right, default");
-
-        tfBottomVisionOffsetX = new JTextField();
-        panel.add(tfBottomVisionOffsetX, "4, 20, fill, default");
-        tfBottomVisionOffsetX.setColumns(10);
-
-        tfBottomVisionOffsetY = new JTextField();
-        tfBottomVisionOffsetY.setText("");
-        panel.add(tfBottomVisionOffsetY, "6, 20, fill, default");
-        tfBottomVisionOffsetY.setColumns(10);
-
-        JButton btnAutoVisionCenterOffset = new JButton("Detect");
-        btnAutoVisionCenterOffset.setToolTipText("Center part over bottom vision camera. Button will run bottom vision and calculates the offset.");
-        panel.add(btnAutoVisionCenterOffset, "8, 20, 3, 1");
-        btnAutoVisionCenterOffset.addActionListener((e) -> {
-            UiUtils.submitUiMachineTask(() -> {
-                determineVisionOffset();
-            });
-        });
-
-        JLabel lblPipeline = new JLabel("Pipeline");
-        panel.add(lblPipeline, "2, 22, right, default");
-
-        JButton editPipelineButton = new JButton("Edit");
-        editPipelineButton.addActionListener(e -> UiUtils.messageBoxOnException(this::editPipeline));
-        panel.add(editPipelineButton, "4, 22, 3, 1");
-                
-                        JButton resetPipelineButton = new JButton("Reset Pipeline to Default");
-                        resetPipelineButton.addActionListener(e -> {
-                            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                                    "This will replace the Pipeline with the built-in default. Are you sure??", null,
-                                    JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-                            if (result == JOptionPane.YES_OPTION) {
-                                UiUtils.messageBoxOnException(() -> {
-                                    ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
-                                    visionSettings.setCvPipeline(bottomVision.getBottomVisionSettings().getCvPipeline().clone());
-                                    editPipeline();
-                                });
-                            }
-                        });
-                        panel.add(resetPipelineButton, "8, 22, 3, 1");
+            @Override
+            public void resetPipeline() throws Exception {
+                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "This will replace the Pipeline with the default. Are you sure??", null,
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    UiUtils.messageBoxOnException(() -> {
+                        applyAction.actionPerformed(null);
+                        ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
+                        if (bottomVision.getBottomVisionSettings() == visionSettings) {
+                            // Already the default. Set stock.
+                            pipelinePanel.setPipeline(ReferenceBottomVision.createStockPipeline("Default"));
+                        }
+                        else {
+                            pipelinePanel.setPipeline(bottomVision.getBottomVisionSettings().getPipeline().clone());
+                        }
+                    });
+                }
+            }
+        };
+        pipelinePanel.setResetable(true);
+        pipelinePanel.setEditable(true);
+        panel.add(pipelinePanel, "1, 20, 14, 1, fill, fill");
 
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);
@@ -288,9 +288,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("min(70dlu;default)"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("min(70dlu;default)"),
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 0),
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -317,9 +317,61 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         chckbxCenterAfterTest.setSelected(true);
         btnTestAlighment.addActionListener((e) -> {
             UiUtils.submitUiMachineTask(() -> {
+                applyAction .actionPerformed(null);
                 testAlignment(chckbxCenterAfterTest.isSelected());
             });
         });
+
+        panelDetectOffset = new JPanel();
+        contentPanel.add(panelDetectOffset);
+        panelDetectOffset.setBorder(new TitledBorder(null, "Vision Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelDetectOffset.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("right:max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
+
+        JLabel lblX = new JLabel("X");
+        panelDetectOffset.add(lblX, "4, 2, center, default");
+
+        JLabel lblY = new JLabel("Y");
+        panelDetectOffset.add(lblY, "6, 2, center, default");
+
+        JLabel lblVisionCenterOffset = new JLabel("Vision Center Offset");
+        panelDetectOffset.add(lblVisionCenterOffset, "2, 4");
+        lblVisionCenterOffset.setToolTipText("Offset relative to the pick location/center of the part to the center of the rectangle detected by the bottom vision");
+
+        tfBottomVisionOffsetX = new JTextField();
+        panelDetectOffset.add(tfBottomVisionOffsetX, "4, 4");
+        tfBottomVisionOffsetX.setColumns(10);
+
+        tfBottomVisionOffsetY = new JTextField();
+        panelDetectOffset.add(tfBottomVisionOffsetY, "6, 4");
+        tfBottomVisionOffsetY.setText("");
+        tfBottomVisionOffsetY.setColumns(10);
+
+        JButton btnAutoVisionCenterOffset = new JButton("Detect");
+        panelDetectOffset.add(btnAutoVisionCenterOffset, "8, 4");
+        btnAutoVisionCenterOffset.setToolTipText("Center part over bottom vision camera. Button will run bottom vision and calculates the offset.");
+        btnAutoVisionCenterOffset.addActionListener((e) -> {
+            UiUtils.submitUiMachineTask(() -> {
+                applyAction.actionPerformed(null);
+                determineVisionOffset();
+            });
+        });
+
+
     }
 
     @Override
@@ -335,6 +387,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 if (comp != btnSpecializeSetting) { 
                     comp.setEnabled(false);
                 }
+            }
+            for (Component comp : panelDetectOffset.getComponents()) {
+                comp.setEnabled(false);
             }
         }
 
@@ -352,6 +407,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         bind(UpdateStrategy.READ_WRITE, bottomVisionOffsetProxy, "lengthY", tfBottomVisionOffsetY, "text", lengthConverter);
 
         addWrappedBinding(bottomVision, "testAlignmentAngle", testAlignmentAngle, "text", doubleConverter);
+
+        bind(UpdateStrategy.READ_WRITE, visionSettings, "pipeline", pipelinePanel, "pipeline");
+        addWrappedBinding(visionSettings, "pipelineParameterAssignments", pipelinePanel, "pipelineParameterAssignments");
 
         ComponentDecorators.decorateWithAutoSelect(textPartSizeTolerance);
         //ComponentDecorators.decorateWithAutoSelect(testAlignmentAngle);
@@ -378,45 +436,46 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-            new RowSpec[] {
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,
-                FormSpecs.RELATED_GAP_ROWSPEC,
-                FormSpecs.DEFAULT_ROWSPEC,}));
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        RowSpec.decode("default:grow"),}));
     }
 
-    private void editPipeline() throws Exception {
-        CvPipeline pipeline = visionSettings.getCvPipeline();
-        pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
-        pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
+    private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
+        Camera camera = VisionUtils.getBottomVisionCamera();
+        Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+        // Nominal position of the part over camera center
+        double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
+                .convertReverse(testAlignmentAngle.getText());
+        Location location = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), 
+                camera,
+                nozzle, angle);
+        bottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, nozzle, location, visionSettings);
 
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
-        dialog.setVisible(true);
+        if (edit) {
+            
+            pipelinePanel.openPipelineEditor("Bottom Vision Pipeline", pipeline, 
+                    "move nozzle "+nozzle.getName()+" to the camera alignment location before editing the pipeline", 
+                    nozzle, location);
+        }
     }
 
     private void testAlignment(boolean centerAfterTest) throws Exception {

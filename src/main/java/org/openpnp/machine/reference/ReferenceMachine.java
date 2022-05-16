@@ -88,6 +88,8 @@ import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.spi.Actuator;
@@ -98,6 +100,7 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.MotionPlanner;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor;
@@ -107,6 +110,8 @@ import org.openpnp.spi.base.AbstractDriver;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.Collect;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -130,11 +135,17 @@ public class ReferenceMachine extends AbstractMachine {
     @Element(required = false)
     private boolean homeAfterEnabled = false;
 
+    @Element(required = false)
+    private boolean parkAfterHomed = false;
+
     @Attribute(required = false)
     private boolean autoToolSelect = true;
 
     @Attribute(required = false)
     private boolean safeZPark = true;
+
+    @Element(required = false)
+    private Length unsafeZRoamingDistance = new Length(10, LengthUnit.Millimeters);
 
     @Element(required = false)
     private Solutions solutions = new Solutions();
@@ -198,11 +209,23 @@ public class ReferenceMachine extends AbstractMachine {
         if (enabled) {
             List<Driver> enabledDrivers = new ArrayList<>();
             try {
+                boolean syncLocation = false;
                 for (Driver driver : getDrivers()) {
                     driver.setEnabled(true);
                     enabledDrivers.add(driver);
+                    if (driver.isSyncInitialLocation()) {
+                        syncLocation = true;
+                    }
                 }
                 this.enabled = true;
+                if (syncLocation) {
+                    // We wait for still-stand, because as a side-effect, it will allow OpenPnP to sync its
+                    // position to the initial reported location (see Driver.isSyncInitialLocation()).
+                    getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
+                }
+                if (getHomeAfterEnabled()) {
+                    UiUtils.submitUiMachineTask(() -> home());
+                }
             }
             catch (Exception e) {
                 // In a multi-driver machine, we must make sure its all-or-nothing, 
@@ -281,6 +304,26 @@ public class ReferenceMachine extends AbstractMachine {
         Object oldValue = this.safeZPark;
         this.safeZPark = safeZPark;
         firePropertyChange("safeZPark", oldValue, safeZPark);
+    }
+
+    @Override
+    public boolean isParkAfterHomed() {
+        return parkAfterHomed;
+    }
+
+    public void setParkAfterHomed(boolean parkAfterHomed) {
+        this.parkAfterHomed = parkAfterHomed;
+    }
+
+    @Override
+    public Length getUnsafeZRoamingDistance() {
+        return unsafeZRoamingDistance;
+    }
+
+    public void setUnsafeZRoamingDistance(Length unsafeZRoamingDistance) {
+        Object oldValue = this.unsafeZRoamingDistance;
+        this.unsafeZRoamingDistance = unsafeZRoamingDistance;
+        firePropertyChange("safeRoamingDistance", oldValue, unsafeZRoamingDistance);
     }
 
     @Override
@@ -450,7 +493,13 @@ public class ReferenceMachine extends AbstractMachine {
         Configuration.get().getScripting().on("Machine.AfterHoming", null);
 
         // if homing went well, set machine homed-flag true
-        this.setHomed(true);     
+        this.setHomed(true);
+        
+        if (isParkAfterHomed()) {
+            for (Head head : getHeads()) {
+                MovableUtils.park(head);
+            }
+        }
     }
 
     @Override

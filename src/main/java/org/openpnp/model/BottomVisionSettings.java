@@ -1,5 +1,7 @@
 package org.openpnp.model;
 
+import java.awt.geom.Rectangle2D;
+
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.MaxRotation;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
@@ -46,7 +48,7 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     public BottomVisionSettings(PartSettings partSettings) {
         this();
         this.setEnabled(partSettings.isEnabled());
-        this.setCvPipeline(partSettings.getPipeline());
+        this.setPipeline(partSettings.getPipeline());
         this.preRotateUsage = partSettings.getPreRotateUsage();
         this.checkPartSizeMethod = partSettings.getCheckPartSizeMethod();
         this.checkSizeTolerancePercent = partSettings.getCheckSizeTolerancePercent();
@@ -107,16 +109,40 @@ public class BottomVisionSettings extends AbstractVisionSettings {
     public void setValues(BottomVisionSettings another) {
         setEnabled(another.isEnabled());
         try {
-            setCvPipeline(another.getCvPipeline().clone());
+            setPipeline(another.getPipeline().clone());
         }
         catch (CloneNotSupportedException e) {
         }
+        setPipelineParameterAssignments(another.getPipelineParameterAssignments());
         setPreRotateUsage(another.getPreRotateUsage());
         setCheckPartSizeMethod(another.checkPartSizeMethod);
         setMaxRotation(another.getMaxRotation());
         setCheckSizeTolerancePercent(another.getCheckSizeTolerancePercent());
         setVisionOffset(another.getVisionOffset());
         Configuration.get().fireVisionSettingsChanged();
+    }
+
+    public Location getPartCheckSize(Part part, boolean addTolerance) {
+        Footprint footprint = part.getPackage().getFootprint();
+        double checkWidth = 0.0;
+        double checkHeight = 0.0;
+
+        // Get the part footprint body dimensions to compare to
+        switch (checkPartSizeMethod) {
+            case Disabled:
+                return null;
+            case BodySize:
+                checkWidth = footprint.getBodyWidth();
+                checkHeight = footprint.getBodyHeight();
+                break;
+            case PadExtents:
+                Rectangle2D bounds = footprint.getPadsShape().getBounds2D();
+                checkWidth = bounds.getWidth();
+                checkHeight = bounds.getHeight();
+                break;
+        }
+        double factor = addTolerance ? checkSizeTolerancePercent*0.01+1.0 : 1.0;
+        return new Location(footprint.getUnits(), checkWidth*factor, checkHeight*factor, 0, 0);
     }
 
 }

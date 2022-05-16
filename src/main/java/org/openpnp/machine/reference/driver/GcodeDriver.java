@@ -1300,6 +1300,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 responseQueue.offer(line);
             }
             Logger.trace("[{}] disconnectRequested, bye-bye.", getCommunications().getConnectionName());
+            if (connected) {
+                connected = false;
+            }
         }
     }
 
@@ -1645,7 +1648,18 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
                 String value;
                 int pos = matcher.end();
                 if (matcher.find()) {
-                    value = detectedFirmware.substring(pos, matcher.start()-1);
+                    if (matcher.start() <= pos) {
+                        // Likely an illegal value with ':' in it, like an URL.
+                        if (matcher.find()) {
+                            value = detectedFirmware.substring(pos, matcher.start()-1);
+                        }
+                        else {
+                            value = detectedFirmware.substring(pos);
+                        }
+                    }
+                    else {
+                        value = detectedFirmware.substring(pos, matcher.start()-1);
+                    }
                 }
                 else {
                     value = detectedFirmware.substring(pos);
