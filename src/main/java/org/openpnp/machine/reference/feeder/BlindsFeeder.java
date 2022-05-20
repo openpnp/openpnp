@@ -1611,11 +1611,12 @@ public class BlindsFeeder extends ReferenceFeeder {
                 // Calculate the motion for the cover to be pushed in feeder local coordinates. 
                 Length feederX0 = (openState ^ isBlindsCoverAlignmentReversed() ? 
                         edgeOpenDistance.multiply(-1.0)
+                        .subtract(pocketPitch).multiply(0.5)
                         .subtract(sprocketPitch.multiply(0.5)) // go half sprocket too far back
-                        .subtract(nozzleTipDiameter.multiply(0.5))
-                        : 
+                        .subtract(nozzleTipDiameter.multiply(0.5)) : 
                             edgeClosedDistance
                             .add(tapeLength) 
+                            .add(pocketPitch).multiply(0.5)
                             .add(sprocketPitch.multiply(0.5)) // go half sprocket too far
                             .add(nozzleTipDiameter.multiply(0.5)))
                         .convertToUnits(location.getUnits());
