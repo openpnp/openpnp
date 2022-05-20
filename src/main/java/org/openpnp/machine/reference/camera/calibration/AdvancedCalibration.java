@@ -53,7 +53,8 @@ public class AdvancedCalibration extends LensCalibrationParams {
     // tangential distortion correction by default.
     // Moving to version 1.3 - version 1.2 accidentally disabled all distortion correction by 
     // default rather than only tangential distortion correction.
-    private static final Double LATEST_VERSION = 1.3;
+    // Moving to version 1.4 - increase the testPatternFillFraction. 
+    private static final Double LATEST_VERSION = 1.4;
     
     @Attribute(required = false)
     private boolean overridingOldTransformsAndDistortionCorrectionSettings = false;
@@ -122,7 +123,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private int desiredRadialLinesPerTestPattern = 32;
     
     @Attribute(required = false)
-    private double testPatternFillFraction = 0.90;
+    private double testPatternFillFraction = 0.98;
     
     @Attribute(required = false)
     private double walkingLoopGain = 0.50;
@@ -277,6 +278,11 @@ public class AdvancedCalibration extends LensCalibrationParams {
             //Fix version 1.2 where the initial values of these two were accidentally swapped
             disableDistortionCorrection = false;
             disableTangentialDistortionCorrection = true;
+        }
+        if (version <= 1.3) {
+            // Allow for a larger fill fraction, thanks to better circular symmetry detection,
+            // including even cropped circles. 
+            testPatternFillFraction = 0.98;
         }
     }
     

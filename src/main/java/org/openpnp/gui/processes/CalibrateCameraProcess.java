@@ -440,7 +440,6 @@ public abstract class CalibrateCameraProcess {
      */
     private boolean estimateUnitsPerPixelAction() {
         Logger.trace("Entering estimateUnitsPerPixelAction");
-        ((ReferenceCamera) camera).setAutoVisible(savedAutoVisible);
         
         //Capture the movable's coordinate as the approximate center of the camera's field-of-view
         centralLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters).
@@ -763,10 +762,7 @@ public abstract class CalibrateCameraProcess {
                 }
                 // Note, automatic only available when location set. 
                 if (automatic) {
-                    setInstructionsAndProceedAction("If necessary, use the jog controls on the Machine Controls panel to jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next when ready to proceed.", 
-                            ()->requestOperatorToAdjustDiameterAction(),
-                            calibrationLocations.get(calibrationHeightIndex).getLengthZ().toString()); 
-//                    requestOperatorToAdjustDiameterAction();
+                    requestOperatorToAdjustDiameterAction();
                     return true;
                 }
             }
@@ -973,13 +969,6 @@ public abstract class CalibrateCameraProcess {
         //Mask off everything that is not near the expected location
         pipeline.setProperty("MaskCircle.center", expectedPoint);
         pipeline.setProperty("DetectCircularSymmetry.center", expectedPoint);
-        
-        //Restrict the mask diameter so as to not extend beyond the edge of  the image
-        maskDiameter = 2*(int)Math.min(expectedPoint.getX(), 
-                Math.min(pixelsX-expectedPoint.getX(),
-                Math.min(expectedPoint.getY(),
-                Math.min(pixelsY-expectedPoint.getY(), maskDiameter/2))));
-        
         pipeline.setProperty("MaskCircle.diameter", maskDiameter);
         pipeline.setProperty("DetectCircularSymmetry.maxDistance", maskDiameter/2.0);
 
