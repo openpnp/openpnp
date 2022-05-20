@@ -589,7 +589,7 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
     @Attribute(required = false)
     private int backgroundWorstValue = 255/2; 
 
-    private List<byte []> backgroundImages;
+    private List<byte []> backgroundImages = new ArrayList<>();
 
     /**
      * TODO Left for backward compatibility. Unused. Can be removed after Feb 7, 2020.
@@ -842,12 +842,13 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             // go to camera position (now offset-corrected). prevents the user from being irritated if it's not exactly centered
             nozzle.moveTo(camera.getLocation(nozzle).derive(null, null, measureBaseLocation.getZ(), angleStop));
 
-            // Finish the background calibration, if images were successfully collected.  
-            finishBackgroundCalibration(referenceCamera, nozzle);
+            if (!calibrateCamera) {
+                // Finish the background calibration, if images were successfully collected.  
+                finishBackgroundCalibration(referenceCamera, nozzle);
+            }
 
             // after processing the nozzle returns to safe-z
             nozzle.moveToSafeZ();
-            MovableUtils.fireTargetedUserAction(nozzle);
 
             // setting to false in the very end to prevent endless calibration repetitions if calibration was not successful (pipeline not well or similar) and the nozzle is commanded afterwards somewhere else (where the calibration is asked for again ...)
             calibrating = false;
