@@ -1613,7 +1613,8 @@ public class BlindsFeeder extends ReferenceFeeder {
                         edgeOpenDistance.multiply(-1.0)
                         .subtract(pocketPitch).multiply(0.5)
                         .subtract(sprocketPitch.multiply(0.5)) // go half sprocket too far back
-                        .subtract(nozzleTipDiameter.multiply(0.5)) : 
+                        .subtract(nozzleTipDiameter.multiply(0.5)) 
+                        : 
                             edgeClosedDistance
                             .add(tapeLength) 
                             .add(pocketPitch).multiply(0.5)
