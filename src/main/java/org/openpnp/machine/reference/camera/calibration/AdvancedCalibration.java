@@ -274,15 +274,17 @@ public class AdvancedCalibration extends LensCalibrationParams {
         if (version == null) {
             disableTangentialDistortionCorrection = true;
         }
-        else if (version == 1.2) {
-            //Fix version 1.2 where the initial values of these two were accidentally swapped
-            disableDistortionCorrection = false;
-            disableTangentialDistortionCorrection = true;
-        }
-        if (version <= 1.3) {
-            // Allow for a larger fill fraction, thanks to better circular symmetry detection,
-            // including even cropped circles. 
-            testPatternFillFraction = 0.98;
+        else {
+            if (version == 1.2) {
+                //Fix version 1.2 where the initial values of these two were accidentally swapped
+                disableDistortionCorrection = false;
+                disableTangentialDistortionCorrection = true;
+            }
+            if (version <= 1.3) {
+                // Allow for a larger fill fraction, thanks to better circular symmetry detection,
+                // including even cropped circles. 
+                testPatternFillFraction = 0.98;
+            }
         }
     }
     

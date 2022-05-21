@@ -112,6 +112,14 @@ public class CalibrationSolutions implements Solutions.Subject {
     @Attribute(required=false)
     private double upLookingSecondaryOffsetZMm = 2;
 
+    /**
+     * automationLevel = 0: No automation, user can step through process.<br/>
+     * automationLevel = 1: Automated process, but stops at the Z level change.<br/>
+     * automationLevel = 2: Fully automated.
+     */
+    @Attribute(required = false)
+    private int automationLevel = 2;
+
     public CalibrationSolutions setMachine(ReferenceMachine machine) {
         this.machine = machine;
         return this;
@@ -1236,7 +1244,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                              .getCameraView(camera);
             // Encapsulated CalibrateCameraProcess
             new CalibrateCameraProcess(MainFrame.get(), cameraView, calibrationLocations,
-                    detectionDiameters, true) {
+                    detectionDiameters, automationLevel) {
 
                 @Override
                 public void processRawCalibrationData(double[][][] testPattern3dPointsList,

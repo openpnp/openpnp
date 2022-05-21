@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
@@ -140,14 +141,19 @@ public abstract class CalibrateCameraProcess {
     private BufferedImage resultImage;
     private Machine machine;
 
+    private boolean pauseAtSecondaryZ;
+
+    private int automationLevel;
+
     public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, 
-            List<Location> calibrationLocations, ArrayList<Integer> detectionDiameters, boolean automatic)
+            List<Location> calibrationLocations, ArrayList<Integer> detectionDiameters, int automationLevel)
             throws Exception {
         this.mainFrame = mainFrame;
         this.cameraView = cameraView;
         this.calibrationLocations = new ArrayList<Location>(calibrationLocations);
         this.detectionDiameters = detectionDiameters;
-        this.automatic = automatic;
+        this.automatic = automationLevel > 0;
+        this.automationLevel = automationLevel;
 
         machine = Configuration.get().getMachine();
         
@@ -269,7 +275,7 @@ public abstract class CalibrateCameraProcess {
                     cleanUpWhenCancelled();
                 }
                 // Note, automatic is only available if the moveLocation is already set.
-                if (automatic) {
+                if (automationLevel >= 2) {
                     requestOperatorToAdjustDiameterAction();
                     return true;
                 }
