@@ -584,11 +584,12 @@ public abstract class CalibrateCameraProcess {
                     double scaling = advCal.getTestPatternFillFraction()*
                             Math.min(coverageX / (2*Math.abs(unitVector[0])),
                                     coverageY / (2*Math.abs(unitVector[1])));
+                    double r0 = 3 + Math.random()*5;
                     Location startLocation = centralLocation.derive(null, null, movable.getLocation().getLengthZ().
                             convertToUnits(LengthUnit.Millimeters).getValue(), 
                             movable.getLocation().getRotation()).subtract(new Location(LengthUnit.Millimeters,
-                            (3 + Math.random()*5)*advCal.getTrialStep().multiply(unitVector[0]).convertToUnits(LengthUnit.Millimeters).getValue(),
-                            (3 + Math.random()*5)*advCal.getTrialStep().multiply(unitVector[1]).convertToUnits(LengthUnit.Millimeters).getValue(),
+                            r0*advCal.getTrialStep().multiply(unitVector[0]).convertToUnits(LengthUnit.Millimeters).getValue(),
+                            r0*advCal.getTrialStep().multiply(unitVector[1]).convertToUnits(LengthUnit.Millimeters).getValue(),
                             0, 0));
                     try {
                         machine.execute(() -> {
