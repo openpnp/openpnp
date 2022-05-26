@@ -75,6 +75,8 @@ There is a dark blue letter-F-shaped indicator superimposed on the graph:
 
 #### Backlash Compensation Method Selection
 
+Based on the observed performance, a heuristic will select the appropriate [Backlash Compensation Method](https://github.com/openpnp/openpnp/wiki/Backlash-Compensation#backlash-compensation-methods) automatically:
+
 * If the **Backlash Offset** and **Sneak-up Distance** are within **Tolerance ±**, the backlash compensation is switched off. Bravo for a superb machine!
 * If the **Sneak-up Distance** is smaller than the average **Backlash Offset**, the most efficient **DirectionalCompensation** method is chosen. This method is as fast and fluid as with no compensation. 
 * If the **Sneak-up Distance** is larger than the average **Backlash Offset** but still acceptable, the still quite efficient **DirectionalSneakUp** method is chosen.
