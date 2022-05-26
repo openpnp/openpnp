@@ -50,7 +50,7 @@ Works like **DirectionalCompensation** except for the last bit of the motion, wh
 
 **Note**, newer versions of OpenPnP provide [automatic Backlash calibration using Issues & Solutions](https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-backlash-compensation). 
 
-![Backlash Calibration](https://user-images.githubusercontent.com/9963310/130323847-1a5ccfe6-072d-4f73-a64e-378749d936c7.png)
+![Backlash Wizard](https://user-images.githubusercontent.com/9963310/134782398-0faaac87-1cbf-4c15-9f02-4bfb6ddb9ccb.png)
 
 ### Manual Calibration
 ____
