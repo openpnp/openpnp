@@ -80,7 +80,7 @@ Based on the observed performance, a heuristic will select the appropriate [Back
 * If the **Backlash Offset** and **Sneak-up Distance** are within **Tolerance ±**, the backlash compensation is switched off. Bravo for a superb machine!
 * If the **Sneak-up Distance** is smaller than the average **Backlash Offset**, the most efficient **DirectionalCompensation** method is chosen. This method is as fast and fluid as with no compensation. 
 * If the **Sneak-up Distance** is larger than the average **Backlash Offset** but still acceptable, the still quite efficient **DirectionalSneakUp** method is chosen.
-* If the **Sneak-up Distance** is not acceptable, the classical **OneSidedPositioning** is chosen. This is a sign that backlash is large and rather inconsistent. Check the brown dots in the first graph for how consistently accurate the machine _really_ is (no guarantees to uphold the wanted tolerance at this point). 
+* If the **Sneak-up Distance** is not acceptable, the classical **OneSidedPositioning** is chosen. It incurs extra slow approach moves and direction changes, i.e. motion is significantly slower. This is a sign that backlash is large and rather inconsistent. Check the brown dots in the first graph for how consistently accurate the machine _really_ is (no guarantees to uphold the wanted tolerance at this point). 
 
 ### Move Time over Distance
 
