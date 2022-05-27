@@ -32,7 +32,7 @@ Your commits should be generally useful, not specifically useful to just your ma
 
 ## Coding Style
 
-Please try to adhere to the existing code style as much as possible. Understand that your code is likely to be reformatted to fit the project standard if it doesn't follow it. Do not modify the formatting or white-space of existing code, that is not directly affected by your changes, i.e. make sure that the code differences (as tracked by git) will be restricted to your actual code changes.
+Please try to adhere to the existing code style as much as possible. Understand that your code is likely to be reformatted to fit the project standard if it doesn't follow it. Do not modify the formatting or white-space of existing code, that is not directly affected by your changes, i.e. make sure that the source code differences (as tracked by git) will be closely restricted to the modified code regions.
 
 OpenPnP closely follows the [Google Java Style](https://google.github.io/styleguide/javaguide.html). While there may be existing code in OpenPnP that does not follow the style exactly, any new code must follow the style.
 
