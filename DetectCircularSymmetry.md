@@ -90,6 +90,8 @@ To supply the wanted diameter and maximum search distance from the vision operat
 
 **Vision Diameter**: Must be set to the physical diameter of the feature you want to detect. Typically, a feature at the very point of the nozzle tip. Either the outer diameter or the air bore. 
 
+### Measure the Vision Diameter
+
 Measuring the **Vision Diameter** using the camera and relative DRO mode (see also the animation below):
 
 1. Center the nozzle tip.
