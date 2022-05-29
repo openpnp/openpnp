@@ -273,6 +273,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
         //distortion correction by default.  We now want to change it to be disabled by default.
         if (version == null) {
             disableTangentialDistortionCorrection = true;
+            testPatternFillFraction = 0.98;
         }
         else {
             if (version == 1.2) {
