@@ -1,6 +1,7 @@
 * [How do I let OpenPnP help me?](#how-do-i-let-openpnp-help-me)
 * [How do I get help?](#how-do-i-get-help)
 * [Where are configuration and log files located?](#where-are-configuration-and-log-files-located)
+* [How can I go back to an old/working configuration?](#how-can-i-go-back-to-an-oldworking-configuration)
 * [How do I reset my configuration?](#how-do-i-reset-my-configuration)
 * [How do I start OpenPnP with a JAR File?](#how-do-i-start-openpnp-with-a-jar-file)
 * [How do I use a different config directory](#how-do-i-use-a-different-config-directory)
@@ -38,13 +39,19 @@ Linux: /home/your_username/.openpnp2
 Mac OS X: /Users/your_username/.openpnp2
 ```
 
-Configuration files are `machine.xml`, `parts.xml` and `packages.xml` along with other plugin specific files.
+Configuration files are `machine.xml`, `parts.xml` `packages.xml` and `vision-settings.xml` along with other plugin specific files.
 
 Log files are under the `log` subdirectory and the current file is always called `OpenPnP.log`.
 
 If you double-click your camera view, a snapshot gets written to the `snapshots` subfolder.
 
 Some Computer Vision pipelines also write debug images into various subfolders here.
+
+## How can I go back to an old/working configuration?
+
+OpenPnP creates a backup of your configuration, each time a new one is saved, which also happens automatically, each time you exit OpenPnP. 
+
+The backups are located in the `backup` sub-directory, see [Where are configuration and log files located?](#where-are-configuration-and-log-files-located).
 
 ## How do I reset my configuration?
 
