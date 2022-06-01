@@ -323,6 +323,30 @@ public class EagleBoardImporter implements BoardImporter {
 
                             if (pkg == null) {
                                 pkg = new Package(pkgId);
+                                org.openpnp.model.Footprint fp = new org.openpnp.model.Footprint();
+
+                                for (Object e : polys) {
+                                    if (e instanceof org.openpnp.model.eagle.xml.Smd) {
+                                        org.openpnp.model.eagle.xml.Smd s =
+                                                (org.openpnp.model.eagle.xml.Smd) e;
+                                        org.openpnp.model.Footprint.Pad p =
+                                                new org.openpnp.model.Footprint.Pad();
+
+                                        p.setName(s.getName());
+                                        p.setX(Double.parseDouble(s.getX()));
+                                        p.setY(Double.parseDouble(s.getY()));
+                                        p.setWidth(Double.parseDouble(s.getDx()));
+                                        p.setHeight(Double.parseDouble(s.getDy()));
+                                        p.setRotation(Double.parseDouble(s.getRot()
+                                                                          .replaceAll("[A-Za-z]",
+                                                                                  "")));
+                                        p.setRoundness(Double.parseDouble(s.getRoundness()));
+
+                                        fp.addPad(p);
+                                    }
+                                }
+
+                                pkg.setFootprint(fp); // add the footprint to the package
                                 cfg.addPackage(pkg); // save the package in the configuration file
                                 if (part != null) {
                                     cfg.removePart(part);// we have to remove the part so we can
