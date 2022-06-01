@@ -47,7 +47,7 @@ Issues are classified and color-coded by **Severity**.
 
 * **Fundamental**: Issues that must be resolved up-front. They represent fundamental building blocks that lay the foundation for further work. Only when the answer to that issue is provided, can the Issues & Solutions system go on to find more solutions. 
 * **Information**: Issues that provide information, guidance to go on with the process. 
-* **Suggestion**: Issues that point to configuration that may be missing or can likely be improved. If you hand-tuned your configuration, a suggestion may pop up to revert it to the suggested standard setting. Dismiss it in these cases. 
+* **Suggestion**: Issues that point to configuration that may be missing or can likely be improved. If you hand-tuned your configuration, and are sure about it, you may choose Dismiss to override the suggestion. 
 * **Warning**: Issues that point to configuration that is likely wrong or missing. 
 * **Error**: Issues that point to configuration that is almost certainly wrong or missing. 
 
