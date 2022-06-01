@@ -258,18 +258,60 @@ public class EagleBoardImporter implements BoardImporter {
                     double y = Double.parseDouble(element.getY());
                     placement.setLocation(new Location(LengthUnit.Millimeters, x, y, 0, rotation));
 
+                    // Get all SMD pads and polygons associated with this package
+                    packageId = element.getPackage(); // Package
+                    libraryId = element.getLibrary(); // Library that contains the package
+
+                    List<Object> polys = new ArrayList<>();
+
+                    if (!boardToProcess.board.getLibraries()
+                                             .getLibrary()
+                                             .isEmpty()) {
+                        for (Library library : boardToProcess.board.getLibraries()
+                                                                   .getLibrary()) {
+                            if (library.getName()
+                                       .equalsIgnoreCase(libraryId)) {
+                                // we have found the library, now to scan for the package we want
+                                if (!library.getPackages()
+                                            .getPackage()
+                                            .isEmpty()) {
+
+                                    ListIterator<org.openpnp.model.eagle.xml.Package> it =
+                                            library.getPackages()
+                                                   .getPackage()
+                                                   .listIterator();
+
+                                    while (it.hasNext()) {
+
+                                        org.openpnp.model.eagle.xml.Package pak =
+                                                (org.openpnp.model.eagle.xml.Package) it.next();
+                                        if (pak.getName()
+                                               .equalsIgnoreCase(packageId)) {
+
+                                            for (Object e : pak.getPolygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHoleOrPadOrSmd()) {
+                                                if (e instanceof org.openpnp.model.eagle.xml.Smd
+                                                        || e instanceof org.openpnp.model.eagle.xml.Pad
+                                                        || e instanceof org.openpnp.model.eagle.xml.Polygon) {
+                                                    polys.add(e);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // placement now contains where the package is on the PCB, we need to work out
                     // where the pads
                     // are relative to the 'placement'
                     Configuration cfg = Configuration.get();
                     if (cfg != null && createMissingParts) {
                         String value = element.getValue(); // Value
-                        packageId = element.getPackage(); // Package
-                        libraryId = element.getLibrary(); // Library that contains the package
 
                         String pkgId = libraryId + "-" + packageId;
-
                         String partId = libraryId + "-" + packageId;
+
                         if (value.trim().length() > 0) {
                             partId += "-" + value;
                         }
@@ -309,23 +351,7 @@ public class EagleBoardImporter implements BoardImporter {
 
                     // TODO: This desperately needs to be broken up into functions. This function
                     // is way too long and wide.
-                    if (!boardToProcess.board.getLibraries().getLibrary().isEmpty()) {
-                        for (Library library : boardToProcess.board.getLibraries().getLibrary()) {
-                            if (library.getName().equalsIgnoreCase(libraryId)) {
-                                // we have found the library, now to scan for the package we want
-                                if (!library.getPackages().getPackage().isEmpty()) {
-
-                                    ListIterator<org.openpnp.model.eagle.xml.Package> it =
-                                            library.getPackages().getPackage().listIterator();
-
-                                    while (it.hasNext()) {
-
-                                        org.openpnp.model.eagle.xml.Package pak =
-                                                (org.openpnp.model.eagle.xml.Package) it.next();
-                                        if (pak.getName().equalsIgnoreCase(packageId)) {
-
-                                            for (Object e : pak
-                                                    .getPolygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHoleOrPadOrSmd()) {
+                    for (Object e : polys) {
                                                 if (e instanceof org.openpnp.model.eagle.xml.Smd) {
                                                     // we have found the correct package in the
                                                     // correct library and we need to to add the pad
@@ -653,12 +679,6 @@ public class EagleBoardImporter implements BoardImporter {
                                                     }
                                                 }
                                             }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
 
                     placement.setSide(element_side);
                     placements.add(placement);
