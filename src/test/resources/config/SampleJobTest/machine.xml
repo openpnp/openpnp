@@ -488,7 +488,7 @@
          <mid-location-2 units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
          <end-location units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
       </motion-planner>
-      <home-after-enabled>true</home-after-enabled>
+      <home-after-enabled>false</home-after-enabled>
       <dismissed-solutions class="java.util.HashSet">
          <string>ebc08eb957002721ae303c54638ed1d0975f4538</string>
       </dismissed-solutions>

@@ -68,6 +68,9 @@ public class TcpCommunications extends ReferenceDriverCommunications {
         try {
             return input.read();
         }
+        catch (NullPointerException ex) {
+            throw new IOException("Trying to read from a unconnected socket.");
+        }
         catch (IOException ex) {
             if (ex.getCause() instanceof SocketTimeoutException) {
                 throw new TimeoutException(ex.getMessage());
