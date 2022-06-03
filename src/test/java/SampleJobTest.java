@@ -114,6 +114,7 @@ public class SampleJobTest {
             for (int i = 0; i < 4; i++) {
                 try {
                     camera.capture();
+                    Thread.sleep(42);
                 }
                 catch (Exception e) {
                 }
