@@ -63,7 +63,7 @@ public class SampleJobTest {
 
         Configurator
         .currentConfig()
-        .level(Level.INFO) // change this for other log levels.
+        .level(Level.TRACE) // change this for other log levels.
         .activate();
 
         Configuration.initialize(workingDirectory);
