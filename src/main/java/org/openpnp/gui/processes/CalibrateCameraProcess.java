@@ -80,6 +80,7 @@ public abstract class CalibrateCameraProcess {
     private final MainFrame mainFrame;
     private final CameraView cameraView;
     private boolean automatic;
+    private int automationLevel;
     private final Camera camera;
     private final boolean isHeadMountedCamera;
     private Nozzle nozzle;
@@ -140,8 +141,6 @@ public abstract class CalibrateCameraProcess {
     protected CameraWalker cameraWalker;
     private BufferedImage resultImage;
     private Machine machine;
-
-    private int automationLevel;
 
     public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, 
             List<Location> calibrationLocations, ArrayList<Integer> detectionDiameters, int automationLevel)
@@ -273,7 +272,7 @@ public abstract class CalibrateCameraProcess {
                     cleanUpWhenCancelled();
                 }
                 // Note, automatic is only available if the moveLocation is already set.
-                if (automationLevel >= 2) {
+                if (automatic) {
                     requestOperatorToAdjustDiameterAction();
                     return true;
                 }
