@@ -141,8 +141,6 @@ public abstract class CalibrateCameraProcess {
     private BufferedImage resultImage;
     private Machine machine;
 
-    private boolean pauseAtSecondaryZ;
-
     private int automationLevel;
 
     public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, 
@@ -570,16 +568,13 @@ public abstract class CalibrateCameraProcess {
                 List<Integer> randomIdx = new ArrayList<>();
                 double coverageX = pixelsX - detectionDiameters.get(calibrationHeightIndex)*1.2;
                 double coverageY = pixelsY - detectionDiameters.get(calibrationHeightIndex)*1.2;
-                // For best coverage, make sure the base angle line goes to one image corner. Because the radial lines 
-                // are always made to be multiples of 4 this also makes the opposite line go to the corner. 
-                double angle0 = Math.atan2((calibrationHeightIndex % 2 == 0 ? coverageY : -coverageY), coverageX);
                 for (int iLine=0; iLine<numberOfLines; iLine++) {
                     publish(String.format("Initializing radial line %d of %d at calibration Z coordinate %d of %d", 
                         iLine+1, numberOfLines, 
                         calibrationHeightIndex+1, numberOfCalibrationHeights));
                     
                     randomIdx.add(iLine);
-                    double lineAngle = angle0 + iLine * 2 * Math.PI / numberOfLines;
+                    double lineAngle = iLine * 2 * Math.PI / numberOfLines;
                     double[] unitVector = new double[] {Math.cos(lineAngle), Math.sin(lineAngle)};
                     double scaling = advCal.getTestPatternFillFraction()*
                             Math.min(coverageX / (2*Math.abs(unitVector[0])),
@@ -777,7 +772,7 @@ public abstract class CalibrateCameraProcess {
                     cleanUpWhenCancelled();
                 }
                 // Note, automatic only available when location set. 
-                if (automatic) {
+                if (automationLevel >= 2) {
                     requestOperatorToAdjustDiameterAction();
                     return true;
                 }
