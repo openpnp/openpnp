@@ -1066,7 +1066,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                                     postCalibrationProcessing();
                                 }
                                 catch (Exception e) {
-                                    MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                                    UiUtils.showError(e);
                                     advCal.setValid(false);
                                     advCal.setEnabled(false);
                                     chckbxEnable.setSelected(false);

@@ -30,7 +30,6 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.processes.CalibrateCameraProcess;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -1274,7 +1273,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         });
                     }
                     catch (Exception e) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                        UiUtils.showError(e);
                         advCal.setValid(false);
                         advCal.setEnabled(false);
                         advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);
