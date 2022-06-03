@@ -26,6 +26,17 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
 
     public synchronized void connect() throws Exception {
         disconnect();
+        if (gcodeServer == null) {
+            try {
+                gcodeServer = new GcodeServer();
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
+        }
+        if (gcodeServer != null) {
+            gcodeServer.setDriver(driver);
+        }
         clientSocket = new Socket("localhost", getGcodeServer().getListenerPort());
         input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         output = new DataOutputStream(clientSocket.getOutputStream());
@@ -52,17 +63,6 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
 
     @Override
     public GcodeServer getGcodeServer() {
-        if (gcodeServer == null) {
-            try {
-                gcodeServer = new GcodeServer();
-            }
-            catch (Exception e) {
-                Logger.warn(e);
-            }
-        }
-        if (gcodeServer != null) {
-            gcodeServer.setDriver(driver);
-        }
         return gcodeServer;
     }
 
