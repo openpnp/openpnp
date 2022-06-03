@@ -32,6 +32,7 @@ public class TcpCommunications extends ReferenceDriverCommunications {
     protected GcodeServer gcodeServer;
     protected AbstractReferenceDriver driver;
 
+    @Override
     public synchronized void connect() throws Exception {
         disconnect();
         if (ipAddress.equals("GcodeServer")) {
@@ -47,6 +48,7 @@ public class TcpCommunications extends ReferenceDriverCommunications {
         output = new DataOutputStream(clientSocket.getOutputStream());
     }
 
+    @Override
     public synchronized void disconnect() throws Exception {
         if (clientSocket != null && clientSocket.isBound()) {
             clientSocket.close();
@@ -60,10 +62,12 @@ public class TcpCommunications extends ReferenceDriverCommunications {
         }
     }
 
+    @Override
     public String getConnectionName(){
         return "tcp://" + ipAddress + ":" + port;
     }
 
+    @Override
     public int read() throws TimeoutException, IOException {
         try {
             return input.read();
