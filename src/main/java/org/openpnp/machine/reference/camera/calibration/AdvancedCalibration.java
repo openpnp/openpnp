@@ -53,8 +53,7 @@ public class AdvancedCalibration extends LensCalibrationParams {
     // tangential distortion correction by default.
     // Moving to version 1.3 - version 1.2 accidentally disabled all distortion correction by 
     // default rather than only tangential distortion correction.
-    // Moving to version 1.4 - increase the testPatternFillFraction. 
-    private static final Double LATEST_VERSION = 1.4;
+    private static final Double LATEST_VERSION = 1.3;
     
     @Attribute(required = false)
     private boolean overridingOldTransformsAndDistortionCorrectionSettings = false;
