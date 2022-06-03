@@ -614,6 +614,10 @@ public class JogControlsPanel extends JPanel {
                 if (hm instanceof AbstractNozzle) {
                     AbstractNozzle nozzle = (AbstractNozzle) hm;
                     if (nozzle.getRotationMode() == RotationMode.LimitedArticulation) {
+                        if (nozzle.getPart() == null) {
+                            // Make sure any lingering rotation offset is reset.
+                            nozzle.setRotationModeOffset(null);
+                        }
                         // Limited axis, select a 90° step position within the limits.
                         double [] limits = nozzle.getRotationModeLimits();
                         parkAngle = Math.round((limits[0]+limits[1])/2/90)*90;
