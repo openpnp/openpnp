@@ -45,7 +45,6 @@ import org.opencv.core.Size;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraViewFilter;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
@@ -64,6 +63,7 @@ import org.openpnp.util.CameraWalker;
 import org.openpnp.util.ImageUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.UiUtils.Thrunnable;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -268,7 +268,7 @@ public abstract class CalibrateCameraProcess {
                     });
                 }
                 catch (Exception ex) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                    UiUtils.showError(ex);
                     cleanUpWhenCancelled();
                 }
                 // Note, automatic is only available if the moveLocation is already set.
@@ -511,7 +511,7 @@ public abstract class CalibrateCameraProcess {
                 
                 if (!cameraWalker.isReadyToWalk()) {
                     if (!isCancelled()) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Error", "Could not estimate units per pixel - calibration aborting.");
+                        UiUtils.showError(new Exception("Could not estimate units per pixel - calibration aborting."));
                     }
                     cleanUpWhenCancelled();
                     return;
@@ -592,7 +592,7 @@ public abstract class CalibrateCameraProcess {
                         });
                     }
                     catch (Exception ex) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                        UiUtils.showError(ex);
                         cleanUpWhenCancelled();
                     }
                     
@@ -678,7 +678,7 @@ public abstract class CalibrateCameraProcess {
                 }
                 
                 if (errorCount > props.maxErrorCount) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", "Too many misdetects - retry and verify fiducial/nozzle tip detection." );
+                    UiUtils.showError(new Exception("Too many misdetects - retry and verify fiducial/nozzle tip detection."));
                     cleanUpWhenCancelled();
                     return;
                 }
@@ -722,7 +722,7 @@ public abstract class CalibrateCameraProcess {
                             new Size(pixelsX, pixelsY), mirrored, apparentMotionDirection);
                     }
                     catch (Exception ex) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                        UiUtils.showError(ex);
                     }
                     finally {
                         cleanUpWhenDone();
@@ -767,7 +767,7 @@ public abstract class CalibrateCameraProcess {
                     });
                 }
                 catch (Exception ex) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                    UiUtils.showError(ex);
                     cleanUpWhenCancelled();
                 }
                 // Note, automatic only available when location set. 
@@ -793,7 +793,7 @@ public abstract class CalibrateCameraProcess {
                 });
             }
             catch (Exception ex) {
-                MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                UiUtils.showError(ex);
                 cleanUpWhenCancelled();
             }
             
@@ -826,7 +826,7 @@ public abstract class CalibrateCameraProcess {
                 });
             }
             catch (Exception ex) {
-                MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                UiUtils.showError(ex);
                 cleanUpWhenCancelled();
             }
             // Note, automatic only available when location set. 
@@ -876,7 +876,7 @@ public abstract class CalibrateCameraProcess {
             });
         }
         catch (Exception ex) {
-            MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+            UiUtils.showError(ex);
             cleanUpWhenCancelled();
         }
         
@@ -1151,7 +1151,7 @@ public abstract class CalibrateCameraProcess {
                     tempAction.thrun();
                 }
                 catch (Exception ex) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                    UiUtils.showError(ex);
                     cleanUpWhenCancelled();
                 }
             }

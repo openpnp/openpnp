@@ -38,7 +38,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -514,7 +513,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                     catch (Exception e) {
                         if (!hasShownError) {
                             hasShownError = true;
-                            MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                            UiUtils.showError(e);
                         }
                         else {
                             Logger.debug("{}: {}", "Error", e);

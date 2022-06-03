@@ -14,6 +14,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.pmw.tinylog.Logger;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -57,11 +58,16 @@ public class UiUtils {
     }
 
     /**
-     * Show an error using a message box.
+     * Show an error using a message box, if the GUI is present, otherwise just log the error.
      * @param t
      */
     public static void showError(Throwable t) {
-        MessageBoxes.errorBox(MainFrame.get(), "Error", t);
+        if (MainFrame.get() != null) {
+            MessageBoxes.errorBox(MainFrame.get(), "Error", t);
+        }
+        else {
+            Logger.error(t);
+        }
     }
 
 
