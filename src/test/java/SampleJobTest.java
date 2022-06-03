@@ -72,6 +72,19 @@ public class SampleJobTest {
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
         AbstractCamera camera = (AbstractCamera)machine.getDefaultHead().getDefaultCamera();
 
+        // There seems to be a race condition in imperfectMachine simulation where the camera is not yet ready
+        // this never happens in real OpenPnP so let's just settle things down.
+        try {
+            camera.capture();
+        }
+        catch (Exception e) {
+        }
+        try {
+            camera.capture();
+        }
+        catch (Exception e) {
+        }
+
         if (!imperfectMachine) {
             NullDriver driver = (NullDriver) machine.getDefaultDriver();
             // Make it faster for the test (now including axes).
@@ -109,16 +122,6 @@ public class SampleJobTest {
 
         machine.setEnabled(true);
         machine.execute(() -> {
-            // There seems to be a race condition in imperfectMachine simulation where the camera is not yet ready
-            // this never happens in real OpenPnP so let's just settle things down.
-            for (int i = 0; i < 4; i++) {
-                try {
-                    camera.capture();
-                    Thread.sleep(42);
-                }
-                catch (Exception e) {
-                }
-            }
             machine.home();
             jobProcessor.initialize(job);
             while (jobProcessor.next()) {

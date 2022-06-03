@@ -111,7 +111,6 @@ import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.Collect;
 import org.openpnp.util.MovableUtils;
-import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -223,8 +222,8 @@ public class ReferenceMachine extends AbstractMachine {
                     // position to the initial reported location (see Driver.isSyncInitialLocation()).
                     getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
                 }
-                if (getHomeAfterEnabled()) {
-                    UiUtils.submitUiMachineTask(() -> home());
+                if (getHomeAfterEnabled() && isTask(Thread.currentThread())) {
+                    home();
                 }
             }
             catch (Exception e) {
