@@ -53,7 +53,10 @@ The ReferenceControllerAxis is the primary controller-attached axis of a machine
 **Axis Letter** gives you the letter of the axis by which it is addressed in the controller (usually a G-code letter). The letter must obviously be unique for a given driver. If you have multiple drivers, you typically have the same letter multiple times (and that is why inside OpenPnP you refer to the axis by its conceptual **Name** rather than its **Letter**). 
 
 **Switch Linear ↔ Rotational**: G-code controllers make a difference between linear and rotational axes. The difference is relevant for the correct interpretation of feed-rates, acceleration limits and other issues. If you have a machine with more than one controller and/or more than two nozzles, chances are high that you are forced to be using a linear controller axis (typically X Y Z) to move what is conceptually a rotational axis (A B C) or vice versa. 
-OpenPnP needs to know if this is the case, so use the switch to toggle the axis meaning. 
+
+Furthermore, for best results it is recommended to configure all axes as _linear_, even if they are physically _rotational_. This allows OpenPnP to control feed-rates, acceleration etc. with better precision and smooth segment transitions. This is mandatory for advanced features such as [motion interpolation](https://github.com/openpnp/openpnp/wiki/Motion-Planner#motion-interpolation) including for [**Simulated3rdOrderControl** motion control](https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#motion-control-type). 
+
+In any case, OpenPnP needs to know how the axis is configured on the controller, so use the switch to toggle the axis meaning. For advanced controllers (currently Smoothieware and Duet 3D) with the [right firmwares](https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares), this is automatically detected by [[Issues and Solutions]]. If this is not configured right, you typically get timeout errors, or your speed control does not work.
 
 **Home Coordinate** gives OpenPnP the initial coordinate after homing. This may include a retract distance. 
 
