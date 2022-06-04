@@ -91,7 +91,7 @@ The `pocket_width` is the width the physical pocket across the tape. You can mak
 ### Building up the Feeder Array
 ___
 
-**CAUTION**: the OpenPnP 2.0 testing version has changed the way to define the tape lanes (see below this section for the old way): 
+**NEW VERSION**: newer OpenPnP versions have changed the way to define the tape lanes (see below this section for the old way): 
 
 ![grafik](https://user-images.githubusercontent.com/9963310/122678424-1b43a280-d1e7-11eb-86c1-c76a54dd089f.png)
 
@@ -102,7 +102,7 @@ Use the `margin_length_begin` parameter to set aside a margin for OCR Labels and
 
 ___
 
-Once you've defined your `TapeDefinition`s, you can multiply and mix them to build up a feeder array i.e. print many feeders in one piece (at end of the `BlindsFeeder-3DPrinting.scad` file):
+**OLD VERSION**: Once you've defined your `TapeDefinition`s, you can multiply and mix them to build up a feeder array i.e. print many feeders in one piece (at end of the `BlindsFeeder-3DPrinting.scad` file):
 
 ![grafik](https://user-images.githubusercontent.com/9963310/73120868-66ff0780-3f73-11ea-90d3-940594bee1ff.png)
 
