@@ -108,7 +108,7 @@ The **maxDistance** property is automatically derived from the already present *
 
 Standard pipeline (Edit the pipeline and paste this using the ![Paste](https://user-images.githubusercontent.com/9963310/115295345-f0db5780-a159-11eb-826e-4fcabc1917e6.png) button):
 
-```
+```xml
 <cv-pipeline>
    <stages>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" default-light="false" settle-first="true" count="1">
@@ -135,7 +135,7 @@ The **diameter** of the fiducial is automatically derived from the footprint. Th
 
 Standard pipeline (Edit the pipeline and paste this using the ![Paste](https://user-images.githubusercontent.com/9963310/115295345-f0db5780-a159-11eb-826e-4fcabc1917e6.png) button):
 
-```
+```xml
 <cv-pipeline>
    <stages>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="image" enabled="true" default-light="true" settle-first="true" count="1"/>
@@ -161,7 +161,7 @@ The ReferenceStripFeeder also controls the **maxDistance** search range: full ca
 
 Edit the pipeline and paste this using the ![Paste](https://user-images.githubusercontent.com/9963310/122116892-74e25080-ce26-11eb-9f49-3a50c4359d7b.png) button:
 
-```
+```xml
 <cv-pipeline>
    <stages>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="original" enabled="true" default-light="true" settle-first="true" count="1"/>
@@ -195,7 +195,7 @@ The ReferencePushPullFeeder also controls the **maxDistance** search range: full
 
 Edit the pipeline and paste this using the ![Paste](https://user-images.githubusercontent.com/9963310/122116892-74e25080-ce26-11eb-9f49-3a50c4359d7b.png) button:
 
-```
+```xml
 <cv-pipeline>
    <stages>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="0" enabled="true" default-light="true" settle-first="true" count="1"/>
