@@ -567,13 +567,17 @@ public abstract class CalibrateCameraProcess {
                 List<Integer> randomIdx = new ArrayList<>();
                 double coverageX = pixelsX - detectionDiameters.get(calibrationHeightIndex)*1.2;
                 double coverageY = pixelsY - detectionDiameters.get(calibrationHeightIndex)*1.2;
+                // Start from a diagonal to the corner for better coverage when numberOfLines is small.
+                // Note, because numberOfLines is always a multiple of 4, this will create two lines going to opposing corners. 
+                // We also swap the targeted corners on Z heights.
+                final double angle0 = Math.atan2((calibrationHeightIndex % 2 == 0) ? -coverageY : coverageY, coverageX);
                 for (int iLine=0; iLine<numberOfLines; iLine++) {
                     publish(String.format("Initializing radial line %d of %d at calibration Z coordinate %d of %d", 
                         iLine+1, numberOfLines, 
                         calibrationHeightIndex+1, numberOfCalibrationHeights));
                     
                     randomIdx.add(iLine);
-                    double lineAngle = iLine * 2 * Math.PI / numberOfLines;
+                    double lineAngle = angle0 + iLine * 2 * Math.PI / numberOfLines;
                     double[] unitVector = new double[] {Math.cos(lineAngle), Math.sin(lineAngle)};
                     double scaling = advCal.getTestPatternFillFraction()*
                             Math.min(coverageX / (2*Math.abs(unitVector[0])),
