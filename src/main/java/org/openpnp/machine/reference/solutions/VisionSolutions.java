@@ -1342,7 +1342,7 @@ public class VisionSolutions implements Solutions.Subject {
             int minDiameter = (int) (expectedOffsetAndDiameter != null ? 
                     expectedDiameter/fiducialMargin - 1
                     : 7);
-            int maxDistance = (int) (maxDiameter*2*fiducialMargin
+            int maxDistance = (int) (Math.max(subjectAreaDiameter/2, maxDiameter*2*fiducialMargin)
                     + Math.min(image.cols(), image.rows())*extraSearchRange);
             int expectedX = bufferedImage.getWidth()/2 + (int) (expectedOffsetAndDiameter != null ? expectedOffsetAndDiameter.getX() : 0);
             int expectedY = bufferedImage.getHeight()/2 + (int) (expectedOffsetAndDiameter != null ? expectedOffsetAndDiameter.getY() : 0);
@@ -1374,8 +1374,8 @@ public class VisionSolutions implements Solutions.Subject {
                     bufferedImage = camera.lightSettleAndCapture();
                     image.release();
                     image = OpenCvUtils.toMat(bufferedImage);
-                    result = getPixelLocationShot(camera, diagnostics, image, maxDiameter,
-                            minDiameter, maxDistance, expectedX, expectedY, 
+                    result = getPixelLocationShot(camera, diagnostics, image, minDiameter,
+                            maxDiameter, maxDistance, expectedX, expectedY, 
                             n == 0 ? scoreRange : new ScoreRange());
                     // Accumulate
                     x += result.getX();
@@ -1388,8 +1388,8 @@ public class VisionSolutions implements Solutions.Subject {
             }
             else {
                 // Fiducial can be detected by one shot.
-                result = getPixelLocationShot(camera, diagnostics, image, maxDiameter,
-                        minDiameter, maxDistance, expectedX, expectedY, scoreRange);
+                result = getPixelLocationShot(camera, diagnostics, image, minDiameter,
+                        maxDiameter, maxDistance, expectedX, expectedY, scoreRange);
             }
             return result;
         }
@@ -1399,11 +1399,11 @@ public class VisionSolutions implements Solutions.Subject {
     }
 
     private Circle getPixelLocationShot(ReferenceCamera camera, String diagnostics, Mat image,
-            int maxDiameter, int minDiameter, int maxDistance, int expectedX, int expectedY, ScoreRange scoreRange) 
+            int minDiameter, int maxDiameter, int maxDistance, int expectedX, int expectedY, ScoreRange scoreRange) 
                     throws Exception, IOException {
         List<Circle> results = DetectCircularSymmetry.findCircularSymmetry(image, 
                 expectedX, expectedY, 
-                maxDiameter, minDiameter, maxDistance, maxDistance, maxDistance, 1,
+                minDiameter, maxDiameter, maxDistance, maxDistance, maxDistance, 1,
                 minSymmetry, 0.0, subSampling, superSampling, diagnostics != null, false, scoreRange);
         if (diagnostics != null) {
             if (LogUtils.isDebugEnabled()) {
