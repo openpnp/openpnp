@@ -50,8 +50,10 @@ public class AdvancedCalibration extends LensCalibrationParams {
     // Prior to version 1.2, no explicit version attribute existed. Version 1.0 (implicit) was the
     // initial release of AdvancedCalibration, version 1.1 (implicit) added attributes to disable 
     // distortion and tilt corrections but were all enabled by default, and version 1.2 disabled
-    // tangential distortion correction by default
-    private static final Double LATEST_VERSION = 1.2;
+    // tangential distortion correction by default.
+    // Moving to version 1.3 - version 1.2 accidentally disabled all distortion correction by 
+    // default rather than only tangential distortion correction.
+    private static final Double LATEST_VERSION = 1.3;
     
     @Attribute(required = false)
     private boolean overridingOldTransformsAndDistortionCorrectionSettings = false;
@@ -156,10 +158,10 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private boolean disableTiltCorrection = false;
     
     @Attribute(required = false)
-    private boolean disableDistortionCorrection = true;
+    private boolean disableDistortionCorrection = false;
     
     @Attribute(required = false)
-    private boolean disableTangentialDistortionCorrection = false;
+    private boolean disableTangentialDistortionCorrection = true;
     
     @Attribute(required = false)
     private Double version;
@@ -269,6 +271,11 @@ public class AdvancedCalibration extends LensCalibrationParams {
         //files that may have been updated with the prior version that had enabled tangential
         //distortion correction by default.  We now want to change it to be disabled by default.
         if (version == null) {
+            disableTangentialDistortionCorrection = true;
+        }
+        else if (version == 1.2) {
+            //Fix version 1.2 where the initial values of these two were accidentally swapped
+            disableDistortionCorrection = false;
             disableTangentialDistortionCorrection = true;
         }
     }

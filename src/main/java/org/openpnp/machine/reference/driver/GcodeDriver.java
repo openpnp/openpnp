@@ -358,10 +358,10 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         getCommunications().connect();
         connected = false;
 
+        connectThreads();
+
         // Wait a bit while the controller starts up
         Thread.sleep(connectWaitTimeMilliseconds);
-
-        connectThreads();
 
         // Consume any startup messages
         try {

@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
@@ -44,7 +45,6 @@ import org.opencv.core.Size;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.CameraViewFilter;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
@@ -63,6 +63,7 @@ import org.openpnp.util.CameraWalker;
 import org.openpnp.util.ImageUtils;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.UiUtils.Thrunnable;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -79,6 +80,7 @@ public abstract class CalibrateCameraProcess {
     private final MainFrame mainFrame;
     private final CameraView cameraView;
     private boolean automatic;
+    private int automationLevel;
     private final Camera camera;
     private final boolean isHeadMountedCamera;
     private Nozzle nozzle;
@@ -141,13 +143,14 @@ public abstract class CalibrateCameraProcess {
     private Machine machine;
 
     public CalibrateCameraProcess(MainFrame mainFrame, CameraView cameraView, 
-            List<Location> calibrationLocations, ArrayList<Integer> detectionDiameters, boolean automatic)
+            List<Location> calibrationLocations, ArrayList<Integer> detectionDiameters, int automationLevel)
             throws Exception {
         this.mainFrame = mainFrame;
         this.cameraView = cameraView;
         this.calibrationLocations = new ArrayList<Location>(calibrationLocations);
         this.detectionDiameters = detectionDiameters;
-        this.automatic = automatic;
+        this.automatic = automationLevel > 0;
+        this.automationLevel = automationLevel;
 
         machine = Configuration.get().getMachine();
         
@@ -265,7 +268,7 @@ public abstract class CalibrateCameraProcess {
                     });
                 }
                 catch (Exception ex) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                    UiUtils.showError(ex);
                     cleanUpWhenCancelled();
                 }
                 // Note, automatic is only available if the moveLocation is already set.
@@ -341,7 +344,7 @@ public abstract class CalibrateCameraProcess {
                 Math.min(pixelsX-expectedPoint.getX(),
                 Math.min(expectedPoint.getY(),
                 Math.min(pixelsY-expectedPoint.getY(),
-                Math.max(maskDiameter/2, advCal.getFiducialDiameter())))));
+                Math.max(maskDiameter/2, advCal.getFiducialDiameter()*1.2)))));
         
         swingWorker = new SwingWorker<Void, String>() {
 
@@ -440,12 +443,22 @@ public abstract class CalibrateCameraProcess {
      */
     private boolean estimateUnitsPerPixelAction() {
         Logger.trace("Entering estimateUnitsPerPixelAction");
-        ((ReferenceCamera) camera).setAutoVisible(savedAutoVisible);
         
         //Capture the movable's coordinate as the approximate center of the camera's field-of-view
         centralLocation = movable.getLocation().convertToUnits(LengthUnit.Millimeters).
                 derive(null, null, movableZ, 0.0);
-        
+        try {
+            if (movable instanceof Nozzle
+                    && ((Nozzle) movable).getRotationMode() == RotationMode.LimitedArticulation
+                    && angleIncrement < 360) {
+                // Make sure it is compliant with limited articulation.
+                Location l1 = centralLocation.derive(null, null, null, (double) angleIncrement);
+                ((Nozzle) movable).prepareForPickAndPlaceArticulation(centralLocation, l1);
+            } 
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
         //Setup the camera walker
         cameraWalker = new CameraWalker(movable, (Point p)->findAveragedFiducialPoint(p));
         cameraWalker.setOnlySafeZMovesAllowed(isHeadMountedCamera);
@@ -455,15 +468,8 @@ public abstract class CalibrateCameraProcess {
             @Override
             protected Void doInBackground() throws Exception {
                 publish("Estimating Units Per Pixel.");
-                try {
-                    if (movable instanceof Nozzle
-                            && ((Nozzle) movable).getRotationMode() == RotationMode.LimitedArticulation
-                            && angleIncrement < 360) {
-                        // Make sure it is compliant with limited articulation.
-                        Location l1 = centralLocation.derive(null, null, null, (double) angleIncrement);
-                        ((Nozzle) movable).prepareForPickAndPlaceArticulation(centralLocation, l1);
-                    }
 
+                try {
                     cameraWalker.estimateScaling(advCal.getTrialStep(), new Point(pixelsX/2, pixelsY/2));
                 }
                 catch (Exception e) {
@@ -505,7 +511,7 @@ public abstract class CalibrateCameraProcess {
                 
                 if (!cameraWalker.isReadyToWalk()) {
                     if (!isCancelled()) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Error", "Could not estimate units per pixel - calibration aborting.");
+                        UiUtils.showError(new Exception("Could not estimate units per pixel - calibration aborting."));
                     }
                     cleanUpWhenCancelled();
                     return;
@@ -559,22 +565,29 @@ public abstract class CalibrateCameraProcess {
             protected Void doInBackground() throws Exception {
                 maskDiameter = Math.max(initialMaskDiameter, 3*detectionDiameters.get(calibrationHeightIndex)/2);
                 List<Integer> randomIdx = new ArrayList<>();
+                double coverageX = pixelsX - detectionDiameters.get(calibrationHeightIndex)*1.2;
+                double coverageY = pixelsY - detectionDiameters.get(calibrationHeightIndex)*1.2;
+                // Start from a diagonal to the corner for better coverage when numberOfLines is small.
+                // Note, because numberOfLines is always a multiple of 4, this will create two lines going to opposing corners. 
+                // We also swap the targeted corners on Z heights.
+                final double angle0 = Math.atan2((calibrationHeightIndex % 2 == 0) ? -coverageY : coverageY, coverageX);
                 for (int iLine=0; iLine<numberOfLines; iLine++) {
                     publish(String.format("Initializing radial line %d of %d at calibration Z coordinate %d of %d", 
                         iLine+1, numberOfLines, 
                         calibrationHeightIndex+1, numberOfCalibrationHeights));
                     
                     randomIdx.add(iLine);
-                    double lineAngle = iLine * 2 * Math.PI / numberOfLines;
+                    double lineAngle = angle0 + iLine * 2 * Math.PI / numberOfLines;
                     double[] unitVector = new double[] {Math.cos(lineAngle), Math.sin(lineAngle)};
                     double scaling = advCal.getTestPatternFillFraction()*
-                            Math.min((pixelsX - detectionDiameters.get(calibrationHeightIndex)) / (2*Math.abs(unitVector[0])),
-                                    (pixelsY - detectionDiameters.get(calibrationHeightIndex)) / (2*Math.abs(unitVector[1])));
+                            Math.min(coverageX / (2*Math.abs(unitVector[0])),
+                                    coverageY / (2*Math.abs(unitVector[1])));
+                    double r0 = 3 + Math.random()*5;
                     Location startLocation = centralLocation.derive(null, null, movable.getLocation().getLengthZ().
                             convertToUnits(LengthUnit.Millimeters).getValue(), 
                             movable.getLocation().getRotation()).subtract(new Location(LengthUnit.Millimeters,
-                            5*advCal.getTrialStep().multiply(unitVector[0]).convertToUnits(LengthUnit.Millimeters).getValue(),
-                            5*advCal.getTrialStep().multiply(unitVector[1]).convertToUnits(LengthUnit.Millimeters).getValue(),
+                            r0*advCal.getTrialStep().multiply(unitVector[0]).convertToUnits(LengthUnit.Millimeters).getValue(),
+                            r0*advCal.getTrialStep().multiply(unitVector[1]).convertToUnits(LengthUnit.Millimeters).getValue(),
                             0, 0));
                     try {
                         machine.execute(() -> {
@@ -583,7 +596,7 @@ public abstract class CalibrateCameraProcess {
                         });
                     }
                     catch (Exception ex) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                        UiUtils.showError(ex);
                         cleanUpWhenCancelled();
                     }
                     
@@ -669,7 +682,7 @@ public abstract class CalibrateCameraProcess {
                 }
                 
                 if (errorCount > props.maxErrorCount) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", "Too many misdetects - retry and verify fiducial/nozzle tip detection." );
+                    UiUtils.showError(new Exception("Too many misdetects - retry and verify fiducial/nozzle tip detection."));
                     cleanUpWhenCancelled();
                     return;
                 }
@@ -713,7 +726,7 @@ public abstract class CalibrateCameraProcess {
                             new Size(pixelsX, pixelsY), mirrored, apparentMotionDirection);
                     }
                     catch (Exception ex) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                        UiUtils.showError(ex);
                     }
                     finally {
                         cleanUpWhenDone();
@@ -758,15 +771,12 @@ public abstract class CalibrateCameraProcess {
                     });
                 }
                 catch (Exception ex) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                    UiUtils.showError(ex);
                     cleanUpWhenCancelled();
                 }
                 // Note, automatic only available when location set. 
-                if (automatic) {
-                    setInstructionsAndProceedAction("If necessary, use the jog controls on the Machine Controls panel to jog the camera so that the calibration fiducial at Z = %s is approximately centered in the green circle.  Click Next when ready to proceed.", 
-                            ()->requestOperatorToAdjustDiameterAction(),
-                            calibrationLocations.get(calibrationHeightIndex).getLengthZ().toString()); 
-//                    requestOperatorToAdjustDiameterAction();
+                if (automationLevel >= 2) {
+                    requestOperatorToAdjustDiameterAction();
                     return true;
                 }
             }
@@ -787,7 +797,7 @@ public abstract class CalibrateCameraProcess {
                 });
             }
             catch (Exception ex) {
-                MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                UiUtils.showError(ex);
                 cleanUpWhenCancelled();
             }
             
@@ -820,7 +830,7 @@ public abstract class CalibrateCameraProcess {
                 });
             }
             catch (Exception ex) {
-                MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                UiUtils.showError(ex);
                 cleanUpWhenCancelled();
             }
             // Note, automatic only available when location set. 
@@ -870,7 +880,7 @@ public abstract class CalibrateCameraProcess {
             });
         }
         catch (Exception ex) {
-            MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+            UiUtils.showError(ex);
             cleanUpWhenCancelled();
         }
         
@@ -973,13 +983,6 @@ public abstract class CalibrateCameraProcess {
         //Mask off everything that is not near the expected location
         pipeline.setProperty("MaskCircle.center", expectedPoint);
         pipeline.setProperty("DetectCircularSymmetry.center", expectedPoint);
-        
-        //Restrict the mask diameter so as to not extend beyond the edge of  the image
-        maskDiameter = 2*(int)Math.min(expectedPoint.getX(), 
-                Math.min(pixelsX-expectedPoint.getX(),
-                Math.min(expectedPoint.getY(),
-                Math.min(pixelsY-expectedPoint.getY(), maskDiameter/2))));
-        
         pipeline.setProperty("MaskCircle.diameter", maskDiameter);
         pipeline.setProperty("DetectCircularSymmetry.maxDistance", maskDiameter/2.0);
 
@@ -1152,7 +1155,7 @@ public abstract class CalibrateCameraProcess {
                     tempAction.thrun();
                 }
                 catch (Exception ex) {
-                    MessageBoxes.errorBox(MainFrame.get(), "Error", ex);
+                    UiUtils.showError(ex);
                     cleanUpWhenCancelled();
                 }
             }

@@ -30,7 +30,6 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.processes.CalibrateCameraProcess;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -111,6 +110,14 @@ public class CalibrationSolutions implements Solutions.Subject {
 
     @Attribute(required=false)
     private double upLookingSecondaryOffsetZMm = 2;
+
+    /**
+     * automationLevel = 0: No automation, user can step through process.<br/>
+     * automationLevel = 1: Automated process, but stops at the Z level change.<br/>
+     * automationLevel = 2: Fully automated.
+     */
+    @Attribute(required = false)
+    private int automationLevel = 2;
 
     public CalibrationSolutions setMachine(ReferenceMachine machine) {
         this.machine = machine;
@@ -1236,7 +1243,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                              .getCameraView(camera);
             // Encapsulated CalibrateCameraProcess
             new CalibrateCameraProcess(MainFrame.get(), cameraView, calibrationLocations,
-                    detectionDiameters, true) {
+                    detectionDiameters, automationLevel) {
 
                 @Override
                 public void processRawCalibrationData(double[][][] testPattern3dPointsList,
@@ -1266,7 +1273,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         });
                     }
                     catch (Exception e) {
-                        MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                        UiUtils.showError(e);
                         advCal.setValid(false);
                         advCal.setEnabled(false);
                         advCal.setOverridingOldTransformsAndDistortionCorrectionSettings(false);

@@ -223,7 +223,7 @@ public class ReferenceMachine extends AbstractMachine {
                     // position to the initial reported location (see Driver.isSyncInitialLocation()).
                     getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
                 }
-                if (getHomeAfterEnabled()) {
+                if (getHomeAfterEnabled() && isTask(Thread.currentThread())) {
                     UiUtils.submitUiMachineTask(() -> home());
                 }
             }

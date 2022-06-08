@@ -133,9 +133,16 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         return portNames.toArray(new String[] {});
     }
 
+    @Override
     public int read() throws TimeoutException, IOException {
         byte[] b = new byte[1];
-        int l = serialPort.readBytes(b, 1);
+        int l;
+        try {
+            l = serialPort.readBytes(b, 1);
+        }
+        catch (NullPointerException e) {
+            throw new IOException("Trying to read from a unconnected serial.");
+        }
         if (l == -1) {
             throw new IOException("Read error.");
         }
@@ -145,6 +152,7 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         return b[0];
     }
 
+    @Override
     public void writeBytes(byte[] data) throws IOException {
         int l = serialPort.writeBytes(data, data.length);
         if (l == -1) {
@@ -153,6 +161,7 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
     }
 
 
+    @Override
     public String getConnectionName() {
         return "serial://" + portName;
     }
