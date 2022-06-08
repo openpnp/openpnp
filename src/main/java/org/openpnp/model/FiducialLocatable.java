@@ -3,10 +3,12 @@ package org.openpnp.model;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.openpnp.util.IdentifiableList;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -24,34 +26,41 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
     @ElementList(required = false)
     protected IdentifiableList<Placement> placements = new IdentifiableList<>();
 
+    protected transient FiducialLocatable definedBy;
     protected transient File file;
     
     protected transient boolean dirty;
 
 
     public FiducialLocatable() {
+        definedBy = this;
     }
     
     public FiducialLocatable(FiducialLocatable fiducialLocatable) {
-        this.name = fiducialLocatable.name;
-        this.dimensions = fiducialLocatable.dimensions;
+        name = fiducialLocatable.name;
+        dimensions = fiducialLocatable.dimensions;
         placements = new IdentifiableList<>();
         for (Placement placement : fiducialLocatable.placements) {
             placements.add(new Placement(placement));
         }
         file = fiducialLocatable.file;
         dirty = fiducialLocatable.dirty;
+        definedBy = fiducialLocatable.definedBy;
+        fiducialLocatable.addPropertyChangeListener(this);
     }
     
     public void setTo(FiducialLocatable fiducialLocatable) {
-        this.name = fiducialLocatable.name;
-        this.dimensions = fiducialLocatable.dimensions;
+        name = fiducialLocatable.name;
+        dimensions = fiducialLocatable.dimensions;
         placements = new IdentifiableList<>();
         for (Placement placement : fiducialLocatable.placements) {
             placements.add(new Placement(placement));
         }
         file = fiducialLocatable.file;
         dirty = fiducialLocatable.dirty;
+        definedBy = fiducialLocatable.definedBy;
+        fiducialLocatable.removePropertyChangeListener(this);
+        fiducialLocatable.addPropertyChangeListener(this);
     }
     
     public String getName() {
@@ -130,9 +139,23 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        Logger.trace("PropertyChangeEvent = " + evt);
+        Logger.trace(String.format("PropertyChangeEvent handled by @%08x = %s", this.hashCode(), evt));
         if (evt.getSource() != FiducialLocatable.this || evt.getPropertyName() != "dirty") {
             dirty = true;
+            if (evt.getSource() == definedBy) {
+                try {
+                    Logger.trace("setting property: " + evt.getPropertyName() + " = " + evt.getNewValue());
+                    BeanUtils.setProperty(this, evt.getPropertyName(), evt.getNewValue());
+                }
+                catch (IllegalAccessException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (InvocationTargetException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
         }
         
     }

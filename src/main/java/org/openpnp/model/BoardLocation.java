@@ -45,9 +45,6 @@ public class BoardLocation extends FiducialLocatableLocation {
     @Attribute(required = false)
     private Boolean enabled; 
 
-    @ElementMap(required = false)
-    private Map<String, Boolean> placed = new HashMap<>();
-
     BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
     }
@@ -59,7 +56,6 @@ public class BoardLocation extends FiducialLocatableLocation {
 //            setBoard(new Board(boardLocation.getBoard()));
             setBoard(boardLocation.getBoard());
         }
-        this.placed = boardLocation.placed;
     }
 
     public BoardLocation(Board board) {
@@ -87,37 +83,37 @@ public class BoardLocation extends FiducialLocatableLocation {
 //        if (MainFrame.get().getJobTab().getJob().getPanelLocations().get(parentId) == null) {
     }
     
-    public int getTotalActivePlacements(){
-    	if (fiducialLocatable == null) {
-    		return 0;
-    	}
-    	int counter = 0;
-    	for(Placement placement : fiducialLocatable.getPlacements()) {
-    		if (placement.getSide() == getSide()
-    		        && placement.getType() == Type.Placement
-    		        && placement.isEnabled()) {
-    				counter++;
-        	}
-    	}
-    	return counter;
-    }
-    
-    public int getActivePlacements() {
-    	if (fiducialLocatable == null) {
-    		return 0;
-    	}
-    	int counter = 0;
-	    for(Placement placement : fiducialLocatable.getPlacements()) {
-            if (placement.getSide() == getSide()
-                    && placement.getType() == Type.Placement
-                    && placement.isEnabled()
-                    && !getPlaced(placement.getId())) {
-                    counter++;
-            }
-        }
-    	return counter;
-    }
-
+//    public int getTotalActivePlacements(){
+//    	if (fiducialLocatable == null) {
+//    		return 0;
+//    	}
+//    	int counter = 0;
+//    	for(Placement placement : fiducialLocatable.getPlacements()) {
+//    		if (placement.getSide() == getSide()
+//    		        && placement.getType() == Type.Placement
+//    		        && placement.isEnabled()) {
+//    				counter++;
+//        	}
+//    	}
+//    	return counter;
+//    }
+//    
+//    public int getActivePlacements() {
+//    	if (fiducialLocatable == null) {
+//    		return 0;
+//    	}
+//    	int counter = 0;
+//	    for(Placement placement : fiducialLocatable.getPlacements()) {
+//            if (placement.getSide() == getSide()
+//                    && placement.getType() == Type.Placement
+//                    && placement.isEnabled()
+//                    && !getPlaced(placement.getId())) {
+//                    counter++;
+//            }
+//        }
+//    	return counter;
+//    }
+//
     public Board getBoard() {
         return (Board) getFiducialLocatable();
     }
@@ -142,24 +138,24 @@ public class BoardLocation extends FiducialLocatableLocation {
 //        setParentId(id);
 //    }
 
-    public void setPlaced(String placementId, boolean placed) {
-        this.placed.put(placementId, placed);
-        firePropertyChange("placed", null, this.placed);
-    }
-
-    public boolean getPlaced(String placementId) {
-        if (placed.containsKey(placementId)) {
-            return placed.get(placementId);
-        } 
-        else {
-            return false;
-        }
-    }
-    
-    public void clearAllPlaced() {
-        this.placed.clear();
-        firePropertyChange("placed", null, this.placed);
-    }
+//    public void setPlaced(String placementId, boolean placed) {
+//        this.placed.put(placementId, placed);
+//        firePropertyChange("placed", null, this.placed);
+//    }
+//
+//    public boolean getPlaced(String placementId) {
+//        if (placed.containsKey(placementId)) {
+//            return placed.get(placementId);
+//        } 
+//        else {
+//            return false;
+//        }
+//    }
+//    
+//    public void clearAllPlaced() {
+//        this.placed.clear();
+//        firePropertyChange("placed", null, this.placed);
+//    }
     
     public AffineTransform getPlacementTransform() {
         return getLocalToParentTransform();

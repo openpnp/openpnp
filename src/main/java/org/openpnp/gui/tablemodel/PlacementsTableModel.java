@@ -28,6 +28,7 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FiducialLocatable;
+import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -54,9 +55,8 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
         Disabled
     }
 
-//    private Board board;
-    private FiducialLocatable board;
-    private BoardLocation boardLocation;
+    private FiducialLocatable fiducialLocatable;
+    private FiducialLocatableLocation fiducialLocatableLocation;
     private JobPlacementsPanel jobPlacementsPanel;
 
     public PlacementsTableModel(Configuration configuration) {
@@ -67,25 +67,25 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     	this.jobPlacementsPanel = jobPlacementsPanel;
     }
 
-    public void setBoardLocation(BoardLocation boardLocation) {
-        this.boardLocation = boardLocation;
-        if (boardLocation == null) {
-            this.board = null;
+    public void setFiducialLocatableLocation(FiducialLocatableLocation fiducialLocatableLocation) {
+        this.fiducialLocatableLocation = fiducialLocatableLocation;
+        if (fiducialLocatableLocation == null) {
+            this.fiducialLocatable = null;
         }
         else {
-            this.board = boardLocation.getBoard();
+            this.fiducialLocatable = fiducialLocatableLocation.getFiducialLocatable();
         }
         fireTableDataChanged();
     }
 
     @Override
     public Placement getRowObjectAt(int index) {
-        return board.getPlacements().get(index);
+        return fiducialLocatable.getPlacements().get(index);
     }
 
     @Override
     public int indexOf(Object object) {
-        return board.getPlacements().indexOf(object);
+        return fiducialLocatable.getPlacements().indexOf(object);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     }
 
     public int getRowCount() {
-        return (board == null) ? 0 : board.getPlacements().size();
+        return (fiducialLocatable == null) ? 0 : fiducialLocatable.getPlacements().size();
     }
 
     @Override
@@ -114,7 +114,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            Placement placement = board.getPlacements().get(rowIndex);
+            Placement placement = fiducialLocatable.getPlacements().get(rowIndex);
             if (columnIndex == 0) {
                 placement.setEnabled((Boolean) aValue);
                 jobPlacementsPanel.updateActivePlacements();
@@ -155,7 +155,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 8) {
-                boardLocation.setPlaced(placement.getId(), (Boolean) aValue);
+                fiducialLocatableLocation.setPlaced(placement.getId(), (Boolean) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 10) {
@@ -200,7 +200,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     }
 
     public Object getValueAt(int row, int col) {
-        Placement placement = board.getPlacements().get(row);
+        Placement placement = fiducialLocatable.getPlacements().get(row);
         Location loc = placement.getLocation();
         switch (col) {
 			case 0:
@@ -224,7 +224,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 // in the render process. At the least we should cache this information but it
                 // would be better if the information was updated out of band by a listener.
             	jobPlacementsPanel.updateActivePlacements();
-            	return boardLocation.getPlaced(placement.getId());
+            	return fiducialLocatableLocation.getPlaced(placement.getId());
             case 9:
                 return getPlacementStatus(placement);
             case 10:

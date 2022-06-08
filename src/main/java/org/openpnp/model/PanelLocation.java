@@ -101,6 +101,27 @@ public class PanelLocation extends FiducialLocatableLocation {
         }
     }
     
+    /**
+     * Checks to see if a FiducialLocatableLocation is a decendant of this PanelLocation
+     * @param potentialDecendant - the FiducialLocatableLocation to check
+     * @return the direct parent of potentialDecendant or null if potentialDecendant is not a 
+     * decendant of this PanelLocation
+     */
+    public PanelLocation getParentOfDecendant(FiducialLocatableLocation potentialDecendant) {
+        for (FiducialLocatableLocation child : getChildren()) {
+            if (child == potentialDecendant) {
+                return this;
+            }
+            if (child instanceof PanelLocation) {
+                PanelLocation parent = getParentOfDecendant(child);
+                if (parent != null) {
+                    return parent;
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return String.format("Panel (%s), location (%s), side (%s)", fileName, getLocation(), side);

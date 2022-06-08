@@ -58,6 +58,8 @@ import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.FiducialLocatableTableModel;
+import org.openpnp.model.Panel;
+import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -66,47 +68,45 @@ import org.pmw.tinylog.Logger;
 import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
-public class BoardsPanel extends JPanel {
+public class PanelsPanel extends JPanel {
     final private Configuration configuration;
     final private MainFrame frame;
 
-    private static final String PREF_DIVIDER_POSITION = "BoardsPanel.dividerPosition"; //$NON-NLS-1$
+    private static final String PREF_DIVIDER_POSITION = "PanelsPanel.dividerPosition"; //$NON-NLS-1$
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
 
-    private FiducialLocatableTableModel boardsTableModel;
-    private JTable boardsTable;
+    private FiducialLocatableTableModel panelsTableModel;
+    private JTable panelsTable;
     private JSplitPane splitPane;
 
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
 
-    private Preferences prefs = Preferences.userNodeForPackage(BoardsPanel.class);
+    private Preferences prefs = Preferences.userNodeForPackage(PanelsPanel.class);
 
-    private final BoardPlacementsPanel boardPlacementsPanel;
+    private final PanelDefinitionPanel panelDefinitionPanel;
 
-    private JPanel pnlPlacements;
-    
-    public BoardsPanel(Configuration configuration, MainFrame frame) {
+    public PanelsPanel(Configuration configuration, MainFrame frame) {
         this.configuration = configuration;
         this.frame = frame;
         
-        singleSelectionActionGroup = new ActionGroup(removeBoardAction, copyBoardAction);
+        singleSelectionActionGroup = new ActionGroup(removePanelAction, copyPanelAction);
         singleSelectionActionGroup.setEnabled(false);
         
-        multiSelectionActionGroup = new ActionGroup(removeBoardAction);
+        multiSelectionActionGroup = new ActionGroup(removePanelAction);
         multiSelectionActionGroup.setEnabled(false);
         
-        boardsTableModel = new FiducialLocatableTableModel(configuration, 
-                () -> configuration.getBoards(), Board.class);
-        configuration.addPropertyChangeListener("boards", new PropertyChangeListener() {
+        panelsTableModel = new FiducialLocatableTableModel(configuration, 
+                () -> configuration.getPanels(), Panel.class);
+        configuration.addPropertyChangeListener("panels", new PropertyChangeListener() {
 
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 Logger.trace("PropertyChangeEvent = " + evt);
-                boardsTableModel.fireTableDataChanged();
+                panelsTableModel.fireTableDataChanged();
             }});
         
-        boardsTable = new AutoSelectTextTable(boardsTableModel) {
+        panelsTable = new AutoSelectTextTable(panelsTableModel) {
             @Override
             public String getToolTipText(MouseEvent e) {
 
@@ -116,8 +116,8 @@ public class BoardsPanel extends JPanel {
 
                 if (row >= 0) {
                     if (col == 0) {
-                        row = boardsTable.convertRowIndexToModel(row);
-                        return configuration.getBoards().get(row).getFile().toString();
+                        row = panelsTable.convertRowIndexToModel(row);
+                        return configuration.getPanels().get(row).getFile().toString();
                     }
                 }
 
@@ -125,8 +125,8 @@ public class BoardsPanel extends JPanel {
             }
         };
 
-        boardsTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        boardsTable.getSelectionModel()
+        panelsTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        panelsTable.getSelectionModel()
                 .addListSelectionListener(new ListSelectionListener() {
                     @Override
                     public void valueChanged(ListSelectionEvent e) {
@@ -134,25 +134,25 @@ public class BoardsPanel extends JPanel {
                             return;
                         }
                         
-                        List<Board> selections = getSelections();
+                        List<Panel> selections = getSelections();
                         if (selections.size() == 0) {
                             singleSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(false);
-                            boardPlacementsPanel.setBoard(null);
+                            panelDefinitionPanel.setPanel(null);
 //                            Configuration.get().getBus()
 //                                .post(new FiducialLocatableLocationSelectedEvent(null, BoardsPanel.this));
                         }
                         else if (selections.size() == 1) {
                             multiSelectionActionGroup.setEnabled(false);
                             singleSelectionActionGroup.setEnabled(true);
-                            boardPlacementsPanel.setBoard((Board) selections.get(0));
+                            panelDefinitionPanel.setPanel((Panel) selections.get(0));
 //                            Configuration.get().getBus()
 //                                .post(new FiducialLocatableLocationSelectedEvent((BoardLocation) selections.get(0), BoardsPanel.this));
                         }
                         else {
                             singleSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(true);
-                            boardPlacementsPanel.setBoard(null);
+                            panelDefinitionPanel.setPanel(null);
 //                            Configuration.get().getBus()
 //                                .post(new FiducialLocatableLocationSelectedEvent(null, BoardsPanel.this));
                         }
@@ -173,122 +173,127 @@ public class BoardsPanel extends JPanel {
             }
         });
 
-        JPanel pnlBoards = new JPanel();
-        pnlBoards.setBorder(new TitledBorder(null,
-                Translations.getString("BoardsPanel.Tab.Boards"),
+        JPanel pnlPanels = new JPanel();
+        pnlPanels.setBorder(new TitledBorder(null,
+                Translations.getString("PanelsPanel.Tab.Panels"),
                 TitledBorder.LEADING, TitledBorder.TOP, null)); //$NON-NLS-1$
-        pnlBoards.setLayout(new BorderLayout(0, 0));
+        pnlPanels.setLayout(new BorderLayout(0, 0));
 
-        JToolBar toolBarBoards = new JToolBar();
-        toolBarBoards.setFloatable(false);
-        pnlBoards.add(toolBarBoards, BorderLayout.NORTH);
+        JToolBar toolBarPanels = new JToolBar();
+        toolBarPanels.setFloatable(false);
+        pnlPanels.add(toolBarPanels, BorderLayout.NORTH);
 
-        toolBarBoards.addSeparator();
-        JButton btnAddBoard = new JButton(addBoardAction);
-        btnAddBoard.setHideActionText(true);
-        btnAddBoard.addMouseListener(new MouseAdapter() {
+        toolBarPanels.addSeparator();
+        JButton btnAddPanel = new JButton(addPanelAction);
+        btnAddPanel.setHideActionText(true);
+        btnAddPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 JPopupMenu menu = new JPopupMenu();
-                menu.add(new JMenuItem(addNewBoardAction));
-                menu.add(new JMenuItem(addExistingBoardAction));
-                menu.show(btnAddBoard, (int) btnAddBoard.getWidth(), (int) btnAddBoard.getHeight());
+                menu.add(new JMenuItem(addNewPanelAction));
+                menu.add(new JMenuItem(addExistingPanelAction));
+                menu.show(btnAddPanel, (int) btnAddPanel.getWidth(), (int) btnAddPanel.getHeight());
             }
         });
-        toolBarBoards.add(btnAddBoard);
+        toolBarPanels.add(btnAddPanel);
         
-        JButton btnRemoveBoard = new JButton(removeBoardAction);
-        btnRemoveBoard.setHideActionText(true);
-        toolBarBoards.add(btnRemoveBoard);
+        JButton btnRemovePanel = new JButton(removePanelAction);
+        btnRemovePanel.setHideActionText(true);
+        toolBarPanels.add(btnRemovePanel);
         
-        JButton btnCopyBoard = new JButton(copyBoardAction);
-        btnCopyBoard.setHideActionText(true);
-        toolBarBoards.add(btnCopyBoard);
+        JButton btnCopyPanel = new JButton(copyPanelAction);
+        btnCopyPanel.setHideActionText(true);
+        toolBarPanels.add(btnCopyPanel);
 
-        pnlBoards.add(new JScrollPane(boardsTable));
-        splitPane.setLeftComponent(pnlBoards);
+        pnlPanels.add(new JScrollPane(panelsTable));
+        splitPane.setLeftComponent(pnlPanels);
         
-        pnlPlacements = new JPanel();
-        pnlPlacements.setLayout(new BorderLayout(0, 0));
-        splitPane.setRightComponent(pnlPlacements);
-
-        boardPlacementsPanel = new BoardPlacementsPanel(this);
-        pnlPlacements.add(boardPlacementsPanel);
+        panelDefinitionPanel = new PanelDefinitionPanel(this);
+        splitPane.setRightComponent(panelDefinitionPanel);
         
         add(splitPane);
+        
 
         Configuration.get().getBus().register(this);
     }
     
     public JTable getFiducialLocatableLocationsTable() {
-        return boardsTable;
+        return panelsTable;
     }
 
     @Subscribe
     public void fiducialLocatableLocationSelected(FiducialLocatableLocationSelectedEvent event) {
-        if (event.source == this || event.fiducialLocatableLocation == null || !(event.fiducialLocatableLocation.getFiducialLocatable() instanceof Board)) {
+        if (event.source == this || event.fiducialLocatableLocation == null) {
             return;
         }
-        SwingUtilities.invokeLater(() -> {
-            selectBoard((Board) event.fiducialLocatableLocation.getFiducialLocatable());
-        });
+        if (event.fiducialLocatableLocation.getFiducialLocatable() instanceof Panel) {
+            SwingUtilities.invokeLater(() -> {
+                selectPanel((Panel) event.fiducialLocatableLocation.getFiducialLocatable());
+            });
+        }
+        else if (event.fiducialLocatableLocation.getParent() instanceof PanelLocation) {
+            SwingUtilities.invokeLater(() -> {
+                selectPanel((Panel) event.fiducialLocatableLocation.getParent().getFiducialLocatable());
+                panelDefinitionPanel.selectChild(event.fiducialLocatableLocation);
+            });
+        }
     }
 
     @Subscribe
     public void placementSelected(PlacementSelectedEvent event) {
-        if (event.source == this || event.source == boardPlacementsPanel || event.fiducialLocatableLocation == null || !(event.fiducialLocatableLocation.getFiducialLocatable() instanceof Board)) {
+        if (event.source == this || event.source == panelDefinitionPanel || event.fiducialLocatableLocation == null || !(event.fiducialLocatableLocation.getFiducialLocatable() instanceof Panel)) {
             return;
         }
         SwingUtilities.invokeLater(() -> {
-            selectBoard((Board) event.fiducialLocatableLocation.getFiducialLocatable());
-            boardPlacementsPanel.selectPlacement(event.placement);
+            selectPanel((Panel) event.fiducialLocatableLocation.getFiducialLocatable());
+            panelDefinitionPanel.selectFiducial(event.placement);
         });
     }
 
-    private void selectBoard(Board board) {
-        if (board == null) {
-            boardsTable.getSelectionModel().clearSelection();
+    private void selectPanel(Panel panel) {
+        if (panel == null) {
+            panelsTable.getSelectionModel().clearSelection();
             return;
         }
-        for (int i = 0; i < boardsTableModel.getRowCount(); i++) {
-            if (configuration.getBoards().get(i) == board) {
-                int index = boardsTable.convertRowIndexToView(i);
-                boardsTable.getSelectionModel().setSelectionInterval(index, index);
-                boardsTable.scrollRectToVisible(
-                        new Rectangle(boardsTable.getCellRect(index, 0, true)));
+        for (int i = 0; i < panelsTableModel.getRowCount(); i++) {
+            if (configuration.getPanels().get(i) == panel) {
+                int index = panelsTable.convertRowIndexToView(i);
+                panelsTable.getSelectionModel().setSelectionInterval(index, index);
+                panelsTable.scrollRectToVisible(
+                        new Rectangle(panelsTable.getCellRect(index, 0, true)));
                 break;
             }
         }
     }
 
     public void refresh() {
-        boardsTableModel.fireTableDataChanged();
+        panelsTableModel.fireTableDataChanged();
     }
 
     public void refreshSelectedRow() {
-        int index = boardsTable.convertRowIndexToModel(boardsTable.getSelectedRow());
-        boardsTableModel.fireTableRowsUpdated(index, index);
+        int index = panelsTable.convertRowIndexToModel(panelsTable.getSelectedRow());
+        panelsTableModel.fireTableRowsUpdated(index, index);
     }
 
-    public Board getSelection() {
-        List<Board> selections = getSelections();
+    public Panel getSelection() {
+        List<Panel> selections = getSelections();
         if (selections.isEmpty()) {
             return null;
         }
         return selections.get(0);
     }
 
-    public List<Board> getSelections() {
-        ArrayList<Board> selections = new ArrayList<>();
-        int[] selectedRows = boardsTable.getSelectedRows();
+    public List<Panel> getSelections() {
+        ArrayList<Panel> selections = new ArrayList<>();
+        int[] selectedRows = panelsTable.getSelectedRows();
         for (int selectedRow : selectedRows) {
-            selectedRow = boardsTable.convertRowIndexToModel(selectedRow);
-            selections.add(configuration.getBoards().get(selectedRow));
+            selectedRow = panelsTable.convertRowIndexToModel(selectedRow);
+            selections.add(configuration.getPanels().get(selectedRow));
         }
         return selections;
     }
 
-    public final Action addBoardAction = new AbstractAction() {
+    public final Action addPanelAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard")); //$NON-NLS-1$
             putValue(SMALL_ICON, Icons.add);
@@ -300,7 +305,7 @@ public class BoardsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {}
     };
 
-    public final Action addNewBoardAction = new AbstractAction() {
+    public final Action addNewPanelAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard.NewBoard")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.AddBoard.NewBoard.Description")); //$NON-NLS-1$
@@ -330,7 +335,7 @@ public class BoardsPanel extends JPanel {
 
                 addBoard(file);
 
-                Helpers.selectLastTableRow(boardsTable);
+                Helpers.selectLastTableRow(panelsTable);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -340,7 +345,7 @@ public class BoardsPanel extends JPanel {
         }
     };
 
-    public final Action addExistingBoardAction = new AbstractAction() {
+    public final Action addExistingPanelAction = new AbstractAction() {
         {
             putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard")); //$NON-NLS-1$
             putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
@@ -366,7 +371,7 @@ public class BoardsPanel extends JPanel {
 
                 addBoard(file);
 
-                Helpers.selectLastTableRow(boardsTable);
+                Helpers.selectLastTableRow(panelsTable);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -379,10 +384,10 @@ public class BoardsPanel extends JPanel {
         Board board = configuration.getBoard(file);
         BoardLocation boardLocation = new BoardLocation(board);
         // TODO: Move to a list property listener.
-        boardsTableModel.fireTableDataChanged();
+        panelsTableModel.fireTableDataChanged();
     }
     
-    public final Action removeBoardAction = new AbstractAction("Remove Board") { //$NON-NLS-1$
+    public final Action removePanelAction = new AbstractAction("Remove Board") { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, Translations.getString("BoardPanel.Action.RemoveBoard")); //$NON-NLS-1$
@@ -392,51 +397,51 @@ public class BoardsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (Board selection : getSelections()) {
-                configuration.removeBoard(selection);
+            for (Panel selection : getSelections()) {
+                configuration.removePanel(selection);
 
             }
-            boardsTableModel.fireTableDataChanged();
+            panelsTableModel.fireTableDataChanged();
         }
     };
     
-    public final Action copyBoardAction = new AbstractAction() {
+    public final Action copyPanelAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, Translations.getString("BoardPanel.Action.CopyBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.CopyBoard.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("PanelsPanel.Action.CopyPanel")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PanelsPanel.Action.CopyPanel.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_COPY);
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Board boardToCopy = getSelection();
-            FileDialog fileDialog = new FileDialog(frame, Translations.getString("BoardPanel.Action.CopyBoard.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
+            Panel panelToCopy = getSelection();
+            FileDialog fileDialog = new FileDialog(frame, Translations.getString("PanelsPanel.Action.CopyPanel.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    return name.toLowerCase().endsWith(".board.xml"); //$NON-NLS-1$
+                    return name.toLowerCase().endsWith(".panel.xml"); //$NON-NLS-1$
                 }
             });
-            fileDialog.setFile("*.board.xml");
+            fileDialog.setFile("*.panel.xml");
             fileDialog.setVisible(true);
             try {
                 String filename = fileDialog.getFile();
                 if (filename == null) {
                     return;
                 }
-                if (!filename.toLowerCase().endsWith(".board.xml")) { //$NON-NLS-1$
-                    filename = filename + ".board.xml"; //$NON-NLS-1$
+                if (!filename.toLowerCase().endsWith(".panel.xml")) { //$NON-NLS-1$
+                    filename = filename + ".panel.xml"; //$NON-NLS-1$
                 }
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
-                Board newBoard = new Board(boardToCopy);
-                newBoard.setFile(file);
-                newBoard.setName(file.getName());
-                newBoard.setDirty(true);
-                configuration.addBoard(newBoard);
-                boardsTableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(boardsTable);
+                Panel newPanel = new Panel(panelToCopy);
+                newPanel.setFile(file);
+                newPanel.setName(file.getName());
+                newPanel.setDirty(true);
+                configuration.addPanel(newPanel);
+                panelsTableModel.fireTableDataChanged();
+                Helpers.selectLastTableRow(panelsTable);
             }
             catch (Exception e) {
                 e.printStackTrace();

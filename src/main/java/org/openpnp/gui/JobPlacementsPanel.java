@@ -59,6 +59,7 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
+import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -80,7 +81,8 @@ public class JobPlacementsPanel extends JPanel {
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
     private ActionGroup captureAndPositionActionGroup;
-    private BoardLocation boardLocation;
+//    private BoardLocation boardLocation;
+    private FiducialLocatableLocation fiducialLocatableLocation;
     private JobPanel jobPanel;
 
     private static Color typeColorFiducial = new Color(157, 188, 255);
@@ -160,9 +162,9 @@ public class JobPlacementsPanel extends JPanel {
                     multiSelectionActionGroup.setEnabled(false);
                     singleSelectionActionGroup.setEnabled(getSelection() != null);
                     captureAndPositionActionGroup.setEnabled(getSelection() != null
-                            && getSelection().getSide() == boardLocation.getSide());
+                            && getSelection().getSide() == fiducialLocatableLocation.getSide());
                     Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
-                            boardLocation, JobPlacementsPanel.this));
+                            fiducialLocatableLocation, JobPlacementsPanel.this));
                     MainFrame mainFrame = MainFrame.get();
                     if (getSelection() != null
                             && mainFrame.getTabs().getSelectedComponent() == mainFrame.getJobTab() 
@@ -326,6 +328,10 @@ public class JobPlacementsPanel extends JPanel {
     }
 
     public void selectPlacement(Placement placement) {
+        if (placement == null) {
+            table.getSelectionModel().clearSelection();
+            return;
+        }
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             if (tableModel.getRowObjectAt(i) == placement) {
                 int index = table.convertRowIndexToView(i);
@@ -353,9 +359,9 @@ public class JobPlacementsPanel extends JPanel {
         int blTotalActivePlacements = 0;
         int blActivePlacements = 0;
         
-        if (boardLocation != null) {
-            blTotalActivePlacements = boardLocation.getTotalActivePlacements();
-            blActivePlacements = boardLocation.getActivePlacements();
+        if (fiducialLocatableLocation != null) {
+            blTotalActivePlacements = fiducialLocatableLocation.getTotalActivePlacements();
+            blActivePlacements = fiducialLocatableLocation.getActivePlacements();
         }
         
         MainFrame.get().setPlacementCompletionStatus(totalActivePlacements - activePlacements, 
@@ -369,12 +375,12 @@ public class JobPlacementsPanel extends JPanel {
         
         RowFilter<PlacementsTableModel, Integer> sideFilter = new RowFilter<PlacementsTableModel, Integer>() {
             public boolean include(Entry<? extends PlacementsTableModel, ? extends Integer> entry) {
-                if (boardLocation == null) {
+                if (fiducialLocatableLocation == null) {
                     return false;
                 }
                 PlacementsTableModel model = entry.getModel();
                 Placement placement = model.getRowObjectAt(entry.getIdentifier());
-                return placement.getSide() == boardLocation.getSide();
+                return placement.getSide() == fiducialLocatableLocation.getSide();
             }
         };
         filters.add(sideFilter);
@@ -390,14 +396,14 @@ public class JobPlacementsPanel extends JPanel {
     }
     
     
-    public void setBoardLocation(BoardLocation boardLocation) {
-        this.boardLocation = boardLocation;
-        if (boardLocation == null) {
-            tableModel.setBoardLocation(null);
+    public void setFiducialLocatableLocation(FiducialLocatableLocation fiducialLocatableLocation) {
+        this.fiducialLocatableLocation = fiducialLocatableLocation;
+        if (fiducialLocatableLocation == null) {
+            tableModel.setFiducialLocatableLocation(null);
             boardLocationSelectionActionGroup.setEnabled(false);
         }
         else {
-            tableModel.setBoardLocation(boardLocation);
+            tableModel.setFiducialLocatableLocation(fiducialLocatableLocation);
             boardLocationSelectionActionGroup.setEnabled(true);
 
             updateRowFilter();
@@ -415,13 +421,13 @@ public class JobPlacementsPanel extends JPanel {
 
     public List<Placement> getSelections() {
         ArrayList<Placement> placements = new ArrayList<>();
-        if (boardLocation == null) {
+        if (fiducialLocatableLocation == null) {
             return placements;
         }
         int[] selectedRows = table.getSelectedRows();
         for (int selectedRow : selectedRows) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            placements.add(boardLocation.getBoard().getPlacements().get(selectedRow));
+            placements.add(fiducialLocatableLocation.getFiducialLocatable().getPlacements().get(selectedRow));
         }
         return placements;
     }
@@ -448,7 +454,7 @@ public class JobPlacementsPanel extends JPanel {
             }
             
             // Check if the new placement ID is unique
-            for(Placement compareplacement : boardLocation.getBoard().getPlacements()) {
+            for(Placement compareplacement : fiducialLocatableLocation.getFiducialLocatable().getPlacements()) {
             	if (compareplacement.getId().equals(id)) {
             		MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
                             "The ID for the new placement already exists");
@@ -460,12 +466,12 @@ public class JobPlacementsPanel extends JPanel {
 
             placement.setPart(Configuration.get().getParts().get(0));
             placement.setLocation(new Location(Configuration.get().getSystemUnits()));
-            placement.setSide(boardLocation.getSide());
+            placement.setSide(fiducialLocatableLocation.getSide());
 
-            boardLocation.getBoard().addPlacement(placement);
+            fiducialLocatableLocation.getFiducialLocatable().addPlacement(placement);
             tableModel.fireTableDataChanged();
             updateActivePlacements();
-            boardLocation.setPlaced(placement.getId(), false);
+            fiducialLocatableLocation.setPlaced(placement.getId(), false);
             Helpers.selectLastTableRow(table);
         }
     };
@@ -480,7 +486,7 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-                boardLocation.getBoard().removePlacement(placement);
+                fiducialLocatableLocation.getFiducialLocatable().removePlacement(placement);
             }
             tableModel.fireTableDataChanged();
             updateActivePlacements();
@@ -497,7 +503,7 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                Location location = Utils2D.calculateBoardPlacementLocation(fiducialLocatableLocation,
                         getSelection().getLocation());
 
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
@@ -528,7 +534,7 @@ public class JobPlacementsPanel extends JPanel {
                 Component comp = MainFrame.get().getFocusOwner();
                 Helpers.selectNextTableRow(table);
                 comp.requestFocus();
-                Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+                Location location = Utils2D.calculateBoardPlacementLocation(fiducialLocatableLocation,
                         getSelection().getLocation());
                 Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
                         .getDefaultCamera();
@@ -551,7 +557,7 @@ public class JobPlacementsPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Location location = Utils2D.calculateBoardPlacementLocation(boardLocation,
+            Location location = Utils2D.calculateBoardPlacementLocation(fiducialLocatableLocation,
                     getSelection().getLocation());
 
             Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
@@ -576,7 +582,7 @@ public class JobPlacementsPanel extends JPanel {
                 HeadMountable tool = MainFrame.get().getMachineControls().getSelectedTool();
                 Camera camera = tool.getHead().getDefaultCamera();
                 Location placementLocation = Utils2D.calculateBoardPlacementLocationInverse(
-                        boardLocation, camera.getLocation());
+                        fiducialLocatableLocation, camera.getLocation());
                 getSelection().setLocation(placementLocation);
                 table.repaint();
             });
@@ -596,7 +602,7 @@ public class JobPlacementsPanel extends JPanel {
             UiUtils.messageBoxOnException(() -> {
                 Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
                 Location placementLocation = Utils2D
-                        .calculateBoardPlacementLocationInverse(boardLocation, nozzle.getLocation());
+                        .calculateBoardPlacementLocationInverse(fiducialLocatableLocation, nozzle.getLocation());
                 getSelection().setLocation(placementLocation);
                 table.repaint();
             });
@@ -727,7 +733,7 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-                boardLocation.setPlaced(placement.getId(), placed);
+                fiducialLocatableLocation.setPlaced(placement.getId(), placed);
                 tableModel.fireTableDataChanged();   
                 updateActivePlacements();
             }

@@ -651,6 +651,12 @@ public class Configuration extends AbstractModelObject {
         return machine;
     }
 
+    public void addPanel(Panel panel) {
+        LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
+        panels.put(panel.getFile(), panel);
+        firePropertyChange("panels", oldValue, panels);
+    }
+    
     public void addPanel(File file) throws Exception {
         getPanel(file);
     }
@@ -890,7 +896,7 @@ public class Configuration extends AbstractModelObject {
             return;
         }
         Panel panel;
-        if (panelLocation == job.getRootPanelLocation()) {
+        if (job != null && panelLocation == job.getRootPanelLocation()) {
             panel = panelLocation.getPanel();
             panel.setFile(job.getFile());
         }
@@ -901,7 +907,7 @@ public class Configuration extends AbstractModelObject {
                 //If that didn't work, try to find it in the parent panel directory
                 panelFile = new File(panelLocation.getParent().getPanel().getFile().getParentFile(), panelFileName);
             }
-            if (!panelFile.exists()) {
+            if (job != null && !panelFile.exists()) {
                 // If that fails, see if we can find it relative to the
                 // directory the job was in
                 panelFile = new File(job.getFile().getParentFile(), panelFileName);
@@ -909,7 +915,7 @@ public class Configuration extends AbstractModelObject {
             if (!panelFile.exists()) {
                 throw new Exception("Panel file not found: " + panelFileName);
             }
-            panel = getPanel(panelFile);
+            panel = new Panel(getPanel(panelFile));
             panelLocation.setPanel(panel);
         }
         else {
@@ -1130,7 +1136,7 @@ public class Configuration extends AbstractModelObject {
     }
 
     /**
-     * Used to provide a fixed root for the Parts when serializing.
+     * Used to provide a fixed root for the Panels when serializing.
      */
     @Root(name = "openpnp-panels")
     public static class PanelsConfigurationHolder {

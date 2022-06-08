@@ -2,14 +2,21 @@ package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.Placement.Type;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
+import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
 
 public class FiducialLocatableLocation extends AbstractLocatable {
 
+    /**
+     * The side of this FiducialLocatableLocation that faces the Top side of its parent
+     */
     @Attribute
     protected Side side = Side.Top;
 
@@ -21,6 +28,9 @@ public class FiducialLocatableLocation extends AbstractLocatable {
 
     @Attribute(required = false)
     protected boolean locallyEnabled = true;
+
+    @ElementMap(required = false)
+    private Map<String, Boolean> placed = new HashMap<>();
 
     protected PanelLocation parent;
     protected FiducialLocatable fiducialLocatable;
@@ -48,19 +58,13 @@ public class FiducialLocatableLocation extends AbstractLocatable {
         this.locallyEnabled = fiducialLocatableLocation.locallyEnabled;
         this.parent = fiducialLocatableLocation.parent;
         this.fiducialLocatable = fiducialLocatableLocation.fiducialLocatable;
-//        if (fiducialLocatableLocation.fiducialLocatable != null) {
-//            this.fiducialLocatable = new FiducialLocatable(fiducialLocatableLocation.fiducialLocatable);
-//        }
-//        else {
-//            this.fiducialLocatable = null;
-//        }
         if (fiducialLocatableLocation.localToParentTransform != null) {
             this.localToParentTransform = new AffineTransform(fiducialLocatableLocation.localToParentTransform);
         }
         else {
             this.localToParentTransform = null;
         }
-        
+        this.placed = new HashMap<>(fiducialLocatableLocation.placed);
     }
     
     public FiducialLocatableLocation(FiducialLocatable fiducialLocatable) {
@@ -68,10 +72,18 @@ public class FiducialLocatableLocation extends AbstractLocatable {
         setFiducialLocatable(fiducialLocatable);
     }
 
+    /**
+     * Gets the side of the FiducialLocatableLocation that is facing the Top side of its parent
+     * @return
+     */
     public Side getLocalSide() {
         return side;
     }
     
+    /**
+     * Sets the side of the FiducialLocatableLocation that is facing the Top side of its parent
+     * @param side
+     */
     public void setLocalSide(Side side) {
         Object oldValue = this.side;
         this.side = side;
@@ -79,7 +91,7 @@ public class FiducialLocatableLocation extends AbstractLocatable {
     }
     
     public void flipSide() {
-        side = side.flip();
+        setSide(getSide().flip());
     }
 
     public FiducialLocatable getFiducialLocatable() {
@@ -198,6 +210,10 @@ public class FiducialLocatableLocation extends AbstractLocatable {
         }
     }
     
+    /**
+     * Gets the side of the FiducialLocatableLocation that is facing up on the machine
+     * @return
+     */
     public Side getSide() {
         if (parent != null && parent.getSide() == Side.Bottom) {
             return side.flip();
@@ -205,6 +221,10 @@ public class FiducialLocatableLocation extends AbstractLocatable {
         return side;
     }
     
+    /**
+     * Sets the side of the FiducialLocatableLocation that is facing up on the machine
+     * @param side
+     */
     public void setSide(Side side) {
         if (parent != null && parent.getSide() == Side.Bottom) {
             this.side = side.flip();
@@ -224,4 +244,55 @@ public class FiducialLocatableLocation extends AbstractLocatable {
         }
         return false;
     }
+    
+    public int getTotalActivePlacements(){
+        if (fiducialLocatable == null) {
+            return 0;
+        }
+        int counter = 0;
+        for(Placement placement : fiducialLocatable.getPlacements()) {
+            if (placement.getSide() == getSide()
+                    && placement.getType() == Type.Placement
+                    && placement.isEnabled()) {
+                    counter++;
+            }
+        }
+        return counter;
+    }
+    
+    public int getActivePlacements() {
+        if (fiducialLocatable == null) {
+            return 0;
+        }
+        int counter = 0;
+        for(Placement placement : fiducialLocatable.getPlacements()) {
+            if (placement.getSide() == getSide()
+                    && placement.getType() == Type.Placement
+                    && placement.isEnabled()
+                    && !getPlaced(placement.getId())) {
+                    counter++;
+            }
+        }
+        return counter;
+    }
+
+    public void setPlaced(String placementId, boolean placed) {
+        this.placed.put(placementId, placed);
+        firePropertyChange("placed", null, this.placed);
+    }
+
+    public boolean getPlaced(String placementId) {
+        if (placed.containsKey(placementId)) {
+            return placed.get(placementId);
+        } 
+        else {
+            return false;
+        }
+    }
+    
+    public void clearAllPlaced() {
+        this.placed.clear();
+        firePropertyChange("placed", null, this.placed);
+    }
+    
 }

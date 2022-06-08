@@ -71,6 +71,7 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
             placements.addAll(fiducials);
         }
         id = null;
+        
         for (FiducialLocatableLocation child : children) {
             child.addPropertyChangeListener(this);
         }
@@ -78,9 +79,7 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     
     @Persist
     private void persist() {
-        if (version == null || !version.equals(LATEST_VERSION)) {
-            version = LATEST_VERSION;
-        }
+        version = LATEST_VERSION;
         
         //Remove deprecated elements
         columns = null;

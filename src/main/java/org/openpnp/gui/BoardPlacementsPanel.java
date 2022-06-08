@@ -63,6 +63,8 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
+import org.openpnp.util.IdentifiableList;
+
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassInfoList;
@@ -429,7 +431,7 @@ public class BoardPlacementsPanel extends JPanel {
                     "Please select a board to import into."); //$NON-NLS-1$
             return;
         }
-
+        
         BoardImporter boardImporter;
         try {
             boardImporter = boardImporterClass.newInstance();
@@ -443,8 +445,40 @@ public class BoardPlacementsPanel extends JPanel {
             Board importedBoard = boardImporter.importBoard((Frame) getTopLevelAncestor());
             if (importedBoard != null) {
                 Board existingBoard = boardsPanel.getSelection();
+                IdentifiableList<Placement> existingPlacements = existingBoard.getPlacements();
+                int importOption = 1;
+                if (!existingPlacements.isEmpty()) {
+                    //Option 0: Merge imported placements with existing placements
+                    //Option 1: Import after deleting all existing placements
+                    //Option 2: Cancel the import
+                    Object[] options = {"Merge new with existing",
+                            "Replace existing with new",
+                            "Cancel"};
+                    importOption = JOptionPane.showOptionDialog((Frame) getTopLevelAncestor(),
+                            "The Selected Board Already Has Existing Placements",
+                            "What do you want to do?",
+                            JOptionPane.YES_NO_CANCEL_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            options,
+                            options[2]);
+                    if (importOption == 2) {
+                        return;
+                    }
+                }
+                if (importOption == 1) {
+                    existingPlacements.clear();
+                }
                 for (Placement placement : importedBoard.getPlacements()) {
-                    existingBoard.addPlacement(placement);
+                    if (importOption == 0 && (existingPlacements.get(placement.getId()) != null)) {
+                        Placement existingPlacement = existingPlacements.get(placement.getId());
+                        existingPlacement.setPart(placement.getPart());
+                        existingPlacement.setSide(placement.getSide());
+                        existingPlacement.setLocation(placement.getLocation());
+                    }
+                    else {
+                        existingBoard.addPlacement(placement);
+                    }
                 }
                 for (BoardPad pad : importedBoard.getSolderPastePads()) {
                     // TODO: This is a temporary hack until we redesign the

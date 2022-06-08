@@ -22,6 +22,7 @@ package org.openpnp.gui.tablemodel;
 import java.util.List;
 import java.util.Locale;
 
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
@@ -165,9 +166,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
                     }
                     fiducialLocatableLocation.setLocalToParentTransform(null);
                 }
-                fireDecendantsCellUpdated(rowIndex, columnIndex);
-                fireDecendantsCellUpdated(rowIndex, 4);
-                fireDecendantsCellUpdated(rowIndex, 5);
+                fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 4) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -175,8 +174,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
                 Location location = fiducialLocatableLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
                 fiducialLocatableLocation.setGlobalLocation(location);
-                fireDecendantsCellUpdated(rowIndex, columnIndex);
-                fireDecendantsCellUpdated(rowIndex, 5);
+                fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -184,8 +182,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
                 Location location = fiducialLocatableLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
                 fiducialLocatableLocation.setGlobalLocation(location);
-                fireDecendantsCellUpdated(rowIndex, columnIndex);
-                fireDecendantsCellUpdated(rowIndex, 4);
+                fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 6) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -198,9 +195,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
             else if (columnIndex == 7) {
                 fiducialLocatableLocation.setGlobalLocation(fiducialLocatableLocation.getGlobalLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
-                fireDecendantsCellUpdated(rowIndex, columnIndex);
-                fireDecendantsCellUpdated(rowIndex, 4);
-                fireDecendantsCellUpdated(rowIndex, 5);
+                fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 8) {
                 fiducialLocatableLocation.setLocallyEnabled((Boolean) aValue);
@@ -216,6 +211,13 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
         }
     }
 
+    public void fireDecendantsUpdated(FiducialLocatableLocation fiducialLocatableLocation) {
+        int idx = indexOf(fiducialLocatableLocation);
+        if (idx >= 0) {
+            fireDecendantsCellUpdated(idx, TableModelEvent.ALL_COLUMNS);
+        }
+    }
+    
     private void fireDecendantsCellUpdated(int rowIndex, int columnIndex) {
         fireTableCellUpdated(rowIndex, columnIndex);
         FiducialLocatableLocation fll = getFiducialLocatableLocation(rowIndex);
