@@ -244,21 +244,25 @@ The BlindsFeeder implements the EIA-481-C standard and its own geometry makes su
 
 ![image](https://user-images.githubusercontent.com/9963310/173005071-a46b1282-b6de-4375-b9d7-9c71b13a202e.png)
 
+The **Rotation in Tape** setting must be interpreted relative to the tape's orientation, regardless of how the feeder/tape is oriented on the machine. 
 
-The **Rotation in Tape** setting must be interpreted relative to the tape's orientation, regardless of how the feeder/tape is oriented on the machine. Unfortunately, it seems there is no universal industry standard of how to interpret the orientation of parts or what is considered 0° inside the tape [(see here)](https://groups.google.com/g/openpnp/c/M93Ve67V-Xg/m/EpMJMLkFCAAJ). Furthermore, your E-CAD library parts might have legacy mixed orientations anyway. So let's proceed pragmatically as follows:
+Proceed as follows:
 
 1. Look at the **neutral** upright orientation of the part package/footprint as drawn inside your E-CAD **library**.
-1. ⚠ Double-check you are in the **library**, do **not** look at the part in the project PCB, this is _not_ neutral!  
-1. See where pin 1 is, how the polarity, the cathode etc. are oriented. This is your 0° for the part. 
+1. ⚠ Double-check you are in the **library**, do **not** look at the part in the project PCB, this is **not neutral!**  
+1. Note how pin 1, polarity, cathode etc. are oriented. 
+   This is your 0° for the part. 
 
    ![library part](https://user-images.githubusercontent.com/9963310/173001959-d0b8e036-c73d-4e39-99ec-589f6b16d32c.png)
 
-1. Look at the tape with the sprocket holes on top. The direction of unreeling goes to the right and this is our 0° tape orientation.
-1. Determine how the part is rotated inside the tape pocket, relative from its upright orientation in (1). This is the **Rotation in Tape**.
+1. Look at the tape so that the sprocket holes are on top. 
+   This is your 0° tape orientation (EIA-481 industry standard). 
+1. Determine how the part is rotated inside the tape pocket, relative from its upright orientation in (1). Positive rotation goes counter-clockwise, negative clockwise.
+   This is the **Rotation in Tape**.
 
-   ![Rotation in Tape](https://user-images.githubusercontent.com/9963310/173002852-441fdf97-c342-4f9a-9d3e-8e5a99beac85.png)
+   ![Rotation in Tape](https://user-images.githubusercontent.com/9963310/173055769-d776d177-b013-498e-8371-d631e43f1bb4.png)
 
- 
+1. Our example has a 90° clockwise rotation from its upright orientation in (1), so the correct **Rotation in Tape** is -90°. 
 
 
 ### Setting the Z 
