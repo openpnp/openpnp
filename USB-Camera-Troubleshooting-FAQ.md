@@ -14,7 +14,7 @@ Most systems will be able to use a hub to run one camera and some other low band
 Most USB cameras on the market today default to uncompressed YUV video mode, which is very high bandwidth. When the camera enumerates on the USB bus it tells the bus it needs something like 90% of the bandwidth, leaving no bandwidth for other cameras or devices. When you try to connect a second camera it will fail to enumerate or it will enumerate but then when you try to open it it will fail. This usually results in locking up OpenPnP.
 
 ## What about USB 3?
-If you have USB 3 specific cameras these should work. USB 2 cameras on a USB 3 port, or a USB 3 hub, will not work. USB 2 devices on a USB 3 bus share a USB 2 bus over the USB 3 cable, so they have the same limitation.
+If you have USB 3 specific cameras these should work. USB 2 cameras on a USB 3 port, or a USB 3 hub, will not help. USB 2 devices on a USB 3 bus share a USB 2 bus over the USB 3 cable, so they have the same limitation.
 
 ## Why is it a software limitation?
 Most cameras on the market also support MJPEG compressed video. This is **much** lower bandwidth and you can have 2 or more cameras on a port. Unfortunately, OpenCV does not have a way to tell the camera to switch to MJPEG mode so it is stuck at YUV. By using the [[OpenPnpCaptureCamera]] instead you can get around this issue.
