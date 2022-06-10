@@ -98,7 +98,7 @@ public class EagleBoardImporter implements BoardImporter {
         return board;
     }
 
-    private static List<Placement> parseFile(File file, Side side, boolean createMissingParts)
+    private static List<Placement> parseFile(File file, Side side, boolean createMissingParts, boolean updateExistingParts, boolean addLibraryPrefix)
             throws Exception {
 
         String dimensionLayer = "";
@@ -309,8 +309,8 @@ public class EagleBoardImporter implements BoardImporter {
                     if (cfg != null && createMissingParts) {
                         String value = element.getValue(); // Value
 
-                        String pkgId = libraryId + "-" + packageId;
-                        String partId = libraryId + "-" + packageId;
+                        String pkgId = addLibraryPrefix ? libraryId + "-" + packageId : packageId;
+                        String partId = pkgId;
 
                         if (value.trim().length() > 0) {
                             partId += "-" + value;
@@ -319,9 +319,9 @@ public class EagleBoardImporter implements BoardImporter {
                         part = cfg.getPart(partId);
                         Package pkg = cfg.getPackage(pkgId);
 
-                        if ((part == null) || (pkg == null)) {
+                        if ((part == null) || (pkg == null) || updateExistingParts) {
 
-                            if (pkg == null) {
+                            if (pkg == null || updateExistingParts) {
                                 pkg = new Package(pkgId);
                                 org.openpnp.model.Footprint fp = new org.openpnp.model.Footprint();
 
@@ -728,6 +728,8 @@ public class EagleBoardImporter implements BoardImporter {
         private final Action importAction = new SwingAction_2();
         private final Action cancelAction = new SwingAction_3();
         private JCheckBox chckbxCreateMissingParts;
+        private JCheckBox chckbxUpdateExistingParts;
+        private JCheckBox chckbxAddLibraryPrefix;
         private JCheckBox chckbxImportTop;
         private JCheckBox chckbxImportBottom;
 
@@ -765,19 +767,29 @@ public class EagleBoardImporter implements BoardImporter {
                     new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                            FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                            FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
             chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
+            
+            chckbxUpdateExistingParts = new JCheckBox("Update Existing Parts");
+            chckbxUpdateExistingParts.setSelected(false);
+            panel_1.add(chckbxUpdateExistingParts, "2, 4");
+            
+            chckbxAddLibraryPrefix = new JCheckBox("Add Library Prefix to Part Names");
+            chckbxAddLibraryPrefix.setSelected(false);
+            panel_1.add(chckbxAddLibraryPrefix, "2, 6");
 
             chckbxImportTop = new JCheckBox("Import Parts on the Top of the board");
             chckbxImportTop.setSelected(true);
-            panel_1.add(chckbxImportTop, "2, 4");
+            panel_1.add(chckbxImportTop, "2, 8");
 
             chckbxImportBottom = new JCheckBox("Import Parts on the Bottom of the board");
             chckbxImportBottom.setSelected(true);
-            panel_1.add(chckbxImportBottom, "2, 6");
+            panel_1.add(chckbxImportBottom, "2, 10");
 
             JSeparator separator = new JSeparator();
             getContentPane().add(separator);
@@ -842,17 +854,23 @@ public class EagleBoardImporter implements BoardImporter {
                     if (boardFile.exists()) {
                         if (chckbxImportTop.isSelected() && chckbxImportBottom.isSelected()) {
                             placements.addAll(parseFile(boardFile, null,
-                                    chckbxCreateMissingParts.isSelected())); // both Top and Bottom
+                                    chckbxCreateMissingParts.isSelected(),
+                                    chckbxUpdateExistingParts.isSelected(),
+                                    chckbxAddLibraryPrefix.isSelected()));   // both Top and Bottom
                                                                              // of the board
                         }
                         else if (chckbxImportTop.isSelected()) {
                             placements.addAll(parseFile(boardFile, Side.Top,
-                                    chckbxCreateMissingParts.isSelected())); // Just the Top side of
+                                    chckbxCreateMissingParts.isSelected(),
+                                    chckbxUpdateExistingParts.isSelected(),
+                                    chckbxAddLibraryPrefix.isSelected()));   // Just the Top side of
                                                                              // the board
                         }
                         else if (chckbxImportBottom.isSelected()) {
                             placements.addAll(parseFile(boardFile, Side.Bottom,
-                                    chckbxCreateMissingParts.isSelected())); // Just the Bottom side
+                                    chckbxCreateMissingParts.isSelected(),
+                                    chckbxUpdateExistingParts.isSelected(),
+                                    chckbxAddLibraryPrefix.isSelected()));   // Just the Bottom side
                                                                              // of the board
                         }
                     }
