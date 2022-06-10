@@ -41,10 +41,11 @@ The **Rotation in Tape** setting must be interpreted relative to the tape's orie
 
    ![library part](https://user-images.githubusercontent.com/9963310/173001959-d0b8e036-c73d-4e39-99ec-589f6b16d32c.png)
 
-1. Look at the tape with the sprocket holes on the right. The direction of unreeling goes down and this is our 0° tape orientation here. 
+1. Look at the tape with the sprocket holes on the left. The direction of unreeling goes up and this is our 0° tape orientation here. 
 1. Determine how the part is rotated inside the tape pocket, relative from its upright orientation in (1). This is the **Rotation in Tape**.
 
-   ![Rotation in Tape](https://user-images.githubusercontent.com/9963310/173004064-d4e721b5-c6a9-41fb-aeca-7e1d01de090f.png)
+   ![Rotation in Tape](https://user-images.githubusercontent.com/9963310/173041573-f9a6ec7c-13ee-4ee9-b360-4b81bb90e54b.png)
+
 
 Note: having the holes on the right instead of the top is unfortunately different from the industry standard EIA-481-C orientation that is implemented for the [[BlindsFeeder]] and [[ReferencePushPullFeeder]].
 
