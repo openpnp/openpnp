@@ -49,7 +49,7 @@ The **Rotation in Tape** setting must be interpreted relative to the tape's orie
 1. Our example happens to have no rotation relative from its upright orientation in (1), so the correct **Rotation in Tape** is 0°. 
 
 
-Note: having the holes on the right instead of the top is unfortunately different from the industry standard EIA-481-C orientation that is implemented for the [[BlindsFeeder]] and [[ReferencePushPullFeeder]].
+Note: having the holes on the left instead of the top is unfortunately different from the industry standard EIA-481-C orientation that is implemented for the [[BlindsFeeder]] and [[ReferencePushPullFeeder]].
 
 
 ## Video Tutorials
