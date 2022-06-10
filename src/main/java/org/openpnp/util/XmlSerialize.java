@@ -88,6 +88,7 @@ public class XmlSerialize {
         boolean list = false;
         boolean listItem = false;
         int lineBegin = 0;
+        int lastSpace = -1;
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
 
@@ -176,6 +177,9 @@ public class XmlSerialize {
                 out.append(';');
             } 
             else if (c == '\n' && i+1 < s.length()) {
+                if (lastSpace < i-1) {
+                    out.append(" ");
+                }
                 // Skip over whitespace.
                 int skip = 1;
                 int lf = 0;
@@ -256,6 +260,10 @@ public class XmlSerialize {
             }
             else if (code && c == '\t') {
                 out.append("  ");
+            }
+            else if (c == ' ') {
+                lastSpace = i;
+                out.append(" ");
             }
             else {
                 // Vanilla character.

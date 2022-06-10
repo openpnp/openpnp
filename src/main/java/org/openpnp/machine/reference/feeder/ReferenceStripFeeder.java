@@ -45,6 +45,7 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 
 /**
@@ -98,6 +99,9 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     @Attribute(required = false)
     private TapeType tapeType = TapeType.WhitePaper;
+
+    @Attribute(required = false)
+    private Boolean standardEia481 = null;
 
     @Attribute(required = false)
     private boolean visionEnabled = true;
@@ -190,15 +194,20 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         Length y = referenceHoleToPartLinear.convertToUnits(l.getUnits());
         Point p = new Point(x.getValue(), y.getValue());
 
-		// Determine the angle that the tape is at
-		double angle = Utils2D.getAngleFromPoint(lineLocations[0], lineLocations[1]);
-		// Rotate the part offsets by the angle to move it into the right
+        // Determine the angle that the tape is at. For historical reasons, our local coordinates are
+        // rotated -90° (vertical tape with sprocket holes left). 
+        double angle = Utils2D.getAngleFromPoint(lineLocations[1], lineLocations[0]) - 90;
+        // Rotate the part offsets by the angle to move it into the right
         // coordinate space
         p = Utils2D.rotatePoint(p, angle);
         // And add the offset to the location we calculated previously
         l = l.add(new Location(l.getUnits(), p.x, p.y, 0, 0));
         // Add in the angle of the tape plus the angle of the part in the tape
         // so that the part is picked at the right angle
+        if (isStandardEia481()) {
+            // Angle with the sprocket holes on top, as per the EIA-481-C industry standard.  
+            angle += 90;
+        }
         l = l.derive(null, null, null, angle + getLocation().getRotation());
 
         return l;
@@ -472,6 +481,25 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 
     public void setVisionEnabled(boolean visionEnabled) {
         this.visionEnabled = visionEnabled;
+    }
+
+    @Commit
+    void commit() {
+        if (standardEia481 == null) {
+            // If loaded from old configuration, we must migrate it to the EIA-481-C industry 
+            // standard rotation in tape, where tape 0° is with the sprocket holes on top.
+            setLocation(getLocation().derive(null, null, null, 
+                    Utils2D.angleNorm(getLocation().getRotation() - 90, 180)));
+            standardEia481 = true;
+        }
+    }
+
+    public boolean isStandardEia481() {
+        if (standardEia481 == null) {
+            // This is a new feeder.
+            standardEia481 = true;
+        }
+        return standardEia481;
     }
 
     @Override
