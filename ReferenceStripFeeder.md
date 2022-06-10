@@ -33,23 +33,27 @@ When picking from the strip feeder, OpenPnP will lower the nozzle to the Z value
 ## Rotation in Tape
 To pick up parts taking the right angle into account it has to be set in "Rotation in Tape". 
 
-The **Rotation in Tape** setting must be interpreted relative to the tape's orientation, regardless of how the feeder/tape is oriented on the machine. Unfortunately, it seems there is no universal industry standard of how to interpret the orientation of parts or what is considered 0° inside the tape [(see here)](https://groups.google.com/g/openpnp/c/M93Ve67V-Xg/m/EpMJMLkFCAAJ). Furthermore, your E-CAD library parts might have legacy mixed orientations anyway. So let's proceed pragmatically as follows:
+The **Rotation in Tape** setting must be interpreted relative to the tape's orientation, regardless of how the feeder/tape is oriented on the machine. 
+
+Proceed as follows:
 
 1. Look at the **neutral** upright orientation of the part package/footprint as drawn inside your E-CAD **library**.
-1. ⚠ Double-check you are in the **library**, do **not** look at the part in the project PCB, this is _not_ neutral!  
-1. See where pin 1 is, how the polarity, the cathode etc. are oriented. This is your 0° for the part. 
+1. ⚠ Double-check you are in the **library**, do **not** look at the part in the project PCB, this is **not neutral!**  
+1. Note how pin 1, polarity, cathode etc. are oriented. 
+   This is your 0° for the part. 
 
    ![library part](https://user-images.githubusercontent.com/9963310/173001959-d0b8e036-c73d-4e39-99ec-589f6b16d32c.png)
 
-1. Look at the tape with the sprocket holes on the left. The direction of unreeling goes up and this is our 0° tape orientation here. 
-1. Determine how the part is rotated inside the tape pocket, relative from its upright orientation in (1). This is the **Rotation in Tape**.
+1. Look at the tape so that the sprocket holes are on top. 
+   This is your 0° tape orientation (EIA-481 industry standard). 
+1. Determine how the part is rotated inside the tape pocket, relative from its upright orientation in (1). Positive rotation goes counter-clockwise, negative clockwise.
+   This is the **Rotation in Tape**.
 
-   ![Rotation in Tape](https://user-images.githubusercontent.com/9963310/173041573-f9a6ec7c-13ee-4ee9-b360-4b81bb90e54b.png)
-
-1. Our example happens to have no rotation relative from its upright orientation in (1), so the correct **Rotation in Tape** is 0°. 
+   ![Rotation in Tape](https://user-images.githubusercontent.com/9963310/173055769-d776d177-b013-498e-8371-d631e43f1bb4.png)
 
 
-Note: having the holes on the left instead of the top is unfortunately different from the industry standard EIA-481-C orientation that is implemented for the [[BlindsFeeder]] and [[ReferencePushPullFeeder]].
+1. Our example has a 90° clockwise rotation from its upright orientation in (1), so the correct **Rotation in Tape** is -90°. 
+1. ⚠ If your OpenPnP versions is older than 2022-06-10 (check Help/About), the meaning of this rotation was not yet conformant to the EIA-481 industry standard. Add 90° to **Rotation in Tape**, if you have an older Version!
 
 
 ## Video Tutorials
