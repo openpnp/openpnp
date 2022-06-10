@@ -1,6 +1,20 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2022-06-10
+
+## ReferenceStripFeeder Rotation in Tape
+
+The ReferenceStripFeeder Rotation in Tape has been adapted to the EIA-481 industry standard
+where the tape 0° orientation is the one where the sprocket holes are on top. Part rotation
+in tape is determined from that baseline. This was already the case for other feeder classes.
+
+Formerly, ReferenceStripFeeder had the tape 0° orientation with the sprocket holes on the
+left. The Wiki documentation, reflecting the EIA-481 industry standard was actually wrong.
+
+See also:
+https://github.com/openpnp/openpnp/wiki/ReferenceStripFeeder#rotation-in-tape
+
 # 2022-02-23
 
 ## Pipeline Parameters
