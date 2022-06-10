@@ -31,10 +31,23 @@ During the feeder setup wizard, the strip feeder hole debug colors are as follow
 When picking from the strip feeder, OpenPnP will lower the nozzle to the Z value specified on the first reference hole. The Z value for the second reference hole is ignored.
 
 ## Rotation in Tape
-To pick up parts taking the right angle into account it has to be set in "Rotation in Tape". The part's orientation is referenced to the direction of feed (direction of unreeling) and thus independent of the tape's orientation on the table. See the image below for some clarifying examples: 
-![rotation in tape_examples](https://user-images.githubusercontent.com/3868450/34457251-6b83c38e-edab-11e7-8e5a-f6e4212db124.png)
+To pick up parts taking the right angle into account it has to be set in "Rotation in Tape". 
 
-For a summarizing article on the orientation of parts according to common standards see https://blogs.mentor.com/tom-hausherr/blog/tag/ipc-standards/
+The **Rotation in Tape** setting must be interpreted relative to the tape's orientation, regardless of how the feeder/tape is oriented on the machine. Unfortunately, it seems there is no universal industry standard of how to interpret the orientation of parts or what is considered 0° inside the tape [(see here)](https://groups.google.com/g/openpnp/c/M93Ve67V-Xg/m/EpMJMLkFCAAJ). Furthermore, your E-CAD library parts might have legacy mixed orientations anyway. So let's proceed pragmatically as follows:
+
+1. Look at the **neutral** upright orientation of the part package/footprint as drawn inside your E-CAD **library**.
+1. ⚠ Double-check you are in the **library**, do **not** look at the part in the project PCB, this is _not_ neutral!  
+1. See where pin 1 is, how the polarity, the cathode etc. are oriented. This is your 0° for the part. 
+
+   ![library part](https://user-images.githubusercontent.com/9963310/173001959-d0b8e036-c73d-4e39-99ec-589f6b16d32c.png)
+
+1. Look at the tape with the sprocket holes on the right. The direction of unreeling goes down and this is our 0° tape orientation here. 
+1. Determine how the part is rotated inside the tape pocket, relative from its upright orientation in (1). This is the **Rotation in Tape**.
+
+   ![Rotation in Tape](https://user-images.githubusercontent.com/9963310/173004064-d4e721b5-c6a9-41fb-aeca-7e1d01de090f.png)
+
+Note: having the holes on the right instead of the top is unfortunately different from the industry standard EIA-481-C orientation that is implemented for the [[BlindsFeeder]] and [[ReferencePushPullFeeder]].
+
 
 ## Video Tutorials
 
