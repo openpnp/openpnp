@@ -849,6 +849,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         public void actionPerformed(ActionEvent arg0) {
             FiducialLocatableLocation child = getChildrenSelection();
             DlgPanelArrayBuilder dlg = new DlgPanelArrayBuilder(rootPanelLocation, child);
+            dlg.setVisible(true);
 //            for (Placement placement : getSelections()) {
 //                boardLocation.getBoard().removePlacement(placement);
 //            }

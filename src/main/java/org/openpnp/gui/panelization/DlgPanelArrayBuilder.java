@@ -20,38 +20,57 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.Shape;
-import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Area;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JTextField;
 import javax.swing.JCheckBox;
-import javax.swing.SwingConstants;
-import java.awt.Dialog.ModalityType;
 import java.awt.Dimension;
 
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.Action;
 import javax.swing.ButtonGroup;
 import javax.swing.border.TitledBorder;
 
+import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.gui.components.ComponentDecorators;
+import org.openpnp.gui.support.IntegerConverter;
+import org.openpnp.gui.support.LengthConverter;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
+import org.openpnp.model.Placement;
+import org.openpnp.util.BeanUtils;
+import org.openpnp.util.Utils2D;
+import org.pmw.tinylog.Logger;
 
+@SuppressWarnings("serial")
 public class DlgPanelArrayBuilder extends JDialog {
 
     private enum ArrayType {
         Rectangular, Circular;
     }
     
+    private LengthUnit systemUnit = Configuration.get().getSystemUnits();
+
+    private List<FiducialLocatableLocation> newChildren = new ArrayList<>();
     private ArrayType arrayType = ArrayType.Rectangular;
     private final JPanel contentPanel = new JPanel();
     private JTextField textFieldColumns;
@@ -66,20 +85,19 @@ public class DlgPanelArrayBuilder extends JDialog {
     private PanelLocation panelLocation;
     private FiducialLocatableLocation rootChildLocation;
     protected BufferedImage panelImage;
-
-    /**
-     * Launch the application.
-     */
-//    public static void main(String[] args) {
-//        try {
-//            DlgPanelArrayBuilder dialog = new DlgPanelArrayBuilder();
-//            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-//            dialog.setVisible(true);
-//        }
-//        catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+    private int columnCount = 1;
+    private int rowCount = 1;
+    private int angularCount = 1;
+    private int radialCount = 1;
+    private Length columnSpacing = new Length(10, LengthUnit.Millimeters);
+    private Length rowSpacing = new Length(10, LengthUnit.Millimeters);
+    private Length alternateOffset = new Length(0, LengthUnit.Millimeters);
+    private int alternateRowColumnDelta = 0;
+    private Length centerX = new Length(0, LengthUnit.Millimeters);
+    private Length centerY = new Length(0, LengthUnit.Millimeters);
+    private boolean increaseProportionally = false;
+    private boolean panelReferenceFrame = true;
+    private JPanel panelLayout;
 
     /**
      * Create the dialog.
@@ -87,7 +105,14 @@ public class DlgPanelArrayBuilder extends JDialog {
     public DlgPanelArrayBuilder(PanelLocation panelLocation, FiducialLocatableLocation rootChildLocation) {
         this.panelLocation = panelLocation;
         this.rootChildLocation = rootChildLocation;
-        setModalityType(ModalityType.DOCUMENT_MODAL);
+        this.addWindowListener(new WindowAdapter( ) {
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // TODO Auto-generated method stub
+                cancel();
+            }});
+        setModalityType(ModalityType.APPLICATION_MODAL);
         setTitle("Panel Array Generator");
         setBounds(100, 100, 600, 480);
         getContentPane().setLayout(new BorderLayout());
@@ -169,6 +194,8 @@ public class DlgPanelArrayBuilder extends JDialog {
                         gbc_textFieldColumns.gridy = 2;
                         panelRectangular.add(textFieldColumns, gbc_textFieldColumns);
                         textFieldColumns.setColumns(10);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "columnCount", textFieldColumns, "text", new IntegerConverter());
+                        ComponentDecorators.decorateWithAutoSelect(textFieldColumns);
                     }
                     {
                         textFieldRows = new JTextField();
@@ -180,6 +207,8 @@ public class DlgPanelArrayBuilder extends JDialog {
                         gbc_textFieldRows.gridy = 2;
                         panelRectangular.add(textFieldRows, gbc_textFieldRows);
                         textFieldRows.setColumns(10);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "rowCount", textFieldRows, "text", new IntegerConverter());
+                        ComponentDecorators.decorateWithAutoSelect(textFieldRows);
                     }
                     {
                         JLabel lblNewLabel_3 = new JLabel("Step");
@@ -200,6 +229,8 @@ public class DlgPanelArrayBuilder extends JDialog {
                         gbc_textFieldColumnSpacing.gridy = 3;
                         panelRectangular.add(textFieldColumnSpacing, gbc_textFieldColumnSpacing);
                         textFieldColumnSpacing.setColumns(10);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "columnSpacing", textFieldColumnSpacing, "text", new LengthConverter());
+                        ComponentDecorators.decorateWithLengthConversion(textFieldColumnSpacing);
                     }
                     {
                         textFieldRowSpacing = new JTextField();
@@ -211,6 +242,8 @@ public class DlgPanelArrayBuilder extends JDialog {
                         gbc_textFieldRowSpacing.gridy = 3;
                         panelRectangular.add(textFieldRowSpacing, gbc_textFieldRowSpacing);
                         textFieldRowSpacing.setColumns(10);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "rowSpacing", textFieldRowSpacing, "text", new LengthConverter());
+                        ComponentDecorators.decorateWithLengthConversion(textFieldRowSpacing);
                     }
                     {
                         JLabel lblNewLabel_6 = new JLabel("Alternate rows have");
@@ -222,9 +255,14 @@ public class DlgPanelArrayBuilder extends JDialog {
                         panelRectangular.add(lblNewLabel_6, gbc_lblNewLabel_6);
                     }
                     {
+                        String[] alternateOptions = new String[] {
+                                "the same number of columns as the first row", 
+                                "one more column than the first row", 
+                                "one less column than the first row"};
+
                         JComboBox<String> comboBoxAlternateRows = new JComboBox();
                         comboBoxAlternateRows.setToolTipText("Selects the number of columns in the even rows of the array");
-                        comboBoxAlternateRows.setModel(new DefaultComboBoxModel<String>(new String[] {"the same number of columns as the first row", "one more column than the first row", "one less column than the first row"}));
+                        comboBoxAlternateRows.setModel(new DefaultComboBoxModel<String>(alternateOptions));
                         GridBagConstraints gbc_comboBoxAlternateRows = new GridBagConstraints();
                         gbc_comboBoxAlternateRows.gridwidth = 5;
                         gbc_comboBoxAlternateRows.insets = new Insets(0, 0, 5, 5);
@@ -232,6 +270,22 @@ public class DlgPanelArrayBuilder extends JDialog {
                         gbc_comboBoxAlternateRows.gridx = 1;
                         gbc_comboBoxAlternateRows.gridy = 5;
                         panelRectangular.add(comboBoxAlternateRows, gbc_comboBoxAlternateRows);
+                        comboBoxAlternateRows.addActionListener(new ActionListener() {
+
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                switch (comboBoxAlternateRows.getSelectedIndex()) {
+                                    case 0:
+                                        setAlternateRowColumnDelta(0);
+                                        break;
+                                    case 1:
+                                        setAlternateRowColumnDelta(1);
+                                        break;
+                                    case 2:
+                                        setAlternateRowColumnDelta(-1);
+                                        break;
+                                }
+                            }});
                     }
                     {
                         JLabel lblNewLabel_5 = new JLabel("Alternate rows have");
@@ -252,6 +306,8 @@ public class DlgPanelArrayBuilder extends JDialog {
                         gbc_textFieldAlternateOffset.gridy = 6;
                         panelRectangular.add(textFieldAlternateOffset, gbc_textFieldAlternateOffset);
                         textFieldAlternateOffset.setColumns(10);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "alternateOffset", textFieldAlternateOffset, "text", new LengthConverter());
+                        ComponentDecorators.decorateWithLengthConversion(textFieldAlternateOffset);
                     }
                     {
                         JLabel lblNewLabel_8 = new JLabel("column offset relative to the first row");
@@ -308,6 +364,8 @@ public class DlgPanelArrayBuilder extends JDialog {
                         gbc_textFieldCenterX.gridy = 1;
                         panelCircular.add(textFieldCenterX, gbc_textFieldCenterX);
                         textFieldCenterX.setColumns(10);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "centerX", textFieldCenterX, "text", new LengthConverter());
+                        ComponentDecorators.decorateWithLengthConversion(textFieldCenterX);
                     }
                     {
                         textFieldCenterY = new JTextField();
@@ -319,6 +377,8 @@ public class DlgPanelArrayBuilder extends JDialog {
                         gbc_textFieldCenterY.gridy = 1;
                         panelCircular.add(textFieldCenterY, gbc_textFieldCenterY);
                         textFieldCenterY.setColumns(10);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "centerY", textFieldCenterY, "text", new LengthConverter());
+                        ComponentDecorators.decorateWithLengthConversion(textFieldCenterY);
                     }
                     {
                         JLabel lblNewLabel_10 = new JLabel("Relative to");
@@ -340,6 +400,7 @@ public class DlgPanelArrayBuilder extends JDialog {
                         gbc_rdbtnPanel.gridx = 1;
                         gbc_rdbtnPanel.gridy = 2;
                         panelCircular.add(rdbtnPanel, gbc_rdbtnPanel);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "panelReferenceFrame", rdbtnPanel, "selected");
                     }
                     {
                         JRadioButton rdbtnRootChild = new JRadioButton("Root Child");
@@ -364,13 +425,14 @@ public class DlgPanelArrayBuilder extends JDialog {
                     {
                         JSpinner spinnerAngularSteps = new JSpinner();
                         spinnerAngularSteps.setToolTipText("Number of copies to generate angularly around the Array Center");
-                        spinnerAngularSteps.setModel(new SpinnerNumberModel(new Integer(2), new Integer(2), null, new Integer(1)));
+                        spinnerAngularSteps.setModel(new SpinnerNumberModel(2, 2, null, 1));
                         GridBagConstraints gbc_spinnerAngularSteps = new GridBagConstraints();
                         gbc_spinnerAngularSteps.fill = GridBagConstraints.HORIZONTAL;
                         gbc_spinnerAngularSteps.insets = new Insets(0, 0, 5, 5);
                         gbc_spinnerAngularSteps.gridx = 1;
                         gbc_spinnerAngularSteps.gridy = 4;
                         panelCircular.add(spinnerAngularSteps, gbc_spinnerAngularSteps);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "angularCount", spinnerAngularSteps, "value");
                     }
                     {
                         JCheckBox chckbxAngleStepsIncrease = new JCheckBox("Increase proportionally with radius");
@@ -382,6 +444,7 @@ public class DlgPanelArrayBuilder extends JDialog {
                         gbc_chckbxAngleStepsIncrease.gridx = 2;
                         gbc_chckbxAngleStepsIncrease.gridy = 4;
                         panelCircular.add(chckbxAngleStepsIncrease, gbc_chckbxAngleStepsIncrease);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "increaseProportionally", chckbxAngleStepsIncrease, "selected");
                     }
                     {
                         JLabel lblNewLabel_9 = new JLabel("Radial Steps");
@@ -395,18 +458,19 @@ public class DlgPanelArrayBuilder extends JDialog {
                     {
                         JSpinner spinnerRadialSteps = new JSpinner();
                         spinnerRadialSteps.setToolTipText("Number of copies to generate radially outward from the Array Center");
-                        spinnerRadialSteps.setModel(new SpinnerNumberModel(new Integer(1), new Integer(1), null, new Integer(1)));
+                        spinnerRadialSteps.setModel(new SpinnerNumberModel(1, 1, null, 1));
                         GridBagConstraints gbc_spinnerRadialSteps = new GridBagConstraints();
                         gbc_spinnerRadialSteps.fill = GridBagConstraints.HORIZONTAL;
                         gbc_spinnerRadialSteps.insets = new Insets(0, 0, 0, 5);
                         gbc_spinnerRadialSteps.gridx = 1;
                         gbc_spinnerRadialSteps.gridy = 5;
                         panelCircular.add(spinnerRadialSteps, gbc_spinnerRadialSteps);
+                        BeanUtils.bind(UpdateStrategy.READ_WRITE, this, "radialCount", spinnerRadialSteps, "value");
                     }
                 }
             }
             {
-                JPanel panelLayout = new JPanel() {
+                panelLayout = new JPanel() {
                     @Override
                     public void paintComponent(Graphics g) {
                         renderPanelImage(this);
@@ -431,35 +495,290 @@ public class DlgPanelArrayBuilder extends JDialog {
             {
                 JButton okButton = new JButton("OK");
                 okButton.setActionCommand("OK");
+                okButton.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        newChildren.clear();
+                        DlgPanelArrayBuilder.this.dispatchEvent(new WindowEvent(
+                                DlgPanelArrayBuilder.this, WindowEvent.WINDOW_CLOSING));
+                    }});
                 buttonPane.add(okButton);
                 getRootPane().setDefaultButton(okButton);
             }
             {
                 JButton cancelButton = new JButton("Cancel");
                 cancelButton.setActionCommand("Cancel");
+                cancelButton.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        cancel();
+                        DlgPanelArrayBuilder.this.dispatchEvent(new WindowEvent(
+                                DlgPanelArrayBuilder.this, WindowEvent.WINDOW_CLOSING));
+                    }});
                 buttonPane.add(cancelButton);
             }
         }
     }
 
+    protected void cancel() {
+        for (FiducialLocatableLocation newChild : newChildren) {
+            panelLocation.removeChild(newChild);
+        }
+        newChildren.clear();
+    }
+
+    /**
+     * @return the columnCount
+     */
+    public int getColumnCount() {
+        return columnCount;
+    }
+
+    /**
+     * @param columnCount the columnCount to set
+     */
+    public void setColumnCount(int columnCount) {
+        this.columnCount = columnCount;
+        generateArray();
+    }
+
+    /**
+     * @return the rowCount
+     */
+    public int getRowCount() {
+        return rowCount;
+    }
+
+    /**
+     * @param rowCount the rowCount to set
+     */
+    public void setRowCount(int rowCount) {
+        this.rowCount = rowCount;
+        generateArray();
+    }
+
+    /**
+     * @return the angularCount
+     */
+    public int getAngularCount() {
+        return angularCount;
+    }
+
+    /**
+     * @param angularCount the angularCount to set
+     */
+    public void setAngularCount(int angularCount) {
+        this.angularCount = angularCount;
+        generateArray();
+    }
+
+    /**
+     * @return the radialCount
+     */
+    public int getRadialCount() {
+        return radialCount;
+    }
+
+    /**
+     * @param radialCount the radialCount to set
+     */
+    public void setRadialCount(int radialCount) {
+        this.radialCount = radialCount;
+        generateArray();
+    }
+
+    /**
+     * @return the columnSpacing
+     */
+    public Length getColumnSpacing() {
+        return columnSpacing;
+    }
+
+    /**
+     * @param columnSpacing the columnSpacing to set
+     */
+    public void setColumnSpacing(Length columnSpacing) {
+        this.columnSpacing = columnSpacing;
+        generateArray();
+    }
+
+    /**
+     * @return the rowSpacing
+     */
+    public Length getRowSpacing() {
+        return rowSpacing;
+    }
+
+    /**
+     * @param rowSpacing the rowSpacing to set
+     */
+    public void setRowSpacing(Length rowSpacing) {
+        this.rowSpacing = rowSpacing;
+        generateArray();
+    }
+
+    /**
+     * @return the alternateOffset
+     */
+    public Length getAlternateOffset() {
+        return alternateOffset;
+    }
+
+    /**
+     * @param alternateOffset the alternateOffset to set
+     */
+    public void setAlternateOffset(Length alternateOffset) {
+        this.alternateOffset = alternateOffset;
+        generateArray();
+    }
+
+    /**
+     * @return the alternateRowColumnDelta
+     */
+    public int getAlternateRowColumnDelta() {
+        return alternateRowColumnDelta;
+    }
+
+    /**
+     * @param alternateRowColumnDelta the alternateRowColumnDelta to set
+     */
+    public void setAlternateRowColumnDelta(int alternateRowColumnDelta) {
+        this.alternateRowColumnDelta = alternateRowColumnDelta;
+        generateArray();
+    }
+
+    /**
+     * @return the centerX
+     */
+    public Length getCenterX() {
+        return centerX;
+    }
+
+    /**
+     * @param centerX the centerX to set
+     */
+    public void setCenterX(Length centerX) {
+        this.centerX = centerX;
+    }
+
+    /**
+     * @return the centerY
+     */
+    public Length getCenterY() {
+        return centerY;
+    }
+
+    /**
+     * @param centerY the centerY to set
+     */
+    public void setCenterY(Length centerY) {
+        this.centerY = centerY;
+    }
+
+    /**
+     * @return the increaseProportionally
+     */
+    public boolean isIncreaseProportionally() {
+        return increaseProportionally;
+    }
+
+    /**
+     * @param increaseProportionally the increaseProportionally to set
+     */
+    public void setIncreasePropotionally(boolean increaseProportionally) {
+        this.increaseProportionally = increaseProportionally;
+    }
+
+    /**
+     * @return the panelReferenceFrame
+     */
+    public boolean isPanelReferenceFrame() {
+        return panelReferenceFrame;
+    }
+
+    /**
+     * @param panelReferenceFrame the panelReferenceFrame to set
+     */
+    public void setPanelReferenceFrame(boolean panelReferenceFrame) {
+        this.panelReferenceFrame = panelReferenceFrame;
+    }
+
+    protected void generateArray() {
+        for (FiducialLocatableLocation newChild : newChildren) {
+            panelLocation.removeChild(newChild);
+        }
+        newChildren.clear();
+        switch (arrayType) {
+            case Rectangular:
+                for (int i=0; i<columnCount; i++) {
+                    for (int j=0; j<rowCount; j++) {
+                        if (i != 0 || j != 0) {
+                            Location offset = new Location(systemUnit);
+                            offset = offset.deriveLengths(columnSpacing.multiply(i), rowSpacing.multiply(j), 
+                                    null, 
+                                    null);
+                            if (rootChildLocation instanceof BoardLocation) {
+                                BoardLocation newChildLocation = new BoardLocation((BoardLocation) rootChildLocation);
+                                newChildLocation.setLocation(rootChildLocation.getLocation().add(offset));
+                                newChildren.add(newChildLocation);
+                                panelLocation.addChild(newChildLocation);
+                            }
+                            else if (rootChildLocation instanceof PanelLocation) {
+                                PanelLocation newChildLocation = new PanelLocation((PanelLocation) rootChildLocation);
+                                newChildLocation.setLocation(rootChildLocation.getLocation().add(offset));
+                                newChildren.add(newChildLocation);
+                                panelLocation.addChild(newChildLocation);
+                            }
+                        }
+                    }
+                }
+                break;
+            case Circular:
+                double angleStep;
+                int aCount = angularCount;
+                Location center = new Location(systemUnit);
+                center = center.deriveLengths(centerX, centerY, rootChildLocation.getLocation().getLengthZ(), null);
+                Length radiusStep = rootChildLocation.getLocation().getLinearLengthTo(center);
+                
+                for (int i=0; i<radialCount; i++) {
+                    Length radius = radiusStep.add(radiusStep.multiply(i));
+                    double angle = Utils2D.getAngleFromPoint(center, rootChildLocation.getLocation());
+                    angleStep = 360.0 / angularCount;
+                    if (increaseProportionally) {
+                        angleStep /= (i+1);
+                    }
+                    
+                    for (double angleOffset=0; angleOffset<(360-0.5*angleStep); angleOffset += angleStep) {
+                        if (i != 0 || angleOffset != 0) {
+                            Location offset = new Location(systemUnit);
+                        }
+                    }
+                }
+                break;
+        }
+        panelLayout.repaint();
+    }
+    
     protected void renderPanelImage(JPanel jPanel) {
-        int borderPixels = 5;
+        int borderPixels = jPanel.getBorder().getBorderInsets(jPanel).top;
         Dimension currentSize = jPanel.getSize();
-        LengthUnit systemUnit = Configuration.get().getSystemUnits();
         Location panelDimensions = panelLocation.getPanel().getDimensions().convertToUnits(systemUnit);
         double scale = Math.min((currentSize.width - 2*borderPixels)/panelDimensions.getX(), 
                 (currentSize.height - 2*borderPixels)/panelDimensions.getY());
-        double pixelOffsetX = (currentSize.width - scale*panelDimensions.getX()) / 2;
-        double pixelOffsetY = (currentSize.height + scale*panelDimensions.getY()) / 2;
         
         panelImage = new BufferedImage(currentSize.width, currentSize.height, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics2D offScr = (Graphics2D) panelImage.getGraphics();
         offScr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         Color backGround = Color.BLACK;
-        Color copperColor = new Color(230, 163, 4);
+        Color copperColor = new Color(250, 160, 27);
         Color maskColor = new Color(151, 49, 176);
         Color profileColor = new Color(181, 167, 177);
+        Color rootProfileColor = Color.green;
+        Color copyProfileColor = Color.red;
+        Color boardColor = new Color(189, 196, 199);
         Color silkColor = Color.WHITE;
         
         offScr.setColor(backGround);
@@ -477,10 +796,73 @@ public class DlgPanelArrayBuilder extends JDialog {
         offScr.setColor(maskColor);
         offScr.fill(transformedShape);
         offScr.setColor(profileColor);
-        offScr.setStroke(new BasicStroke((float) (1.0/scale), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        offScr.setStroke(new BasicStroke((float) (2.0/scale), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         offScr.draw(transformedShape);
+        
+        drawCoordinateFrameMarker(offScr, at, 10, Color.RED, Color.CYAN);
+        
+        for (FiducialLocatableLocation child : panelLocation.getChildren()) {
+            Location loc = child.getLocation().convertToUnits(systemUnit);
+            Location dims = child.getFiducialLocatable().getDimensions().convertToUnits(systemUnit);
+            AffineTransform at2 = new AffineTransform(at);
+            at2.translate(loc.getX(), loc.getY());
+            at2.rotate(Math.toRadians(loc.getRotation()));
+            
+            Shape childOutline = new Rectangle2D.Double(0, 0, dims.getX(), dims.getY());
+            transformedShape = at2.createTransformedShape(childOutline);
+            offScr.setColor(maskColor);
+            offScr.fill(transformedShape);
+            if (child != rootChildLocation) {
+                offScr.setColor(profileColor);
+            }
+            else {
+                offScr.setColor(rootProfileColor);
+            }
+            offScr.setStroke(new BasicStroke((float) (2.0/scale), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            offScr.draw(transformedShape);
+            
+            drawCoordinateFrameMarker(offScr, at2, 10, Color.RED, Color.CYAN);
+        }
+        
+        for (Placement fid : panelLocation.getPanel().getPlacements()) {
+            if (fid.getSide() == panelLocation.getSide()) {
+                Location loc = fid.getLocation().convertToUnits(systemUnit);
+                AffineTransform at2 = new AffineTransform(at);
+                at2.translate(loc.getX(), loc.getY());
+                
+                Shape fidOutline = new Ellipse2D.Double(-1.0, -1.0, 2.0, 2.0);
+                transformedShape = at2.createTransformedShape(fidOutline);
+                offScr.setColor(boardColor);
+                offScr.fill(transformedShape);
+                fidOutline = new Ellipse2D.Double(-0.5, -0.5, 1.0, 1.0);
+                transformedShape = at2.createTransformedShape(fidOutline);
+                offScr.setColor(copperColor);
+                offScr.fill(transformedShape);
+            }
+        }
 
         offScr.dispose();
     }
 
+    private void drawCoordinateFrameMarker(Graphics2D offScr, AffineTransform at2, int size, Color xColor,
+            Color yColor) {
+        Path2D xArrow = new Path2D.Double();
+        xArrow.moveTo(0, 0);
+        xArrow.lineTo(size, 0);
+        xArrow.lineTo(size*0.9, size*0.1);
+        xArrow.moveTo(size, 0);
+        xArrow.lineTo(size*0.9, -size*0.1);
+        Path2D yArrow = new Path2D.Double();
+        yArrow.moveTo(0, 0);
+        yArrow.lineTo(0, size);
+        yArrow.lineTo(size*0.1, size*0.9);
+        yArrow.moveTo(0, size);
+        yArrow.lineTo(-size*0.1, size*0.9);
+        offScr.setStroke(new BasicStroke((float) (size/20.0), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        offScr.setColor(xColor);
+        offScr.draw(at2.createTransformedShape(xArrow));
+        offScr.setColor(yColor);
+        offScr.draw(at2.createTransformedShape(yArrow));
+    }
+    
 }
