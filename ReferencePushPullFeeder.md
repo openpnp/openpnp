@@ -72,19 +72,25 @@ In the Tape Settings you can set the right **Part Pitch**.
 
 The **Feed Pitch** is the mechanical tape transport per feeder actuation. If the Part Pitch is larger than that, OpenPnP will automatically actuate the feeder multiple times. If the Part Pitch is less than that, OpenPnP will automatically skip actuation and instead iterate between the pick locations. 
 
-The **Rotation in Tape** setting must be interpreted relative to the tape's orientation, regardless of how the feeder/tape is oriented on the machine. Unfortunately, it seems there is no universal industry standard of how to interpret the orientation of parts or what is considered 0° inside the tape [(see here)](https://groups.google.com/g/openpnp/c/M93Ve67V-Xg/m/EpMJMLkFCAAJ). Furthermore, your E-CAD library parts might have legacy mixed orientations anyway. So let's proceed pragmatically as follows:
+The **Rotation in Tape** setting must be interpreted relative to the tape's orientation, regardless of how the feeder/tape is oriented on the machine. 
+
+Proceed as follows:
 
 1. Look at the **neutral** upright orientation of the part package/footprint as drawn inside your E-CAD **library**.
-1. ⚠ Double-check you are in the **library**, do **not** look at the part in the project PCB, this is _not_ neutral!  
-1. See where pin 1 is, how the polarity, the cathode etc. are oriented. This is your 0° for the part. 
+1. ⚠ Double-check you are in the **library**, do **not** look at the part in the project PCB, this is **not neutral!**  
+1. Note how pin 1, polarity, cathode etc. are oriented. 
+   This is your 0° for the part. 
 
    ![library part](https://user-images.githubusercontent.com/9963310/173001959-d0b8e036-c73d-4e39-99ec-589f6b16d32c.png)
 
-1. Look at the tape with the sprocket holes on top. The direction of unreeling goes to the right and this is our 0° tape orientation.
-1. Determine how the part is rotated inside the tape pocket, relative from its upright orientation in (1). This is the **Rotation in Tape**.
+1. Look at the tape so that the sprocket holes are on top. 
+   This is your 0° tape orientation (EIA-481 industry standard). 
+1. Determine how the part is rotated inside the tape pocket, relative from its upright orientation in (1). Positive rotation goes counter-clockwise, negative clockwise.
+   This is the **Rotation in Tape**.
 
-   ![Rotation in Tape](https://user-images.githubusercontent.com/9963310/173002852-441fdf97-c342-4f9a-9d3e-8e5a99beac85.png)
+   ![Rotation in Tape](https://user-images.githubusercontent.com/9963310/173055769-d776d177-b013-498e-8371-d631e43f1bb4.png)
 
+1. Our example has a 90° clockwise rotation from its upright orientation in (1), so the correct **Rotation in Tape** is -90°. 
  
 The **Multiplier** allows you to actuate the feeder multiple times to feed more parts per serving, as a speed optimization. This may reduce the feed time per part because the actuator is already at the right place and/or engaged in the mechanics. 
 
