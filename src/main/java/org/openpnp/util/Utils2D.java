@@ -430,23 +430,19 @@ public class Utils2D {
         return a.add(new Location(a.getUnits(), vu.x, vu.y, 0, 0));
     }
 
+    /**
+     * @param firstPoint
+     * @param secondPoint
+     * @return The angle of the vector pointing from the first to the second point. 
+     */
     static public double getAngleFromPoint(Location firstPoint, Location secondPoint) {
         secondPoint = secondPoint.convertToUnits(firstPoint.getUnits());
-        
-        double angle = 0.0;
-        // above 0 to 180 degrees
-        if ((secondPoint.getX() > firstPoint.getX())) {
-            angle = (Math.atan2((secondPoint.getX() - firstPoint.getX()),
-                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
-        }
-        // above 180 degrees to 360/0
-        else if ((secondPoint.getX() <= firstPoint.getX())) {
-            angle = 360 - (Math.atan2((firstPoint.getX() - secondPoint.getX()),
-                    (firstPoint.getY() - secondPoint.getY())) * 180 / Math.PI);
-        }
+        double angle = Math.toDegrees(Math.atan2(
+                secondPoint.getY() - firstPoint.getY(),
+                secondPoint.getX() - firstPoint.getX()));
         return angle;
     }
-    
+
     public static double distance(Point2D.Double a, Point2D.Double b) {
         return (Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2)));
     }
