@@ -110,19 +110,19 @@ See https://github.com/openpnp/openpnp/wiki/GcodeDriver#asking-for-help
 
 Make sure you have the nozzle as the selected tool in the machine controls:
 
-![selected-tool](https://user-images.githubusercontent.com/9963310/173219345-afbab8fd-323f-4c01-a1ac-122bd61a3097.gif)
+![selected-tool-2 avi](https://user-images.githubusercontent.com/9963310/173219902-d6d6851c-55e3-4a2a-9b6c-07284aa5df0d.gif)
 
-Often, the camera is selected, especially if you use the [Auto tool select option](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#the-machine-setup-tree) on the machine (as is recommended) and then performed an explicit camera operation. So you need to select the wanted nozzle, before you can jog C or Z.
+Often, the camera is selected, especially if you use the [Auto tool select option](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#the-machine-setup-tree) on the machine (as is recommended) and then performed an explicit camera operation. So you need to select the wanted nozzle, before you can jog its `C` or `Z`.
 
-The camera has its own _virtual C and Z axes_, i.e. they move "invisibly" when you jog them. Read [here](https://github.com/openpnp/openpnp/wiki/Machine-Axes#use-case--example), why this is useful.
+The camera has its own _virtual `C` and `Z` axes_, i.e. they move "invisibly" when you jog them. Read [here](https://github.com/openpnp/openpnp/wiki/Machine-Axes#use-case--example), why this is useful.
 
 If a problem persists, also read the next section.
 
 ## My nozzle moves (in Z) when the camera is moved.
 
-For newer version of OpenPnP, just use [[Issues and Solutions]]. It will point you to the mistake. 
+For newer version of OpenPnP, just use [[Issues and Solutions]]. It should point you to the mistake. 
 
-Most likely you have the _real_ Z and/or C axis set on the camera, instead of [virtual axes](https://github.com/openpnp/openpnp/wiki/Machine-Axes#use-case--example).
+Most likely, you have the _real_ `C` and/or `Z` axis set on the camera, instead of [virtual axes](https://github.com/openpnp/openpnp/wiki/Machine-Axes#use-case--example).
 
 For very old versions of OpenPnP look here:
 See https://github.com/openpnp/openpnp/wiki/GcodeDriver#nozzle-is-moving-or-turning-when-camera-is-moved
