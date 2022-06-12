@@ -10,7 +10,7 @@
 * [How do I troubleshoot GcodeDriver?](#how-do-i-troubleshoot-gcodedriver)
 * [I'm having trouble connecting multiple USB cameras.](#im-having-trouble-connecting-multiple-usb-cameras)
 * [I need help configuring GcodeDriver.](#i-need-help-configuring-gcodedriver)
-* [My nozzle is not turning or going up/down when I job C or Z](#my-nozzle-is-not-turning-or-going-updown-when-i-job-c-or-z)
+* [My nozzle is not turning or going up/down when I jog C or Z](#my-nozzle-is-not-turning-or-going-updown-when-i-jog-c-or-z)
 * [My nozzle moves (in Z) when the camera is moved.](#my-nozzle-moves-in-z-when-the-camera-is-moved)
 * ["It would be faster to do it by hand."](#it-would-be-faster-to-do-it-by-hand)
 * [What Should I Build?](#what-should-i-build)
@@ -106,15 +106,17 @@ See https://github.com/openpnp/openpnp/wiki/USB-Camera-Troubleshooting-FAQ
 
 See https://github.com/openpnp/openpnp/wiki/GcodeDriver#asking-for-help
 
-## My nozzle is not turning or going up/down when I job C or Z
+## My nozzle is not turning or going up/down when I jog C or Z
 
 Make sure you have the nozzle as the selected tool in the machine controls:
 
 ![selected-tool](https://user-images.githubusercontent.com/9963310/173219345-afbab8fd-323f-4c01-a1ac-122bd61a3097.gif)
 
-Often, the camera is selected, especially if you use the [Auto tool select option](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#the-machine-setup-tree) on the machine (as is recommended) and then performed an explicit camera operation.
+Often, the camera is selected, especially if you use the [Auto tool select option](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#the-machine-setup-tree) on the machine (as is recommended) and then performed an explicit camera operation. So you need to select the wanted nozzle, before you can jog C or Z.
 
-The camera has its own virtual axes, i.e. they move "invisibly" when you jog them. Read [here](https://github.com/openpnp/openpnp/wiki/Machine-Axes#use-case--example), why this is useful.
+The camera has its own _virtual C and Z axes_, i.e. they move "invisibly" when you jog them. Read [here](https://github.com/openpnp/openpnp/wiki/Machine-Axes#use-case--example), why this is useful.
+
+If a problem persists, also read the next section.
 
 ## My nozzle moves (in Z) when the camera is moved.
 
