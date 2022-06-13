@@ -109,6 +109,20 @@ This applies to the ReferenceActuator, for the other types please see the corres
 
 Once you've created an Actuator, you will generally need to assign commands to it. The most common case is using GcodeDriver/GcodeAsyncDriver and boolean actuators to control something like a switch, a solenoid, a pump, a valve, etc. 
 
+In newer versions of OpenPnP you get support by [[Issues and Solutions]] to interactively set the Gcode commands: 
+
+![Actuator G-code Issues](https://user-images.githubusercontent.com/9963310/149199024-8161894e-b27b-485b-9ec0-4a1faee1a36d.png)
+
+Placeholders ❓ stand for G-code command numbers and regexes that cannot be fully suggested, because they are typically highly machine/controller/configuration specific:
+
+![Placeholder](https://user-images.githubusercontent.com/9963310/149199538-103b2c27-d14e-41a6-903e-82fabc585cb5.png)
+
+Issues & Solutions G-code command and regex support is enabled for Vacuum Valve, Blow-Off, Vacuum Sense, Pump, Z-Probe, Camera Light actuators. 
+
+### Assigning Commands Manually
+
+For manual setup or other actuators, follow the following procedures. 
+
 To set the Gcode for a Boolean Actuator:
 1. Go to Machine Setup -> Driver -> GcodeDriver/GcodeAsyncDriver -> Gcode. 
 2. Select the Actuator from the dropdown menu.
