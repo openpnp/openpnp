@@ -107,17 +107,17 @@ This applies to the ReferenceActuator, for the other types please see the corres
 
 ### Assigning Commands
 
-Once you've created an Actuator, you will generally need to assign commands to it. The most common case is using GcodeDriver/GcodeAsyncDriver and boolean actuators to control something like a switch, a solenoid, a pump, a valve, etc. 
+Once you've created and assigned an Actuator, you will generally need to assign commands to it. Some actuators may also have been created for you automatically (e.g. by the [Nozzle Solution](https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions#welcome-milestone)). The most common case is using GcodeDriver/GcodeAsyncDriver and boolean actuators to control something like a switch, a solenoid, a pump, a valve, etc. 
 
-In newer versions of OpenPnP you get support by [[Issues and Solutions]] to interactively set the Gcode commands: 
+In newer versions of OpenPnP, you get support by [[Issues and Solutions]] to interactively set the Gcode commands. As of this writing, G-code command and regex support is enabled for Vacuum Valve, Blow-Off, Vacuum Sense, Pump, Z-Probe, Camera Light actuators. Make sure the actuator is already assigned in its role, so **Issues & Solutions** knows which functions are needed. Press **Find Issues & Solutions** to refresh the suggestions, if you just assigned a new actuator: 
 
 ![Actuator G-code Issues](https://user-images.githubusercontent.com/9963310/149199024-8161894e-b27b-485b-9ec0-4a1faee1a36d.png)
 
-Placeholders ❓ stand for G-code command numbers and regexes that cannot be fully suggested, because they are typically highly machine/controller/configuration specific:
+Use the drop-down to select a template. Placeholders ❓ stand for G-code command numbers and regexes that cannot be fully suggested, because they are typically highly machine/controller/configuration specific:
 
 ![Placeholder](https://user-images.githubusercontent.com/9963310/149199538-103b2c27-d14e-41a6-903e-82fabc585cb5.png)
 
-Issues & Solutions G-code command and regex support is enabled for Vacuum Valve, Blow-Off, Vacuum Sense, Pump, Z-Probe, Camera Light actuators. 
+Note, once set the solutions will disappear from the list. If you ever want to come back, you must delete (empty) the commands manually (as explained in the next section) and then press **Find Issues & Solutions** again.
 
 ### Assigning Commands Manually
 
