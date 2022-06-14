@@ -52,7 +52,7 @@ Proceed as follows:
    ![Rotation in Tape](https://user-images.githubusercontent.com/9963310/173055769-d776d177-b013-498e-8371-d631e43f1bb4.png)
 
 1. Our example has a 90° clockwise rotation from its upright orientation in (1), so the correct **Rotation in Tape** is -90°. 
-1. ⚠ If your OpenPnP versions is older than 2022-06-10 (check Help/About), the meaning of this rotation was not yet conformant to the EIA-481 industry standard. Add 90° to **Rotation in Tape**, if you have an older Version! The angles will be automatically adjusted, when you upgrade to a newer OpenPnP version later.
+1. ⚠ If your OpenPnP versions is older than 2022-06-10 (check Help/About), the meaning of this rotation was not yet conformant to the EIA-481 industry standard. Add 90° to **Rotation in Tape**, if you have an older Version! And don't worry, the **Rotation in Tape** will be automatically adjusted when you upgrade to a newer OpenPnP version, later.
 
 
 ## Video Tutorials
