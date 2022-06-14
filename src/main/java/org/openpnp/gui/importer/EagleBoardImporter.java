@@ -26,6 +26,7 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -113,9 +114,11 @@ public class EagleBoardImporter implements BoardImporter {
         double mmMaxCreamFrame_number = 0;
         String libraryId = "";
         String packageId = "";
-        Part part = null;
 
         List<BoardPad> pads = new ArrayList<>();
+
+        // Keep track of unique parts as we see them, so we don't update them for every placement
+        HashMap<String,Part> parts = new HashMap<String,Part>();
 
         ArrayList<Placement> placements = new ArrayList<>();
         // we don't use the 'side' parameter as we can read this from the .brd file
@@ -306,23 +309,24 @@ public class EagleBoardImporter implements BoardImporter {
                     // where the pads
                     // are relative to the 'placement'
                     Configuration cfg = Configuration.get();
-                    if (cfg != null && createMissingParts) {
+                    Part part = null;
+
+                    if (cfg != null && (createMissingParts || updateExistingParts)) {
                         String value = element.getValue(); // Value
 
                         String pkgId = addLibraryPrefix ? libraryId + "-" + packageId : packageId;
-                        String partId = pkgId;
+                        String partId = value.trim().length() > 0 ? pkgId + "-" + value : pkgId;
 
-                        if (value.trim().length() > 0) {
-                            partId += "-" + value;
-                        }
+                        // Only create or update a part the first time we encounter it
+                        if (!parts.containsKey(partId)) {
+                            part = cfg.getPart(partId);
+                            Package pkg = cfg.getPackage(pkgId);
 
-                        part = cfg.getPart(partId);
-                        Package pkg = cfg.getPackage(pkgId);
+                            if ((pkg == null && createMissingParts) || (pkg != null && updateExistingParts)) {
+                                if (pkg == null) {
+                                    pkg = new Package(pkgId);
+                                }
 
-                        if ((part == null) || (pkg == null) || updateExistingParts) {
-
-                            if (pkg == null || updateExistingParts) {
-                                pkg = new Package(pkgId);
                                 org.openpnp.model.Footprint fp = new org.openpnp.model.Footprint();
 
                                 for (Object e : polys) {
@@ -346,23 +350,23 @@ public class EagleBoardImporter implements BoardImporter {
                                     }
                                 }
 
-                                pkg.setFootprint(fp); // add the footprint to the package
-                                cfg.addPackage(pkg); // save the package in the configuration file
-                                if (part != null) {
-                                    cfg.removePart(part);// we have to remove the part so we can
-                                                         // re-add it with the correct package &
-                                                         // library
-                                    part = null;
+                                pkg.setFootprint(fp);   // add the footprint to the package
+                                cfg.addPackage(pkg);    // save the package in the configuration file
+                            }
+
+                            if ((part == null && createMissingParts) || (part != null && updateExistingParts)) {
+                                if (part == null) {
+                                    part = new Part(partId);
                                 }
 
-                            }
-                            if (part == null) {
-                                part = new Part(partId);
                                 part.setPackage(pkg);
                                 // TODO part.setLibrary(libraryId);
-                                cfg.addPart(part); // save the package in the configuration file
+                                cfg.addPart(part); // save the part in the configuration file
                             }
-                            cfg.addPart(part);
+
+                            parts.put(partId, part); // keep track of parts we've already created or updated
+                        } else {
+                            part = parts.get(partId);
                         }
                     }
                     placement.setPart(part);
