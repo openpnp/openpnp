@@ -99,8 +99,8 @@ public class EagleBoardImporter implements BoardImporter {
         return board;
     }
 
-    private static List<Placement> parseFile(File file, Side side, boolean createMissingParts, boolean updateExistingParts, boolean addLibraryPrefix)
-            throws Exception {
+    private static List<Placement> parseFile(File file, Side side, boolean createMissingParts,
+            boolean updateExistingParts, boolean addLibraryPrefix) throws Exception {
 
         String dimensionLayer = "";
         String topLayer = "";
@@ -118,12 +118,12 @@ public class EagleBoardImporter implements BoardImporter {
         List<BoardPad> pads = new ArrayList<>();
 
         // Keep track of unique parts as we see them, so we don't update them for every placement
-        HashMap<String,Part> parts = new HashMap<String,Part>();
+        HashMap<String, Part> parts = new HashMap<String, Part>();
 
         ArrayList<Placement> placements = new ArrayList<>();
-        // we don't use the 'side' parameter as we can read this from the .brd file
-        // in the future we could use the side parameter to restrict this from only parsing one side
-        // or the other or both
+        // we don't use the 'side' parameter as we can read this from the .brd file in the future we
+        // could use the side parameter to restrict this from only parsing one side or the other or
+        // both
 
         EagleLoader boardToProcess = new EagleLoader(file);
         if (boardToProcess.board != null) {
@@ -131,19 +131,24 @@ public class EagleBoardImporter implements BoardImporter {
             // first establish which is the Dimension, Top, Bottom, tCream and bCream layers in case
             // the board has non-standard layer numbering
             for (Layer layer : boardToProcess.layers.getLayer()) {
-                if (layer.getName().equalsIgnoreCase("Dimension")) {
+                if (layer.getName()
+                         .equalsIgnoreCase("Dimension")) {
                     dimensionLayer = layer.getNumber();
                 }
-                else if (layer.getName().equalsIgnoreCase("Top")) {
+                else if (layer.getName()
+                              .equalsIgnoreCase("Top")) {
                     topLayer = layer.getNumber();
                 }
-                else if (layer.getName().equalsIgnoreCase("Bottom")) {
+                else if (layer.getName()
+                              .equalsIgnoreCase("Bottom")) {
                     bottomLayer = layer.getNumber();
                 }
-                else if (layer.getName().equalsIgnoreCase("tCream")) {
+                else if (layer.getName()
+                              .equalsIgnoreCase("tCream")) {
                     tCreamLayer = layer.getNumber();
                 }
-                else if (layer.getName().equalsIgnoreCase("bCream")) {
+                else if (layer.getName()
+                              .equalsIgnoreCase("bCream")) {
                     bCreamLayer = layer.getNumber();
                 }
             }
@@ -151,10 +156,10 @@ public class EagleBoardImporter implements BoardImporter {
             // Now we want to establish the width of the board which we need to record
             Double x_boundary = 0.0;
             for (Object e : boardToProcess.board.getPlain()
-                    .getPolygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHole()) {
+                                                .getPolygonOrWireOrTextOrDimensionOrCircleOrRectangleOrFrameOrHole()) {
                 if (e instanceof org.openpnp.model.eagle.xml.Wire) {
                     if (((org.openpnp.model.eagle.xml.Wire) e).getLayer()
-                            .equalsIgnoreCase(dimensionLayer)) {
+                                                              .equalsIgnoreCase(dimensionLayer)) {
                         x_boundary = Math.max(x_boundary,
                                 Double.parseDouble(((org.openpnp.model.eagle.xml.Wire) e).getX1()));
                         x_boundary = Math.max(x_boundary,
@@ -166,23 +171,25 @@ public class EagleBoardImporter implements BoardImporter {
                                                          // the Y=0;
 
             // determine the parameters for the pads based on DesignRules
-            for (Param params : boardToProcess.board.getDesignrules().getParam()) {
+            for (Param params : boardToProcess.board.getDesignrules()
+                                                    .getParam()) {
 
-                if (params.getName().compareToIgnoreCase("mlMinCreamFrame") == 0) { // found exact
-                                                                                    // match when 0
-                                                                                    // returned
-                    mmMinCreamFrame_string = params.getValue().replaceAll("[A-Za-z ]", ""); // remove
-                                                                                            // all
-                                                                                            // letters,
-                                                                                            // i.e.
-                                                                                            // 0mil
-                                                                                            // becomes
-                                                                                            // 0
-                    if (params.getValue().toUpperCase().endsWith("MIL")) {
+                if (params.getName()
+                          .compareToIgnoreCase("mlMinCreamFrame") == 0) { // found exact match when
+                                                                          // 0 returned
+                    mmMinCreamFrame_string = params.getValue()
+                                                   .replaceAll("[A-Za-z ]", ""); // remove all
+                                                                                 // letters, i.e.
+                                                                                 // 0mil becomes 0
+                    if (params.getValue()
+                              .toUpperCase()
+                              .endsWith("MIL")) {
                         mmMinCreamFrame_number =
                                 Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
                     }
-                    else if (params.getValue().toUpperCase().endsWith("MM")) {
+                    else if (params.getValue()
+                                   .toUpperCase()
+                                   .endsWith("MM")) {
                         mmMinCreamFrame_number =
                                 Double.parseDouble(mmMinCreamFrame_string) * mil_to_mm;
                     }
@@ -195,21 +202,22 @@ public class EagleBoardImporter implements BoardImporter {
                                                                                        // wrong
                     }
                 }
-                if (params.getName().compareToIgnoreCase("mlMaxCreamFrame") == 0) { // found exact
-                                                                                    // match when 0
-                                                                                    // returned
-                    mmMaxCreamFrame_string = params.getValue().replaceAll("[A-Za-z ]", ""); // remove
-                                                                                            // all
-                                                                                            // letters,
-                                                                                            // i.e.
-                                                                                            // "0mil"
-                                                                                            // becomes
-                                                                                            // 0
-                    if (params.getValue().toUpperCase().endsWith("MIL")) {
+                if (params.getName()
+                          .compareToIgnoreCase("mlMaxCreamFrame") == 0) { // found exact match when
+                                                                          // 0 returned
+                    mmMaxCreamFrame_string = params.getValue()
+                                                   .replaceAll("[A-Za-z ]", ""); // remove all
+                                                                                 // letters, i.e.
+                                                                                 // "0mil" becomes 0
+                    if (params.getValue()
+                              .toUpperCase()
+                              .endsWith("MIL")) {
                         mmMaxCreamFrame_number =
                                 Double.parseDouble(mmMaxCreamFrame_string) * mil_to_mm;
                     }
-                    else if (params.getValue().toUpperCase().endsWith("MM")) {
+                    else if (params.getValue()
+                                   .toUpperCase()
+                                   .endsWith("MM")) {
                         mmMaxCreamFrame_number = Double.parseDouble(mmMaxCreamFrame_string);
                     }
                     else {
@@ -222,20 +230,24 @@ public class EagleBoardImporter implements BoardImporter {
                     }
                 }
             }
-            // Now we know the min and max tolerance for the cream (aka solder paste)
-            // which are mmMinCreamFrame_number and mmMaxCreamFrame_number and are in mm (converted
-            // from mil as required)
+            // Now we know the min and max tolerance for the cream (aka solder paste) which are
+            // mmMinCreamFrame_number and mmMaxCreamFrame_number and are in mm (converted from mil
+            // as required)
 
             // Now we got through each of the parts
-            if (!boardToProcess.board.getElements().getElement().isEmpty()) {
+            if (!boardToProcess.board.getElements()
+                                     .getElement()
+                                     .isEmpty()) {
 
                 // Process each of the element items
-                for (Element element : boardToProcess.board.getElements().getElement()) {
+                for (Element element : boardToProcess.board.getElements()
+                                                           .getElement()) {
                     // first we determine if the part is on the top layer or bottom layer
 
                     Side element_side;
                     String rot = element.getRot();
-                    if (rot.toUpperCase().startsWith("M")) {
+                    if (rot.toUpperCase()
+                           .startsWith("M")) {
                         // The part is mirrored and therefore is on the bottom of the board
                         element_side = Side.Bottom;
                     }
@@ -306,8 +318,7 @@ public class EagleBoardImporter implements BoardImporter {
                     }
 
                     // placement now contains where the package is on the PCB, we need to work out
-                    // where the pads
-                    // are relative to the 'placement'
+                    // where the pads are relative to the 'placement'
                     Configuration cfg = Configuration.get();
                     Part part = null;
 
@@ -315,14 +326,16 @@ public class EagleBoardImporter implements BoardImporter {
                         String value = element.getValue(); // Value
 
                         String pkgId = addLibraryPrefix ? libraryId + "-" + packageId : packageId;
-                        String partId = value.trim().length() > 0 ? pkgId + "-" + value : pkgId;
+                        String partId = value.trim()
+                                             .length() > 0 ? pkgId + "-" + value : pkgId;
 
                         // Only create or update a part the first time we encounter it
                         if (!parts.containsKey(partId)) {
                             part = cfg.getPart(partId);
                             Package pkg = cfg.getPackage(pkgId);
 
-                            if ((pkg == null && createMissingParts) || (pkg != null && updateExistingParts)) {
+                            if ((pkg == null && createMissingParts)
+                                    || (pkg != null && updateExistingParts)) {
                                 if (pkg == null) {
                                     pkg = new Package(pkgId);
                                 }
@@ -350,11 +363,12 @@ public class EagleBoardImporter implements BoardImporter {
                                     }
                                 }
 
-                                pkg.setFootprint(fp);   // add the footprint to the package
-                                cfg.addPackage(pkg);    // save the package in the configuration file
+                                pkg.setFootprint(fp); // add the footprint to the package
+                                cfg.addPackage(pkg); // save the package in the configuration file
                             }
 
-                            if ((part == null && createMissingParts) || (part != null && updateExistingParts)) {
+                            if ((part == null && createMissingParts)
+                                    || (part != null && updateExistingParts)) {
                                 if (part == null) {
                                     part = new Part(partId);
                                 }
@@ -364,8 +378,10 @@ public class EagleBoardImporter implements BoardImporter {
                                 cfg.addPart(part); // save the part in the configuration file
                             }
 
-                            parts.put(partId, part); // keep track of parts we've already created or updated
-                        } else {
+                            parts.put(partId, part); // keep track of parts we've already created or
+                                                     // updated
+                        }
+                        else {
                             part = parts.get(partId);
                         }
                     }
@@ -373,340 +389,247 @@ public class EagleBoardImporter implements BoardImporter {
 
                     // Now we have the part, we now need to add the SolderPastePad to the board
                     // Note, Eagle has the concept of minimum and max from the edge of the pad so we
-                    // need to
-                    // adjust the pad to be the size as the mid-point between the minimum and max
-                    // in practice these are usually 0, which means we paste the entire pad
+                    // need to adjust the pad to be the size as the mid-point between the minimum
+                    // and max in practice these are usually 0, which means we paste the entire pad
 
-                    // TODO: This desperately needs to be broken up into functions. This function
-                    // is way too long and wide.
+                    // TODO: This desperately needs to be broken up into functions. This function is
+                    // way too long and wide.
                     for (Object e : polys) {
-                                                if (e instanceof org.openpnp.model.eagle.xml.Smd) {
-                                                    // we have found the correct package in the
-                                                    // correct library and we need to to add the pad
-                                                    // to the boardPads
+                        if (e instanceof org.openpnp.model.eagle.xml.Smd) {
+                            // we have found the correct package in the correct library and we need
+                            // to to add the pad to the boardPads
 
-                                                    if (!((org.openpnp.model.eagle.xml.Smd) e)
-                                                            .getCream().equalsIgnoreCase("No")) { // if
-                                                                                                  // cream="no"
-                                                                                                  // then
-                                                                                                  // we
-                                                                                                  // do
-                                                                                                  // not
-                                                                                                  // paste
-                                                                                                  // this
-                                                                                                  // pad
+                            if (!((org.openpnp.model.eagle.xml.Smd) e).getCream()
+                                                                      .equalsIgnoreCase("No")) { // if
+                                                                                                 // cream="no"
+                                                                                                 // then
+                                                                                                 // we
+                                                                                                 // do
+                                                                                                 // not
+                                                                                                 // paste
+                                                                                                 // this
+                                                                                                 // pad
 
-                                                        Pad.RoundRectangle pad =
-                                                                new Pad.RoundRectangle();
-                                                        pad.setUnits(LengthUnit.Millimeters);
+                                Pad.RoundRectangle pad = new Pad.RoundRectangle();
+                                pad.setUnits(LengthUnit.Millimeters);
 
-                                                        // TODO check that these reduce the pad to
-                                                        // the halfway between the minimum & maximum
-                                                        // tolerances
-                                                        pad.setHeight(Double.parseDouble(
-                                                                ((org.openpnp.model.eagle.xml.Smd) e)
-                                                                        .getDx())
-                                                                - (mmMaxCreamFrame_number
-                                                                        - mmMinCreamFrame_number)
-                                                                        / 2);
-                                                        pad.setWidth(Double.parseDouble(
-                                                                ((org.openpnp.model.eagle.xml.Smd) e)
-                                                                        .getDy())
-                                                                - (mmMaxCreamFrame_number
-                                                                        - mmMinCreamFrame_number)
-                                                                        / 2);
+                                // TODO check that these reduce the pad to the halfway between the
+                                // minimum & maximum tolerances
+                                pad.setHeight(Double.parseDouble(
+                                        ((org.openpnp.model.eagle.xml.Smd) e).getDx())
+                                        - (mmMaxCreamFrame_number - mmMinCreamFrame_number) / 2);
+                                pad.setWidth(Double.parseDouble(
+                                        ((org.openpnp.model.eagle.xml.Smd) e).getDy())
+                                        - (mmMaxCreamFrame_number - mmMinCreamFrame_number) / 2);
 
-                                                        pad.setRoundness(0);
-                                                        pad.setRoundness(Double.parseDouble(
-                                                                ((org.openpnp.model.eagle.xml.Smd) e)
-                                                                        .getRoundness()));
+                                pad.setRoundness(0);
+                                pad.setRoundness(Double.parseDouble(
+                                        ((org.openpnp.model.eagle.xml.Smd) e).getRoundness()));
 
-                                                        // first find out how is the package defined
-                                                        Double pad_rotation =
-                                                                Double.parseDouble(rot_number);
-                                                        // now rotate the pad by its own rotation
-                                                        // relative to its origin and make sure we
-                                                        // don't turn through 360 degrees
-                                                        pad_rotation += Double.parseDouble(
-                                                                ((org.openpnp.model.eagle.xml.Smd) e)
-                                                                        .getRot().replaceAll(
-                                                                                "[A-Za-z ]", ""))
-                                                                % 360;
+                                // first find out how is the package defined
+                                Double pad_rotation = Double.parseDouble(rot_number);
+                                // now rotate the pad by its own rotation relative to its origin and
+                                // make sure we don't turn through 360 degrees
+                                pad_rotation += Double.parseDouble(
+                                        ((org.openpnp.model.eagle.xml.Smd) e).getRot()
+                                                                             .replaceAll(
+                                                                                     "[A-Za-z ]",
+                                                                                     ""))
+                                        % 360;
 
-                                                        Point a = new Point(
-                                                                Double.parseDouble(
-                                                                        ((org.openpnp.model.eagle.xml.Smd) e)
-                                                                                .getX())
-                                                                        + x,
-                                                                Double.parseDouble(
-                                                                        ((org.openpnp.model.eagle.xml.Smd) e)
-                                                                                .getY())
-                                                                        + y);
+                                Point a = new Point(
+                                        Double.parseDouble(
+                                                ((org.openpnp.model.eagle.xml.Smd) e).getX()) + x,
+                                        Double.parseDouble(
+                                                ((org.openpnp.model.eagle.xml.Smd) e).getY()) + y);
 
-                                                        Point part_center = new Point(x, y);
+                                Point part_center = new Point(x, y);
 
-                                                        if (element_side == Side.Top) {
-                                                            if (rotation > 180) {
-                                                                a = Utils2D
-                                                                        .rotateTranslateCenterPoint(
-                                                                                a, rotation, 0, 0,
-                                                                                part_center); // rotate
+                                if (element_side == Side.Top) {
+                                    if (rotation > 180) {
+                                        a = Utils2D.rotateTranslateCenterPoint(a, rotation, 0, 0,
+                                                part_center); // rotate the part-pin
+                                    }
+                                    else {
+                                        a = Utils2D.rotateTranslateCenterPoint(a, -rotation, 0, 0,
+                                                part_center); // rotate the part-pin
+                                    }
+                                }
+                                else if (element_side == Side.Bottom) {
+                                    if (rotation > 180) {
+                                        a = Utils2D.rotateTranslateCenterPoint(a, rotation, 0, 0,
+                                                part_center); // rotate the part-pin
+                                    }
+                                    else {
+                                        a = Utils2D.rotateTranslateCenterPoint(a, -(180 - rotation),
+                                                0, 0, part_center); // rotate the part-pin
+                                    }
+
+                                    // Mirror along the Y axis of the board
+                                    if (a.getX() < center.getX()) {
+                                        Double offset = center.getX() - a.getX();
+                                        a.setX(center.getX() + offset); // mirror left to right
+                                                                        // across the centre of the
+                                                                        // board
+                                    }
+                                    else {
+                                        Double offset = a.getX() - center.getX();
+                                        a.setX(center.getX() - offset);
+                                    }
+                                    // Mirror along the X axis of the part's center line
+                                    if (a.getY() < y) {
+                                        Double offset = y - a.getY();
+                                        a.setY(y + offset); // mirror top to bottom across the
+                                                            // centre of the part
+                                    }
+                                    else {
+                                        Double offset = a.getY() - y;
+                                        a.setY(y - offset); // mirror bottom to top across the
+                                                            // centre of the part
+                                    }
+
+                                }
+
+                                // TODO Need to write the logic for pad rotation
+                                // A =
+                                // Utils2D.rotateTranslateCenterPoint(A,pad_rotation,0,0,center);
+
+
+                                BoardPad boardPad =
+                                        new BoardPad(pad, new Location(LengthUnit.Millimeters,
+                                                a.getX(), a.getY(), 0, pad_rotation));
+
+                                // TODO add support for Circle pads
+
+                                boardPad.setName(element.getName() + "-"
+                                        + ((org.openpnp.model.eagle.xml.Smd) e).getName());
+
+                                if (((org.openpnp.model.eagle.xml.Smd) e).getLayer()
+                                                                         .equalsIgnoreCase(
+                                                                                 topLayer)) { // is
                                                                                               // the
-                                                                                              // part-pin
-                                                            }
-                                                            else {
-                                                                a = Utils2D
-                                                                        .rotateTranslateCenterPoint(
-                                                                                a, -rotation, 0, 0,
-                                                                                part_center); // rotate
-                                                                                              // the
-                                                                                              // part-pin
-                                                            }
-                                                        }
-                                                        else if (element_side == Side.Bottom) {
-                                                            if (rotation > 180) {
-                                                                a = Utils2D
-                                                                        .rotateTranslateCenterPoint(
-                                                                                a, rotation, 0, 0,
-                                                                                part_center); // rotate
-                                                                                              // the
-                                                                                              // part-pin
-                                                            }
-                                                            else {
-                                                                a = Utils2D
-                                                                        .rotateTranslateCenterPoint(
-                                                                                a,
-                                                                                -(180 - rotation),
-                                                                                0, 0, part_center); // rotate
-                                                                                                    // the
-                                                                                                    // part-pin
-                                                            }
+                                                                                              // pad
+                                                                                              // on
+                                                                                              // top
+                                    if (element_side == Side.Top) {// part is on the top
+                                        boardPad.setSide(Side.Top);
+                                    } // pad is on the top
+                                    else {
+                                        boardPad.setSide(Side.Bottom); // part is on top, but pad is
+                                                                       // on the bottom
+                                    }
+                                }
+                                else if (((org.openpnp.model.eagle.xml.Smd) e).getLayer()
+                                                                              .equalsIgnoreCase(
+                                                                                      bottomLayer)) { // is
+                                                                                                      // the
+                                                                                                      // pad
+                                                                                                      // on
+                                                                                                      // the
+                                                                                                      // bottom
+                                    if (element_side == Side.Top) { // part is top
+                                        boardPad.setSide(Side.Bottom); // pad stays on the bottom
+                                    }
+                                    else {
+                                        boardPad.setSide(Side.Top); // pad moves to the top
+                                    }
+                                }
+                                else {
+                                    Logger.info("Warning: " + file
+                                            + "contains a SMD pad that is not on a topLayer or bottomLayer");
+                                }
 
-                                                            // Mirror along the Y axis of the board
-                                                            if (a.getX() < center.getX()) {
-                                                                Double offset =
-                                                                        center.getX() - a.getX();
-                                                                a.setX(center.getX() + offset); // mirror
-                                                                                                // left
-                                                                                                // to
-                                                                                                // right
-                                                                                                // across
-                                                                                                // the
-                                                                                                // centre
-                                                                                                // of
-                                                                                                // the
-                                                                                                // board
-                                                            }
-                                                            else {
-                                                                Double offset =
-                                                                        a.getX() - center.getX();
-                                                                a.setX(center.getX() - offset);
-                                                            }
-                                                            // Mirror along the X axis of the part's
-                                                            // center line
-                                                            if (a.getY() < y) {
-                                                                Double offset = y - a.getY();
-                                                                a.setY(y + offset); // mirror top to
-                                                                                    // bottom across
-                                                                                    // the centre of
-                                                                                    // the part
-                                                            }
-                                                            else {
-                                                                Double offset = a.getY() - y;
-                                                                a.setY(y - offset); // mirror bottom
-                                                                                    // to top across
-                                                                                    // the centre of
-                                                                                    // the part
-                                                            }
+                                // TODO figure out if it is possible for an SMD pad to have a drill,
+                                // it appears not !!
+                                // pad.setdrillDiameter(0);
 
-                                                        }
+                                // TODO later we need to associate a list of pads to a board.
+                                pads.add(boardPad);
 
-                                                        // TODO Need to write the logic for pad
-                                                        // rotation
-                                                        // A = Utils2D.rotateTranslateCenterPoint(A,
-                                                        // pad_rotation,0,0,center);
-                                                        //
+                                board.addSolderPastePad(boardPad); // This adds the pad to the
+                                                                   // SolderPaste
+                            }
+                        }
+                        else if (e instanceof org.openpnp.model.eagle.xml.Pad) {
 
+                            // TODO implement pasting for through hole pads
 
-                                                        BoardPad boardPad = new BoardPad(pad,
-                                                                new Location(LengthUnit.Millimeters,
-                                                                        a.getX(), a.getY(), 0,
-                                                                        pad_rotation));
+                        }
+                        else if (e instanceof org.openpnp.model.eagle.xml.Polygon) {
+                            // We have a polygon is it on a tCream or bCream layer, otherwise ignore
+                            // it
+                            if (((org.openpnp.model.eagle.xml.Polygon) e).getLayer()
+                                                                         .equalsIgnoreCase(
+                                                                                 tCreamLayer)
+                                    || ((org.openpnp.model.eagle.xml.Polygon) e).getLayer()
+                                                                                .equalsIgnoreCase(
+                                                                                        bCreamLayer)) {
+                                Logger.info("Warning: " + file
+                                        + " contains a Polygon pad - this functionality has been implmented as the smallest bounded rectangle and may over paste the area");
+                                Logger.info("Layer"
+                                        + ((org.openpnp.model.eagle.xml.Polygon) e).getLayer()
+                                                                                   .toString());
+                                Double vertex_x_min = 0.0;
+                                Double vertex_x_max = 0.0;
+                                Double vertex_y_min = 0.0;
+                                Double vertex_y_max = 0.0;
+                                ListIterator<org.openpnp.model.eagle.xml.Vertex> vertex_it =
+                                        ((org.openpnp.model.eagle.xml.Polygon) e).getVertex()
+                                                                                 .listIterator();
+                                while (vertex_it.hasNext()) {
+                                    org.openpnp.model.eagle.xml.Vertex vertex =
+                                            (Vertex) vertex_it.next();
+                                    vertex_x_min = Math.min(vertex_x_min,
+                                            Double.parseDouble(vertex.getX()));
+                                    vertex_x_max = Math.max(vertex_x_max,
+                                            Double.parseDouble(vertex.getX()));
+                                    vertex_y_min = Math.min(vertex_y_min,
+                                            Double.parseDouble(vertex.getY()));
+                                    vertex_y_max = Math.max(vertex_y_max,
+                                            Double.parseDouble(vertex.getY()));
+                                    Logger.info(
+                                            "Vertex: X=" + vertex.getX() + " y=" + vertex.getY());
+                                }
+                                // TODO implement polygon pad in Pad.java
+                                Pad.RoundRectangle pad = new Pad.RoundRectangle();
+                                pad.setUnits(LengthUnit.Millimeters);
+                                pad.setRoundness(0);
+                                pad.setHeight((vertex_y_max - vertex_y_min));
+                                pad.setWidth((vertex_x_max - vertex_x_min));
 
-                                                        // TODO add support for Circle pads
+                                BoardPad boardPad = new BoardPad(pad,
+                                        new Location(LengthUnit.Millimeters,
+                                                x + (vertex_x_max + vertex_x_min) / 2,
+                                                y + (vertex_y_max + vertex_y_min) / 2, 0, 0));
+                                Logger.info("Pad generated width is " + pad.getWidth() + " height "
+                                        + pad.getHeight() + " centered at x = "
+                                        + boardPad.getLocation()
+                                                  .getX()
+                                        + " y = " + boardPad.getLocation()
+                                                            .getY());
+                                boardPad.setName(element.getName() + "-" + "Polygon "); // Polygons
+                                                                                        // are not
+                                                                                        // named so
+                                                                                        // just name
+                                                                                        // it as
+                                                                                        // "Polygon"
 
-                                                        boardPad.setName(element.getName() + "-"
-                                                                + ((org.openpnp.model.eagle.xml.Smd) e)
-                                                                        .getName());
+                                if (((org.openpnp.model.eagle.xml.Polygon) e).getLayer()
+                                                                             .equalsIgnoreCase(
+                                                                                     tCreamLayer)) {
+                                    boardPad.setSide(Side.Top);
+                                }
+                                else {
+                                    boardPad.setSide(Side.Bottom);
+                                }
 
-                                                        if (((org.openpnp.model.eagle.xml.Smd) e)
-                                                                .getLayer()
-                                                                .equalsIgnoreCase(topLayer)) { // is
-                                                                                               // the
-                                                                                               // pad
-                                                                                               // on
-                                                                                               // top
-                                                            if (element_side == Side.Top) {// part
-                                                                                           // is
-                                                                                           // on the
-                                                                                           // top
-                                                                boardPad.setSide(Side.Top);
-                                                            } // pad
-                                                              // is on
-                                                              // the
-                                                              // top
-                                                            else {
-                                                                boardPad.setSide(Side.Bottom); // part
-                                                                                               // is
-                                                                                               // on
-                                                                                               // top,
-                                                                                               // but
-                                                                                               // pat
-                                                                                               // is
-                                                                                               // on
-                                                                                               // the
-                                                                                               // bottom
-                                                            }
-                                                        }
-                                                        else if (((org.openpnp.model.eagle.xml.Smd) e)
-                                                                .getLayer()
-                                                                .equalsIgnoreCase(bottomLayer)) { // is
-                                                                                                  // the
-                                                                                                  // pad
-                                                                                                  // on
-                                                                                                  // the
-                                                                                                  // bottom
-                                                            if (element_side == Side.Top) { // part
-                                                                                            // is
-                                                                                            // top
-                                                                boardPad.setSide(Side.Bottom); // pad
-                                                                                               // stays
-                                                                                               // on
-                                                                                               // the
-                                                                                               // bottom
-                                                            }
-                                                            else {
-                                                                boardPad.setSide(Side.Top); // pad
-                                                                                            // moves
-                                                                                            // to
-                                                                                            // the
-                                                                                            // top
-                                                            }
-                                                        }
-                                                        else {
-                                                            Logger.info("Warning: " + file
-                                                                    + "contains a SMD pad that is not on a topLayer or bottomLayer");
-                                                        }
+                                pads.add(boardPad);
 
-                                                        // TODO figure out if it is possible for an
-                                                        // SMD pad to have a drill, it appears not
-                                                        // !!
-                                                        // pad.setdrillDiameter(0);
-
-                                                        // TODO later we need to associate a list of
-                                                        // pads to a board.
-                                                        pads.add(boardPad);
-
-                                                        board.addSolderPastePad(boardPad); // This
-                                                                                           // adds
-                                                                                           // the
-                                                                                           // pad to
-                                                                                           // the
-                                                                                           // SolderPaste
-                                                    }
-                                                }
-                                                else if (e instanceof org.openpnp.model.eagle.xml.Pad) {
-
-                                                    // TODO implement pasting for through hole pads
-
-                                                }
-                                                else if (e instanceof org.openpnp.model.eagle.xml.Polygon) {
-                                                    // We have a polygon is it on a tCream or bCream
-                                                    // layer, otherwise ignore it
-                                                    if (((org.openpnp.model.eagle.xml.Polygon) e)
-                                                            .getLayer()
-                                                            .equalsIgnoreCase(tCreamLayer)
-                                                            || ((org.openpnp.model.eagle.xml.Polygon) e)
-                                                                    .getLayer().equalsIgnoreCase(
-                                                                            bCreamLayer)) {
-                                                        Logger.info("Warning: " + file
-                                                                + " contains a Polygon pad - this functionality has been implmented as the smallest bounded rectangle and may over paste the area");
-                                                        Logger.info(
-                                                                "Layer" + ((org.openpnp.model.eagle.xml.Polygon) e)
-                                                                        .getLayer().toString());
-                                                        Double vertex_x_min = 0.0;
-                                                        Double vertex_x_max = 0.0;
-                                                        Double vertex_y_min = 0.0;
-                                                        Double vertex_y_max = 0.0;
-                                                        ListIterator<org.openpnp.model.eagle.xml.Vertex> vertex_it =
-                                                                ((org.openpnp.model.eagle.xml.Polygon) e)
-                                                                        .getVertex().listIterator();
-                                                        while (vertex_it.hasNext()) {
-                                                            org.openpnp.model.eagle.xml.Vertex vertex =
-                                                                    (Vertex) vertex_it.next();
-                                                            vertex_x_min = Math.min(vertex_x_min,
-                                                                    Double.parseDouble(
-                                                                            vertex.getX()));
-                                                            vertex_x_max = Math.max(vertex_x_max,
-                                                                    Double.parseDouble(
-                                                                            vertex.getX()));
-                                                            vertex_y_min = Math.min(vertex_y_min,
-                                                                    Double.parseDouble(
-                                                                            vertex.getY()));
-                                                            vertex_y_max = Math.max(vertex_y_max,
-                                                                    Double.parseDouble(
-                                                                            vertex.getY()));
-                                                            Logger.info("Vertex: X=" + vertex.getX()
-                                                                    + " y=" + vertex.getY());
-                                                        }
-                                                        // TODO implement polygon pad in Pad.java
-                                                        Pad.RoundRectangle pad =
-                                                                new Pad.RoundRectangle();
-                                                        pad.setUnits(LengthUnit.Millimeters);
-                                                        pad.setRoundness(0);
-                                                        pad.setHeight(
-                                                                (vertex_y_max - vertex_y_min));
-                                                        pad.setWidth((vertex_x_max - vertex_x_min));
-
-                                                        BoardPad boardPad = new BoardPad(pad,
-                                                                new Location(LengthUnit.Millimeters,
-                                                                        x + (vertex_x_max
-                                                                                + vertex_x_min) / 2,
-                                                                        y + (vertex_y_max
-                                                                                + vertex_y_min) / 2,
-                                                                        0, 0));
-                                                        Logger.info("Pad generated width is "
-                                                                + pad.getWidth() + " height "
-                                                                + pad.getHeight()
-                                                                + " centered at x = "
-                                                                + boardPad.getLocation().getX()
-                                                                + " y = "
-                                                                + boardPad.getLocation().getY());
-                                                        boardPad.setName(element.getName() + "-"
-                                                                + "Polygon "); // Polygons are not
-                                                                               // named so just name
-                                                                               // it as "Polygon"
-
-                                                        if (((org.openpnp.model.eagle.xml.Polygon) e)
-                                                                .getLayer()
-                                                                .equalsIgnoreCase(tCreamLayer)) {
-                                                            boardPad.setSide(Side.Top);
-                                                        }
-                                                        else {
-                                                            boardPad.setSide(Side.Bottom);
-                                                        }
-
-                                                        pads.add(boardPad);
-
-                                                        board.addSolderPastePad(boardPad); // This
-                                                                                           // adds
-                                                                                           // the
-                                                                                           // pad to
-                                                                                           // the
-                                                                                           // SolderPaste
-                                                    }
-                                                }
-                                            }
+                                board.addSolderPastePad(boardPad); // This adds the pad to the
+                                                                   // SolderPaste
+                            }
+                        }
+                    }
 
                     placement.setSide(element_side);
                     placements.add(placement);
@@ -778,11 +701,11 @@ public class EagleBoardImporter implements BoardImporter {
             chckbxCreateMissingParts = new JCheckBox("Create Missing Parts");
             chckbxCreateMissingParts.setSelected(true);
             panel_1.add(chckbxCreateMissingParts, "2, 2");
-            
+
             chckbxUpdateExistingParts = new JCheckBox("Update Existing Parts");
             chckbxUpdateExistingParts.setSelected(false);
             panel_1.add(chckbxUpdateExistingParts, "2, 4");
-            
+
             chckbxAddLibraryPrefix = new JCheckBox("Add Library Prefix to Part Names");
             chckbxAddLibraryPrefix.setSelected(false);
             panel_1.add(chckbxAddLibraryPrefix, "2, 6");
@@ -818,7 +741,8 @@ public class EagleBoardImporter implements BoardImporter {
             KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
             InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
             inputMap.put(stroke, "ESCAPE");
-            rootPane.getActionMap().put("ESCAPE", cancelAction);
+            rootPane.getActionMap()
+                    .put("ESCAPE", cancelAction);
         }
 
         private class SwingAction extends AbstractAction {
@@ -832,7 +756,8 @@ public class EagleBoardImporter implements BoardImporter {
                 fileDialog.setFilenameFilter(new FilenameFilter() {
                     @Override
                     public boolean accept(File dir, String name) {
-                        return name.toLowerCase().endsWith(".brd");
+                        return name.toLowerCase()
+                                   .endsWith(".brd");
                     }
                 });
                 fileDialog.setVisible(true);
@@ -860,22 +785,22 @@ public class EagleBoardImporter implements BoardImporter {
                             placements.addAll(parseFile(boardFile, null,
                                     chckbxCreateMissingParts.isSelected(),
                                     chckbxUpdateExistingParts.isSelected(),
-                                    chckbxAddLibraryPrefix.isSelected()));   // both Top and Bottom
-                                                                             // of the board
+                                    chckbxAddLibraryPrefix.isSelected())); // both Top and Bottom
+                                                                           // of the board
                         }
                         else if (chckbxImportTop.isSelected()) {
                             placements.addAll(parseFile(boardFile, Side.Top,
                                     chckbxCreateMissingParts.isSelected(),
                                     chckbxUpdateExistingParts.isSelected(),
-                                    chckbxAddLibraryPrefix.isSelected()));   // Just the Top side of
-                                                                             // the board
+                                    chckbxAddLibraryPrefix.isSelected())); // Just the Top side of
+                                                                           // the board
                         }
                         else if (chckbxImportBottom.isSelected()) {
                             placements.addAll(parseFile(boardFile, Side.Bottom,
                                     chckbxCreateMissingParts.isSelected(),
                                     chckbxUpdateExistingParts.isSelected(),
-                                    chckbxAddLibraryPrefix.isSelected()));   // Just the Bottom side
-                                                                             // of the board
+                                    chckbxAddLibraryPrefix.isSelected())); // Just the Bottom side
+                                                                           // of the board
                         }
                     }
                 }
