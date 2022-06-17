@@ -5,6 +5,13 @@ EAGLE
 OpenPNP can read EAGLE .brd files directly:
 1. File -> Import Board -> CadSoft EAGLE Board
 
+Options:
+* Create Missing Parts: Creates new parts in the OpenPnP library if they don't already exist
+* Update Existing Parts: Updates or creates footprint outlines and package mappings in the OpenPnP library for parts that already exist
+* Add Library Prefix to Part Names: Creates unique part names that include the library name where the same part name might exist in multiple libraries
+* Import Parts on Top of the board: Import all parts located on the top side of the board
+* Import Parts on Bottom of the board: Import all parts located on the bottom side of the board
+
 You can also export via a ULP:
 1. In EAGLE, run mountsmd.ulp, which is included in the EAGLE distribution.
 2. In OpenPnP, go to the menu at File -> Import Board -> EAGLE mountsmd.ulp.
