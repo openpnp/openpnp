@@ -55,6 +55,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Package;
 import org.openpnp.spi.Camera;
 
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -69,8 +70,8 @@ public class PackageVisionPanel extends JPanel {
 
     final private Footprint footprint;
 
-    public PackageVisionPanel(Footprint footprint) {
-        this.footprint = footprint;
+    public PackageVisionPanel(Package pkg) {
+        this.footprint = pkg.getFootprint();
 
         setLayout(new BorderLayout(0, 0));
         tableModel = new FootprintTableModel(footprint);

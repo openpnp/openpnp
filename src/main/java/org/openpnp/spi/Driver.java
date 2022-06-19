@@ -25,9 +25,9 @@ import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Identifiable;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.model.Named;
 import org.openpnp.model.Solutions;
-import org.openpnp.model.Motion.MoveToCommand;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 
 /**
@@ -91,6 +91,11 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
      * @throws Exception
      */
     public AxesLocation getReportedLocation(long timeout) throws Exception;
+
+    /**
+     * @return true if the driver should synchronize its initial position after enabling.
+     */
+    boolean isSyncInitialLocation();
 
     /**
      * @return true if a motion is still assumed to be pending, i.e. waitForCompletion() has not yet been called.  
@@ -228,6 +233,18 @@ import org.openpnp.spi.MotionPlanner.CompletionType;
 
         public boolean isUnpredictable() {
             return this.ordinal() <= EuclideanAxisLimits.ordinal();
+        }
+
+        public boolean isControllingFeedRate() {
+            return this.ordinal() >= EuclideanAxisLimits.ordinal();
+        }
+        public boolean isControllingAcceleration() {
+            return this.ordinal() >= ConstantAcceleration.ordinal();
+        }
+        public boolean isControllingJerk() {
+            // Only the SimpleSCurve really requires the Jerk value. The others fall back to Constant Acceleration when 
+            // it is missing, which is a valid setting.  
+            return this.ordinal() == SimpleSCurve.ordinal();
         }
     }
 

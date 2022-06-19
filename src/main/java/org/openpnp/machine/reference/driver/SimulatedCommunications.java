@@ -10,6 +10,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.openpnp.spi.Driver;
 import org.openpnp.util.GcodeServer;
+import org.pmw.tinylog.Logger;
 
 /**
  * A base class for basic TCP based Drivers. Includes functions for connecting,
@@ -23,86 +24,59 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
     protected GcodeServer gcodeServer;
     private Driver driver;
 
+    @Override
     public synchronized void connect() throws Exception {
         disconnect();
+        if (gcodeServer == null) {
+            try {
+                gcodeServer = new GcodeServer();
+            }
+            catch (Exception e) {
+                Logger.warn(e);
+            }
+        }
+        if (gcodeServer != null) {
+            gcodeServer.setDriver(driver);
+        }
         clientSocket = new Socket("localhost", getGcodeServer().getListenerPort());
         input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         output = new DataOutputStream(clientSocket.getOutputStream());
     }
 
+    @Override
     public synchronized void disconnect() throws Exception {
         if (clientSocket != null && clientSocket.isBound()) {
             clientSocket.close();
             input.close();
             output.close();
-            gcodeServer.shutdown();
             input = null;
             output = null;
             clientSocket = null;
+        }
+        if (gcodeServer != null) {
+            gcodeServer.shutdown();
             gcodeServer = null;
         }
     }
 
+    @Override
     public String getConnectionName(){
-        return "simulated: "+(gcodeServer == null ? "off" : "port "+gcodeServer.getListenerPort());
+        GcodeServer server = gcodeServer; // prevent race by taking a copy
+        return "simulated: "+(server == null ? "off" : "port "+server.getListenerPort());
     }
 
-    public GcodeServer getGcodeServer() throws Exception {
-        if (gcodeServer == null) {
-            gcodeServer = new GcodeServer();
-        }
-        gcodeServer.setDriver(driver);
+    @Override
+    public GcodeServer getGcodeServer() {
         return gcodeServer;
     }
 
-    /**
-     * Read a line from the socket. Blocks for the default timeout. If the read times out a
-     * TimeoutException is thrown. Any other failure to read results in an IOExeption;
-     * 
-     * @return
-     * @throws TimeoutException
-     * @throws IOException
-     */
-    public String readLine() throws TimeoutException, IOException {
-        StringBuffer line = new StringBuffer();
-        while (true) {
-            try {
-                int ch = input.read();
-                if (ch == -1) {
-                    return null;
-                }
-                else if (ch == '\n' || ch == '\r') {
-                    if (line.length() > 0) {
-                        return line.toString();
-                    }
-                }
-                else {
-                    line.append((char) ch);
-                }
-            }
-            catch (IOException ex) {
-                if (ex.getCause() instanceof SocketTimeoutException) {
-                    throw new TimeoutException(ex.getMessage());
-                }
-                throw ex;
-            }
-        }
-    }
-
-    public void writeLine(String data) throws IOException
-    {
-        try {
-            output.write(data.getBytes());
-            output.write(getLineEndingType().getLineEnding().getBytes());
-        }
-        catch (IOException ex) {
-            throw ex;
-        }
-    }
-
+    @Override
     public int read() throws TimeoutException, IOException {
         try {
             return input.read();
+        }
+        catch (NullPointerException ex) {
+            throw new IOException("Trying to read from a unconnected socket.");
         }
         catch (IOException ex) {
             if (ex.getCause() instanceof SocketTimeoutException) {
@@ -112,6 +86,7 @@ public class SimulatedCommunications extends ReferenceDriverCommunications {
         }
     }
 
+    @Override
     public void write(int d) throws IOException {
         output.write(d);
     }

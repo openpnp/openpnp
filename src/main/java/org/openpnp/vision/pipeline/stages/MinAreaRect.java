@@ -8,6 +8,7 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
 import org.simpleframework.xml.Attribute;
@@ -42,6 +43,10 @@ public class MinAreaRect extends CvStage {
     
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
+        if (pipeline.getWorkingColorSpace() != FluentCv.ColorSpace.Gray){
+            throw new Exception(String.format("%s is not compatible with %s colorspace. Only Grey colorspace is supported.", MinAreaRect.class.getSimpleName(), pipeline.getWorkingColorSpace()));
+        }
+
         Mat mat = pipeline.getWorkingImage();
         List<Point> points = new ArrayList<>();
         byte[] rowData = new byte[mat.cols()];

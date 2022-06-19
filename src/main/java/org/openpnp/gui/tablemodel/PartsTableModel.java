@@ -24,21 +24,21 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.table.AbstractTableModel;
-
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PercentConverter;
+import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Length;
 import org.openpnp.model.Package;
 import org.openpnp.model.Part;
 
 @SuppressWarnings("serial")
-public class PartsTableModel extends AbstractTableModel implements PropertyChangeListener {
+public class PartsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
     private String[] columnNames =
-            new String[] {"ID", "Description", "Height", "Package", "Speed %"};
+            new String[] {"ID", "Description", "Height", "Package", "Speed %", "BottomVision", "FiducialVision", "Placements", "Feeders"};
     private Class[] columnTypes = new Class[] {String.class, String.class, LengthCellValue.class,
-            Package.class, String.class};
+            Package.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class, Integer.class, Integer.class};
     private List<Part> parts;
     private PercentConverter percentConverter = new PercentConverter();
 
@@ -67,11 +67,17 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex != 0;
+        return columnIndex >= 1 && columnIndex <= 6;
     }
 
-    public Part getPart(int index) {
+    @Override
+    public Part getRowObjectAt(int index) {
         return parts.get(index);
+    }
+
+    @Override
+    public int indexOf(Object selectedPart) {
+        return parts.indexOf(selectedPart);
     }
 
     @Override
@@ -102,6 +108,12 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
             else if (columnIndex == 4) {
                 part.setSpeed(percentConverter.convertReverse(aValue.toString()));
             }
+            else if (columnIndex == 5) {
+                part.setBottomVisionSettings((BottomVisionSettings) aValue);
+            }
+            else if (columnIndex == 6) {
+                part.setFiducialVisionSettings((FiducialVisionSettings) aValue);
+            }
         }
         catch (Exception e) {
             // TODO: dialog, bad input
@@ -121,6 +133,14 @@ public class PartsTableModel extends AbstractTableModel implements PropertyChang
                 return part.getPackage();
             case 4:
                 return percentConverter.convertForward(part.getSpeed());
+            case 5:
+                return part.getBottomVisionSettings();
+            case 6:
+                return part.getFiducialVisionSettings();
+            case 7:
+                return part.getPlacementCount();
+            case 8:
+                return part.getAssignedFeeders();
             default:
                 return null;
         }

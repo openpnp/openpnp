@@ -14,6 +14,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.pmw.tinylog.Logger;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -57,12 +58,18 @@ public class UiUtils {
     }
 
     /**
-     * Show an error using a message box.
+     * Show an error using a message box, if the GUI is present, otherwise just log the error.
      * @param t
      */
     public static void showError(Throwable t) {
-        MessageBoxes.errorBox(MainFrame.get(), "Error", t);
+        if (MainFrame.get() != null) {
+            MessageBoxes.errorBox(MainFrame.get(), "Error", t);
+        }
+        else {
+            Logger.error(t);
+        }
     }
+
 
     /**
      * Functional version of Machine.submit which guarantees that the the onSuccess and onFailure
@@ -75,6 +82,21 @@ public class UiUtils {
      */
     public static <T> Future<T> submitUiMachineTask(final Callable<T> callable,
             final Consumer<T> onSuccess, final Consumer<Throwable> onFailure) {
+        return submitUiMachineTask(callable, onSuccess, onFailure, false);
+    }
+
+    /**
+     * Functional version of Machine.submit which guarantees that the the onSuccess and onFailure
+     * handlers will be run on the Swing event thread. Includes the ignoreEnabled argument.
+     * 
+     * @param callable
+     * @param onSuccess
+     * @param onFailure
+     * @param ignoreEnabled
+     * @return
+     */
+    public static <T> Future<T> submitUiMachineTask(final Callable<T> callable,
+            final Consumer<T> onSuccess, final Consumer<Throwable> onFailure, boolean ignoreEnabled) {
         return Configuration.get().getMachine().submit(callable, new FutureCallback<T>() {
             @Override
             public void onSuccess(T result) {
@@ -95,7 +117,7 @@ public class UiUtils {
                     e.printStackTrace();
                 }
             }
-        });
+        }, ignoreEnabled);
     }
 
     /**
@@ -144,7 +166,7 @@ public class UiUtils {
             Location location, boolean allowWithoutMove,
             final Thrunnable actionThrunnable) {
         messageBoxOnException(() -> {
-            if (location.equals(movable.getLocation())) {
+            if (movable == null || location == null || location.equals(movable.getLocation())) {
                 // Already there, just act.
                 actionThrunnable.thrun();
             }

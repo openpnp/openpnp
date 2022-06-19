@@ -22,6 +22,7 @@ package org.openpnp.machine.reference.driver;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import org.openpnp.util.GcodeServer;
 import org.simpleframework.xml.Attribute;
 
 /**
@@ -55,7 +56,7 @@ public abstract class ReferenceDriverCommunications {
 
     abstract public String getConnectionName();
 
-    abstract public void writeBytes(byte[] data) throws IOException;
+    abstract protected void writeBytes(byte[] data) throws IOException;
 
     abstract public int read() throws TimeoutException, IOException;
 
@@ -85,7 +86,7 @@ public abstract class ReferenceDriverCommunications {
      * @throws TimeoutException
      * @throws IOException
      */
-    public String readUntil(String characters) throws TimeoutException, IOException {
+    protected String readUntil(String characters) throws TimeoutException, IOException {
         StringBuffer line = new StringBuffer();
         while (true) {
             int ch = read();
@@ -107,12 +108,16 @@ public abstract class ReferenceDriverCommunications {
         byte[] b = new byte[] { (byte) d };
         writeBytes(b);
     }
-    
+
     public void setLineEndingType(LineEndingType lineEndingType) {
         this.lineEndingType = lineEndingType;
     }
-    
+
     public LineEndingType getLineEndingType() {
         return lineEndingType;
+    }
+
+    public GcodeServer getGcodeServer() {
+        return null;
     }
 }

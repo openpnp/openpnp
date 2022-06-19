@@ -49,10 +49,10 @@ import org.openpnp.gui.support.ActuatorItem;
 import org.openpnp.gui.support.CameraItem;
 import org.openpnp.gui.support.HeadMountableItem;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.NozzleItem;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Actuator;
@@ -76,7 +76,6 @@ public class MachineControlsPanel extends JPanel {
     private final Configuration configuration;
     private final JobPanel jobPanel;
 
-    private static final double VIRTUAL_Z_MAX_UNSAFE_ROAMING_MM = 10;
     private static final String PREF_JOG_CONTROLS_EXPANDED =
             "MachineControlsPanel.jogControlsExpanded"; //$NON-NLS-1$
     private static final boolean PREF_JOG_CONTROLS_EXPANDED_DEF = true;
@@ -284,29 +283,36 @@ public class MachineControlsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setEnabled(false);
-            // Note: We specifically bypass the machine submit so that this runs immediately.
-            // That's not really thread safe tho, so it's better than nothing, but not much.
-            Thread thread = new Thread(() -> {
-                Machine machine = Configuration.get().getMachine();
-                boolean enable = !machine.isEnabled();
+            final Machine machine = Configuration.get().getMachine();
+            final boolean enable = !machine.isEnabled();
+            Runnable task = () -> {
                 try {
-                    Configuration.get().getMachine().setEnabled(enable);
-                    // TODO STOPSHIP move setEnabled into a binding.
-                    setEnabled(true);
-                    if (machine.getHomeAfterEnabled() && machine.isEnabled()) {
-                        UiUtils.submitUiMachineTask(() -> {
-                            machine.home();
-                        });
-                    }
+                    machine.setEnabled(enable);
                 }
                 catch (Exception t1) {
-                    MessageBoxes.errorBox(MachineControlsPanel.this, "Enable Failure", //$NON-NLS-1$
-                            t1.getMessage());
-                    setEnabled(true);
+                    UiUtils.showError(t1);
                 }
-            });
-            thread.setDaemon(true);
-            thread.start();
+                // TODO STOPSHIP move setEnabled into a binding.
+                SwingUtilities.invokeLater(() -> setEnabled(true));
+            };
+            if (machine.isBusy() && !enable) {
+                // Note: We specifically bypass the machine submit so that this runs immediately 
+                // as an emergency stop.
+                // That's not really thread safe tho, so it's better than nothing, but not much.
+                Thread thread = new Thread(task);
+                thread.setDaemon(true);
+                thread.start();
+            }
+            else {
+                // Not an emergency stop. Run as regular machine task.  
+                UiUtils.submitUiMachineTask(() -> {
+                            task.run();
+                            return null;
+                        }, 
+                        (result) -> {} , 
+                        (t) -> UiUtils.showError(t), 
+                        true); // Allow for disabled machine.
+            }
         }
     };
 
@@ -430,8 +436,8 @@ public class MachineControlsPanel extends JPanel {
                 else {
                     // Jogging the same selected tool. Apply auto-Safe Z.
                     if (hm.getAxisZ() instanceof ReferenceVirtualAxis) {
-                        double distance = lastUserActionLocation.getLinearDistanceTo(hm.getLocation());
-                        if (distance > VIRTUAL_Z_MAX_UNSAFE_ROAMING_MM) {
+                        Length distance = lastUserActionLocation.getLinearLengthTo(hm.getLocation());
+                        if (distance.compareTo(machine.getUnsafeZRoamingDistance()) > 0) {
                             // Distance is too large to retain virtual Z. Make it safe.
                             Logger.debug(hm.getName()+" exceeded roaming distance at non-safe Z, going to safe Z. "
                                     + "Last user action at "+lastUserActionLocation+" roamed to "+hm.getLocation()+" distance "+distance+"mm.");

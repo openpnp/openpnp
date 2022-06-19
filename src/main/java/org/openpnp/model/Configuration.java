@@ -19,15 +19,18 @@
 
 package org.openpnp.model;
 
-import java.io.*;
-import java.nio.file.CopyOption;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -70,8 +73,11 @@ public class Configuration extends AbstractModelObject {
     private static final String PREF_UNITS = "Configuration.units";
     private static final String PREF_UNITS_DEF = "Millimeters";
 
+    private static final String PREF_TABLE_LINKS = "Configuration.tableLinks";
+
     private static final String PREF_THEME_INFO = "Configuration.theme.info";
     private static final String PREF_THEME_FONT_SIZE = "Configuration.theme.fontSize";
+    private static final String PREF_THEME_ALTERNATE_ROWS = "Configuration.theme.alternateRows";
 
     private static final String PREF_LENGTH_DISPLAY_FORMAT = "Configuration.lengthDisplayFormat";
     private static final String PREF_LENGTH_DISPLAY_FORMAT_DEF = "%.3f";
@@ -85,8 +91,14 @@ public class Configuration extends AbstractModelObject {
     private static final int PREF_VERTICAL_SCROLL_UNIT_INCREMENT_DEF = 16;
     private static final String imgurClientId = "620fc1fa8ee0180";
 
+    public enum TablesLinked {
+        Unlinked,
+        Linked
+    };
+
     private LinkedHashMap<String, Package> packages = new LinkedHashMap<>();
     private LinkedHashMap<String, Part> parts = new LinkedHashMap<>();
+    private LinkedHashMap<String, AbstractVisionSettings> visionSettings = new LinkedHashMap<>();
     private Machine machine;
     private LinkedHashMap<File, Board> boards = new LinkedHashMap<>();
     private boolean loaded;
@@ -172,6 +184,14 @@ public class Configuration extends AbstractModelObject {
         prefs.put(PREF_UNITS, lengthUnit.name());
     }
 
+    public TablesLinked getTablesLinked() {
+        return TablesLinked.valueOf(prefs.get(PREF_TABLE_LINKS, TablesLinked.Unlinked.toString()));
+    }
+
+    public void setTablesLinked(TablesLinked tablesLinked) {
+        prefs.put(PREF_TABLE_LINKS, tablesLinked.toString());
+    }
+
     public Locale getLocale() {
         return new Locale(prefs.get(PREF_LOCALE_LANG, PREF_LOCALE_LANG_DEF), 
                 prefs.get(PREF_LOCALE_COUNTRY, PREF_LOCALE_COUNTRY_DEF));
@@ -208,8 +228,8 @@ public class Configuration extends AbstractModelObject {
         byte[] serializedSettings = prefs.getByteArray(PREF_THEME_FONT_SIZE, null);
         if (serializedSettings != null) {
             try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
-                ThemeSettingsPanel.FontSize theme = (ThemeSettingsPanel.FontSize) in.readObject();
-                return theme;
+                ThemeSettingsPanel.FontSize fontSize = (ThemeSettingsPanel.FontSize) in.readObject();
+                return fontSize;
             } catch (IOException | ClassNotFoundException ignore) {
             }
         }
@@ -222,6 +242,28 @@ public class Configuration extends AbstractModelObject {
             out.writeObject(fontSize);
             out.flush();
             prefs.putByteArray(PREF_THEME_FONT_SIZE, bos.toByteArray());
+        } catch (IOException ignore) {
+        }
+    }
+
+    public Boolean isAlternateRows() {
+        byte[] serializedSettings = prefs.getByteArray(PREF_THEME_ALTERNATE_ROWS, null);
+        if (serializedSettings != null) {
+            try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedSettings))) {
+                Boolean alternateRows = (Boolean) in.readObject();
+                return alternateRows;
+            } catch (IOException | ClassNotFoundException ignore) {
+            }
+        }
+        return null;
+    }
+
+    public void setAlternateRows(Boolean alternateRows) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(alternateRows);
+            out.flush();
+            prefs.putByteArray(PREF_THEME_ALTERNATE_ROWS, bos.toByteArray());
         } catch (IOException ignore) {
         }
     }
@@ -285,8 +327,8 @@ public class Configuration extends AbstractModelObject {
      * uniquely identify the file within the application and a unique name is generated within that
      * namespace. suffix is appended to the unique part of the filename. The result of calling
      * File.getName() on the returned file can be used to load the same file in the future by
-     * calling getResourceFile(). This method uses File.createTemporaryFile() and so the rules for
-     * that method must be followed when calling this one.
+     * calling getResourceFile(). This method uses NanosecondTime.get() so the files names
+     * will be unique and ordered.
      * 
      * @param forClass
      * @param suffix
@@ -299,7 +341,7 @@ public class Configuration extends AbstractModelObject {
         if (!directory.exists()) {
             directory.mkdirs();
         }
-        File file = File.createTempFile(prefix, suffix, directory);
+        File file = new File(directory, prefix+NanosecondTime.get()+suffix);
         return file;
     }
 
@@ -362,6 +404,24 @@ public class Configuration extends AbstractModelObject {
             throw new Exception("Error while reading parts.xml (" + message + ")", e);
         }
 
+        try {
+            File file = new File(configurationDirectory, "vision-settings.xml");
+            if (overrideUserConfig || !file.exists()) {
+                Logger.info("No vision-settings.xml found in configuration directory, loading defaults.");
+                file = File.createTempFile("visionSettings", "xml");
+                FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/vision-settings.xml"), file);
+                forceSave = true;
+            }
+            loadVisionSettings(file);
+        }
+        catch (Exception e) {
+            String message = e.getMessage();
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                message = e.getCause().getMessage();
+            }
+            throw new Exception("Error while reading vision-settings.xml (" + message + ")", e);
+        }
+
 
         try {
             File file = new File(configurationDirectory, "machine.xml");
@@ -419,6 +479,12 @@ public class Configuration extends AbstractModelObject {
         }
         catch (Exception e) {
             throw new Exception("Error while saving parts.xml (" + e.getMessage() + ")", e);
+        }
+        try {
+            saveVisionSettings(createBackedUpFile("vision-settings.xml", now));
+        }
+        catch (Exception e) {
+            throw new Exception("Error while saving vision-settings.xml (" + e.getMessage() + ")", e);
         }
     }
 
@@ -487,8 +553,41 @@ public class Configuration extends AbstractModelObject {
         firePropertyChange("parts", null, parts);
     }
 
+    public void addVisionSettings(AbstractVisionSettings visionSettings) {
+        if (null == visionSettings.getId()) {
+            throw new Error("Vision Settings with null Id cannot be added to Configuration.");
+        }
+        this.visionSettings.put(visionSettings.getId().toUpperCase(), visionSettings);
+        fireVisionSettingsChanged();
+    }
+
+    public List<AbstractVisionSettings> getVisionSettings() {
+        return Collections.unmodifiableList(new ArrayList<>(visionSettings.values()));
+    }
+
+    public AbstractVisionSettings getVisionSettings(String visionSettingsId) {
+        if (visionSettingsId == null) {
+            return null;
+        }
+
+        return this.visionSettings.get(visionSettingsId.toUpperCase());
+    }
+
+    public void removeVisionSettings(AbstractVisionSettings visionSettings) {
+        this.visionSettings.remove(visionSettings.getId().toUpperCase());
+        fireVisionSettingsChanged();
+    }
+
     public List<Board> getBoards() {
         return Collections.unmodifiableList(new ArrayList<>(boards.values()));
+    }
+
+    /**
+     * Signal that something about the vision settings has changed. Inheritance makes it hard to track how changes affect
+     * single properties, therefore this is simply fired globally.
+     */
+    public void fireVisionSettingsChanged() {
+        firePropertyChange("visionSettings", null, this.visionSettings);
     }
 
     public Machine getMachine() {
@@ -561,6 +660,21 @@ public class Configuration extends AbstractModelObject {
     private void saveParts(File file) throws Exception {
         PartsConfigurationHolder holder = new PartsConfigurationHolder();
         holder.parts = new ArrayList<>(parts.values());
+        serializeObject(holder, file);
+    }
+
+    private void loadVisionSettings(File file) throws Exception {
+        Serializer serializer = createSerializer();
+        VisionSettingsConfigurationHolder holder =
+                serializer.read(VisionSettingsConfigurationHolder.class, file);
+        for (AbstractVisionSettings visionSettings : holder.visionSettings) {
+            addVisionSettings(visionSettings);
+        }
+    }
+
+    private void saveVisionSettings(File file) throws Exception {
+        VisionSettingsConfigurationHolder holder = new VisionSettingsConfigurationHolder();
+        holder.visionSettings = new ArrayList<>(visionSettings.values());
         serializeObject(holder, file);
     }
 
@@ -679,4 +793,14 @@ public class Configuration extends AbstractModelObject {
         @ElementList(inline = true, entry = "part", required = false)
         private ArrayList<Part> parts = new ArrayList<>();
     }
+
+    /**
+     * Used to provide a fixed root for the VisionSettings when serializing.
+     */
+    @Root(name = "openpnp-vision-settings")
+    public static class VisionSettingsConfigurationHolder {
+        @ElementList(inline = true, entry = "visionSettings", required = false)
+        public ArrayList<AbstractVisionSettings> visionSettings = new ArrayList<>();
+    }
+
 }

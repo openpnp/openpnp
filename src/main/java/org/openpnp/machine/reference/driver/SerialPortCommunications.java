@@ -1,11 +1,8 @@
 package org.openpnp.machine.reference.driver;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
-import java.util.regex.Pattern;
 
 import org.simpleframework.xml.Attribute;
 
@@ -110,7 +107,7 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
             serialPort.setRTS();
         }
         serialPort.setComPortTimeouts(
-                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 500, 0);
+                SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0);
     }
 
     public synchronized void disconnect() throws Exception {
@@ -136,9 +133,16 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         return portNames.toArray(new String[] {});
     }
 
+    @Override
     public int read() throws TimeoutException, IOException {
         byte[] b = new byte[1];
-        int l = serialPort.readBytes(b, 1);
+        int l;
+        try {
+            l = serialPort.readBytes(b, 1);
+        }
+        catch (NullPointerException e) {
+            throw new IOException("Trying to read from a unconnected serial.");
+        }
         if (l == -1) {
             throw new IOException("Read error.");
         }
@@ -148,6 +152,7 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
         return b[0];
     }
 
+    @Override
     public void writeBytes(byte[] data) throws IOException {
         int l = serialPort.writeBytes(data, data.length);
         if (l == -1) {
@@ -156,6 +161,7 @@ public class SerialPortCommunications extends ReferenceDriverCommunications {
     }
 
 
+    @Override
     public String getConnectionName() {
         return "serial://" + portName;
     }

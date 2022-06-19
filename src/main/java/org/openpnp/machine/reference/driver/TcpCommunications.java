@@ -8,7 +8,6 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeoutException;
 
-import org.openpnp.machine.reference.driver.ReferenceDriverCommunications.LineEndingType;
 import org.openpnp.util.GcodeServer;
 import org.simpleframework.xml.Attribute;
 
@@ -33,6 +32,7 @@ public class TcpCommunications extends ReferenceDriverCommunications {
     protected GcodeServer gcodeServer;
     protected AbstractReferenceDriver driver;
 
+    @Override
     public synchronized void connect() throws Exception {
         disconnect();
         if (ipAddress.equals("GcodeServer")) {
@@ -48,6 +48,7 @@ public class TcpCommunications extends ReferenceDriverCommunications {
         output = new DataOutputStream(clientSocket.getOutputStream());
     }
 
+    @Override
     public synchronized void disconnect() throws Exception {
         if (clientSocket != null && clientSocket.isBound()) {
             clientSocket.close();
@@ -61,13 +62,18 @@ public class TcpCommunications extends ReferenceDriverCommunications {
         }
     }
 
+    @Override
     public String getConnectionName(){
         return "tcp://" + ipAddress + ":" + port;
     }
 
+    @Override
     public int read() throws TimeoutException, IOException {
         try {
             return input.read();
+        }
+        catch (NullPointerException ex) {
+            throw new IOException("Trying to read from a unconnected socket.");
         }
         catch (IOException ex) {
             if (ex.getCause() instanceof SocketTimeoutException) {
@@ -106,6 +112,10 @@ public class TcpCommunications extends ReferenceDriverCommunications {
     public void setDriver(AbstractReferenceDriver driver) {
         this.driver = driver;
     }
-    
+
+    @Override
+    public GcodeServer getGcodeServer() {
+        return gcodeServer;
+    }
 }
 

@@ -134,6 +134,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
 
     @Override
     public void moveTo(HeadMountable hm, AxesLocation axesLocation, double speed, MotionOption... options) throws Exception {
+        if (speed <= 0) {
+            throw new Exception("Speed must be greater than 0.");
+        }
         // Handle soft limits and rotation axes limiting and wrap-around.
         axesLocation = limitAxesLocation(hm, axesLocation, false);
 
@@ -613,22 +616,25 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
         Location location = hm.toTransformed(axesLocation);
         location = hm.toHeadMountableLocation(location);
         double limitedRotation = location.getRotation();
-        double limit0 = -180;
-        double limit1 = 180;
-        if (axis.isSoftLimitLowEnabled()) {
-            AxesLocation axesLimit = axesLocation
-                    .put(new AxesLocation(axis, axis.getSoftLimitLow()));
-            Location limit = hm.toTransformed(axesLimit, LocationOption.Quiet);
-            limit = hm.toHeadMountableLocation(limit, LocationOption.Quiet);
-            limit0 = limit.getRotation();
-        }
-        if (axis.isSoftLimitHighEnabled()) {
-            AxesLocation axesLimit = axesLocation
-                    .put(new AxesLocation(axis, axis.getSoftLimitHigh()));
-            Location limit = hm.toTransformed(axesLimit, LocationOption.Quiet);
-            limit = hm.toHeadMountableLocation(limit, LocationOption.Quiet);
-            limit1 = limit.getRotation();
-        }
+        // Lower limit.
+        AxesLocation axesLimitLow = axesLocation
+                .put(new AxesLocation(axis, 
+                        (axis.isSoftLimitLowEnabled() 
+                                ? axis.getSoftLimitLow() 
+                                : new Length(-180, AxesLocation.getUnits()))));
+        Location limitLow = hm.toTransformed(axesLimitLow, LocationOption.Quiet);
+        limitLow = hm.toHeadMountableLocation(limitLow, LocationOption.Quiet);
+        double limit0 = limitLow.getRotation();
+        // Higher limit.
+        AxesLocation axesLimitHigh = axesLocation
+                .put(new AxesLocation(axis, 
+                        (axis.isSoftLimitHighEnabled() 
+                                ? axis.getSoftLimitHigh() 
+                                : new Length(180, AxesLocation.getUnits()))));
+        Location limitHigh = hm.toTransformed(axesLimitHigh, LocationOption.Quiet);
+        limitHigh = hm.toHeadMountableLocation(limitHigh, LocationOption.Quiet);
+        double limit1 = limitHigh.getRotation();
+        // Swap if necessary.
         if (limit0 > limit1) {
             // Transformation must have negated the coordinates.
             double swap = limit0;
@@ -656,8 +662,9 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
                 throw new Exception("Axis "+axis.getName()+" with limited articulation must not have Wrap Around option set.");
             }
             else {
-                throw new Exception("Axis "+axis.getName()+" with limited articulation cannot rotate to "+
-                        axesLocation.getCoordinate(axis)+" ("+hm.getName()+" at "+location.getRotation()+"°)");
+                throw new Exception("Axis "+axis.getName()+" with limited articulation "+
+                        axesLimitLow.getCoordinate(axis)+".."+axesLimitHigh.getCoordinate(axis)+" cannot rotate to "+
+                        limitedAxesLocation.getCoordinate(axis)+" (transformed "+hm.getName()+" to "+location.getRotation()+"°)");
             }
         }
         return limitedAxesLocation;
@@ -683,17 +690,8 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
             return motion;
         }
         else {
-            // Plan empty or machine stopped before this time.  
-            entry1 = motionPlan.lastEntry();
-            AxesLocation currentLocation; 
-            if (entry1 != null) {
-                // Machine stopped before this time, take the last exit location.
-                currentLocation = entry1.getValue().getLocation1();
-            }
-            else {
-                // Nothing in the plan (yet), just get the current axes location.
-                currentLocation = new AxesLocation(getMachine());
-            }
+            // Plan empty or machine stopped before this time, just get the current axes location.
+            AxesLocation currentLocation = new AxesLocation(getMachine());
             // Mark it as Stillstand, so callers can wait for it. 
             Motion motion = new Motion( 
                     null, 

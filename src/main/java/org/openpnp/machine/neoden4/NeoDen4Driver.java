@@ -1,10 +1,11 @@
 package org.openpnp.machine.neoden4;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.awt.geom.Point2D;
+import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
+// import org.openpnp.logging.CalibrationLogger;
 import org.openpnp.machine.neoden4.wizards.Neoden4DriverConfigurationWizard;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceHead;
@@ -22,10 +23,11 @@ import org.openpnp.spi.ControllerAxis;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
-import org.openpnp.spi.Nozzle;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Root;
+
+import org.openpnp.util.Utils2D;
 
 @Root
 public class NeoDen4Driver extends AbstractReferenceDriver {
@@ -93,6 +95,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     public static final String ACT_N3_BLOW = "N3-Blow";
     public static final String ACT_N4_BLOW = "N4-Blow";
 
+
     @Attribute(required = false)
     protected LengthUnit units = LengthUnit.Millimeters;
 
@@ -102,27 +105,34 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     @Attribute(required = false)
     protected int connectWaitTimeMilliseconds = 3000;
 
-    @Deprecated
+    protected boolean isAlreadyHomed = false;
+
+    //    @Deprecated
     @Attribute(required = false)
     protected double homeCoordinateX = -437.;
-    
+
     @Deprecated
     @Attribute(required = false)
     protected double homeCoordinateY = 437.; /* Maybe this needs to be 400. - needs more testing  */
 
     @Attribute(required = false)
     protected double scaleFactorX = 1.0501;   // slightly bigger, might be between +.0001 and +.0009
-    
+
     @Attribute(required = false)
     protected double scaleFactorY = 1.04947526;
 
     private boolean connected;
-    private Set<Nozzle> pickedNozzles = new HashSet<>();
 
+    double backlashCompensation = 0.5;
 
-    double x = 0, y = 0;
-    double z1 = 0, z2 = 0, z3 = 0, z4 = 0;
-    double c1 = 0, c2 = 0, c3 = 0, c4 = 0;
+    private AxesLocation homingOffsets = new AxesLocation();
+
+    double[] z = {0,0,0,0,0};
+    double[] c = {0,0,0,0,0};
+
+    private int xMs = 0, yMs = 0;
+    public int getXms() { return this.xMs; }
+    public int getYms() { return this.yMs; }
 
     private boolean motionPending;
 
@@ -151,7 +161,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             n.setVacuumActuator(getOrCreateActuatorInHead(head, ACT_N1_VACUUM));
             n.setBlowOffActuator(getOrCreateActuatorInHead(head, ACT_N1_BLOW));
         }
-        
+
         n = (ReferenceNozzle) head.getNozzle("N2");
         if (n == null) {
             n = new ReferenceNozzle("N2");
@@ -160,7 +170,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             n.setVacuumActuator(getOrCreateActuatorInHead(head, ACT_N2_VACUUM));
             n.setBlowOffActuator(getOrCreateActuatorInHead(head, ACT_N2_BLOW));
         }
-        
+
         n = (ReferenceNozzle) head.getNozzle("N3");
         if (n == null) {
             n = new ReferenceNozzle("N3");
@@ -169,7 +179,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             n.setVacuumActuator(getOrCreateActuatorInHead(head, ACT_N3_VACUUM));
             n.setBlowOffActuator(getOrCreateActuatorInHead(head, ACT_N3_BLOW));
        }
-        
+
         n = (ReferenceNozzle) head.getNozzle("N4");
         if (n == null) {
             n = new ReferenceNozzle("N4");
@@ -178,39 +188,47 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             n.setVacuumActuator(getOrCreateActuatorInHead(head, ACT_N4_VACUUM));
             n.setBlowOffActuator(getOrCreateActuatorInHead(head, ACT_N4_BLOW));
         }
-        
+
         a = (ReferenceActuator) machine.getActuatorByName("Lights-Down");
         if (a == null) {
             a = new ReferenceActuator();
             a.setName("Lights-Down");
             machine.addActuator(a);
         }
-        
+
         a = (ReferenceActuator) machine.getActuatorByName("Lights-Up");
         if (a == null) {
             a = new ReferenceActuator();
             a.setName("Lights-Up");
             machine.addActuator(a);
         }
-        
+
         a = (ReferenceActuator) machine.getActuatorByName("Rails");
         if (a == null) {
             a = new ReferenceActuator();
             a.setName("Rails");
             machine.addActuator(a);
         }
+
+        a = (ReferenceActuator) machine.getActuatorByName("ReleaseC");
+        if (a == null) {
+            a = new ReferenceActuator();
+            a.setName("ReleaseC");
+            machine.addActuator(a);
+        }
+        
     }
-    
+
     public synchronized void connect() throws Exception {
         createMachineObjects();
-        
+
         getCommunications().connect();
 
         connected = false;
 
         // Disable the machine
         setEnabled(false);
-        
+
         connected = true;
     }
 
@@ -235,23 +253,33 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     
     int read(boolean log) throws Exception {
         while (true) {
-            try {
-                int d = getCommunications().read();
-                if (log) {
-                    Logger.trace(String.format("< %02x", d & 0xff));
-                }
-                return d;
+//            try {
+            int d = getCommunications().read();
+            if (log) {
+                Logger.trace(String.format("< %02x", d & 0xff));
             }
-            catch (TimeoutException e) {
-                continue;
-            }
+            return d;
+//            }
+//            catch (TimeoutException e) {
+//                continue;
+//            }
         }
     }
-    
+
+    void flushInput() throws Exception{
+        try {
+            while(true) {
+                read();
+            }
+        }
+        catch (TimeoutException e) {
+        }
+    }
+
     void write(int d) throws Exception {
         write(d, true);
     }
-    
+
     void write(int d, boolean log) throws Exception {
         d = d & 0xff;
         if (log) {
@@ -259,7 +287,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         }
         getCommunications().write(d);
     }
-    
+
     void writeWithChecksum(byte[] b) throws Exception {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < b.length; i++) {
@@ -272,7 +300,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         }
         getCommunications().write(checksum(b) & 0xff);
     }
-    
+
     byte[] readWithChecksum(int length) throws Exception {
         byte[] b = new byte[length];
         for (int i = 0; i < length; i++) {
@@ -288,19 +316,36 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         Logger.trace("< " + sb.toString());
         return b;
     }
-    
+
     int expect(int expected) throws Exception {
-        int received = read();
+        int received = read() & 0xff;
         if (received != expected) {
             throw new Exception(String.format("Expected %02x but received %02x.", expected, received));
         }
         return received;
     }
-    
+
     int pollFor(int command, int response) throws Exception {
+    	return pollFor(command, response, 500);
+    }
+
+    /**
+     * @param timeoutMs disabled if <=0 
+     */
+    int pollFor(int command, int response, int timeoutMs) throws Exception {
+        long start = System.currentTimeMillis();
         do {
             write(command);
+            
+            if(System.currentTimeMillis() - start > timeoutMs && timeoutMs > 0) {
+            	throw new TimeoutException("Pool for timeout");
+            }
+            if(command == response) {
+            	throw new TimeoutException("Pool for error");
+            }
+            
         } while (read() != response);
+        
         return response;
     }
 
@@ -310,12 +355,12 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         buffer[position + 2] = (byte) ((value >> 16) & 0xff);
         buffer[position + 3] = (byte) ((value >> 24) & 0xff);
     }
-    
+
     void putInt16(int value, byte[] buffer, int position) throws Exception {
         buffer[position + 0] = (byte) ((value >> 0) & 0xff);
         buffer[position + 1] = (byte) ((value >> 8) & 0xff);
     }
-    
+
     int checksum(byte[] b) {
         short result;
 
@@ -332,19 +377,29 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         }
         return result;
     }
-    
+
     @Override
     public void home(Machine machine) throws Exception {
+        homingOffsets = new AxesLocation();
+
+        //comment this to force neoden home every time
+        if(isAlreadyHomed) {
+            return;
+        }
+
         /* Make sure *all* nozzles are up before moving */ 
-        moveZ(1, 0);
-        moveZ(2, 0);
-        moveZ(3, 0);
-        moveZ(4, 0);
+        for(int index = 1; index <= 4; index++)
+        {
+            moveZ(index, 0);
+            moveC(index, 0);
+        }
+
+        releaseCMotors();
 
         /* Now, send home command */
         write(0x47);
         expect(0x0b);
-        
+
         write(0xc7);
         expect(0x03);
 
@@ -352,51 +407,85 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         putInt32(0x01, b, 0);
         putInt32(0x00, b, 4);
         writeWithChecksum(b);
-        
         pollFor(0x07, 0x43);
-        
+
         if (! waitForStatusReady(100, 30000)) {
             throw new Exception("home timeout while waiting for status==ready");
         }
 
         /* Initialize coordinates correctly after home is completed */
         AxesLocation homeLocation = new AxesLocation(machine, this, (axis) -> (axis.getHomeCoordinate()));
+
+        // Store the new location to the axes.
         homeLocation.setToDriverCoordinates(this);
-        
-        this.x = homeLocation.getCoordinate(homeLocation.getAxis(this, Axis.Type.X), units);
-        this.y = homeLocation.getCoordinate(homeLocation.getAxis(this, Axis.Type.Y), units);
+
+        isAlreadyHomed = true;	
+//        CalibrationLogger.addToLog("\n====================== HARD HOME ======================\n");    	
     }
 
     @Override
-    public void setGlobalOffsets(Machine machine, AxesLocation location)
-            throws Exception {
-        // TODO: if the driver can do it, please implement to support visual homing. 
-        throw new Exception("Not supported in this driver");
+    public void setGlobalOffsets(Machine machine, AxesLocation location) throws Exception {
+        // Take only this driver's axes.
+        AxesLocation newDriverLocation = location.drivenBy(this);
+        // Take the current driver location of the given axes.
+        AxesLocation oldDriverLocation = new AxesLocation(newDriverLocation.getAxes(this), 
+                (axis) -> (axis.getDriverLengthCoordinate()));
+        Logger.debug("setGlobalOffsets("+oldDriverLocation+" -> "+newDriverLocation+")");
+        // Calculate the new machine to working coordinate system offset. 
+        homingOffsets = newDriverLocation.subtract(oldDriverLocation).add(homingOffsets);
+        // Store to axes
+        newDriverLocation.setToDriverCoordinates(this);
     }
 
     @Override
     public AxesLocation getReportedLocation(long timeout) throws Exception {
         // TODO: if the driver can do it, please implement. 
-        throw new Exception("Not supported in this driver");
+        throw new Exception("Not supported in this driver 2");
+    }
+
+    private double distance(double dX, double dY) {
+    	Point2D.Double start = new Point2D.Double(0, 0);
+    	Point2D.Double end = new Point2D.Double(dX,dY);
+    	double result = Utils2D.distance(start,end);
+    	return result;
+    }
+
+    private void retractNozzles() throws Exception {
+        for(int index = 1; index <= 4; index++) {
+            if(z[index] < 0)
+            {
+                moveZ(index, 0);
+                this.z[index] = 0;
+                Thread.sleep(300);
+            }
+        }
     }
 
     private void moveXy(double x, double y) throws Exception {
+        moveStep((int) (x*scaleFactorX * 100), (int) (y*scaleFactorY * 100));
+    }
+
+    public void moveStep(int sx, int sy) throws Exception {
         write(0x48);
         expect(0x05);
-      
+
         write(0xc8);
         expect(0x0d);
 
         byte[] b = new byte[8];
-        putInt32((int) (x*scaleFactorX * 100), b, 0);
-        putInt32((int) (y*scaleFactorY * 100), b, 4);
+        Logger.trace(String.format("Neoden moveStep %d, %d", sx, sy));
+        putInt32(sx, b, 0);
+        putInt32(sy, b, 4);
         writeWithChecksum(b);
-      
         pollFor(0x08, 0x4d);
 
         if (! waitForStatusReady(100, 30000)) {
             throw new Exception("moveXy timeout while waiting for status==ready");
         }
+
+        this.xMs = sx;
+        this.yMs = sy;
+        Logger.trace(String.format("xMs, yMs changed to %d,%d", sx, sy));
     }
 
     private Boolean isStatusReady() throws Exception {
@@ -432,12 +521,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     private void moveZ(int nozzle, double z) throws Exception {
         // Neoden thinks 13.0 is max retracted into the head, 0 is max out.
         // In our world, 0 is max up and -13 is max down.
-      
+
+        Logger.debug("Move Z");
+
         z = Math.abs(z) * 1000.;
-        
+
         write(0x42);
         expect(0x0e);
-        
+
         write(0xc2);
         expect(0x06);
 
@@ -446,30 +537,39 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         b[2] = 0x64;
         b[3] = (byte) nozzle;
         writeWithChecksum(b);
-        
         pollFor(0x02, 0x46);
     }
-    
+
+    private void releaseCMotors()  throws Exception{
+        moveC(0,0);
+
+        //This will force nozzle to move on next MoveTo
+        for(int index = 1; index <= 4; index++) {
+            this.c[index] = 360;
+        }
+    }
+
     private void moveC(int nozzle, double c) throws Exception {
+        Logger.debug("Move C");
+
         write(0x41);
         expect(0x0d);
-        
+
         write(0xc1);
         expect(0x05);
 
         byte[] b = new byte[8];
-        putInt16((int) (c * 10.), b, 0);
+        putInt16((int) (-c * 10.), b, 0);
         b[2] = 0x32;
         b[3] = (byte) nozzle;
         writeWithChecksum(b);
-        
         pollFor(0x01, 0x45);
     }
 
     private void setMoveSpeed(double speed) throws Exception {
         write(0x46);
         expect(0x0a);
-        
+
         write(0xc6);
         expect(0x02);
 
@@ -479,117 +579,297 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         b[2] = 0x09;
         b[4] = (byte) 0xc8;
         writeWithChecksum(b);
-        
         pollFor(0x06, 0x42);
+    }
+
+    private void feedInternal(int id, int strength, int feedRate) throws Exception {
+        write(0x3f);
+        expect(0x0c);
+
+        write(0x46+id);
+        read();
+
+        write(0xff);
+        expect(0x00);
+
+        write(0x46+id);
+        read();
+
+        byte[] b = new byte[8];
+        // Speed is percentage of max speed.  Speed is really 10-130
+        //putInt16((int) ((120. * speed)+10), b, 0);
+        b[0] = (byte) strength;
+        b[1] = (byte) feedRate;
+        writeWithChecksum(b);
+
+        write(0x3f);
+        expect(0x0c);
+
+        write(0x46+id);
+        read();
+        //pollFor(0x47, 0x42);
+    }
+
+    public void feed(int id, int strength, int feedRate) throws Exception {
+        Logger.debug(String.format("Feed, id=%d, strength=%d, feedRate=%d", id, strength, feedRate));
+        boolean success = false;
+        for(int i=0; i<3; i++) {
+            try {
+                feedInternal(id, strength, feedRate);
+                success = true;
+                break;
+            }
+            catch (Exception e){
+                Thread.sleep(1000);
+                flushInput();
+                Logger.warn("Recovered feed");
+                Thread.sleep(1000);
+            }
+        }
+
+        if(!success) {
+            throw new IOException("Feed error.");
+        }
+    }
+
+    private void changeFeederIdInternal(int oldId, int newId) throws Exception {
+        write(0x3f);
+        expect(0x0c);
+
+        write(0x46+oldId);
+        read();
+
+        write(0xff);
+        expect(0x00);
+
+        write(0x46+oldId);
+        read();
+
+        byte[] b = new byte[8];
+
+        b[0] = (byte) newId;
+        b[7] = (byte) 0x01;
+        writeWithChecksum(b);
+
+        write(0x3f);
+        expect(0x0c);
+
+        write(0x46+oldId);
+        read();
+    }
+
+    public void changeFeederId(int oldId, int newId) throws Exception {
+        Logger.debug(String.format("changeFeederId, oldId=%d, newId=%d", oldId, newId));
+        if((oldId < 0)||(oldId >= 100)) {
+            throw new IOException("changeFeederId oldId must be between 0-99.");
+        }
+        else {
+            if((newId < 0)||(newId >= 100)) {
+                throw new IOException("changeFeederId newId must be between 0-99.");
+            }
+            else {
+                boolean success = false;
+                for(int i=0; i<3; i++) {
+                    try {
+                        changeFeederIdInternal(oldId, newId);
+                        success = true;
+                        break;
+                    }
+                    catch (Exception e){
+                        Thread.sleep(1000);
+                        flushInput();
+                        Logger.warn("Recovered changeFeederId");
+                        Thread.sleep(1000);
+                    }
+                }
+                
+                if(!success) {
+                    throw new IOException("changeFeederId error.");
+                }
+            }
+        }
+    }
+    private void peelInternal(int id, int strength, int feedRate) throws Exception {
+
+        boolean isTopHalf = false;
+
+        if(id >= 20) {
+            isTopHalf = true;
+        }
+    
+        if(!isTopHalf) {
+            write(0x4c);
+            expect(0x01);
+
+            write(0xcc);
+            expect(0x09);
+
+            byte[] b = new byte[8];
+            b[0] = (byte) id;
+            b[1] = (byte) feedRate;
+            b[2] = (byte) strength;
+            writeWithChecksum(b);
+            pollFor(0x0c, 0x49);
+        }
+        else {
+
+            write(0x4e);
+            expect(0x03);
+
+            write(0xce);
+            expect(0x0B);
+
+            byte[] b = new byte[8];
+            b[0] = (byte) (id-19);
+            b[1] = (byte) feedRate;
+            b[2] = (byte) strength;
+            writeWithChecksum(b);
+            pollFor(0x0E, 0x4B);
+        }
+    }
+
+    public void peel(int id, int strength, int feedRate) throws Exception {
+        Logger.debug(String.format("Peel, id=%d, strength=%d, feedRate=%d", id, strength, feedRate));
+        boolean success = false;
+        for(int i=0; i<3; i++) {
+            try {
+                peelInternal(id, strength, feedRate);
+                success = true;
+                break;
+            }
+            catch (Exception e){
+                Thread.sleep(1000);
+                flushInput();
+                Logger.warn("Recovered peel");
+                Thread.sleep(1000);
+            }
+        }
+
+        if(!success) {
+            throw new IOException("Peel error.");
+        }
+    }
+
+    @Override
+    public Length getFeedRatePerSecond() {
+        // Default implementation for feeders that don't implement an extra feed-rate. 
+        // The axes' fee-rate will be used.
+        return new Length(250, getUnits());
+    }
+
+    private void moveToInternal(HeadMountable hm, MoveToCommand move) 
+            throws Exception {
+        boolean isDelayNeeded = false;
+
+        AxesLocation location1 = move.getLocation1();
+        AxesLocation location0 = move.getLocation0();
+
+        // Take only the changed axes and only those driven by this driver
+        AxesLocation displacement = location0.motionSegmentTo(location1)
+                .drivenBy(this);
+
+        // Drive rotation axes.
+        for(ControllerAxis axis : displacement.byType(Axis.Type.Rotation)
+                .getControllerAxes()){
+            // map from axis letter to driver index.
+            int index = 1+"ABCD".indexOf(axis.getLetter());
+            if (index < 1 || index > 4) {
+                throw new Exception("Invalid axis letter "+axis.getLetter()
+                +" for nozzle rotation axis "+axis.getName());
+            }            
+            else {
+                this.c[index] = location1.getCoordinate(axis, getUnits());
+                moveC(index, location1.getCoordinate(axis, getUnits()));
+                isDelayNeeded = true;
+            }
+        }
+
+        if(isDelayNeeded) {
+            Thread.sleep(100);
+            isDelayNeeded = false;
+        }
+
+        // Drive Z axes
+        for(ControllerAxis axis : displacement.byType(Axis.Type.Z)
+                .getControllerAxes()){
+
+            // map from axis letter to driver index.
+            int index = 1+"ZUVW".indexOf(axis.getLetter());
+            if (index < 1 || index > 4) {
+                throw new Exception("Invalid axis letter "+axis.getLetter()
+                +" for nozzle z axis "+axis.getName());
+            }            
+            else {
+                this.z[index] = location1.getCoordinate(axis, getUnits());
+                moveZ(index, location1.getCoordinate(axis, getUnits()));
+                isDelayNeeded = true;
+            }
+        }
+
+        if(isDelayNeeded) {
+            Thread.sleep(100);
+            isDelayNeeded = false;
+        }
+
+        // Drive XY axes
+        double feedRate = move.getFeedRatePerSecond();
+        // Reconstruct speed factor from "virtual" feed-rate assuming the default 
+        // 250mm/s axes feedrate.
+        // TODO: better solution than just assuming 250. 
+        double speed = Math.max(0.0, Math.min(1.0, feedRate/250.0));
+
+        double x = location1.getCoordinate(location1.getAxis(this, Axis.Type.X), units);
+        double y = location1.getCoordinate(location1.getAxis(this, Axis.Type.Y), units);
+
+        if(displacement.getAxis(Axis.Type.X) != null || displacement.getAxis(Axis.Type.Y) != null)
+        {
+           setMoveSpeed(speed);
+
+           x -= homingOffsets.getCoordinate(homingOffsets.getAxis(Axis.Type.X));
+           y -= homingOffsets.getCoordinate(homingOffsets.getAxis(Axis.Type.Y));
+
+           Logger.debug(String.format("Neoden move to to %.3f,%.3f", x, y));
+           moveXy(x,y);
+
+           isDelayNeeded = true;
+        }
+
+        if(isDelayNeeded) {
+           Thread.sleep(100);
+        }
+
+        // Store the new location to the axes.
+        location1.setToDriverCoordinates(this);
+        motionPending = true;
     }
 
     @Override
     public void moveTo(HeadMountable hm, MoveToCommand move)
             throws Exception {
-        AxesLocation location = move.getLocation1();
-        double feedRate = move.getFeedRatePerSecond();
-        // Reconstruct speed factor from "virtual" feed-rate assuming the default 
-        // 250mm/s axes feedrate.
-        
-        // TODO: better solution than just assuming 250. 
-        double speed = Math.max(0.0, Math.min(1.0, feedRate/250.0));
-        
-        double x = location.getCoordinate(location.getAxis(this, Axis.Type.X), units);
-        double y = location.getCoordinate(location.getAxis(this, Axis.Type.Y), units);
-        double z = location.getCoordinate(location.getAxis(this, Axis.Type.Z), units);
-        double c = location.getCoordinate(location.getAxis(this, Axis.Type.Rotation), units);
 
-        // TODO: remove NaN handling. It is already done outside of the driver.
-        
-        // Handle NaNs, which means don't move this axis for this move. We just copy the existing
-        // coordinate.
-        x = Double.isNaN(x) ? this.x : x;
-        y = Double.isNaN(y) ? this.y : y;
-        if (x != this.x || y != this.y) {
-            setMoveSpeed(speed);
-            moveXy(x, y);
-            
-            this.x = x;
-            this.y = y;
-        }
-
-        double minZ = 0.;
-        double maxZ = -13.;
-
-        switch (hm.getId()) {
-            case "N1":
-                z = Double.isNaN(z) ? this.z1 : z;
-                z = Math.min(z, minZ);
-                z = Math.max(z, maxZ);
-                if (z != this.z1) {
-                    moveZ(1, z);
-                    this.z1 = z;
-                }
-                
-                c = Double.isNaN(c) ? this.c1 : c;
-                c = Math.max(c, -180.);
-                c = Math.min(c, 180.);                
-                if (c != this.c1) {
-                    moveC(1, c);
-                    this.c1 = c;
-                }
-                break;
-            case "N2":
-                z = Double.isNaN(z) ? this.z2 : z;
-                z = Math.min(z, minZ);
-                z = Math.max(z, maxZ);
-                if (z != this.z2) {
-                    moveZ(2, z);
-                    this.z2 = z;
-                }
-                
-                c = Double.isNaN(c) ? this.c2 : c;
-                c = Math.max(c, -180.);
-                c = Math.min(c, 180.);                
-                if (c != this.c2) {
-                    moveC(2, c);
-                    this.c2 = c;
-                }
-                break;
-            case "N3":
-                z = Double.isNaN(z) ? this.z3 : z;
-                z = Math.min(z, minZ);
-                z = Math.max(z, maxZ);
-                if (z != this.z3) {
-                    moveZ(3, z);
-                    this.z3 = z;
-                }
-                
-                c = Double.isNaN(c) ? this.c3 : c;
-                c = Math.max(c, -180.);
-                c = Math.min(c, 180.);                
-                if (c != this.c3) {
-                    moveC(3, c);
-                    this.c3 = c;
-                }
-                break;
-            case "N4":
-                z = Double.isNaN(z) ? this.z4 : z;
-                z = Math.min(z, minZ);
-                z = Math.max(z, maxZ);
-                if (z != this.z4) {
-                    moveZ(4, z);
-                    this.z4 = z;
-                }
-                
-                c = Double.isNaN(c) ? this.c4 : c;
-                c = Math.max(c, -180.);
-                c = Math.min(c, 180.);                
-                if (c != this.c4) {
-                    moveC(4, c);
-                    this.c4 = c;
-                }
-                break;
+        // Disable movement when not homed
+        if(!isAlreadyHomed) {
+            throw new Exception("NeoDen4Driver moveTo: Machine must be homed before movement");
         }
         
-        // Store the new location to the axes.
-        location.setToDriverCoordinates(this);
-        motionPending = true;
+        boolean success = false;
+        for(int i=0; i<3; i++) {
+            try {
+                moveToInternal(hm, move);
+                success = true;
+                break;
+            }
+            catch (Exception e){
+                Thread.sleep(1000);
+                flushInput();
+                Thread.sleep(1000);
+                Logger.warn("Recovered moveTo");
+            }
+        }
+        
+        if(!success) {
+            throw new IOException("MoveTo error.");
+        }
     }
 
     @Override
@@ -598,7 +878,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
     }
 
     @Override
-    public void waitForCompletion(HeadMountable hm,
+    public void waitForCompletion(HeadMountable hm, 
             CompletionType completionType) throws Exception {
         // TODO implement
         motionPending = false;
@@ -615,6 +895,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
                     actuate(actuator, -128.0);
                 } else {
                     actuate(actuator, 20.0);
+                    Thread.sleep(100);
                     actuate(actuator, 0.0);
                 }
                 break;
@@ -624,9 +905,10 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             case ACT_N3_BLOW:
             case ACT_N4_BLOW: {
                 if (on) {
-                    actuate(actuator, 127.0);
+//                    actuate(actuator, 127.0);
+//                    Thread.sleep(400);
+//                    actuate(actuator, 0.0);
                 } else {
-                    actuate(actuator, 0.0);
                 }
                 break;
             }
@@ -640,7 +922,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             }
             case "Lights-Up": {
                 if (on) {
-                    actuate(actuator, 2.0);
+                    actuate(actuator, 1.0);
                 } else {
                     actuate(actuator, 0.0);
                 }
@@ -649,10 +931,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             case "Rails": {
                 if (on) {
                     actuate(actuator, 25.0);
-                } else {
+                }else{
                     actuate(actuator, 0.0);
                 }
                 break;
+            }
+            case "ReleaseC": {
+                actuate(actuator, 0.0);
+            break;
             }
         }
     }
@@ -753,95 +1039,175 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         b[0] = (byte) value;
         b[1] = (byte) nozzleNum;
         writeWithChecksum(b);
-
         pollFor(0x03,  0x47);
+    }
+
+    public void setBuzzer(boolean state) throws Exception {
+        Logger.trace(String.format("Neoden setBuzzer %b", state));
+        write(0x47);
+        expect(0x0b);
+
+        write(0xc7);
+        expect(0x03);
+
+        byte[] b = new byte[8];  
+        b[0] = (byte) 0x00;
+        b[1] = (byte) 0x00;
+        b[2] = (byte) 0x00;
+        b[3] = (byte) 0x00;
+        b[4] = (byte) 0x00;
+        b[5] = state ? (byte) 0x01 : (byte) 0x00;
+        b[6] = (byte) 0x00;
+        b[7] = (byte) 0x00;
+
+        writeWithChecksum(b);
+        pollFor(0x07,  0x43);
+    }
+
+    private void actuateInternal(Actuator actuator, double value) throws Exception {
+        switch (actuator.getName()) {
+        case ACT_N1_BLOW:
+        case ACT_N1_VACUUM: {
+            setAirParameters(1, value);
+            break;
+        }
+        case ACT_N2_BLOW:
+        case ACT_N2_VACUUM: {
+            setAirParameters(2, value);
+            break;
+        }
+        case ACT_N3_BLOW:
+        case ACT_N3_VACUUM: {
+            setAirParameters(3, value);
+            break;
+        }
+        case ACT_N4_BLOW:
+        case ACT_N4_VACUUM: {
+            setAirParameters(4, value);
+            break;
+        }
+        case "Lights-Down": {
+            write(0x44);
+            expect(0x08);
+            
+            write(0xc4);
+            expect(0x00);
+            
+            byte[] b = new byte[8];
+            b[0] = (byte) value;
+            writeWithChecksum(b);
+            
+            pollFor(0x04,  0x40);
+          break;
+        }
+        case "Lights-Up": {
+            write(0x47);
+            expect(0x0b);
+            
+            write(0xc7);
+            expect(0x03);
+            
+            byte[] b = new byte[8];
+            b[4] = (byte) value;
+            writeWithChecksum(b);
+            
+            pollFor(0x07,  0x43);
+            break;
+        }
+        case "Rails": {
+            if ((int)value == 0) {
+              stopRail();
+            } else if (value > 0) {
+                stopRail();
+                setRailSpeed((byte)value);
+                forwardRail();
+            }
+            else {
+                stopRail();
+                setRailSpeed((byte)value);
+                reverseRail();
+            }
+            
+          break;
+        }
+        case "ReleaseC": {
+        	releaseCMotors();
+        	break;
+        }
+        }
     }
 
     @Override
     public void actuate(Actuator actuator, double value) throws Exception {
-        switch (actuator.getName()) {
-            case ACT_N1_BLOW:
-            case ACT_N1_VACUUM: {
-                setAirParameters(1, value);
-                break;
-            }
-            case ACT_N2_BLOW:
-            case ACT_N2_VACUUM: {
-                setAirParameters(2, value);
-                break;
-            }
-            case ACT_N3_BLOW:
-            case ACT_N3_VACUUM: {
-                setAirParameters(3, value);
-                break;
-            }
-            case ACT_N4_BLOW:
-            case ACT_N4_VACUUM: {
-                setAirParameters(4, value);
-                break;
-            }
-            case "Lights-Down": {
-                write(0x44);
-                expect(0x08);
-                
-                write(0xc4);
-                expect(0x00);
-                
-                byte[] b = new byte[8];
-                b[0] = (byte) value;
-                writeWithChecksum(b);
-                
-                pollFor(0x04,  0x40);
-              break;
-            }
-            case "Lights-Up": {
-                write(0x47);
-                expect(0x0b);
-                
-                write(0xc7);
-                expect(0x03);
-                
-                byte[] b = new byte[8];
-                b[4] = (byte) value;
-                writeWithChecksum(b);
-                
-                pollFor(0x07,  0x43);
-                break;
-            }
-            case "Rails": {
-                if ((int)value == 0) {
-                  stopRail();
-                } else if (value > 0) {
-                    stopRail();
-                    setRailSpeed((byte)value);
-                    forwardRail();
-                }
-                else {
-                    stopRail();
-                    setRailSpeed((byte)value);
-                    reverseRail();
-                }
-                
-              break;
-            }
-        }
+        Logger.trace(String.format("Neoden actuate %s, %f", actuator.getName(), value));
+    	boolean success = false;
+    	for(int i=0; i<3; i++) {
+        	try {
+        		actuateInternal(actuator, value);
+        		success = true;
+        		break;
+        	}
+        	catch (Exception e){
+        		Thread.sleep(1000);
+        		flushInput();
+        		Logger.warn(String.format("actuate: try %d, exception %s, [%s]", i, e.toString(), actuator.toString()));
+        		Thread.sleep(1000);
+        	}
+    	}
+    	
+    	if(!success) {
+    		throw new IOException("Actuate error.");
+    	}
     }
     
     private int getNozzleAirValue(int nozzleNum) throws Exception {
-        assert(nozzleNum >= 0);
-        assert(nozzleNum <= 3);
+        Logger.trace(String.format("Neoden getNozzleAirValue %d", nozzleNum));
+        assert (nozzleNum >= 0);
+        assert (nozzleNum <= 3);
 
-        write(0x40);
-        expect(0x0c);
+        byte[] payload = { 0, 0, 0, 0 };
+        boolean success = false;
 
-        write(0x00);
-        expect(0x11);
+        for (int i = 0; i < 5; i++) {
+            try {
+                write(0x40);
+                expect(0x0c);
 
-        write(0x80);
-        expect(0x19);
+                write(0x00);
+                expect(0x11);
 
-        byte[] payload = readWithChecksum(8);
-        return payload[nozzleNum];
+                write(0x80);
+                expect(0x19);
+
+                payload = readWithChecksum(8);
+                success = true;
+                break;
+            }catch (Exception e) {
+                Thread.sleep(1000);
+                flushInput();
+                Logger.warn("Recovered getNozzleAirValue");
+                Thread.sleep(1000);
+            }
+        }
+
+        if (!success) {
+            throw new IOException("getNozzleAirValue error.");
+        } 
+        else {
+            int airValue = (int) payload[nozzleNum];
+
+            if (airValue > 110) {
+                Logger.trace(String.format("Error in getNozzleAirValue! Value<-128 (%d)", airValue));
+                // HACK
+                // sometimes when usign small nozzletip 
+                // neoden returns values smaller than -128
+                // and thus the variable jumps for example from -128 to 127 
+                // Let's change the variable range
+                // from (-128, 127) to (-145, 110)
+                airValue = -128 - (128-airValue);
+            }
+            return airValue;
+        }
     }
 
     @Override
@@ -874,7 +1240,7 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             getCommunications().disconnect();
         }
         catch (Exception e) {
-            Logger.error(e, "disconnect()");
+            Logger.error("disconnect()", e);
         }
     }
 
@@ -884,6 +1250,14 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
             new PropertySheetWizardAdapter(super.getConfigurationWizard()),
             new PropertySheetWizardAdapter(new Neoden4DriverConfigurationWizard(this), "Machine")
         };
+    }
+
+    public AxesLocation getHomingOffsets() {
+        return homingOffsets;
+    }
+
+    public void setHomingOffsets(AxesLocation homingOffsets) {
+        this.homingOffsets = homingOffsets;
     }
 
     public LengthUnit getUnits() {
@@ -926,6 +1300,22 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
         this.scaleFactorY = scaleFactorY;
     }
 
+    public double getHomeCoordinateX() {
+        return this.homeCoordinateX;
+    }
+
+    public void setHomeCoordinateX(double homeCoordinateX) {
+        this.homeCoordinateX = homeCoordinateX;
+    }
+
+    public double getHomeCoordinateY() {
+        return this.homeCoordinateY;
+    }
+
+    public void setHomeCoordinateY(double homeCoordinateY) {
+        this.homeCoordinateY = homeCoordinateY;
+    }    
+
     @Deprecated
     @Override
     public void migrateDriver(Machine machine) throws Exception {
@@ -946,6 +1336,6 @@ public class NeoDen4Driver extends AbstractReferenceDriver {
 
     @Override
     public boolean isUsingLetterVariables() {
-        return false;
+        return true;
     }
 }

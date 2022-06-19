@@ -143,6 +143,24 @@ public class Utils2DTest {
         check(locationBefore, 60.22, 14.22, -8, 84);
         check(locationAfter, 60.22, 14.22, -8, 84);
     }
+
+    /**
+     * Test Utils2D.getAngleFromPoint() in the new correct way.
+     * @throws Exception
+     */
+    @Test
+    public void testAngleFromPoint() throws Exception {
+        for (double angle = 0; angle <= 360; angle +=5) {
+            Location location0 = new Location(LengthUnit.Millimeters); 
+            Location location1 = new Location(LengthUnit.Millimeters,
+                    Math.cos(Math.toRadians(angle)), Math.sin(Math.toRadians(angle)), -10, 0);
+            double angleDetermined = Utils2D.getAngleFromPoint(location0, location1);
+            if (1e-9 < Math.abs((angleDetermined - angle) % 360)) {
+                throw new Exception("Utils2D.getAngleFromPoint() given "+angle+"° angled points, but returned "+angleDetermined+"°.");
+            }
+        }
+    }
+
 }
 
 

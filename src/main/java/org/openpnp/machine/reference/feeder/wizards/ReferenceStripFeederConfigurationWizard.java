@@ -38,7 +38,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
-import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -151,7 +150,9 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC },
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),},
             new RowSpec[] {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
@@ -174,7 +175,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         comboBoxPart = new JComboBox();
         comboBoxPart.setModel(new PartsComboBoxModel());
         comboBoxPart.setRenderer(new IdentifiableListCellRenderer<Part>());
-        panelPart.add(comboBoxPart, "4, 2, left, default");
+        panelPart.add(comboBoxPart, "4, 2, 3, 1, left, default");
 
         comboBoxPart.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -182,10 +183,11 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             }
         });
         
-        lblPartInfo = new JLabel("");
-        panelPart.add(lblPartInfo,"6, 2, left, default");
+        lblPartInfo = new JLabel(" ");
+        panelPart.add(lblPartInfo,"8, 2, left, default");
         
         lblRotationInTape = new JLabel("Rotation In Tape");
+        lblRotationInTape.setToolTipText("<html>\n<p>The <strong>Rotation in Tape</strong> setting must be interpreted relative to the tape's orientation, <br/>\nregardless of how the feeder/tape is oriented on the machine. </p>\n<ol>\n<li>\n<p>Look at the <strong>neutral</strong> upright orientation of the part package/footprint <br/>\nas drawn inside your E-CAD <strong>library</strong>.</p>\n</li>\n<li>\n<p>Note how pin 1, polarity, cathode etc. are oriented.  <br/>\nThis is your 0° for the part.</p>\n</li>\n<li>\n<p>Look at the tape so that the sprocket holes are at the top. <br/>\nThis is your 0° tape orientation (per EIA-481 industry standard).</p>\n</li>\n<li>\n<p>Determine how the part is rotated inside the tape pocket, <em>relative</em> from  <br/>\nits upright orientation in (1).  Positive rotation goes counter-clockwise.<br/>\nThis is your <strong>Rotation in Tape</strong>.</p>\n</li>\n</ol>\n</html>");
         panelPart.add(lblRotationInTape, "2, 4, left, default");
 
         textFieldLocationRotation = new JTextField();
@@ -514,7 +516,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                     catch (Exception e) {
                         if (!hasShownError) {
                             hasShownError = true;
-                            MessageBoxes.errorBox(MainFrame.get(), "Error", e);
+                            UiUtils.showError(e);
                         }
                         else {
                             Logger.debug("{}: {}", "Error", e);

@@ -19,6 +19,16 @@
 	</properties>
 	<dependencies>
 		<dependency>
+		  <groupId>net.java.dev.jna</groupId>
+		  <artifactId>jna</artifactId>
+		  <version>5.8.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.jfree</groupId>
+		    <artifactId>jfreechart</artifactId>
+		    <version>1.5.3</version>
+		</dependency>
+		<dependency>
 			<groupId>com.github.sarxos</groupId>
 			<artifactId>webcam-capture</artifactId>
 			<version>0.3.10</version>
@@ -372,7 +382,8 @@
 					<linkXRef>false</linkXRef>
 					<includeTestSourceDirectory>true</includeTestSourceDirectory>
 					<!-- Exclude Eagle importer code, which is auto generated -->
-					<excludes>org/openpnp/model/eagle/xml/*</excludes>
+					<!-- Exclude Neoden dll function names we can't modify -->
+					<excludes>org/openpnp/model/eagle/xml/*,org/openpnp/machine/neoden4/Neoden4CamDll*</excludes>
 					<!-- Add any resource files to exclude here -->
 					<resourceExcludes></resourceExcludes>
 				</configuration>

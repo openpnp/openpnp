@@ -2,38 +2,32 @@ package org.openpnp.machine.reference.vision.wizards;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JDialog;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
-import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.VisionSettingsComboBoxModel;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.NamedListCellRenderer;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
-import org.openpnp.machine.reference.vision.ReferenceBottomVision.PartSettings;
+import org.openpnp.model.BottomVisionSettings;
 import org.openpnp.model.Configuration;
-import org.openpnp.util.UiUtils;
-import org.openpnp.util.VisionUtils;
-import org.openpnp.vision.pipeline.CvPipeline;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditor;
-import org.openpnp.vision.pipeline.ui.CvPipelineEditorDialog;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import javax.swing.JTextField;
 
 public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceBottomVision bottomVision;
@@ -42,6 +36,8 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
     private JTextField textFieldMaxVisionPasses;
     private JTextField textFieldMaxLinearOffset;
     private JTextField textFieldMaxAngularOffset;
+    private JComboBox visionSettings;
+    private boolean reloadWizard = false;
 
     
     public ReferenceBottomVisionConfigurationWizard(ReferenceBottomVision bottomVision) {
@@ -78,51 +74,18 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 2");
 
-        JLabel lblPipeline = new JLabel("Pipeline");
-        panel.add(lblPipeline, "2, 4");
-
-        JButton editPipelineButton = new JButton("Edit");
-        editPipelineButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                UiUtils.messageBoxOnException(() -> {
-                    editPipeline();
-                });
-            }
-        });
-        panel.add(editPipelineButton, "4, 4");
-
-        JButton btnResetToDefault = new JButton("Reset to Default");
-        btnResetToDefault.addActionListener((e) -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace the current pipeline with the built in default pipeline. Are you sure?",
-                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    bottomVision.setPipeline(ReferenceBottomVision.createDefaultPipeline());
-                    editPipeline();
-                });
-            }
-        });
-        panel.add(btnResetToDefault, "6, 4");
-
-        JButton btnResetAllTo = new JButton("Reset All Parts");
-        btnResetAllTo.addActionListener((e) -> {
-            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "This will replace all custom part pipelines with the current pipeline. Are you sure?",
-                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                UiUtils.messageBoxOnException(() -> {
-                    for (PartSettings partSettings : bottomVision.getPartSettingsByPartId()
-                                                                 .values()) {
-                        partSettings.setPipeline(bottomVision.getPipeline()
-                                                             .clone());
+        JLabel lblBottomVision = new JLabel("Bottom Vision Settings");
+        panel.add(lblBottomVision, "2, 4, right, default");
+                
+                visionSettings = new JComboBox(new VisionSettingsComboBoxModel(BottomVisionSettings.class));
+                visionSettings.setMaximumRowCount(20);
+                visionSettings.setRenderer(new NamedListCellRenderer<>());
+                visionSettings.addItemListener(new ItemListener() {
+                    public void itemStateChanged(ItemEvent e) {
+                        reloadWizard = true;
                     }
-                    MessageBoxes.infoBox("Parts Reset",
-                            "All custom part pipelines have been reset.");
                 });
-            }
-        });
-        panel.add(btnResetAllTo, "8, 4");
+                panel.add(visionSettings, "4, 4, 3, 1, fill, default");
 
         JLabel lblPreRot = new JLabel("Rotate parts prior to vision?");
         lblPreRot.setToolTipText("Pre-rotate default setting for bottom vision. Can be overridden on individual parts.");
@@ -174,30 +137,22 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         textFieldMaxAngularOffset.setEnabled(enabled);
         */
     }
-    
-    private void editPipeline() throws Exception {
-        CvPipeline pipeline = bottomVision.getPipeline();
-        pipeline.setProperty("camera", VisionUtils.getBottomVisionCamera());
-		pipeline.setProperty("nozzle", MainFrame.get().getMachineControls().getSelectedNozzle());
-        CvPipelineEditor editor = new CvPipelineEditor(pipeline);
-        JDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), "Bottom Vision Pipeline", editor);
-        dialog.setVisible(true);
-}
 
     @Override
     public String getWizardName() {
         return "ReferenceBottomVision";
     }
-    
+
     @Override
     public void createBindings() {
-        addWrappedBinding(bottomVision, "enabled", enabledCheckbox, "selected");
-        addWrappedBinding(bottomVision, "preRotate", preRotCheckbox, "selected");
-        
         LengthConverter lengthConverter = new LengthConverter();
         IntegerConverter intConverter = new IntegerConverter();
         DoubleConverter doubleConverter = new DoubleConverter(Configuration.get()
                                                                            .getLengthDisplayFormat());
+
+        addWrappedBinding(bottomVision, "bottomVisionSettings", visionSettings, "selectedItem");
+        addWrappedBinding(bottomVision, "enabled", enabledCheckbox, "selected");
+        addWrappedBinding(bottomVision, "preRotate", preRotCheckbox, "selected");
 
         addWrappedBinding(bottomVision, "maxVisionPasses", textFieldMaxVisionPasses, "text", intConverter);
         addWrappedBinding(bottomVision, "maxLinearOffset", textFieldMaxLinearOffset, "text", lengthConverter);
@@ -208,5 +163,14 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
         ComponentDecorators.decorateWithAutoSelect(textFieldMaxAngularOffset);
         
         updateEnabledState();
+    }
+
+    @Override
+    protected void saveToModel() {
+        super.saveToModel();
+        if (reloadWizard) {
+            // Reselect the tree path to reload the wizard with potentially different property sheets. 
+            MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
+        }
     }
 }

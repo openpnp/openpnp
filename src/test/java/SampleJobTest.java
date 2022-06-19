@@ -100,6 +100,9 @@ public class SampleJobTest {
             camera.setSettleMethod(AbstractCamera.SettleMethod.FixedTime);
             camera.setSettleTimeMs(0);
         }
+        else {
+            System.out.println("SampleJobTest runs with imperfect machine in real-time, please be patient...");
+        }
 
 
         // File videoFile = new File("target");
@@ -125,7 +128,7 @@ public class SampleJobTest {
                 //spin
             };
             return null;
-        });
+        }, false, 10000);
         // camera.stopContinuousCapture(encoder);
         // encoder.finish();
     }

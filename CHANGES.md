@@ -1,6 +1,78 @@
 This file lists major or notable changes to OpenPnP in chronological order. This is not
 a complete change list, only those that may directly interest or affect users.
 
+# 2022-06-10
+
+## ReferenceStripFeeder Rotation in Tape
+
+The ReferenceStripFeeder Rotation in Tape has been adapted to the EIA-481 industry standard
+where the tape 0° orientation is the one where the sprocket holes are on top. Part rotation
+in tape is determined from that baseline. This was already the case for other feeder classes.
+
+Formerly, ReferenceStripFeeder had the tape 0° orientation with the sprocket holes on the
+left. The Wiki documentation, reflecting the EIA-481 industry standard was actually wrong.
+
+See also:
+https://github.com/openpnp/openpnp/wiki/ReferenceStripFeeder#rotation-in-tape
+
+# 2022-02-23
+
+## Pipeline Parameters
+
+Pipelines can now expose essential stage properties as parameters to be controlled directly 
+from vision settings, without having to go to the pipeline editor. These parameters can be 
+controlled using customizable sliders. During adjustment, the camera view shows a preview 
+of the affected stage and/or the pipeline end result. The solutions makes tuning pipelines 
+much easier. See the Wiki:
+
+https://github.com/openpnp/openpnp/wiki/Exposed-Pipeline-Parameters
+
+# 2022-02-19
+
+## Background Calibration
+
+Automatic calibration of the bottom camera background can be enabled to drive the color-
+keyed removal of the background in a bottom vision pipelines. The calibration is done with 
+no part is on the nozzle tip, during the nozzle tip calibration (for run-out compensation). 
+
+The MaskHSV stage for knocking out the green key-color of Juki nozzle tips (and similar) is 
+fully controlled. A trouble-shooting function detects bad background conditions such as 
+missing shading, nozzle tip reflections etc. See the Wiki:
+
+https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Background-Calibration
+
+# 2022-01-23
+
+## Advanced Camera Calibration
+
+Camera setup and calibration has been improved to eliminate the need for manual 
+setup of camera flips, rotation, position, units-per-pixel scaling, and lens 
+distortion compensation. In addition, camera tilt is also now corrected. See the Wiki:
+
+* https://github.com/openpnp/openpnp/wiki/Advanced-Camera-Calibration
+* https://github.com/openpnp/openpnp/wiki/Advance-Camera-Calibration---Camera-Mounting-Errors
+
+# 2021-12-30 
+
+## Vision Settings
+
+Alignment (Bottom Vision) and Fiducial Locator vision settings (including the pipelines) are 
+now stored in separate Vision Settings entities that can be assigned to Parts, Packages and 
+to the default Machine Setup Vision presets. 
+
+If a setting is not assigned on any of these levels, it will be inherited from the more general 
+level. The system allows for more efficient, more centralized management of vision settings. 
+The vision settings are now also available on the GUI for all these levels. Quick specialization 
+and generalization functions are provided. The OpenPnP stock settings and pipelines are always 
+present in the central list and can be assigned and copied. 
+
+Existing configurations with old part settings are migrated automatically. All combinations of 
+settings and pipelines that happen to be equal will be unified into one new Vision Setting. 
+Inheritance will be established, where Vision Settings are common among Parts or Packages. 
+
+A new table linking feature (in the menu) can be used to link a selected Part to its Package, 
+Feeder and Vision Settings. Selecting one, automatically selects the other across tabs. 
+
 # 2021-11-07
 
 ## Machine Calibration with Issues & Solutions 

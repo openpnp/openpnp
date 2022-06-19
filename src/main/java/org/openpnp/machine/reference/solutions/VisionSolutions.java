@@ -48,8 +48,8 @@ import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
-import org.openpnp.machine.reference.vision.ReferenceFiducialLocator.PartSettings;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.Length;
@@ -62,10 +62,11 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.model.Solutions.Subject;
 import org.openpnp.spi.Camera;
-import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.Nozzle.RotationMode;
+import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.openpnp.util.LogUtils;
 import org.openpnp.util.MovableUtils;
@@ -123,6 +124,11 @@ public class VisionSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private double zeroKnowledgeDisplacementMm = 1;
     /**
+     * The required minimum offset between primary and secondary calibration fiducial Z.
+     */
+    @Attribute(required = false)
+    private double fiducialsMinimumZOffsetMm = 2;
+    /**
      * How to perform one-sided backlash compensation, before we know anything about the machine. 
      * Note, due to this having evolved, these are no longer backlash offsets in the classic sense, instead they 
      * give a "final approach vector". Hence the negative sign, to be as compatible as possible with backlash 
@@ -140,7 +146,7 @@ public class VisionSolutions implements Solutions.Subject {
     private double fiducialMargin = 1.1;
 
     @Attribute(required = false)
-    private int zeroKnowledgeRunoutCompensationShots = 6;
+    private int zeroKnowledgeRunoutCompensationShots = 2;
 
     @Attribute(required = false)
     private double zeroKnowledgeAutoFocusDepthMm = 2.0;
@@ -162,6 +168,7 @@ public class VisionSolutions implements Solutions.Subject {
     }
 
     private ReferenceMachine machine;
+    private BufferedImage retainedImage;
 
     @Override
     public void findIssues(Solutions solutions) {
@@ -286,26 +293,34 @@ public class VisionSolutions implements Solutions.Subject {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
                                     new Thread(() -> {
-                                        double bestScore = 0.0;
-                                        for (double diameter = 10; diameter <= maxDiameter; diameter = diameter*Math.sqrt(fiducialMargin) + 1) {
+                                        UiUtils.messageBoxOnException(() -> {
                                             try {
-                                                ScoreRange scoreRange = new ScoreRange();
-                                                Circle result = getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)diameter), 0.05, "Diameter "+(int)diameter+" px - Score {score} ", scoreRange);
-                                                if (bestScore < scoreRange.finalScore) {
-                                                    bestScore = scoreRange.finalScore;
-                                                    featureDiameter = (int) Math.round(result.getDiameter());
+                                                retainedImage = camera.lightSettleAndCapture();
+                                                double bestScore = 0.0;
+                                                for (double diameter = 10; diameter <= maxDiameter; diameter = diameter*Math.sqrt(fiducialMargin) + 1) {
+                                                    try {
+                                                        ScoreRange scoreRange = new ScoreRange();
+                                                        Circle result = getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)diameter), 0.05, "Diameter "+(int)diameter+" px - Score {score} ", scoreRange);
+                                                        if (bestScore < scoreRange.finalScore) {
+                                                            bestScore = scoreRange.finalScore;
+                                                            featureDiameter = (int) Math.round(result.getDiameter());
+                                                        }
+                                                    }
+                                                    catch (Exception e1) {
+                                                        continue;
+                                                    }
+                                                }
+                                                // Preview best diameter again.
+                                                try {
+                                                    getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)featureDiameter), 0.05, "Best Diameter "+(int)featureDiameter+" px", null);
+                                                }
+                                                catch (Exception e1) {
                                                 }
                                             }
-                                            catch (Exception e1) {
-                                                continue;
+                                            finally {
+                                                retainedImage = null;
                                             }
-                                        }
-                                        // Preview best diameter again.
-                                        try {
-                                            getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)featureDiameter), 0.05, "Best Diameter "+(int)featureDiameter+" px", null);
-                                        }
-                                        catch (Exception e1) {
-                                        }
+                                        });
                                         MainFrame.get().getIssuesAndSolutionsTab().solutionChanged();
                                     }).start();
                                 }
@@ -361,8 +376,8 @@ public class VisionSolutions implements Solutions.Subject {
 
                 @Override
                 public boolean isForcedUnsolved() {
-                    // When the camera is not at all calibrated. Always show this as unsolved.
-                    return camera.getUnitsPerPixelPrimary().getX() <= 0.0 || camera.getUnitsPerPixelPrimary().getY() <= 0.0;
+                    // Always show this as unsolved, if data is missing/invalid.
+                    return !isSolvedPrimaryXY(head);
                 }
 
                 @Override
@@ -439,6 +454,12 @@ public class VisionSolutions implements Solutions.Subject {
                             + "Zoom the camera using the scroll-wheel.</p><br/>"
                             + "<p>Then press Accept to capture the position.</p>"
                             + "</html>";
+                }
+
+                @Override
+                public boolean isForcedUnsolved() {
+                    // Always show this as unsolved, if data is missing/invalid.
+                    return !isSolvedSecondaryXY(head);
                 }
 
                 @Override
@@ -615,9 +636,13 @@ public class VisionSolutions implements Solutions.Subject {
 
                 @Override
                 public boolean isForcedUnsolved() {
-                    // When the camera is not at all calibrated. Always show this as unsolved.
-                    return camera.getUnitsPerPixelPrimary().getX() <= 0.0 || camera.getUnitsPerPixelPrimary().getY() <= 0.0;
+                    // When the camera is not at all calibrated, always show this as unsolved.
+                    return !camera.getLocation().isInitialized()
+                            || camera.getUnitsPerPixelPrimary().getX() <= 0.0 || camera.getUnitsPerPixelPrimary().getY() <= 0.0;
                 }
+
+                private ReferenceNozzleTip referenceNozzleTip = null;
+                private Length oldVisionDiameter = null;
 
                 @Override
                 public void setState(Solutions.State state) throws Exception {
@@ -626,7 +651,14 @@ public class VisionSolutions implements Solutions.Subject {
                             throw new Exception("The nozzle "+defaultNozzle.getName()+" head offsets are not yet set. "
                                     + "You need to perform the \"Nozzle "+defaultNozzle.getName()+" offsets for the primary fiducial\" calibration first.");
                         }
-
+                        // Re-evaluate the loaded nozzle tip, the user might have unloaded/loaded since the last findIssues().
+                        // Note the referenceNozzleTip and oldVisionDiameter still need to be stored as members, to support undo.
+                        referenceNozzleTip = (defaultNozzle.getNozzleTip() instanceof ReferenceNozzleTip) ?
+                                (ReferenceNozzleTip)defaultNozzle.getNozzleTip() : null;
+                        if (referenceNozzleTip == null) {
+                            throw new Exception("The nozzle "+defaultNozzle.getName()+" has no nozzle tip loaded.");
+                        }
+                        oldVisionDiameter = referenceNozzleTip.getCalibration().getCalibrationTipDiameter();
                         final State oldState = getState();
                         UiUtils.submitUiMachineTask(
                                 () -> {
@@ -639,10 +671,8 @@ public class VisionSolutions implements Solutions.Subject {
                                     camera.setHeadOffsets(nozzleLocation);
                                     Logger.info("Set camera "+camera.getName()+" offsets to "+headOffsets
                                             +" (previously "+oldCameraOffsets+")");
-                                    if (referenceNozzleTip != null) {
-                                        referenceNozzleTip.getCalibration().setCalibrationTipDiameter(visionDiameter);
-                                        Logger.info("Set nozzle tip "+referenceNozzleTip.getName()+" vision diameter to "+visionDiameter+" (previously "+oldVisionDiameter+")");
-                                    }
+                                    referenceNozzleTip.getCalibration().setCalibrationTipDiameter(visionDiameter);
+                                    Logger.info("Set nozzle tip "+referenceNozzleTip.getName()+" vision diameter to "+visionDiameter+" (previously "+oldVisionDiameter+")");
                                     return true;
                                 },
                                 (result) -> {
@@ -660,7 +690,8 @@ public class VisionSolutions implements Solutions.Subject {
                         // Restore the camera offset
                         camera.setHeadOffsets(oldCameraOffsets);
                         cameraCalibrationState.restoreTo(camera);
-                        if (referenceNozzleTip != null) {
+                        if (referenceNozzleTip != null && oldVisionDiameter != null) {
+                            // Restore the old vision diameter.
                             referenceNozzleTip.getCalibration().setCalibrationTipDiameter(oldVisionDiameter);
                         }
                         // Persist this unsolved state.
@@ -674,18 +705,51 @@ public class VisionSolutions implements Solutions.Subject {
 
     private void perNozzleSolutions(Solutions solutions, ReferenceHead head, ReferenceCamera defaultCamera, Nozzle defaultNozzle, ReferenceNozzle nozzle) {
         if (isSolvedPrimaryXY(head) 
-                && (isSolvedPrimaryZ(head) || defaultNozzle == nozzle)) {
+                && (isSolvedPrimaryZ(head) || defaultNozzle == nozzle)
+                && nozzle.getSafeZ() != null) {
             final Location oldPrimaryFiducialLocation = head.getCalibrationPrimaryFiducialLocation();
             final Location oldSecondaryFiducialLocation = head.getCalibrationSecondaryFiducialLocation();
             final Location oldPrimaryUpp = defaultCamera.getUnitsPerPixelPrimary();
             final Location oldSecondaryUpp = defaultCamera.getUnitsPerPixelSecondary();
-            
+
             final Location oldNozzleOffsets = nozzle.getHeadOffsets();
             final Length oldPrimaryZ = defaultCamera.getCameraPrimaryZ();
             final Length oldSecondaryZ = defaultCamera.getCameraSecondaryZ();
             final boolean oldEnabled3D = defaultCamera.isEnableUnitsPerPixel3D();
+
+            if (defaultNozzle == nozzle
+                    && oldPrimaryFiducialLocation.getLengthZ().isInitialized()
+                    && oldSecondaryFiducialLocation.getLengthZ().isInitialized()
+                    && Math.abs(oldPrimaryFiducialLocation.getLengthZ()
+                            .subtract(oldSecondaryFiducialLocation.getLengthZ())
+                            .convertToUnits(LengthUnit.Millimeters).getValue()) < fiducialsMinimumZOffsetMm) {
+                solutions.add(new Solutions.PlainIssue(
+                        head, 
+                        "Primary/secondary calibration fiducial Z too close together.", 
+                        "Head "+head.getName()+" primary and secondary calibration fiducial Z coordinates must be at least "
+                                +fiducialsMinimumZOffsetMm+"\u00A0mm apart.", 
+                                Solutions.Severity.Error,
+                        "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#nozzle-offsets"));
+            }
+
             for (boolean primary : (nozzle == defaultNozzle && isSolvedSecondaryXY(head)) ? new boolean [] {true, false} : new boolean [] {true} ) {
                 String qualifier = primary ? "primary" : "secondary";
+                Location oldLocation = primary ? oldPrimaryFiducialLocation : oldSecondaryFiducialLocation;
+                boolean isNonZeroReferenceZOffset = (primary 
+                        && nozzle == defaultNozzle 
+                        && Math.abs(nozzle.getHeadOffsets().getLengthZ()
+                        .convertToUnits(LengthUnit.Millimeters).getValue()) > 0.1);
+                if (defaultNozzle == nozzle
+                        && oldLocation.getLengthZ().isInitialized()
+                        && oldLocation.getLengthZ().compareTo(nozzle.getSafeZ()) >= 0) {
+                    solutions.add(new Solutions.PlainIssue(
+                            nozzle, 
+                            "Safe Z of Nozzle "+nozzle.getName()+" lower than "+qualifier+" fiducial Z.", 
+                            "Safe Z of Nozzle "+nozzle.getName()+" is lower than the calibration "+qualifier+" fiducial Z. "
+                                    + "Please change the calibration rig "+qualifier+" height or adjust Safe Z.", 
+                            Solutions.Severity.Error,
+                            "https://github.com/openpnp/openpnp/wiki/Vision-Solutions#nozzle-offsets"));
+                }
                 solutions.add(new Solutions.Issue(
                         nozzle, 
                         "Nozzle "+nozzle.getName()+" offsets for the "+qualifier+" fiducial.", 
@@ -706,16 +770,43 @@ public class VisionSolutions implements Solutions.Subject {
                                 + ((nozzle == defaultNozzle) ? 
                                         "<p>This will also capture the calibration "+qualifier+" fiducial Z coordinate.</p><br/>" : 
                                             "<p>This will also equalize Z of nozzle "+nozzle.getName()+" to Z of the default nozzle "+defaultNozzle.getName()+".</p><br/>")
+                                + (isNonZeroReferenceZOffset ?
+                                        "<p><strong color=\"red\">CAUTION:</strong> A non-zero head offsets Z has been detected on "
+                                        + "default nozzle "+nozzle.getName()+". "
+                                        + "Accepting this solution will reset it to zero, creating the new reference in Z. "
+                                        + "This will change the meaning of Z coordinates that have already been captured. "
+                                        + "Do not accept this solution, unless you are confident this is OK. "
+                                        + "In the worst case, this may lead to machine collisions! "
+                                        + "<strong color=\"red\">You have been warned!</strong></p><br/>" : 
+                                        "")
                                 + "<p>Jog nozzle " + nozzle.getName()
                                 + " over the "+qualifier+" fiducial. Lower the nozzle tip down until it touches the fiducial.</p><br/>"
-                                + "<p>Then press Accept to capture the nozzle head offsets.</p>"
+                                        + "<p><strong style=\"color:red;\">CAUTION:</strong> this is a very important Z coordinate, please capture it with care.</p><br/>"
+                                        + "<p>Then press Accept to capture the nozzle head offsets.</p>"
                                 + "</html>";
+                    }
+
+                    @Override
+                    public boolean isForcedUnsolved() {
+                        // Always show this as unsolved, if data is missing/invalid.
+                        if (nozzle == defaultNozzle) {
+                            if (primary) {
+                                if (!defaultCamera.getDefaultZ().equals(head.getCalibrationPrimaryFiducialLocation().getLengthZ())) {
+                                    return true;
+                                }
+                            }
+                            return !(primary ? isSolvedPrimaryZ(head) : isSolvedSecondaryZ(head));
+                        }
+                        return false;
                     }
 
                     @Override
                     public void setState(Solutions.State state) throws Exception {
                         if (state == State.Solved) {
                             // Check pre-conditions.
+                            if (nozzle.getSafeZ() == null) {
+                                throw new Exception("The nozzle "+nozzle.getName()+" Z axis Safe Z Zone must be set first.");
+                            }
                             if (! isSolvedPrimaryXY(head)) {
                                 throw new Exception("The head "+head.getName()+" primary fiducial location X and Y must be set first.");
                             }
@@ -739,6 +830,16 @@ public class VisionSolutions implements Solutions.Subject {
                                         Location nozzleLocation = nozzle.getLocation();
                                         if (nozzle == defaultNozzle) {
                                             // This is the reference nozzle, set the Z of the fiducial.
+                                            if (nozzle.getSafeZ().compareTo(nozzleLocation.getLengthZ()) <= 0) {
+                                                throw new Exception("The calibration "+qualifier+" fidcuial Z must be lower than Safe Z.");
+                                            }
+                                            else if (!primary
+                                                    && Math.abs(head.getCalibrationPrimaryFiducialLocation().getLengthZ()
+                                                    .subtract(nozzleLocation.getLengthZ())
+                                                    .convertToUnits(LengthUnit.Millimeters).getValue()) < fiducialsMinimumZOffsetMm) {
+                                                throw new Exception("Primary and secondary calibration fidcuial Z must be more than "
+                                                        +fiducialsMinimumZOffsetMm+"\u00A0mm apart.");
+                                            }
                                             if (primary) {
                                                 head.setCalibrationPrimaryFiducialLocation(head.getCalibrationPrimaryFiducialLocation()
                                                         .derive(nozzleLocation, false, false, true, false));
@@ -959,6 +1060,10 @@ public class VisionSolutions implements Solutions.Subject {
      */
     public Length autoCalibrateCamera(ReferenceCamera camera, HeadMountable movable, Double expectedDiameter, String diagnostics, boolean secondary) 
             throws Exception {
+        if (camera.getAdvancedCalibration().isOverridingOldTransformsAndDistortionCorrectionSettings()) {
+            throw new Exception("Preliminary camera "+camera.getName()+" calibration cannot be performed, "
+                    + "because the Advanced Camera Calibration is already active.");
+        }
         Location initialLocation = movable.getLocation();
         try {
             if (!secondary) {
@@ -1224,7 +1329,8 @@ public class VisionSolutions implements Solutions.Subject {
         if (scoreRange == null) {
             scoreRange = new ScoreRange();
         }
-        BufferedImage bufferedImage = camera.lightSettleAndCapture();
+        BufferedImage bufferedImage = (retainedImage != null ?
+                retainedImage : camera.lightSettleAndCapture());
         Mat image = OpenCvUtils.toMat(bufferedImage);
         try {
             int subjectAreaDiameter = (int) (Math.min(image.cols(), image.rows())
@@ -1236,7 +1342,7 @@ public class VisionSolutions implements Solutions.Subject {
             int minDiameter = (int) (expectedOffsetAndDiameter != null ? 
                     expectedDiameter/fiducialMargin - 1
                     : 7);
-            int maxDistance = (int) (maxDiameter*2*fiducialMargin
+            int maxDistance = (int) (Math.max(subjectAreaDiameter/2, maxDiameter*2*fiducialMargin)
                     + Math.min(image.cols(), image.rows())*extraSearchRange);
             int expectedX = bufferedImage.getWidth()/2 + (int) (expectedOffsetAndDiameter != null ? expectedOffsetAndDiameter.getX() : 0);
             int expectedY = bufferedImage.getHeight()/2 + (int) (expectedOffsetAndDiameter != null ? expectedOffsetAndDiameter.getY() : 0);
@@ -1249,14 +1355,27 @@ public class VisionSolutions implements Solutions.Subject {
                 double y = 0;
                 int n = 0;
                 int da = 360/zeroKnowledgeRunoutCompensationShots;
-                for (int angle = -180+da/2; angle < 180; angle += da) {
+                int angle0 = 0;
+                int angle1 = 360-da;
+                if (movable instanceof Nozzle
+                        && ((Nozzle) movable).getRotationMode() == RotationMode.LimitedArticulation) {
+                    // Make sure it is compliant.
+                    zeroKnowledgeRunoutCompensationShots = Math.min(zeroKnowledgeRunoutCompensationShots, 2);
+                    da = 360/zeroKnowledgeRunoutCompensationShots;
+                    angle0 = 0;
+                    angle1 = 360-da;
+                    Location l0 = l.derive(new Location(l.getUnits(), 0, 0, 0, angle0), false, false, false, true);
+                    Location l1 = l.derive(new Location(l.getUnits(), 0, 0, 0, angle1), false, false, false, true);
+                    ((Nozzle) movable).prepareForPickAndPlaceArticulation(l0, l1);
+                }
+                for (int angle = angle0; angle <= angle1; angle += da) {
                     l = l.derive(new Location(l.getUnits(), 0, 0, 0, angle), false, false, false, true);
                     movable.moveTo(l);
                     bufferedImage = camera.lightSettleAndCapture();
                     image.release();
                     image = OpenCvUtils.toMat(bufferedImage);
-                    result = getPixelLocationShot(camera, diagnostics, image, maxDiameter,
-                            minDiameter, maxDistance, expectedX, expectedY, 
+                    result = getPixelLocationShot(camera, diagnostics, image, minDiameter,
+                            maxDiameter, maxDistance, expectedX, expectedY, 
                             n == 0 ? scoreRange : new ScoreRange());
                     // Accumulate
                     x += result.getX();
@@ -1269,8 +1388,8 @@ public class VisionSolutions implements Solutions.Subject {
             }
             else {
                 // Fiducial can be detected by one shot.
-                result = getPixelLocationShot(camera, diagnostics, image, maxDiameter,
-                        minDiameter, maxDistance, expectedX, expectedY, scoreRange);
+                result = getPixelLocationShot(camera, diagnostics, image, minDiameter,
+                        maxDiameter, maxDistance, expectedX, expectedY, scoreRange);
             }
             return result;
         }
@@ -1280,11 +1399,11 @@ public class VisionSolutions implements Solutions.Subject {
     }
 
     private Circle getPixelLocationShot(ReferenceCamera camera, String diagnostics, Mat image,
-            int maxDiameter, int minDiameter, int maxDistance, int expectedX, int expectedY, ScoreRange scoreRange) 
+            int minDiameter, int maxDiameter, int maxDistance, int expectedX, int expectedY, ScoreRange scoreRange) 
                     throws Exception, IOException {
         List<Circle> results = DetectCircularSymmetry.findCircularSymmetry(image, 
                 expectedX, expectedY, 
-                maxDiameter, minDiameter, maxDistance, maxDistance, maxDistance, 1,
+                minDiameter, maxDiameter, maxDistance, maxDistance, maxDistance, 1,
                 minSymmetry, 0.0, subSampling, superSampling, diagnostics != null, false, scoreRange);
         if (diagnostics != null) {
             if (LogUtils.isDebugEnabled()) {
@@ -1350,24 +1469,61 @@ public class VisionSolutions implements Solutions.Subject {
     }
 
     public boolean isSolvedPrimaryXY(ReferenceHead head) {
+        AbstractCamera camera;
+        try {
+            camera = (AbstractCamera) head.getDefaultCamera();
+        }
+        catch (Exception e) {
+            return false;
+        }
+        if (camera.getUnitsPerPixelPrimary().getX() <= 0.0 || camera.getUnitsPerPixelPrimary().getY() <= 0.0) {
+            return false;
+        }
         Location fiducialLocation = head.getCalibrationPrimaryFiducialLocation();
         return fiducialLocation.getLengthX().isInitialized()
-               && fiducialLocation.getLengthY().isInitialized();
+               && fiducialLocation.getLengthY().isInitialized()
+               && head.getCalibrationPrimaryFiducialDiameter().isInitialized();
     }
 
     public boolean isSolvedPrimaryZ(ReferenceHead head) {
+        Nozzle nozzle;
+        try {
+            nozzle = head.getDefaultNozzle();
+        }
+        catch (Exception e) {
+            return false;
+        }
         Location fiducialLocation = head.getCalibrationPrimaryFiducialLocation();
+        if (nozzle.getSafeZ() == null || nozzle.getSafeZ().compareTo(fiducialLocation.getLengthZ()) <= 0) {
+            return false; // Cannot be lower than Safe Z.
+        }
         return fiducialLocation.getLengthZ().isInitialized();
     }
 
     public boolean isSolvedSecondaryXY(ReferenceHead head) {
         Location fiducialLocation = head.getCalibrationSecondaryFiducialLocation();
         return fiducialLocation.getLengthX().isInitialized()
-               && fiducialLocation.getLengthY().isInitialized();
+               && fiducialLocation.getLengthY().isInitialized()
+               && head.getCalibrationSecondaryFiducialDiameter().isInitialized();
     }
 
     public boolean isSolvedSecondaryZ(ReferenceHead head) {
+        Nozzle nozzle;
+        try {
+            nozzle = head.getDefaultNozzle();
+        }
+        catch (Exception e) {
+            return false;
+        }
         Location fiducialLocation = head.getCalibrationSecondaryFiducialLocation();
+        if (nozzle.getSafeZ() == null || nozzle.getSafeZ().compareTo(fiducialLocation.getLengthZ()) <= 0) {
+            return false; // Cannot be lower than Safe Z.
+        }
+        else if (Math.abs(head.getCalibrationPrimaryFiducialLocation().getLengthZ()
+                .subtract(fiducialLocation.getLengthZ())
+                .convertToUnits(LengthUnit.Millimeters).getValue()) < fiducialsMinimumZOffsetMm) {
+            return false; // Primary/secondary fiducial Z must be sufficiently different.
+        }
         return fiducialLocation.getLengthZ().isInitialized();
     }
 
@@ -1420,13 +1576,24 @@ public class VisionSolutions implements Solutions.Subject {
             configuration.addPart(part);
         }
         part.setPackage(pkg);
-        FiducialLocator fiducialLocator =
-                Configuration.get().getMachine().getFiducialLocator();
-        PartSettings settings = ((ReferenceFiducialLocator) fiducialLocator).getPartSettings(part);
+        ReferenceFiducialLocator fiducialLocator = ReferenceFiducialLocator.getDefault();
+        FiducialVisionSettings visionSettings = fiducialLocator.getInheritedVisionSettings(part);
+        if (visionSettings.getUsedFiducialVisionIn().size() == 1 
+                && visionSettings.getUsedFiducialVisionIn().get(0) == part) {
+            // Already a special setting on the part. Modify it.
+        }
+        else {
+            FiducialVisionSettings newSettings = new FiducialVisionSettings();
+            newSettings.setValues(visionSettings);
+            newSettings.setName(part.getShortName());
+            part.setFiducialVisionSettings(newSettings);
+            Configuration.get().addVisionSettings(newSettings);
+            visionSettings = newSettings;
+        }
         String xml = IOUtils.toString(ReferenceBottomVision.class
-                .getResource("ReferenceFiducialLocator-CircularSymmetryPipeline.xml"));
+                .getResource("ReferenceFiducialLocator-DefaultPipeline.xml"));
         CvPipeline pipeline = new CvPipeline(xml);
-        settings.setPipeline(pipeline);
+        visionSettings.setPipeline(pipeline);
     }
 
     public Length getHomingFiducialDiameter() {

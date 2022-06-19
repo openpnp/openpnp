@@ -41,6 +41,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -85,13 +86,16 @@ import org.openpnp.gui.importer.EagleMountsmdUlpImporter;
 import org.openpnp.gui.importer.KicadPosImporter;
 import org.openpnp.gui.importer.LabcenterProteusImporter; //
 import org.openpnp.gui.importer.NamedCSVImporter;
+import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.HeadCellValue;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.OSXAdapter;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.RotationCellValue;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.scripting.ScriptFileWatcher;
 import org.pmw.tinylog.Logger;
@@ -151,16 +155,47 @@ public class MainFrame extends JFrame {
     private JPanel panelMachine;
     private MachineSetupPanel machineSetupPanel;
     private IssuesAndSolutionsPanel issuesAndSolutionsPanel;
+    private VisionSettingsPanel visionSettingsPanel;
     private JDialog frameCamera;
     private JDialog frameMachineControls;
     private Map<KeyStroke, Action> hotkeyActionMap;
-    
+    private AbstractConfigurationWizard wizardWithActiveProcess = null;
     private UndoManager undoManager = new UndoManager();
 
     public static MainFrame get() {
         return mainFrame;
     }
     
+    /**
+     * @return the wizardWithActiveProcess
+     */
+    public synchronized AbstractConfigurationWizard getWizardWithActiveProcess() {
+        return wizardWithActiveProcess;
+    }
+
+    /**
+     * @param wizardWithActiveProcess the wizardWithActiveProcess to set
+     */
+    public synchronized void setWizardWithActiveProcess(AbstractConfigurationWizard wizardWithActiveProcess) {
+        if (this.wizardWithActiveProcess == null) {
+            if (wizardWithActiveProcess.getId() != null) {
+                this.wizardWithActiveProcess = wizardWithActiveProcess;
+            }
+            else {
+                throw new InvalidParameterException("Wizard does not have a valid Id.");
+            }
+        }
+        else {
+            throw new IllegalStateException(String.format("Another wizard (%s - %s) already has an active process, it must complete or be cancelled before this wizard can start another process.", this.wizardWithActiveProcess.getName(), ((PropertySheetWizardAdapter) (this.wizardWithActiveProcess.getWizardContainer())).getPropertySheetTitle()));
+        }
+    }
+    
+    public synchronized void clearWizardWithActiveProcess(AbstractConfigurationWizard wizardWithActiveProcess) {
+        if (this.wizardWithActiveProcess == wizardWithActiveProcess) {
+            this.wizardWithActiveProcess = null;
+        }
+    }
+
     public UndoManager getUndoManager() {
         return undoManager;
     }
@@ -175,6 +210,10 @@ public class MainFrame extends JFrame {
 
     public PackagesPanel getPackagesTab() {
         return packagesPanel;
+    }
+
+    public VisionSettingsPanel getVisionSettingsTab() {
+        return visionSettingsPanel;
     }
 
     public FeedersPanel getFeedersTab() {
@@ -266,6 +305,7 @@ public class MainFrame extends JFrame {
         feedersPanel = new FeedersPanel(configuration, this);
         machineSetupPanel = new MachineSetupPanel();
         issuesAndSolutionsPanel = new IssuesAndSolutionsPanel(configuration, this);
+        visionSettingsPanel = new VisionSettingsPanel(this);
 
         menuBar = new JMenuBar();
         setJMenuBar(menuBar);
@@ -343,6 +383,24 @@ public class MainFrame extends JFrame {
             menuItem.setSelected(true);
         }
         mnUnits.add(menuItem);
+        
+        // View -> Tables Linked
+        buttonGroup = new ButtonGroup();
+        JMenu tablesLinked = new JMenu(Translations.getString("Menu.View.TablesLinked")); //$NON-NLS-1$
+        mnView.add(tablesLinked);
+
+        menuItem = new JCheckBoxMenuItem(tablesUnlinkedSelected);
+        buttonGroup.add(menuItem);
+        if (configuration.getTablesLinked() == TablesLinked.Unlinked) {
+            menuItem.setSelected(true);
+        }
+        tablesLinked.add(menuItem);
+        menuItem = new JCheckBoxMenuItem(tablesLinkedSelected);
+        buttonGroup.add(menuItem);
+        if (configuration.getTablesLinked() == TablesLinked.Linked) {
+            menuItem.setSelected(true);
+        }
+        tablesLinked.add(menuItem);
         
         // View -> Language
         buttonGroup = new ButtonGroup();
@@ -612,6 +670,7 @@ public class MainFrame extends JFrame {
         tabs.addTab("Job", null, jobPanel, null); //$NON-NLS-1$
         tabs.addTab("Parts", null, partsPanel, null); //$NON-NLS-1$
         tabs.addTab("Packages", null, packagesPanel, null); //$NON-NLS-1$
+        tabs.addTab("Vision", null, visionSettingsPanel, null); //$NON-NLS-1$
         tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
         tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
         tabs.addTab("Issues & Solutions", null, issuesAndSolutionsPanel, null); //$NON-NLS-1$
@@ -844,8 +903,10 @@ public class MainFrame extends JFrame {
     }
 
     public void hideInstructions() {
-        scheduledExecutor.shutdown();
-        scheduledExecutor = null;
+        if (scheduledExecutor != null) {
+            scheduledExecutor.shutdown();
+            scheduledExecutor = null;
+        }
         panelInstructions.setVisible(false);
         doLayout();
     }
@@ -1040,6 +1101,20 @@ public class MainFrame extends JFrame {
             configuration.setSystemUnits(LengthUnit.Millimeters);
             MessageBoxes.infoBox("Notice", //$NON-NLS-1$
                     "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+        }
+    };
+
+    private Action tablesUnlinkedSelected = new AbstractAction(TablesLinked.Unlinked.name()) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            configuration.setTablesLinked(TablesLinked.Unlinked);
+        }
+    };
+
+    private Action tablesLinkedSelected = new AbstractAction(TablesLinked.Linked.name()) {
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            configuration.setTablesLinked(TablesLinked.Linked);
         }
     };
 

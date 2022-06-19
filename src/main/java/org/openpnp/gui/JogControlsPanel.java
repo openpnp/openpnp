@@ -586,13 +586,17 @@ public class JogControlsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
                 HeadMountable hm = machineControlsPanel.getSelectedTool();
-                // Note, we don't just moveToSafeZ(), because this will just sit still, if we're anywhere in the Safe Z Zone.
+                // Note, we don't just moveToSafeZ(), because this will just sit still, if we're already in the Safe Z Zone.
                 // instead we explicitly move to the Safe Z coordinate i.e. the lower bound of the Safe Z Zone, applicable
                 // for this hm.
                 Location location = hm.getLocation();
                 Length safeZLength = hm.getSafeZ();
                 double safeZ = (safeZLength != null ? safeZLength.convertToUnits(location.getUnits()).getValue() : Double.NaN);
                 location = location.derive(null, null, safeZ, null);
+                if (Configuration.get().getMachine().isSafeZPark()) {
+                    // All other head-mountables must also be moved to safe Z.
+                    hm.getHead().moveToSafeZ();
+                }
                 hm.moveTo(location);
                 MovableUtils.fireTargetedUserAction(hm);
             });
@@ -610,6 +614,10 @@ public class JogControlsPanel extends JPanel {
                 if (hm instanceof AbstractNozzle) {
                     AbstractNozzle nozzle = (AbstractNozzle) hm;
                     if (nozzle.getRotationMode() == RotationMode.LimitedArticulation) {
+                        if (nozzle.getPart() == null) {
+                            // Make sure any lingering rotation offset is reset.
+                            nozzle.setRotationModeOffset(null);
+                        }
                         // Limited axis, select a 90° step position within the limits.
                         double [] limits = nozzle.getRotationModeLimits();
                         parkAngle = Math.round((limits[0]+limits[1])/2/90)*90;

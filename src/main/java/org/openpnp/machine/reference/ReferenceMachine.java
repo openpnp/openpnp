@@ -32,7 +32,11 @@ import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.neoden4.NeoDen4Driver;
+import org.openpnp.machine.neoden4.NeoDen4FeederActuator;
 import org.openpnp.machine.neoden4.Neoden4Camera;
+import org.openpnp.machine.neoden4.Neoden4Feeder;
+import org.openpnp.machine.neoden4.Neoden4Signaler;
+import org.openpnp.machine.neoden4.Neoden4SwitcherCamera;
 import org.openpnp.machine.rapidplacer.RapidFeeder;
 import org.openpnp.machine.reference.actuator.ThermistorToLinearSensorActuator;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
@@ -84,6 +88,8 @@ import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.machine.reference.wizards.ReferenceMachineConfigurationWizard;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.spi.Actuator;
@@ -94,6 +100,7 @@ import org.openpnp.spi.Feeder;
 import org.openpnp.spi.FiducialLocator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.MotionPlanner;
+import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.spi.PnpJobProcessor;
@@ -103,6 +110,8 @@ import org.openpnp.spi.base.AbstractDriver;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 import org.openpnp.util.Collect;
+import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -126,8 +135,17 @@ public class ReferenceMachine extends AbstractMachine {
     @Element(required = false)
     private boolean homeAfterEnabled = false;
 
+    @Element(required = false)
+    private boolean parkAfterHomed = false;
+
     @Attribute(required = false)
     private boolean autoToolSelect = true;
+
+    @Attribute(required = false)
+    private boolean safeZPark = true;
+
+    @Element(required = false)
+    private Length unsafeZRoamingDistance = new Length(10, LengthUnit.Millimeters);
 
     @Element(required = false)
     private Solutions solutions = new Solutions();
@@ -191,11 +209,23 @@ public class ReferenceMachine extends AbstractMachine {
         if (enabled) {
             List<Driver> enabledDrivers = new ArrayList<>();
             try {
+                boolean syncLocation = false;
                 for (Driver driver : getDrivers()) {
                     driver.setEnabled(true);
                     enabledDrivers.add(driver);
+                    if (driver.isSyncInitialLocation()) {
+                        syncLocation = true;
+                    }
                 }
                 this.enabled = true;
+                if (syncLocation) {
+                    // We wait for still-stand, because as a side-effect, it will allow OpenPnP to sync its
+                    // position to the initial reported location (see Driver.isSyncInitialLocation()).
+                    getMotionPlanner().waitForCompletion(null, CompletionType.WaitForStillstand);
+                }
+                if (getHomeAfterEnabled() && isTask(Thread.currentThread())) {
+                    UiUtils.submitUiMachineTask(() -> home());
+                }
             }
             catch (Exception e) {
                 // In a multi-driver machine, we must make sure its all-or-nothing, 
@@ -263,6 +293,37 @@ public class ReferenceMachine extends AbstractMachine {
         Object oldValue = this.autoToolSelect;
         this.autoToolSelect = autoToolSelect;
         firePropertyChange("autoToolSelect", oldValue, autoToolSelect);
+    }
+
+    @Override
+    public boolean isSafeZPark() {
+        return safeZPark;
+    }
+
+    public void setSafeZPark(boolean safeZPark) {
+        Object oldValue = this.safeZPark;
+        this.safeZPark = safeZPark;
+        firePropertyChange("safeZPark", oldValue, safeZPark);
+    }
+
+    @Override
+    public boolean isParkAfterHomed() {
+        return parkAfterHomed;
+    }
+
+    public void setParkAfterHomed(boolean parkAfterHomed) {
+        this.parkAfterHomed = parkAfterHomed;
+    }
+
+    @Override
+    public Length getUnsafeZRoamingDistance() {
+        return unsafeZRoamingDistance;
+    }
+
+    public void setUnsafeZRoamingDistance(Length unsafeZRoamingDistance) {
+        Object oldValue = this.unsafeZRoamingDistance;
+        this.unsafeZRoamingDistance = unsafeZRoamingDistance;
+        firePropertyChange("safeRoamingDistance", oldValue, unsafeZRoamingDistance);
     }
 
     @Override
@@ -346,6 +407,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(SchultzFeeder.class);
         l.add(SlotSchultzFeeder.class);
         l.add(RapidFeeder.class);
+        l.add(Neoden4Feeder.class);
         l.addAll(registeredFeederClasses);
         return l;
     }
@@ -356,6 +418,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(OpenPnpCaptureCamera.class);
         l.add(OpenCvCamera.class);
         l.add(Neoden4Camera.class);
+        l.add(Neoden4SwitcherCamera.class);
         l.add(Webcams.class);
         l.add(OnvifIPCamera.class);
         l.add(ImageCamera.class);
@@ -380,6 +443,7 @@ public class ReferenceMachine extends AbstractMachine {
         l.add(HttpActuator.class);
         l.add(ScriptActuator.class);
         l.add(ThermistorToLinearSensorActuator.class);
+        l.add(NeoDen4FeederActuator.class);
         return l;
     }
 
@@ -388,6 +452,7 @@ public class ReferenceMachine extends AbstractMachine {
         List<Class<? extends Signaler>> l = new ArrayList<>();
         l.add(SoundSignaler.class);
         l.add(ActuatorSignaler.class);
+        l.add(Neoden4Signaler.class);
         return l;
     }
 
@@ -428,7 +493,13 @@ public class ReferenceMachine extends AbstractMachine {
         Configuration.get().getScripting().on("Machine.AfterHoming", null);
 
         // if homing went well, set machine homed-flag true
-        this.setHomed(true);     
+        this.setHomed(true);
+        
+        if (isParkAfterHomed()) {
+            for (Head head : getHeads()) {
+                MovableUtils.park(head);
+            }
+        }
     }
 
     @Override

@@ -34,6 +34,7 @@ import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
 import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
+import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
 import org.openpnp.model.Configuration;
@@ -44,6 +45,7 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
+import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.CoordinateAxis;
 import org.openpnp.spi.HeadMountable;
@@ -53,6 +55,7 @@ import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractControllerAxis;
 import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.spi.base.AbstractNozzle;
+import org.pmw.tinylog.Logger;
 
 /**
  * This helper class implements the Issues & Solutions for the ReferenceHead. 
@@ -202,66 +205,137 @@ public class HeadSolutions implements Solutions.Subject {
                 if (camera.getAxisY() == null) {
                     addMissingAxisIssue(solutions, camera, Axis.Type.Y);
                 }
+                if (camera.getAxisZ() == null) {
+                    addMissingAxisIssue(solutions, camera, Axis.Type.Z);
+                }
+                if (camera.getAxisRotation() == null) {
+                    addMissingAxisIssue(solutions, camera, Axis.Type.Rotation);
+                }
                 if (camera.getAxisX() != null && camera.getAxisY() != null) {
                     for (HeadMountable hm : head.getHeadMountables()) {
                         addInconsistentAxisIssue(solutions, camera, hm, Axis.Type.X);
                         addInconsistentAxisIssue(solutions, camera, hm, Axis.Type.Y);
                         if (hm instanceof Nozzle) {
-                            if (hm.getAxisZ() == null) {
-                                solutions.add(new Solutions.PlainIssue(
-                                        hm, 
-                                        "Nozzle "+hm.getName()+" does not have a Z axis assigned.", 
-                                        "Please assign a proper Z axis. You might need to create one first.", 
-                                        Severity.Error,
-                                        "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                            }
-                            if (hm.getAxisRotation() == null) {
-                                solutions.add(new Solutions.PlainIssue(
-                                        hm, 
-                                        "Nozzle "+hm.getName()+" does not have a Rotation axis assigned.", 
-                                        "Please assign a proper Rotation axis. You might need to create one first.", 
-                                        Severity.Error,
-                                        "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                            }
-                            if (hm.getAxisZ() != null && hm.getAxisRotation() != null) {
-                                for (Nozzle nozzle2 : head.getNozzles()) {
-                                    if (nozzle2 == hm) {
-                                        break;
-                                    }
-                                    if (nozzle2.getAxisZ() == hm.getAxisZ()) {
-                                        solutions.add(new Solutions.PlainIssue(
-                                                head, 
-                                                "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Z axis assigned.", 
-                                                "Please assign a different Z axis.", 
-                                                Severity.Error,
-                                                "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                                    }
-                                    if (nozzle2.getAxisRotation() == hm.getAxisRotation()) {
-                                        solutions.add(new Solutions.PlainIssue(
-                                                head, 
-                                                "Nozzles "+nozzle2.getName()+" and "+hm.getName()+" have the same Rotation axis assigned.", 
-                                                "It is OK to share rotation axes. If intentional, just dismiss this issue. Otherwise assign a different Rotation axis.", 
-                                                Severity.Information,
-                                                "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
-                                    }
-                                }
-                            }
+                            perNozzleSolutions(solutions, (Nozzle) hm);
                         }
                     }
+                }
+
+                if (head.getPumpActuator() != null) {
+                    ActuatorSolutions.findActuateIssues(solutions, head, head.getPumpActuator(), "pump control",
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup#pump-control-setup");
+                }
+                if (head.getzProbeActuator() != null) {
+                    ActuatorSolutions.findActuatorReadIssues(solutions, head, head.getzProbeActuator(), "Z probe",
+                        "https://github.com/openpnp/openpnp/wiki/Z-Probing");
                 }
             }
         }
     }
+
+    protected void perNozzleSolutions(Solutions solutions, Nozzle nozzle) {
+        if (nozzle.getAxisZ() == null) {
+            solutions.add(new Solutions.PlainIssue(
+                    nozzle, 
+                    "Nozzle "+nozzle.getName()+" does not have a Z axis assigned.", 
+                    "Please assign a proper Z axis. You might need to create one first.", 
+                    Severity.Error,
+                    "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+        }
+        if (nozzle.getAxisRotation() == null) {
+            solutions.add(new Solutions.PlainIssue(
+                    nozzle, 
+                    "Nozzle "+nozzle.getName()+" does not have a Rotation axis assigned.", 
+                    "Please assign a proper Rotation axis. You might need to create one first.", 
+                    Severity.Error,
+                    "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+        }
+        if (nozzle.getAxisZ() != null && nozzle.getAxisRotation() != null) {
+            for (Camera camera2 : head.getCameras()) {
+                if (camera2.getAxisZ() == nozzle.getAxisZ()) {
+                    sameAxisAssignedIssue(solutions, camera2, nozzle, camera2.getAxisZ(), Axis.Type.Z);
+                }
+                if (camera2.getAxisRotation() == nozzle.getAxisRotation()) {
+                    sameAxisAssignedIssue(solutions, camera2, nozzle, camera2.getAxisRotation(), Axis.Type.Rotation);
+                }
+            }
+            for (Nozzle nozzle2 : head.getNozzles()) {
+                if (nozzle2 == nozzle) {
+                    break;
+                }
+                if (nozzle2.getAxisZ() == nozzle.getAxisZ()) {
+                    solutions.add(new Solutions.PlainIssue(
+                            nozzle, 
+                            "Nozzles "+nozzle2.getName()+" and "+nozzle.getName()+" have the same Z axis assigned.", 
+                            "Please assign a different Z axis.", 
+                            Severity.Error,
+                            "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+                }
+                if (nozzle2.getAxisRotation() == nozzle.getAxisRotation()) {
+                    solutions.add(new Solutions.PlainIssue(
+                            nozzle, 
+                            "Nozzles "+nozzle2.getName()+" and "+nozzle.getName()+" have the same Rotation axis assigned.", 
+                            "It is OK to share rotation axes. If intentional, just dismiss this issue. Otherwise assign a different Rotation axis.", 
+                            Severity.Information,
+                            "https://github.com/openpnp/openpnp/wiki/Mapping-Axes"));
+                }
+            }
+        }
+    }
+
+    protected void sameAxisAssignedIssue(Solutions solutions, Camera camera, HeadMountable hm,
+            Axis axis, Axis.Type type) {
+        solutions.add(new Solutions.Issue(
+                head, 
+                "Camera "+camera.getName()+" and "+hm.getName()+" have the same "+type+" axis "+axis.getName()+" assigned.", 
+                "Unassign the "+type+" axis "+axis.getName()+" from the camera "+camera.getName()+". Later you can press Find Issues & Solutions "
+                        + "again to get a new Solution for a virtual axis replacement.",
+                Severity.Error,
+                "https://github.com/openpnp/openpnp/wiki/Machine-Axes#referencevirtualaxis") {
+            @Override
+            public void setState(Solutions.State state) throws Exception {
+                ((AbstractHeadMountable) camera).setAxis(
+                        ((AbstractAxis)(state == State.Solved ? null : axis)),
+                        type);
+                super.setState(state);
+            }
+        });
+    }
     protected void addMissingAxisIssue(Solutions solutions, final Camera camera, Axis.Type type) {
         // Find a default axis.
-        final AbstractAxis axis = head.getMachine().getDefaultAxis(type);
+        AbstractAxis suggestedAxis;
+        boolean isNewAxis = false;
+        boolean isXY = (type == Type.X || type == Type.Y);
+        if (isXY) {
+            suggestedAxis = head.getMachine().getDefaultAxis(type);
+        }
+        else {
+            suggestedAxis = null;
+            for (Axis axisCand : head.getMachine().getAxes()) {
+                if (axisCand.getType() == type && axisCand instanceof ReferenceVirtualAxis) {
+                    suggestedAxis = (AbstractAxis) axisCand;
+                    break;
+                }
+            }
+            if (suggestedAxis == null) {
+                ReferenceVirtualAxis virtualAxis = new ReferenceVirtualAxis();
+                isNewAxis = true;
+                virtualAxis.setType(type);
+                virtualAxis.setName(type+" "+camera.getName());
+                suggestedAxis = virtualAxis;
+            }
+        }
+        final AbstractAxis axis = suggestedAxis;
+        final boolean isNew = isNewAxis;
         solutions.add(new Solutions.Issue(
                 camera, 
-                "Missing "+type.name()+" axis assignment. Assign one to continue.", 
+                (isXY ? 
+                        "Missing "+type.name()+" axis assignment. Assign one to continue.":
+                            "Virtual "+type.name()+" axis recommended for camera "+camera.getName()+"."), 
                 (axis == null ? 
                         "Create and assign a "+type.name()+" axis manually."  
-                        : "Assign "+axis.getName()+" as "+type.name()+"."), 
-                Severity.Fundamental,
+                        : "Assign "+(isNew ? "new " : "existing ")+axis.getClass().getSimpleName()+" "+axis.getName()+" as "+type.name()+"."), 
+                isXY ? Severity.Fundamental : Severity.Suggestion,
                 "https://github.com/openpnp/openpnp/wiki/Mapping-Axes") {
 
             @Override
@@ -269,6 +343,19 @@ public class HeadSolutions implements Solutions.Subject {
                 ((AbstractHeadMountable) camera).setAxis(
                         ((AbstractAxis)(state == State.Solved ? axis : null)),
                         type);
+                if (isNew) {
+                    try {
+                        if (state == State.Solved) {
+                            head.getMachine().addAxis(axis);
+                        }
+                        else {
+                            head.getMachine().removeAxis(axis);
+                        }
+                    }
+                    catch (Exception e) {
+                        Logger.warn(e);
+                    }
+                }
                 super.setState(state);
             }
 

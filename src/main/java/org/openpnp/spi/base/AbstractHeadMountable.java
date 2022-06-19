@@ -252,14 +252,20 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
                 throw new Exception("Effective Safe Z coordinate "+safeZ+" is outside Safe Z Zone.");
             }
             safeZ = safeZ.convertToUnits(l.getUnits());
-            if (safeZ.getValue() > l.getZ() || !isInSafeZZone(l.getLengthZ())) {
-                // Only move if 
-                // a) the new effective Safe Z is higher than current Z, or 
-                // b) the current Z is outside the safe zone.
-                // The second condition must be checked for shared Z with negating transform, where the Safe Z Zone 
-                // is limited on two sides. 
+            if (safeZ.getValue() > l.getZ()) {
+                // Only move if the new effective Safe Z is higher than current Z. 
                 l = l.derive(null, null, safeZ.getValue(), null);
                 moveTo(l, speed);
+            }
+            else if (!isInSafeZZone(l.getLengthZ())) {
+                // Still outside safe Z Zone (above it), for shared Z with negating transform, where the Safe Z Zone 
+                // is limited on two sides. 
+                safeZ = getSafeZZone()[1];
+                if (safeZ != null) {
+                    safeZ = safeZ.convertToUnits(l.getUnits());
+                    l = l.derive(null, null, safeZ.getValue(), null);
+                    moveTo(l, speed);
+                }
             }
         }
     }
@@ -294,8 +300,8 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     }
 
     public Location toHeadLocation(Location location, Location currentLocation, LocationOption... options) {
-        // Subtract the Head offset.
-        location = location.subtract(getHeadOffsets());
+        // Subtract the calibrated Head offset.
+        location = location.subtract(getCalibratedHeadOffsets(options));
         return location;
     }
 
@@ -319,9 +325,13 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         return toHeadLocation(location, getLocation(), options);
     }
 
+    public Location getCalibratedHeadOffsets(LocationOption... options) {
+        return getHeadOffsets();
+    }
+    
     public Location toHeadMountableLocation(Location location, Location currentLocation, LocationOption... options) {
-        // Add the Head offset.
-        location = location.add(getHeadOffsets());
+        // Add the calibrated Head offset.
+        location = location.add(getCalibratedHeadOffsets(options));
         return location;
     }
     @Override

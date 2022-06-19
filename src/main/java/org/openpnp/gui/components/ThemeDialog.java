@@ -1,11 +1,22 @@
 package org.openpnp.gui.components;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dialog;
+import java.awt.Dimension;
+import java.awt.Window;
+import java.awt.event.WindowEvent;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+
 import org.openpnp.Translations;
 import org.openpnp.model.Configuration;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowEvent;
 
 @SuppressWarnings("unused")
 public class ThemeDialog {
@@ -15,6 +26,7 @@ public class ThemeDialog {
     private JDialog dialog;
     private ThemeInfo oldTheme = null;
     private ThemeSettingsPanel.FontSize oldFontSize = null;
+    private Boolean oldAlternateRows = true;
 
     protected ThemeDialog() {
     }
@@ -85,8 +97,10 @@ public class ThemeDialog {
             ThemeInfo theme = themePanel.setTheme();
             oldTheme = theme;
             oldFontSize = themePanel.getFontSize();
+            oldAlternateRows  = themePanel.isAlternateRows();
             Configuration.get().setThemeInfo(theme);
             Configuration.get().setFontSize(oldFontSize);
+            Configuration.get().setAlternateRows(oldAlternateRows);
             dialog.pack();
             dialog.doLayout();
             dialog.dispatchEvent(new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING));
@@ -95,7 +109,7 @@ public class ThemeDialog {
         JButton cancel = new JButton(Translations.getString("Theme.Cancel"));
         cancel.addActionListener(e -> {
             if (oldTheme != null) {
-                themePanel.setTheme(oldTheme, oldFontSize);
+                themePanel.setTheme(oldTheme, oldFontSize, oldAlternateRows);
             }
             dialog.pack();
             dialog.doLayout();

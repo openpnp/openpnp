@@ -37,7 +37,7 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 
 /**
- * Finds the maximum circular symmetry in the working image and stores the results as a single element List<Circle> on the model. 
+ * Finds occurrences of maximum circular symmetry in the working image and stores the results as a List<Circle> on the model. 
  */
 @Stage(description="Finds circular symmetry in the working image. Diameter range and maximum search distance can be specified.")
 public class DetectCircularSymmetry extends CvStage {
@@ -248,6 +248,8 @@ public class DetectCircularSymmetry extends CvStage {
             if (Double.isFinite(diameter)) {
                 minDiameter = (int) Math.round(diameter*(1.0-innerMargin));
                 maxDiameter = (int) Math.round(diameter*(1.0+outerMargin));
+                recordPropertyOverride("minDiameter", minDiameter);
+                recordPropertyOverride("maxDiameter", maxDiameter);
             }
 
             maxDistance = getPossiblePipelinePropertyOverride(maxDistance, pipeline, 
@@ -271,7 +273,7 @@ public class DetectCircularSymmetry extends CvStage {
         }
 
         List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 
-                maxDiameter, minDiameter, maxDistance*2, searchWidth, searchHeight, maxTargetCount, minSymmetry, corrSymmetry, 
+                minDiameter, maxDiameter, maxDistance*2, searchWidth, searchHeight, maxTargetCount, minSymmetry, corrSymmetry, 
                 subSampling, superSampling, diagnostics, heatMap, new ScoreRange());
         return new Result(null, circles);
     }
@@ -332,8 +334,8 @@ public class DetectCircularSymmetry extends CvStage {
      * @param image             Image to be searched. If diagnostics are enabled, this image will be modified. 
      * @param xCenter           Nominal X center of the search area inside the given image, in pixels.
      * @param yCenter           Nominal Y center of the search area inside the given image, in pixels.
-     * @param maxDiameter       Maximum diameter of the examined circular symmetry area (pixels outside it are ignored).
      * @param minDiameter       Minimum diameter of the examined circular symmetry area (pixels inside it are ignored).
+     * @param maxDiameter       Maximum diameter of the examined circular symmetry area (pixels outside it are ignored).
      * @param searchDiameter    Search diameter across the given center. Limited by image margins and searchWidth, searchHeight.
      * @param searchWidth       Search height across the given center. Limited by image margins.
      * @param searchHeight      Search height across the given center. Limited by image margins.
@@ -352,7 +354,7 @@ public class DetectCircularSymmetry extends CvStage {
      * @throws Exception
      */
     public static  List<Result.Circle> findCircularSymmetry(Mat image, int xCenter, int yCenter,
-            int maxDiameter, int minDiameter, int searchDiameter, int searchWidth, 
+            int minDiameter, int maxDiameter, int searchDiameter, int searchWidth, 
             int searchHeight, int maxTargetCount, double minSymmetry,
             double corrSymmetry, int subSampling, int superSampling, boolean diagnostics, boolean heatMap, ScoreRange scoreRange) throws Exception {
         boolean outermost = !Double.isFinite(scoreRange.finalScore);
@@ -641,7 +643,7 @@ public class DetectCircularSymmetry extends CvStage {
                     // For each local maxima...
                     for (SymmetryCircle localBest : maximaFiltered) {
                         // ... recursion into finer subSampling and local search.
-                        List<CvStage.Result.Circle> localRet = findCircularSymmetry(image, (int)localBest.x, (int)localBest.y, maxDiameter, minDiameter, 
+                        List<CvStage.Result.Circle> localRet = findCircularSymmetry(image, (int)localBest.x, (int)localBest.y, minDiameter, maxDiameter, 
                                 subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1,
                                 minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
                         if (localRet.size() > 0) { 
@@ -690,7 +692,7 @@ public class DetectCircularSymmetry extends CvStage {
             }
             else {
                 // Recursion into finer subSampling and local search.
-                ret = findCircularSymmetry(image, (int)(xBest), (int)(yBest), maxDiameter, minDiameter, 
+                ret = findCircularSymmetry(image, (int)(xBest), (int)(yBest), minDiameter, maxDiameter, 
                         subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1,
                         minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
             }

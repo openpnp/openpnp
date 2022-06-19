@@ -27,30 +27,30 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.net.URI;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.Main;
+import org.openpnp.gui.components.MarkupTextPane;
 
 @SuppressWarnings("serial")
 public class Welcome2_0Dialog extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
-    private JTextPane textPane;
+    private MarkupTextPane markupTextPane;
 
     public Welcome2_0Dialog(Frame frame) {
         super(frame, true);
         setTitle("Welcome to OpenPnP 2.0");
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        setBounds(100, 100, 347, 360);
+        setBounds(100, 100, 648, 434);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -68,14 +68,15 @@ public class Welcome2_0Dialog extends JDialog {
         lblVersion.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(lblVersion);
 
-        textPane = new JTextPane();
-        textPane.setEditable(false);
-        contentPanel.add(new JScrollPane(textPane));
+        markupTextPane = new MarkupTextPane();
+        contentPanel.add(markupTextPane);
+
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
         getContentPane().add(buttonPane, BorderLayout.SOUTH);
         JButton okButton = new JButton("OK");
         okButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent arg0) {
                 setVisible(false);
             }
@@ -86,11 +87,12 @@ public class Welcome2_0Dialog extends JDialog {
 
         try {
             String s = FileUtils.readFileToString(new File("OPENPNP_2_0.md"));
-            textPane.setText(s);
-            textPane.setCaretPosition(0);
+            markupTextPane.setText(s);
+            // HACK: can't truly pinpoint hyperlinks in the text, so point it to the original.
+            markupTextPane.setUri(new URI(Main.getSourceUri()+"OPENPNP_2_0.md"));
         }
         catch (Exception e) {
-
+            markupTextPane.setPlainText(e.toString());
         }
     }
 }

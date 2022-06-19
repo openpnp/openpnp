@@ -29,7 +29,6 @@ import javax.swing.JOptionPane;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
-import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.wizards.ReferenceActuatorConfigurationWizard;
@@ -232,38 +231,41 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
             assertOnOffDefined();
             if (deferred) {
                 UiUtils.submitUiMachineTask(() -> {
-                    actuate(value ? getDefaultOnValue() : getDefaultOffValue());
+                    actuate(value);
                 });
             }
             else {
                 machine.execute(() -> {
-                    actuate(value ? getDefaultOnValue() : getDefaultOffValue());
+                    actuate(value);
                     return true;
                 }, true, 0);
             }
         }
         catch (Exception e) {
-            MessageBoxes.errorBox(MainFrame.get(), "Error actuating "+getName(), e);
+            UiUtils.messageBoxOnExceptionLater(() -> { 
+                throw new Exception("Error actuating "+getName(), e);
+            });
         }
     }
 
     @Override
     public void actuate(boolean on) throws Exception {
-        if (isCoordinatedBeforeActuate()) {
-            coordinateWithMachine(false);
-        }
-        Logger.debug("{}.actuate({})", getName(), on);
-        if (getValueType() == ActuatorValueType.Profile) {
-            actuateProfile(on);
+        if (getValueType() != ActuatorValueType.Boolean) {
+            // Not a boolean actuator, defer to the generic implementation, using ON/OFF values.
+            actuate((Object)on);
         }
         else {
+            if (isCoordinatedBeforeActuate()) {
+                coordinateWithMachine(false);
+            }
+            Logger.debug("{}.actuate({})", getName(), on);
             driveActuation(on);
             setLastActuationValue(on);
+            if (isCoordinatedAfterActuate()) {
+                coordinateWithMachine(true);
+            }
+            getMachine().fireMachineHeadActivity(head);
         }
-        if (isCoordinatedAfterActuate()) {
-            coordinateWithMachine(true);
-        }
-        getMachine().fireMachineHeadActivity(head);
     }
 
     protected void driveActuation(boolean on) throws Exception {

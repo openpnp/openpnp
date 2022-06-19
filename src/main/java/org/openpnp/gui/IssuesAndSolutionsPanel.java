@@ -232,7 +232,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                             return;
                         }
 
-                        selectionActions();
+                        solutionChanged();
                     }
                 });
                 table.getColumnModel().getColumn(0).setPreferredWidth(150);
@@ -250,9 +250,17 @@ public class IssuesAndSolutionsPanel extends JPanel {
                     }
                 });
 
-                SwingUtilities.invokeLater(() -> {
-                    findIssuesAndSolutions(); 
-                });
+                // Execute the first issue search after a delay (the delay prevents a
+                // race condition with configuration loading and camera startup).
+                new java.util.Timer().schedule( 
+                        new java.util.TimerTask() {
+                            @Override
+                            public void run() {
+                                SwingUtilities.invokeLater(()->findIssuesAndSolutions()); 
+                            }
+                        },
+                        5000
+                );
             }
         });
 
@@ -336,7 +344,6 @@ public class IssuesAndSolutionsPanel extends JPanel {
             if (issue.getUri() != null) {
                 needInfo = true;
             }
-
         }
         acceptSolutionAction.setEnabled(needAccept && issues.size() == 1);
         dismissSolutionAction.setEnabled(needDismiss);
@@ -344,6 +351,9 @@ public class IssuesAndSolutionsPanel extends JPanel {
         infoAction.setEnabled(needInfo);
         if (issuePanel != null) {
             issuePane.remove(issuePanel);
+            issuePanel.setVisible(false);
+            issuePanel = null;
+            issuePane.revalidate();
         }
         if (issues.size() == 1) {
             issuePanel = new IssuePanel(issues.get(0), machine);
@@ -367,18 +377,20 @@ public class IssuesAndSolutionsPanel extends JPanel {
             }
         }
         JTabbedPane tabs = frame.getTabs();
-        int index = tabs.indexOfComponent(frame.getIssuesAndSolutionsTab());
-        if (index >= 0) {
-            if (maxSeverity.ordinal() > Solutions.Severity.Information.ordinal()) {
-                int indicatorUnicode = 0x2B24;
-                Color color = maxSeverity.color;
-                color = saturate(color);
-                tabs.setTitleAt(index, "<html>Issues &amp; Solutions <span style=\"color:#"
-                        +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
-                        +";\">&#"+(indicatorUnicode)+";</span></html>");
-            }
-            else {
-                tabs.setTitleAt(index, "Issues & Solutions");
+        if (tabs != null) {
+            int index = tabs.indexOfComponent(frame.getIssuesAndSolutionsTab());
+            if (index >= 0) {
+                if (maxSeverity.ordinal() > Solutions.Severity.Information.ordinal()) {
+                    int indicatorUnicode = 0x2B24;
+                    Color color = maxSeverity.color;
+                    color = saturate(color);
+                    tabs.setTitleAt(index, "<html>Issues &amp; Solutions <span style=\"color:#"
+                            +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
+                            +";\">&#"+(indicatorUnicode)+";</span></html>");
+                }
+                else {
+                    tabs.setTitleAt(index, "Issues & Solutions");
+                }
             }
         }
     }
@@ -565,11 +577,11 @@ public class IssuesAndSolutionsPanel extends JPanel {
 
 
     /**
-     * 
+     * Rebuild the UI as needed, when solutions have changed state, perhaps asynchronously.
      */
     public void solutionChanged() {
+        dirty = true;
         SwingUtilities.invokeLater(() -> {
-            dirty = true;
             notifySolutionsChanged();
         });
     }

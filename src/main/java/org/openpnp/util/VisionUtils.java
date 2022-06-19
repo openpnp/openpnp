@@ -1,5 +1,6 @@
 package org.openpnp.util;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,8 +29,9 @@ import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 
 public class VisionUtils {
-    public static String PIPELINE_RESULTS_NAME = "results";
-    
+    final public static String PIPELINE_RESULTS_NAME = "results";
+    final public static String PIPELINE_CONTROL_PROPERTY_NAME = "propertyName";
+
     /**
      * Given pixel coordinates within the frame of the Camera's image, get the offsets from Camera
      * center to the coordinates in Camera space and units. The resulting value is the distance the
@@ -274,6 +276,32 @@ public class VisionUtils {
                 histogram[0][r]++;
                 histogram[1][g]++;
                 histogram[2][b]++;
+            }
+        }
+        return histogram;
+    }
+
+    /**
+     * Compute an RGB histogram over the provided image.
+     * 
+     * @param image
+     * @return the histogram as long[channel][value] with channel 0=Red 1=Green 2=Blue and value 0...255.
+     */
+    public static long[][] computeImageHistogramHsv(BufferedImage image) {
+        long[][] histogram = new long[3][256];
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int rgb = image.getRGB(x, y);
+                int r = (rgb >> 16) & 0xff;
+                int g = (rgb >> 8) & 0xff;
+                int b = (rgb >> 0) & 0xff;
+                float[] hsb = Color.RGBtoHSB(r, g, b, null);
+                int h = (int)(hsb[0]*255.999);
+                int s = (int)(hsb[1]*255.999);
+                int v = (int)(hsb[2]*255.999);
+                histogram[0][h]++;
+                histogram[1][s]++;
+                histogram[2][v]++;
             }
         }
         return histogram;

@@ -37,6 +37,9 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
     private JComboBox motionPlannerClass;
     private boolean reloadWizard;
     private JCheckBox autoToolSelect;
+    private JCheckBox safeZPark;
+    private JTextField unsafeZRoamingDistance;
+    private JCheckBox parkAfterHomed;
 
     public ReferenceMachineConfigurationWizard(ReferenceMachine machine) {
         this.machine = machine;
@@ -47,10 +50,22 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 TitledBorder.TOP, null, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -66,33 +81,63 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         checkBoxHomeAfterEnabled = new JCheckBox("");
         panelGeneral.add(checkBoxHomeAfterEnabled, "4, 2");
         
+        JLabel lblParkAfterHomed = new JLabel("Park after homed?");
+        panelGeneral.add(lblParkAfterHomed, "2, 4, right, default");
+        
+        parkAfterHomed = new JCheckBox("");
+        panelGeneral.add(parkAfterHomed, "4, 4");
+        
+        JLabel lblParkAllAtSafeZ = new JLabel("Park all at Safe Z?");
+        lblParkAllAtSafeZ.setToolTipText("When the Z Park button is pressed, move all tools mounted on the same head to safe Z.");
+        panelGeneral.add(lblParkAllAtSafeZ, "2, 6, right, default");
+        
+        safeZPark = new JCheckBox("");
+        panelGeneral.add(safeZPark, "4, 6");
+        
         JLabel lblAutoToolSelect = new JLabel("Auto tool select?");
-        panelGeneral.add(lblAutoToolSelect, "2, 4, right, default");
+        panelGeneral.add(lblAutoToolSelect, "2, 10, right, default");
         
         autoToolSelect = new JCheckBox("");
-        panelGeneral.add(autoToolSelect, "4, 4");
+        panelGeneral.add(autoToolSelect, "4, 10");
+        
+        JLabel lblNewLabel = new JLabel("Unsafe Z Roaming");
+        lblNewLabel.setToolTipText("<html>Maximum allowable roaming distance at unsafe Z.<br/><br/>\r\nVirtual Z axes (typically on cameras) are invisible, therefore it can easily be overlooked<br/>\r\nthat you are at unsafe Z. When you later press the <strong>Move tool to camera location</strong><br/>\r\nbutton, an unexpected Z down-move will result, potentially crashing the tool.<br/>\r\nThe maximum allowable roaming distance at unsafe Z therefore limits the jogging area<br/>\r\nwithin which an unsafe virtual Z is kept, it should be enough to fine-adjust a captured<br/>\r\nlocation. Jogging further away will automatically move the virtual axis to Safe Z.\r\n</html>");
+        panelGeneral.add(lblNewLabel, "2, 12, right, default");
+        
+        unsafeZRoamingDistance = new JTextField();
+        panelGeneral.add(unsafeZRoamingDistance, "4, 12, fill, default");
+        unsafeZRoamingDistance.setColumns(10);
         
         JLabel lblMotionPlanning = new JLabel("Motion Planning");
-        panelGeneral.add(lblMotionPlanning, "2, 6, right, default");
+        panelGeneral.add(lblMotionPlanning, "2, 16, right, default");
         
         Object[] classNames = machine.getCompatibleMotionPlannerClasses().stream()
         .map(c -> c.getSimpleName()).toArray();
         motionPlannerClass = new JComboBox(classNames);
-        panelGeneral.add(motionPlannerClass, "4, 6, fill, default");
+        panelGeneral.add(motionPlannerClass, "4, 16, fill, default");
         
                 JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
                 TitledBorder.TOP, null, null));
         contentPanel.add(panelLocations);
-        panelLocations.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        panelLocations.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
         
                 JLabel lblX = new JLabel("X");
         panelLocations.add(lblX, "4, 2");
@@ -141,7 +186,10 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         LengthConverter lengthConverter = new LengthConverter();
 
         addWrappedBinding(machine, "homeAfterEnabled", checkBoxHomeAfterEnabled, "selected");
+        addWrappedBinding(machine, "parkAfterHomed", parkAfterHomed, "selected");
         addWrappedBinding(machine, "autoToolSelect", autoToolSelect, "selected");
+        addWrappedBinding(machine, "safeZPark", safeZPark, "selected");
+        addWrappedBinding(machine, "unsafeZRoamingDistance", unsafeZRoamingDistance, "text", lengthConverter);
 
         motionPlannerClassName = machine.getMotionPlanner().getClass().getSimpleName();
         addWrappedBinding(this, "motionPlannerClassName", motionPlannerClass, "selectedItem");
@@ -152,7 +200,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         addWrappedBinding(discardLocation, "lengthY", discardYTf, "text", lengthConverter);
         addWrappedBinding(discardLocation, "lengthZ", discardZTf, "text", lengthConverter);
         addWrappedBinding(discardLocation, "rotation", discardCTf, "text", doubleConverter);
-        
+
+        ComponentDecorators.decorateWithAutoSelectAndLengthConversion(unsafeZRoamingDistance);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardXTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardYTf);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(discardZTf);

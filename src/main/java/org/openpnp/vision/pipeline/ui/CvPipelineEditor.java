@@ -35,6 +35,7 @@ import org.openpnp.vision.pipeline.stages.DetectEdgesRobertsCross;
 import org.openpnp.vision.pipeline.stages.DetectFixedCirclesHough;
 import org.openpnp.vision.pipeline.stages.DetectLinesHough;
 import org.openpnp.vision.pipeline.stages.DetectRectangleHough;
+import org.openpnp.vision.pipeline.stages.DetectRectlinearSymmetry;
 import org.openpnp.vision.pipeline.stages.DilateModel;
 import org.openpnp.vision.pipeline.stages.DrawCircles;
 import org.openpnp.vision.pipeline.stages.DrawContours;
@@ -65,8 +66,11 @@ import org.openpnp.vision.pipeline.stages.MatchPartsTemplate;
 import org.openpnp.vision.pipeline.stages.MatchTemplate;
 import org.openpnp.vision.pipeline.stages.MinAreaRect;
 import org.openpnp.vision.pipeline.stages.MinAreaRectContours;
+import org.openpnp.vision.pipeline.stages.MinEnclosingCircle;
 import org.openpnp.vision.pipeline.stages.Normalize;
 import org.openpnp.vision.pipeline.stages.OrientRotatedRects;
+import org.openpnp.vision.pipeline.stages.ParameterBool;
+import org.openpnp.vision.pipeline.stages.ParameterNumeric;
 import org.openpnp.vision.pipeline.stages.ReadModelProperty;
 import org.openpnp.vision.pipeline.stages.ReadPartTemplateImage;
 import org.openpnp.vision.pipeline.stages.Rotate;
@@ -79,6 +83,7 @@ import org.openpnp.vision.pipeline.stages.SizeCheck;
 import org.openpnp.vision.pipeline.stages.Threshold;
 import org.openpnp.vision.pipeline.stages.ThresholdAdaptive;
 import org.openpnp.vision.pipeline.stages.WritePartTemplateImage;
+import org.pmw.tinylog.Logger;
 
 /**
  * A JPanel based component for editing a CvPipeline. Allows the user to add and remove stages,
@@ -95,6 +100,10 @@ import org.openpnp.vision.pipeline.stages.WritePartTemplateImage;
 public class CvPipelineEditor extends JPanel {
     static {
         stageClasses = new HashSet<>();
+        // Parameter stages.
+        registerStageClass(ParameterNumeric.class);
+        registerStageClass(ParameterBool.class);
+        // Vision stages.
         registerStageClass(BlurMedian.class);
         registerStageClass(BlurGaussian.class);
         registerStageClass(ClosestModel.class);
@@ -114,6 +123,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(DetectEdgesLaplacian.class);
         registerStageClass(DetectFixedCirclesHough.class);
         registerStageClass(DetectCircularSymmetry.class);
+        registerStageClass(DetectRectlinearSymmetry.class);
         registerStageClass(DilateModel.class);
         registerStageClass(DrawCircles.class);
         registerStageClass(DrawContours.class);
@@ -143,6 +153,7 @@ public class CvPipelineEditor extends JPanel {
         registerStageClass(MatchPartsTemplate.class);
         registerStageClass(MinAreaRect.class);
         registerStageClass(MinAreaRectContours.class);
+        registerStageClass(MinEnclosingCircle.class);
         registerStageClass(FitEllipseContours.class);
         registerStageClass(Normalize.class);
         registerStageClass(OrientRotatedRects.class);
@@ -226,6 +237,7 @@ public class CvPipelineEditor extends JPanel {
         }
         catch (Exception e) {
             // Do nothing
+            Logger.warn(e);
         }
         return !editedVersion.equals(originalVersion);
     }

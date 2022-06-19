@@ -267,6 +267,7 @@ public class ImageCamera extends ReferenceCamera {
         BufferedImage frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D gFrame = frame.createGraphics();
+        AffineTransform tx = gFrame.getTransform();
 
         double locationX = location.getX();
         double locationY = location.getY();
@@ -320,7 +321,7 @@ public class ImageCamera extends ReferenceCamera {
             BufferedImage undistorted  = ImageUtils.clone(frame);
             double xo = 0.5 - width/2;
             double yo = 0.5 - height/2;
-            double radius = Math.sqrt(width*width+height*height)/2;
+            double radius = Math.hypot(width, height)/2;
             double dist = cameraDistance/(upp.getX()*radius);
             double factor = 1.0/radius;
             double zFactor = 1.0/dist;
@@ -334,120 +335,97 @@ public class ImageCamera extends ReferenceCamera {
             double zRotSin = Math.sin(zRotRad);
             double zRotCos = Math.cos(zRotRad);
             final int kernel_r = 1;
-            // First pass: stake out the projection by 9 points and calculate the projectionFactor.
-            for (int x = 0; x <= width; x += width/2) {
-                for (int y = 0; y <= height; y += height/2) {
-                    // NOTE: as this cannot be refactored without performance penalty,
-                    // the following code block is an exact duplicate in both passes.
-                    // BEGIN:-------------------------------------- //
-                    // Normed to ±1.0
-                    double xN = (x + xo)*factor; 
-                    double yN = (y + yo)*factor;
-                    // Distortion
-                    double vect = Math.sqrt(xN*xN + yN*yN);
-                    double distortion = vect*distort + (1.0-distort);
-                    double xD = xN*distortion;
-                    double yD = yN*distortion;
-                    // Rotate back in Z 
-                    double xR = xD*zRotCos + yD*zRotSin;
-                    double yR = - xD*zRotSin + yD*zRotCos;
-                    // Reverse perspective transform
-                    double alpha = Math.atan2(xR, dist)-yRotRad;
-                    double xY = (Math.tan(alpha)+tanYaw)*dist;
-                    double zT = 1.0 - xY*zFactorYaw;
-                    double yY = yR*zT;
-                    // Rotate back in Z 
-                    double xT = xY*zRotCos - yY*zRotSin;
-                    double yT = xY*zRotSin + yY*zRotCos;
-                    // Pixel coordinates
-                    double xP = (xT*projectionFactor - xo);
-                    double yP = (yT*projectionFactor - yo);
-                    // END:---------------------------------------- //
-
-                    // Minimize the projectionFactor.
-                    if (xP < kernel_r) {
-                        projectionFactor = (kernel_r + xo)/xT;
-                    }
-                    else if (xP > width-kernel_r) {
-                        projectionFactor = (-kernel_r + width + xo)/xT;
-                    }
-                    else if (yP < kernel_r) {
-                        projectionFactor = (kernel_r + yo)/yT;
-                    }
-                    else if (yP > height-kernel_r) {
-                        projectionFactor = (-kernel_r + height + yo)/yT;
-                    }
-                }
-            }
-            // Second pass: transform the image.
             int grayRGB = new Color(128, 128, 128).getRGB();
             int baseRGB = new Color(0, 0, 0).getRGB();
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < height; y++) {
-                    // NOTE: as this cannot be refactored without performance penalty,
-                    // the following code block is an exact duplicate in both passes.
-                    // BEGIN:-------------------------------------- //
-                    // Normed to ±1.0
-                    double xN = (x + xo)*factor; 
-                    double yN = (y + yo)*factor;
-                    // Distortion
-                    double vect = Math.sqrt(xN*xN + yN*yN);
-                    double distortion = vect*distort + (1.0-distort);
-                    double xD = xN*distortion;
-                    double yD = yN*distortion;
-                    // Rotate back in Z 
-                    double xR = xD*zRotCos - yD*zRotSin;
-                    double yR = + xD*zRotSin + yD*zRotCos;
-                    // Reverse perspective transform
-                    double alpha = Math.atan2(xR, dist)-yRotRad;
-                    double xY = (Math.tan(alpha)+tanYaw)*dist;
-                    double zT = 1.0 - xY*zFactorYaw;
-                    double yY = yR*zT;
-                    // Rotate back in Z 
-                    double xT = xY*zRotCos + yY*zRotSin;
-                    double yT = -xY*zRotSin + yY*zRotCos;
-                    // Pixel coordinates
-                    double xP = (xT*projectionFactor - xo);
-                    double yP = (yT*projectionFactor - yo);
-                    // END:---------------------------------------- //
+            // First pass  : stake out the projection by 9 points and calculate the projectionFactor.
+            // Second pass : actually apply the projection to the pixels.
+            for (int pass = 0; pass < 2; pass++) {
+                final int xStep = pass == 0 ? width/2 : 1;
+                final int yStep = pass == 0 ? height/2 : 1;
+                final int x1 = pass == 0 ? width : width-1;
+                final int y1 = pass == 0 ? height : height-1;
+                for (int x = 0; x <= x1; x += xStep) {
+                    for (int y = 0; y <= y1; y += yStep) {
+                        // Normed to ±1.0
+                        double xN = (x + xo)*factor; 
+                        double yN = (y + yo)*factor;
+                        double radial = Math.hypot(xN, yN);
+                        // Distortion
+                        double distortion = (1-distort)*radial + distort*(-0.2*Math.pow(radial, 2) + 0.8*Math.pow(radial, 4) + 0.4*Math.pow(radial, 6));
+                        double xD = xN/radial*distortion;
+                        double yD = yN/radial*distortion;
+                        // Rotate back in Z 
+                        double xR = xD*zRotCos + yD*zRotSin;
+                        double yR = - xD*zRotSin + yD*zRotCos;
+                        // Reverse perspective transform
+                        double alpha = Math.atan2(xR, dist)-yRotRad;
+                        double xY = (Math.tan(alpha)+tanYaw)*dist;
+                        double zT = 1.0 - xY*zFactorYaw;
+                        double yY = yR*zT;
+                        // Rotate back in Z 
+                        double xT = xY*zRotCos - yY*zRotSin;
+                        double yT = xY*zRotSin + yY*zRotCos;
+                        // Pixel coordinates
+                        double xP = (xT*projectionFactor - xo);
+                        double yP = (yT*projectionFactor - yo);
 
-                    // Set the pixel.
-                    int x0 = (int)(xP);
-                    int y0 = (int)(yP);
-                    if (x0 >= 0 && x0+kernel_r < width && y0 >= 0 && y0+kernel_r < height) {
-                        double red = 0;
-                        double green = 0;
-                        double blue = 0;
-                        double norm = 0;
-                        for (int ix = x0; ix <= x0+kernel_r; ix++) {
-                            for (int iy = y0; iy <= y0+kernel_r; iy++) {
-                                int rgb = undistorted.getRGB(ix, iy);
-                                int r = (rgb >> 16) & 0xff;
-                                int g = (rgb >> 8) & 0xff;
-                                int b = (rgb >> 0) & 0xff;
-                                double dix = ix - xP;
-                                double diy = iy - yP;
-                                double di = (dix*dix + diy*diy);
-                                double weight = Math.max(0, 1.0 - di);
-                                norm += weight;
-                                red += weight*r;
-                                green += weight*g;
-                                blue += weight*b;
+                        if (pass == 0) {
+                            // Minimize the projectionFactor.
+                            if (xP < kernel_r) {
+                                projectionFactor = (kernel_r + xo)/xT;
+                            }
+                            else if (xP > width-kernel_r) {
+                                projectionFactor = (-kernel_r + width + xo)/xT;
+                            }
+                            else if (yP < kernel_r) {
+                                projectionFactor = (kernel_r + yo)/yT;
+                            }
+                            else if (yP > height-kernel_r) {
+                                projectionFactor = (-kernel_r + height + yo)/yT;
                             }
                         }
-                        int r = Math.max(0, Math.min(255, (int)(red/norm)));
-                        int g = Math.max(0, Math.min(255, (int)(green/norm)));
-                        int b = Math.max(0, Math.min(255, (int)(blue/norm)));
-                        int newRGB = baseRGB|(r<<16)|(g<<8)|(b<<0);
-                        frame.setRGB(x, y, newRGB);
-                    }
-                    else {
-                        frame.setRGB(x, y, grayRGB);
+                        else {  
+                            // Set the pixel.
+                            int x0 = (int)(xP);
+                            int y0 = (int)(yP);
+                            if (x0 >= 0 && x0+kernel_r < width && y0 >= 0 && y0+kernel_r < height) {
+                                double red = 0;
+                                double green = 0;
+                                double blue = 0;
+                                double norm = 0;
+                                for (int ix = x0; ix <= x0+kernel_r; ix++) {
+                                    for (int iy = y0; iy <= y0+kernel_r; iy++) {
+                                        int rgb = undistorted.getRGB(ix, iy);
+                                        int r = (rgb >> 16) & 0xff;
+                                        int g = (rgb >> 8) & 0xff;
+                                        int b = (rgb >> 0) & 0xff;
+                                        double dix = ix - xP;
+                                        double diy = iy - yP;
+                                        double di = (dix*dix + diy*diy);
+                                        double weight = Math.max(0, 1.0 - di);
+                                        norm += weight;
+                                        red += weight*r;
+                                        green += weight*g;
+                                        blue += weight*b;
+                                    }
+                                }
+                                int r = Math.max(0, Math.min(255, (int)(red/norm)));
+                                int g = Math.max(0, Math.min(255, (int)(green/norm)));
+                                int b = Math.max(0, Math.min(255, (int)(blue/norm)));
+                                int newRGB = baseRGB|(r<<16)|(g<<8)|(b<<0);
+                                frame.setRGB(x, y, newRGB);
+                            }
+                            else {
+                                frame.setRGB(x, y, grayRGB);
+                            }
+                        }
                     }
                 }
             }
         }
+
         if (simulation) {
+            gFrame.setTransform(tx);
             SimulationModeMachine.simulateCameraExposure(this, gFrame, width, height);
         }
 
