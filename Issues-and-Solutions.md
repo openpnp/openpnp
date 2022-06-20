@@ -10,7 +10,7 @@ Hence, the Issues & Solutions system was born. It has these features:
 4. The user is the boss: proposed solutions can be accepted or dismissed.
 5. Accept solutions, explore them and undo them, if you don't like them.
 6. Significantly lowers the required expertise of users. Solutions generate machine-specific, ready-to-use Gcode commands and regular expressions.
-7. Removes former `machine.xml` hacking.
+7. Removes former need for manual `machine.xml` hacking.
 8. Each issue/solution is accompanied by an Info page, often linking to this Wiki.
 
 ## General Usage
