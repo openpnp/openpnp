@@ -30,9 +30,7 @@ See [Where are configuration and log files located?](https://github.com/openpnp/
 
 ## Guidance by the Issues & Solutions System
 
-Be sure to check out the [[Issues and Solutions]] system. It will guide you through the machine setup process. The system is still being improved but already supports the most difficult configuration steps mostly automatically. Whenever OpenPnP starts up, it will scan your configuration for issues and solution. A notifier dot will appear on the tab, when unresolved issues and solutions are present. 
-
-![Issues and Solutions Tab](https://user-images.githubusercontent.com/9963310/118362167-a3061380-b58e-11eb-9acd-d4d0b521af1c.png)
+Follow the [Issues and Solutions](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration#follow-the-issues--solutions-system) system whenever possible. 
 
 
 ***
