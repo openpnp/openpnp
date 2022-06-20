@@ -25,7 +25,7 @@ Hence, the Issues & Solutions system was born. It has these features:
 
 **Include Dismissed?**: Includes issues in the list that have been dismissed before. You can then reopen them and revisit the reported issue or proposed solution. 
 
-![Info](https://user-images.githubusercontent.com/9963310/118359670-d8a5ff00-b584-11eb-9f89-b46d004b4630.png) Goes to this Wiki page. 
+![Info](https://user-images.githubusercontent.com/9963310/118359670-d8a5ff00-b584-11eb-9f89-b46d004b4630.png) Goes to the Milestone Wiki page. 
 
 ### Issues
 
