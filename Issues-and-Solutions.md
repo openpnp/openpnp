@@ -64,7 +64,7 @@ The last issue per milestone will always be the **Milestone Issue**, giving you 
 ## The Milestones
 
 ### Welcome Milestone 
-The **Welcome** milestone allows you to get to know OpenPnP with a simulation machine. Furthermore, you can use Issues & Solutions to choose between common head / nozzle topologies: standalone nozzles, pairs of nozzles with shared Z and negation, pairs with shared Z and cam. Using a multiplier you can tell OpenPnP how many standalone nozzles or nozzle pairs you want. Issues & Solutions then creates all the required axes and nozzles and wires them up. 
+The **Welcome** milestone allows you to get to know OpenPnP with a simulation machine. Furthermore, you can use Issues & Solutions to choose between common head / nozzle topologies: standalone nozzles, pairs of nozzles with shared Z and negation, pairs with shared Z and cam. Using a multiplier you can tell OpenPnP how many standalone nozzles or nozzle pairs you want. Issues & Solutions then creates all the required axes, nozzles and actuators, and wires them up. 
 
 ![Nozzle Solutions](https://user-images.githubusercontent.com/9963310/116826397-0f971080-ab94-11eb-83a0-f00aa16103ef.png)
 
