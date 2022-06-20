@@ -8,7 +8,7 @@ In recent versions of OpenPnP, the [[Issues and Solutions]] system can guide you
 
 ![Nozzle Solutions](https://user-images.githubusercontent.com/9963310/116826397-0f971080-ab94-11eb-83a0-f00aa16103ef.png)
 
-Whenever OpenPnP starts up, or when you press **Find Issues & Solutions**, it will scan your configuration for any issues and solution. A notifier dot will appear on the tab, when unresolved issues and solutions are present. The system is very flexible, you can skip over steps and proceed to the next. OpenPnP will keep monitoring your configuration and list issues as long as unsolved. It will also detect issues if they are (re-) introduced later.
+Whenever OpenPnP starts up, or when you press **Find Issues & Solutions**, it will scan your configuration for any issues and solutions. A notifier dot will appear on the tab, when unresolved items are present. The system is very flexible, you can skip over steps and proceed to the next. OpenPnP will keep monitoring your configuration and list issues as long as unsolved. It will also detect issues if they are (re-) introduced later.
 
 Consider the [[Issues and Solutions]] system as a more up-to-date/smarter alternative to the **Table of Contents** of this Wiki. Instead of working linearly through this document, follow [[Issues and Solutions]] and then use the blue information buttons to link back to this Wiki for details.  
 
