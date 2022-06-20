@@ -30,7 +30,7 @@ See [Where are configuration and log files located?](https://github.com/openpnp/
 
 ## Guidance by the Issues & Solutions System
 
-Follow the [Issues and Solutions](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration#follow-the-issues--solutions-system) system whenever possible. 
+Remember, you should follow the [Issues and Solutions](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration#follow-the-issues--solutions-system) system whenever possible. 
 
 
 ***
