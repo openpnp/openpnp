@@ -1,6 +1,23 @@
 # Setup and Calibration
 
-This document will guide you through the process of setting up a new machine to work with OpenPnP. Since every machine is different you may find that not every part of this document is applicable to your machine, but it should provide a good starting point for getting your machine up and running.
+This will guide you through the process of setting up a new machine to work with OpenPnP. Since every machine is different you may find that not every part of this document is applicable to your machine, but it should provide a good starting point for getting your machine up and running.
+
+## Follow the Issues & Solutions System
+
+In recent versions of OpenPnP, the [[Issues and Solutions]] system can guide you through most of the machine setup process. The system already covers most of the  difficult configuration steps, more are continuously being added. Many of the suggested solutions are automatic, or can be configured interactively, some even with graphical guidance:
+
+![Nozzle Solutions](https://user-images.githubusercontent.com/9963310/116826397-0f971080-ab94-11eb-83a0-f00aa16103ef.png)
+
+Whenever OpenPnP starts up, or when you press **Find Issues & Solutions**, it will scan your configuration for any issues and solution. A notifier dot will appear on the tab, when unresolved issues and solutions are present. The system is very flexible, you can skip over steps and proceed to the next. OpenPnP will keep monitoring your configuration and list issues as long as unsolved. It will also detect issues if they are (re-) introduced later.
+
+Consider the [[Issues and Solutions]] system as a more up-to-date/smarter alternative to the **Table of Contents** of this Wiki. Instead of working linearly through this document, follow [[Issues and Solutions]] and then use the blue information buttons to link back to this Wiki for details.  
+
+### Next Step: [[Issues and Solutions]]
+
+___
+NOTE: The Wiki still contains information for many of the older versions of OpenPnP and/or legacy ways of setting things up manually, so the following is still also left here. 
+___
+
 
 You should follow the steps in the order they are listed in this guide since many of the steps depend on previous steps.
 
