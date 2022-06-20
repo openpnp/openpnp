@@ -15,7 +15,9 @@ Consider the [[Issues and Solutions]] system as a more up-to-date/smarter altern
 ### Next Step: [[Issues and Solutions]]
 
 ___
-NOTE: The Wiki still contains information for many of the older versions of OpenPnP and/or legacy ways of setting things up manually, so the following is still also left here. 
+NOTE: The Wiki still contains information for many of the older versions of OpenPnP and/or legacy ways of setting things up manually, including hacking the `machine.xml`. **It is no longer recommended to do so!** 
+
+The following is left for older versions of OpenPnP, and for those steps and use cases that are not yet covered by [[Issues and Solutions]]. 
 ___
 
 
