@@ -72,7 +72,7 @@ Even complex nozzle solutions are created with a few clicks:
 
 ![Complex nozzle solution](https://user-images.githubusercontent.com/9963310/116826561-e32fc400-ab94-11eb-9354-e14ac4b391a3.png)
 
-You can even revisit the solution i.e. change the number and type again and again. Issues & Solutions will carefully re-use any nozzles and axes it finds and only add new ones as needed. On reused components the detail configuration is preserved (except for names).  
+You can even revisit the solution i.e. change the number and type again and again. Issues & Solutions will carefully re-use any nozzles, axes and actuators it finds and only add new ones as needed. On reused components the detail configuration is preserved (except for names).  
 
 ### Connect Milestone 
 The **Connect** milestone handles the conversion from the simulated machine to a real connected machine with motion controller and USB cameras. It also tests the driver connection and tries to discover the firmware of your controller. If the firmware cannot be detected, there is the option to use generic G-code.
