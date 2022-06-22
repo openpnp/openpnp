@@ -6,11 +6,13 @@ optimizing your machine. Axis limit switches trigger at varying places that can 
 
 ## Mounting a Fiducial
 
-The standard fiducial is just any bright 1mm diameter round mark on dark ground. You can simply print the linked PDF. It is recommended to use a high quality matte photo paper or similar. Also make sure no scaling is in effect in the print settings: 
+The standard fiducial is just any bright 1mm diameter round mark on dark ground. In newer OpenPnP versions, with the Issues & Solutions setup shown in the next section, all that actually matters, is a round and reasonably sharp outline, it can have any inside/outside color and any reasonably small diameter.
+
+You can simply print the linked PDF. It is recommended to use a high quality matte photo paper or similar: 
 
 * [FiducialHome.pdf](https://github.com/openpnp/openpnp/files/5542424/FiducialHome.pdf)
 
-Alternatively you can cut a fiducial out of a spare PCB. Other users have cleverly used the sprocket hole from a black plastic carrier tape on bright ground (1.5mm diameter).  
+Alternatively you can cut a fiducial out of a spare PCB. Other users have cleverly used the sprocket hole from a black plastic carrier tape on bright ground (1.5mm diameter). Just make sure the fiducial is really flat, do **not** use "3D" structures such as holes etc.
 
 The fiducial needs to be mounted for "eternity". Choose a location where your machine is very unlikely to be modified in the future. A central location is ideal, as it halves any error in scale across the machine.
 
