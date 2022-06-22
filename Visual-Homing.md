@@ -12,7 +12,7 @@ You can simply print the linked PDF. It is recommended to use a high quality mat
 
 * [FiducialHome.pdf](https://github.com/openpnp/openpnp/files/5542424/FiducialHome.pdf)
 
-Alternatively you can cut a fiducial out of a spare PCB. Other users have cleverly used the sprocket hole from a black plastic carrier tape on bright ground (1.5mm diameter). Just make sure the fiducial is really flat, do **not** use "3D" structures such as holes etc.
+Alternatively you can cut a fiducial out of a spare PCB. Other users have cleverly used the sprocket hole from a thin black plastic carrier tape on bright ground (1.5mm diameter). Just make sure the fiducial is quite flat, do **not** use deep "3D" structures such as holes, pins etc.
 
 The fiducial needs to be mounted for "eternity". Choose a location where your machine is very unlikely to be modified in the future. A central location is ideal, as it halves any error in scale across the machine.
 
