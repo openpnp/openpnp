@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -141,7 +142,12 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
 
     @Override
     public String toString() {
-        return String.format("Board: file %s, dims: %sx%s, placements: %d", file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
+        return String.format("Board @%08x defined by @%08x: file %s, dims: %sx%s, placements: %d", hashCode(), definedBy.hashCode(), file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
     }
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+//        Logger.trace(String.format("PropertyChangeEvent handled by Board @%08x = %s", this.hashCode(), evt));
+        super.propertyChange(evt);
+    }
 }

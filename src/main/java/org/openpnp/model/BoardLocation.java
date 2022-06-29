@@ -20,6 +20,7 @@
 package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
+import java.beans.PropertyChangeEvent;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,7 +54,6 @@ public class BoardLocation extends FiducialLocatableLocation {
     public BoardLocation(BoardLocation boardLocation) {
         super(boardLocation);
         if (boardLocation.getBoard() != null) {
-//            setBoard(new Board(boardLocation.getBoard()));
             setBoard(boardLocation.getBoard());
         }
     }
@@ -176,7 +176,12 @@ public class BoardLocation extends FiducialLocatableLocation {
         if (parentPanelLocation != null) {
             parentHashCode = parentPanelLocation.hashCode();
         }
-        Logger.trace(String.format("%sBoardLocation:@%08x child of @%08x, %s, location=%s globalLocation=%s, side=%s (%s)", leader,  this.hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getBoard() == null ? "Null" : getBoard().toString()));
+        Logger.trace(String.format("%sBoardLocation:@%08x defined by @%08x child of @%08x, %s, location=%s globalLocation=%s, side=%s (%s)", leader,  this.hashCode(), this.getDefinedBy().hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getBoard() == null ? "Null" : getBoard().toString()));
     }
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        Logger.trace(String.format("PropertyChangeEvent handled by BoardLocation @%08x = %s", this.hashCode(), evt));
+        super.propertyChange(evt);
+    }
 }

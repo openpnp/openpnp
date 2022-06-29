@@ -670,6 +670,7 @@ public class Configuration extends AbstractModelObject {
     public Panel getPanel(File file) throws Exception {
         if (!file.exists()) {
             Panel panel = new Panel(file);
+            Logger.trace(String.format("Created new Panel1 @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
             panel.setName(file.getName());
             Serializer serializer = createSerializer();
             serializer.write(panel, file);
@@ -679,6 +680,7 @@ public class Configuration extends AbstractModelObject {
             return panels.get(file);
         }
         Panel panel = loadPanel(file);
+        Logger.trace(String.format("Created new Panel2 @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(file, panel);
         firePropertyChange("panels", oldValue, panels);
@@ -916,6 +918,7 @@ public class Configuration extends AbstractModelObject {
                 throw new Exception("Panel file not found: " + panelFileName);
             }
             panel = new Panel(getPanel(panelFile));
+            Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
             panelLocation.setPanel(panel);
         }
         else {
@@ -930,7 +933,7 @@ public class Configuration extends AbstractModelObject {
             String boardFileName = rootPcb.getFileName();
             String panelFileName = boardFileName.substring(0, boardFileName.indexOf(".board.xml")) + ".panel.xml";
             File panelFile = new File(job.getFile().getParentFile(), panelFileName);
-            panelLocation.setFileName(panelFileName);
+            panelLocation.setFileName(panelFile.getCanonicalPath());
             panelLocation.setParent(null);
             panel.setName(panelFileName);
             panel.setFile(panelFile);

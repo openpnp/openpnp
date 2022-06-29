@@ -1,19 +1,35 @@
 package org.openpnp.model;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.lang.reflect.InvocationTargetException;
+
+import org.apache.commons.beanutils.BeanUtils;
+import org.openpnp.spi.Definable;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 
-public abstract class AbstractLocatable extends AbstractModelObject {
+public abstract class AbstractLocatable extends AbstractModelObject implements Definable, PropertyChangeListener {
 
     @Element
     private Location location;
 
+    protected transient Definable definedBy;
+
+    private transient boolean dirty;
+    
+    AbstractLocatable() {
+        definedBy = this;
+    }
+    
     AbstractLocatable(AbstractLocatable abstractLocatable) {
         super();
-        this.location = abstractLocatable.location;
+        location = abstractLocatable.location;
+        setDefinedBy(abstractLocatable.getDefinedBy());
     }
     
     AbstractLocatable(Location location) {
-        super();
+        this();
         this.location = location;
     }
     
@@ -27,4 +43,56 @@ public abstract class AbstractLocatable extends AbstractModelObject {
         firePropertyChange("location", oldValue, location);
     }
 
+    public Definable getDefinedBy() {
+        return definedBy;
+    }
+    
+    public void setDefinedBy(Definable definedBy) {
+        Definable oldValue = this.definedBy;
+        this.definedBy = definedBy;
+        firePropertyChange("definedBy", oldValue, definedBy);
+        if (oldValue != null) {
+            ((AbstractLocatable) oldValue).removePropertyChangeListener(this);
+        }
+        if (definedBy != null) {
+            ((AbstractLocatable) definedBy).addPropertyChangeListener(this);
+        }
+    }
+    
+    public boolean isDefinedBy(Definable definedBy) {
+        return this.definedBy == definedBy;
+    };
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        boolean oldValue = this.dirty;
+        this.dirty = dirty;
+        firePropertyChange("dirty", oldValue, dirty);
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+//        Logger.trace(String.format("PropertyChangeEvent handled by AbstractLocatable @%08x = %s", this.hashCode(), evt));
+        if (evt.getSource() != AbstractLocatable.this || evt.getPropertyName() != "dirty") {
+            dirty = true;
+            if (evt.getSource() == definedBy) {
+                try {
+                    Logger.trace("Attempting to set property: " + evt.getPropertyName() + " = " + evt.getNewValue());
+                    BeanUtils.setProperty(this, evt.getPropertyName(), evt.getNewValue());
+                }
+                catch (IllegalAccessException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (InvocationTargetException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+    }
 }

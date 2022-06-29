@@ -59,7 +59,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     public Job() {
         rootPanelLocation = new PanelLocation(new Panel("root"));
         rootPanelLocation.setLocalToParentTransform(new AffineTransform());
-        
+        Logger.trace(String.format("Created new Job Panel @%08x, defined by @%08x", rootPanelLocation.getPanel().hashCode(), rootPanelLocation.getPanel().getDefinedBy().hashCode()));
         addPropertyChangeListener(this);
     }
 
@@ -125,6 +125,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         boardLocations.remove(boardLocation);
         firePropertyChange("boardLocations", oldValue, boardLocations);
         boardLocation.removePropertyChangeListener(this);
+        ((AbstractModelObject) boardLocation.getDefinedBy()).removePropertyChangeListener(boardLocation);
     }
 
     public void removeAllBoards() {
@@ -135,6 +136,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
 
         for (int i = 0; i < oldValue.size(); i++) {
             oldValue.get(i).removePropertyChangeListener(this);
+            ((AbstractModelObject) oldValue.get(i).getDefinedBy()).removePropertyChangeListener(oldValue.get(i));
         }
     }
 
@@ -285,14 +287,8 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         return rootPanelLocation;
     }
 
-//    public void setRootPanelLocation(PanelLocation rootPanel) {
-//        PanelLocation oldValue = this.rootPanelLocation;
-//        this.rootPanelLocation = rootPanel;
-//        firePropertyChange("rootPanelLocation", oldValue, rootPanel);
-//    }
-
     public void propertyChange(PropertyChangeEvent evt) {
-        Logger.trace("PropertyChangeEvent = " + evt);
+//        Logger.trace("PropertyChangeEvent = " + evt);
         if (evt.getSource() != Job.this || !evt.getPropertyName().equals("dirty")) {
             setDirty(true);
         }

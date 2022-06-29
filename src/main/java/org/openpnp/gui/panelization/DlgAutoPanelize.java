@@ -111,7 +111,7 @@ public class DlgAutoPanelize extends JDialog {
 
         //Make a copy of the current panel
         pcbPanel = new Panel(jobPanel.getJob().getPanels().get(0));
-        
+        Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", pcbPanel.hashCode(), pcbPanel.getDefinedBy().hashCode()));
         
 //        if (pcbPanel.getRootPcbOffset() == null) {
 //            Logger.trace("Updating an old panelization to new format");

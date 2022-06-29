@@ -425,7 +425,7 @@ public class DlgPanelArrayBuilder extends JDialog {
                     {
                         JSpinner spinnerAngularSteps = new JSpinner();
                         spinnerAngularSteps.setToolTipText("Number of copies to generate angularly around the Array Center");
-                        spinnerAngularSteps.setModel(new SpinnerNumberModel(2, 2, null, 1));
+                        spinnerAngularSteps.setModel(new SpinnerNumberModel(1, 1, null, 1));
                         GridBagConstraints gbc_spinnerAngularSteps = new GridBagConstraints();
                         gbc_spinnerAngularSteps.fill = GridBagConstraints.HORIZONTAL;
                         gbc_spinnerAngularSteps.insets = new Insets(0, 0, 5, 5);
@@ -661,6 +661,7 @@ public class DlgPanelArrayBuilder extends JDialog {
      */
     public void setCenterX(Length centerX) {
         this.centerX = centerX;
+        generateArray();
     }
 
     /**
@@ -675,6 +676,7 @@ public class DlgPanelArrayBuilder extends JDialog {
      */
     public void setCenterY(Length centerY) {
         this.centerY = centerY;
+        generateArray();
     }
 
     /**
@@ -687,8 +689,9 @@ public class DlgPanelArrayBuilder extends JDialog {
     /**
      * @param increaseProportionally the increaseProportionally to set
      */
-    public void setIncreasePropotionally(boolean increaseProportionally) {
+    public void setIncreaseProportionally(boolean increaseProportionally) {
         this.increaseProportionally = increaseProportionally;
+        generateArray();
     }
 
     /**
@@ -703,6 +706,7 @@ public class DlgPanelArrayBuilder extends JDialog {
      */
     public void setPanelReferenceFrame(boolean panelReferenceFrame) {
         this.panelReferenceFrame = panelReferenceFrame;
+        generateArray();
     }
 
     protected void generateArray() {
@@ -712,25 +716,24 @@ public class DlgPanelArrayBuilder extends JDialog {
         newChildren.clear();
         switch (arrayType) {
             case Rectangular:
-                for (int i=0; i<columnCount; i++) {
-                    for (int j=0; j<rowCount; j++) {
+                for (int i=0; i<rowCount; i++) {
+                    int cCount = columnCount + ((i % 2) == 0 ? 0 : alternateRowColumnDelta);
+                    Length rowOffset = alternateOffset.abs().multiply((i % 2) == 0 ? 0 : -alternateRowColumnDelta);
+                    for (int j=0; j<cCount; j++) {
                         if (i != 0 || j != 0) {
                             Location offset = new Location(systemUnit);
-                            offset = offset.deriveLengths(columnSpacing.multiply(i), rowSpacing.multiply(j), 
-                                    null, 
-                                    null);
+                            offset = offset.deriveLengths(columnSpacing.multiply(j).add(rowOffset),
+                                    rowSpacing.multiply(i), null, null);
+                            FiducialLocatableLocation newChildLocation = null;
                             if (rootChildLocation instanceof BoardLocation) {
-                                BoardLocation newChildLocation = new BoardLocation((BoardLocation) rootChildLocation);
-                                newChildLocation.setLocation(rootChildLocation.getLocation().add(offset));
-                                newChildren.add(newChildLocation);
-                                panelLocation.addChild(newChildLocation);
+                                newChildLocation = new BoardLocation((BoardLocation) rootChildLocation);
                             }
                             else if (rootChildLocation instanceof PanelLocation) {
-                                PanelLocation newChildLocation = new PanelLocation((PanelLocation) rootChildLocation);
-                                newChildLocation.setLocation(rootChildLocation.getLocation().add(offset));
-                                newChildren.add(newChildLocation);
-                                panelLocation.addChild(newChildLocation);
+                                newChildLocation = new PanelLocation((PanelLocation) rootChildLocation);
                             }
+                            newChildLocation.setLocation(rootChildLocation.getLocation().add(offset));
+                            newChildren.add(newChildLocation);
+                            panelLocation.addChild(newChildLocation);
                         }
                     }
                 }
@@ -740,20 +743,42 @@ public class DlgPanelArrayBuilder extends JDialog {
                 int aCount = angularCount;
                 Location center = new Location(systemUnit);
                 center = center.deriveLengths(centerX, centerY, rootChildLocation.getLocation().getLengthZ(), null);
+                if (!panelReferenceFrame) {
+                    center = Utils2D.calculateBoardPlacementLocation(rootChildLocation, center);
+                }
                 Length radiusStep = rootChildLocation.getLocation().getLinearLengthTo(center);
                 
                 for (int i=0; i<radialCount; i++) {
                     Length radius = radiusStep.add(radiusStep.multiply(i));
-                    double angle = Utils2D.getAngleFromPoint(center, rootChildLocation.getLocation());
+                    double initAngle = Utils2D.getAngleFromPoint(center, rootChildLocation.getLocation());
                     angleStep = 360.0 / angularCount;
                     if (increaseProportionally) {
                         angleStep /= (i+1);
                     }
                     
-                    for (double angleOffset=0; angleOffset<(360-0.5*angleStep); angleOffset += angleStep) {
-                        if (i != 0 || angleOffset != 0) {
-                            Location offset = new Location(systemUnit);
+                    for (int j=0; j<aCount; j++) {
+                        if (i != 0 || j != 0) {
+                            double angleDeg = initAngle + angleStep*j;
+                            double angleRad = Math.toRadians(angleDeg);
+                            Location loc = new Location(systemUnit);
+                            loc = loc.deriveLengths(radius.multiply(Math.cos(angleRad)), 
+                                    radius.multiply(Math.sin(angleRad)), null, null);
+                            loc = loc.add(center);
+                            loc = loc.derive(null, null, null, rootChildLocation.getLocation().getRotation() + angleStep*j);
+                            FiducialLocatableLocation newChildLocation = null;
+                            if (rootChildLocation instanceof BoardLocation) {
+                                newChildLocation = new BoardLocation((BoardLocation) rootChildLocation);
+                            }
+                            else if (rootChildLocation instanceof PanelLocation) {
+                                newChildLocation = new PanelLocation((PanelLocation) rootChildLocation);
+                            }
+                            newChildLocation.setLocation(loc);
+                            newChildren.add(newChildLocation);
+                            panelLocation.addChild(newChildLocation);
                         }
+                    }
+                    if (increaseProportionally) {
+                        aCount += angularCount;
                     }
                 }
                 break;
@@ -799,7 +824,7 @@ public class DlgPanelArrayBuilder extends JDialog {
         offScr.setStroke(new BasicStroke((float) (2.0/scale), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         offScr.draw(transformedShape);
         
-        drawCoordinateFrameMarker(offScr, at, 10, Color.RED, Color.CYAN);
+        drawCoordinateFrameMarker(offScr, at, 10, Color.RED, Color.CYAN, true);
         
         for (FiducialLocatableLocation child : panelLocation.getChildren()) {
             Location loc = child.getLocation().convertToUnits(systemUnit);
@@ -810,18 +835,25 @@ public class DlgPanelArrayBuilder extends JDialog {
             
             Shape childOutline = new Rectangle2D.Double(0, 0, dims.getX(), dims.getY());
             transformedShape = at2.createTransformedShape(childOutline);
-            offScr.setColor(maskColor);
-            offScr.fill(transformedShape);
             if (child != rootChildLocation) {
-                offScr.setColor(profileColor);
+                if (newChildren.contains(child)) {
+                    offScr.setColor(copyProfileColor);
+                }
+                else {
+                    offScr.setColor(maskColor);
+                    offScr.fill(transformedShape);
+                    offScr.setColor(profileColor);
+                }
             }
             else {
+                offScr.setColor(maskColor);
+                offScr.fill(transformedShape);
                 offScr.setColor(rootProfileColor);
             }
             offScr.setStroke(new BasicStroke((float) (2.0/scale), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             offScr.draw(transformedShape);
             
-            drawCoordinateFrameMarker(offScr, at2, 10, Color.RED, Color.CYAN);
+            drawCoordinateFrameMarker(offScr, at2, 10, Color.RED, Color.CYAN, true);
         }
         
         for (Placement fid : panelLocation.getPanel().getPlacements()) {
@@ -844,14 +876,23 @@ public class DlgPanelArrayBuilder extends JDialog {
         offScr.dispose();
     }
 
-    private void drawCoordinateFrameMarker(Graphics2D offScr, AffineTransform at2, int size, Color xColor,
+    private void drawLocationMarker(Graphics2D offScr, AffineTransform at2, int size, Color xColor,
             Color yColor) {
+    }
+    
+    private void drawOriginMarker(Graphics2D offScr, AffineTransform at2, int size, Color xColor,
+            Color yColor) {
+    }
+    
+    private void drawCoordinateFrameMarker(Graphics2D offScr, AffineTransform at2, int size, Color xColor,
+            Color yColor, boolean rightHanded) {
+        int sign = rightHanded ? +1 : -1;
         Path2D xArrow = new Path2D.Double();
         xArrow.moveTo(0, 0);
-        xArrow.lineTo(size, 0);
-        xArrow.lineTo(size*0.9, size*0.1);
-        xArrow.moveTo(size, 0);
-        xArrow.lineTo(size*0.9, -size*0.1);
+        xArrow.lineTo(sign*size, 0);
+        xArrow.lineTo(sign*size*0.9, size*0.1);
+        xArrow.moveTo(sign*size, 0);
+        xArrow.lineTo(sign*size*0.9, -size*0.1);
         Path2D yArrow = new Path2D.Double();
         yArrow.moveTo(0, 0);
         yArrow.lineTo(0, size);

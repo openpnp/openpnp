@@ -20,6 +20,7 @@
 package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
+import java.beans.PropertyChangeEvent;
 import java.util.List;
 
 import org.openpnp.util.Utils2D;
@@ -124,7 +125,7 @@ public class PanelLocation extends FiducialLocatableLocation {
 
     @Override
     public String toString() {
-        return String.format("Panel (%s), location (%s), side (%s)", fileName, getLocation(), side);
+        return String.format("PanelLocation @%08x defined by @%08x: (%s), location (%s), side (%s)", hashCode(), definedBy.hashCode(), fileName, getLocation(), side);
     }
 
     public void dump(String leader) {
@@ -133,7 +134,7 @@ public class PanelLocation extends FiducialLocatableLocation {
         if (parentPanelLocation != null) {
             parentHashCode = parentPanelLocation.hashCode();
         }
-        Logger.trace(String.format("%sPanelLocation:@%08x child of @%08x, %s, location=%s , globalLocation=%s side=%s (%s)", leader,  this.hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getPanel() == null ? "Null" : getPanel().toString()));
+        Logger.trace(String.format("%sPanelLocation:@%08x defined by @%08x child of @%08x, %s, location=%s , globalLocation=%s side=%s (%s)", leader,  this.hashCode(), this.definedBy.hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getPanel() == null ? "Null" : getPanel().toString()));
         if (getPanel() != null) {
             leader = leader + "    ";
             for (FiducialLocatableLocation child : getPanel().getChildren()) {
@@ -145,5 +146,11 @@ public class PanelLocation extends FiducialLocatableLocation {
                 }
             }
         }
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        Logger.trace(String.format("PropertyChangeEvent handled by PanelLocation @%08x = %s", this.hashCode(), evt));
+        super.propertyChange(evt);
     }
 }

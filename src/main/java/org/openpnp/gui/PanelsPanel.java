@@ -228,12 +228,12 @@ public class PanelsPanel extends JPanel {
         }
         if (event.fiducialLocatableLocation.getFiducialLocatable() instanceof Panel) {
             SwingUtilities.invokeLater(() -> {
-                selectPanel((Panel) event.fiducialLocatableLocation.getFiducialLocatable());
+                selectPanel((Panel) event.fiducialLocatableLocation.getFiducialLocatable().getDefinedBy());
             });
         }
         else if (event.fiducialLocatableLocation.getParent() instanceof PanelLocation) {
             SwingUtilities.invokeLater(() -> {
-                selectPanel((Panel) event.fiducialLocatableLocation.getParent().getFiducialLocatable());
+                selectPanel((Panel) event.fiducialLocatableLocation.getParent().getFiducialLocatable().getDefinedBy());
                 panelDefinitionPanel.selectChild(event.fiducialLocatableLocation);
             });
         }
@@ -245,7 +245,7 @@ public class PanelsPanel extends JPanel {
             return;
         }
         SwingUtilities.invokeLater(() -> {
-            selectPanel((Panel) event.fiducialLocatableLocation.getFiducialLocatable());
+            selectPanel((Panel) event.fiducialLocatableLocation.getFiducialLocatable().getDefinedBy());
             panelDefinitionPanel.selectFiducial(event.placement);
         });
     }
@@ -255,7 +255,9 @@ public class PanelsPanel extends JPanel {
             panelsTable.getSelectionModel().clearSelection();
             return;
         }
+        Logger.trace(String.format("Attempting to select Panel @%08x defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
         for (int i = 0; i < panelsTableModel.getRowCount(); i++) {
+            Logger.trace(String.format("...found Panel @%08x defined by @%08x", configuration.getPanels().get(i).hashCode(), configuration.getPanels().get(i).getDefinedBy().hashCode()));
             if (configuration.getPanels().get(i) == panel) {
                 int index = panelsTable.convertRowIndexToView(i);
                 panelsTable.getSelectionModel().setSelectionInterval(index, index);
@@ -436,6 +438,7 @@ public class PanelsPanel extends JPanel {
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
                 Panel newPanel = new Panel(panelToCopy);
+                Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", newPanel.hashCode(), newPanel.getDefinedBy().hashCode()));
                 newPanel.setFile(file);
                 newPanel.setName(file.getName());
                 newPanel.setDirty(true);

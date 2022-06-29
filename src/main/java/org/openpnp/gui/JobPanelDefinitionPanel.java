@@ -373,10 +373,10 @@ public class JobPanelDefinitionPanel extends JPanel implements PropertyChangeLis
         
         
         
-        JPanel panel = new JPanel();
-        FlowLayout flowLayout = (FlowLayout) panel.getLayout();
+        JPanel jPanel = new JPanel();
+        FlowLayout flowLayout = (FlowLayout) jPanel.getLayout();
         flowLayout.setAlignment(FlowLayout.RIGHT);
-        add(panel, BorderLayout.SOUTH);
+        add(jPanel, BorderLayout.SOUTH);
         
         JButton btnApply = new JButton("Apply");
         btnApply.setEnabled(false);
@@ -385,7 +385,9 @@ public class JobPanelDefinitionPanel extends JPanel implements PropertyChangeLis
             @Override
             public void actionPerformed(ActionEvent e) {
                 PanelLocation jobPanelLocation = (PanelLocation) jobPanel.getSelection();
+                int oldDef = jobPanelLocation.getPanel().getDefinedBy().hashCode();
                 jobPanelLocation.getPanel().setTo(rootPanelLocation.getPanel());
+                Logger.trace(String.format("Changed Panel @%08x, defined @%08x, to be defined by @%08x", jobPanelLocation.getPanel().hashCode(), oldDef, jobPanelLocation.getPanel().getDefinedBy().hashCode()));
 //                jobPanelLocation.setPanel(new Panel(rootPanelLocation.getPanel()));
                 for (FiducialLocatableLocation child : jobPanelLocation.getChildren()) {
                     child.setParent(jobPanelLocation);
@@ -398,7 +400,7 @@ public class JobPanelDefinitionPanel extends JPanel implements PropertyChangeLis
             }
             
         });
-        panel.add(btnApply);
+        jPanel.add(btnApply);
         
         JButton btnReset = new JButton("Reset");
         btnReset.setEnabled(false);
@@ -411,7 +413,7 @@ public class JobPanelDefinitionPanel extends JPanel implements PropertyChangeLis
             }
             
         });
-        panel.add(btnReset);
+        jPanel.add(btnReset);
                 
         addPropertyChangeListener("dirty", new PropertyChangeListener( ) {
 
@@ -428,6 +430,7 @@ public class JobPanelDefinitionPanel extends JPanel implements PropertyChangeLis
         originalPanel = panel;
         if (panel != null) {
             Panel newPanel = new Panel(panel);
+            Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", newPanel.hashCode(), newPanel.getDefinedBy().hashCode()));
             newPanel.addPropertyChangeListener(this);
             rootPanelLocation.setSide(Side.Top);
             rootPanelLocation.setPanel(newPanel);

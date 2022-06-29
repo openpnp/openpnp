@@ -51,7 +51,7 @@ import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
-import org.openpnp.gui.tablemodel.BoardPlacementsTableModel;
+import org.openpnp.gui.tablemodel.FiducialLocatablePlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
@@ -73,8 +73,8 @@ import io.github.classgraph.ScanResult;
 @SuppressWarnings("serial")
 public class BoardPlacementsPanel extends JPanel {
     private JTable table;
-    private BoardPlacementsTableModel tableModel;
-    private TableRowSorter<BoardPlacementsTableModel> tableSorter;
+    private FiducialLocatablePlacementsTableModel tableModel;
+    private TableRowSorter<FiducialLocatablePlacementsTableModel> tableSorter;
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
     private BoardsPanel boardsPanel;
@@ -111,7 +111,7 @@ public class BoardPlacementsPanel extends JPanel {
         JComboBox<ErrorHandling> errorHandlingComboBox = new JComboBox<>(ErrorHandling.values());
         
         setLayout(new BorderLayout(0, 0));
-        tableModel = new BoardPlacementsTableModel();
+        tableModel = new FiducialLocatablePlacementsTableModel();
         tableSorter = new TableRowSorter<>(tableModel);
         
         table = new AutoSelectTextTable(tableModel);
@@ -326,10 +326,10 @@ public class BoardPlacementsPanel extends JPanel {
     }
     
     private void updateRowFilter() {
-        List<RowFilter<BoardPlacementsTableModel, Integer>> filters = new ArrayList<>();
+        List<RowFilter<FiducialLocatablePlacementsTableModel, Integer>> filters = new ArrayList<>();
         
         try {
-            RowFilter<BoardPlacementsTableModel, Integer> searchFilter = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
+            RowFilter<FiducialLocatablePlacementsTableModel, Integer> searchFilter = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
             filters.add(searchFilter);
         }
         catch (PatternSyntaxException e) {
@@ -341,7 +341,7 @@ public class BoardPlacementsPanel extends JPanel {
     
     public void setBoard(Board board) {
         this.board = board;
-        tableModel.setBoard(board);
+        tableModel.setFiducialLocatable(board);
         importAction.setEnabled(board != null);
         updateRowFilter();
     }

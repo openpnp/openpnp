@@ -344,4 +344,11 @@ public class Length {
     public boolean isInitialized() {
         return getValue() != 0.0;
     }
+
+    /**
+     * @return the absolute value of the length
+     */
+    public Length abs() {
+        return new Length(Math.abs(value), units);
+    }
 }

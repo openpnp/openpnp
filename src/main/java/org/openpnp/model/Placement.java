@@ -19,7 +19,10 @@
 
 package org.openpnp.model;
 
+import java.beans.PropertyChangeEvent;
+
 import org.openpnp.model.Board.Side;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Version;
@@ -98,6 +101,7 @@ public class Placement extends AbstractLocatable implements Identifiable {
         this.side = placement.side;
         this.type = placement.type;
         this.version = placement.version;
+        this.definedBy = placement.definedBy;
     }
     
     public Placement(String id) {
@@ -203,5 +207,11 @@ public class Placement extends AbstractLocatable implements Identifiable {
     public String toString() {
         return String.format("id %s, location %s, side %s, part %s, type %s", id, getLocation(), side,
                 part, type);
+    }
+    
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        Logger.trace(String.format("PropertyChangeEvent handled by Placement @%08x = %s", this.hashCode(), evt));
+        super.propertyChange(evt);
     }
 }

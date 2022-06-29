@@ -250,8 +250,12 @@ public class JobPanel extends JPanel {
                             multiSelectionActionGroup.setEnabled(false);
                             singleSelectionActionGroup.setEnabled(true);
                             jobPlacementsPanel.setFiducialLocatableLocation(selections.get(0));
+                            if (selections.get(0).getParent() != job.getRootPanelLocation()) {
+                                Configuration.get().getBus()
+                                .post(new FiducialLocatableLocationSelectedEvent((FiducialLocatableLocation) selections.get(0).getParent().getDefinedBy(), JobPanel.this));
+                            }
                             Configuration.get().getBus()
-                            .post(new FiducialLocatableLocationSelectedEvent(selections.get(0), JobPanel.this));
+                            .post(new FiducialLocatableLocationSelectedEvent((FiducialLocatableLocation) selections.get(0).getDefinedBy(), JobPanel.this));
                             Configuration.get().getBus()
                             .post(new PlacementSelectedEvent(null, selections.get(0), JobPanel.this));
                         }

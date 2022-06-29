@@ -5,17 +5,15 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.commons.beanutils.BeanUtils;
+import org.openpnp.spi.Definable;
 import org.openpnp.util.IdentifiableList;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
-public class FiducialLocatable extends AbstractModelObject implements PropertyChangeListener {
+public class FiducialLocatable extends AbstractModelObject implements Definable, PropertyChangeListener {
     
     @Attribute(required = false)
     private String name;
@@ -26,7 +24,7 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
     @ElementList(required = false)
     protected IdentifiableList<Placement> placements = new IdentifiableList<>();
 
-    protected transient FiducialLocatable definedBy;
+    protected transient Definable definedBy;
     protected transient File file;
     
     protected transient boolean dirty;
@@ -45,8 +43,7 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
         }
         file = fiducialLocatable.file;
         dirty = fiducialLocatable.dirty;
-        definedBy = fiducialLocatable.definedBy;
-        fiducialLocatable.addPropertyChangeListener(this);
+        setDefinedBy(fiducialLocatable.definedBy);
     }
     
     public void setTo(FiducialLocatable fiducialLocatable) {
@@ -58,9 +55,7 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
         }
         file = fiducialLocatable.file;
         dirty = fiducialLocatable.dirty;
-        definedBy = fiducialLocatable.definedBy;
-        fiducialLocatable.removePropertyChangeListener(this);
-        fiducialLocatable.addPropertyChangeListener(this);
+        setDefinedBy(fiducialLocatable.definedBy);
     }
     
     public String getName() {
@@ -84,7 +79,6 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
     }
 
     public IdentifiableList<Placement> getPlacements() {
-//        return Collections.unmodifiableList(placements);
         return new IdentifiableList<>(placements);
     }
 
@@ -138,13 +132,36 @@ public class FiducialLocatable extends AbstractModelObject implements PropertyCh
     }
 
     @Override
+    public Definable getDefinedBy() {
+        return definedBy;
+    }
+
+    @Override
+    public void setDefinedBy(Definable definedBy) {
+        Definable oldValue = this.definedBy;
+        this.definedBy = definedBy;
+        firePropertyChange("definedBy", oldValue, definedBy);
+        if (oldValue != null) {
+            ((FiducialLocatable) oldValue).removePropertyChangeListener(this);
+        }
+        if (definedBy != null) {
+            ((FiducialLocatable) definedBy).addPropertyChangeListener(this);
+        }
+    }
+
+    @Override
+    public boolean isDefinedBy(Definable definedBy) {
+        return this.definedBy == definedBy;
+    }
+
+    @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        Logger.trace(String.format("PropertyChangeEvent handled by @%08x = %s", this.hashCode(), evt));
+//        Logger.trace(String.format("PropertyChangeEvent handled by FiducialLocatable @%08x = %s", this.hashCode(), evt));
         if (evt.getSource() != FiducialLocatable.this || evt.getPropertyName() != "dirty") {
             dirty = true;
             if (evt.getSource() == definedBy) {
                 try {
-                    Logger.trace("setting property: " + evt.getPropertyName() + " = " + evt.getNewValue());
+//                    Logger.trace("setting property: " + evt.getPropertyName() + " = " + evt.getNewValue());
                     BeanUtils.setProperty(this, evt.getPropertyName(), evt.getNewValue());
                 }
                 catch (IllegalAccessException e) {

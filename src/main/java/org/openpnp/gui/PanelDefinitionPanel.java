@@ -55,6 +55,7 @@ import org.openpnp.Translations;
 import org.openpnp.events.FiducialLocatableLocationSelectedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
+import org.openpnp.gui.panelization.DlgChildFiducialSelector;
 import org.openpnp.gui.panelization.DlgPanelArrayBuilder;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActionGroup;
@@ -69,6 +70,7 @@ import org.openpnp.gui.tablemodel.FiducialLocatableLocationsTableModel;
 import org.openpnp.gui.tablemodel.PanelFiducialsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
+import org.openpnp.model.AbstractLocatable;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -259,10 +261,10 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                     // single select
                     childrenMultiSelectionActionGroup.setEnabled(false);
                     childrenSingleSelectionActionGroup.setEnabled(selections != null);
-//                    Configuration.get().getBus()
-//                        .post(new FiducialLocatableLocationSelectedEvent(selections.get(0), PanelDefinitionPanel.this));
-//                    Configuration.get().getBus()
-//                        .post(new PlacementSelectedEvent(null, selections.get(0), PanelDefinitionPanel.this));
+                    Configuration.get().getBus()
+                        .post(new FiducialLocatableLocationSelectedEvent(selections.get(0), PanelDefinitionPanel.this));
+                    Configuration.get().getBus()
+                        .post(new PlacementSelectedEvent(null, selections.get(0), PanelDefinitionPanel.this));
                 }
                 else {
                     // no select
@@ -338,7 +340,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         toolBarFiducials.add(btnRemoveFiducial);
         
         JButton btnUseChildFiducial = new JButton(useChildFiducialAction);
-        btnUseChildFiducial.setToolTipText("Use a child's fiducial as this panel's fiducial.");
+        btnUseChildFiducial.setToolTipText("Copy the selected child's fiducial(s) to use as this panel's fiducial(s).");
         btnUseChildFiducial.setHideActionText(true);
         toolBarFiducials.add(btnUseChildFiducial);
         
@@ -455,6 +457,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
     
     public void setPanel(Panel panel) {
         originalPanel = panel;
+        boolean oldDirty = panel.isDirty();
         if (panel != null) {
             Panel newPanel = panel; //new Panel(panel);
             newPanel.addPropertyChangeListener(this);
@@ -474,8 +477,10 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
                 child.setParent(rootPanelLocation);
                 child.addPropertyChangeListener(this);
             }
+            newPanel.setDirty(oldDirty);
             childrenTableModel.setFiducialLocatableLocations(rootPanelLocation.getChildren());
             fiducialTableModel.setPanel(newPanel);
+//            rootPanelLocation.dump("");
         }
         else {
             rootPanelLocation.setPanel(null);
@@ -593,6 +598,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getFiducialSelections()) {
                 rootPanelLocation.getPanel().removePlacement(placement);
+                ((AbstractLocatable) placement.getDefinedBy()).removePropertyChangeListener(placement);
             }
             fiducialTableModel.fireTableDataChanged();
         }
@@ -602,29 +608,13 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         {
             putValue(SMALL_ICON, Icons.autoPanelizeFidCheck);
             putValue(NAME, "Use Child Fiducial");
-            putValue(SHORT_DESCRIPTION, "Use a child's fiducial as a panel fiducial.");
+            putValue(SHORT_DESCRIPTION, "Copy the selected child's fiducial(s) to use as this panel's fiducial(s).");
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            FiducialLocatableLocation child = getChildrenSelection();
-            Side childLocalSide = child.getLocalSide();
-            Side childGlobalSide = child.getSide();
-            List<Placement> childPlacements = child.getFiducialLocatable().getPlacements();
-            IdentifiableList<Placement> fiducials = rootPanelLocation.getPanel().getPlacements();
-            for (Placement placement : childPlacements) {
-                if (placement.getType() == Type.Fiducial) {
-                    Logger.trace("placement = " + placement);
-                    Placement newFiducial = new Placement(fiducials.createId(placement.getId() + "-"));
-                    newFiducial.setType(Type.Fiducial);
-                    newFiducial.setEnabled(true);
-                    newFiducial.setPart(placement.getPart());
-                    newFiducial.setLocation(Utils2D.calculateBoardPlacementLocation(child, placement));
-                    newFiducial.setSide(placement.getSide().flip(childGlobalSide == Side.Bottom));
-                    Logger.trace("newFiducial = " + newFiducial);
-                    rootPanelLocation.getPanel().addPlacement(newFiducial);
-                }
-            }
+            DlgChildFiducialSelector dialog = new DlgChildFiducialSelector(rootPanelLocation, getChildrenSelection());
+            dialog.setVisible(true);
             fiducialTableModel.fireTableDataChanged();
         }
     };
@@ -832,6 +822,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         public void actionPerformed(ActionEvent arg0) {
             for (FiducialLocatableLocation child : getChildrenSelections()) {
                 rootPanelLocation.getPanel().removeChild(child);
+                ((AbstractLocatable) child.getDefinedBy()).removePropertyChangeListener(child);
                 child.removePropertyChangeListener(PanelDefinitionPanel.this);
             }
             childrenTableModel.fireTableDataChanged();
@@ -850,12 +841,6 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             FiducialLocatableLocation child = getChildrenSelection();
             DlgPanelArrayBuilder dlg = new DlgPanelArrayBuilder(rootPanelLocation, child);
             dlg.setVisible(true);
-//            for (Placement placement : getSelections()) {
-//                boardLocation.getBoard().removePlacement(placement);
-//            }
-//            tableModel.fireTableDataChanged();
-//            updateActivePlacements();
-//            setDirty(true);
         }
     };
 
@@ -999,8 +984,10 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             fiducialTable.getSelectionModel().clearSelection();
             return;
         }
+        Logger.trace(String.format("Attempting to select Placement @%08x defined by @%08x", placement.hashCode(), placement.getDefinedBy().hashCode()));
         for (int i = 0; i < fiducialTableModel.getRowCount(); i++) {
-            if (fiducialTableModel.getRowObjectAt(i) == placement) {
+            Logger.trace(String.format("...found Placement @%08x defined by @%08x", fiducialTableModel.getRowObjectAt(i).hashCode(), fiducialTableModel.getRowObjectAt(i).getDefinedBy().hashCode()));
+            if (fiducialTableModel.getRowObjectAt(i) == placement.getDefinedBy()) {
                 int index = fiducialTable.convertRowIndexToView(i);
                 fiducialTable.getSelectionModel().setSelectionInterval(index, index);
                 fiducialTable.scrollRectToVisible(new Rectangle(fiducialTable.getCellRect(index, 0, true)));
@@ -1014,8 +1001,10 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             childrenTable.getSelectionModel().clearSelection();
             return;
         }
+        Logger.trace(String.format("Attempting to select %s @%08x defined by @%08x", child.getClass().getSimpleName(), child.hashCode(), child.getDefinedBy().hashCode()));
         for (int i = 0; i < childrenTableModel.getRowCount(); i++) {
-            if (childrenTableModel.getRowObjectAt(i) == child) {
+            Logger.trace(String.format("...found %s @%08x defined by @%08x", childrenTableModel.getRowObjectAt(i).getClass().getSimpleName(), childrenTableModel.getRowObjectAt(i).hashCode(), ((AbstractLocatable) childrenTableModel.getRowObjectAt(i)).getDefinedBy().hashCode()));
+            if (childrenTableModel.getRowObjectAt(i) == child.getDefinedBy()) {
                 int index = childrenTable.convertRowIndexToView(i);
                 childrenTable.getSelectionModel().setSelectionInterval(index, index);
                 childrenTable.scrollRectToVisible(new Rectangle(childrenTable.getCellRect(index, 0, true)));

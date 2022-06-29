@@ -29,7 +29,10 @@ import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
+import org.openpnp.util.Utils2D;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.FiducialLocatable;
+import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
@@ -37,8 +40,8 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 
 @SuppressWarnings("serial")
-public class BoardPlacementsTableModel extends AbstractObjectTableModel {
-    private Board board = null;
+public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableModel {
+    private FiducialLocatable fiducialLocatable = null;
 
     private String[] columnNames =
             new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Error Handling", "Comments"};
@@ -48,27 +51,36 @@ public class BoardPlacementsTableModel extends AbstractObjectTableModel {
             LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
             ErrorHandling.class, String.class};
 
+    private boolean localReferenceFrame = true;
+
+    private FiducialLocatableLocation parent = null;
+
 //    public BoardPlacementsTableModel(Board board) {
 //        this.board = board;
 //    }
     
-    public Board getBoard() {
-        return board;
+    public FiducialLocatable getFiducialLocatable() {
+        return fiducialLocatable;
     }
 
-    public void setBoard(Board board) {
-        this.board = board;
+    public void setFiducialLocatable(FiducialLocatable fiducialLocatable) {
+        this.fiducialLocatable = fiducialLocatable;
+        fireTableDataChanged();
+    }
+    
+    public void setParentLocation(FiducialLocatableLocation parent) {
+        this.parent = parent;
         fireTableDataChanged();
     }
 
     @Override
     public Placement getRowObjectAt(int index) {
-        return board.getPlacements().get(index);
+        return fiducialLocatable.getPlacements().get(index);
     }
 
     @Override
     public int indexOf(Object object) {
-        return board.getPlacements().indexOf(object);
+        return fiducialLocatable.getPlacements().indexOf(object);
     }
 
     @Override
@@ -81,7 +93,7 @@ public class BoardPlacementsTableModel extends AbstractObjectTableModel {
     }
 
     public int getRowCount() {
-        return (board == null) ? 0 : board.getPlacements().size();
+        return (fiducialLocatable == null) ? 0 : fiducialLocatable.getPlacements().size();
     }
 
     @Override
@@ -97,7 +109,7 @@ public class BoardPlacementsTableModel extends AbstractObjectTableModel {
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            Placement placement = board.getPlacements().get(rowIndex);
+            Placement placement = fiducialLocatable.getPlacements().get(rowIndex);
             if (columnIndex == 0) {
                 placement.setEnabled((Boolean) aValue);
             }
@@ -154,8 +166,17 @@ public class BoardPlacementsTableModel extends AbstractObjectTableModel {
     }
 
     public Object getValueAt(int row, int col) {
-        Placement placement = board.getPlacements().get(row);
-        Location loc = placement.getLocation();
+        Placement placement = fiducialLocatable.getPlacements().get(row);
+        Location loc;
+        Side side;
+        if (localReferenceFrame || parent == null) {
+            loc = placement.getLocation();
+            side = placement.getSide();
+        }
+        else {
+            loc = Utils2D.calculateBoardPlacementLocation(parent, placement);
+            side = placement.getSide().flip(parent.getSide() == Side.Bottom);
+        }
         switch (col) {
 			case 0:
 				return placement.isEnabled();
@@ -164,7 +185,7 @@ public class BoardPlacementsTableModel extends AbstractObjectTableModel {
             case 2:
                 return placement.getPart();
             case 3:
-                return placement.getSide();
+                return side;
             case 4:
                 return new LengthCellValue(loc.getLengthX(), true);
             case 5:
@@ -180,5 +201,10 @@ public class BoardPlacementsTableModel extends AbstractObjectTableModel {
             default:
                 return null;
         }
+    }
+
+    public void setLocalReferenceFrame(boolean b) {
+        localReferenceFrame = b;
+        fireTableDataChanged();
     }
 }

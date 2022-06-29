@@ -222,11 +222,12 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     
     @Override
     public String toString() {
-        return String.format("Panel: file %s, dims: %sx%s, fiducial count: %d, children: %d", file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size(), children.size());
+        return String.format("Panel @%08x defined by @%08x: file %s, dims: %sx%s, fiducial count: %d, children: %d", hashCode(), definedBy.hashCode(), file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size(), children.size());
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+//        Logger.trace(String.format("PropertyChangeEvent handled by Panel @%08x = %s", this.hashCode(), evt));
         super.propertyChange(evt);
     }
 

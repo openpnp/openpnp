@@ -2,9 +2,12 @@ package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.beans.PropertyChangeEvent;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.util.Utils2D;
@@ -65,6 +68,7 @@ public class FiducialLocatableLocation extends AbstractLocatable {
             this.localToParentTransform = null;
         }
         this.placed = new HashMap<>(fiducialLocatableLocation.placed);
+        setDefinedBy(fiducialLocatableLocation.getDefinedBy());
     }
     
     public FiducialLocatableLocation(FiducialLocatable fiducialLocatable) {
@@ -295,4 +299,27 @@ public class FiducialLocatableLocation extends AbstractLocatable {
         firePropertyChange("placed", null, this.placed);
     }
     
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+//        Logger.trace(String.format("PropertyChangeEvent handled by FiducialLocatable @%08x = %s", this.hashCode(), evt));
+        if (evt.getSource() != FiducialLocatableLocation.this /*|| evt.getPropertyName() != "dirty"*/) {
+//            dirty = true;
+            if (evt.getSource() == definedBy) {
+                try {
+//                    Logger.trace("setting property: " + evt.getPropertyName() + " = " + evt.getNewValue());
+                    BeanUtils.setProperty(this, evt.getPropertyName(), evt.getNewValue());
+                }
+                catch (IllegalAccessException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                catch (InvocationTargetException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+    }
+
 }
