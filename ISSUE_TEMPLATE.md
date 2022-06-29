@@ -1,4 +1,7 @@
 # Read This First
+Issues must only be opened once they are confirmed.
+Please [visit the discussion group](https://groups.google.com/group/openpnp) first, so bugs or missing features can be separated from other problems.
+
 To submit an issue for OpenPnP you must use this template or it will be deleted. Please fill out either the Problem Report or Feature Request section below and delete the other section.
 
 -----------------------------------------------------------------------

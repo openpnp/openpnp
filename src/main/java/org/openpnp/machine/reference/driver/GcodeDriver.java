@@ -229,6 +229,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     @Attribute(required = false)
     protected int connectWaitTimeMilliseconds = 3000;
 
+    @Attribute(required = false)
+    protected int dollarWaitTimeMilliseconds = 50;
+
     @Deprecated
     @Attribute(required = false)
     protected boolean visualHomingEnabled = true;
@@ -1076,6 +1079,9 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
             Configuration.get().getMachine().setEnabled(false);
         }
         waitForConfirmation(command, timeout);
+        if (command.startsWith("$")) {
+            Thread.sleep(dollarWaitTimeMilliseconds);
+        }
     }
 
     protected Line waitForConfirmation(String command, long timeout)
@@ -1445,6 +1451,14 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
 
     public void setConnectWaitTimeMilliseconds(int connectWaitTimeMilliseconds) {
         this.connectWaitTimeMilliseconds = connectWaitTimeMilliseconds;
+    }
+
+    public int getDollarWaitTimeMilliseconds() {
+        return dollarWaitTimeMilliseconds;
+    }
+
+    public void setDollarWaitTimeMilliseconds(int dollarWaitTimeMilliseconds) {
+        this.dollarWaitTimeMilliseconds = dollarWaitTimeMilliseconds;
     }
 
     public boolean isBackslashEscapedCharactersEnabled() {
