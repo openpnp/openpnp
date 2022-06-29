@@ -92,6 +92,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("max(50dlu;default)"),}));
         
         JLabel lblMotionControlType = new JLabel("Motion Control Type");
@@ -129,52 +131,60 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         settingsPanel.add(connectWaitTimeTf, "4, 6, fill, default");
         connectWaitTimeTf.setColumns(10);
         
+        JLabel lblNewLabel = new JLabel("$-Command Wait Time [ms]");
+        lblNewLabel.setToolTipText("<html>\n<p>Whenever a command starts with a <strong>$ </strong> sign, add this wait time before<br/>\nsending the next command. The TinyG controller is known to require this<br/>\npause, so it can write settings to the EEPROM uninterrupted. </p>\n<br/>\n<p>Note: in an GcodeAsyncDriver without Confirmation Flow Control, <br/>\nthis is only guaranteed to work, if the $-commands are sent to an idle  <br/>\ncontroller. This is the case if $-commands are sent as the first thing in <br/>\nthe <strong>CONNECT_COMMAND</strong>.</p> \n</html>");
+        settingsPanel.add(lblNewLabel, "2, 8, right, default");
+        
+        dollarWaitTimeMilliseconds = new JTextField();
+        settingsPanel.add(dollarWaitTimeMilliseconds, "4, 8, fill, default");
+        dollarWaitTimeMilliseconds.setColumns(10);
+        
         JLabel lblLetterVariables = new JLabel("Letter Variables?");
         lblLetterVariables.setToolTipText("Axis variables in Gcode are named using the Axis Letters rather than the Axis Type.");
-        settingsPanel.add(lblLetterVariables, "2, 8, right, default");
+        settingsPanel.add(lblLetterVariables, "2, 10, right, default");
         
         letterVariables = new JCheckBox("");
-        settingsPanel.add(letterVariables, "4, 8");
+        settingsPanel.add(letterVariables, "4, 10");
         
         JLabel lblAllowPremoveCommands = new JLabel("Allow Pre-Move Commands?");
-        settingsPanel.add(lblAllowPremoveCommands, "6, 8, right, default");
+        settingsPanel.add(lblAllowPremoveCommands, "6, 10, right, default");
         
         supportingPreMove = new JCheckBox("");
-        settingsPanel.add(supportingPreMove, "8, 8");
+        settingsPanel.add(supportingPreMove, "8, 10");
         
         JLabel lblRemoveComments = new JLabel("Remove Comments?");
         lblRemoveComments.setToolTipText("<html>\r\n<p>Remove comments from G-code to speed up transmissions <br/>\r\nto the controller.</p>\r\n<p>Note, this only works with G-code syntax style.</p>\r\n<p>Example:</p>\r\n<p><code style=\"background-color:#DDDDDD\">G1 <span style=\"color:#007700\">(move to)</span> X100 Y20 <span style=\"color:#007700\">; move to the given X, Y</span><br/></code></p>\r\n<p>is sent as:</p>\r\n<p><code style=\"background-color:#DDDDDD\">G1 X100 Y20 </code></p>\r\n</html>");
-        settingsPanel.add(lblRemoveComments, "2, 10, right, default");
+        settingsPanel.add(lblRemoveComments, "2, 12, right, default");
         
         removeComments = new JCheckBox("");
         removeComments.setToolTipText("");
-        settingsPanel.add(removeComments, "4, 10");
+        settingsPanel.add(removeComments, "4, 12");
         
         JLabel lblCompressGcode = new JLabel("Compress Gcode?");
         lblCompressGcode.setToolTipText("<html>\r\n<p>Remove unneeded white-space and trailing decimal digits from Gcode<br/>\r\nto speed up transmissions to the controller.</p>\r\n<p>Note, this only works with regular Gcode syntax.</p>\r\n<p>Example:</p>\r\n<p><code style=\"background-color:#DDDDDD\">G1&nbsp;&nbsp;X100.0000     Y20.1000&nbsp;&nbsp;&nbsp;&nbsp;</code></p>\r\n<p>is compressed into:</p>\r\n<p><code style=\"background-color:#DDDDDD\">G1X100Y20.1</code></p>\r\n</html>");
-        settingsPanel.add(lblCompressGcode, "6, 10, right, default");
+        settingsPanel.add(lblCompressGcode, "6, 12, right, default");
         
         compressGcode = new JCheckBox("");
-        settingsPanel.add(compressGcode, "8, 10");
+        settingsPanel.add(compressGcode, "8, 12");
         
         JLabel lblBackslashEscapedCharacters = new JLabel("Backslash Escaped Characters?");
         lblBackslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(lblBackslashEscapedCharacters, "2, 12, right, default");
+        settingsPanel.add(lblBackslashEscapedCharacters, "2, 14, right, default");
         
         backslashEscapedCharacters = new JCheckBox("");
         backslashEscapedCharacters.setToolTipText("Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                 + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                 + "feed, \\r for carriage return, and \\f for form feed.");
-        settingsPanel.add(backslashEscapedCharacters, "4, 12");
+        settingsPanel.add(backslashEscapedCharacters, "4, 14");
         
         JLabel lblLogGcode = new JLabel("Log Gcode?");
         lblLogGcode.setToolTipText("Log the generated Gcode into a separate file in the .openpnp2 driver subdirectory.");
-        settingsPanel.add(lblLogGcode, "6, 12, right, default");
+        settingsPanel.add(lblLogGcode, "6, 14, right, default");
         
         loggingGcode = new JCheckBox("");
-        settingsPanel.add(loggingGcode, "8, 12");
+        settingsPanel.add(loggingGcode, "8, 14");
         
         JButton btnDetectFirmware = new JButton("Detect Firmware");
         btnDetectFirmware.addActionListener(new ActionListener() {
@@ -201,8 +211,8 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         });
         
         JLabel label_1 = new JLabel(" ");
-        settingsPanel.add(label_1, "10, 14");
-        settingsPanel.add(btnDetectFirmware, "2, 16");
+        settingsPanel.add(label_1, "10, 16");
+        settingsPanel.add(btnDetectFirmware, "2, 18");
         
         firmwareConfiguration = new JTextArea();
         firmwareConfiguration.setBackground(UIManager.getColor("controlLtHighlight"));
@@ -211,10 +221,10 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         firmwareConfiguration.setLineWrap(true);
         firmwareConfiguration.setEditable(false);
         firmwareConfiguration.setFont(new Font("Dialog", Font.PLAIN, 11));
-        settingsPanel.add(firmwareConfiguration, "4, 16, 7, 3, fill, fill");
+        settingsPanel.add(firmwareConfiguration, "4, 18, 7, 3, fill, fill");
         
         JLabel label = new JLabel(" ");
-        settingsPanel.add(label, "2, 18");
+        settingsPanel.add(label, "2, 20");
     }
 
     @Override
@@ -226,6 +236,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         addWrappedBinding(driver, "maxFeedRate", maxFeedRateTf, "text", intConverter);
         addWrappedBinding(driver, "timeoutMilliseconds", commandTimeoutTf, "text", intConverter);
         addWrappedBinding(driver, "connectWaitTimeMilliseconds", connectWaitTimeTf, "text", intConverter);
+        addWrappedBinding(driver, "dollarWaitTimeMilliseconds", dollarWaitTimeMilliseconds, "text", intConverter);
         addWrappedBinding(driver, "removeComments", removeComments, "selected");
         addWrappedBinding(driver, "compressGcode", compressGcode, "selected");
         addWrappedBinding(driver, "backslashEscapedCharactersEnabled", backslashEscapedCharacters, "selected");
@@ -381,6 +392,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
     private JCheckBox loggingGcode;
 
     private JTextArea firmwareConfiguration;
+    private JTextField dollarWaitTimeMilliseconds;
 
     static class HeadMountableItem {
         private HeadMountable hm;
