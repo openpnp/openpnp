@@ -99,6 +99,30 @@ Use the `margin_length_begin` parameter to set aside a margin for OCR Labels and
 
 ![grafik](https://user-images.githubusercontent.com/9963310/122680832-9c079c00-d1f1-11eb-8cc3-196d55e85192.png)
 
+There are many more parameters available. Open the [`BlindsFeeder-Library.scad`](https://github.com/openpnp/openpnp/blob/test/src/develop/resources/org/openpnp/machine/reference/feeder/BlindsFeeder-Library.scad#L112) file to look them up, then copy them into your `BlindsFeeder-3DPrinting.scad` file at the call. For example, if you want to change the `floor_thickness`, add it like so:
+
+```java
+// Create the feeder array with these tape definitions.
+// Note the BlindsFeeder has a myriad of parameters you can tweak, the ones used here are just the most important. 
+// See the Library file to learn more. 
+rotate([0, 0, 180]) BlindsFeeder(
+    // Tape length from feeder edge to edge (not including the margin), usually multiples of 4mm.
+    // Other values are supported if you manually adjust the default 2mm edge distance in the OpenPNP feeder.
+    tape_length=100,
+    
+    // The feeder floor thickness. This feeder is based on the idea that it is taped/glued to a sturdy 
+    // surface. No need to be very thick.
+    floor_thickness=layer_height*2,
+
+    // Want to print the label?
+    label=true,`
+
+    // For OCR, add a margin at the begin of the tape.
+    margin_length_begin=20,
+    
+    . . . 
+); 
+```
 
 ___
 
