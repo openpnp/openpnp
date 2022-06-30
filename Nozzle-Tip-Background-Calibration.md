@@ -4,11 +4,13 @@ Background Calibration analyzes the empty nozzle tip and background in the botto
 
 ## Calibration Operating Principle
 
-Background Calibration reuses the images that are already captured by the [[Nozzle Tip Calibration|Nozzle-Tip-Calibration-Setup]], so no extra machine time and motion is needed to obtain them. It analyzes these background images for the **Key Color** (Chroma Key) of the Juki (or similar) nozzle tip. Any dominant, vivid color is automatically detected and a likely bounding box computed in the [HSV Color Model](https://en.wikipedia.org/wiki/HSL_and_HSV). 
+Background Calibration reuses the images that are already captured by the [[Nozzle Tip Calibration|Nozzle-Tip-Calibration-Setup]], so no extra machine time and motion is needed to obtain them. 
 
-Furthermore, a cutoff brightness is determined where the non-color-keyed parts of the background must all be darker. This indicates the minimum brightness applicable typically in a `Threshold` stage. 
+For Juki (or similar) nozzle tips, it analyzes the background images for the **Key Color** (Chroma Key). Any dominant, vivid color is automatically detected and a likely bounding box computed in the [HSV Color Model](https://en.wikipedia.org/wiki/HSL_and_HSV). This step is optional.
 
-The background calibration automatically blots out a round center area in the calibration image, where the nozzle tip was detected. This will eliminate any shiny elements that are typically present on the tip (needle, worn-off point of a tip etc.). OpenPnP assumes this center area to be always covered by the picked part, i.e. there is no need to include its color in the background calibration. Furthermore, any shiny spots in there are not treated as a problem (see the [Trouble Shooting](#trouble-shooting) section). The blotted-out area has a size of **Min. Part Diameter** - 2 x **Max. Pick Tolerance** (see the [Nozzle Tip Configuration for bottom vision](https://github.com/openpnp/openpnp/wiki/DetectRectlinearSymmetry#nozzle-tip-configuration)).
+For all nozzle types, a cutoff brightness is determined where the non-color-keyed parts of the background must all be darker. When we later detect the bright contacts of parts in bottom vision, this gives us the minimal brightness cutoff threshold (typically applied in a `Threshold` stage). 
+
+The background calibration automatically ignores a round area in the calibration image, where the nozzle tip was detected. This will eliminate any shiny elements that are typically present on the tip (metallic needle, worn-off tip, etc.). OpenPnP assumes this center area to be always covered by the picked part, i.e. there is no need to include its color in the background calibration. Furthermore, any shiny spots in there are not treated as a problem (see the [Trouble Shooting](#trouble-shooting) section). The blotted-out area has a size of **Min. Part Diameter** - 2 x **Max. Pick Tolerance** (see the [Nozzle Tip Configuration for bottom vision](https://github.com/openpnp/openpnp/wiki/DetectRectlinearSymmetry#nozzle-tip-configuration)).
 
 The resulting calibration is also validated, and if the detected background quality is not good, diagnostic guidance and visual feed-back is provided for users to remedy the situation (see section [Trouble Shooting](#trouble-shooting) below).
 
