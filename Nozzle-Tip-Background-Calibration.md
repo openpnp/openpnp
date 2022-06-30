@@ -4,7 +4,7 @@ Background Calibration analyzes the empty nozzle tip and background in the botto
 
 ## Calibration Operating Principle
 
-The new Background Calibration reuses the images that are already captured by the [[Nozzle Tip Calibration|Nozzle-Tip-Calibration-Setup]], so no extra machine time and motion is needed to obtain them. It analyzes these background images for the **Key Color** (Chroma Key) of the Juki (or similar) nozzle tip. Any dominant, vivid color is automatically detected and a likely bounding box computed in the [HSV Color Model](https://en.wikipedia.org/wiki/HSL_and_HSV). 
+Background Calibration reuses the images that are already captured by the [[Nozzle Tip Calibration|Nozzle-Tip-Calibration-Setup]], so no extra machine time and motion is needed to obtain them. It analyzes these background images for the **Key Color** (Chroma Key) of the Juki (or similar) nozzle tip. Any dominant, vivid color is automatically detected and a likely bounding box computed in the [HSV Color Model](https://en.wikipedia.org/wiki/HSL_and_HSV). 
 
 Furthermore, a cutoff brightness is determined where the non-color-keyed parts of the background must all be darker. This indicates the minimum brightness applicable typically in a `Threshold` stage. 
 
