@@ -38,9 +38,7 @@ Firmware [version 3.3beta](https://github.com/Duet3D/RepRapFirmware/wiki/Changel
 
 Refer to the Duet3D Wiki on how to upgrade:
 
-* [Duet 2 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Installing_and_Updating_Firmware)
-
-* [Duet 3 Installing and Updating Firmware](https://duet3d.dozuki.com/Wiki/Getting_Started_With_Duet_3#Section_Updating_Duet_3_main_board_firmware)
+* [Duet 2/3 Installing and Updating Firmware](https://docs.duet3d.com/en/User_manual/RepRapFirmware/Updating_firmware)
 
 Configuration
 
