@@ -1,7 +1,7 @@
 ## The OpenPnP Coordinate System
-OpenPnP conceptually uses a [right-handed Cartesian Coordinate System](https://en.wikipedia.org/wiki/Cartesian_coordinate_system). Assuming you stand in front of the machine, the X axis points to the right, Y away from you and Z up. The rotational axis C rotates around Z. When looking down on the machine table, this is counter-clockwise.
+OpenPnP conceptually uses a [right-handed Cartesian Coordinate System](https://en.wikipedia.org/wiki/Cartesian_coordinate_system). Assuming you stand in front of the machine, the X axis points to the right, Y away from you and Z up. The rotational axis C rotates around Z. When looking down on the machine table, this is counter-clockwise, 0° is where the X-axis points.
 
-![Axis Coordinate System](https://user-images.githubusercontent.com/9963310/95686141-663efc00-0bfc-11eb-8a7a-153ab472f871.png)
+![Axis Coordinate System](https://user-images.githubusercontent.com/9963310/176896745-72438578-023d-422e-bb19-d863a1cb5a26.png)
 
 ## A Word about Z Coordinates
 
