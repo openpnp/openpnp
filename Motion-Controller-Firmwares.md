@@ -42,7 +42,7 @@ Refer to the Duet3D Wiki on how to upgrade:
 
 Configuration
 
-* [Duet3D config.g Example](https://github.com/openpnp/openpnp/wiki/Duet3D-Example)
+* [[Duet3D Openpnp Example]]
 
 ## Smoothieware
 
