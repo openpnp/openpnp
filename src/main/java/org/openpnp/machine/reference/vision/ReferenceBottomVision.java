@@ -418,6 +418,8 @@ public class ReferenceBottomVision extends AbstractPartAlignment {
             partSize = bottomVisionSettings.getPartCheckSize(nozzle.getPart(), true);
         }
         // Set alignment parameters.
+        pipeline.setProperty("MinAreaRect.center", wantedLocation);
+        pipeline.setProperty("MinAreaRect.expectedAngle", wantedLocation.getRotation());
         pipeline.setProperty("DetectRectlinearSymmetry.center", wantedLocation);
         pipeline.setProperty("DetectRectlinearSymmetry.expectedAngle", wantedLocation.getRotation());
         // Set the background removal properties.
