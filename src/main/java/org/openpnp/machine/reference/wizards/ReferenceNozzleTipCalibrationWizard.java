@@ -554,7 +554,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         }
         else {
             // For real nozzle tips, the nozzle where it is currently attached to is well-defined.
-            refNozzle = nozzleTip.getNozzleAttachedTo();
+            refNozzle = nozzleTip.getNozzleWhereLoaded();
             if (refNozzle == null) {
                 throw new Exception("Please load the nozzle tip on a nozzle.");
             }
