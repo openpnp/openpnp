@@ -13,6 +13,8 @@ This page links to detailed instructions for some tasks around Computer Vision.
 
 * [[MaskHsv]] suppresses certain ranges of colors in the image. It is typically used for "green-screening" in bottom vision or for the [[BlindsFeeder]].
 
+* [[MinAreaRect]] finds the smallest area rotated rectangle around a subject.
+
 * [[ImageRead]] reads an image into the pipeline. It can be used as a template, or to simulate a captured image for testing.
 
 ## Using New Stock Pipelines
