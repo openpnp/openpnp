@@ -428,7 +428,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         tabbedPane.removeAll();
         if (selectedPackage != null) {
             tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(selectedPackage));
-            tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(selectedPackage)));
+            tabbedPane.add("Footprint", new JScrollPane(new PackageVisionPanel(selectedPackage)));
             tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(selectedPackage)));
             Machine machine = Configuration.get().getMachine();
             for (PartAlignment partAlignment : machine.getPartAlignments()) {

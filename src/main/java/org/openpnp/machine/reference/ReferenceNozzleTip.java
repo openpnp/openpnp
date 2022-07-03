@@ -511,7 +511,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         firePropertyChange("visionCalibrationTrigger", oldValue, visionCalibrationTrigger);
     }
 
-    public ReferenceNozzle getNozzleAttachedTo() {
+    @Override
+    public ReferenceNozzle getNozzleWhereLoaded() {
         for (Head head : Configuration.get().getMachine().getHeads()) {
             for (Nozzle nozzle : head.getNozzles()) {
                 if (nozzle instanceof ReferenceNozzle) {
@@ -715,7 +716,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
      */
     public Length getCalibrationOffsetZ() {
         Length offsetZ = null;
-        Nozzle nozzle = getNozzleAttachedTo();
+        Nozzle nozzle = getNozzleWhereLoaded();
         if (nozzle instanceof ContactProbeNozzle) {
             offsetZ = ((ContactProbeNozzle) nozzle).getCalibrationOffsetZ();
         }
@@ -1193,7 +1194,7 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
                 Mat templateMatOccupied = OpenCvUtils.toMat(templateOccupied);
                 try {
                     Location originalLocation = location;
-                    boolean shouldBeOccupied = (getNozzleAttachedTo() == null);
+                    boolean shouldBeOccupied = (getNozzleWhereLoaded() == null);
                     for (int pass = 0; pass < visionCalibrationMaxPasses; ++pass) {
                         BufferedImage cameraImage = camera.lightSettleAndCapture();
                         int x = (cameraImage.getWidth() - width) / 2;
