@@ -33,7 +33,7 @@ import org.simpleframework.xml.ElementList;
  * A Footprint is a group of SMD pads along with length unit information. Footprints can be rendered
  * to a Shape for easy display using 2D primitives.
  */
-public class Footprint {
+public class Footprint extends AbstractModelObject{
     @Attribute
     private LengthUnit units = LengthUnit.Millimeters;
 
@@ -45,6 +45,24 @@ public class Footprint {
 
     @Attribute(required = false)
     private double bodyHeight;
+
+    @Attribute(required = false)
+    private double outerDimension;
+
+    @Attribute(required = false)
+    private double innerDimension;
+
+    @Attribute(required = false)
+    private int padCount;
+
+    @Attribute(required = false)
+    private double padPitch;
+
+    @Attribute(required = false)
+    private double padAcross;
+
+    @Attribute(required = false)
+    private double padRoundness;
 
     public Shape getShape() {
         Path2D.Double shape = new Path2D.Double();
@@ -93,6 +111,10 @@ public class Footprint {
         pads.remove(pad);
     }
 
+    public void removeAllPads() {
+        pads = new ArrayList<>();
+    }
+
     public void addPad(Pad pad) {
         pads.add(pad);
     }
@@ -102,7 +124,9 @@ public class Footprint {
     }
 
     public void setBodyWidth(double bodyWidth) {
+        Object oldValue = this.bodyWidth;
         this.bodyWidth = bodyWidth;
+        firePropertyChange("bodyWidth", oldValue, bodyWidth);
     }
 
     public double getBodyHeight() {
@@ -110,7 +134,71 @@ public class Footprint {
     }
 
     public void setBodyHeight(double bodyHeight) {
+        Object oldValue = this.bodyHeight;
         this.bodyHeight = bodyHeight;
+        firePropertyChange("bodyHeight", oldValue, bodyHeight);
+    }
+
+
+
+    public double getOuterDimension() {
+        return outerDimension;
+    }
+
+    public void setOuterDimension(double outerDimension) {
+        Object oldValue = this.outerDimension;
+        this.outerDimension = outerDimension;
+        firePropertyChange("outerDimension", oldValue, outerDimension);
+    }
+
+    public double getInnerDimension() {
+        return innerDimension;
+    }
+
+    public void setInnerDimension(double innerDimension) {
+        Object oldValue = this.innerDimension;
+        this.innerDimension = innerDimension;
+        firePropertyChange("innerDimension", oldValue, innerDimension);
+    }
+
+    public int getPadCount() {
+        return padCount;
+    }
+
+    public void setPadCount(int padCount) {
+        Object oldValue = this.padCount;
+        this.padCount = padCount;
+        firePropertyChange("padCount", oldValue, padCount);
+    }
+
+    public double getPadPitch() {
+        return padPitch;
+    }
+
+    public void setPadPitch(double padPitch) {
+        Object oldValue = this.padPitch;
+        this.padPitch = padPitch;
+        firePropertyChange("padPitch", oldValue, padPitch);
+    }
+
+    public double getPadAcross() {
+        return padAcross;
+    }
+
+    public void setPadAcross(double padAcross) {
+        Object oldValue = this.padAcross;
+        this.padAcross = padAcross;
+        firePropertyChange("padAcross", oldValue, padAcross);
+    }
+
+    public double getPadRoundness() {
+        return padRoundness;
+    }
+
+    public void setPadRoundness(double padRoundness) {
+        Object oldValue = this.padRoundness;
+        this.padRoundness = padRoundness;
+        firePropertyChange("padRoundness", oldValue, padRoundness);
     }
 
 
