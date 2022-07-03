@@ -21,10 +21,12 @@ package org.openpnp.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -42,6 +44,7 @@ import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
+import org.jdesktop.beansbinding.Converter;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -50,6 +53,7 @@ import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.tablemodel.FootprintTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
@@ -57,6 +61,7 @@ import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Package;
 import org.openpnp.spi.Camera;
+import org.openpnp.util.UiUtils;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -83,18 +88,53 @@ public class PackageVisionPanel extends JPanel {
         propertiesPanel.setBorder(
                 new TitledBorder(null, "Settings",
                         TitledBorder.LEADING, TitledBorder.TOP, null));
-        propertiesPanel.setLayout(new FormLayout(
-                new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
+        propertiesPanel.setLayout(new FormLayout(new ColumnSpec[] {
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("default:grow"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+                new RowSpec[] {
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        RowSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblUnits = new JLabel("Units");
         propertiesPanel.add(lblUnits, "2, 2, right, default");
 
         unitsCombo = new JComboBox(LengthUnit.values());
         propertiesPanel.add(unitsCombo, "4, 2, left, default");
+
+        JLabel lblGenerate = new JLabel("Generate");
+        propertiesPanel.add(lblGenerate, "8, 2, right, default");
+
+        JPanel panelGenerate = new JPanel();
+        panelGenerate.setBorder(null);
+        propertiesPanel.add(panelGenerate, "10, 2, 5, 1, center, fill");
+        panelGenerate.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+
+        JButton generateDual = new JButton(generateDualAction);
+        panelGenerate.add(generateDual);
+
+        JButton generateQuad = new JButton(generateQuadAction);
+        panelGenerate.add(generateQuad);
+
+        JButton generateBga = new JButton(generateBgaAction);
+        panelGenerate.add(generateBga);
 
         JLabel lblBodyWidth = new JLabel("Body Width");
         propertiesPanel.add(lblBodyWidth, "2, 4, right, default");
@@ -103,12 +143,58 @@ public class PackageVisionPanel extends JPanel {
         propertiesPanel.add(bodyWidthTf, "4, 4, left, default");
         bodyWidthTf.setColumns(10);
 
+        JLabel lblDimension = new JLabel("Outside dimension");
+        lblDimension.setToolTipText("<html>\nOverall outside dimension of the footprint <br/>\nFor Dual this is the width, for Quad width and height (it is calculated for BGE).\n</html>");
+        propertiesPanel.add(lblDimension, "8, 4, right, default");
+
+        outerDimension = new JTextField();
+        propertiesPanel.add(outerDimension, "10, 4, fill, default");
+        outerDimension.setColumns(10);
+
+        JLabel lblInnerDim = new JLabel("Inside dimension");
+        lblInnerDim.setToolTipText("The inner dimension between the pads. For BGA this the area where balls are left out.");
+        propertiesPanel.add(lblInnerDim, "12, 4, right, default");
+
+        innerDimension = new JTextField();
+        propertiesPanel.add(innerDimension, "14, 4, fill, default");
+        innerDimension.setColumns(10);
+
         JLabel lblBodyHeight = new JLabel("Body Length");
         propertiesPanel.add(lblBodyHeight, "2, 6, right, default");
 
         bodyHeightTf = new JTextField();
         propertiesPanel.add(bodyHeightTf, "4, 6, left, default");
         bodyHeightTf.setColumns(10);
+
+        JLabel lblPadCount = new JLabel("Pad Count");
+        lblPadCount.setToolTipText("<html>\nOverall count of the pads. <br/>\n<ul>\n<li>Dual: Multiples of 2. </li>\n<li>Quad: Multiples of 4. </li>\n<li>BGA: Square number (including those left out on the inside). </li>\n</ul>\n</html>");
+        propertiesPanel.add(lblPadCount, "8, 6, right, default");
+
+        padCount = new JTextField();
+        propertiesPanel.add(padCount, "10, 6, fill, default");
+        padCount.setColumns(10);
+
+        JLabel lblPadPitch = new JLabel("Pad Pitch");
+        propertiesPanel.add(lblPadPitch, "12, 6, right, default");
+
+        padPitch = new JTextField();
+        propertiesPanel.add(padPitch, "14, 6, fill, default");
+        padPitch.setColumns(10);
+
+        JLabel lblPadAcross = new JLabel("Pad Across");
+        lblPadAcross.setToolTipText("The size of pads, in the direction of the pitch. ");
+        propertiesPanel.add(lblPadAcross, "8, 8, right, default");
+
+        padAcross = new JTextField();
+        propertiesPanel.add(padAcross, "10, 8, fill, default");
+        padAcross.setColumns(10);
+
+        JLabel lblRound = new JLabel("% Round");
+        propertiesPanel.add(lblRound, "12, 8, right, default");
+
+        padRoundness = new JTextField();
+        propertiesPanel.add(padRoundness, "14, 8, fill, default");
+        padRoundness.setColumns(10);
 
         JPanel tablePanel = new JPanel();
         add(tablePanel, BorderLayout.CENTER);
@@ -149,37 +235,6 @@ public class PackageVisionPanel extends JPanel {
 
         showReticle();
         initDataBindings();
-    }
-
-    protected void initDataBindings() {
-        DoubleConverter doubleConverter =
-                new DoubleConverter(Configuration.get().getLengthDisplayFormat());
-
-        BeanProperty<Footprint, LengthUnit> footprintBeanProperty = BeanProperty.create("units");
-        BeanProperty<JComboBox, Object> jComboBoxBeanProperty = BeanProperty.create("selectedItem");
-        AutoBinding<Footprint, LengthUnit, JComboBox, Object> autoBinding =
-                Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint,
-                        footprintBeanProperty, unitsCombo, jComboBoxBeanProperty);
-        autoBinding.bind();
-        //
-        BeanProperty<Footprint, Double> footprintBeanProperty_1 = BeanProperty.create("bodyWidth");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_1 =
-                Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint,
-                        footprintBeanProperty_1, bodyWidthTf, jTextFieldBeanProperty);
-        autoBinding_1.setConverter(doubleConverter);
-        autoBinding_1.bind();
-        //
-        BeanProperty<Footprint, Double> footprintBeanProperty_2 = BeanProperty.create("bodyHeight");
-        BeanProperty<JTextField, String> jTextFieldBeanProperty_1 = BeanProperty.create("text");
-        AutoBinding<Footprint, Double, JTextField, String> autoBinding_2 =
-                Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint,
-                        footprintBeanProperty_2, bodyHeightTf, jTextFieldBeanProperty_1);
-        autoBinding_2.setConverter(doubleConverter);
-        autoBinding_2.bind();
-
-        ComponentDecorators.decorateWithAutoSelect(bodyWidthTf);
-        ComponentDecorators.decorateWithAutoSelect(bodyHeightTf);
     }
 
     private void showReticle() {
@@ -243,10 +298,259 @@ public class PackageVisionPanel extends JPanel {
                     "Delete " + getSelectedPad().getName() + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 footprint.removePad(getSelectedPad());
+                tableModel.fireTableDataChanged();
             }
         }
     };
+
+
+    public final Action generateDualAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.footprintDual);
+            putValue(SHORT_DESCRIPTION, "Generate a Dual form factor package.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            generatePads(this);
+        }
+    };
+
+    public final Action generateQuadAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.footprintQuad);
+            putValue(SHORT_DESCRIPTION, "Generate a square Quad form factor package.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            generatePads(this);
+        }
+    };
+
+    public final Action generateBgaAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.footprintBga);
+            putValue(SHORT_DESCRIPTION, "Generate a square BGA package.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            generatePads(this);
+        }
+    };
+
+    protected void generatePads(Action action) {
+        UiUtils.messageBoxOnException(() -> {
+            if (!footprint.getPads().isEmpty()) {
+                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                        "Are you sure you want to delete all existing pads?",
+                        "Delete all pads?", JOptionPane.YES_NO_OPTION);
+                if (ret != JOptionPane.YES_OPTION) {
+                    return; // Abort.
+                }
+                footprint.removeAllPads();
+                tableModel.fireTableDataChanged();
+            }
+
+            double outerDimension = footprint.getOuterDimension();
+            double innerDimension = footprint.getInnerDimension();
+            int padCount = footprint.getPadCount();
+            double padAcross = footprint.getPadAcross();
+            double padPitch = footprint.getPadPitch();
+            double padRoundness = footprint.getPadRoundness();
+            if (action == generateDualAction) {
+                if (padCount % 2 != 0 || padCount <= 0) {
+                    throw new Exception("For Dual form factor, the pad count must be positive multiples of 2.");
+                }
+                double padLength = (outerDimension - innerDimension)/2;
+                double x = (outerDimension + innerDimension)/4;
+                int padNr = 0;
+                // Left side.
+                for (; padNr < padCount/2; padNr++) {
+                    Pad pad = new Pad();
+                    pad.setName(String.valueOf(padNr+1));
+                    pad.setWidth(padLength);
+                    pad.setHeight(padAcross);
+                    pad.setRotation(180); // strictly speaking
+                    pad.setX(-x);
+                    pad.setY((padCount/4.0 - padNr - 0.5)*padPitch);
+                    pad.setRoundness(padRoundness);
+                    footprint.addPad(pad);
+                }
+                // Right side.
+                for (; padNr < padCount; padNr++) {
+                    Pad pad = new Pad();
+                    pad.setName(String.valueOf(padNr+1));
+                    pad.setWidth(padLength);
+                    pad.setHeight(padAcross);
+                    pad.setRotation(0);
+                    pad.setX(x);
+                    pad.setY((padNr - padCount*3/4.0 + 0.5)*padPitch);
+                    pad.setRoundness(padRoundness);
+                    footprint.addPad(pad);
+                }
+            }
+            else if (action == generateQuadAction) {
+                if (padCount % 4 != 0 || padCount <= 0) {
+                    throw new Exception("For Quad form factor, the pad count must be positive multiples of 4.");
+                }
+                double padLength = (outerDimension - innerDimension)/2;
+                double d = (outerDimension + innerDimension)/4;
+                int padNr = 0;
+                // Left side.
+                for (; padNr < padCount*1/4; padNr++) {
+                    Pad pad = new Pad();
+                    pad.setName(String.valueOf(padNr+1));
+                    pad.setWidth(padLength);
+                    pad.setHeight(padAcross);
+                    pad.setRotation(180); // strictly speaking
+                    pad.setX(-d);
+                    pad.setY((padCount/8.0 - padNr - 0.5)*padPitch);
+                    pad.setRoundness(padRoundness);
+                    footprint.addPad(pad);
+                }
+                // Bottom side.
+                for (; padNr < padCount*2/4; padNr++) {
+                    Pad pad = new Pad();
+                    pad.setName(String.valueOf(padNr+1));
+                    pad.setWidth(padLength);
+                    pad.setHeight(padAcross);
+                    pad.setRotation(-90); 
+                    pad.setX((padNr - padCount*3/8.0 + 0.5)*padPitch);
+                    pad.setY(-d);
+                    pad.setRoundness(padRoundness);
+                    footprint.addPad(pad);
+                }
+                // Right side.
+                for (; padNr < padCount*3/4; padNr++) {
+                    Pad pad = new Pad();
+                    pad.setName(String.valueOf(padNr+1));
+                    pad.setWidth(padLength);
+                    pad.setHeight(padAcross);
+                    pad.setRotation(0);
+                    pad.setX(d);
+                    pad.setY((padNr - padCount*5/8.0 + 0.5)*padPitch);
+                    pad.setRoundness(padRoundness);
+                    footprint.addPad(pad);
+                }
+                // Top side.
+                for (; padNr < padCount*4/4; padNr++) {
+                    Pad pad = new Pad();
+                    pad.setName(String.valueOf(padNr+1));
+                    pad.setWidth(padLength);
+                    pad.setHeight(padAcross);
+                    pad.setRotation(90); 
+                    pad.setX((padCount*7/8.0 - padNr - 0.5)*padPitch);
+                    pad.setY(d);
+                    pad.setRoundness(padRoundness);
+                    footprint.addPad(pad);
+                }
+            }
+            else if (action == generateBgaAction) {
+                int cols = (int)Math.sqrt(padCount);
+                int rows = cols;
+                if (Math.pow(rows, 2) != padCount) {
+                    throw new Exception("For PGA, the pad count must be a square number.");
+                }
+                double d = (outerDimension + innerDimension)/4;
+                for (int row = 0; row < rows; row++) {
+                    for (int col = 0; col < cols; col++) {
+                        double x = (col - cols/2.0 + 0.5)*padPitch;
+                        double y = (rows/2.0 - row - 0.5)*padPitch;
+                        if (Math.abs(x) > innerDimension/2 || Math.abs(y) > innerDimension/2) {
+                            Pad pad = new Pad();
+                            pad.setName(String.valueOf((char)('A'+row))+String.valueOf(col));
+                            pad.setWidth(padAcross);
+                            pad.setHeight(padAcross);
+                            pad.setX(x);
+                            pad.setY(y);
+                            pad.setRoundness(padRoundness);
+                            footprint.addPad(pad);
+                        }
+                    }
+                }
+                footprint.setOuterDimension((rows - 1)/2*padPitch + padAcross);
+            }
+            tableModel.fireTableDataChanged();
+        });
+    }
+
     private JTextField bodyWidthTf;
     private JTextField bodyHeightTf;
     private JComboBox unitsCombo;
+    private JTextField padCount;
+    private JTextField padAcross;
+    private JTextField padPitch;
+    private JTextField outerDimension;
+    private JTextField innerDimension;
+    private JTextField padRoundness;
+
+    protected void initDataBindings() {
+        Converter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        Converter intConverter = new IntegerConverter();
+
+        BeanProperty<Footprint, LengthUnit> footprintBeanProperty = BeanProperty.create("units");
+        BeanProperty<JComboBox, Object> jComboBoxBeanProperty = BeanProperty.create("selectedItem");
+        AutoBinding<Footprint, LengthUnit, JComboBox, Object> autoBinding = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty, unitsCombo, jComboBoxBeanProperty);
+        autoBinding.bind();
+        //
+        BeanProperty<Footprint, Double> footprintBeanProperty_1 = BeanProperty.create("bodyWidth");
+        BeanProperty<JTextField, String> jTextFieldBeanProperty = BeanProperty.create("text");
+        AutoBinding<Footprint, Double, JTextField, String> autoBinding_1 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_1, bodyWidthTf, jTextFieldBeanProperty);
+        autoBinding_1.setConverter(doubleConverter);
+        autoBinding_1.bind();
+        //
+        BeanProperty<Footprint, Double> footprintBeanProperty_2 = BeanProperty.create("bodyHeight");
+        BeanProperty<JTextField, String> jTextFieldBeanProperty_1 = BeanProperty.create("text");
+        AutoBinding<Footprint, Double, JTextField, String> autoBinding_2 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_2, bodyHeightTf, jTextFieldBeanProperty_1);
+        autoBinding_2.setConverter(doubleConverter);
+        autoBinding_2.bind();
+        //
+        BeanProperty<Footprint, Double> footprintBeanProperty_3 = BeanProperty.create("outerDimension");
+        BeanProperty<JTextField, String> jTextFieldBeanProperty_2 = BeanProperty.create("text");
+        AutoBinding<Footprint, Double, JTextField, String> autoBinding_3 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_3, outerDimension, jTextFieldBeanProperty_2);
+        autoBinding_3.setConverter(doubleConverter);
+        autoBinding_3.bind();
+        //
+        BeanProperty<Footprint, Double> footprintBeanProperty_4 = BeanProperty.create("innerDimension");
+        BeanProperty<JTextField, String> jTextFieldBeanProperty_3 = BeanProperty.create("text");
+        AutoBinding<Footprint, Double, JTextField, String> autoBinding_4 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_4, innerDimension, jTextFieldBeanProperty_3);
+        autoBinding_4.setConverter(doubleConverter);
+        autoBinding_4.bind();
+        //
+        BeanProperty<Footprint, Integer> footprintBeanProperty_5 = BeanProperty.create("padCount");
+        BeanProperty<JTextField, String> jTextFieldBeanProperty_4 = BeanProperty.create("text");
+        AutoBinding<Footprint, Integer, JTextField, String> autoBinding_5 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_5, padCount, jTextFieldBeanProperty_4);
+        autoBinding_5.setConverter(intConverter);
+        autoBinding_5.bind();
+        //
+        BeanProperty<Footprint, Double> footprintBeanProperty_6 = BeanProperty.create("padPitch");
+        BeanProperty<JTextField, String> jTextFieldBeanProperty_5 = BeanProperty.create("text");
+        AutoBinding<Footprint, Double, JTextField, String> autoBinding_6 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_6, padPitch, jTextFieldBeanProperty_5);
+        autoBinding_6.setConverter(doubleConverter);
+        autoBinding_6.bind();
+        //
+        BeanProperty<Footprint, Double> footprintBeanProperty_7 = BeanProperty.create("padAcross");
+        BeanProperty<JTextField, String> jTextFieldBeanProperty_6 = BeanProperty.create("text");
+        AutoBinding<Footprint, Double, JTextField, String> autoBinding_7 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_7, padAcross, jTextFieldBeanProperty_6);
+        autoBinding_7.setConverter(doubleConverter);
+        autoBinding_7.bind();
+        //
+        BeanProperty<Footprint, Double> footprintBeanProperty_8 = BeanProperty.create("padRoundness");
+        BeanProperty<JTextField, String> jTextFieldBeanProperty_7 = BeanProperty.create("text");
+        AutoBinding<Footprint, Double, JTextField, String> autoBinding_8 = Bindings.createAutoBinding(UpdateStrategy.READ_WRITE, footprint, footprintBeanProperty_8, padRoundness, jTextFieldBeanProperty_7);
+        autoBinding_8.setConverter(doubleConverter);
+        autoBinding_8.bind();
+
+        ComponentDecorators.decorateWithAutoSelect(bodyWidthTf);
+        ComponentDecorators.decorateWithAutoSelect(bodyHeightTf);
+
+        ComponentDecorators.decorateWithAutoSelect(outerDimension);
+        ComponentDecorators.decorateWithAutoSelect(innerDimension);
+        ComponentDecorators.decorateWithAutoSelect(padCount);
+        ComponentDecorators.decorateWithAutoSelect(padPitch);
+        ComponentDecorators.decorateWithAutoSelect(padAcross);
+        ComponentDecorators.decorateWithAutoSelect(padRoundness);
+    }
 }

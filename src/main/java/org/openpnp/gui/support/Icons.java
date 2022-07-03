@@ -116,6 +116,10 @@ public class Icons {
     public static Icon safeZDynamic = getIcon("/icons/safe-z-dynamic.svg", 96, 96);
     public static Icon safeZCapture = getIcon("/icons/safe-z-capture.svg", 96, 96);
 
+    public static Icon footprintQuad = getIcon("/icons/footprint-quad.svg");
+    public static Icon footprintDual = getIcon("/icons/footprint-dual.svg");
+    public static Icon footprintBga = getIcon("/icons/footprint-bga.svg");
+
     public static Icon getIcon(String resourceName, int width, int height) {
         if (resourceName.endsWith(".svg")) {
             return new FlatSVGIcon(resourceName.substring(1), width, height);
