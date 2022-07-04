@@ -24,12 +24,12 @@ import com.google.common.io.Files;
 public class ReferenceBottomVisionTest {
     @Test
     public void testPositiveAngle() throws Exception {
-        testError(new Location(LengthUnit.Millimeters, 1, 2, 0, 13));
+        testError(new Location(LengthUnit.Millimeters, 0.25, 0.75, 0, 13));
     }
     
     @Test
     public void testNegativeAngle() throws Exception {
-        testError(new Location(LengthUnit.Millimeters, 1, 2, 0, -13));
+        testError(new Location(LengthUnit.Millimeters, 0.25, 0.75, 0, -13));
     }
     
     public static void testError(Location error) throws Exception {
@@ -59,7 +59,7 @@ public class ReferenceBottomVisionTest {
 
         // Set nozzle tip pick tolerances for large offsets.
         for (NozzleTip tip : Configuration.get().getMachine().getNozzleTips()) {
-            ((ReferenceNozzleTip) tip).setMaxPickTolerance(new Length(3, LengthUnit.Millimeters));
+            ((ReferenceNozzleTip) tip).setMaxPickTolerance(new Length(1, LengthUnit.Millimeters));
         }
 
         camera.setErrorOffsets(error);

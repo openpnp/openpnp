@@ -17,7 +17,7 @@ import javax.swing.border.TitledBorder;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
-import org.openpnp.gui.components.PipelinePanel;
+import org.openpnp.gui.components.PipelineControls;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
@@ -71,7 +71,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
     private JButton btnSpecializeSetting;
     private JButton btnGeneralizeSettings;
-    private PipelinePanel pipelinePanel;
+    private PipelineControls pipelinePanel;
     private JPanel panelDetectOffset;
 
     public BottomVisionSettingsConfigurationWizard(BottomVisionSettings visionSettings, 
@@ -224,26 +224,26 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         panel.add(comboBoxPreRotate, "4, 10");
 
         JLabel lblMaxRotation = new JLabel("Rotation");
-        panel.add(lblMaxRotation, "2, 12, right, default");
+        panel.add(lblMaxRotation, "6, 10, right, default");
 
         comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
         comboBoxMaxRotation.setToolTipText(
                 "Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1");
-        panel.add(comboBoxMaxRotation, "4, 12, fill, default");
+        panel.add(comboBoxMaxRotation, "8, 10, fill, default");
 
         JLabel lblPartCheckType = new JLabel("Part size check");
-        panel.add(lblPartCheckType, "2, 14");
+        panel.add(lblPartCheckType, "2, 12");
 
         comboBoxCheckPartSizeMethod = new JComboBox(ReferenceBottomVision.PartSizeCheckMethod.values());
-        panel.add(comboBoxCheckPartSizeMethod, "4, 14, fill, default");
+        panel.add(comboBoxCheckPartSizeMethod, "4, 12, fill, default");
 
         JLabel lblPartSizeTolerance = new JLabel("Size tolerance (%)");
-        panel.add(lblPartSizeTolerance, "2, 16");
+        panel.add(lblPartSizeTolerance, "6, 12, right, default");
 
         textPartSizeTolerance = new JTextField();
-        panel.add(textPartSizeTolerance, "4, 16, fill, default");
+        panel.add(textPartSizeTolerance, "8, 12, fill, default");
 
-        pipelinePanel = new PipelinePanel() {
+        pipelinePanel = new PipelineControls() {
 
             @Override
             public void configurePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
@@ -278,7 +278,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         };
         pipelinePanel.setResetable(true);
         pipelinePanel.setEditable(true);
-        panel.add(pipelinePanel, "1, 20, 14, 1, fill, fill");
+        panel.add(pipelinePanel, "1, 14, 14, 1, fill, fill");
 
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);
@@ -291,14 +291,12 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 0),
+                new ColumnSpec(ColumnSpec.FILL, Sizes.bounded(Sizes.DEFAULT, Sizes.constant("50dlu", true), Sizes.constant("70dlu", true)), 1),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblTestPlacementAngle = new JLabel("Placement Angle");
         panelAlign.add(lblTestPlacementAngle, "2, 2");
@@ -435,27 +433,21 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("default:grow"),},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        RowSpec.decode("default:grow"),}));
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                RowSpec.decode("default:grow"),}));
     }
 
     private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
@@ -467,8 +459,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         Location location = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), 
                 camera,
                 nozzle, angle);
-        bottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, nozzle, location, visionSettings);
-
+        bottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, nozzle.getPart().getPackage(), nozzle, nozzle.getNozzleTip(), 
+                location, location, visionSettings);
         if (edit) {
             
             pipelinePanel.openPipelineEditor("Bottom Vision Pipeline", pipeline, 
@@ -502,13 +494,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 nozzle, angle);
 
         if (alignmentOffset.getPreRotated()) {
-            // See https://github.com/openpnp/openpnp/pull/590 for explanations of the magic
-            // value below.
-            if (Math.abs(alignmentOffset.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(0.,
-                    0.)) > 19.999) {
-                throw new Exception("Offset too big");
-            }
-            nozzle.moveTo(cameraLocation.subtractWithRotation(alignmentOffset.getLocation()));
+            Location centeredLocation = cameraLocation.subtractWithRotation(alignmentOffset.getLocation());
+            nozzle.moveTo(centeredLocation);
             return;
         }
 

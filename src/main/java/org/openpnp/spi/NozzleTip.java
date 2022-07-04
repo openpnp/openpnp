@@ -30,7 +30,24 @@ public interface NozzleTip extends Identifiable, Named, Solutions.Subject, Wizar
     void home() throws Exception;
 
     /**
-     * @return the Nozzle where this tip is currently loaded, or null.
+     * @return The Nozzle where this tip is currently loaded, or null.
      */
     Nozzle getNozzleWhereLoaded();
+
+    /**
+     * @return The maximum part height to be allowed on this nozzle tip. 
+     */
+    Length getMaxPartHeight();
+    /**
+     * @return The maximum part diameter to be allowed on this nozzle tip.
+     */
+    Length getMaxPartDiameter();
+    /**
+     * @return The minimum part diameter to be allowed on this nozzle tip.
+     */
+    Length getMinPartDiameter();
+    /**
+     * @return The maximum pick tolerance on this nozzle tip. This can be overridden in the Package. 
+     */
+    Length getMaxPickTolerance();
 }

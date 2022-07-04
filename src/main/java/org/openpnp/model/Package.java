@@ -54,6 +54,9 @@ public class Package extends AbstractPartSettingsHolder {
     @Element(required = false)
     private Footprint footprint;
     
+    @Element(required = false)
+    private VisionCompositing visionCompositing;
+    
     @ElementList(required = false)
     protected List<String> compatibleNozzleTipIds = new ArrayList<>();
 
@@ -133,6 +136,23 @@ public class Package extends AbstractPartSettingsHolder {
         Object oldValue = this.footprint;
         this.footprint = footprint;
         firePropertyChange("footprint", oldValue, footprint);
+    }
+
+    public void fireFootprintChanged() {
+        firePropertyChange("footprint", null, footprint); 
+     }
+
+    public VisionCompositing getVisionCompositing() {
+        if (visionCompositing == null) {
+            visionCompositing = new VisionCompositing();
+        }
+        return visionCompositing;
+    }
+
+    public void setVisionCompositing(VisionCompositing visionCompositing) {
+        Object oldValue = this.visionCompositing;
+        this.visionCompositing = visionCompositing;
+        firePropertyChange("visionCompositing", oldValue, visionCompositing);
     }
 
     @Override

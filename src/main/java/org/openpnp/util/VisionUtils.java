@@ -57,14 +57,26 @@ public class VisionUtils {
         // Calculate the difference between the center of the image to the
         // center of the match.
         double offsetX = x - (imageWidth / 2);
-        double offsetY = (imageHeight / 2) - y;
+        double offsetY = y - (imageHeight / 2);
 
-        // And convert pixels to units
+        return getPixelOffsets(camera, offsetX, offsetY);
+    }
+
+    /**
+     * Given pixel offset coordinates, get the same offsets in Camera space and units.
+     * 
+     * @param camera
+     * @param offsetX
+     * @param offsetY
+     * @return
+     */
+    public static Location getPixelOffsets(Camera camera, double offsetX, double offsetY) {
+        // Convert pixels to units
         Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         offsetX *= unitsPerPixel.getX();
         offsetY *= unitsPerPixel.getY();
-
-        return new Location(unitsPerPixel.getUnits(), offsetX, offsetY, 0, 0);
+        // Convert to right-handed.
+        return new Location(unitsPerPixel.getUnits(), offsetX, -offsetY, 0, 0);
     }
 
     /**
