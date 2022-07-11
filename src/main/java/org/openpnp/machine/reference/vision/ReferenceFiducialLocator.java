@@ -201,8 +201,18 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
         
         Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
+        double[] matrix = new double[6];
+        tx.getMatrix(matrix);
         Logger.info("Fiducial results: " + ai);
-        
+        Logger.info("Linear Transform X-Axis:"
+                + " X Factor: "+String.format("%12.6f", matrix[0])
+                + " Y Factor: "+String.format("%12.6f", matrix[1])
+                + " X Offset: "+String.format("%12.6f", matrix[4]));
+        Logger.info("Linear Transform Y-Axis:"
+                + " X Factor: "+String.format("%12.6f", matrix[2])
+                + " Y Factor: "+String.format("%12.6f", matrix[3])
+                + " Y Offset: "+String.format("%12.6f", matrix[5]));
+
         double boardOffset = newBoardLocation.getLinearLengthTo(savedBoardLocation).convertToUnits(LengthUnit.Millimeters).getValue();
         Logger.info("Board origin offset distance: " + boardOffset + "mm");
         
