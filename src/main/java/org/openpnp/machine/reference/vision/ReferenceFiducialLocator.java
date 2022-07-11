@@ -201,17 +201,32 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
         }
         
         Utils2D.AffineInfo ai = Utils2D.affineInfo(tx);
+        Logger.info("Fiducial results: " + ai);
         double[] matrix = new double[6];
         tx.getMatrix(matrix);
-        Logger.info("Fiducial results: " + ai);
-        Logger.info("Linear Transform X-Axis:"
+        Logger.info("Placement to machine transform X:"
                 + " X Factor: "+String.format("%12.6f", matrix[0])
                 + " Y Factor: "+String.format("%12.6f", matrix[1])
                 + " X Offset: "+String.format("%12.6f", matrix[4]));
-        Logger.info("Linear Transform Y-Axis:"
+        Logger.info("Placement to machine transform Y:"
                 + " X Factor: "+String.format("%12.6f", matrix[2])
                 + " Y Factor: "+String.format("%12.6f", matrix[3])
                 + " Y Offset: "+String.format("%12.6f", matrix[5]));
+        try {
+            AffineTransform invTx = tx.createInverse();
+            invTx.getMatrix(matrix);
+            Logger.info("Machine to placement transform X:"
+                    + " X Factor: "+String.format("%12.6f", matrix[0])
+                    + " Y Factor: "+String.format("%12.6f", matrix[1])
+                    + " X Offset: "+String.format("%12.6f", matrix[4]));
+            Logger.info("Machine to placement transform Y:"
+                    + " X Factor: "+String.format("%12.6f", matrix[2])
+                    + " Y Factor: "+String.format("%12.6f", matrix[3])
+                    + " Y Offset: "+String.format("%12.6f", matrix[5]));
+        }
+        catch (Exception e) {
+            Logger.warn(e);
+        }
 
         double boardOffset = newBoardLocation.getLinearLengthTo(savedBoardLocation).convertToUnits(LengthUnit.Millimeters).getValue();
         Logger.info("Board origin offset distance: " + boardOffset + "mm");
