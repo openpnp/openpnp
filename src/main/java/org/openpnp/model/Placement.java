@@ -91,7 +91,7 @@ public class Placement extends AbstractLocatable implements Identifiable {
     }
 
     public Placement(Placement placement) {
-        super(placement.getLocation());
+        super(placement);
         this.comments = placement.comments;
         this.enabled = placement.enabled;
         this.errorHandling = placement.errorHandling;
@@ -101,7 +101,6 @@ public class Placement extends AbstractLocatable implements Identifiable {
         this.side = placement.side;
         this.type = placement.type;
         this.version = placement.version;
-        this.definedBy = placement.definedBy;
     }
     
     public Placement(String id) {

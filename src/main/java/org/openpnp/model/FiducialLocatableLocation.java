@@ -230,12 +230,14 @@ public class FiducialLocatableLocation extends AbstractLocatable {
      * @param side
      */
     public void setSide(Side side) {
+        Side oldValue = this.side;
         if (parent != null && parent.getSide() == Side.Bottom) {
             this.side = side.flip();
         }
         else {
             this.side = side;
         }
+        firePropertyChange("side", oldValue, side);
     }
     
     public boolean isDecendantOf(FiducialLocatableLocation potentialAncestor) {

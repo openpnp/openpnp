@@ -670,8 +670,9 @@ public class Configuration extends AbstractModelObject {
     public Panel getPanel(File file) throws Exception {
         if (!file.exists()) {
             Panel panel = new Panel(file);
-            Logger.trace(String.format("Created new Panel1 @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
-            panel.setName(file.getName());
+            Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
+//            panel.setName(file.getName());
+            panel.setName(file.getCanonicalPath());
             Serializer serializer = createSerializer();
             serializer.write(panel, file);
         }
@@ -680,7 +681,7 @@ public class Configuration extends AbstractModelObject {
             return panels.get(file);
         }
         Panel panel = loadPanel(file);
-        Logger.trace(String.format("Created new Panel2 @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
+        Logger.trace(String.format("Loaded new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(file, panel);
         firePropertyChange("panels", oldValue, panels);
@@ -878,7 +879,7 @@ public class Configuration extends AbstractModelObject {
         if (!boardFile.exists()) {
             throw new Exception("Board file not found: " + boardFilename);
         }
-        Board board = getBoard(boardFile);
+        Board board = new Board(getBoard(boardFile));
         boardLocation.setBoard(board);
         
 //        job.getRootPanelLocation().addChild(boardLocation);
@@ -1070,6 +1071,21 @@ public class Configuration extends AbstractModelObject {
         Serializer serializer = createSerializer();
         Panel panel = serializer.read(Panel.class, file);
         panel.setFile(file);
+//        load children here!!!
+        for (FiducialLocatableLocation child : panel.getChildren()) {
+            File childFile = new File(child.getFileName());
+            if (childFile.exists()) {
+                if (child instanceof BoardLocation) {
+                    child.setFiducialLocatable(getBoard(childFile));
+                }
+                else if (child instanceof PanelLocation) {
+                    child.setFiducialLocatable(getPanel(childFile));
+                }
+            }
+            else {
+                throw new Exception(String.format("Unable to find child %s of panel %s", childFile.getCanonicalPath(), file.getCanonicalPath()));
+            }
+        }
         panel.setDirty(false);
         return panel;
     }

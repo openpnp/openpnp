@@ -464,16 +464,16 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             rootPanelLocation.setSide(Side.Top);
             rootPanelLocation.setPanel(newPanel);
             for (FiducialLocatableLocation child : rootPanelLocation.getChildren()) {
-                if (child instanceof BoardLocation) {
-                    for (Board board : configuration.getBoards()) {
-                        if (((BoardLocation) child).getFileName().equals(board.getFile().getName())) {
-                            ((BoardLocation) child).setBoard(board);
-                            break;
-                        }
-                    }
-                }
-                else if (child instanceof PanelLocation) {
-                }
+//                if (child instanceof BoardLocation) {
+//                    for (Board board : configuration.getBoards()) {
+//                        if (((BoardLocation) child).getFileName().equals(board.getFile().getName())) {
+//                            ((BoardLocation) child).setBoard(board);
+//                            break;
+//                        }
+//                    }
+//                }
+//                else if (child instanceof PanelLocation) {
+//                }
                 child.setParent(rootPanelLocation);
                 child.addPropertyChangeListener(this);
             }
