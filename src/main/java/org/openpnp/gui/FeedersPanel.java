@@ -714,29 +714,45 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         if (nozzle.getNozzleTip() == null || 
                 !packag.getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
             // Wrong nozzle tip, try find one that works.
-            boolean resolved = false;
-            if (nozzle.isNozzleTipChangedOnManualFeed() && allowNozzleTipChange) {
-                for (NozzleTip nozzleTip : packag.getCompatibleNozzleTips()) {
-                    if (nozzle.getCompatibleNozzleTips().contains(nozzleTip)) {
-                        // Found a compatible one. Unload and load like the JobProcessor.
+            Nozzle altNozzle = null;
+            // Try find a good nozzle tip.
+            for (NozzleTip nozzleTip : packag.getCompatibleNozzleTips()) {
+                Nozzle nozzle2 = nozzleTip.getNozzleWhereLoaded();
+                if (nozzle2 == null 
+                        && nozzle.getCompatibleNozzleTips().contains(nozzleTip)) {
+                    // Found a compatible one. 
+                    if (nozzle.isNozzleTipChangedOnManualFeed() && allowNozzleTipChange) {
+                        // Unload and load like the JobProcessor.
                         nozzle.unloadNozzleTip();
                         nozzle.loadNozzleTip(nozzleTip);
-                        resolved = true;
-                        break;
+                        return nozzle; // Success.
                     }
                 }
+                if (altNozzle == null && nozzle2 != null){
+                    altNozzle = nozzle2;
+                }
             }
+            String errMsg = "";
             if (nozzle.getNozzleTip() == null) {
-                throw new Exception("No nozzle tip loaded on nozzle "+nozzle.getName()+". "
-                        +"You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer.");
+                errMsg += "No nozzle tip loaded on nozzle "+nozzle.getName()+". ";
             }
-            else if (! resolved) {
-                throw new Exception("Loaded nozzle tip "+
-                        nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". "
-                        +(allowNozzleTipChange ? 
-                                "You may want to enable automatic nozzle tip change on manual pick on the Nozzle / Tool Changer." 
-                                : ""));
+            else {
+                errMsg += "Nozzle "+nozzle.getName()+" loaded nozzle tip "+
+                        nozzle.getNozzleTip().getName()+" is not compatible with package "+packag.getId()+". ";
+                if (nozzle.getPart() != null) {
+                    errMsg += "There is already a part "+nozzle.getPart().getId()+" loaded. "; 
+                }
             }
+            if (altNozzle != null) {
+                errMsg += "Consider selecting nozzle "+altNozzle.getName()+", "
+                        + "it has compatible nozzle tip "+altNozzle.getNozzleTip().getName()+" loaded. ";
+            }
+            else if (allowNozzleTipChange && !nozzle.isNozzleTipChangedOnManualFeed()) { 
+                errMsg += "You may want to enable automatic nozzle tip change on manual pick on the "
+                        + "Nozzle / Tool Changer. ";
+            }
+            errMsg += "The pick will always be performed with the nozzle selected in the Machine Controls. ";
+            throw new Exception(errMsg);
         }
         return nozzle;
     }

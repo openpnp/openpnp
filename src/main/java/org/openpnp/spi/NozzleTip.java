@@ -28,4 +28,9 @@ public interface NozzleTip extends Identifiable, Named, Solutions.Subject, Wizar
      * @throws Exception
      */
     void home() throws Exception;
+
+    /**
+     * @return the Nozzle where this tip is currently loaded, or null.
+     */
+    Nozzle getNozzleWhereLoaded();
 }
