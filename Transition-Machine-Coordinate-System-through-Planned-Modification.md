@@ -52,7 +52,11 @@ The following is a simple recipe using OpenPnP's board fiducial system to help y
    ![grafik](https://user-images.githubusercontent.com/9963310/178229166-6e3850de-4f75-40aa-a091-5c9e8070f4fc.png)
 1. Now look in the log for lines like this:
    
-   ![grafik](https://user-images.githubusercontent.com/9963310/178230327-e6394140-0106-4e07-9dcb-0de682d9b810.png)
+   ```
+   2022-07-11 10:54:38.513 ReferenceFiducialLocator INFO: Machine to placement transform X: X Factor:     1.000681 Y Factor:     0.000620 X Offset:    -0.047904
+   2022-07-11 10:54:38.513 ReferenceFiducialLocator INFO: Machine to placement transform Y: X Factor:    -0.000773 Y Factor:     0.999558 Y Offset:    -0.044157
+
+   ```
 
 1. Enter the coefficients into your X and Y `ReferenceLinearAxis`: 
    
