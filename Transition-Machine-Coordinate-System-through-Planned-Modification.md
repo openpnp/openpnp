@@ -57,6 +57,7 @@ The following is a simple recipe using OpenPnP's board fiducial system to help y
 1. Enter the coefficients into your X and Y `ReferenceLinearAxis`: 
    
    ![grafik](https://user-images.githubusercontent.com/9963310/178230526-7f80bfbd-e889-4986-ac8d-2f5eca7dd433.png)
-   See also here: 
-   https://github.com/openpnp/openpnp/wiki/Linear-Transformed-Axes#rotate-the-machine-table
+
+
+See also the [[Linear Transformed Axes]] page.
    
