@@ -18,7 +18,7 @@ The following functions are provided:
 
 Between tiny 0201/0402 passives and enormous LQFP-256 packages, it is quite hard to get the bottom camera view right. One has to trade resolution against view size. Attempting to escape this dilemma by using a higher resolution camera comes at a significant additional cost in processing power, more lighting required, more compression artifacts, or (worse) reduced frame rate (fps) and additional camera lag. 
 
-Wanting a large camera view also adds constraints to the machine build. The ideal camera has a long focal length ("telephoto") lens to minimize parallax errors, which means it has to be far away from the subject. However, this usually means building a taller machine, especially for table-top designs. Consequently, designers often use (very) wide-angle lenses, which are detrimental to alignment accuracy (see the nest section). 
+Wanting a large camera view also adds constraints to the machine build. The ideal camera has a long focal length ("telephoto") lens to minimize parallax errors, which means it has to be far away from the subject. However, this usually means building a taller machine, especially for table-top designs. Consequently, designers often use (very) wide-angle lenses, which are detrimental to alignment accuracy (see the next section). 
 
 Ironically, the very large parts are often quite rare in projects, just the _one_ MCU, for example. The overwhelming majority of parts are rather small. It hurts to make poor tradeoffs for the few exceptions.  
 
