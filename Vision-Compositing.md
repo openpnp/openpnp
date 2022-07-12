@@ -14,9 +14,11 @@ The following functions are provided:
 
 # Motivation
 
+## Camera Design
+
 Between tiny 0201/0402 passives and enormous LQFP-256 packages, it is quite hard to get the bottom camera view right. One has to trade resolution against view size. Attempting to escape this dilemma by using a higher resolution camera comes at a significant additional cost in processing power, more lighting required, more compression artifacts, or (worse) reduced frame rate (fps) and additional camera lag. 
 
-Wanting a large camera view also adds constraints to the machine build. The ideal camera has a long focal length ("telephoto") lens to minimize parallax errors, which means it has to be far away from the subject. However, this usually means building a taller machine, especially for table-top designs. Consequently, designers often use (very) wide-angle lenses, which are detrimental to alignment accuracy (see the parallax error illustration further below). 
+Wanting a large camera view also adds constraints to the machine build. The ideal camera has a long focal length ("telephoto") lens to minimize parallax errors, which means it has to be far away from the subject. However, this usually means building a taller machine, especially for table-top designs. Consequently, designers often use (very) wide-angle lenses, which are detrimental to alignment accuracy (see the nest section). 
 
 Ironically, the very large parts are often quite rare in projects, just the _one_ MCU, for example. The overwhelming majority of parts are rather small. It hurts to make poor tradeoffs for the few exceptions.  
 
@@ -26,9 +28,21 @@ Cameras can now be optimized to the brunt of the work with medium and small size
 
 The few large parts can then still be aligned with multiple shots. Obviously, there is an extra cost in alignment time, which may or may not be compensated by avoided tradeoffs elsewehere. 
 
+## Improving Accuracy
+
 As an independent benefit, multi-shot alignment increases accuracy, particularly for very large parts. In some cases it might be the key to successful placement, regardless of the package actually being too large for the camera view. 
 
-Finally, the multi-shot feature also enables alignment of non-rectangular hull parts (best see the video for examples). 
+The following illustration (exaggerated) shows how a slightly tilted nozzle might result in large placments errors (red) due to large parallax errors in (very) wide angle lenses:
+
+![illu](https://user-images.githubusercontent.com/9963310/178497746-51f0a470-8410-4cfd-b95e-0bb22a44c74a.png)
+
+Detecting the same corners using two shots reduces these errors to nothing, as the parallax is negligible when looking straight up from the camera center, and even what little remains, is symmetric left and right, and cancels itself out.
+
+Similar effects might come from viewing pins from the side, and/or having asymmetric lighting. Or from residual lens distortions.
+
+## Odd Shaped Packages
+
+Multi-shot bottom vision also enables alignment of some non-rectangular (hull) parts (best see the video for examples). 
 
 # Instructions for Use
 
@@ -103,12 +117,3 @@ You can press the mouse to see how the pads are fused together, where they are t
 
 ![Inside corners](https://user-images.githubusercontent.com/9963310/178497553-a355b84d-40ad-4462-9e3d-8402c38ca6c4.png)
 
-## Improving Accuracy
-
-The following illustration (exaggerated) shows how a slightly tilted nozzle might result in large placments errors (red) due to large parallax errors in (very) wide angle lenses:
-
-![illu](https://user-images.githubusercontent.com/9963310/178497746-51f0a470-8410-4cfd-b95e-0bb22a44c74a.png)
-
-Detecting the same corners using two shots reduces these errors to nothing, as the parallax is negligible when looking straight up from the camera center, and even what little remains, is symmetric left and right, and cancels itself out.
-
-Similar effects might come from viewing pins from the side, and/or having asymmetric lighting. Or from residual lens distortions.
