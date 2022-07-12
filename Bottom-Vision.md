@@ -85,6 +85,10 @@ To access the bottom vision part settings go to the Parts tab in OpenPnP, select
 
 **Size tolerance (%)**: Determines by how much (relatively speaking) the detected part size may deviate from the footprint defined size. If the tolerance is exceeded, the aligment fails. Most likely the part was then not properly picked. 
 
+# Multi-Shot Bottom Vision
+
+Vision Compositing a.k.a. Multi-Shot Bottom Vision can take more than one vision shot to determine the alignment of a part. See the extra [[Vision Compositing]] page.
+
 # Usage
 
 ## Note: This section will be expanded soon.
