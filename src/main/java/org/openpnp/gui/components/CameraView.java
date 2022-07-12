@@ -1524,12 +1524,21 @@ public class CameraView extends JComponent implements CameraListener {
                 // The camera is non-movable
                 // Get the selected nozzle
                 Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
+                Location currentLocation = nozzle.getLocation();
                 // Subtract the offsets from the nozzle position.
-                Location location = nozzle.getLocation().subtract(offsets);
+                Location location = currentLocation.subtract(offsets);
                 // Only change X/Y. 
-                location = nozzle.getLocation().derive(location, true, true, false, false);
+                location = currentLocation.derive(location, true, true, false, false);
                 // Move the nozzle such that the clicked position is moved to the center of the camera view
-                MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+                if (currentLocation.getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) < 0
+                        && location.getLinearLengthTo(camera.getLocation()).compareTo(camera.getRoamingRadius()) < 0) {
+                    // Within the roaming area, no need to go to Safe Z.
+                    nozzle.moveTo(location);
+                }
+                else {
+                    // Current or new location outside roaming area. Move to safe Z.
+                    MovableUtils.moveToLocationAtSafeZ(nozzle, location);
+                }
             }
             else { 
                 // The camera is movable

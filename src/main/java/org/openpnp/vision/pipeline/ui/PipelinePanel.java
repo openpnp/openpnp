@@ -38,6 +38,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
+import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage;
@@ -53,6 +54,7 @@ public class PipelinePanel extends JPanel {
     private JTable stagesTable;
     private StagesTableModel stagesTableModel;
     private PropertySheetPanel propertySheetPanel;
+    private JEditorPane descriptionTa;
     private PipelinePropertySheetTable pipelinePropertySheetTable;
 
     public PipelinePanel(CvPipelineEditor editor) {
@@ -75,6 +77,13 @@ public class PipelinePanel extends JPanel {
         JButton refreshButton = new JButton(refreshAction);
         refreshButton.setHideActionText(true);
         toolbar.add(refreshButton);
+
+        if (editor.getPipeline() != null 
+                && editor.getPipeline().getPipelineShotsCount() > 1) {
+            JButton stepNextButton = new JButton(stepNextShotAction);
+            stepNextButton.setHideActionText(true);
+            toolbar.add(stepNextButton);
+        }
 
         JButton btnAdd = new JButton(newStageAction);
         btnAdd.setHideActionText(true);
@@ -354,5 +363,20 @@ public class PipelinePanel extends JPanel {
             editor.process();
         }
     };
-    private JEditorPane descriptionTa;
+
+    public final Action stepNextShotAction = new AbstractAction() {
+        {
+            putValue(SMALL_ICON, Icons.step);
+            putValue(NAME, "Step to the next shot.");
+            putValue(SHORT_DESCRIPTION, "Step to the next shot.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            UiUtils.messageBoxOnException(() -> {
+                editor.getPipeline().stepToNextPipelineShot();
+                editor.process();
+            });
+        }
+    };
 }

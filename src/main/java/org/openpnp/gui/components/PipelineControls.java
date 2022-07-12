@@ -55,6 +55,8 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
+import org.openpnp.spi.MotionPlanner.CompletionType;
+import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.UiUtils;
 import org.openpnp.vision.pipeline.CvAbstractParameterStage;
@@ -71,7 +73,7 @@ import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 
-public abstract class PipelinePanel extends JPanel {
+public abstract class PipelineControls extends JPanel {
     private CvPipeline pipeline;
     private Map<String, Object> pipelineParameterAssignments;
 
@@ -81,7 +83,7 @@ public abstract class PipelinePanel extends JPanel {
     private boolean resetable = true;
     private Timer timer;
 
-    public PipelinePanel() { 
+    public PipelineControls() { 
         rebuildUi();
     }
 
@@ -182,9 +184,20 @@ public abstract class PipelinePanel extends JPanel {
     public void openPipelineEditor(String pipelineTitle, CvPipeline pipeline,
             String moveBeforeEditDescription, HeadMountable movable, Location location) {
         UiUtils.confirmMoveToLocationAndAct(getTopLevelAncestor(), 
-                moveBeforeEditDescription, 
-                movable, 
-                location, true, () -> {
+                moveBeforeEditDescription, true, 
+                () -> {
+                    if (pipeline.getPipelineShotsCount() > 0) {
+                        // Start with the first shot.
+                        pipeline.getPipelineShot(0).apply();
+                    }
+                    else {
+                        // not a multi-shot pipeline, move to location.
+                        MovableUtils.moveToLocationAtSafeZ(movable, location);
+                        MovableUtils.fireTargetedUserAction(movable);
+                        movable.waitForCompletion(CompletionType.WaitForStillstand);
+                    }
+                },
+                () -> {
                     CvPipelineEditor editor = new CvPipelineEditor(pipeline);
                     CvPipelineEditorDialog dialog = new CvPipelineEditorDialog(MainFrame.get(), pipelineTitle, editor) {
 

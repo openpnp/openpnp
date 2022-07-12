@@ -122,6 +122,9 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
     @Element(required = false)
     protected VisionProvider visionProvider;
 
+    @Element(required = false)
+    protected Length roamingRadius = new Length(0, LengthUnit.Millimeters);
+
     public enum SettleMethod {
         FixedTime,
         Maximum,
@@ -510,6 +513,15 @@ public abstract class AbstractCamera extends AbstractHeadMountable implements Ca
 
     public void setCameraSecondaryZ(Length cameraSecondaryZ) {
         this.cameraSecondaryZ = cameraSecondaryZ;
+    }
+
+    @Override
+    public Length getRoamingRadius() {
+        return roamingRadius;
+    }
+
+    public void setRoamingRadius(Length roamingRadius) {
+        this.roamingRadius = roamingRadius;
     }
 
     /**

@@ -1000,7 +1000,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
                 // Blot out the nozzle tip center part.
                 Point center = VisionUtils.getLocationPixels(camera, location.add(camera.getLocation()));
                 org.opencv.core.Point center2 = new org.opencv.core.Point(center.x, center.y);
-                Length minPartDiameter = nozzleTip.getMinPartDiameterWithTolerance();
+                Length minPartDiameter = nozzleTip.getMinPartDiameter()
+                .subtract(nozzleTip.getMaxPickTolerance().multiply(2.0));
                 if (minPartDiameter.compareTo(getCalibrationTipDiameter()) < 0) {
                     minPartDiameter = getCalibrationTipDiameter();
                 }
@@ -1039,7 +1040,8 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
             if (nozzleTip != null 
                     && backgroundImages.size() > 3) {
                 double t0 = NanosecondTime.getRuntimeSeconds();
-                double maskDiameterPixels = nozzleTip.getMaxPartDiameterWithTolerance()
+                double maskDiameterPixels = nozzleTip.getMaxPartDiameter()
+                .add(nozzleTip.getMaxPickTolerance().multiply(2.0))
                         .divide(camera.getUnitsPerPixel().getLengthX())*0.5;
                 int maskSq = (int)Math.pow(maskDiameterPixels, 2);
                 int rows = backgroundImageRows, cols = backgroundImageCols, ch = backgroundImageChannels;

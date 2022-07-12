@@ -376,19 +376,25 @@ public class PackagesPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            String id;
+            while ((id = JOptionPane.showInputDialog(frame,
+                    "Please enter an ID for the pasted package.")) != null) {
+                if (configuration.getPackage(id) == null) {
+                    break;
+                }
+                MessageBoxes.errorBox(frame, "Error", "Package ID " + id + " already exists.");
+            }
+            if (id == null || id.isEmpty()) {
+                return;
+            }
             try {
                 Serializer ser = Configuration.createSerializer();
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
                 StringReader r = new StringReader(s);
                 Package pkg = ser.read(Package.class, s);
-                for (int i = 0;; i++) {
-                    if (Configuration.get().getPackage(pkg.getId() + "-" + i) == null) {
-                        pkg.setId(pkg.getId() + "-" + i);
-                        Configuration.get().addPackage(pkg);
-                        break;
-                    }
-                }
+                pkg.setId(id);
+                Configuration.get().addPackage(pkg);
                 tableModel.fireTableDataChanged();
                 Helpers.selectObjectTableRow(table, pkg);
             }
@@ -428,8 +434,9 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         tabbedPane.removeAll();
         if (selectedPackage != null) {
             tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(selectedPackage));
-            tabbedPane.add("Footprint", new JScrollPane(new PackageVisionPanel(selectedPackage)));
             tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(selectedPackage)));
+            tabbedPane.add("Footprint", new JScrollPane(new PackageVisionPanel(selectedPackage)));
+            tabbedPane.add("Vision Compositing", new JScrollPane(new PackageCompositingPanel(selectedPackage)));
             Machine machine = Configuration.get().getMachine();
             for (PartAlignment partAlignment : machine.getPartAlignments()) {
                 Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPackage);

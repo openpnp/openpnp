@@ -54,8 +54,24 @@ public class Point {
         this.y = y;
     }
 
+    public Point add(Point p) {
+        return new Point(x + p.x, y + p.y);
+    }
+
     public Point subtract(Point p) {
         return new Point(x - p.x, y - p.y);
+    }
+
+    public Point multiply(double f) {
+        return new Point(x*f, y*f);
+    }
+
+    public Point divide(double f) {
+        return new Point(x/f, y/f);
+    }
+
+    public double distance() {
+        return Math.hypot(x, y);
     }
 
     public static Point fromOpencv(org.opencv.core.Point p) {

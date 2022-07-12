@@ -57,22 +57,26 @@ public class CvPipeline implements AutoCloseable {
     private ArrayList<CvStage> stages = new ArrayList<>();
 
     private Map<CvStage, Result> results = new HashMap<CvStage, Result>();
-    
+
     private Map<String, Object> properties = new HashMap<String, Object>();
+
+    private ArrayList<PipelineShot> compositeShots = new ArrayList<>();
 
     private Mat workingImage;
     private Object workingModel;
     private Exception terminalException;
     private ColorSpace workingColorSpace;
-    
+
     private long totalProcessingTimeNs;
 
     private BufferedImage lastCapturedImage;
-    
+
+    private int currentShot;
+
     public CvPipeline() {
         
     }
-    
+
     public CvPipeline(String xmlPipeline) {
         try {
             fromXmlString(xmlPipeline);
@@ -429,10 +433,15 @@ public class CvPipeline implements AutoCloseable {
         properties.put(name, value);
     }
 
-    public void setProperties(Map<String, Object> pipelineParameterAssignments) {
+    public void addProperties(Map<String, Object> pipelineParameterAssignments) {
         if (pipelineParameterAssignments != null) {
             properties.putAll(pipelineParameterAssignments);
         }
+    }
+
+    public void resetReusedPipeline() {
+        properties = new HashMap<>();
+        compositeShots = new ArrayList<>();
     }
 
     private static Serializer createSerializer() {
@@ -449,5 +458,83 @@ public class CvPipeline implements AutoCloseable {
 
     public void setLastCapturedImage(BufferedImage lastCapturedImage) {
         this.lastCapturedImage = lastCapturedImage;
+    }
+
+    public abstract class PipelineShot {
+        private Map<String, Object> properties;
+        private final int index; 
+
+        /**
+         * Records the customized pipeline properties for this shot.
+         * 
+         * Use a derived class to add user defined data and methods
+         * to the PipelineShot.
+         */
+        public PipelineShot() {
+            super();
+            // Record a snapshot of the current properties
+            properties = new HashMap<>();
+            properties.putAll(CvPipeline.this.properties);
+            index = compositeShots.size(); 
+            CvPipeline.this.compositeShots.add(this);
+            CvPipeline.this.currentShot = index; 
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        /**
+         * Apply the recorded pipeline properties for this shot to the pipeline.
+         * Override this method to define custom actions, such as moving the 
+         * subject/camera to the specific shot location. 
+         * 
+         * @throws Exception
+         */
+        public void apply() throws Exception {
+            CvPipeline.this.properties = new HashMap<>();
+            CvPipeline.this.properties.putAll(properties);
+            CvPipeline.this.currentShot = index;
+        }
+
+        /**
+         * Process the result of one shot. 
+         * Override this method to define the custom operations.
+         * 
+         * @param result
+         */
+        public abstract void processResult(Result result);
+
+        /**
+         * Process the composite result of all the shots. 
+         * Override this method to define custom operations.
+         */
+        public abstract Result processCompositeResult();
+    }
+
+    public List<PipelineShot> getPipelineShots() {
+        return Collections.unmodifiableList(compositeShots);
+    }
+
+    public PipelineShot getCurrentPipelineShot() {
+        return getPipelineShot(currentShot);
+    }
+
+    public PipelineShot getPipelineShot(int i) {
+        if (i >= 0 && i < compositeShots.size()) {
+            return compositeShots.get(i);
+        }
+        return null;
+    }
+
+    public int getPipelineShotsCount() {
+        return compositeShots.size();
+    }
+
+    public void stepToNextPipelineShot() throws Exception {
+        if (compositeShots.size() > 1) {
+            int i = (currentShot + 1) % compositeShots.size();
+            getPipelineShot(i).apply();
+        }
     }
 }
