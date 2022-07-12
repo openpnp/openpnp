@@ -117,3 +117,10 @@ You can press the mouse to see how the pads are fused together, where they are t
 
 ![Inside corners](https://user-images.githubusercontent.com/9963310/178497553-a355b84d-40ad-4462-9e3d-8402c38ca6c4.png)
 
+## Using in the Pipeline Editor
+
+If a Vision Compositing pipeline has multiple shots, you can cycle through them using the **Step** button:
+
+![Pipeline Editor Shots](https://user-images.githubusercontent.com/9963310/178543041-1937df53-7fd1-4579-b2dc-411bf650256f.png)
+
+Note, the pipeline is the same for all the shots, i.e. any modifications to stages and stage properties will affect all shots, and must work with all of them. It is only the input image (camera subject position) and some _externally_ controlled pipeline and stage properties that will change between shots. 
