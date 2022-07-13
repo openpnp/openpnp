@@ -94,6 +94,8 @@ Proceed as follows:
  
 The **Multiplier** allows you to actuate the feeder multiple times to feed more parts per serving, as a speed optimization. This may reduce the feed time per part because the actuator is already at the right place and/or engaged in the mechanics. 
 
+The **Discard Parts** function voids any remaining parts that were produced by prior feed actuations. This can be the case in 2mm pitch tapes (0201 or 0402 parts), where one feed produces two parts, and/or if you used a **Multiplier** greater than one. These parts might have fallen out of the tape in the meantime, or you don't want them picked for some reason. Discarding will just disregard these parts and prompt a new feed actuation on the next feed. If parts are still physically in their pockets, they will be transported away with the spent tape. 
+
 ## Vision
 
 ### Vision / Calibration
