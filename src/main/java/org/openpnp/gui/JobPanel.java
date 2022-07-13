@@ -86,6 +86,7 @@ import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
+import org.openpnp.model.Motion;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Camera;
@@ -94,6 +95,7 @@ import org.openpnp.spi.JobProcessor;
 import org.openpnp.spi.JobProcessor.TextStatusListener;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
+import org.openpnp.spi.MotionPlanner;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -899,10 +901,24 @@ public class JobPanel extends JPanel {
     
     public void jobRun() {
         UiUtils.submitUiMachineTask(() -> {
+            // For optional motion stepping, remember the past move.
+            MotionPlanner motionPlanner = Configuration.get().getMachine().getMotionPlanner();
+            Motion pastMotion = motionPlanner.getLastMotion();
             do {
-                if (!jobProcessor.next()) {
-                    setState(State.Stopped);
+                do { 
+                    if (!jobProcessor.next()) {
+                        setState(State.Stopped);
+                        break;
+                    }
+                    else if (state == State.Pausing) {
+                        // We're pausing, but check if we need motion before we can pause for real.
+                        Motion lastMotion = motionPlanner.getLastMotion();
+                        if (! (jobProcessor.isSteppingToNextMotion() && lastMotion == pastMotion)) {
+                            break;
+                        }
+                    }
                 }
+                while (state == State.Pausing);
             } while (state == State.Running);
             
             if (state == State.Pausing) {
