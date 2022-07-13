@@ -57,6 +57,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.tablemodel.FootprintTableModel;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
+import org.openpnp.model.Footprint.Generator;
 import org.openpnp.model.Footprint.Pad;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Package;
@@ -73,13 +74,15 @@ public class PackageVisionPanel extends JPanel {
     private FootprintTableModel tableModel;
     private JTable table;
 
+    final private Package pkg;
     final private Footprint footprint;
 
     public PackageVisionPanel(Package pkg) {
+        this.pkg = pkg;
         this.footprint = pkg.getFootprint();
 
         setLayout(new BorderLayout(0, 0));
-        tableModel = new FootprintTableModel(footprint);
+        tableModel = new FootprintTableModel(footprint, pkg);
 
         deleteAction.setEnabled(false);
 
@@ -189,7 +192,8 @@ public class PackageVisionPanel extends JPanel {
         propertiesPanel.add(padAcross, "10, 8, fill, default");
         padAcross.setColumns(10);
 
-        JLabel lblRound = new JLabel("% Round");
+        JLabel lblRound = new JLabel("% Roundness");
+        lblRound.setToolTipText("Roundness of the pad in percent of its smaller dimension. If negative, only the inner side will be rounded.");
         propertiesPanel.add(lblRound, "12, 8, right, default");
 
         padRoundness = new JTextField();
@@ -235,6 +239,16 @@ public class PackageVisionPanel extends JPanel {
 
         showReticle();
         initDataBindings();
+
+        ComponentDecorators.decorateWithAutoSelect(bodyWidthTf);
+        ComponentDecorators.decorateWithAutoSelect(bodyHeightTf);
+
+        ComponentDecorators.decorateWithAutoSelect(outerDimension);
+        ComponentDecorators.decorateWithAutoSelect(innerDimension);
+        ComponentDecorators.decorateWithAutoSelect(padCount);
+        ComponentDecorators.decorateWithAutoSelect(padPitch);
+        ComponentDecorators.decorateWithAutoSelect(padAcross);
+        ComponentDecorators.decorateWithAutoSelect(padRoundness);
     }
 
     private void showReticle() {
@@ -312,7 +326,7 @@ public class PackageVisionPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            generatePads(this);
+            generatePads(Generator.Dual);
         }
     };
 
@@ -324,7 +338,7 @@ public class PackageVisionPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            generatePads(this);
+            generatePads(Generator.Quad);
         }
     };
 
@@ -336,145 +350,31 @@ public class PackageVisionPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            generatePads(this);
+            generatePads(Generator.Bga);
         }
     };
 
-    protected void generatePads(Action action) {
+    protected void generatePads(Footprint.Generator type) {
         UiUtils.messageBoxOnException(() -> {
-            if (!footprint.getPads().isEmpty()) {
-                int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "Are you sure you want to delete all existing pads?",
-                        "Delete all pads?", JOptionPane.YES_NO_OPTION);
-                if (ret != JOptionPane.YES_OPTION) {
-                    return; // Abort.
-                }
-                footprint.removeAllPads();
-                tableModel.fireTableDataChanged();
-            }
-
-            double outerDimension = footprint.getOuterDimension();
-            double innerDimension = footprint.getInnerDimension();
-            int padCount = footprint.getPadCount();
-            double padAcross = footprint.getPadAcross();
-            double padPitch = footprint.getPadPitch();
-            double padRoundness = footprint.getPadRoundness();
-            if (action == generateDualAction) {
-                if (padCount % 2 != 0 || padCount <= 0) {
-                    throw new Exception("For Dual form factor, the pad count must be positive multiples of 2.");
-                }
-                double padLength = (outerDimension - innerDimension)/2;
-                double x = (outerDimension + innerDimension)/4;
-                int padNr = 0;
-                // Left side.
-                for (; padNr < padCount/2; padNr++) {
-                    Pad pad = new Pad();
-                    pad.setName(String.valueOf(padNr+1));
-                    pad.setWidth(padLength);
-                    pad.setHeight(padAcross);
-                    pad.setRotation(180); // strictly speaking
-                    pad.setX(-x);
-                    pad.setY((padCount/4.0 - padNr - 0.5)*padPitch);
-                    pad.setRoundness(padRoundness);
-                    footprint.addPad(pad);
-                }
-                // Right side.
-                for (; padNr < padCount; padNr++) {
-                    Pad pad = new Pad();
-                    pad.setName(String.valueOf(padNr+1));
-                    pad.setWidth(padLength);
-                    pad.setHeight(padAcross);
-                    pad.setRotation(0);
-                    pad.setX(x);
-                    pad.setY((padNr - padCount*3/4.0 + 0.5)*padPitch);
-                    pad.setRoundness(padRoundness);
-                    footprint.addPad(pad);
-                }
-            }
-            else if (action == generateQuadAction) {
-                if (padCount % 4 != 0 || padCount <= 0) {
-                    throw new Exception("For Quad form factor, the pad count must be positive multiples of 4.");
-                }
-                double padLength = (outerDimension - innerDimension)/2;
-                double d = (outerDimension + innerDimension)/4;
-                int padNr = 0;
-                // Left side.
-                for (; padNr < padCount*1/4; padNr++) {
-                    Pad pad = new Pad();
-                    pad.setName(String.valueOf(padNr+1));
-                    pad.setWidth(padLength);
-                    pad.setHeight(padAcross);
-                    pad.setRotation(180); // strictly speaking
-                    pad.setX(-d);
-                    pad.setY((padCount/8.0 - padNr - 0.5)*padPitch);
-                    pad.setRoundness(padRoundness);
-                    footprint.addPad(pad);
-                }
-                // Bottom side.
-                for (; padNr < padCount*2/4; padNr++) {
-                    Pad pad = new Pad();
-                    pad.setName(String.valueOf(padNr+1));
-                    pad.setWidth(padLength);
-                    pad.setHeight(padAcross);
-                    pad.setRotation(-90); 
-                    pad.setX((padNr - padCount*3/8.0 + 0.5)*padPitch);
-                    pad.setY(-d);
-                    pad.setRoundness(padRoundness);
-                    footprint.addPad(pad);
-                }
-                // Right side.
-                for (; padNr < padCount*3/4; padNr++) {
-                    Pad pad = new Pad();
-                    pad.setName(String.valueOf(padNr+1));
-                    pad.setWidth(padLength);
-                    pad.setHeight(padAcross);
-                    pad.setRotation(0);
-                    pad.setX(d);
-                    pad.setY((padNr - padCount*5/8.0 + 0.5)*padPitch);
-                    pad.setRoundness(padRoundness);
-                    footprint.addPad(pad);
-                }
-                // Top side.
-                for (; padNr < padCount*4/4; padNr++) {
-                    Pad pad = new Pad();
-                    pad.setName(String.valueOf(padNr+1));
-                    pad.setWidth(padLength);
-                    pad.setHeight(padAcross);
-                    pad.setRotation(90); 
-                    pad.setX((padCount*7/8.0 - padNr - 0.5)*padPitch);
-                    pad.setY(d);
-                    pad.setRoundness(padRoundness);
-                    footprint.addPad(pad);
-                }
-            }
-            else if (action == generateBgaAction) {
-                int cols = (int)Math.sqrt(padCount);
-                int rows = cols;
-                if (Math.pow(rows, 2) != padCount) {
-                    throw new Exception("For PGA, the pad count must be a square number.");
-                }
-                double d = (outerDimension + innerDimension)/4;
-                for (int row = 0; row < rows; row++) {
-                    for (int col = 0; col < cols; col++) {
-                        double x = (col - cols/2.0 + 0.5)*padPitch;
-                        double y = (rows/2.0 - row - 0.5)*padPitch;
-                        if (Math.abs(x) > innerDimension/2 || Math.abs(y) > innerDimension/2) {
-                            Pad pad = new Pad();
-                            pad.setName(String.valueOf((char)('A'+row))+String.valueOf(col));
-                            pad.setWidth(padAcross);
-                            pad.setHeight(padAcross);
-                            pad.setX(x);
-                            pad.setY(y);
-                            pad.setRoundness(padRoundness);
-                            footprint.addPad(pad);
-                        }
+            try{
+                if (!footprint.getPads().isEmpty()) {
+                    int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                            "Are you sure you want to delete all existing pads?",
+                            "Delete all pads?", JOptionPane.YES_NO_OPTION);
+                    if (ret != JOptionPane.YES_OPTION) {
+                        return; // Abort.
                     }
+                    footprint.removeAllPads();
                 }
-                footprint.setOuterDimension((rows - 1)/2*padPitch + padAcross);
+                footprint.generate(type);
             }
-            tableModel.fireTableDataChanged();
+            finally {
+                tableModel.fireTableDataChanged();
+                pkg.fireFootprintChanged();
+            }
         });
     }
+
 
     private JTextField bodyWidthTf;
     private JTextField bodyHeightTf;
@@ -543,14 +443,5 @@ public class PackageVisionPanel extends JPanel {
         autoBinding_8.setConverter(doubleConverter);
         autoBinding_8.bind();
 
-        ComponentDecorators.decorateWithAutoSelect(bodyWidthTf);
-        ComponentDecorators.decorateWithAutoSelect(bodyHeightTf);
-
-        ComponentDecorators.decorateWithAutoSelect(outerDimension);
-        ComponentDecorators.decorateWithAutoSelect(innerDimension);
-        ComponentDecorators.decorateWithAutoSelect(padCount);
-        ComponentDecorators.decorateWithAutoSelect(padPitch);
-        ComponentDecorators.decorateWithAutoSelect(padAcross);
-        ComponentDecorators.decorateWithAutoSelect(padRoundness);
     }
 }

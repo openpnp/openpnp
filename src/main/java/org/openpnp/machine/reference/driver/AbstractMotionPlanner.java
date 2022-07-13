@@ -706,6 +706,18 @@ public abstract class AbstractMotionPlanner extends AbstractModelObject implemen
     }
 
     @Override
+    public synchronized Motion getLastMotion() {
+        for (Map.Entry<Double, Motion> entry : motionPlan.descendingMap().entrySet()) {
+            Motion motion = entry.getValue();
+            if (!motion.getLocation0().matches(motion.getLocation1())) {
+                // Got a real move.
+                return motion;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public void waitForCompletion(HeadMountable hm, CompletionType completionType)
             throws Exception {
         // Now is high time to plan and execute the queued motion commands. 

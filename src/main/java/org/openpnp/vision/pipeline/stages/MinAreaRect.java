@@ -11,7 +11,6 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.openpnp.model.Location;
 import org.openpnp.util.Utils2D;
 import org.openpnp.vision.FluentCv;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -38,6 +37,10 @@ public class MinAreaRect extends CvStage {
     @Attribute(required = false)
     @Property(description = "Expected angle of the rectangular hull to be detected.")
     private double expectedAngle = 0;
+
+    @Attribute(required = false)
+    @Property(description = "Search angle, two-sided around the expected angle.")
+    private double searchAngle = 45;
 
     @Attribute(required = false)
     @Property(description = "Detect the left edge of the rectangle (rotated to expectedAngle).")
@@ -81,6 +84,14 @@ public class MinAreaRect extends CvStage {
 
     public void setExpectedAngle(double expectedAngle) {
         this.expectedAngle = expectedAngle;
+    }
+
+    public double getSearchAngle() {
+        return searchAngle;
+    }
+
+    public void setSearchAngle(double searchAngle) {
+        this.searchAngle = searchAngle;
     }
 
     public boolean isLeftEdge() {
@@ -145,19 +156,17 @@ public class MinAreaRect extends CvStage {
         Mat mat = pipeline.getWorkingImage();
         Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
         double expectedAngle = getExpectedAngle();
+        double searchAngle = getSearchAngle();
         boolean leftEdge = isLeftEdge();
         boolean rightEdge = isRightEdge();
         boolean topEdge = isTopEdge();
         boolean bottomEdge = isBottomEdge();
 
         if (!propertyName.isEmpty()) {
-
-            center = getPossiblePipelinePropertyOverride(center, pipeline, 
-                    propertyName + ".center", Point.class, org.opencv.core.Point.class, 
-                    Location.class);
-
             expectedAngle = getPossiblePipelinePropertyOverride(expectedAngle, pipeline, 
                     propertyName + ".expectedAngle", Double.class, Integer.class);
+            searchAngle = getPossiblePipelinePropertyOverride(searchAngle, pipeline, 
+                    propertyName + ".searchAngle", Double.class, Integer.class);
 
             leftEdge = getPossiblePipelinePropertyOverride(leftEdge, pipeline, 
                     propertyName + ".leftEdge");
@@ -179,6 +188,9 @@ public class MinAreaRect extends CvStage {
         int[] lastRowVertical = new int[cols];
         // -1 means uninitialized.
         Arrays.fill(firstRowVertical, -1);
+        long xSum = 0;
+        long ySum = 0;
+        int nPixels = 0;
         for (int row = 0; row < rows; row++) {
             mat.get(row, 0, rowData);
             int firstColHorizontal = -1;
@@ -190,6 +202,10 @@ public class MinAreaRect extends CvStage {
                         firstColHorizontal = col;
                     }
                     lastColHorizontal = col;
+                    // stats 
+                    xSum += col; 
+                    ySum += row; 
+                    nPixels ++;
                 }
             }
             if (firstColHorizontal >= 0) {
@@ -203,6 +219,10 @@ public class MinAreaRect extends CvStage {
                 lastRowVertical[lastColHorizontal] = row;
             }
         }
+        // Make the gravity center of the pixels our center. It determines where a partial edge minimum area is
+        // snuggling to..
+        center.x = xSum/(double)nPixels;
+        center.y = ySum/(double)nPixels;
         if (diagnostics) {
             mat.setTo(new Scalar(0, 0, 0));
         }
@@ -227,24 +247,7 @@ public class MinAreaRect extends CvStage {
             r = Imgproc.minAreaRect(pointsMat);
             pointsMat.release();
 
-            // Rotate nearest to expectedAngle in 90° steps.
-            // Note, the angles in RotatedRect are left-handed (we reverse the sign).
-            int steps90 = (int) Math.round((expectedAngle + r.angle)/90);
-            if (steps90 != 0) {
-                if ((steps90 & 1) != 0) {
-                    // Odd 90° rotation, must swap size
-                    r = new RotatedRect(
-                            r.center, 
-                            new Size(r.size.height, r.size.width), 
-                            Utils2D.angleNorm(r.angle - steps90*90, 180));
-                }
-                else {
-                    r = new RotatedRect(
-                            r.center, 
-                            r.size, 
-                            Utils2D.angleNorm(r.angle - steps90*90, 180));
-                }
-            }
+            r = Utils2D.rotateToExpectedAngle(r, expectedAngle);
         }
         else {
             // Partial edges, use own method.
@@ -255,7 +258,7 @@ public class MinAreaRect extends CvStage {
             }
             // Detect the minimum area edges.
             r = minAreaEdges(points, leftEdge, rightEdge, topEdge, bottomEdge, 
-                    expectedAngle, 45, 
+                    expectedAngle, searchAngle, 
                     cols, rows);
             // Translate rotated rect back to mat coordinates. 
             if (r != null) {
@@ -283,8 +286,10 @@ public class MinAreaRect extends CvStage {
         final double unbounded = Math.hypot(cols, rows);
         final double step = searchAngle/stepsPerSearch;
         final double da = Math.toRadians(step);
+        // Sanity
+        searchAngle = Math.min(45, Math.abs(searchAngle));
         for (double angle = Math.toRadians(expectedAngle - searchAngle), 
-                angleMax = Math.toRadians(angleMax = expectedAngle + searchAngle); 
+                angleMax = Math.toRadians(expectedAngle + searchAngle); 
                 angle < angleMax; 
                 angle += da) {
             // Note this is the OpenCv 2D left-handed coordinate system, Y pointing down.
@@ -311,23 +316,36 @@ public class MinAreaRect extends CvStage {
                     y1 = y;
                 }
             }
-            // Enlarge unbounded edges to the maximum.
+            // Limit unbounded edges to center of gravity.
             if (!leftEdge) {
-                x0 = -unbounded;
+                x0 = 0;
             }
             if (!rightEdge) {
-                x1 = +unbounded;
+                x1 = 0;
             }
             if (!topEdge) {
-                y0 = -unbounded;
+                y0 = 0;
             }
             if (!bottomEdge) {
-                y1 = +unbounded;
+                y1 = 0;
             }
             // calculate the area
             double area = (x1 - x0)*(y1 - y0);
+            //System.out.println("minAreaEdges: angle="+Math.toDegrees(angle)+"° area="+area+" w="+(x1 - x0)+" h="+(y1 - y0)+" rect="+x0+","+y0+"*"+x1+","+y1);
             if (bestArea > area) {
                 bestArea = area;
+                if (!leftEdge) {
+                    x0 = -unbounded;
+                }
+                if (!rightEdge) {
+                    x1 = +unbounded;
+                }
+                if (!topEdge) {
+                    y0 = -unbounded;
+                }
+                if (!bottomEdge) {
+                    y1 = +unbounded;
+                }
                 double dx = (x0 + x1)/2;
                 double dy = (y0 + y1)/2;
                 double px = c*dx + s*dy;

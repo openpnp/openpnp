@@ -1538,7 +1538,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             }
                         });
 
-                        if (autoSetupMode  == FindFeaturesMode.FromPickLocationGetHoles) {
+                        if (autoSetupMode == FindFeaturesMode.FromPickLocationGetHoles
+                                || (autoSetupMode == null && !(getHole1Location().isInitialized() && getHole2Location().isInitialized()))) {
                             // because we sorted the holes by distance, the first two are our holes 1 and 2
                             if (holes.size() < 2) {
                                 throw new Exception("At least two sprocket holes need to be recognized"); 

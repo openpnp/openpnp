@@ -36,6 +36,9 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
     @Attribute(required = false)
     protected RotationMode rotationMode = RotationMode.AbsolutePartAngle;
 
+    @Attribute(required = false)
+    protected boolean aligningRotationMode = false;
+
     /**
      * Under limited angular articulation, the nozzle must be prepared for a pick-and-place cycle, including
      * any angular tolerances in the pick (for feeders with vision) and in the alignment (bottom vision).
@@ -104,7 +107,7 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
         Object oldValue = this.part;
         this.part = part;
         if (rotationModeOffset != null && part == null) {
-            rotationModeOffset = null;
+            setRotationModeOffset(null);
             getMachine().fireMachineHeadActivity(head);
         }
         firePropertyChange("part", oldValue, part);
@@ -121,7 +124,20 @@ public abstract class AbstractNozzle extends AbstractHeadMountable implements No
     }
 
     public void setRotationMode(RotationMode rotationMode) {
+        Object oldValue = this.rotationMode;
         this.rotationMode = rotationMode;
+        firePropertyChange("rotationMode", oldValue, rotationMode);
+    }
+
+    @Override
+    public boolean isAligningRotationMode() {
+        return aligningRotationMode;
+    }
+
+    public void setAligningRotationMode(boolean aligningRotationMode) {
+        Object oldValue = this.aligningRotationMode;
+        this.aligningRotationMode = aligningRotationMode;
+        firePropertyChange("aligningRotationMode", oldValue, aligningRotationMode);
     }
 
     public double[] getRotationModeLimits() throws Exception {

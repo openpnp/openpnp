@@ -16,7 +16,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
-import org.openpnp.gui.components.PipelinePanel;
+import org.openpnp.gui.components.PipelineControls;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.AbstractVisionSettings;
@@ -52,7 +52,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
 
     private JButton btnSpecializeSetting;
     private JButton btnGeneralizeSettings;
-    private PipelinePanel pipelinePanel;
+    private PipelineControls pipelinePanel;
 
     public FiducialVisionSettingsConfigurationWizard(FiducialVisionSettings visionSettings, 
             PartSettingsHolder settingsHolder) {
@@ -194,7 +194,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 8");
 
-        pipelinePanel = new PipelinePanel() {
+        pipelinePanel = new PipelineControls() {
 
             @Override
             public void configurePipeline(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {

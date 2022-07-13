@@ -39,6 +39,7 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
+import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.axis.ReferenceCamClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceCamCounterClockwiseAxis;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
@@ -903,6 +904,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         command = substituteVariable(command, "True", on ? on : null);
         command = substituteVariable(command, "False", on ? null : on);
         sendGcode(command);
+        SimulationModeMachine.simulateActuate(actuator, on, true);
     }
 
     @Override
@@ -916,6 +918,7 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         command = substituteVariable(command, "DoubleValue", value);
         command = substituteVariable(command, "IntegerValue", (int) value);
         sendGcode(command);
+        SimulationModeMachine.simulateActuate(actuator, value, true);
     }
 
     @Override

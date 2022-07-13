@@ -89,9 +89,11 @@ public class Helpers {
                 int index = tableModel.indexOf(row);
                 if (index >= 0) {
                     int viewIndex = table.getRowSorter().convertRowIndexToView(index);
-                    table.addRowSelectionInterval(viewIndex, viewIndex);
-                    Rectangle cellRect = table.getCellRect(viewIndex, viewIndex, true);
-                    table.scrollRectToVisible(cellRect);
+                    if (viewIndex >= 0 && viewIndex < table.getRowCount()) {
+                        table.addRowSelectionInterval(viewIndex, viewIndex);
+                        Rectangle cellRect = table.getCellRect(viewIndex, viewIndex, true);
+                        table.scrollRectToVisible(cellRect);
+                    }
                 }
             }
         });

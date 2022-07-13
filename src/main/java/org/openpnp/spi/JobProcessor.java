@@ -11,9 +11,11 @@ public interface JobProcessor extends PropertySheetHolder, WizardConfigurable {
     }
 
     public void initialize(Job job) throws Exception;
-    
+
     public boolean next() throws JobProcessorException;
-    
+
+    boolean isSteppingToNextMotion();
+
     public void abort() throws JobProcessorException;    
 
     public void addTextStatusListener(TextStatusListener listener);

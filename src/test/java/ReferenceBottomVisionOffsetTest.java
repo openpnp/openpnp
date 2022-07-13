@@ -19,7 +19,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
+import org.openpnp.model.VisionCompositing.CompositingMethod;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -211,6 +211,8 @@ public class ReferenceBottomVisionOffsetTest {
        
         Part part = Configuration.get().getPart("DoubleAsymPart");
         BottomVisionSettings bottomVisionSettings = bottomVision.getInheritedVisionSettings(part);
+        // Need to suppress vision compositing, as it complains about asymmetric parts.
+        part.getPackage().getVisionCompositing().setCompositingMethod(CompositingMethod.None);
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
@@ -255,6 +257,8 @@ public class ReferenceBottomVisionOffsetTest {
         Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
        
         Part part = Configuration.get().getPart("DoubleAsymPart");
+        // Need to suppress vision compositing, as it complains about asymmetric parts.
+        part.getPackage().getVisionCompositing().setCompositingMethod(CompositingMethod.None);
         BottomVisionSettings bottomVisionSettings = bottomVision.getInheritedVisionSettings(part);
         
         BoardLocation boardLocation = new BoardLocation(new Board());

@@ -32,7 +32,8 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.AbstractLocatable;
-import org.openpnp.model.Board.Side;
+import org.opencv.core.RotatedRect;
+import org.opencv.core.Size;import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
@@ -411,7 +412,48 @@ public class Utils2D {
         }
         return angle;
     }
-    
+
+    public static double angleNorm(double val, double lim) {
+        double clip = lim * 2;
+        while (Math.abs(val) > lim) {
+            val += (val < 0.) ? clip : -clip;
+        }
+        return val;
+    }
+
+    public static double angleNorm(double val) {
+        return angleNorm(val, 45.);
+    }
+
+    /**
+     * Rotate the given RotatedRect nearest to the expectedAngle in 90° steps, i.e., it will have the same shape
+     * but be ±45° within expectedAngle. 
+     * 
+     * @param r
+     * @param expectedAngle Note, the angle given here is right-handed, unlike the one 
+     *                      stored in the RotatedRect.
+     * @return
+     */
+    public static RotatedRect rotateToExpectedAngle(RotatedRect r, double expectedAngle) {
+        int steps90 = (int) Math.round((expectedAngle + r.angle)/90);
+        if (steps90 != 0) {
+            if ((steps90 & 1) != 0) {
+                // Odd 90° rotation, must swap size
+                r = new RotatedRect(
+                        r.center, 
+                        new Size(r.size.height, r.size.width), 
+                        Utils2D.angleNorm(r.angle - steps90*90, 180));
+            }
+            else {
+                r = new RotatedRect(
+                        r.center, 
+                        r.size, 
+                        Utils2D.angleNorm(r.angle - steps90*90, 180));
+            }
+        }
+        return r;
+    }
+
     /**
      * Calculate the Location along the line formed by a and b with distance from a.
      * @param a
@@ -693,17 +735,5 @@ public class Utils2D {
         results.add(maxA);
         results.add(maxB);
         return results;
-    }
-
-    public static double angleNorm(double val, double lim) {
-        double clip = lim * 2;
-        while (Math.abs(val) > lim) {
-            val += (val < 0.) ? clip : -clip;
-        }
-        return val;
-    }
-
-    public static double angleNorm(double val) {
-        return angleNorm(val, 45.);
     }
 }

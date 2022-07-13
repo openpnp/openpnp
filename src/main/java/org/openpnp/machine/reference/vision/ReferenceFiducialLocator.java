@@ -436,7 +436,7 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
             pipeline.setProperty("fiducial.diameter", diameter);
             pipeline.setProperty("fiducial.maxDistance", getMaxDistance());
         }
-        pipeline.setProperties(pipelineParameterAssignments);
+        pipeline.addProperties(pipelineParameterAssignments);
     }
 
     public Location getFiducialLocation(Location nominalLocation, PartSettingsHolder partSettingsHolder) throws Exception {
@@ -657,6 +657,9 @@ public class ReferenceFiducialLocator extends AbstractPartSettingsHolder impleme
     @Override
     public Wizard getPartConfigurationWizard(PartSettingsHolder partSettingsHolder) {
         FiducialVisionSettings visionSettings = getInheritedVisionSettings(partSettingsHolder);
+        if (visionSettings == null) {
+            return null;
+        }
         try {
             visionSettings.getPipeline().setProperty("camera", getVisionCamera());
         }

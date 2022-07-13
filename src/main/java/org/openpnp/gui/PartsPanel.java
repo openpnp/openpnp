@@ -398,19 +398,25 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
+            String id;
+            while ((id = JOptionPane.showInputDialog(frame,
+                    "Please enter an ID for the pasted part.")) != null) {
+                if (configuration.getPart(id) == null) {
+                    break;
+                }
+                MessageBoxes.errorBox(frame, "Error", "Part ID " + id + " already exists.");
+            }
+            if (id == null || id.isEmpty()) {
+                return;
+            }
             try {
                 Serializer ser = Configuration.createSerializer();
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 String s = (String) clipboard.getData(DataFlavor.stringFlavor);
                 StringReader r = new StringReader(s);
                 Part part = ser.read(Part.class, s);
-                for (int i = 0;; i++) {
-                    if (Configuration.get().getPart(part.getId() + "-" + i) == null) {
-                        part.setId(part.getId() + "-" + i);
-                        Configuration.get().addPart(part);
-                        break;
-                    }
-                }
+                part.setId(id);
+                Configuration.get().addPart(part);
                 tableModel.fireTableDataChanged();
                 Helpers.selectLastTableRow(table);
             }

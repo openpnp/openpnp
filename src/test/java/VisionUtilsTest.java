@@ -1,3 +1,5 @@
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -26,8 +28,6 @@ import org.openpnp.spi.base.AbstractHeadMountable;
 import org.openpnp.util.VisionUtils;
 
 import com.google.common.io.Files;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 
 public class VisionUtilsTest {
@@ -281,6 +281,11 @@ public class VisionUtilsTest {
         @Override
         public FocusProvider getFocusProvider() {
             return null;
+        }
+
+        @Override
+        public Length getRoamingRadius() {
+            return new Length(10, LengthUnit.Millimeters);
         }
     }
 }

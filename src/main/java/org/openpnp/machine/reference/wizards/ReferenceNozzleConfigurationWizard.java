@@ -79,6 +79,8 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
     private JLabel lblOffset;
     private JLabel lblRotationMode;
     private JComboBox rotationMode;
+    private JLabel lblAlignWithPart;
+    private JCheckBox aligningRotationMode;
 
     public ReferenceNozzleConfigurationWizard(AbstractMachine machine, ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -181,6 +183,13 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         
         rotationMode = new JComboBox(RotationMode.values());
         panelOffsets.add(rotationMode, "4, 10, fill, default");
+        
+        lblAlignWithPart = new JLabel("Align with Part?");
+        lblAlignWithPart.setToolTipText("<html>\n<p>After bottom vision part alignment, make the nozzle Rotation Mode offset<br/>\nalign with the part rotation.</p>\n<br/>\n<p>This will make sure the nozzle coordinates as indicated in the reticle (cross-hairs),<br/>\nin the DRO etc. match the detected rotation of the part.</p>\n<br/>\n<p>After placing/discarding the part, the nozzle snaps back to indicating the original <br/>\naxis rotation.</p>\n</html>");
+        panelOffsets.add(lblAlignWithPart, "6, 10, right, default");
+        
+        aligningRotationMode = new JCheckBox("");
+        panelOffsets.add(aligningRotationMode, "8, 10");
 
         JPanel panelSafeZ = new JPanel();
         panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
@@ -273,6 +282,8 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         addWrappedBinding(nozzle, "axisZ", axisZ, "selectedItem", axisConverter);
         addWrappedBinding(nozzle, "axisRotation", axisRotation, "selectedItem", axisConverter);
         addWrappedBinding(nozzle, "rotationMode", rotationMode, "selectedItem");
+        addWrappedBinding(nozzle, "aligningRotationMode", aligningRotationMode, "selected");
+        
 
         MutableLocationProxy headOffsets = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, nozzle, "headOffsets", headOffsets, "location");

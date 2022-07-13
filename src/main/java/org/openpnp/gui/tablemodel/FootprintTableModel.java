@@ -38,9 +38,11 @@ public class FootprintTableModel extends AbstractTableModel {
                     LengthCellValue.class, LengthCellValue.class, String.class, String.class};
 
     final private Footprint footprint;
+    final private org.openpnp.model.Package pkg;
 
-    public FootprintTableModel(Footprint footprint) {
+    public FootprintTableModel(Footprint footprint, org.openpnp.model.Package pkg) {
         this.footprint = footprint;
+        this.pkg = pkg;
     }
 
     public Pad getPad(int index) {
@@ -121,10 +123,11 @@ public class FootprintTableModel extends AbstractTableModel {
             }
             else if (columnIndex == 6) {
                 double val = Double.parseDouble(aValue.toString());
-                val = Math.max(val, 0);
+                val = Math.max(val, -100);
                 val = Math.min(val, 100);
                 pad.setRoundness(val);
             }
+            pkg.fireFootprintChanged();
         }
         catch (Exception e) {
             // TODO: dialog, bad input
