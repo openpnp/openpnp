@@ -36,7 +36,7 @@ import org.simpleframework.xml.core.Persist;
  * 
  * @author jason
  */
-public class Placement extends AbstractLocatable implements Identifiable {
+public class Placement extends AbstractLocatable {
     public enum Type {
         Placement, 
         Fiducial,
@@ -60,12 +60,6 @@ public class Placement extends AbstractLocatable implements Identifiable {
     @Version(revision = 1.4)
     private double version;
 
-    @Attribute
-    private String id;
-    
-//    @Element
-//    private Location location;
-    
     @Attribute
     private Side side = Side.Top;
 
@@ -95,7 +89,6 @@ public class Placement extends AbstractLocatable implements Identifiable {
         this.comments = placement.comments;
         this.enabled = placement.enabled;
         this.errorHandling = placement.errorHandling;
-        this.id = placement.id;
         this.part = placement.part;
         this.partId = placement.partId;
         this.side = placement.side;
@@ -146,10 +139,6 @@ public class Placement extends AbstractLocatable implements Identifiable {
         if (part != null) {
             part.setPlacementCount(+1);
         }
-    }
-
-    public String getId() {
-        return id;
     }
 
     public Side getSide() {
@@ -210,7 +199,7 @@ public class Placement extends AbstractLocatable implements Identifiable {
     
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        Logger.trace(String.format("PropertyChangeEvent handled by Placement @%08x = %s", this.hashCode(), evt));
+        Logger.trace(String.format("PropertyChangeEvent handled by Placement %s @%08x = %s", id, this.hashCode(), evt));
         super.propertyChange(evt);
     }
 }

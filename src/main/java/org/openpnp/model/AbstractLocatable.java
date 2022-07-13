@@ -7,13 +7,17 @@ import java.lang.reflect.InvocationTargetException;
 import org.apache.commons.beanutils.BeanUtils;
 import org.openpnp.spi.Definable;
 import org.pmw.tinylog.Logger;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-public abstract class AbstractLocatable extends AbstractModelObject implements Definable, PropertyChangeListener {
+public abstract class AbstractLocatable extends AbstractModelObject implements Definable, Identifiable, PropertyChangeListener {
 
     @Element
-    private Location location;
+    protected Location location;
 
+    @Attribute
+    protected String id;
+    
     protected transient Definable definedBy;
 
     private transient boolean dirty;
@@ -26,6 +30,7 @@ public abstract class AbstractLocatable extends AbstractModelObject implements D
         super();
         location = abstractLocatable.location;
         setDefinedBy(abstractLocatable.getDefinedBy());
+        id = abstractLocatable.id;
     }
     
     AbstractLocatable(Location location) {
@@ -62,6 +67,16 @@ public abstract class AbstractLocatable extends AbstractModelObject implements D
     public boolean isDefinedBy(Definable definedBy) {
         return this.definedBy == definedBy;
     };
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        String oldValue = this.id;
+        this.id = id;
+        firePropertyChange("id", oldValue, id);
+    }
 
     public boolean isDirty() {
         return dirty;
