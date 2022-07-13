@@ -80,7 +80,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected int maxVisionRetries = 3;
     
     @Attribute(required = false)
-    boolean steppingToNextMotion;
+    boolean steppingToNextMotion = true;
 
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
