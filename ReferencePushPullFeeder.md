@@ -149,7 +149,7 @@ Use the **All Feeder OCR** button to perform the OCR action on all the feeders m
 
 ### Vision / Edit Pipeline
 
-As usual, use the **Edit Pipeline** and **Reset Pipeline** buttons. 
+As usual, use the **Edit Pipeline** and **Reset Pipeline** buttons. There is also an [alternative Pipeline available using the Circular Symmetry detection](https://github.com/openpnp/openpnp/wiki/DetectCircularSymmetry#referencepushpullfeeder) instead of color-keying. Try this one, if the default one fails.
 
 ![Buttons](https://user-images.githubusercontent.com/9963310/94434817-9fa64f00-019a-11eb-9095-392c0b95da2e.png) 
 
