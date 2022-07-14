@@ -127,6 +127,9 @@ Standard pipeline (Edit the pipeline and paste this using the ![Paste](https://u
 ```
 
 ## Fiducial Locator
+
+This is now the standard pipeline in newer OpenPnP versions.
+
 ![Fiducial Locator](https://user-images.githubusercontent.com/9963310/115297291-5597b180-a15c-11eb-940f-47a3cd2fde15.png)
 
 The **diameter** of the fiducial is automatically derived from the footprint. Therefore, the same underlying data can be used both for the classic `MatchPartTemplate` based pipeline and the new pipeline (obviously this only works if the ficucial is actually round). 
@@ -189,7 +192,7 @@ A deliberately bent strip was perfectly followed, zero mis-detects:
 
 ## ReferencePushPullFeeder
 
-The ReferencePushPullFeeder sets the **diameter** to be detected, i.e. the sprocket hole diameter according to the EIA 481 standard. A relatively accurate camera units per pixel setting is required and the tape surface needs to be near the camera focal plane in Z. 
+The ReferencePushPullFeeder sets the **diameter** to be detected, i.e. the sprocket hole diameter according to the EIA 481 standard. A relatively accurate camera units per pixel setting is required, i.e. use [Issues & Solutions camera calibration](https://github.com/openpnp/openpnp/wiki/Vision-Solutions), which includes [[3D Units per Pixel]], so the feeder Z is taken into consideration.  
 
 The ReferencePushPullFeeder also controls the **maxDistance** search range: full camera scope for Auto Setup and an optimized minimal search range for routine detection of the two reference holes.
 
