@@ -35,10 +35,10 @@ This documentation is incomplete and can use your help! Anyone with a GitHub acc
 # Helpful Resources
 
 * [The GoFundMe Page](https://www.gofundme.com/help-openpnp-grow)
+* [CharmHigh Conversion](https://github.com/openpnp/openpnp/wiki/Charmhigh-modifications-for-OpenPnP): how to convert the CharmHigh machine to use Smoothieware and OpenPnP.
+* [SwitcherCamera Documentation](https://github.com/openpnp/openpnp/wiki/SwitcherCamera): The SwitcherCamera lets OpenPnP switch the camera board on the CHMT between the top and bottom camera.
 * [SparkFun's CHMT36VA Repo](https://github.com/sparkfunX/Desktop-PickAndPlace-CHMT36VA) contains translations, documentation, software, and utilities for working with the machine.
 * [OpenPnP + CHMT Thread](https://groups.google.com/forum/#!msg/desktop-pick-and-place/qaoGrnM7pPw/-2k-5FBHCAAJ) contains tons of good information on making the CHMT work with OpenPnP.
 * [Smoothie on STM32/CHMT Thread](https://groups.google.com/d/msg/desktop-pick-and-place/C-n9dksqhDQ/xZdmKPh3CAAJ)
-* [SwitcherCamera Documentation](https://github.com/openpnp/openpnp/wiki/SwitcherCamera): The SwitcherCamera lets OpenPnP switch the camera board on the CHMT between the top and bottom camera.
-* [CharmHigh Conversion](https://github.com/openpnp/openpnp/wiki/Charmhigh-modifications-for-OpenPnP): how to convert the CharmHigh machine to use Smoothieware and OpenPnP.
 * [Pneumatics Overview](https://github.com/openpnp/openpnp/wiki/Charmhigh-36VA-Pneumatics) Basic workings of the OEM pneumatics
 ---
