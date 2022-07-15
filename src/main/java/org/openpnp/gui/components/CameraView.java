@@ -69,7 +69,7 @@ import org.openpnp.CameraListener;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.gui.support.LengthConverter;
-import org.openpnp.machine.reference.AbstractBroadcastingCamera;
+import org.openpnp.machine.reference.camera.AbstractBroadcastingCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;

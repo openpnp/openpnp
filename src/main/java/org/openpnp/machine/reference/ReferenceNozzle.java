@@ -17,6 +17,7 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceNozzleTip.VacuumMeasurementMethod;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.solutions.ActuatorSolutions;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCameraOffsetWizard;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleCompatibleNozzleTipsWizard;

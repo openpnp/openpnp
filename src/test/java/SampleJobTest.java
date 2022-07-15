@@ -10,13 +10,13 @@ import org.openpnp.CameraListener;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferencePnpJobProcessor;
 import org.openpnp.machine.reference.axis.ReferenceControllerAxis;
+import org.openpnp.machine.reference.camera.AbstractSettlingCamera;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Axis;
-import org.openpnp.spi.base.AbstractCamera;
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 
@@ -70,7 +70,7 @@ public class SampleJobTest {
         Configuration.get().load();
         
         ReferenceMachine machine = (ReferenceMachine) Configuration.get().getMachine();
-        AbstractCamera camera = (AbstractCamera)machine.getDefaultHead().getDefaultCamera();
+        AbstractSettlingCamera camera = (AbstractSettlingCamera)machine.getDefaultHead().getDefaultCamera();
 
         // There seems to be a race condition in imperfectMachine simulation where the camera is not yet ready
         // this never happens in real OpenPnP so let's just settle things down.
@@ -97,7 +97,7 @@ public class SampleJobTest {
                 }
             }
 
-            camera.setSettleMethod(AbstractCamera.SettleMethod.FixedTime);
+            camera.setSettleMethod(AbstractSettlingCamera.SettleMethod.FixedTime);
             camera.setSettleTimeMs(0);
         }
         else {

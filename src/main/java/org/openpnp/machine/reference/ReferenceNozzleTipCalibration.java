@@ -18,6 +18,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;

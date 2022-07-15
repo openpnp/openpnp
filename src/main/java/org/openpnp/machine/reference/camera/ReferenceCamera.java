@@ -17,7 +17,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference;
+package org.openpnp.machine.reference.camera;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -51,8 +51,8 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.WizardUtils;
 import org.openpnp.gui.wizards.CameraConfigurationWizard;
 import org.openpnp.gui.wizards.CameraVisionConfigurationWizard;
-import org.openpnp.machine.reference.camera.AutoFocusProvider;
-import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
+import org.openpnp.machine.reference.ReferenceHeadMountable;
+import org.openpnp.machine.reference.ReferenceNozzleTipCalibration;
 import org.openpnp.machine.reference.camera.calibration.AdvancedCalibration;
 import org.openpnp.machine.reference.camera.calibration.LensCalibrationParams;
 import org.openpnp.machine.reference.camera.wizards.ReferenceCameraWhiteBalanceConfigurationWizard;

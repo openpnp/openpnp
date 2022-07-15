@@ -19,7 +19,7 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.machine.reference;
+package org.openpnp.machine.reference.camera;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -42,7 +42,6 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.base.AbstractActuator;
-import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.util.MovableUtils;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -51,7 +50,7 @@ import org.simpleframework.xml.Attribute;
  * AbstractPreviewCamera handles the preview capture broadcasting aspects of a Camera. 
  *
  */
-public abstract class AbstractBroadcastingCamera extends AbstractCamera implements Runnable {
+public abstract class AbstractBroadcastingCamera extends AbstractSettlingCamera implements Runnable {
     // Calling notifyAll on this object will wake the stream thread for one loop to broadcast
     // a new image.
     protected Object captureNotifier = new Object();
