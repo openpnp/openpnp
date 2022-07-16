@@ -30,7 +30,6 @@ import org.openpnp.capture.CaptureStream;
 import org.openpnp.capture.OpenPnpCapture;
 import org.openpnp.capture.PropertyLimits;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OpenPnpCaptureCameraConfigurationWizard;
 import org.openpnp.model.AbstractModelObject;
 import org.openpnp.spi.PropertySheetHolder;

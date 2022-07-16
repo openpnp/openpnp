@@ -31,7 +31,6 @@ import java.net.URLConnection;
 import javax.imageio.ImageIO;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.MjpgCaptureCameraWizard;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;

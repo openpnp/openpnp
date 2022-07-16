@@ -23,7 +23,6 @@ import java.awt.image.BufferedImage;
 import java.util.WeakHashMap;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.PropertySheetHolder;
 

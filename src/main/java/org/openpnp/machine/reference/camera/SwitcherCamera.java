@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.SwitcherCameraConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;

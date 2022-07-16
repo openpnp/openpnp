@@ -38,7 +38,6 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
 import org.openpnp.model.AxesLocation;

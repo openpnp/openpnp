@@ -15,7 +15,7 @@ import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.NamedConverter;
-import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.base.AbstractAxis;

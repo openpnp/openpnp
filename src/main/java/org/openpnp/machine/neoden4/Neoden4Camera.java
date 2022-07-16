@@ -24,7 +24,7 @@ import java.awt.image.BufferedImage;
 import org.opencv.core.Mat;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.neoden4.wizards.Neoden4CameraConfigurationWizard;
-import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.PropertySheetHolder;
 import org.openpnp.util.OpenCvUtils;

@@ -16,7 +16,7 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;

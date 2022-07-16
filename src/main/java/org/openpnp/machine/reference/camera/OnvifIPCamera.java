@@ -39,7 +39,6 @@ import org.onvif.ver10.schema.VideoEncoding;
 import org.onvif.ver10.schema.VideoRateControl;
 import org.onvif.ver10.schema.VideoResolution;
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.OnvifIPCameraConfigurationWizard;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;

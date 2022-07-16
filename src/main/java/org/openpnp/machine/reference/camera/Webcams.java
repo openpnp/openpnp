@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.camera.wizards.WebcamConfigurationWizard;
 import org.openpnp.spi.PropertySheetHolder;
 import org.simpleframework.xml.Attribute;
