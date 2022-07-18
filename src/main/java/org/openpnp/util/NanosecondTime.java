@@ -46,7 +46,10 @@ public class NanosecondTime implements Comparable<NanosecondTime> {
     public static double getRuntimeSeconds() {
         return (double) getRuntime()*1e-9;
     }
-    
+    public static long getRuntimeMilliseconds() {
+        return getRuntime()/1000000;
+    }
+
     private static NanosecondTime systemStartTime = null;
     public static NanosecondTime get() {
         if (systemStartTime == null) {

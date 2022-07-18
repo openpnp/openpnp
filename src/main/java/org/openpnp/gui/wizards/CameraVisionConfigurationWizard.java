@@ -36,6 +36,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
@@ -355,13 +356,16 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                 }
                 initialJogWarningDisplayed = true;
             }
-            UiUtils.submitUiMachineTask(() -> {
-                if (jogTool instanceof Camera) {
-                    camera.moveToSafeZ();
-                }
-                MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(x, y, 0, c, jogTool);
-                MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(-x, -y, 0, -c, jogTool);
-                camera.lightSettleAndCapture();
+            SwingUtilities.invokeLater(() -> {
+                // There is some strange redraw related race, so do this later.
+                UiUtils.submitUiMachineTask(() -> {
+                    if (jogTool instanceof Camera) {
+                        camera.moveToSafeZ();
+                    }
+                    MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(x, y, 0, c, jogTool);
+                    MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(-x, -y, 0, -c, jogTool);
+                    camera.lightSettleAndCapture();
+                });
             });
         });
     }
@@ -456,8 +460,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         }
         @Override
         public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
             UiUtils.messageBoxOnException(() -> {
-                applyAction.actionPerformed(e);
                 camera.lightSettleAndCapture();
                 MovableUtils.fireTargetedUserAction(camera);
             });

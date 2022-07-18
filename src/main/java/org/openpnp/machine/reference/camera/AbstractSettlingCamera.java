@@ -43,6 +43,7 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.spi.base.AbstractCamera;
+import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.SimpleGraph;
 import org.pmw.tinylog.Logger;
@@ -55,9 +56,8 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
         Maximum,
         Mean,
         Euclidean,
-        Square;
-
-        protected static final double minimumRange = 16;
+        Square,
+        Motion;
 
         protected int getNorm() {
             switch(this) {
@@ -88,22 +88,60 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                     return -1;
             }
         }
+    }
 
-        protected double computeDifference(Mat mat0, Mat mat1, double settleContrastEnhance, Mat mask) { 
+    protected double computeDifference(SettleMethod method, Mat mat0, Mat mat1, double settleContrastEnhance, Mat mask) { 
+        if (method == SettleMethod.Motion) {
+            int dim = Math.min(mat1.cols(), mat1.rows());
+            int margin = (int) Math.round(dim*maxRelativeMotion);
+            int w = mat1.cols() - margin*2;
+            int h = mat1.rows() - margin*2;
+            Mat template = new Mat(mat1, new Rect(margin, margin, w, h));
+            Mat resultMat = new Mat();
+            if (mask != null) {
+                Mat innerMask = new Mat();
+                innerMask = createMask(template, Math.max(w, h));
+                Imgproc.matchTemplate(mat0, template, resultMat,
+                        Imgproc.TM_CCOEFF_NORMED, innerMask);
+                innerMask.release();
+            }
+            else {
+                Imgproc.matchTemplate(mat0, template, resultMat,
+                        Imgproc.TM_CCOEFF_NORMED);
+            }
+            MinMaxLocResult match = Core.minMaxLoc(resultMat);
+            double result;
+            if (match.maxVal > minMotionTemplateMatchScore) {
+                // Found the shifted image, calculate the difference as the distance in pixels.
+                result = Math.hypot(match.maxLoc.x - margin, match.maxLoc.y - margin);
+                // Take the match value as kind of a "sub-pixel" value.
+                result += (1 - match.maxVal)/(1 - minMotionTemplateMatchScore); 
+            }
+            else {
+                // Shifted image not found, max out.
+                result = Math.hypot(margin, margin);
+                // Take the match value as sub-integral value.
+                result += (1 - match.maxVal); 
+            }
+            template.release();
+            resultMat.release();
+            return result;
+        }
+        else {
             // Compute the method difference norm
             double result, range = 1.0;
             if (mask != null) { 
                 // masked by the circle
-                result = Core.norm(mat0, mat1, getNorm(), mask)/getScale(mat1);
+                result = Core.norm(mat0, mat1, method.getNorm(), mask)/method.getScale(mat1);
                 if (settleContrastEnhance != 0.0) {
-                    range = Core.norm(mat1, getNorm(), mask)/getScale(mat1);
+                    range = Core.norm(mat1, method.getNorm(), mask)/method.getScale(mat1);
                 }
             }
             else {
                 // the whole image
-                result = Core.norm(mat0, mat1, getNorm())/getScale(mat1);
+                result = Core.norm(mat0, mat1, method.getNorm())/method.getScale(mat1);
                 if (settleContrastEnhance != 0.0) {
-                    range = Core.norm(mat1, getNorm())/getScale(mat1);
+                    range = Core.norm(mat1, method.getNorm())/method.getScale(mat1);
                 }
             }
             if (range != 0.0) {
@@ -113,6 +151,24 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
             return result*100.0;
         }
     }
+
+    /**
+     * Maximum assumed motion relative to the camera (or mask) dimension. 
+     * Larger motion should register as no template match, and max out.
+     */
+    @Attribute(required = false)
+    protected double maxRelativeMotion = 0.05;
+    /**
+     * Minimum motion template image matching score.
+     */
+    @Attribute(required = false)
+    protected double minMotionTemplateMatchScore = 0.9;
+    /**
+     * Minimum image channel (brightness) range for contrast enhancement.
+     */
+    @Attribute(required = false)
+    protected double minContrastRange = 16;
+
 
     @Attribute(required = false)
     protected SettleMethod settleMethod = null;
@@ -205,13 +261,13 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
         }
     }
 
-    private BufferedImage autoSettleAndCapture() throws Exception {
+    private BufferedImage autoSettleAndCapture(double settleMaskCircle) throws Exception {
         Mat mask = null;
         Mat maskFullsize = null;
         Mat lastSettleMat = null;
 
         try {
-            long t0 = System.currentTimeMillis();
+            long t0 = NanosecondTime.getRuntimeMilliseconds();
             long timeout = t0 + settleTimeoutMs;
             int debounceCount = 0;
             SimpleGraph settleGraph = startDiagnostics();
@@ -230,6 +286,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 // The actual capture.
                 BufferedImage image = capture();
 
+                long t1 = NanosecondTime.getRuntimeMilliseconds();
                 double tCapture = 0.0; 
                 if (settleGraph != null) {
                     tCapture = settleGraph.getT();
@@ -332,7 +389,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 }
 
                 // Compute the differences of the two images according to the method.
-                double result = settleMethod.computeDifference(lastSettleMat, mat, settleContrastEnhance, mask);
+                double result = computeDifference(settleMethod, lastSettleMat, mat, settleContrastEnhance, mask);
                 if (settleGraph != null) {
                     settleGraph.getRow(DIFFERENCE, DATA).recordDataPoint(settleGraph.getT(), result);
                 }
@@ -341,8 +398,8 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 lastSettleMat.release();
                 lastSettleMat = mat;
 
-                long t = System.currentTimeMillis();
-                Logger.trace("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + result);
+                long t = NanosecondTime.getRuntimeMilliseconds();
+                Logger.trace("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + String.format("%.3f", result) +" compute time: "+(t-t1));
 
                 // If the image changed at least a bit (due to noise) and less than our
                 // threshold, we have a winner. The check for > 0 is to ensure that we're not just
@@ -396,7 +453,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
         }
     }
 
-    protected Mat createMask(Mat mat, int maskDiameter) {
+    protected static Mat createMask(Mat mat, int maskDiameter) {
         Mat mask;
         mask = new Mat(mat.rows(), mat.cols(), CvType.CV_8U, Scalar.all(0));
         Imgproc.circle(mask,
@@ -410,8 +467,8 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
         // It's weirdly difficult to extract the minimum level (black point) from an image.
         // Core.norm(... NORM_MINMAX) does not seem to work and minMaxLoc() takes only single channel images. 
         // So we need to work with the channels individually here. I must be missing something.
-        double max = SettleMethod.minimumRange/255.0;
-        double range = SettleMethod.minimumRange/255.0;
+        double range = minContrastRange/255.0;
+        double max = 0 + range;
         int nChannels = mat.channels();
         if (nChannels > 1) {
             Mat workingMat = new Mat();
@@ -456,12 +513,12 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
         // Create the difference heat-map
         if (mat0 != null) {
             // We have mat0, i.e. this is at least the second frame. 
+            Mat normMat = new Mat();
             Mat diffMat = new Mat();
             Core.absdiff(mat0, mat1, diffMat);
             if (settleFullColor) {
                 Imgproc.cvtColor(diffMat, diffMat, Imgproc.COLOR_BGR2GRAY);
             }
-            Mat normMat = new Mat();
             if (mask != null) {
                 Core.normalize(diffMat, normMat, 255, 0, 
                         Core.NORM_INF, 
@@ -472,8 +529,9 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                         Core.NORM_INF, 
                         0);
             }
-            Imgproc.cvtColor(normMat, normMat, Imgproc.COLOR_GRAY2BGR);
             diffMat.release();
+
+            Imgproc.cvtColor(normMat, normMat, Imgproc.COLOR_GRAY2BGR);
             Mat heatmapMat = new Mat();
             Imgproc.applyColorMap(normMat, heatmapMat, Imgproc.COLORMAP_HOT);
             Mat backgroundMat = new Mat();
@@ -517,6 +575,27 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 diagnosticMat.release();
             }
             diagnosticMat = blendedMat;
+            if (settleMethod == SettleMethod.Motion) {
+                // Draw the motion detection margin.
+                int margin = (int) (Math.min(diagnosticMat.cols(), diagnosticMat.rows())*maxRelativeMotion);
+                if (mask != null) {
+                    Imgproc.circle (
+                            diagnosticMat,
+                            new Point(diagnosticMat.cols()/2, diagnosticMat.rows()/2),
+                            recordedMaskDiameter/2 - margin,
+                            new Scalar(64, 64, 64),
+                            1, Imgproc.LINE_AA);
+                }
+                if (recordedMaskDiameter == 0
+                       || recordedMaskDiameter > mask.cols() || recordedMaskDiameter > mask.rows())  {
+                    Imgproc.rectangle(
+                            blendedMat, 
+                            new Point(margin, margin), 
+                            new Point(diagnosticMat.cols() - margin, diagnosticMat.rows() - margin),
+                            new Scalar(64, 64, 64),
+                            1, Imgproc.LINE_AA);
+                }
+            }
         }
 
         // Save file to disk.
@@ -554,7 +633,11 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
     }
 
     @Override
-    public BufferedImage settleAndCapture() throws Exception {
+    public BufferedImage settleAndCapture(SettleOption settleOption) throws Exception {
+        if (settleOption == SettleOption.Skip) {
+            // Skip settling.
+            return capture();
+        }
         Map<String, Object> globals = new HashMap<>();
         globals.put("camera", this);
         Configuration.get().getScripting().on("Camera.BeforeSettle", globals);
@@ -577,7 +660,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 return capture();
             }
             else {
-                return autoSettleAndCapture();
+                return autoSettleAndCapture(settleOption == SettleOption.SettleFullArea ? 0 : settleMaskCircle);
             }
         }
         finally {
