@@ -21,9 +21,26 @@
 
 import java.io.File;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openpnp.machine.reference.ReferenceMachine;
+import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.camera.SimulatedUpCamera;
+import org.openpnp.machine.reference.driver.NullDriver;
+import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.model.Part;
+import org.openpnp.spi.Machine;
+import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
+import org.openpnp.spi.PartAlignment.PartAlignmentOffset;
+import org.openpnp.util.VisionUtils;
+import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
 
 import com.google.common.io.Files;
 
@@ -38,187 +55,71 @@ public class VisionCompositingTest {
         File workingDirectory = Files.createTempDir();
         workingDirectory = new File(workingDirectory, ".openpnp");
         System.out.println("Configuration directory: " + workingDirectory);
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/VisionCompositingTest/packages.xml"),
+                new File(workingDirectory, "packages.xml"));
+        FileUtils.copyURLToFile(ClassLoader.getSystemResource("config/VisionCompositingTest/parts.xml"),
+                new File(workingDirectory, "parts.xml"));
         Configuration.initialize(workingDirectory);
         Configuration.get().load();
+
+        Configurator
+        .currentConfig()
+        .level(Level.INFO) // change this for other log levels.
+        .activate();
 
     }
 
 
     @Test
     public void testPackageSolutions() throws Exception {
-        /*
-        SimulatedUpCamera camera = (SimulatedUpCamera)VisionUtils.getBottomVisionCamera();
-        NozzleTip nt = Configuration.get().getMachine().getNozzleTips().get(0); 
-        org.openpnp.model.Package pkg;
-        Footprint footprint;
-        Pad pad;
-        pkg = new org.openpnp.model.Package("PASSIVE");
-        pkg.addCompatibleNozzleTip(nt);
-        footprint = pkg.getFootprint();
-        footprint.setOuterDimension(3);
-        footprint.setInnerDimension(2);
-        footprint.setPadAcross(2);
-        footprint.setPadCount(2);
-        footprint.generate(Generator.Dual);
-        pkg.getVisionCompositing().computeCompositeShots(pkg, camera);
-        assertEquals(pkg.getVisionCompositing().getMinCorners(), 3);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().size(), 4);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getRating(), 6); // non-square box and X configuration.
+        Machine machine = Configuration.get().getMachine();
+        Nozzle nozzle = machine.getDefaultHead().getDefaultNozzle();
+        SimulatedUpCamera camera = (SimulatedUpCamera) VisionUtils.getBottomVisionCamera();
+        camera.setRoamingRadius(new Length(30, LengthUnit.Millimeters));
+        ReferenceBottomVision bottomVision = ReferenceBottomVision.getDefault();
+        NullDriver driver = (NullDriver) ((ReferenceMachine) machine).getDefaultDriver();
+        driver.setFeedRateMmPerMinute(0);
 
-        pkg = new org.openpnp.model.Package("DUAL"); // SOIC
-        pkg.addCompatibleNozzleTip(nt);
-        footprint = pkg.getFootprint();
-        footprint.setOuterDimension(6.2);
-        footprint.setInnerDimension(3.8);
-        footprint.setPadAcross(0.5);
-        footprint.setPadPitch(1.27);
-        footprint.setPadCount(24);
-        footprint.generate(Generator.Dual);
-        pkg.getVisionCompositing().computeCompositeShots(pkg, camera);
-        assertEquals(pkg.getVisionCompositing().getMinCorners(), 3);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().size(), 4);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getRating(), 6); // non-square box and X configuration.
+        // Set nozzle tip pick tolerances for large offsets.
+        for (NozzleTip tip : Configuration.get().getMachine().getNozzleTips()) {
+            ((ReferenceNozzleTip) tip).setMaxPickTolerance(new Length(1, LengthUnit.Millimeters));
+        }
+        // Some of these irregular parts simply need pre-rotate vision i.e. multiple passes.
+        bottomVision.setPreRotate(true);
+        bottomVision.setMaxAngularOffset(0.1);
+        bottomVision.setMaxLinearOffset(new Length(0.1, LengthUnit.Millimeters));
 
-        pkg = new org.openpnp.model.Package("QUAD");
-        pkg.addCompatibleNozzleTip(nt);
-        footprint = pkg.getFootprint();
-        footprint.setOuterDimension(4);
-        footprint.setInnerDimension(2);
-        footprint.setPadAcross(0.2);
-        footprint.setPadPitch(0.5);
-        footprint.setPadCount(16);
-        footprint.generate(Generator.Quad);
-        pkg.getVisionCompositing().computeCompositeShots(pkg, camera);
-        assertEquals(pkg.getVisionCompositing().getMinCorners(), 2);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().size(), 4);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getRating(), 9); // full square
+        machine.setEnabled(true);
+        machine.execute(() -> {
+            for (Part part: Configuration.get().getParts()) {
+                if (!part.getId().startsWith("FID")) {
+                    Location error;
+                    Location maxError;
+                    if (part.getId().startsWith("SMALL")) {
+                        error = new Location(LengthUnit.Millimeters, 0.05, 0.1, 0, 7);
+                        // For small parts, expect small linear but large angular errors.
+                        maxError = new Location(LengthUnit.Millimeters, 0.025, 0.025, 0, 1.5);
+                    }
+                    else {
+                        error = new Location(LengthUnit.Millimeters, 0.25, 0.75, 0, -2);
+                        maxError = new Location(LengthUnit.Millimeters, 0.05, 0.05, 0, 0.07);
+                    }
+                    camera.setErrorOffsets(error);
+                    nozzle.pick(part);
+                    PartAlignmentOffset offset = bottomVision.findOffsets(part, null, Location.origin, nozzle);
+                    Location offsets = offset.getLocation();
+                    assertMaxDelta(offsets.getX(), error.getX(), maxError.getX());
+                    assertMaxDelta(offsets.getY(), error.getY(), maxError.getY());
+                    assertMaxDelta(offsets.getRotation(), error.getRotation(), maxError.getRotation());
+                }
+            }
+            return true;
+        });
+    }
 
-        pkg = new org.openpnp.model.Package("BGA");
-        pkg.addCompatibleNozzleTip(nt);
-        footprint = pkg.getFootprint();
-        footprint.setPadAcross(0.2);
-        footprint.setPadPitch(0.5);
-        footprint.setPadCount(64);
-        footprint.setPadRoundness(100);
-        footprint.generate(Generator.Bga);
-        pkg.getVisionCompositing().computeCompositeShots(pkg, camera);
-        assertEquals(pkg.getVisionCompositing().getMinCorners(), 2);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().size(), 4);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getRating(), 9); // full square
-
-        pkg = new org.openpnp.model.Package("HEADPHONE");
-        pkg.addCompatibleNozzleTip(nt);
-        footprint = pkg.getFootprint();
-        pad = new Pad();            //  [1]
-        pad.setX(-3);               //       [4]
-        pad.setY(6);                //
-        pad.setWidth(2);            //
-        pad.setHeight(2);           //  [2]
-        pad.setName("1");           //       [3]
-        footprint.addPad(pad);      //
-        pad = new Pad();            // Staggered pads.
-        pad.setX(-3);
-        pad.setY(-4);
-        pad.setWidth(2);
-        pad.setHeight(2);
-        pad.setName("2");
-        footprint.addPad(pad);
-        pad = new Pad();
-        pad.setX(3);
-        pad.setY(-6);
-        pad.setWidth(2);
-        pad.setHeight(2);
-        pad.setName("3");
-        footprint.addPad(pad);
-        pad = new Pad();
-        pad.setX(3);
-        pad.setY(4);
-        pad.setWidth(2);
-        pad.setHeight(2);
-        pad.setName("4");
-        footprint.addPad(pad);
-        pkg.getVisionCompositing().computeCompositeShots(pkg, camera);
-        assertEquals(pkg.getVisionCompositing().getMinCorners(), 3);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().size(), 4);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getX(), -4); // upper left corner of 1st pad is lead
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getY(), 7); 
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getRating(), 5); // Z configuration
-
-        pkg = new org.openpnp.model.Package("HEADPHONE2");
-        pkg.addCompatibleNozzleTip(nt);
-        footprint = pkg.getFootprint();
-        pad = new Pad();            //       [4]
-        pad.setX(-3);               //  [1]
-        pad.setY(4);                //
-        pad.setWidth(2);            //
-        pad.setHeight(2);           //       [3]
-        pad.setName("1");           //  [2]
-        footprint.addPad(pad);      //
-        pad = new Pad();            // Staggered pads.
-        pad.setX(-3);
-        pad.setY(-6);
-        pad.setWidth(2);
-        pad.setHeight(2);
-        pad.setName("2");
-        footprint.addPad(pad);
-        pad = new Pad();
-        pad.setX(3);
-        pad.setY(-4);
-        pad.setWidth(2);
-        pad.setHeight(2);
-        pad.setName("3");
-        footprint.addPad(pad);
-        pad = new Pad();
-        pad.setX(3);
-        pad.setY(6);
-        pad.setWidth(2);
-        pad.setHeight(2);
-        pad.setName("4");
-        footprint.addPad(pad);
-        pkg.getVisionCompositing().computeCompositeShots(pkg, camera);
-        assertEquals(pkg.getVisionCompositing().getMinCorners(), 3);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().size(), 4);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getX(), -4); // lower left corner of 2nd pad is lead
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getY(), -7); 
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getRating(), 5); // Z configuration
-
-        pkg = new org.openpnp.model.Package("PWR_FET");
-        pkg.addCompatibleNozzleTip(nt);
-        footprint = pkg.getFootprint();
-        pad = new Pad();            //  [  1  ]
-        pad.setX(-3);               //              [     ]  
-        pad.setY(1);                //              [     ]
-        pad.setWidth(4);            //  [  2  ]     [  4  ]
-        pad.setHeight(0.5);         //              [     ]
-        pad.setName("1");           //              [     ]
-        footprint.addPad(pad);      //  [  3  ]
-        pad = new Pad();            //
-        pad.setX(-3);               // Power-FET, left-right asymmetrical.
-        pad.setY(0);
-        pad.setWidth(4);
-        pad.setHeight(0.5);
-        pad.setName("2");
-        footprint.addPad(pad);
-        pad = new Pad();
-        pad.setX(-3);
-        pad.setY(-1);
-        pad.setWidth(4);
-        pad.setHeight(0.5);
-        pad.setName("3");
-        footprint.addPad(pad);
-        pad = new Pad();
-        pad.setX(3);
-        pad.setY(0);
-        pad.setWidth(4);
-        pad.setHeight(2);
-        pad.setName("4");
-        footprint.addPad(pad);
-        pkg.getVisionCompositing().computeCompositeShots(pkg, camera);
-        assertEquals(pkg.getVisionCompositing().getMinCorners(), 4);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().size(), 4);
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getX(), -5); // upper left corner of 1st pad is lead
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getY(), 1.25); 
-        assertEquals(pkg.getVisionCompositing().getCompositeCorners().get(0).getRating(), 2); // Trapezoid configuration
-        */
+    public static void assertMaxDelta(double a, double b, double maxDelta) throws Exception {
+        if (Math.abs(a - b) > maxDelta) {
+            throw new Exception(String.format("abs(%f - %f) > %f", a, b, maxDelta));
+        }
     }
 }
