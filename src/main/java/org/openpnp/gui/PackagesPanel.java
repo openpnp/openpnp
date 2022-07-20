@@ -242,7 +242,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         });
     }
 
-    private Package getSelection() {
+    public Package getSelectedPackage() {
         List<Package> selections = getSelections();
         if (selections.size() != 1) {
             return null;
@@ -349,7 +349,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Package pkg = getSelection();
+            Package pkg = getSelectedPackage();
             if (pkg == null) {
                 return;
             }
@@ -423,7 +423,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             singleSelectionActionGroup.setEnabled(!selections.isEmpty());
         }
 
-        Package selectedPackage = getSelection();
+        Package selectedPackage = getSelectedPackage();
         if (selectedPackage != null) {
             this.selectedPackage = selectedPackage; 
         }
@@ -473,7 +473,7 @@ public class PackagesPanel extends JPanel implements WizardContainer {
     }
 
     public void selectPackageInTable(Package packag) {
-        if (getSelection() != packag) {
+        if (getSelectedPackage() != packag) {
             Helpers.selectObjectTableRow(table, packag);
         }
     }

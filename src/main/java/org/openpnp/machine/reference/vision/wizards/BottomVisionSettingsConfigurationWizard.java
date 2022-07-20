@@ -35,6 +35,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.PartSettingsHolder;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
+import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.PartAlignment;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.VisionUtils;
@@ -450,19 +451,53 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 RowSpec.decode("default:grow"),}));
     }
 
-    private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) throws Exception {
+    private void pipelineConfiguration(CvPipeline pipeline, Map<String, Object> pipelineParameterAssignments, boolean edit) 
+            throws Exception {
         Camera camera = VisionUtils.getBottomVisionCamera();
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
         // Nominal position of the part over camera center
         double angle = new DoubleConverter(Configuration.get().getLengthDisplayFormat())
                 .convertReverse(testAlignmentAngle.getText());
-        Location location = bottomVision.getCameraLocationAtPartHeight(nozzle.getPart(), 
+        Part part = nozzle.getPart();
+        Package pkg = null;
+        if (part != null) {
+            pkg = part.getPackage();
+        }
+        else if (settingsHolder instanceof Part) {
+            part = (Part) settingsHolder;
+            pkg = part.getPackage();
+        }
+        else if (settingsHolder instanceof Package) {
+            pkg = (Package) settingsHolder;
+        }
+        else if (MainFrame.get().getPartsTab().getSelectedPart() != null) {
+            part = MainFrame.get().getPartsTab().getSelectedPart();
+            pkg = part.getPackage();
+        }
+        else if (MainFrame.get().getPackagesTab().getSelectedPackage() != null) {
+            pkg = MainFrame.get().getPackagesTab().getSelectedPackage();
+        }
+        if (pkg == null) {
+            throw new Exception("A package must be designated to configure the pipeline. "
+                    + "Please pick a part with selected nozzle "+nozzle.getName()+". "
+                    + "Alternatively, you can select a single part or package on the Parts or "
+                    + "Packages tab for a \"dry-run\" with empty nozzle (like after a failed pick).");
+        }
+        NozzleTip nt = nozzle.getNozzleTip();
+        if (nt == null) {
+            throw new Exception("A nozzle tip must be loaded on selected nozzle "+nozzle.getName()+".");
+        }
+        if (! pkg.getCompatibleNozzleTips().contains(nt)) {
+            throw new Exception("Nozzle tip "+nt.getName()+" loaded on selected nozzle "+nozzle.getName()
+            +" is not compatible with package "+pkg.getId()+".");
+        }
+        Location location = bottomVision.getCameraLocationAtPartHeight(part, 
                 camera,
                 nozzle, angle);
-        bottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, nozzle.getPart().getPackage(), nozzle, nozzle.getNozzleTip(), 
+        bottomVision.preparePipeline(pipeline, pipelineParameterAssignments, camera, pkg, nozzle, nt, 
                 location, location, visionSettings);
         if (edit) {
-            
+
             pipelinePanel.openPipelineEditor("Bottom Vision Pipeline", pipeline, 
                     "move nozzle "+nozzle.getName()+" to the camera alignment location before editing the pipeline", 
                     nozzle, location);
