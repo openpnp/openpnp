@@ -579,12 +579,21 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 // Do the feed and get the nozzle that would be used for the subsequent pick. 
                 Nozzle nozzle = feedFeeder(feeder);
 
-                // Note, we do not use nozzle.moveToPickLocation(feeder) as this might involve 
+		// Tracking with camera rather than nozzle
+                /*
+		// Note, we do not use nozzle.moveToPickLocation(feeder) as this might involve 
                 // probing, which we don't want to happen here. Instead we need to simulate a preliminary 
                 // pick location. 
                 Location pickLocation = preliminaryPickLocation(feeder, nozzle);
                 MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
                 MovableUtils.fireTargetedUserAction(nozzle);
+		*/
+		    
+             	Camera camera = MainFrame.get().getMachineControls().getSelectedTool().getHead()
+                        .getDefaultCamera();
+                Location pickLocation = preliminaryPickLocation(feeder, nozzle);
+                MovableUtils.moveToLocationAtSafeZ(camera, pickLocation);
+                MovableUtils.fireTargetedUserAction(camera);
             });
         }
     };
@@ -633,6 +642,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         // Perform the feed.
         nozzle.moveToSafeZ();
         feeder.feed(nozzle);
+	feeder.postPick(nozzle);	// moveCameraToPickLocation BUG. Execute postPick if implemented
         return nozzle;
     }
 
