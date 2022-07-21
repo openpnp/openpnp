@@ -160,9 +160,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
          * as if the feeder had been fed. This keeps us from returning a pick location
          * that is off the edge of the strip.
          */
-        if (feedCount == 0) {
-            feedCount = 1;
-        }
+	// moveCameraToPickLocation BUG. No special handling. feedCount is incremented post pick.
+        //if (feedCount == 0) {
+        //    feedCount = 1;
+        //}
+	    
         // Find the location of the part linearly along the tape
         Location[] lineLocations = getIdealLineLocations();
         // 20160608 - ldpgh/lutz_dd
@@ -186,8 +188,12 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         	partPitchAdjusted = holePitch.getValue();
         }
         	
-        Location l = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
-                new Length((feedCount - 1) * partPitchAdjusted, partPitch.getUnits()));
+        // moveCameraToPickLocation BUG
+	//    Location l = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
+        //        new Length((feedCount - 1) * partPitchAdjusted, partPitch.getUnits()));
+	Location l = Utils2D.getPointAlongLine(lineLocations[0], lineLocations[1],
+                new Length(feedCount * partPitchAdjusted, partPitch.getUnits()));
+	    
         // Create the offsets that are required to go from a reference hole
         // to the part in the tape
         Length x = getHoleToPartLateral().convertToUnits(l.getUnits());
@@ -237,7 +243,8 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     }
 
     public void feed(Nozzle nozzle) throws Exception {
-        setFeedCount(getFeedCount() + 1);
+        // moveCameraToPickLocation BUG. feedCount is incremented post pick
+	// setFeedCount(getFeedCount() + 1);
 
         // Throw an exception when the feeder runs out of parts
         if ((maxFeedCount > 0) && (feedCount > maxFeedCount)) {
@@ -245,6 +252,11 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 		}
 
         updateVisionOffsets(nozzle);
+    }
+	
+    public void postPick(Nozzle nozzle) throws Exception {
+    	// moveCameraToPickLocation BUG. FeedCount is incremented here (post pick)
+    	setFeedCount(getFeedCount() + 1);
     }
 
     private void updateVisionOffsets(Nozzle nozzle) throws Exception {
