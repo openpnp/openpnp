@@ -1,0 +1,13 @@
+<openpnp-parts>
+   <part id="FIDUCIAL-HOME" height-units="Millimeters" height="0.0" package-id="FIDUCIAL-HOME" speed="1.0" pick-retry-count="0"/>
+   <part id="TEST_CROSS" height-units="Millimeters" height="2.9400000000000004" package-id="TEST_CROSS" speed="1.0" pick-retry-count="0"/>
+   <part id="Headphone" height-units="Millimeters" height="2.76" package-id="HeadPhone" speed="1.0" pick-retry-count="0"/>
+   <part id="STRANGER" height-units="Millimeters" height="1.4699999999999998" package-id="STRANGER" speed="1.0" pick-retry-count="0"/>
+   <part id="FET" height-units="Millimeters" height="0.9599999999999991" package-id="FET" speed="1.0" pick-retry-count="0"/>
+   <part id="BGA" height-units="Millimeters" height="0.9599999999999991" package-id="BGA" speed="1.0" pick-retry-count="0"/>
+   <part id="SOIC" height-units="Millimeters" height="0.9599999999999991" package-id="SOIC-36-N" speed="1.0" pick-retry-count="0"/>
+   <part id="SMALL_FET" height-units="Millimeters" height="0.9599999999999991" package-id="SMALL-FET" speed="1.0" pick-retry-count="0"/>
+   <part id="LQFP144-STM32L496ZGTP" height-units="Millimeters" height="1.5600000000000005" package-id="LQFP144" speed="1.0" pick-retry-count="0"/>
+   <part id="RECTIFIER" height-units="Millimeters" height="0.9599999999999991" package-id="RECTIFIER" speed="1.0" pick-retry-count="0"/>
+    <part id="K20P64M72SF1" height-units="Millimeters" height="0.5800000000000001" package-id="LQFP64" speed="1.0" pick-retry-count="0"/>
+</openpnp-parts>
