@@ -178,7 +178,8 @@ public class KinematicSolutions implements Solutions.Subject {
                                             @Override 
                                             public String getExtendedDescription() {
                                                 return "<html>"
-                                                        + "<p>Jog "+hm.getName()+" over the tallest obstacle on your machine.</p><br/>"
+                                                        + "<p>Jog "+hm.getName()+" over the tallest obstacle on your machine, "
+                                                                + "including the the tallest parts that may be placed on the PCB.</p><br/>"
                                                         + "<p>Then lower it down so it still has sufficient clearance"
                                                         + (partClearance ? " even with the tallest part on the nozzle" : "")
                                                         + ".</p><br/>"
