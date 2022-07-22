@@ -578,13 +578,6 @@ public class FeedersPanel extends JPanel implements WizardContainer {
                 Feeder feeder = getSelection();
                 // Do the feed and get the nozzle that would be used for the subsequent pick. 
                 Nozzle nozzle = feedFeeder(feeder);
-
-                // Note, we do not use nozzle.moveToPickLocation(feeder) as this might involve 
-                // probing, which we don't want to happen here. Instead we need to simulate a preliminary 
-                // pick location. 
-                Location pickLocation = preliminaryPickLocation(feeder, nozzle);
-                MovableUtils.moveToLocationAtSafeZ(nozzle, pickLocation);
-                MovableUtils.fireTargetedUserAction(nozzle);
             });
         }
     };
