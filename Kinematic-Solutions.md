@@ -25,7 +25,7 @@ With **Fixed Safe Z**, the nozzle Safe Z motion is always the same, i.e. the noz
 
 # Capture Safe Z
 
-According to the choice of [Dynamic Safe Z](#dynamic-safe-z), these solutions let you capture Safe Z for all the nozzles from the machine position.
+According to the choice of [Dynamic Safe Z](#dynamic-safe-z), these solutions let you capture Safe Z for all the nozzles from the machine position. Note, the instructions are different for **Dynamic Safe Z** (shown here) and **Fixed Safe Z**. Follow the instructions carefully.
 
 ![Capture Safe Z](https://user-images.githubusercontent.com/9963310/129459402-b644dfd6-2af6-4cb8-a114-9353ae372772.png)
 
