@@ -21,7 +21,7 @@ Choose whether you want **Dynamic Safe Z** handling or not:
 
 With **Dynamic Safe Z**, the nozzle Safe Z motion is optimized to be as minimal and fast as possible, by exploiting the fact that smaller parts need to be lifted up less to be at Safe Z, i.e. to clear all obstacles on the machine table. The Safe Z coordinate is adjusted to the **underside** of the part. 
 
-With **Fixed Safe Z**, the nozzle Safe Z motion is always the same, i.e. the nozzle is always conservatively lifted so high that even the tallest part will clear all obstacles on the machine table. Use this setting to make the nozzles **balanced** at Safe Z, if you prefer this style. This is usually a slower but simpler method. Note: For machines with only "binary" nozzle Z positions (e.g. pneumatic) **Fixed Safe Z** _must _be selected!
+With **Fixed Safe Z**, the nozzle Safe Z motion is always the same, i.e. the nozzle is always conservatively lifted so high that even the tallest part will clear all obstacles on the machine table. Use this setting to make the nozzles **balanced** at Safe Z, if you prefer this style. This is usually a slower but simpler method. Note: For machines with only "binary" nozzle Z positions (e.g. pneumatic) **Fixed Safe Z** _must_ be selected!
 
 # Capture Safe Z
 
