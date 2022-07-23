@@ -118,4 +118,4 @@ The method is also very robust against different characteristics of scenes: brig
 
 Unfortunately (and not surprisingly), the method has computation costs orders of magnitude higher than the other methods. So it will likely only make sense with quite performant computers and reasonable resolution cameras (~720p). As explained earlier, the computation cost can be read from the blue curve (duration when down), it is also logged. To lessen the load, you can reduce the image size, by using a large **Denoise (Pixel)** setting. For instance, a setting of 11 will reduce the compute times to a quarter. Using a **Mask** will only help if you can make it very small, because applying the circular mask is unfortunately also computation heavy.
 
-
+![settle-method-motion](https://user-images.githubusercontent.com/9963310/180622943-a72b1a70-5802-44c4-87de-7949a4910e1d.gif)
