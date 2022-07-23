@@ -110,4 +110,12 @@ Takes the Euclidean Distance between the frames (the square root over all the sq
 
 Like Euclidean this takes the squared differences over the whole image. It's the classical difference (error) indicator from science. Unlike Euclidean, no square root is taken, so very small numbers will result and will be needed for the threshold. For our purpose of setting a threshold it is equivalent to Euclidean. But more for the math purist.
 
+### Motion
+
+The Motion method is completely different in that is does not compare the frames pixel for pixel, but it tries to determine how the image contents have shifted from frame to frame. As a result we _directly_ get the **pixel distance** of the motion. This makes it very straight-forward to set our **Settle Threshold** value. 
+
+The method is also very robust against different characteristics of scenes: bright, dark, high contrast, low contrast, structured, textured, full of detail or only one forlorn subject in view? It does not matter.
+
+Unfortunately (and not surprisingly), the method has computation costs orders of magnitude higher than the other methods. So it will likely only make sense with quite performant computers and reasonable resolution cameras (~720p). As explained earlier, the computation cost can be read from the blue curve (duration when down), it is also logged. To lessen the load, you can reduce the image size, by using a large **Denoise (Pixel)** setting. For instance, a setting of 11 will reduce the compute times to a quarter. Using a **Mask** will only help if you can make it very small, because applying the circular mask is unfortunately also computation heavy.
+
 
