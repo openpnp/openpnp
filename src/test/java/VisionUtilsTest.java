@@ -215,7 +215,7 @@ public class VisionUtilsTest {
         }
 
         @Override
-        public BufferedImage settleAndCapture() throws Exception {
+        public BufferedImage settleAndCapture(SettleOption settleOption) throws Exception {
             return null;
         }
 
