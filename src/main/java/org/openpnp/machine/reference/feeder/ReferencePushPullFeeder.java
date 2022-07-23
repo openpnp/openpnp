@@ -251,6 +251,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     // Some EIA 481 standard constants.
     static final double sprocketHoleDiameterMm = 1.5;
     static final double sprocketHolePitchMm = 4;
+    static final double minSprocketHolesDistanceMm = 3.5;
 
     /*
      * visionOffset contains the difference between where the part was expected to be and where it
@@ -1502,8 +1503,20 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                         Location bLocation = VisionUtils.getPixelLocation(camera, b.x, b.y);
 
                         // Checks the distance to the line.
-                        double distanceMm = camera.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceToLineSegment(aLocation, bLocation);
-                        if (distanceMm < (autoSetupMode == FindFeaturesMode.CalibrateHoles ? calibrationToleranceMm : bestDistanceMm)) {
+                        // In Auto-Setup/Preview mode we go from the pick location and there must be a minimum distance 
+                        // in order not to confuse pockets for sprocket holes. But then take the closest one, in order not
+                        // to confuse with the neighboring tape's holes. We assume the pick location is always closer to our 
+                        // sprocket holes than to the neighboring tape's holes.
+                        // In Calibration mode we are between the the sprocket holes, and there is no minimum distance
+                        // and the line must simply be within calibration tolerance.
+                        double distanceMm = camera.getLocation().convertToUnits(LengthUnit.Millimeters)
+                                .getLinearDistanceToLineSegment(aLocation, bLocation);
+                        double minDistanceMm = (autoSetupMode == FindFeaturesMode.CalibrateHoles ? 
+                                0 : minSprocketHolesDistanceMm) 
+                                - sprocketHoleToleranceMm;
+                        double maxDistanceMm = (autoSetupMode == FindFeaturesMode.CalibrateHoles ? 
+                                calibrationToleranceMm : bestDistanceMm);
+                        if (distanceMm >= minDistanceMm && distanceMm < maxDistanceMm) {
                             // Take the first line that is close enough, as the lines are ordered by length (descending).
                             // In autoSetupMode take the closest line.
                             bestLine = line;
