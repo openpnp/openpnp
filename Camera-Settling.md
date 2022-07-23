@@ -131,5 +131,6 @@ Unfortunately (and not surprisingly), the method has computation costs orders of
 - Will not work if there are deep 3D structures well visible behind the actual subject. 
 - A diffuser, or other structures fixed with the camera, must not be visible in the camera view (or use **Central Mask** to cover them). 
 - For the bottom camera, very even background shading is needed. 
+- Can only detect planar, linear motion, may be overly strict towards rotation (e.g. part on a nozzle).
 
 ![settle-method-motion](https://user-images.githubusercontent.com/9963310/180622943-a72b1a70-5802-44c4-87de-7949a4910e1d.gif)
