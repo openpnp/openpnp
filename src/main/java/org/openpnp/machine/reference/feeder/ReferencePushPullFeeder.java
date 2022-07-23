@@ -189,8 +189,21 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     private long feedCount = 0;
 
+    public enum PipelineType {
+        ColorKeyed("Default"),
+        CircularSymmetry("CircularSymmetry");
+
+        private String tag;
+
+        PipelineType(String tag) {
+            this.tag = tag; 
+        }
+    }
+
     @Element(required = false)
-    private CvPipeline pipeline = createDefaultPipeline();
+    private CvPipeline pipeline = createDefaultPipeline(PipelineType.ColorKeyed);
+    @Attribute(required = false)
+    protected PipelineType pipelineType = PipelineType.ColorKeyed;
 
     @Attribute(required = false)
     protected String ocrFontName = "Liberation Mono";
@@ -251,6 +264,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     // Some EIA 481 standard constants.
     static final double sprocketHoleDiameterMm = 1.5;
     static final double sprocketHolePitchMm = 4;
+    static final double minSprocketHolesDistanceMm = 3.5;
 
     /*
      * visionOffset contains the difference between where the part was expected to be and where it
@@ -1166,6 +1180,16 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         this.pipeline = pipeline;
     }
 
+    public PipelineType getPipelineType() {
+        return pipelineType;
+    }
+
+    public void setPipelineType(PipelineType pipelineType) {
+        Object oldValue = this.pipelineType;
+        this.pipelineType = pipelineType;
+        firePropertyChange("pipelineType", oldValue, pipelineType);
+    }
+
     public Location getVisionOffset() {
         if (isVisionEnabled() && visionOffset != null) {
             return visionOffset;
@@ -1183,8 +1207,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         setVisionOffset(null);
     }
 
-    public void resetPipeline() {
-        pipeline = createDefaultPipeline();
+    public void resetPipeline(PipelineType type) {
+        pipeline = createDefaultPipeline(type);
+        setPipelineType(type);
     }
 
     public Location getNominalVisionLocation() throws Exception {
@@ -1260,10 +1285,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
 
-    private static CvPipeline createDefaultPipeline() {
+    private static CvPipeline createDefaultPipeline(PipelineType type) {
         try {
             String xml = IOUtils.toString(BlindsFeeder.class
-                    .getResource("ReferencePushPullFeeder-DefaultPipeline.xml"));
+                    .getResource("ReferencePushPullFeeder-"+type.tag+"Pipeline.xml"));
             return new CvPipeline(xml);
         }
         catch (Exception e) {
@@ -1502,15 +1527,30 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                         Location bLocation = VisionUtils.getPixelLocation(camera, b.x, b.y);
 
                         // Checks the distance to the line.
-                        double distanceMm = camera.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceToLineSegment(aLocation, bLocation);
-                        if (distanceMm < (autoSetupMode == FindFeaturesMode.CalibrateHoles ? calibrationToleranceMm : bestDistanceMm)) {
+                        // In Auto-Setup/Preview mode we go from the pick location and there must be a minimum distance 
+                        // in order not to confuse pockets for sprocket holes. But then take the closest one, in order not
+                        // to confuse with the neighboring tape's holes. We assume the pick location is always closer to our 
+                        // sprocket holes than to the neighboring tape's holes.
+                        // In Calibration mode we are between the the sprocket holes, and there is no minimum distance
+                        // and the line must simply be within calibration tolerance.
+                        double distanceMm = camera.getLocation().convertToUnits(LengthUnit.Millimeters)
+                                .getLinearDistanceToLineSegment(aLocation, bLocation);
+                        double minDistanceMm = (autoSetupMode == FindFeaturesMode.CalibrateHoles ? 
+                                0 : minSprocketHolesDistanceMm) 
+                                - sprocketHoleToleranceMm;
+                        double maxDistanceMm = (autoSetupMode == FindFeaturesMode.CalibrateHoles ? 
+                                calibrationToleranceMm : bestDistanceMm);
+
+                        if (distanceMm >= minDistanceMm && distanceMm < maxDistanceMm) {
                             // Take the first line that is close enough, as the lines are ordered by length (descending).
                             // In autoSetupMode take the closest line.
                             bestLine = line;
                             bestUnitVector = aLocation.unitVectorTo(bLocation);
                             bestDistanceMm = distanceMm;
-                            lines.add(bestLine);
-                            break;
+                            lines.add(line);
+                        }
+                        else if (autoSetupMode == null) {
+                            lines.add(line);
                         }
                     }
 
@@ -1519,6 +1559,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             throw new Exception("No line of sprocket holes can be recognized"); 
                         }
                     }
+
                     if (bestLine != null) {
                         // Filter the circles by distance from the resulting line
                         for (Result.Circle circle : results) {
@@ -1675,6 +1716,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     drawLines(resultMat, getLines(), new Color(0, 0, 255));
                     drawPartNumbers(resultMat, Color.orange);
                     drawOcrText(resultMat, Color.orange);
+                    if (getHoles().isEmpty()) {
+                        Imgproc.line(resultMat, new Point(0, 0), new Point(resultMat.cols()-1, resultMat.rows()-1), 
+                                FluentCv.colorToScalar(Color.red), 2);
+                        Imgproc.line(resultMat, new Point(0, resultMat.rows()-1), new Point(resultMat.cols()-1, 0), 
+                                FluentCv.colorToScalar(Color.red), 2);
+                    }
 
                     if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
                         File file = Configuration.get().createResourceFile(getClass(), "push-pull-feeder", ".png");
@@ -1716,6 +1763,26 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
 
         ensureCameraZ(camera);
+        // Try with cloned pipeline.
+        if (autoSetupPipeline(camera, null) != null) {
+            // Failed, try with pipeline type defaults.
+            Exception e = null;
+            for (PipelineType type : PipelineType.values()) {
+               e = autoSetupPipeline(camera, type);
+               if (e == null) {
+                   // Success.
+                   return;
+               }
+            }
+            // Still no luck, throw.
+            throw e;
+        }
+    }
+
+    protected Exception autoSetupPipeline(Camera camera, PipelineType type) {
+        if (type != null) {
+            resetPipeline(type);
+        }
         try (CvPipeline pipeline = getCvPipeline(camera, true, true, true)) {
             // Process vision and get some features 
             pipeline.process();
@@ -1738,6 +1805,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // Move the camera back to the pick location
             MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
             MovableUtils.fireTargetedUserAction(camera);
+            return null;
+        }
+        catch (Exception e) {
+            return e;
         }
     }
 
@@ -2036,6 +2107,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             setFeedCount(0);
             // clone the pipeline
             setPipeline(templateFeeder.getPipeline().clone());
+            setPipelineType(templateFeeder.getPipelineType());
         }
         // now transform over all the locations
         setFeederLocation(getTransform(null), false, true, true, templateFeeder);

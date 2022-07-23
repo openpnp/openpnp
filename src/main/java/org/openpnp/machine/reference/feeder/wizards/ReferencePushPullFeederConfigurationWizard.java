@@ -59,6 +59,7 @@ import org.openpnp.gui.support.LongConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
+import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.PipelineType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
@@ -431,8 +432,16 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVisionEnabled.add(btnOcrAllFeeders, "12, 12, 3, 1");
         panelVisionEnabled.add(btnEditPipeline, "2, 16");
 
+        lblVisionType = new JLabel("Vision Type");
+        lblVisionType.setToolTipText("<html>\r\n<p>Choose the vision type, then press <strong>Reset Pipeline</strong> to assign the<br/>\r\ndefault pipeline of that type. Sprocket holes are detected as follows:</p>\r\n<ul>\r\n<li><strong>ColorKeyed</strong>: the background under the holes must be of a vivid color<br/>\r\n(green by default).</li>\r\n<li><strong>CircularSymmetry</strong>: the shape of the holes must be circular, their<br/>\r\ninside/outside must be plain.</li>\r\n</ul>\r\n<p>Both types of pipeline will further assess detected holes by size, alignment, pitch<br/>\r\nand expected distance.</p>\r\n</html>");
+        panelVisionEnabled.add(lblVisionType, "8, 16, right, default");
+
+        pipelineType = new JComboBox(PipelineType.values());
+
+        panelVisionEnabled.add(pipelineType, "10, 16, fill, default");
+
         btnResetPipeline = new JButton(resetPipelineAction);
-        panelVisionEnabled.add(btnResetPipeline, "4, 16");
+        panelVisionEnabled.add(btnResetPipeline, "12, 16, 3, 1");
 
         contentPanel.add(panelFields);
 
@@ -593,6 +602,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         addWrappedBinding(feeder, "ocrDiscoverOnJobStart", checkBoxDiscoverOnJobStart, "selected");
         addWrappedBinding(feeder, "ocrFontName", comboBoxFontName, "selectedItem");
         addWrappedBinding(feeder, "ocrFontSizePt", textFieldFontSizePt, "text", doubleConverter);
+        addWrappedBinding(feeder, "pipelineType", pipelineType, "selectedItem");
 
         addWrappedBinding(feeder, "cloneTemplateStatus", textPaneCloneTemplateStatus, "text");
 
@@ -635,14 +645,21 @@ extends AbstractReferenceFeederConfigurationWizard {
             new AbstractAction("Reset Pipeline") {
         {
             putValue(Action.SHORT_DESCRIPTION,
-                    "Reset the Pipeline for this feeder to the OpenPNP standard.");
+                    "Reset the Pipeline for this feeder to the selected type default.");
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            UiUtils.messageBoxOnException(() -> {
-                resetPipeline();
-            });
+            PipelineType type = (PipelineType) pipelineType.getSelectedItem();
+            int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+                    "This will reset the pipeline to the "+type+" type default. Are you sure?",
+                    null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (result == JOptionPane.YES_OPTION) {
+                applyAction.actionPerformed(null);
+                UiUtils.messageBoxOnException(() -> {
+                    feeder.resetPipeline(type);
+                });
+            }
         }
     };
 
@@ -934,9 +951,6 @@ extends AbstractReferenceFeederConfigurationWizard {
         dialog.setVisible(true);
     }
 
-    private void resetPipeline() {
-        feeder.resetPipeline();
-    }
     protected void initDataBindings() {
     }
 
@@ -1019,4 +1033,6 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JLabel lblCloneLocationSettings;
     private JCheckBox checkBoxCloneLocationSettings;
     private JButton btnSetPartByOcr;
+    private JComboBox pipelineType;
+    private JLabel lblVisionType;
 }
