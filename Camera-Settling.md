@@ -129,7 +129,7 @@ Unfortunately (and not surprisingly), the method has computation costs orders of
 
 - Computation time orders of magnitudes higher than the simple frame comparison. 
 - Will not work if there are deep 3D structures well visible behind the actual subject. 
-- A diffuser, or other structures fixed with the camera, must not be visible in the camera view (or use **Mask** to cover them). 
+- A diffuser, or other structures fixed with the camera, must not be visible in the camera view (or use **Central Mask** to cover them). 
 - For the bottom camera, very even background shading is needed. 
 
 ![settle-method-motion](https://user-images.githubusercontent.com/9963310/180622943-a72b1a70-5802-44c4-87de-7949a4910e1d.gif)
