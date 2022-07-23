@@ -61,7 +61,7 @@ For a very quick setup, just move your camera center roughly over the pick locat
 
 ![Auto-Setup](https://user-images.githubusercontent.com/9963310/94364461-aadd7a00-00c9-11eb-908c-ae259b719d84.png)
 
-The Auto-Setup will set up all your locations automatically, using "smart" computer vision, taking the camera location i.e. the future pick location into consideration, while applying EIA-481 industry standard tape geometry constraints. It will try the different OpenPnP pipeline types until it finds the tape spocket holes (see the **Vision Type** setting futher below). If you already have other ReferencePushPullFeeders defined, this will also clone some setting over from them (more about that later). 
+The Auto-Setup will set up all your locations automatically, using "smart" computer vision, taking the camera location i.e. the future pick location into consideration, while applying EIA-481 industry standard tape geometry constraints. It will try the different types of computer vison until it finds the sprocket holes (see the **Vision Type** setting [futher below](#vision--edit-pipeline)). If you already have other ReferencePushPullFeeders defined, this will also clone some setting over from them (more about that later). 
 
 
 The **Normalize?** option will normalize the pick location(s) to nominal coordinates relative to the vision calibrated sprocket holes according to the EIA 481 standard. This means it does not matter how precisely you capture the Pick Location i.e. the center of the tape pocket in Auto-Setup (or manually). Your manual capture need only be within ±1mm of the true pick location. If you want to override the standard, switch **Normalize?** off.
