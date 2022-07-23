@@ -53,7 +53,6 @@ The following assumes you have a working pipeline. You can press the **Preview V
 ![](https://user-images.githubusercontent.com/9963310/94364578-a36aa080-00ca-11eb-9ce5-a0160b7462c4.png)
 
 ## Locations Auto-Setup
-___
 
 **Important Note**: Auto-Setup is really only a first-step tool. Do not use it once the feeder is already set up, hand-tuned settings may be overwritten! To avoid mishaps, a warning message box will ask you to confirm.
 ___
@@ -154,9 +153,15 @@ Use the **All Feeder OCR** button to perform the OCR action on all the feeders m
 
 ### Vision / Edit Pipeline
 
-As usual, use the **Edit Pipeline** and **Reset Pipeline** buttons. There is also an [alternative Pipeline available using the Circular Symmetry detection](https://github.com/openpnp/openpnp/wiki/DetectCircularSymmetry#referencepushpullfeeder) instead of color-keying. Try this one, if the default one fails.
+Press the **Edit Pipeline** button to edit the pipeline, if needed. Pipeline editing should **not** normally be necessary. If your feeder does not work without editing the pipeline, please report it on the [OpenPnP discussion list](http://groups.google.com/group/openpnp). 
 
-![Buttons](https://user-images.githubusercontent.com/9963310/94434817-9fa64f00-019a-11eb-9095-392c0b95da2e.png) 
+Select a **Vision Type** and press **Reset Pipeline** to assign one of the two stock pipelines. Usually, **Auto-Setup** should have automatically selected the right **Vision Type** for you.
+
+- **ColorKeyed**: works when the floor under your sprocket holes has a vivid color (typically for 3D printed feeders). Color-keying is a very robust way to detect the holes, as it does not care much about varying brightnesses, shadows etc. However, it does not work for transparent plastic tapes, obviously.
+- **CircularSymmetry**: works by detecting the all-around circular shape of the sprocket holes. They must be mostly plain within and around. Use this type for feeders that are not colored, or for transparent plastic tape. This may be slightly less robust than the color-keyed type.
+
+![Edit, Vision Type, Reset](https://user-images.githubusercontent.com/9963310/180604557-1aa6e94d-1b90-4562-85e5-a15435210061.png)
+
 
 **NOTE**: when editing the Pipeline, be aware that many stage properties are controlled by the feeder i.e. the ones visible in the stages will be ineffective. The AffineWarp is fully controlled by the OCR region set up in the feeder. Likewise the OCR Font etc. are controlled by the corresponding feeder settings, the OCR Alphabet is generated dynamically. 
 
