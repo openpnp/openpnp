@@ -44,7 +44,7 @@ The General Settings are as for every other feeder. However, because we will be 
 
 The Locations define the orientation and location of the feeder _or rather of the tape_ in the feeder. Because it is much easier for computer vision to precisely see the sprocket holes than the parts in the tape's pockets, the sprocket holes will be used for precise tape location calibration. Given tape width and pitch settings, the ReferencePushPullFeeder can then use EIA 481 standardized tape geometry to deduce precise pick locations from the sprocket holes. 
 
-Normally, you let computer vision get the locations automatically for you. When this is not possible e.g. for transparent tapes or when the camera can't reach the feeder, you can set the locations up using the standard capture buttons. Read the tooltips on the field labels to learn which location is which. 
+Normally, you let computer vision get the locations automatically for you (see section [Locations Auto-Setup](#locations-auto-setup) below). When this is not possible e.g. for transparent tapes or when the camera can't reach the feeder, you can set the locations up using the standard capture buttons. Read the tooltips on the field labels to learn which location is which. 
 
 For computer vision to work reliably, it is recommended to have a contrasting background behind the tape's sprocket holes. For best robustness use a vivid (i.e. high saturation) color, like the "green screen" that is used in movie special effects. The color-screening method works across a large range of brightnesses, even in difficult lighting/shadow situations. The ReferencePushPullFeeder comes with a default vision pipeline that should work out of the box for a green-yello-orange-red range of screening colors. However, the vision process is very flexible and also works with any custom sprocket hole detection method and many pipeline result types. So if your machine has a monochrome camera or non-color background, don't give up yet. In this case you need to edit the vision pipeline, see the [[Vision|ReferencePushPullFeeder#vision--calibration]] section below. 
 
@@ -52,13 +52,18 @@ The following assumes you have a working pipeline. You can press the **Preview V
 
 ![](https://user-images.githubusercontent.com/9963310/94364578-a36aa080-00ca-11eb-9ce5-a0160b7462c4.png)
 
+## Locations Auto-Setup
+___
+
+**Important Note**: Auto-Setup is really only a first-step tool. Do not use it once the feeder is already set up, hand-tuned settings may be overwritten! To avoid mishaps, a warning message box will ask you to confirm.
+___
+
 For a very quick setup, just move your camera center roughly over the pick location and press the Auto-Setup button. If this is a 2mm pitch tape, choose the pick location closest to the tape reel, i.e. closest to where it is feeding from.
 
 ![Auto-Setup](https://user-images.githubusercontent.com/9963310/94364461-aadd7a00-00c9-11eb-908c-ae259b719d84.png)
 
-The Auto-Setup will set up all your locations automatically. If you already have other ReferencePushPullFeeders defined, this will also clone some setting over from them (more about that later).  
+The Auto-Setup will set up all your locations automatically, using "smart" computer vision, taking the camera location i.e. the future pick location into consideration, while applying EIA-481 industry standard tape geometry constraints. It will try the different OpenPnP pipeline types until it finds the tape spocket holes (see the **Vision Type** setting futher below). If you already have other ReferencePushPullFeeders defined, this will also clone some setting over from them (more about that later). 
 
-**Important Note**: the Auto-Setup is really only a first-step tool. Do not use it once the feeder is already set up, hand-tuned settings may be overwritten! To avoid mishaps, a warning message box will ask you to confirm.
 
 The **Normalize?** option will normalize the pick location(s) to nominal coordinates relative to the vision calibrated sprocket holes according to the EIA 481 standard. This means it does not matter how precisely you capture the Pick Location i.e. the center of the tape pocket in Auto-Setup (or manually). Your manual capture need only be within ±1mm of the true pick location. If you want to override the standard, switch **Normalize?** off.
 
