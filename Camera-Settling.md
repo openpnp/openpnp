@@ -116,6 +116,20 @@ The Motion method is completely different in that is does not compare the frames
 
 The method is also very robust against different characteristics of scenes: bright, dark, high contrast, low contrast, structured, textured, full of detail or only one forlorn subject in view? It does not matter.
 
-Unfortunately (and not surprisingly), the method has computation costs orders of magnitude higher than the other methods. So it will likely only make sense with quite performant computers and reasonable resolution cameras (~720p). As explained earlier, the computation cost can be read from the blue curve (duration when down), it is also logged. To lessen the load, you can reduce the image size, by using a large **Denoise (Pixel)** setting. For instance, a setting of 11 will reduce the compute times to a quarter. Using a **Mask** will only help if you can make it very small, because applying the circular mask is unfortunately also computation heavy.
+Unfortunately (and not surprisingly), the method has computation costs orders of magnitude higher than the other methods. So it will likely only make sense with quite performant computers and reasonable resolution cameras (~720p). As [explained earlier](#checking-the-camera-frame-rate), the computation cost can be read from the blue curve (duration when down). Compute times are also logged. To lessen the load, you can reduce the image size, by using a large **Denoise (Pixel)** setting. For instance, a setting of 11 will reduce the compute times to a quarter. Using a **Mask** will only help if you can make it very small, because applying the circular mask is unfortunately also computation heavy.
+
+#### Pros
+
+- Directly measures the pixel displacement distance between frames.
+- The ideal criterion for camera settling. 
+- Much easier to understand and set as a threshold value. 
+- Very much independent of image contents, lighting etc.
+
+#### Cons
+
+- Computation time orders of magnitudes higher than the simple frame comparison. 
+- Will not work if there are deep 3D structures well visible behind the actual subject. 
+- A diffuser, or other structures fixed with the camera, must not be visible in the camera view (or use **Mask** to cover them). 
+- For the bottom camera, very even background shading is needed. 
 
 ![settle-method-motion](https://user-images.githubusercontent.com/9963310/180622943-a72b1a70-5802-44c4-87de-7949a4910e1d.gif)
