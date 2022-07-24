@@ -55,13 +55,14 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 	@Element
 	protected Location firstRowLastComponentLocation = new Location(LengthUnit.Millimeters);
 
-	private Location pickLocation;
+	//Private Location pickLocation;  Fix for: change in feeder pick location, not taken into account. #1016
 
 	@Override
 	public Location getPickLocation() throws Exception {
-		if (pickLocation == null) {
-			pickLocation = location;
-		}
+		//if (pickLocation == null) {
+		//	pickLocation = location;
+		//}
+		Location pickLocation;
 		int partX, partY;
 
 		if (feedCount >= (trayCountCols * trayCountRows)) {
@@ -78,14 +79,14 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 			partY = feedCount / trayCountCols;
 		}
 
-		calculatePickLocation(partX, partY);
+		pickLocation = calculatePickLocation(partX, partY);
 	
 		Logger.debug("{}.getPickLocation => {}", getName(), pickLocation);
 		
 		return pickLocation;
 	}
 
-	private void calculatePickLocation(int partX, int partY) throws Exception {
+	private Location calculatePickLocation(int partX, int partY) throws Exception {
 
 		// Multiply the offsets by the X/Y part indexes to get the total offsets
 		// and then rotate it with the correct rotation matrix.
@@ -99,10 +100,12 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 		double delta_y = partX * offsets.getX() * sin - partY * offsets.getY() * cos;
 		Location delta = new Location(LengthUnit.Millimeters, delta_x, delta_y, 0, 0);
 
-		pickLocation = location.add(delta);
+		//pickLocation = location.add(delta);
+		return location.add(delta);
 	}
 
 	public void feed(Nozzle nozzle) throws Exception {
+		Location pickLocation;
 		Logger.debug("{}.feed({})", getName(), nozzle);
 
 		int partX, partY;
@@ -121,14 +124,18 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
 			partY = feedCount / trayCountCols;
 		}
 
-		calculatePickLocation(partX, partY);
+		pickLocation = calculatePickLocation(partX, partY);
 
 		Logger.debug(String.format("Feeding part # %d, x %d, y %d, xPos %f, yPos %f, rPos %f", feedCount, partX, partY,
 				pickLocation.getX(), pickLocation.getY(), pickLocation.getRotation()));
 
-		setFeedCount(getFeedCount() + 1);
+		// setFeedCount(getFeedCount() + 1);	// will increment it post pick
 	}
-
+	
+    public void postPick(Nozzle nozzle) throws Exception {
+    	setFeedCount(getFeedCount() + 1);
+    }
+	
     /**
      * Returns if the feeder can take back a part.
      * Makes the assumption, that after each feed a pick followed,
@@ -156,6 +163,9 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
             throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
         }
 
+        // change FeedCount
+        setFeedCount(getFeedCount() - 1);
+	    
         // ok, now put the part back on the location of the last pick
         nozzle.moveToPickLocation(this);
         nozzle.place();
@@ -163,10 +173,9 @@ public class ReferenceRotatedTrayFeeder extends ReferenceFeeder {
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
-        // change FeedCount
-        setFeedCount(getFeedCount() - 1);
+        //// change FeedCount
+        //setFeedCount(getFeedCount() - 1);
     }
-
 	
 	public int getTrayCountCols() {
 		return trayCountCols;
