@@ -711,7 +711,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         }
         // Check the nozzle tip package compatibility.
         Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
-        org.openpnp.model.Package packag = feeder.getPart().getPackage();d
+        org.openpnp.model.Package packag = feeder.getPart().getPackage();
         if (nozzle.getNozzleTip() == null || 
                 !packag.getCompatibleNozzleTips().contains(nozzle.getNozzleTip())) {
             // Wrong nozzle tip, try find one that works.
