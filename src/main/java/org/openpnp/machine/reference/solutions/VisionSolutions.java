@@ -77,6 +77,7 @@ import org.openpnp.vision.pipeline.CvPipeline;
 import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry;
 import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry.ScoreRange;
+import org.openpnp.vision.pipeline.stages.DetectCircularSymmetry.SymmetryScore;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -96,6 +97,8 @@ public class VisionSolutions implements Solutions.Subject {
     private int subSampling = 4;
     @Attribute(required = false)
     private int superSampling = 8;
+    @Attribute(required = false)
+    private DetectCircularSymmetry.SymmetryScore symmetryScore = SymmetryScore.OverallVarianceVsRingVarianceSum;
 
     @Attribute(required = false)
     protected long diagnosticsMilliseconds = 4000;
@@ -1404,7 +1407,7 @@ public class VisionSolutions implements Solutions.Subject {
         List<Circle> results = DetectCircularSymmetry.findCircularSymmetry(image, 
                 expectedX, expectedY, 
                 minDiameter, maxDiameter, maxDistance, maxDistance, maxDistance, 1,
-                minSymmetry, 0.0, subSampling, superSampling, diagnostics != null, false, scoreRange);
+                minSymmetry, 0.0, subSampling, superSampling, symmetryScore, diagnostics != null, false, scoreRange);
         if (diagnostics != null) {
             if (LogUtils.isDebugEnabled()) {
                 File file = Configuration.get().createResourceFile(getClass(), "loc_", ".png");
