@@ -685,8 +685,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             for (int i = 0; i < 1 + feeder.getPickRetryCount(); i++) {
                 try {
                     pick(nozzle, feeder, jobPlacement, part);
-                    postPick(feeder, nozzle);
                     checkPartOn(nozzle);
+                    postPick(feeder, nozzle);
                     return;
                 }
                 catch (Exception e) {
