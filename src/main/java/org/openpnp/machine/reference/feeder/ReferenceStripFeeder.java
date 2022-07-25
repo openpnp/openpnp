@@ -251,7 +251,12 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
 			throw new Exception("Tried to feed part: " + part.getId() + "  Feeder " + name + " empty.");
 		}
 
-        updateVisionOffsets(nozzle);
+        try {
+		updateVisionOffsets(nozzle);
+	} catch (Exception e) {
+		setFeedCount(getFeedCount() + 1);
+		throw e;
+	}
     }
 	
     public void postPick(Nozzle nozzle) throws Exception {
