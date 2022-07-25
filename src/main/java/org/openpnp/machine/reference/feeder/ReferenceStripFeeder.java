@@ -378,7 +378,10 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
             throw new UnsupportedOperationException("Feeder: " + getName() + " - Currently no free slot. Can not take back the part.");
         }
         
-        // ok, now put the part back on the location of the last pick
+        // change FeedCount
+        setFeedCount(getFeedCount() - 1);
+	    
+	// ok, now put the part back on the location of the last pick
         nozzle.moveToPickLocation(this);
         // put the part back
         nozzle.place();
@@ -386,11 +389,8 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
-        // change FeedCount
-        setFeedCount(getFeedCount() - 1);
     }
-        
-    
+   
     public CvPipeline getPipeline() {
         return pipeline;
     }
