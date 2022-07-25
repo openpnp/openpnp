@@ -193,9 +193,14 @@ public class UiUtils {
                 // We need to move there, ask the user to confirm.
                 int result;
                 if (allowWithoutMove) {
-                    result = JOptionPane.showConfirmDialog(parentComponent,
-                            "Do you want to "+moveBeforeActionDescription+"?\n",
-                                    null, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    if (moveBeforeActionDescription != null) {
+                        result = JOptionPane.showConfirmDialog(parentComponent,
+                                "Do you want to "+moveBeforeActionDescription+"?\n",
+                                null, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    }
+                    else {
+                        result = JOptionPane.NO_OPTION;
+                    }
                 }
                 else {
                     result = JOptionPane.showConfirmDialog(parentComponent,

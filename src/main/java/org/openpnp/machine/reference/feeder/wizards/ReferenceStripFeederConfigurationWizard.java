@@ -788,7 +788,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 points.add(new Point(circle.x, circle.y));
             }
 
-            lines = Ransac.ransac(points, 100, maxDistanceToLine, holePitchPx, holePitchPx - minHolePitchPx);
+            lines = Ransac.ransac(points, 100, maxDistanceToLine, holePitchPx, holePitchPx - minHolePitchPx, true);
 
             bestLine = null;
             for (Ransac.Line line : lines) {

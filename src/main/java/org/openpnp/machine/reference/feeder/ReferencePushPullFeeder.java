@@ -1514,7 +1514,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     for (Result.Circle circle : results) {
                         points.add(new Point(circle.x, circle.y));
                     }
-                    List<Ransac.Line> ransacLines = Ransac.ransac(points, 100, sprocketHoleTolerancePx, sprocketHolePitchPx, sprocketHoleTolerancePx);
+                    List<Ransac.Line> ransacLines = Ransac.ransac(points, 100, sprocketHoleTolerancePx, 
+                            sprocketHolePitchPx, sprocketHoleTolerancePx, false);
                     // Get the best line within the calibration tolerance
                     Ransac.Line bestLine = null;
                     Location bestUnitVector = null;

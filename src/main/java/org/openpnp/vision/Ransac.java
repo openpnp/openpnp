@@ -115,7 +115,8 @@ public class Ransac {
         return results;
     }
 
-    public static List<Line> ransac(List<Point> points, int maxIterations, double pointToLineDistanceThreshold, double pointSpacing, double pointSpacingEpsilon) {
+    public static List<Line> ransac(List<Point> points, int maxIterations, double pointToLineDistanceThreshold, 
+            double pointSpacing, double pointSpacingEpsilon, boolean uninterrupted) {
         if (points.size() < 2) {
             return new ArrayList<Line>();
         }
@@ -142,7 +143,7 @@ public class Ransac {
                     inliers.add(pIndex);
                 }
             }
-            List<Integer> spacedInliers = filterInliersWithSpacing(a, b, points, inliers, pointSpacing, pointSpacingEpsilon);
+            List<Integer> spacedInliers = filterInliersWithSpacing(a, b, points, inliers, pointSpacing, pointSpacingEpsilon, uninterrupted);
             if (spacedInliers.size() >= 2) {
                 // Must check for duplicates as we're just randomly shuffling and testing again; the same line may
                 // come up many times, both from the same starting points or from other points on the same line
@@ -169,7 +170,8 @@ public class Ransac {
         return results;
     }
 
-    private static List<Integer> filterInliersWithSpacing(Point firstPoint, Point secondPoint, List<Point> points, List<Integer> inliers, double pointSpacing, double pointSpacingEpsilon) {
+    private static List<Integer> filterInliersWithSpacing(Point firstPoint, Point secondPoint, List<Point> points, List<Integer> inliers, 
+            double pointSpacing, double pointSpacingEpsilon, boolean uninterrupted) {
         Point lineDir = new Point(secondPoint.x - firstPoint.x, secondPoint.y - firstPoint.y);
 
         TreeSet<Integer> indicesOnLine = new TreeSet<>();
@@ -191,12 +193,31 @@ public class Ransac {
             }
         }
 
-        // Discard this line if any index is missing
-        if (indicesOnLine.size() > 0) {
-            Integer minIndex = indicesOnLine.first();
-            Integer maxIndex = indicesOnLine.last();
-            for (Integer idx=minIndex + 1; idx<maxIndex; idx++) {
-                if (!indicesOnLine.contains(idx)) {
+        if (uninterrupted) {
+            // Discard this line if any index is missing
+            if (indicesOnLine.size() > 0) {
+                Integer minIndex = indicesOnLine.first();
+                Integer maxIndex = indicesOnLine.last();
+                for (Integer idx=minIndex + 1; idx<maxIndex; idx++) {
+                    if (!indicesOnLine.contains(idx)) {
+                        return new ArrayList<>();
+                    }
+                }
+            }
+        }
+        else {
+            // Allows interrupted lines. But at least one pair must be subsequent
+            if (indicesOnLine.size() > 0) {
+                Integer minIndex = indicesOnLine.first();
+                Integer maxIndex = indicesOnLine.last();
+                boolean subsequent = false;
+                for (Integer idx=minIndex; idx<maxIndex; idx++) {
+                    if (indicesOnLine.contains(idx) && indicesOnLine.contains(idx+1)) {
+                        subsequent = true;
+                        break;
+                    }
+                }
+                if (! subsequent) {
                     return new ArrayList<>();
                 }
             }
