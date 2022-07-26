@@ -100,7 +100,7 @@ public class DrawRotatedRects extends CvStage {
         Imgproc.line(image, rrect.center,
                 new Point(rrect.center.x + 1.2 * rrect.size.height / 2.0 * Math.cos(markAngle),
                         rrect.center.y + 1.2 * rrect.size.height / 2.0 * Math.sin(markAngle)),
-                color, Math.abs(thickness));
+                color, Math.abs(thickness), Imgproc.LINE_AA);
     }
 
     @Override
@@ -128,7 +128,7 @@ public class DrawRotatedRects extends CvStage {
             FluentCv.drawRotatedRect(mat, rect, thecolor, thickness);
             if (drawRectCenter) {
                 Imgproc.circle(mat, rect.center, rectCenterRadius, FluentCv.colorToScalar(thecolor),
-                        thickness);
+                        thickness, Imgproc.LINE_AA);
             }
             if (showOrientation) {
                 drawOrientationMark(mat, rect, FluentCv.colorToScalar(thecolor), thickness);

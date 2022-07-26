@@ -576,7 +576,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 double x = rect.center.x;
                 double y = rect.center.y;
                 FluentCv.drawRotatedRect(mat, rect, color, 3);
-                Imgproc.circle(mat, new org.opencv.core.Point(x, y), 2, FluentCv.colorToScalar(centerColor), 3);
+                Imgproc.circle(mat, new org.opencv.core.Point(x, y), 2, FluentCv.colorToScalar(centerColor), 3, Imgproc.LINE_AA);
             }
         }
 

@@ -5,9 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
-import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.vision.FluentCv;
@@ -84,7 +82,7 @@ public class DrawEllipses extends CvStage {
             Color thecolor = (color == null ? FluentCv.indexedColor(i) : color);
             Size axes = new Size(rect.size.width*0.5, rect.size.height*0.5);
             //public static void ellipse(Mat img, Point center, Size axes, double angle, double startAngle, double endAngle, Scalar color, int thickness)
-            Imgproc.ellipse(mat, rect.center, axes, rect.angle, 0, 360, FluentCv.colorToScalar(thecolor), thickness);
+            Imgproc.ellipse(mat, rect.center, axes, rect.angle, 0, 360, FluentCv.colorToScalar(thecolor), thickness,  Imgproc.LINE_AA);
         }
         return new Result(null, rects);
     }

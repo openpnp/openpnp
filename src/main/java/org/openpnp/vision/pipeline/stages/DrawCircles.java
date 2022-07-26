@@ -82,9 +82,9 @@ public class DrawCircles extends CvStage {
             Color centerColor = this.centerColor == null ? new HslColor(color).getComplementary()
                     : this.centerColor;
             Imgproc.circle(mat, new Point(circle.x, circle.y), (int) (circle.diameter / 2),
-                    FluentCv.colorToScalar(color), thickness);
+                    FluentCv.colorToScalar(color), thickness,  Imgproc.LINE_AA);
             Imgproc.circle(mat, new Point(circle.x, circle.y), 1, FluentCv.colorToScalar(centerColor),
-                    2);
+                    2, Imgproc.LINE_AA);
         }
         return null;
     }
