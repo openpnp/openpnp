@@ -144,12 +144,13 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
             Location feedStartLocation = this.feedStartLocation;
             Location feedEndLocation = this.feedEndLocation;
 
+            // Move the actuator to the feed start location, at a safe height.
+            actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+
+            // Move the actuator to the actual feed start location height.
+            actuator.moveTo(feedStartLocation);
+
 		    for (double i = partPitch.convertToUnits(LengthUnit.Millimeters).getValue(); i > 0; i=i-4) {  // perform multiple feeds if required
-		    
-	            // Move the actuator to the feed start location.
-	            actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
-	            actuator.moveTo(feedStartLocation);
-		    
 	            // enable actuator (may do nothing)
 		    	actuator.actuate(true);
 		    
