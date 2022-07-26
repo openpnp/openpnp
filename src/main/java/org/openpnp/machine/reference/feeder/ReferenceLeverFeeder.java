@@ -148,6 +148,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
 		    
 	            // Move the actuator to the feed start location.
 	            actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+	            actuator.moveTo(feedStartLocation);
 		    
 	            // enable actuator (may do nothing)
 		    	actuator.actuate(true);
@@ -160,7 +161,7 @@ public class ReferenceLeverFeeder extends ReferenceFeeder {
 		    		peelOffActuator.actuate(true);
 		    	}
 	            // Now move back to the start location to move the tape.
-	            actuator.moveTo(feedStartLocation.derive(null, null, Double.NaN, Double.NaN));
+	            actuator.moveTo(feedStartLocation);
 		    
 			    // Stop the take up actuator
 		    	if (peelOffActuator != null) {
