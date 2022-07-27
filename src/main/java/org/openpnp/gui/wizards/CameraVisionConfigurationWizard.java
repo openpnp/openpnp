@@ -36,27 +36,25 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LongConverter;
-import org.openpnp.gui.support.NamedConverter;
+import org.openpnp.machine.reference.camera.AbstractSettlingCamera;
+import org.openpnp.machine.reference.camera.AbstractSettlingCamera.SettleMethod;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
-import org.openpnp.spi.base.AbstractCamera;
 import org.openpnp.spi.base.AbstractMachine;
-import org.openpnp.spi.base.AbstractCamera.SettleMethod;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
 
@@ -67,9 +65,9 @@ import com.jgoodies.forms.layout.RowSpec;
 
 @SuppressWarnings("serial")
 public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard {
-    private final AbstractCamera camera;
+    private final AbstractSettlingCamera camera;
     
-    public CameraVisionConfigurationWizard(AbstractCamera camera) {
+    public CameraVisionConfigurationWizard(AbstractSettlingCamera camera) {
         AbstractMachine machine = (AbstractMachine) Configuration.get().getMachine();
         this.camera = camera;
 
@@ -114,7 +112,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         lblSettleMethod = new JLabel("Settle Method");
         panelVision.add(lblSettleMethod, "2, 2, 1, 3, right, default");
 
-        settleMethod = new JComboBox(AbstractCamera.SettleMethod.values());
+        settleMethod = new JComboBox(AbstractSettlingCamera.SettleMethod.values());
         settleMethod.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 adaptDialog();
@@ -256,7 +254,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
     }
 
     private void adaptDialog() {
-        AbstractCamera.SettleMethod method = (SettleMethod) settleMethod.getSelectedItem();
+        AbstractSettlingCamera.SettleMethod method = (SettleMethod) settleMethod.getSelectedItem();
         boolean fixedTime = (method == SettleMethod.FixedTime);
 
         lblSettleTimeMs.setVisible(fixedTime);
@@ -358,13 +356,16 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                 }
                 initialJogWarningDisplayed = true;
             }
-            UiUtils.submitUiMachineTask(() -> {
-                if (jogTool instanceof Camera) {
-                    camera.moveToSafeZ();
-                }
-                MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(x, y, 0, c, jogTool);
-                MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(-x, -y, 0, -c, jogTool);
-                camera.lightSettleAndCapture();
+            SwingUtilities.invokeLater(() -> {
+                // There is some strange redraw related race, so do this later.
+                UiUtils.submitUiMachineTask(() -> {
+                    if (jogTool instanceof Camera) {
+                        camera.moveToSafeZ();
+                    }
+                    MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(x, y, 0, c, jogTool);
+                    MainFrame.get().getMachineControls().getJogControlsPanel().jogTool(-x, -y, 0, -c, jogTool);
+                    camera.lightSettleAndCapture();
+                });
             });
         });
     }
@@ -459,8 +460,8 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         }
         @Override
         public void actionPerformed(ActionEvent e) {
+            applyAction.actionPerformed(e);
             UiUtils.messageBoxOnException(() -> {
-                applyAction.actionPerformed(e);
                 camera.lightSettleAndCapture();
                 MovableUtils.fireTargetedUserAction(camera);
             });

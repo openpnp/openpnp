@@ -13,7 +13,7 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
-import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.layout.ColumnSpec;

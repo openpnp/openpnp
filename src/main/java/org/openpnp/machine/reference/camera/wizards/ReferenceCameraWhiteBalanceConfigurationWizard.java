@@ -43,7 +43,7 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.PercentIntegerConverter;
-import org.openpnp.machine.reference.ReferenceCamera;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;

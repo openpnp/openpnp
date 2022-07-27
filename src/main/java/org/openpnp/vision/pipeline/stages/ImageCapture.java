@@ -7,6 +7,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
+import org.openpnp.spi.Camera.SettleOption;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.vision.FluentCv.ColorSpace;
 import org.openpnp.vision.pipeline.CvPipeline;
@@ -17,6 +18,7 @@ import org.openpnp.vision.pipeline.TerminalException;
 import org.openpnp.vision.pipeline.ui.PipelinePropertySheetTable;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 
 @Stage(
@@ -32,14 +34,26 @@ public class ImageCapture extends CvStage {
     @Property(description="Light actuator value or profile, if default camera lighting is disabled.")
     private Object light = null;
 
-    @Attribute
+    @Deprecated
+    @Attribute(required=false)
+    private Boolean settleFirst;
+
+    @Attribute(required=false)
     @Property(description="Wait for the camera to settle before capturing an image.")
-    private boolean settleFirst;
+    private SettleOption settleOption;
 
     @Attribute(required=false)
     @Property(description="Number of camera images to average.")
     private int count = 1;
 
+    @Commit
+    void commit() {
+        if (settleFirst != null) {
+            settleOption = SettleOption.Settle;
+            settleFirst = null;
+        }
+    }
+    
     public boolean isDefaultLight() {
         return defaultLight;
     }
@@ -56,12 +70,12 @@ public class ImageCapture extends CvStage {
         this.light = light;
     }
 
-    public boolean isSettleFirst() {
-        return settleFirst;
+    public SettleOption getSettleOption() {
+        return settleOption;
     }
 
-    public void setSettleFirst(boolean settleFirst) {
-        this.settleFirst = settleFirst;
+    public void setSettleOption(SettleOption settleOption) {
+        this.settleOption = settleOption;
     }
 
     public int getCount() {
@@ -85,7 +99,7 @@ public class ImageCapture extends CvStage {
             // Light, settle and capture the image. Keep the lights on for possible averaging.
             camera.actuateLightBeforeCapture((defaultLight ? null : getLight()));
             try {
-                BufferedImage bufferedImage = (settleFirst ? camera.settleAndCapture() : camera.capture()); 
+                BufferedImage bufferedImage = camera.settleAndCapture(settleOption); 
                 // Remember the last captured image. This specifically records the native camera image, 
                 // i.e. it does not apply averaging (we want an unaltered raw image for analysis purposes).
                 pipeline.setLastCapturedImage(bufferedImage);

@@ -240,7 +240,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         });
     }
 
-    private Part getSelection() {
+    public Part getSelectedPart() {
         List<Part> selections = getSelections();
         if (selections.size() != 1) {
             return null;
@@ -344,7 +344,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             UiUtils.submitUiMachineTask(() -> {
-                Part part = getSelection();
+                Part part = getSelectedPart();
                 Feeder feeder = null;
                 // find a feeder to feed
                 for (Feeder f : Configuration.get().getMachine().getFeeders()) {
@@ -371,7 +371,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            Part part = getSelection();
+            Part part = getSelectedPart();
             if (part == null) {
                 return;
             }
@@ -439,7 +439,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
             singleSelectionActionGroup.setEnabled(!selections.isEmpty());
         }
 
-        Part selectedPart = getSelection();
+        Part selectedPart = getSelectedPart();
         if (selectedPart != null) {
             this.selectedPart = selectedPart;
         }
@@ -492,7 +492,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
     }
 
     public void selectPartInTable(Part part) {
-        if (getSelection() != part) {
+        if (getSelectedPart() != part) {
             Helpers.selectObjectTableRow(table, part);
         }
     }

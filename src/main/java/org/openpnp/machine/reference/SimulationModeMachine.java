@@ -31,6 +31,7 @@ import java.util.function.BiFunction;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.camera.ImageCamera;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.NullDriver;
 import org.openpnp.machine.reference.driver.ReferenceDriverCommunications;

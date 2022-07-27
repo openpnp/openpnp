@@ -14,7 +14,6 @@ import java.awt.image.Kernel;
 import java.util.ConcurrentModificationException;
 
 import org.openpnp.gui.support.Wizard;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
 import org.openpnp.model.AxesLocation;

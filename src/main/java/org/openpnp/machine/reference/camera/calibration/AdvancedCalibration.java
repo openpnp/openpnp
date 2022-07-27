@@ -33,12 +33,14 @@ import org.opencv.core.Point;
 import org.opencv.core.Point3;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.ReferenceHead;
+import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.spi.Camera.SettleOption;
 import org.openpnp.vision.pipeline.CvPipeline;
+import org.openpnp.vision.pipeline.stages.ImageCapture;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -53,7 +55,8 @@ public class AdvancedCalibration extends LensCalibrationParams {
     // tangential distortion correction by default.
     // Moving to version 1.3 - version 1.2 accidentally disabled all distortion correction by 
     // default rather than only tangential distortion correction.
-    private static final Double LATEST_VERSION = 1.3;
+    // Moving to version 1.4 - modify the pipeline for camera full frame settling.
+    private static final Double LATEST_VERSION = 1.4;
     
     @Attribute(required = false)
     private boolean overridingOldTransformsAndDistortionCorrectionSettings = false;
@@ -65,14 +68,18 @@ public class AdvancedCalibration extends LensCalibrationParams {
     private Boolean dataAvailable = false;
     
     @Element(required = false)
-    private CvPipeline pipeline = new CvPipeline(
-            "<cv-pipeline>" +
-                "<stages>" +
-                    "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"image\" enabled=\"true\" default-light=\"true\" settle-first=\"true\" count=\"1\"/>" +
-                    "<cv-stage class=\"org.openpnp.vision.pipeline.stages.DetectCircularSymmetry\" name=\"detect_circle\" enabled=\"true\" min-diameter=\"18\" max-diameter=\"25\" max-distance=\"100\" search-width=\"0\" search-height=\"0\" max-target-count=\"1\" min-symmetry=\"1.2\" corr-symmetry=\"0.0\" property-name=\"DetectCircularSymmetry\" outer-margin=\"0.1\" inner-margin=\"0.1\" sub-sampling=\"8\" super-sampling=\"8\" diagnostics=\"false\" heat-map=\"false\"/>" +
-                    "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertModelToKeyPoints\" name=\"results\" enabled=\"true\" model-stage-name=\"detect_circle\"/>" +
-                "</stages>" +
-             "</cv-pipeline>");
+    private CvPipeline pipeline = createDefaultPipeline();
+
+    protected static CvPipeline createDefaultPipeline() {
+        return new CvPipeline(
+                "<cv-pipeline>" +
+                    "<stages>" +
+                        "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ImageCapture\" name=\"image\" enabled=\"true\" default-light=\"true\" settle-option=\"SettleFullArea\" count=\"1\"/>" +
+                        "<cv-stage class=\"org.openpnp.vision.pipeline.stages.DetectCircularSymmetry\" name=\"detect_circle\" enabled=\"true\" min-diameter=\"18\" max-diameter=\"25\" max-distance=\"100\" search-width=\"0\" search-height=\"0\" max-target-count=\"1\" min-symmetry=\"1.2\" corr-symmetry=\"0.0\" property-name=\"DetectCircularSymmetry\" outer-margin=\"0.1\" inner-margin=\"0.1\" sub-sampling=\"8\" super-sampling=\"8\" diagnostics=\"false\" heat-map=\"false\"/>" +
+                        "<cv-stage class=\"org.openpnp.vision.pipeline.stages.ConvertModelToKeyPoints\" name=\"results\" enabled=\"true\" model-stage-name=\"detect_circle\"/>" +
+                    "</stages>" +
+                 "</cv-pipeline>");
+    }
 
     @Element(name = "virtualCameraMatrix", required = false)
     private double[] virtualCameraMatrixArr = new double[9];
@@ -277,6 +284,16 @@ public class AdvancedCalibration extends LensCalibrationParams {
             //Fix version 1.2 where the initial values of these two were accidentally swapped
             disableDistortionCorrection = false;
             disableTangentialDistortionCorrection = true;
+        }
+        if (version == null || version <= 1.3) {
+            try {
+                Logger.info("Upgrading AdvancedCalibration.pipeline");
+                ((ImageCapture) pipeline.getStage("image")).setSettleOption(SettleOption.SettleFullArea);
+            }
+            catch (Exception e) {
+                Logger.warn(e, "Falling back to assigning default AdvancedCalibration.pipeline.");
+                pipeline = createDefaultPipeline();
+            }
         }
     }
     
