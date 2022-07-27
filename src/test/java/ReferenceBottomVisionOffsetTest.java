@@ -19,6 +19,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
 import org.openpnp.model.VisionCompositing.CompositingMethod;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;

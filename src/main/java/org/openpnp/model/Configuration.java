@@ -654,6 +654,7 @@ public class Configuration extends AbstractModelObject {
     public void addPanel(Panel panel) {
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(panel.getFile(), panel);
+        Logger.trace("panels = " + panels);
         firePropertyChange("panels", oldValue, panels);
     }
     
@@ -838,19 +839,19 @@ public class Configuration extends AbstractModelObject {
 //            job.getRootPanelLocation().addChild(boardLocation);
 //        }
         
-        Logger.trace("Dump of the job panelLocations");
-        for (PanelLocation panelLocation : job.panelLocations) {
-            panelLocation.dump("");
-        }
-        Logger.trace("Dump of the job boardLocations");
-        for (BoardLocation boardLocation : job.getBoardLocations()) {
-            boardLocation.dump("");
-        }
+//        Logger.trace("Dump of the job panelLocations");
+//        for (PanelLocation panelLocation : job.getPanelLocations()) {
+//            panelLocation.dump("");
+//        }
+//        Logger.trace("Dump of the job boardLocations");
+//        for (BoardLocation boardLocation : job.getBoardLocations()) {
+//            boardLocation.dump("");
+//        }
         
         Logger.trace("Now a dump of the jobRootPanelLocation");
         job.getRootPanelLocation().dump("");
         
-        job.setDirty(false);
+        job.setDirty(job.getVersion() == null);
         
         return job;
     }
@@ -898,7 +899,7 @@ public class Configuration extends AbstractModelObject {
         if (panelLocation == null) {
             return;
         }
-        Panel panel;
+        Panel panel = null;
         if (job != null && panelLocation == job.getRootPanelLocation()) {
             panel = panelLocation.getPanel();
             panel.setFile(job.getFile());
@@ -922,53 +923,74 @@ public class Configuration extends AbstractModelObject {
             Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
             panelLocation.setPanel(panel);
         }
-        else {
-            //This fixes old style panels that were part of the job file - sets the panel file 
-            //and moves the boards from the job to the panel
-            
-            //First resolve the root PCB as we need its dimensions
-            BoardLocation rootPcb = job.getBoardLocations().get(0);
-            resolveBoard(job, rootPcb);
-            
-            panel = panelLocation.getPanel();
-            String boardFileName = rootPcb.getFileName();
-            String panelFileName = boardFileName.substring(0, boardFileName.indexOf(".board.xml")) + ".panel.xml";
-            File panelFile = new File(job.getFile().getParentFile(), panelFileName);
-            panelLocation.setFileName(panelFile.getCanonicalPath());
-            panelLocation.setParent(null);
-            panel.setName(panelFileName);
-            panel.setFile(panelFile);
-            
-            Location rootDims = rootPcb.getBoard().getDimensions().
-                    convertToUnits(Configuration.get().getSystemUnits());
-            
-            double pcbStepX = rootDims.getLengthX().add(panel.xGap).getValue();
-            double pcbStepY = rootDims.getLengthY().add(panel.yGap).getValue();
-          
-            for (int j = 0; j < panel.rows; j++) {
-                for (int i = 0; i < panel.columns; i++) {
-                    // deep copy the existing rootPcb
-                    BoardLocation newPcb = new BoardLocation(rootPcb);
-//                    newPcb.setLocation(rootPcb.getLocation().derive(0.0, 0.0, null, 0.0));
-                    newPcb.setLocation(Location.origin);
-                    
-                    // Offset the sub PCB
-                    newPcb.setLocation(newPcb.getLocation()
-                            .add(new Location(Configuration.get().getSystemUnits(),
-                                    pcbStepX * i,
-                                    pcbStepY * j, 0, 0)));
-                    
-                    panel.addChild(newPcb);
-                }
-            }
-            panel.setDimensions(Location.origin.deriveLengths(
-                rootDims.getLengthX().add(panel.xGap).multiply(panel.columns).subtract(panel.xGap),
-                rootDims.getLengthY().add(panel.yGap).multiply(panel.rows).subtract(panel.yGap),
-                null, null));
-            
-            //Remove all the old boards from the job - they will get added back below
-            job.removeAllBoards();
-        }
+//        else {
+//            //This fixes old style panels that were part of the job file - sets the panel file 
+//            //and moves the boards from the job to the panel
+//            panel = panelLocation.getPanel();
+//            
+//            //First resolve the root PCB as we need its dimensions
+//            BoardLocation rootPcb = job.getBoardLocations().get(0);
+////            BoardLocation rootPcb = (BoardLocation) panel.getChildren().get(0);
+//            resolveBoard(job, rootPcb);
+//            
+//            String boardFileName = rootPcb.getFileName();
+//            String panelFileName = boardFileName.substring(0, boardFileName.indexOf(".board.xml")) + ".panel.xml";
+////            File panelFile = new File(job.getFile().getParentFile(), panelFileName);
+//            File panelFile = new File(panelFileName);
+//            panelLocation.setFileName(panelFile.getCanonicalPath());
+//            panelLocation.setParent(null);
+////            panel.setName(panelFileName);
+//            panel.setName(panelFile.getName());
+//            panel.setFile(panelFile);
+//            
+//            Location rootDims = rootPcb.getBoard().getDimensions().
+//                    convertToUnits(Configuration.get().getSystemUnits());
+//            
+//            double pcbStepX = rootDims.getLengthX().add(panel.xGap).getValue();
+//            double pcbStepY = rootDims.getLengthY().add(panel.yGap).getValue();
+//          
+////            panel.removeAllChildren();
+//            Panel rootPanel = job.getRootPanelLocation().getPanel();
+//            List<FiducialLocatableLocation> rootChildren = rootPanel.getChildren();
+//            for (FiducialLocatableLocation child : rootChildren) {
+//                if (child instanceof BoardLocation) {
+//                    rootPanel.removeChild(child);
+//                    child.removePropertyChangeListener(job);
+//                }
+//            }
+//            for (int j = 0; j < panel.rows; j++) {
+//                for (int i = 0; i < panel.columns; i++) {
+//                    // deep copy the existing rootPcb
+//                    BoardLocation newPcb = new BoardLocation(rootPcb);
+////                    newPcb.setLocation(rootPcb.getLocation().derive(0.0, 0.0, null, 0.0));
+//                    newPcb.setLocation(Location.origin);
+//                    
+//                    // Offset the sub PCB
+//                    newPcb.setLocation(newPcb.getLocation()
+//                            .add(new Location(Configuration.get().getSystemUnits(),
+//                                    pcbStepX * i,
+//                                    pcbStepY * j, 0, 0)));
+//                    
+//                    panel.addChild(newPcb);
+//                    newPcb.addPropertyChangeListener(job);
+//                }
+//            }
+//            panel.setDimensions(Location.origin.deriveLengths(
+//                rootDims.getLengthX().add(panel.xGap).multiply(panel.columns).subtract(panel.xGap),
+//                rootDims.getLengthY().add(panel.yGap).multiply(panel.rows).subtract(panel.yGap),
+//                null, null));
+//            
+//            //Remove all the old boards from the job - they will get added back below
+////            job.removeAllBoards();
+//            
+//            Panel definingPanel = new Panel(panel);
+//            definingPanel.setDefinedBy(definingPanel);
+//            definingPanel.addPropertyChangeListener(panel);
+//            definingPanel.setDirty(true);
+//            panel.setDefinedBy(definingPanel);
+//            
+//            addPanel(definingPanel);
+//        }
         
 //        job.getRootPanelLocation().addChild(panelLocation);
 
@@ -987,6 +1009,7 @@ public class Configuration extends AbstractModelObject {
 //                BoardLocation boardLocation = new BoardLocation((BoardLocation) child);
                 BoardLocation boardLocation = (BoardLocation) child;
                 boardLocation.setParent(panelLocation);
+                ((BoardLocation) boardLocation.getDefinedBy()).addPropertyChangeListener(boardLocation);
 //                child.setParent(panelLocation);
 
                 resolveBoard(job, boardLocation);
@@ -1000,48 +1023,48 @@ public class Configuration extends AbstractModelObject {
     public void saveJob(Job job, File file) throws Exception {
         Serializer serializer = createSerializer();
 
-        Set<Panel> panels = new HashSet<>();
-        // Fix the paths to any panels in the Job
-        for (PanelLocation panelLocation : job.getPanelLocations()) {
-            Panel panel = (Panel) panelLocation.getPanel();
-            panels.add(panel);
-            try {
-                String relativePath = ResourceUtils.getRelativePath(
-                        panel.getFile().getAbsolutePath(), file.getAbsolutePath(), File.separator);
-                panelLocation.setPanelFile(relativePath);
-            }
-            catch (ResourceUtils.PathResolutionException ex) {
-                panelLocation.setPanelFile(panel.getFile().getAbsolutePath());
-            }
-        }
-        // Save any panels in the job
-        for (Panel panel : panels) {
-            savePanel(panel);
-        }
-
-        List<BoardLocation> savedBoardLocations = job.getBoardLocations();
-        Set<Board> boards = new HashSet<>();
-        // Fix the paths to any boards in the Job
-        for (BoardLocation boardLocation : savedBoardLocations) {
-            Board board = (Board) boardLocation.getBoard();
-            boards.add(board);
-            try {
-                String relativePath = ResourceUtils.getRelativePath(
-                        board.getFile().getAbsolutePath(), file.getAbsolutePath(), File.separator);
-                boardLocation.setBoardFile(relativePath);
-            }
-            catch (ResourceUtils.PathResolutionException ex) {
-                boardLocation.setBoardFile(board.getFile().getAbsolutePath());
-            }
-            if (boardLocation.getParent() != null) {
-                Logger.trace("Not saving " + boardLocation + " because it is a child of a panel");
-                job.removeBoardLocation(boardLocation);
-            }
-        }
-        // Save any boards in the job
-        for (Board board : boards) {
-            saveBoard(board);
-        }
+//        Set<Panel> panels = new HashSet<>();
+//        // Fix the paths to any panels in the Job
+//        for (PanelLocation panelLocation : job.getPanelLocations()) {
+//            Panel panel = (Panel) panelLocation.getPanel();
+//            panels.add(panel);
+//            try {
+//                String relativePath = ResourceUtils.getRelativePath(
+//                        panel.getFile().getAbsolutePath(), file.getAbsolutePath(), File.separator);
+//                panelLocation.setPanelFile(relativePath);
+//            }
+//            catch (ResourceUtils.PathResolutionException ex) {
+//                panelLocation.setPanelFile(panel.getFile().getAbsolutePath());
+//            }
+//        }
+//        // Save any panels in the job
+//        for (Panel panel : panels) {
+//            savePanel(panel);
+//        }
+//
+//        List<BoardLocation> savedBoardLocations = job.getBoardLocations();
+//        Set<Board> boards = new HashSet<>();
+//        // Fix the paths to any boards in the Job
+//        for (BoardLocation boardLocation : savedBoardLocations) {
+//            Board board = (Board) boardLocation.getBoard();
+//            boards.add(board);
+//            try {
+//                String relativePath = ResourceUtils.getRelativePath(
+//                        board.getFile().getAbsolutePath(), file.getAbsolutePath(), File.separator);
+//                boardLocation.setBoardFile(relativePath);
+//            }
+//            catch (ResourceUtils.PathResolutionException ex) {
+//                boardLocation.setBoardFile(board.getFile().getAbsolutePath());
+//            }
+//            if (boardLocation.getParent() != null) {
+//                Logger.trace("Not saving " + boardLocation + " because it is a child of a panel");
+//                job.removeBoardLocation(boardLocation);
+//            }
+//        }
+//        // Save any boards in the job
+//        for (Board board : boards) {
+//            saveBoard(board);
+//        }
         
         // Save the job - minus any board locations that are owned by a panel
         serializer.write(job, new ByteArrayOutputStream());
@@ -1050,10 +1073,10 @@ public class Configuration extends AbstractModelObject {
         job.setDirty(false);
         
         // Restore the board locations
-        job.removeAllBoards();
-        for (BoardLocation boardLocation : savedBoardLocations) {
-            job.addBoardLocation(boardLocation);
-        }
+////        job.removeAllBoards();
+//        for (BoardLocation boardLocation : savedBoardLocations) {
+//            job.addBoardLocation(boardLocation);
+//        }
     }
     
     public String getImgurClientId() {

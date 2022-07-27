@@ -26,7 +26,8 @@ public class IdentifiableList<E extends Identifiable> extends ArrayList<E> {
     }
     
     public String createId(String prefix) {
-        for (int i = 0; ; i++) {
+        //Only software people start counting at zero! Everyone else starts counting at one.
+        for (int i = 1; ; i++) {
             if (get(prefix + i) == null) {
                 return prefix + i;
             }

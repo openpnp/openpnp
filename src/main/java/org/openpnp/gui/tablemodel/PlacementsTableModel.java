@@ -37,15 +37,17 @@ import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.spi.Feeder;
 
+@SuppressWarnings("serial")
 public class PlacementsTableModel extends AbstractObjectTableModel {
     final Configuration configuration;
 
     private String[] columnNames =
-            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", "Status", "Error Handling", "Comments"};
+            new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", 
+                    "Status", "Error Handling", "Comments"};
 
-    private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, Side.class,
-            LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, Type.class,
-            Boolean.class, Status.class, ErrorHandling.class, String.class};
+    private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, 
+            Side.class, LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, 
+            Type.class, Boolean.class, Status.class, ErrorHandling.class, String.class};
 
     public enum Status {
         Ready,
@@ -155,7 +157,9 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 8) {
-                fiducialLocatableLocation.setPlaced(placement.getId(), (Boolean) aValue);
+//                fiducialLocatableLocation.setPlaced(placement.getId(), (Boolean) aValue);
+                jobPlacementsPanel.getJobPanel().getJob()
+                    .setPlaced(fiducialLocatableLocation, placement.getId(), (Boolean) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 10) {
@@ -224,7 +228,9 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 // in the render process. At the least we should cache this information but it
                 // would be better if the information was updated out of band by a listener.
             	jobPlacementsPanel.updateActivePlacements();
-            	return fiducialLocatableLocation.getPlaced(placement.getId());
+//            	return fiducialLocatableLocation.getPlaced(placement.getId());
+            	return jobPlacementsPanel.getJobPanel().getJob()
+            	        .getPlaced(fiducialLocatableLocation, placement.getId());
             case 9:
                 return getPlacementStatus(placement);
             case 10:

@@ -15,7 +15,7 @@ public abstract class AbstractLocatable extends AbstractModelObject implements D
     @Element
     protected Location location;
 
-    @Attribute
+    @Attribute(required = false)
     protected String id;
     
     protected transient Definable definedBy;

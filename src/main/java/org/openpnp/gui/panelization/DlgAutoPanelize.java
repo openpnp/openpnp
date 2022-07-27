@@ -102,15 +102,15 @@ public class DlgAutoPanelize extends JDialog {
         this.jobPanel = jobPanel;
         
         // Specify a placeholder panel for now if we don't have one already
-        if (jobPanel.getJob().getPanels() == null || jobPanel.getJob().getPanels().isEmpty()) {
+//        if (jobPanel.getJob().getPanels() == null || jobPanel.getJob().getPanels().isEmpty()) {
 //            jobPanel.getJob().addPanel(
 //                    new Panel("Panel1", 3, 3, new Length(0, LengthUnit.Millimeters),
 //                            new Length(0, LengthUnit.Millimeters),
 //                            jobPanel.getJob().getBoardLocations().get(0).getBoard().getDimensions()));
-        }
+//        }
 
         //Make a copy of the current panel
-        pcbPanel = new Panel(jobPanel.getJob().getPanels().get(0));
+//        pcbPanel = new Panel(jobPanel.getJob().getPanels().get(0));
         Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", pcbPanel.hashCode(), pcbPanel.getDefinedBy().hashCode()));
         
 //        if (pcbPanel.getRootPcbOffset() == null) {
@@ -370,9 +370,9 @@ public class DlgAutoPanelize extends JDialog {
                     // this dlg was that there was a single board in the list.
                     // When this feature is turned off, there will again
                     // be a single board in the list
-                    jobPanel.getJob().removeAllPanels();                  
+//                    jobPanel.getJob().removeAllPanels();                  
                     BoardLocation b = jobPanel.getJob().getBoardLocations().get(0);
-                    jobPanel.getJob().removeAllBoards();
+//                    jobPanel.getJob().removeAllBoards();
                     jobPanel.getJob().addBoardLocation(b);
                     jobPanel.refresh();
                     setVisible(false);
@@ -380,8 +380,8 @@ public class DlgAutoPanelize extends JDialog {
                 else {
                     // Here, panelization is active.
                     validatePanel();
-                    jobPanel.getJob().removeAllPanels();
-                    jobPanel.getJob().addPanel(pcbPanel);
+//                    jobPanel.getJob().removeAllPanels();
+//                    jobPanel.getJob().addPanel(pcbPanel);
 //                    jobPanel.populatePanelSettingsIntoBoardLocations();
                     setVisible(false);
                 }

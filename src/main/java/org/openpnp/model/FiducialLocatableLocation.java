@@ -14,9 +14,12 @@ import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
+import org.simpleframework.xml.core.Persist;
 
 public class FiducialLocatableLocation extends AbstractLocatable {
 
+    public static final String ID_SEPARATOR = "|";
+    
     /**
      * The side of this FiducialLocatableLocation that faces the Top side of its parent
      */
@@ -32,6 +35,7 @@ public class FiducialLocatableLocation extends AbstractLocatable {
     @Attribute(required = false)
     protected boolean locallyEnabled = true;
 
+    @Deprecated
     @ElementMap(required = false)
     private Map<String, Boolean> placed = new HashMap<>();
 
@@ -47,6 +51,11 @@ public class FiducialLocatableLocation extends AbstractLocatable {
     protected void commit() {
         setLocation(getLocation());
         setFiducialLocatable(fiducialLocatable);
+    }
+    
+    @Persist
+    protected void persist() {
+        placed = null;
     }
     
     public FiducialLocatableLocation() {
@@ -67,7 +76,7 @@ public class FiducialLocatableLocation extends AbstractLocatable {
         else {
             this.localToParentTransform = null;
         }
-        this.placed = new HashMap<>(fiducialLocatableLocation.placed);
+//        this.placed = new HashMap<>(fiducialLocatableLocation.placed);
         setDefinedBy(fiducialLocatableLocation.getDefinedBy());
     }
     
@@ -251,54 +260,17 @@ public class FiducialLocatableLocation extends AbstractLocatable {
         return false;
     }
     
-    public int getTotalActivePlacements(){
-        if (fiducialLocatable == null) {
-            return 0;
+    public String getUniqueId() {
+        if (parent != null && parent.getUniqueId() != null) {
+            return parent.getUniqueId() + ID_SEPARATOR + getId();
         }
-        int counter = 0;
-        for(Placement placement : fiducialLocatable.getPlacements()) {
-            if (placement.getSide() == getSide()
-                    && placement.getType() == Type.Placement
-                    && placement.isEnabled()) {
-                    counter++;
-            }
-        }
-        return counter;
-    }
-    
-    public int getActivePlacements() {
-        if (fiducialLocatable == null) {
-            return 0;
-        }
-        int counter = 0;
-        for(Placement placement : fiducialLocatable.getPlacements()) {
-            if (placement.getSide() == getSide()
-                    && placement.getType() == Type.Placement
-                    && placement.isEnabled()
-                    && !getPlaced(placement.getId())) {
-                    counter++;
-            }
-        }
-        return counter;
-    }
-
-    public void setPlaced(String placementId, boolean placed) {
-        this.placed.put(placementId, placed);
-        firePropertyChange("placed", null, this.placed);
-    }
-
-    public boolean getPlaced(String placementId) {
-        if (placed.containsKey(placementId)) {
-            return placed.get(placementId);
-        } 
         else {
-            return false;
+            return getId();
         }
     }
     
-    public void clearAllPlaced() {
-        this.placed.clear();
-        firePropertyChange("placed", null, this.placed);
+    public Map<String, Boolean> getPlaced() {
+        return placed;
     }
     
     @Override

@@ -60,6 +60,7 @@ import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
@@ -345,25 +346,12 @@ public class JobPlacementsPanel extends JPanel {
     // TODO STOPSHIP This is called all over the place and it's likely to rot - need to find
     // a listener or something it can use.
     public void updateActivePlacements() {
-        int activePlacements = 0;
-        int totalActivePlacements = 0;
-        
-        List<BoardLocation> boardLocations = this.jobPanel.getJob().getBoardLocations();
-        for (BoardLocation boardLocation : boardLocations) {
-            if (boardLocation.isEnabled()) {
-                activePlacements += boardLocation.getActivePlacements();
-                totalActivePlacements += boardLocation.getTotalActivePlacements();
-            }
-        }
-        
-        int blTotalActivePlacements = 0;
-        int blActivePlacements = 0;
-        
-        if (fiducialLocatableLocation != null) {
-            blTotalActivePlacements = fiducialLocatableLocation.getTotalActivePlacements();
-            blActivePlacements = fiducialLocatableLocation.getActivePlacements();
-        }
-        
+        Job job = jobPanel.getJob();
+        int activePlacements = job.getActivePlacements(job.getRootPanelLocation());
+        int totalActivePlacements = job.getTotalActivePlacements(job.getRootPanelLocation());
+        int blActivePlacements = job.getActivePlacements(fiducialLocatableLocation);
+        int blTotalActivePlacements = job.getTotalActivePlacements(fiducialLocatableLocation);
+
         MainFrame.get().setPlacementCompletionStatus(totalActivePlacements - activePlacements, 
                 totalActivePlacements, 
                 blTotalActivePlacements - blActivePlacements, 
@@ -432,6 +420,13 @@ public class JobPlacementsPanel extends JPanel {
         return placements;
     }
 
+    /**
+     * @return the jobPanel
+     */
+    public JobPanel getJobPanel() {
+        return jobPanel;
+    }
+
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
@@ -471,7 +466,8 @@ public class JobPlacementsPanel extends JPanel {
             fiducialLocatableLocation.getFiducialLocatable().addPlacement(placement);
             tableModel.fireTableDataChanged();
             updateActivePlacements();
-            fiducialLocatableLocation.setPlaced(placement.getId(), false);
+//            fiducialLocatableLocation.setPlaced(placement.getId(), false);
+            jobPanel.getJob().setPlaced(fiducialLocatableLocation, placement.getId(), false);
             Helpers.selectLastTableRow(table);
         }
     };
@@ -733,7 +729,8 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-                fiducialLocatableLocation.setPlaced(placement.getId(), placed);
+//                fiducialLocatableLocation.setPlaced(placement.getId(), placed);
+                jobPanel.getJob().setPlaced(fiducialLocatableLocation, placement.getId(), placed);
                 tableModel.fireTableDataChanged();   
                 updateActivePlacements();
             }

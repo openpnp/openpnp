@@ -23,10 +23,10 @@ import org.simpleframework.xml.core.Persist;
 
 @Root(name = "openpnp-panel")
 public class Panel extends FiducialLocatable implements PropertyChangeListener {
-    public static final String LATEST_VERSION = "1.0";
+    public static final Double LATEST_VERSION = 2.0;
     
     @Attribute(required = false)
-    private String version = null;
+    private Double version = null;
     
     @Deprecated
     @Element(required = false)
@@ -61,7 +61,7 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     protected IdentifiableList<Placement> fiducials;
     
     @ElementList(required = false)
-    protected List<FiducialLocatableLocation> children = new ArrayList<>();
+    protected IdentifiableList<FiducialLocatableLocation> children = new IdentifiableList<>();
     
     @Commit
     private void commit() {
@@ -133,7 +133,7 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         this.version = panel.version;
         this.defaultFiducialPartId = panel.defaultFiducialPartId;
         this.checkFids = panel.checkFids;
-        this.children = new ArrayList<>();
+        this.children = new IdentifiableList<>();
         for (FiducialLocatableLocation child : panel.getChildren()) {
             if (child instanceof PanelLocation) {
                 this.addChild(new PanelLocation((PanelLocation) child));
@@ -152,13 +152,21 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         return Collections.unmodifiableList(children);
     }
 
-    public void setChildren(List<FiducialLocatableLocation> children) {
+    public void setChildren(IdentifiableList<FiducialLocatableLocation> children) {
         this.children = children;
     }
 
     public void addChild(FiducialLocatableLocation child) {
         Object oldValue = children;
-        children = new ArrayList<>(children);
+        children = new IdentifiableList<>(children);
+        String childId = null;
+        if (child instanceof BoardLocation) {
+            childId = children.createId("Brd");
+        }
+        else if (child instanceof PanelLocation) {
+            childId = children.createId("Pnl");
+        }
+        child.setId(childId);
         children.add(child);
         firePropertyChange("children", oldValue, children);
         if (child != null) {
@@ -168,12 +176,21 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
     
     public void removeChild(FiducialLocatableLocation child) {
         Object oldValue = children;
-        children = new ArrayList<>(children);
+        children = new IdentifiableList<>(children);
         children.remove(child);
         firePropertyChange("children", oldValue, children);
         if (child != null) {
             child.removePropertyChangeListener(this);
         }
+    }
+    
+    public void removeAllChildren() {
+        Object oldValue = children;
+        for (FiducialLocatableLocation child : children) {
+            child.removePropertyChangeListener(this);
+        }
+        children = new IdentifiableList<>(children);
+        firePropertyChange("children", oldValue, children);
     }
     
     public String getDefaultFiducialPartId() {
@@ -210,14 +227,8 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         firePropertyChange("checkFids", oldValue, checkFids);
     }
 
-    public String getVersion() {
+    public Double getVersion() {
         return version;
-    }
-    
-    public void setVersion(String version) {
-        Object oldValue = this.version;
-        this.version = version;
-        firePropertyChange("version", oldValue, version);
     }
     
     @Override

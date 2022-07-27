@@ -921,9 +921,10 @@ public class JobPanel extends JPanel {
                     "Reset placement status?", JOptionPane.YES_NO_OPTION, //$NON-NLS-1$
                     JOptionPane.WARNING_MESSAGE);
             if (ret == JOptionPane.YES_OPTION) {
-                for (BoardLocation boardLocation : job.getBoardLocations()) {
-                    boardLocation.clearAllPlaced();
-                }
+                job.clearAllPlaced();
+//                for (BoardLocation boardLocation : job.getBoardLocations()) {
+//                    boardLocation.clearAllPlaced();
+//                }
                 jobPlacementsPanel.refresh();
             }
         }
@@ -1120,9 +1121,10 @@ public class JobPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            for (BoardLocation boardLocation : job.getBoardLocations()) {
-                boardLocation.clearAllPlaced();
-            }
+            job.clearAllPlaced();
+//            for (BoardLocation boardLocation : job.getBoardLocations()) {
+//                boardLocation.clearAllPlaced();
+//            }
             jobPlacementsPanel.refresh();
         }
     };
@@ -1762,9 +1764,12 @@ public class JobPanel extends JPanel {
         	    if (placement.getSide() != boardLocation.getSide()) {
         	        continue;
         	    }
-        		if (!boardLocation.getPlaced(placement.getId())) {
-    				return false;
-        		}
+//        		if (!boardLocation.getPlaced(placement.getId())) {
+//    				return false;
+//        		}
+                if (!job.getPlaced(boardLocation, placement.getId())) {
+                    return false;
+                }
         	}
     	}
     	return true;

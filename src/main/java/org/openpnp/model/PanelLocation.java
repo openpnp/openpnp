@@ -21,6 +21,7 @@ package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
 import java.beans.PropertyChangeEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.openpnp.util.Utils2D;
@@ -85,6 +86,9 @@ public class PanelLocation extends FiducialLocatableLocation {
     }
     
     public List<FiducialLocatableLocation> getChildren() {
+        if (getPanel() == null) {
+            return new ArrayList<>();
+        }
         return getPanel().getChildren();
     }
     
