@@ -1336,8 +1336,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
             for (Result.Circle circle : features) {
                 org.opencv.core.Point c =  new org.opencv.core.Point(circle.x, circle.y);
-                Imgproc.circle(mat, c, (int) (circle.diameter+0.5)/2, FluentCv.colorToScalar(color), 2);
-                Imgproc.circle(mat, c, 2, FluentCv.colorToScalar(color), 3);
+                Imgproc.circle(mat, c, (int) (circle.diameter+0.5)/2, FluentCv.colorToScalar(color), 2, Imgproc.LINE_AA);
+                Imgproc.circle(mat, c, 1, FluentCv.colorToScalar(color), 3, Imgproc.LINE_AA);
             }
         }
 
@@ -1346,7 +1346,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 return;
             }
             for (Line line : lines) {
-                Imgproc.line(mat, line.a, line.b, FluentCv.colorToScalar(color), 2);
+                Imgproc.line(mat, line.a, line.b, FluentCv.colorToScalar(color), 2, Imgproc.LINE_AA);
             }
         }
 
@@ -1718,9 +1718,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     drawOcrText(resultMat, Color.orange);
                     if (getHoles().isEmpty()) {
                         Imgproc.line(resultMat, new Point(0, 0), new Point(resultMat.cols()-1, resultMat.rows()-1), 
-                                FluentCv.colorToScalar(Color.red), 2);
+                                FluentCv.colorToScalar(Color.red), 2, Imgproc.LINE_AA);
                         Imgproc.line(resultMat, new Point(0, resultMat.rows()-1), new Point(resultMat.cols()-1, 0), 
-                                FluentCv.colorToScalar(Color.red), 2);
+                                FluentCv.colorToScalar(Color.red), 2, Imgproc.LINE_AA);
                     }
 
                     if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {

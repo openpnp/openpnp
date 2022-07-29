@@ -777,7 +777,7 @@ public class FluentCv {
         rect.points(points);
         Scalar color_ = colorToScalar(color);
         for (int j = 0; j < 4; ++j) {
-            Imgproc.line(mat, points[j], points[(j + 1) % 4], color_, thickness);
+            Imgproc.line(mat, points[j], points[(j + 1) % 4], color_, thickness, Imgproc.LINE_AA);
         }
     }
 
