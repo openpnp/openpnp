@@ -61,9 +61,7 @@ The **DetectCircularSymmetry** stage is configured as follows:
 
 **corrSymmetry**: Correlated minimum circular symmetry for multiple matches, i.e. other matches must have at least this relative symmetry. Note that the symmetry score is very dynamic, so setting a robust correlation is difficult. 
 
-**symmetryScore** provides different score functions to reject partial/interrupted ring edges. These may be selected, when the detection has to compete with other nearby features that happen to have an (interrupted) tangential match with the wanted circular diameters. Typical example: on paper carrier tapes 0402 pockets are confused with sprocket holes. Another example are texture patterns that happen to have a circular weight either randomly or from LED reflection highlights etc. (for both examples see the animation below).
-
-The **symmetryScore** provides alternative score functions to reject partial/interrupted ring edges. By either taking the average or median value of ring pixels/segments, the comparison variance is reduced when rings are interrupted, making a candidate less favorable.
+**symmetryScore** provides different score functions to reject partial/interrupted ring edges. These may be selected, when the detection has to compete with other nearby features that happen to have an (interrupted) tangential match with the wanted circular diameters. Typical example: on paper carrier tapes 0402 pockets are confused with sprocket holes. Another example are texture patterns that happen to have a circular weight either randomly or from LED reflection highlights etc. (for both examples see the animation below). By either taking the average or median value of ring pixels/segments, the comparison variance is reduced when rings are interrupted, making a candidate less favorable.
 
 ![circular-symmetry-score](https://user-images.githubusercontent.com/9963310/181843949-0becc703-8f96-485e-8b3c-15d1dac2ffd7.gif)
 
@@ -180,7 +178,7 @@ Edit the pipeline and paste this using the ![Paste](https://user-images.githubus
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageCapture" name="original" enabled="true" default-light="true" settle-first="true" count="1"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageWriteDebug" name="deb0" enabled="false" prefix="strip_" suffix=".png"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.BlurGaussian" name="predetect-1" enabled="false" kernel-size="5"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="results" enabled="true" min-diameter="10" max-diameter="100" max-distance="100" max-target-count="20" min-symmetry="1.2" corr-symmetry="0.25" property-name="sprocketHole" outer-margin="0.3" inner-margin="0.1" sub-sampling="8" super-sampling="2" diagnostics="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="results" enabled="true" min-diameter="10" max-diameter="100" max-distance="100" max-target-count="20" min-symmetry="1.2" corr-symmetry="0.25" property-name="sprocketHole" outer-margin="0.3" inner-margin="0.1" sub-sampling="8" super-sampling="2" symmetry-score="RingMedianVarianceVsRingVarianceSum" diagnostics="false"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="recalled" enabled="false" image-stage-name="original"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="display" enabled="true" circles-stage-name="results" thickness="1">
          <color r="255" g="0" b="0" a="255"/>
@@ -218,7 +216,7 @@ Edit the pipeline and paste this using the ![Paste](https://user-images.githubus
       <cv-stage class="org.openpnp.vision.pipeline.stages.ConvertColor" name="3" enabled="true" conversion="Bgr2Gray"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.SimpleOcr" name="OCR" enabled="true" alphabet="0123456789.-+_RCLDQYXJIVAFH%GMKkmuµnp" font-name="Liberation Mono" font-size-pt="7.0" font-max-pixel-size="20" auto-detect-size="false" threshold="0.75" draw-style="OverOriginalImage" debug="false"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="5" enabled="true" image-stage-name="0"/>
-      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="results" enabled="true" min-diameter="10" max-diameter="100" max-distance="100" max-target-count="10" min-symmetry="1.2" corr-symmetry="0.2" property-name="sprocketHole" outer-margin="0.2" inner-margin="0.2" sub-sampling="8" super-sampling="1" diagnostics="false"/>
+      <cv-stage class="org.openpnp.vision.pipeline.stages.DetectCircularSymmetry" name="results" enabled="true" min-diameter="10" max-diameter="100" max-distance="100" max-target-count="10" min-symmetry="1.2" corr-symmetry="0.2" property-name="sprocketHole" outer-margin="0.2" inner-margin="0.2" sub-sampling="8" super-sampling="1" symmetry-score="RingMedianVarianceVsRingVarianceSum" diagnostics="false"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.ImageRecall" name="7" enabled="false" image-stage-name="0"/>
       <cv-stage class="org.openpnp.vision.pipeline.stages.DrawCircles" name="8" enabled="false" circles-stage-name="results" thickness="1">
          <color r="255" g="0" b="0" a="255"/>
