@@ -338,8 +338,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else {
                         solutions.add(new Solutions.PlainIssue(
                                 gcodeDriver, 
-                                "There is a better Marlin firmware available. "+gcodeDriver.getDetectedFirmware(), 
-                                "Please upgrade to the special PnP version. See info link.", 
+                                "Marlin firmware is not reporting support for rotation axes (A B C). "+gcodeDriver.getDetectedFirmware(), 
+                                "Please upgrade the firmware and/or axis configuration. See the info link.", 
                                 Severity.Error, 
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#marlin-20"));
                     }
