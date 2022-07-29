@@ -76,12 +76,6 @@ public class DetectCircularSymmetry extends CvStage {
     private double corrSymmetry = 0.0;
 
     @Attribute(required = false)
-    @Property(description = "Property name as controlled by the vision operation using this pipeline.<br/>"
-            + "<ul><li><i>propertyName</i>.diameter</li><li><i>propertyName</i>.maxDistance</li><li><i>propertyName</i>.center</li></ul>"
-            + "If set, these will override the properties configured here.")
-    private String propertyName = "";
-
-    @Attribute(required = false)
     @Property(description = "Relative outer diameter margin used when the propertyName is set.")
     private double outerMargin = 0.2;
 
@@ -100,6 +94,34 @@ public class DetectCircularSymmetry extends CvStage {
     @Property(description = "The superSampling value can be used to achieve sub-pixel final precision: "
             + "1 means no supersampling, 2 means half sub-pixel precision etc.")
     private int superSampling = 1;
+
+    public enum SymmetryScore {
+        OverallVarianceVsRingVarianceSum,
+        RingAvgeragesVarianceVsRingVarianceSum,
+        RingMedianVarianceVsRingVarianceSum;
+
+        public int getAngularBins() {
+            if (this == RingMedianVarianceVsRingVarianceSum) {
+                return 16;
+            }
+            return 1;
+        }
+    }
+    @Attribute(required = false)
+    @Property(description = "Set the symmetry score calculation method.<br/>"
+            + "<ul>"
+            + "<li>Overall variance vs. ring variance sum (default): tolerant circular symmetry score. Matches partial/scattered circular patterns.</li>"
+            + "<li>Ring ageraged variance vs. ring variance sum: stricter circular symmetry score. The rings must be quite uniform to match.</li>"
+            + "<li>Ring median variance vs. ring variance sum: even stricter circular symmetry score. Rejects interrupted rings, "
+            + "e.g. from tangential non-circular shapes.</li>"
+            + "</ul>")
+    private SymmetryScore symmetryScore = SymmetryScore.OverallVarianceVsRingVarianceSum;
+
+    @Attribute(required = false)
+    @Property(description = "Property name as controlled by the vision operation using this pipeline.<br/>"
+            + "<ul><li><i>propertyName</i>.diameter</li><li><i>propertyName</i>.maxDistance</li><li><i>propertyName</i>.center</li></ul>"
+            + "If set, these will override the properties configured here.")
+    private String propertyName = "";
 
     @Attribute(required = false)
     @Property(description = "Display matches with circle and cross-hairs.")
@@ -229,6 +251,14 @@ public class DetectCircularSymmetry extends CvStage {
         this.corrSymmetry = corrSymmetry;
     }
 
+    public SymmetryScore getSymmetryScore() {
+        return symmetryScore;
+    }
+
+    public void setSymmetryScore(SymmetryScore symmetryScore) {
+        this.symmetryScore = symmetryScore;
+    }
+
     @Override
     public Result process(CvPipeline pipeline) throws Exception {
         Mat mat = pipeline.getWorkingImage();
@@ -240,6 +270,7 @@ public class DetectCircularSymmetry extends CvStage {
         int maxDistance = this.maxDistance;
         int searchWidth = this.searchWidth;
         int searchHeight = this.searchHeight;
+        SymmetryScore symmetryScore = this.symmetryScore;
         Point center = new Point(mat.cols()*0.5, mat.rows()*0.5);
         
         if (!propertyName.isEmpty()) {
@@ -274,7 +305,7 @@ public class DetectCircularSymmetry extends CvStage {
 
         List<Result.Circle> circles = findCircularSymmetry(mat, (int)center.x, (int)center.y, 
                 minDiameter, maxDiameter, maxDistance*2, searchWidth, searchHeight, maxTargetCount, minSymmetry, corrSymmetry, 
-                subSampling, superSampling, diagnostics, heatMap, new ScoreRange());
+                subSampling, superSampling, symmetryScore, diagnostics, heatMap, new ScoreRange());
         return new Result(null, circles);
     }
 
@@ -282,12 +313,23 @@ public class DetectCircularSymmetry extends CvStage {
         public double minScore = Double.POSITIVE_INFINITY;
         public double maxScore = Double.NEGATIVE_INFINITY;
         public double finalScore = Double.NEGATIVE_INFINITY;
+        private double sumScore = 0;
+        private int n = 0;
         void add(double score) {
-            if (score > 1) {
+            if (score > scoreFloor) {
                 minScore = Math.min(minScore, score); 
                 maxScore = Math.max(maxScore, score);
                 finalScore = Math.max(finalScore, score);
+                sumScore += score;
+                n++;
             }
+        }
+        private double scoreHeat(double score) {
+            double range = maxScore - minScore;
+            double avg = (sumScore/n - minScore)/range;
+            double s = (score - minScore)/range;
+            double exp = Math.log(0.71)/Math.log(avg);
+            return Math.pow(s, exp);
         }
     }
 
@@ -326,6 +368,18 @@ public class DetectCircularSymmetry extends CvStage {
      * Some extra debugging stuff used for development, that might be useful again in the future. DEBUG has levels 1 and 2.  
      */
     static final int DEBUG = 0;
+    /**
+     * The symmetry score mathematical minimum.
+     */
+    static final double scoreFloor = 0;
+    /**
+     * The absolute minimum symmetry to still follow up in iteration.
+     */
+    private static final double absoluteMinSymmetry = 0.1;
+    /**
+     * The candidate targets kept for iteration, as a factor of the requested target count.
+     */
+    private static final int iterationTargetsFactor = 2;
 
     /**
      * Find the circle that has its center at the greatest circular symmetry in the given image,
@@ -347,6 +401,7 @@ public class DetectCircularSymmetry extends CvStage {
      * @param subSampling       Sub-sampling pixel distance, i.e. only one pixel out of a square of size subSampling will be 
      *                          examined on the first pass. 
      * @param superSampling     Super-sampling pixel fraction, i.e. the result will have 1/superSampling sub-pixel accuracy.
+     * @param symmetryScore     The symmetry score function used to judge circular symmetry.
      * @param diagnostics       If true, draws diagnostic match circles and cross hairs into the image. 
      * @param heatMap           If true, overlays a diagnostic heat map onto the image.
      * @param scoreRange        Outputs the score range of all the sampled center candidates.
@@ -356,7 +411,8 @@ public class DetectCircularSymmetry extends CvStage {
     public static  List<Result.Circle> findCircularSymmetry(Mat image, int xCenter, int yCenter,
             int minDiameter, int maxDiameter, int searchDiameter, int searchWidth, 
             int searchHeight, int maxTargetCount, double minSymmetry,
-            double corrSymmetry, int subSampling, int superSampling, boolean diagnostics, boolean heatMap, ScoreRange scoreRange) throws Exception {
+            double corrSymmetry, int subSampling, int superSampling, 
+            SymmetryScore symmetryScore, boolean diagnostics, boolean heatMap, ScoreRange scoreRange) throws Exception {
         boolean outermost = !Double.isFinite(scoreRange.finalScore);
         // Image properties.
         final int channels = image.channels();
@@ -430,116 +486,176 @@ public class DetectCircularSymmetry extends CvStage {
             // The final score is reset here so it will reflect the last pass' maximum score. 
             scoreRange.finalScore = 0;
         }
+        
+        final int xDim = maxDiameter/subSamplingEff+1;
+        final int yDim = maxDiameter/subSamplingEff+1;
+        final int maxPixelDataDim = xDim*yDim*channels;
+        final int rDim = (r - r0 + 1)/subSamplingEff;
+        final int angleDim = symmetryScore.getAngularBins(); 
+        final int angleMask = angleDim-1; 
+        final double fa = angleDim/(Math.PI*2);
+        final int histogramDim = angleDim*rDim*channels;
+        int [] idxPixelData = new int[maxPixelDataDim]; // Index into the pixel data, relative from the left upper corner.
+        int [] idxHistogram = new int[maxPixelDataDim]; // Index into the result histogram.
+        int [] rRing = new int [rDim];
+        double [] segmentValues = new double[angleDim]; 
+        for (int ri = 0; ri < rDim; ri++) {
+            rRing[ri] = r0 + ri*subSamplingEff;
+        }
+        int [] histogramN = new int[histogramDim];
+        double [] histogramFactor = new double[histogramDim];
+        long [] histogramSum = new long[histogramDim]; 
+        long [] histogramSumSq = new long[histogramDim]; 
+
         // Outer super-sampling loop. 
         for (double xOffset : superSamplingOffsets) {
             for (double yOffset : superSamplingOffsets) {
                 double scoreBestSampling = Double.NEGATIVE_INFINITY;
                 double xBestSampling = 0;
                 double yBestSampling = 0;
-                // Create the concentric rings of circular symmetry as lists of indices into the flat array of pixels.
-                // The indices are relative to the origin but they can be offset to any x, y (within
+
+                // Map the concentric rings of circular symmetry from the flat array of pixel channels to the 
+                // radial x angular histogram.
+                // The pixel indices are relative to the origin but they can be offset to any x, y (within
                 // range) and still remain valid, thanks to modulo behavior.
-                Object[] ringsA = new Object[r + 1];
-                int nRingSamples = 0;
-                for (int ri = r0; ri < ringsA.length; ri += subSamplingEff) {
-                    ringsA[ri] = new ArrayList<Integer>();
-                }
+                int samples = 0;
+                Arrays.fill(histogramN, 0);
                 for (int y = -r, yi = 0; y <= r; y += subSamplingEff, yi += subSamplingEff) {
                     for (int x = -r, idx = yi*width*channels; 
                             x <= r; 
                             x += subSamplingEff, idx += channels*subSamplingEff) {
                         double dx = x - xOffset;
                         double dy = y - yOffset;
-                        double distanceSquare = dx*dx + dy*dy;
-                        double d = Math.sqrt(distanceSquare);
-                        int distance = r0 + (-r0 + (int) Math.round(d))/subSamplingEff*subSamplingEff;
-                        if (r0 <= distance && distance <= r) {
-                            ((ArrayList<Integer>) ringsA[distance]).add(idx);
-                            nRingSamples++;
+                        double d = Math.hypot(dx, dy);
+                        int idxR = (-r0 + (int) Math.round(d))/subSamplingEff;
+                        if (idxR >= 0 && idxR < rDim) {
+                            double angle = angleMask == 0 ? 0 : Math.atan2(dy, dx);
+                            int idxAngle = angleMask & (int) Math.round(angle*fa);
+                            int idxHisto = (idxR*angleDim + idxAngle)*channels;
+                            for (int ch = 0; ch < channels; ch++) {
+                                idxPixelData[samples] = idx+ch;
+                                idxHistogram[samples] = idxHisto+ch;
+                                histogramN[idxHisto+ch]++;
+                                samples++;
+                            }
                         }
                     }
                 }
-                // Convert indices to arrays (hopefully faster).
-                int[][] rings = new int[ringsA.length][];
-                for (int ri = r0; ri < ringsA.length; ri += subSamplingEff) {
-                    rings[ri] = ((ArrayList<Integer>) ringsA[ri]).stream()
-                            .mapToInt(i -> i)
-                            .toArray();
+                for (int i = 0; i < histogramDim; i++) {
+                    histogramFactor[i] = histogramN[i] > 0 ? 1.0/histogramN[i] : 0;
                 }
-                // Now iterate through all the offsets and find the maximum circular symmetry
-                // which is the one with the largest ratio between radial and circular variances.
+
+                // Now iterate through all the pixel offsets and find the maximum circular symmetry.
                 for (int yi = 0, yis = 0; yi < hSearchRange; yi += subSamplingEff, yis++) {
                     for (int xi = 0, xis = 0, idxOffset = (yi*width + x0SearchRange) * channels; 
                             xi < wSearchRange; 
                             xi += subSamplingEff, xis++, idxOffset += channels*subSamplingEff) {
                         int distSq = (xi - xSearch)*(xi - xSearch) + (yi - ySearch)*(yi - ySearch);
                         if (distSq <= rSearchSq) {
-                            double varianceSum = 0.01; // Prevent div by zero.
-                            double lastAvgChannels = 0;
+                            Arrays.fill(histogramSum, 0);
+                            Arrays.fill(histogramSumSq, 0);
+                            for (int i = 0; i < samples; i++) {
+                                int idxPixel = idxPixelData[i];
+                                int idxHisto = idxHistogram[i];
+                                int pixel = Byte.toUnsignedInt(pixelSamples[idxOffset + idxPixel]);
+                                histogramSum[idxHisto] += pixel;
+                                histogramSumSq[idxHisto] += pixel*pixel;
+                            }
+
+                            // Analyze the ring sums to find the circular symmetry score, which is ratio between radial 
+                            // and circular variance.
+                            // We use the naive formula
+                            //    Var = (SumSq − (Sum × Sum) / n) / (n − 1), 
+                            // See https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Na%C3%AFve_algorithm
+                            // But we weigh all our variances by the pixel count, so we do not divide by (n - 1).
+                            final double div0Guard = 0.1;
+                            double score;
                             double contrastBest = Double.NEGATIVE_INFINITY;
                             int riContrastBest = 0;
-                            double[] sumOverall = new double[channels];
-                            double[] sumSqOverall = new double[channels];
-                            double[] nOverall = new double[channels];
-                            // Examine each ring.
-                            for (int ri = r0; ri < rings.length; ri += subSamplingEff) {
-                                int[] ring = rings[ri];
-                                double n = ring.length;
-                                if (n > 0) {
-                                    long sumChannels = 0;
-                                    for (int ch = 0; ch < channels; ch++) {
-                                        // Calculate the variance along the ring.
-                                        long sum = 0;
-                                        long sumSq = 0;
-                                        for (int idx : ring) {
+                            double varianceRing = 0;
+                            double [] sumAcross = new double[channels];
+                            double [] sumSqAcross = new double[channels];
+                            double [] lastAvg = new double[channels];
+                            int [] nAcross = new int[channels];
+                            for (int idxR = 0; idxR < rDim; idxR++) {
+                                double contrast = 0;
+                                for (int ch = 0; ch < channels; ch++) {
+                                    double sumRing = 0;
+                                    double sumSqRing = 0;
 
-                                            if (DEBUG >= 2) {
-                                                int idxDebug = idxOffset + idx;
-                                                int yDebug = (idxDebug/channels)/width;
-                                                int xDebug = (idxDebug/channels)%width;
-                                                if (xDebug < xi || xDebug > x0SearchRange + xi + r*2 + 1
-                                                        || yDebug < yi || yDebug > yi + r*2 + 1) {
-                                                    throw new Exception("unexpected idx offset calculation");
-                                                }
-                                                if (finalSamplingPass 
-                                                        && xi == xSearch && yi == ySearch 
-                                                        && ri == rings.length-1
-                                                        && yOffset == xOffset) {
-                                                    byte [] pixelData = new byte[channels];
-                                                    image.get(yDebug+y0SearchRange, xDebug, pixelData);
-                                                    int dc = Arrays.binarySearch(superSamplingOffsets, xOffset) % channels;
-                                                    pixelData[2-dc] = (byte)255;
-                                                    image.put(yDebug+y0SearchRange, xDebug, pixelData);
+                                    int nRing = 0;
+                                    switch (symmetryScore) { 
+                                        case OverallVarianceVsRingVarianceSum:
+                                        {
+                                            int idxHisto = (idxR*angleDim + 0)*channels + ch;
+                                            sumRing += histogramSum[idxHisto];
+                                            sumSqRing += histogramSumSq[idxHisto];
+                                            nRing += histogramN[idxHisto];
+                                            double variance = (sumSqRing - Math.pow(sumRing, 2)/nRing);
+                                            varianceRing += variance;
+                                            sumAcross[ch] += sumRing;
+                                            sumSqAcross[ch] += sumSqRing;
+                                        }
+                                        break;
+                                        case RingAvgeragesVarianceVsRingVarianceSum:
+                                        {
+                                            for (int idxAngle = 0; idxAngle < angleDim; idxAngle++) {
+                                                int idxHisto = (idxR*angleDim + idxAngle)*channels + ch;
+                                                int n = histogramN[idxHisto];
+                                                double segmentAvg = histogramSum[idxHisto]*histogramFactor[idxHisto];
+                                                double segmentAvgSq = Math.pow(segmentAvg, 2);
+                                                sumRing += histogramSum[idxHisto];
+                                                sumSqRing += histogramSumSq[idxHisto];
+                                                sumSqAcross[ch] += segmentAvgSq*n;
+                                                nRing += n;
+                                            }
+                                            sumAcross[ch] += sumRing;
+                                            double variance = (sumSqRing - Math.pow(sumRing, 2)/nRing);
+                                            varianceRing += variance;
+                                        }
+                                        break;
+                                        case RingMedianVarianceVsRingVarianceSum: 
+                                        {
+                                            int slotAngle = 0; 
+                                            for (int idxAngle = 0; idxAngle < angleDim; idxAngle++) {
+                                                int idxHisto = (idxR*angleDim + idxAngle)*channels + ch;
+                                                int n = histogramN[idxHisto];
+                                                if (n > 0) {
+                                                    double segmentAvg = histogramSum[idxHisto]*histogramFactor[idxHisto];
+                                                    //double segmentAvgSq = Math.pow(segmentAvg, 2);
+                                                    segmentValues[slotAngle++] = segmentAvg;
+                                                    sumRing += histogramSum[idxHisto];
+                                                    sumSqRing += /*segmentAvgSq*n;*/histogramSumSq[idxHisto];
+                                                    nRing += n;
                                                 }
                                             }
-
-                                            int pixel = Byte.toUnsignedInt(pixelSamples[idxOffset + idx + ch]);
-                                            sum += pixel;
-                                            sumSq += pixel * pixel;
+                                            Arrays.sort(segmentValues, 0, slotAngle);
+                                            double median = (segmentValues[Math.max(0, slotAngle/2 - 1)] + segmentValues[slotAngle/2])*0.5;
+                                            double medianSq = Math.pow(median, 2);
+                                            sumAcross[ch] += median*nRing;
+                                            sumSqAcross[ch] += medianSq*nRing;
+                                            double variance = (sumSqRing - Math.pow(sumRing, 2)/nRing);
+                                            varianceRing += variance;
                                         }
-                                        sumChannels += sum;
-                                        sumOverall[ch] += sum;
-                                        sumSqOverall[ch] += sumSq;
-                                        nOverall[ch] += n;
-                                        double variance = (sumSq - (sum * sum) / n);// / Math.log(ri+4);
-                                        varianceSum += variance;
+                                        break;
                                     }
-                                    double avgChannels = sumChannels / n;
-                                    if (ri*2 >= minDiameter) {
-                                        double contrast = Math.abs(avgChannels - lastAvgChannels);
-                                        if (contrastBest < contrast) {
-                                            contrastBest = contrast;
-                                            riContrastBest = ri;
-                                        }
+                                    nAcross[ch] += nRing;
+                                    double avg1 = sumRing/nRing;
+                                    contrast += Math.pow(lastAvg[ch] - avg1, 2);
+                                    lastAvg[ch] = avg1;
+                                }
+                                if (rRing[idxR]*2 >= minDiameter) {
+                                    if (contrastBest < contrast) {
+                                        contrastBest = contrast;
+                                        riContrastBest = rRing[idxR];
                                     }
-                                    lastAvgChannels = avgChannels;
                                 }
                             }
-                            double varianceOverall = 0.01; // Prevent zero.
+                            double varianceAcross = 0;
                             for (int ch = 0; ch < channels; ch++) {
-                                varianceOverall += (sumSqOverall[ch] - (sumOverall[ch] * sumOverall[ch]) / nOverall[ch]);
+                                varianceAcross += (sumSqAcross[ch] - Math.pow(sumAcross[ch], 2) / nAcross[ch]);
                             }
-                            double score = varianceOverall/varianceSum; 
+                            score = (varianceAcross + div0Guard)/(varianceRing + div0Guard);
                             scoreRange.add(score);
                             if (scoreBestSampling < score) {
                                 scoreBestSampling = score;
@@ -568,7 +684,7 @@ public class DetectCircularSymmetry extends CvStage {
                     Logger.trace("best circular symmetry at subSampling "+subSamplingEff+", range W"+wSearchRange+" H"+hSearchRange
                             +(finalSamplingPass ? ", superSampling "+superSampling+" offsets Y"+xOffset+" Y"+yOffset : "")
                             +" X"+xBestSampling+" Y"+yBestSampling+" R"+rContrastBest
-                            + " ring samples "+nRingSamples+": "+scoreBestSampling);
+                            + " ring samples "+samples+": "+scoreBestSampling);
                 }
             }
         }
@@ -578,7 +694,8 @@ public class DetectCircularSymmetry extends CvStage {
         if (maxTargetCount > 1) {
             // Need to find multiple targets. Process the score map.
             List<SymmetryCircle> maxima = new ArrayList<SymmetryCircle>();
-            if (scoreBest > minSymmetry) {
+            double minSymmetryEff = subSamplingEff == 1 ? minSymmetry : absoluteMinSymmetry;
+            if (scoreBest > minSymmetryEff) {
                 // Find the local maxima.
                 for (int yis = 1, yim0 = 0, yim1 = wSearchRangeMap, yim2 = wSearchRangeMap*2;  
                         yis < hSearchRangeMap-1; yis++, yim0 += wSearchRangeMap, yim1 += wSearchRangeMap, yim2 += wSearchRangeMap) {
@@ -590,7 +707,7 @@ public class DetectCircularSymmetry extends CvStage {
                         // y2 ¦  6  7  8
                         double score = scoreMap[yim1 + xis];
                         // This will only find true peaks, no plateaus, but plateaus will never happen in real life. 
-                        if (score > minSymmetry
+                        if (score > minSymmetryEff
                                 && scoreMap[yim1 + xis - 1] < score 
                                 && scoreMap[yim1 + xis + 1] < score 
                                 && scoreMap[yim0 + xis - 1] < score 
@@ -634,7 +751,7 @@ public class DetectCircularSymmetry extends CvStage {
                         maximaFiltered.add(cand);
                     }
                 }
-
+                maximaFiltered = sortAndLimit(maximaFiltered, maxTargetCount*iterationTargetsFactor, corrSymmetry);
                 List<SymmetryCircle> samplingFiltered = new ArrayList<SymmetryCircle>();
                 if (finalSamplingPass) {
                     samplingFiltered.addAll(maximaFiltered);
@@ -643,38 +760,19 @@ public class DetectCircularSymmetry extends CvStage {
                     // For each local maxima...
                     for (SymmetryCircle localBest : maximaFiltered) {
                         // ... recursion into finer subSampling and local search.
+                        int localSearchRange = subSamplingEff*iterationRadius;
                         List<CvStage.Result.Circle> localRet = findCircularSymmetry(image, (int)localBest.x, (int)localBest.y, minDiameter, maxDiameter, 
-                                subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1,
-                                minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
+                                localSearchRange, localSearchRange, localSearchRange, 1,
+                                minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, symmetryScore, diagnostics, heatMap, scoreRange);
                         if (localRet.size() > 0) { 
                             samplingFiltered.add((SymmetryCircle) localRet.get(0));
                         }
                     }
                 }
 
-                // Sort best results first.
-                Collections.sort(samplingFiltered, new Comparator<SymmetryCircle>() {
-                    @Override
-                    public int compare(SymmetryCircle o1, SymmetryCircle o2) {
-                        return ((Double) o2.score).compareTo(o1.score);
-                    }
-                });
-
-                // Limit the result count and correlated minimum symmetry.
+                samplingFiltered = sortAndLimit(samplingFiltered, maxTargetCount, corrSymmetry);
                 ret = new ArrayList<>();
-                if (samplingFiltered.size() > 0) {
-                    int n = 0;
-                    double minScore = samplingFiltered.get(0).score*corrSymmetry;
-                    for (SymmetryCircle circle : samplingFiltered) {
-                        if (circle.score < minScore) {
-                            break;
-                        }
-                        ret.add(circle);
-                        if (++n >= maxTargetCount) {
-                            break;
-                        }
-                    }
-                }
+                ret.addAll(samplingFiltered);
             }
             else {
                 // Empty.
@@ -694,13 +792,13 @@ public class DetectCircularSymmetry extends CvStage {
                 // Recursion into finer subSampling and local search.
                 ret = findCircularSymmetry(image, (int)(xBest), (int)(yBest), minDiameter, maxDiameter, 
                         subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, subSamplingEff*iterationRadius, 1,
-                        minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, diagnostics, heatMap, scoreRange);
+                        minSymmetry, corrSymmetry, subSamplingEff/iterationDivision, superSampling, symmetryScore, diagnostics, heatMap, scoreRange);
             }
         }
 
         if (showDiagnostics) {
             // Paint diagnostics.
-            double rscale = 1/(scoreHeat(scoreRange.maxScore) - scoreHeat(scoreRange.minScore));
+            double rscale = 1/(scoreRange.scoreHeat(scoreRange.maxScore) - scoreRange.scoreHeat(scoreRange.minScore));
             double scale = 255*channels*rscale;
             for (int yi = -subSamplingEff/2; yi < hSearchRange-subSamplingEff/2; yi++) {
                 for (int xi = -subSamplingEff/2; xi < wSearchRange-subSamplingEff/2; xi++) {
@@ -709,8 +807,8 @@ public class DetectCircularSymmetry extends CvStage {
                     int yis = (yi+subSamplingEff/2)/subSamplingEff;
                     // Mask to search Radius.
                     double s = scoreMap[yis*wSearchRangeMap + xis];
-                    if (s > 1.0) {
-                        /// Pixel coordinates.
+                    if (s > scoreFloor) {
+                        // Pixel coordinates.
                         final int col = xi + x0SearchRange + r;
                         final int row = yi + y0SearchRange + r;
                         double dx2 = (col - xBest);
@@ -720,11 +818,11 @@ public class DetectCircularSymmetry extends CvStage {
                         if (subSamplingEff == 1 
                                 || distance2 >= subSamplingEff*iterationRadius/2)  {
                             // Get the score.
-                            double heat = scoreHeat(s);
+                            double heat = scoreRange.scoreHeat(s);
                             if (!Double.isFinite(heat)) {
-                                heat = scoreHeat(scoreRange.minScore);
+                                heat = scoreRange.scoreHeat(scoreRange.minScore);
                             }
-                            heat -= scoreHeat(scoreRange.minScore);
+                            heat -= scoreRange.scoreHeat(scoreRange.minScore);
                             double score = heat*scale;
                             // Determine if this pixel coordinate is part of the indicator (cross-hairs and diameter).
                             double indicate = 0.0;
@@ -814,7 +912,32 @@ public class DetectCircularSymmetry extends CvStage {
         return ret;
     }
 
-    private static double scoreHeat(double score) {
-        return Math.log(Math.log(score));
+    protected static List<SymmetryCircle> sortAndLimit(List<SymmetryCircle> circles,
+            int maxTargetCount, double corrSymmetry) {
+        // Sort best results first.
+        Collections.sort(circles, new Comparator<SymmetryCircle>() {
+            @Override
+            public int compare(SymmetryCircle o1, SymmetryCircle o2) {
+                return ((Double) o2.score).compareTo(o1.score);
+            }
+        });
+
+        // Limit the result count and correlated minimum symmetry.
+        List<SymmetryCircle> ret = new ArrayList<>();
+        if (circles.size() > 0) {
+            int n = 0;
+            double minScore = circles.get(0).score*corrSymmetry;
+            for (SymmetryCircle circle : circles) {
+                if (circle.score < minScore) {
+                    break;
+                }
+                ret.add(circle);
+                if (++n >= maxTargetCount) {
+                    break;
+                }
+            }
+        }
+        return ret;
     }
+
 }
