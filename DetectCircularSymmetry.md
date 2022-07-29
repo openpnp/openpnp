@@ -61,6 +61,16 @@ The **DetectCircularSymmetry** stage is configured as follows:
 
 **corrSymmetry**: Correlated minimum circular symmetry for multiple matches, i.e. other matches must have at least this relative symmetry. Note that the symmetry score is very dynamic, so setting a robust correlation is difficult. 
 
+**symmetryScore** provides different score functions to reject partial/interrupted ring edges. These may be selected, when the detection has to compete with other nearby features that happen to have an (interrupted) tangential match with the wanted circular diameters. Typical example: on paper carrier tapes 0402 pockets are confused with sprocket holes. Another example are texture patterns that happen to have a circular weight either randomly or from LED reflection highlights etc. (for both examples see the animation below).
+
+The **symmetryScore** provides alternative score functions to reject partial/interrupted ring edges. By either taking the average or median value of ring pixels/segments, the comparison variance is reduced when rings are interrupted, making a candidate less favorable.
+
+![circular-symmetry-score](https://user-images.githubusercontent.com/9963310/181843949-0becc703-8f96-485e-8b3c-15d1dac2ffd7.gif)
+
+- **Overall variance vs. ring variance sum** (default): tolerant circular symmetry score. Matches partial/scattered circular patterns.
+- **Ring ageraged variance vs. ring variance sum**: stricter circular symmetry score. The rings must be quite uniform to match.
+- **Ring median variance vs. ring variance sum**: even stricter circular symmetry score. Rejects interrupted rings, e.g. from tangential non-circular edges.
+
 ## Properties used when controlled by Vision Operations
 
 **propertyName**: Sets the property name, as set by vision operations using this pipeline. Currently, this is `nozzleTip` for the nozzle tip calibration and `fiducial` for the fiducial locator. As soon as the named property is set by the vision operation, the stage is dynamically controlled and no longer uses the fixed properties in the stage itself. Proper camera Units Per Pixel scaling makes sure the dynamic properties work across machines/cameras/resolutions. 
