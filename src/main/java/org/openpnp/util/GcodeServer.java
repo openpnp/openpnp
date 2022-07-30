@@ -508,6 +508,7 @@ public class GcodeServer extends Thread {
                 GcodeWord pWord = getLetterWord('P', commandWords);
                 AxesLocation axesLocation = getMachineLocation();
                 AxesLocation axesGiven = AxesLocation.zero;
+                Map<Axis, String> letterMap = new HashMap<>();
                 for (Axis axis : machine.getAxes()) {
                     if (axis instanceof ControllerAxis) {
                         ControllerAxis controllerAxis = (ControllerAxis) axis;
@@ -517,19 +518,19 @@ public class GcodeServer extends Thread {
                                 // We're in GcodeServer simulation on this machine. Provide some useful defaults.  
                                 if (axis.getName().equals("x") || axis.getName().equals("y") 
                                         || axis.getName().toLowerCase().substring(0, 1).equals("z")) {
-                                    controllerAxis.setLetter(axis.getName().toUpperCase().substring(0, 1));
+                                    letter = axis.getName().toUpperCase().substring(0, 1);
                                 }
                                 else if (axis.getName().equals("C") || axis.getName().equals("C1")) {
-                                    controllerAxis.setLetter("A");
+                                    letter = "A";
                                 }
                                 else if (axis.getName().equals("C2")) {
-                                    controllerAxis.setLetter("B");
+                                    letter = "B";
                                 }
                                 else {
                                     throw new Exception("Invalid letter on axis "+axis.getName());
                                 }
-                                letter = controllerAxis.getLetter(); 
                             }
+                            letterMap.put(axis, letter);
                             GcodeWord axisWord = getLetterWord(letter.toCharArray()[0], commandWords);
                             if (axisWord != null) {
                                 if (absolute) {
@@ -567,7 +568,7 @@ public class GcodeServer extends Thread {
                         if (axis instanceof ControllerAxis) {
                             if (((ControllerAxis) axis).getDriver() == getDriver()) {
                                 response.append(' ');
-                                response.append(((ControllerAxis) axis).getLetter());
+                                response.append(letterMap.get((ControllerAxis) axis));
                                 response.append(':');
                                 response.append(String.format(Locale.US, "%.4f", reportedLocation.getCoordinate(axis, lengthUnit)));
                             }

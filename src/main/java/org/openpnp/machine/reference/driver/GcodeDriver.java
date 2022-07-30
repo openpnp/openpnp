@@ -1612,40 +1612,35 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
         }
 
         try {
-            Logger.debug("Detecting firmware and position reporting, please ignore any errors and warnings.");
+            Logger.debug("=== Detecting firmware and position reporting, please ignore any errors and warnings.");
             sendCommand("M115");
             String firmware = receiveSingleResponse("^.*FIRMWARE.*");
             if (firmware != null) {
                 setDetectedFirmware(firmware);
             }
-            if (!getAxisVariables((ReferenceMachine) Configuration.get().getMachine()).isEmpty()) {
-                sendCommand("M114");
-                String reportedAxes = receiveSingleResponse(".*[XYZABCDEUVW]:-?\\d+\\.\\d+.*");
-                if (reportedAxes != null) {
-                    if (firmware != null) {
-                        try {
-                            if (getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
-                                sendCommand("M584");
-                                String axisConfig = receiveSingleResponse("^Driver assignments:.*");
-                                if (axisConfig != null) {
-                                    setConfiguredAxes(axisConfig);
-                                }
-                            }
-                            else {
-                                setConfiguredAxes(null);
+            sendCommand("M114");
+            String reportedAxes = receiveSingleResponse(".*[XYZABCDEUVW]:-?\\d+\\.\\d+.*");
+            if (reportedAxes != null) {
+                if (firmware != null) {
+                    try {
+                        if (getFirmwareProperty("FIRMWARE_NAME", "").contains("Duet")) {
+                            sendCommand("M584");
+                            String axisConfig = receiveSingleResponse("^Driver assignments:.*");
+                            if (axisConfig != null) {
+                                setConfiguredAxes(axisConfig);
                             }
                         }
-                        catch (Exception e) {
-                            // ignore
+                        else {
+                            setConfiguredAxes(null);
                         }
                     }
-                    setReportedAxes(reportedAxes);
+                    catch (Exception e) {
+                        // ignore
+                    }
                 }
+                setReportedAxes(reportedAxes);
             }
-            else {
-                setReportedAxes("");
-            }
-            Logger.debug("End detecting firmware and position reporting.");
+            Logger.debug("=== End detecting firmware and position reporting.");
         }
         finally {
             if (!wasConnected) {

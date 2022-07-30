@@ -37,6 +37,7 @@ import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Solutions;
@@ -578,10 +579,20 @@ public class HeadSolutions implements Solutions.Subject {
                 head.getMachine().permutateAxis(axis, -1);
                 pos--;
             }
-            if (axis instanceof AbstractControllerAxis 
+            if (axis instanceof AbstractControllerAxis  
                     && camera.getAxisX() instanceof AbstractControllerAxis) {
                 // Inherit the driver.
                 ((AbstractControllerAxis) axis).setDriver(((AbstractControllerAxis) camera.getAxisX()).getDriver());
+            }
+            if (axis instanceof ReferenceControllerAxis) {
+                if (type == Type.Rotation) {
+                    ((ReferenceControllerAxis) axis).setLimitRotation(true);
+                    ((ReferenceControllerAxis) axis).setSoftLimitLow(new Length(-180, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setSoftLimitHigh(new Length(+180, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(200000.0/60, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(2*200000.0/60, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, AxesLocation.getUnits()));
+                }
             }
         }
         else {

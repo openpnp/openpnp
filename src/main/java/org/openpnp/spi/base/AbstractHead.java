@@ -453,6 +453,8 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         if (pump != null) {
             switch (getVacuumPumpControl()) {
                 case None:
+                    // Do nothing. 
+                    break;
                 case PartOn:
                 case KeepRunning:
                     if (!disabling) {
@@ -463,9 +465,12 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
                 case TaskDuration:
                     // Task must be about to end, switch off pump, if possible.
                     if (!isCarryingPart()) {
-                        if (pump.isActuated() == null || pump.isActuated()) {
+                        if (pump.isActuated() != null && pump.isActuated()) {
                             try {
-                                pump.actuate(false);
+                                machine.execute(() -> {
+                                    pump.actuate(false);
+                                    return true;
+                                });
                             }
                             catch (Exception e) {
                                 Logger.warn(e, "Cannot switch off pump.");

@@ -1351,10 +1351,8 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     });
                 }
             }
-            if (getLightActuator() != null) {
-                ActuatorSolutions.findActuateIssues(solutions, this, this.getLightActuator(), "camera light",
-                    "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
-            }
+            ActuatorSolutions.findActuateIssues(solutions, this, this.getLightActuator(), "camera light",
+                "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
         }
     }
 
