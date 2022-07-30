@@ -38,11 +38,13 @@ import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.ActuatorsComboBoxModel;
+import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
 import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.spi.Actuator;
+import org.openpnp.spi.base.AbstractHead;
 import org.openpnp.spi.base.AbstractHead.VisualHomingMethod;
 import org.openpnp.util.UiUtils;
 
@@ -289,23 +291,45 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(80dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("max(50dlu;default)"),},
-                new RowSpec[] {
-                        FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+                ColumnSpec.decode("max(50dlu;default)"),
+                FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC,},
+            new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,}));
 
         JLabel lblVacuumPumpActuator = new JLabel("Vacuum Pump Actuator");
-        panel_3.add(lblVacuumPumpActuator, "2, 2, 2, 1, right, default");
+        panel_3.add(lblVacuumPumpActuator, "2, 2, right, default");
 
         comboBoxPumpActuator = new JComboBox();
         comboBoxPumpActuator.setModel(new ActuatorsComboBoxModel(head));
-        panel_3.add(comboBoxPumpActuator, "4, 2, fill, default");
+        panel_3.add(comboBoxPumpActuator, "4, 2, 3, 1, fill, default");
+        
+        lblPumpControl = new JLabel("Pump Control");
+        lblPumpControl.setToolTipText("<html>\r\n<p>Determine how the pump on/off state is controlled:</p>\r\n<ul>\r\n<li><strong>None</strong>: the pump is controlled manually or outside of OpenPnP.<br/>\r\nUse this for a controller-side hysteresis control, for instance.</li>\r\n<li><strong>PartOn</strong>: the pump is switched on when a part is about to be <br/>\r\npicked, it is switched off when no part is on any nozzle.</li>\r\n<li><strong>TaskDuration</strong>: the pump is switched on when a part is about<br/>\r\nto be picked, it is only switched off when queued tasks (e.g. <br/>\r\nthe running job) is finished, given no part is on any nozzle.</li>\r\n<li><strong>KeepRunning</strong>: the pump is switched on when a part is about<br/>\r\nto be picked, it is kept running until explicitly switched off, <br/>\r\nor until the machine is being disabled.</li>\r\n</ul>\r\n</html>");
+        panel_3.add(lblPumpControl, "2, 4, right, default");
+        
+        vacuumPumpControl = new JComboBox(AbstractHead.VacuumPumpControl.values());
+        panel_3.add(vacuumPumpControl, "4, 4, 3, 1, fill, default");
+        
+        lblPumpStartTime = new JLabel("Pump On Wait [ms]");
+        lblPumpStartTime.setToolTipText("When switching on the pump, wait this time for it to reach proper pressure.");
+        panel_3.add(lblPumpStartTime, "2, 6, right, default");
+        
+        pumpOnWaitMilliseconds = new JTextField();
+        panel_3.add(pumpOnWaitMilliseconds, "4, 6, fill, default");
+        pumpOnWaitMilliseconds.setColumns(10);
 
     }
 
     @Override
     public void createBindings() {
         LengthConverter lengthConverter = new LengthConverter();
+        IntegerConverter intConverter = new IntegerConverter();
 
         MutableLocationProxy homingFiducialLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, head, "homingFiducialLocation", homingFiducialLocation, "location");
@@ -338,6 +362,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         NamedConverter<Actuator> actuatorConverter = (new NamedConverter<>(head.getActuators()));
         addWrappedBinding(head, "zProbeActuator", comboBoxZProbeActuator, "selectedItem", actuatorConverter);
         addWrappedBinding(head, "pumpActuator", comboBoxPumpActuator, "selectedItem", actuatorConverter);
+        addWrappedBinding(head, "vacuumPumpControl", vacuumPumpControl, "selectedItem");
+        addWrappedBinding(head, "pumpOnWaitMilliseconds", pumpOnWaitMilliseconds, "text", intConverter);
 
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homingFiducialX);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(homingFiducialY);
@@ -352,6 +378,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationPrimaryFiducialDiameter);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationSecondaryFiducialDiameter);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(calibrationTestObjectDiameter);
+        ComponentDecorators.decorateWithAutoSelect(pumpOnWaitMilliseconds);
 
         adaptDialog();
     }
@@ -397,4 +424,8 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
     private JTextField calibrationSecondaryFiducialDiameter;
     private JTextField calibrationTestObjectDiameter;
     private JLabel lblTestObject;
+    private JLabel lblPumpControl;
+    private JComboBox vacuumPumpControl;
+    private JLabel lblPumpStartTime;
+    private JTextField pumpOnWaitMilliseconds;
 }
