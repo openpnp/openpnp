@@ -1283,26 +1283,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
         if (solutions.isTargeting(Milestone.Vision)) {
-            /* replaced by more advanced solutions
-            if (getLooking() == Looking.Up
-                    && isFlipX() == isFlipY()
-                    && ! (this instanceof SimulatedUpCamera)) {
-                solutions.add(new Solutions.PlainIssue(
-                        this, 
-                        "An up-looking camera should usually mirror the image.", 
-                        "Enable either Flip X or Flip Y (but not both) in the camera's Image Transforms.", 
-                        Severity.Warning,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms"));
-            }
-            if (getUnitsPerPixel().getX() == 0 && getUnitsPerPixel().getY() == 0) {
-                solutions.add(new Solutions.PlainIssue(
-                        this, 
-                        "Units per pixel are not yet set.", 
-                        "Perform the Units Per Pixel measurement in the General Configuration tab .", 
-                        Severity.Error,
-                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-units-per-pixel"));
-            }
-            */
             final double previewFps = getPreviewFps();
             if (previewFps > 15) {
                 solutions.add(new Solutions.Issue(

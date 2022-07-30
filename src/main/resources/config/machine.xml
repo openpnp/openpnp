@@ -16,6 +16,9 @@
                <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="AL1" name="LIGHT_TOP" coordinated-before-actuate="false" coordinated-after-actuate="false" coordinated-before-read="true" enabled-actuation="AssumeUnknown" homed-actuation="LeaveAsIs" disabled-actuation="ActuateOff" index="0">
                   <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
                </actuator>
+               <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="AP1" name="PUMP" index="0">
+                  <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
+               </actuator>
                <actuator class="org.openpnp.machine.reference.ReferenceActuator" id="A1" name="A1" index="0">
                   <head-offsets units="Millimeters" x="0.0" y="0.0" z="0.0" rotation="0.0"/>
                </actuator>
@@ -28,6 +31,7 @@
                   <source-uri>classpath://samples/pnp-test/pnp-test.png</source-uri>
                </camera>
             </cameras>
+            <pump-actuator-name>PUMP</pump-actuator-name>
          </head>
       </heads>
       <feeders>

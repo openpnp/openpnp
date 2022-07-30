@@ -394,7 +394,7 @@ public class ContactProbeNozzle extends ReferenceNozzle {
      * @return The actuator used to contact probe with the Nozzle. 
      * @throws Exception when the actuator name cannot be resolved (dangling reference).
      */
-    public Actuator getContactProbeActuator() throws Exception {
+    public Actuator getContactProbeActuator() {
         return contactProbeActuator;
     }
 
