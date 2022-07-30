@@ -170,4 +170,14 @@ public interface Head extends Identifiable, Named, WizardConfigurable, PropertyS
     public Actuator getzProbeActuator(); 
     
     public Actuator getPumpActuator(); 
+
+    /**
+     * Request a pump actuation. It will be subject to pump control method, the presence of parts on other nozzles etc., 
+     * whether the pump will actually be actuated.
+     *  
+     * @param nozzle
+     * @param on
+     * @throws Exception 
+     */
+    public void actuatePumpRequest(Nozzle nozzle, boolean on) throws Exception;
 }

@@ -18,8 +18,10 @@ import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.MachineListener;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.util.IdentifiableList;
+import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -62,6 +64,19 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
 
     @Element(required = false)
     protected String pumpActuatorName;
+
+    public enum VacuumPumpControl {
+        None,
+        PartOn,
+        TaskDuration,
+        KeepRunning;
+    }
+
+    @Attribute(required = false)
+    protected VacuumPumpControl vacuumPumpControl = VacuumPumpControl.PartOn;
+
+    @Attribute(required = false)
+    protected int pumpOnWaitMilliseconds = 0;
 
     /**
      * Choice of Visual Homing Method.
@@ -117,6 +132,23 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
             public void configurationLoaded(Configuration configuration) throws Exception {
                 zProbeActuator = getActuatorByName(zProbeActuatorName);
                 pumpActuator = getActuatorByName(pumpActuatorName);
+
+                Configuration.get().getMachine().addListener(new MachineListener.Adapter() {
+
+                    @Override
+                    public void machineAboutToBeDisabled(Machine machine, String reason) {
+                        // Machine no longer busy, might need to switch off the pump.
+                        delayedPumpOffRequest(true);
+                    }
+
+                    @Override 
+                    public void machineBusy(Machine machine, boolean busy) {
+                        if (!busy) {
+                            // Machine no longer busy, might need to switch off the pump.
+                            delayedPumpOffRequest(false);
+                        }
+                    }
+                });
             }
         });
     }
@@ -368,13 +400,81 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         this.parkLocation = parkLocation;
     }
 
+    @Override
     public boolean isCarryingPart() {
+        return isCarryingPartOtherThanOn(null);
+    }
+
+    public boolean isCarryingPartOtherThanOn(Nozzle exceptNozzle) {
         for (Nozzle nozzle : getNozzles()) {
-            if (nozzle.getPart() != null) {
-                return true;
+            if (nozzle != exceptNozzle) {
+                if (nozzle.getPart() != null) {
+                    return true;
+                }
             }
         }
         return false;
+    }
+
+
+    @Override
+    public void actuatePumpRequest(Nozzle nozzle, boolean on) throws Exception {
+        Actuator pump = getPumpActuator();
+        if (pump != null) {
+            switch (getVacuumPumpControl()) {
+                case None:
+                    // Do nothing. 
+                    break;
+                case PartOn:
+                    // Legacy mode: switch on/off with part(s) on nozzle or not.
+                    if (!isCarryingPartOtherThanOn(nozzle)) {
+                        pump.actuate(on);
+                        if (on) {
+                            Thread.sleep(getPumpOnWaitMilliseconds());
+                        }
+                    }
+                    break;
+                case TaskDuration:
+                case KeepRunning:
+                    // Make sure it is on, now. Switching off will be handled later.
+                    if (on) {
+                        if (pump.isActuated() == null || !pump.isActuated()) {
+                            pump.actuate(on);
+                            Thread.sleep(getPumpOnWaitMilliseconds());
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+
+    protected void delayedPumpOffRequest(boolean disabling) {
+        Actuator pump = getPumpActuator();
+        if (pump != null) {
+            switch (getVacuumPumpControl()) {
+                case None:
+                case PartOn:
+                case KeepRunning:
+                    if (!disabling) {
+                        // Do nothing. 
+                        break;
+                    }
+                    // fall through
+                case TaskDuration:
+                    // Task must be about to end, switch off pump, if possible.
+                    if (!isCarryingPart()) {
+                        if (pump.isActuated() == null || pump.isActuated()) {
+                            try {
+                                pump.actuate(false);
+                            }
+                            catch (Exception e) {
+                                Logger.warn(e, "Cannot switch off pump.");
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
     }
 
     public double getMaxPartSpeed() {
@@ -434,6 +534,26 @@ public abstract class AbstractHead extends AbstractModelObject implements Head {
         Object oldValue = this.pumpActuator;
         this.pumpActuator = pumpActuator;
         firePropertyChange("pumpActuator", oldValue, pumpActuator);
+    }
+
+    public VacuumPumpControl getVacuumPumpControl() {
+        return vacuumPumpControl;
+    }
+
+    public void setVacuumPumpControl(VacuumPumpControl vacuumPumpControl) {
+        Object oldValue = this.vacuumPumpControl;
+        this.vacuumPumpControl = vacuumPumpControl;
+        firePropertyChange("vacuumPumpControl", oldValue, vacuumPumpControl);
+    }
+
+    public int getPumpOnWaitMilliseconds() {
+        return pumpOnWaitMilliseconds;
+    }
+
+    public void setPumpOnWaitMilliseconds(int pumpOnWaitMilliseconds) {
+        Object oldValue = this.pumpOnWaitMilliseconds;
+        this.pumpOnWaitMilliseconds = pumpOnWaitMilliseconds;
+        firePropertyChange("pumpOnWaitMilliseconds", oldValue, pumpOnWaitMilliseconds);
     }
 
     public VisualHomingMethod getVisualHomingMethod() {

@@ -1023,38 +1023,20 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         blowOffActuatorName = (actuator != null ? actuator.getName() : null);
     }
 
-    protected boolean hasPartOnAnyOtherNozzle() {
-        for (Nozzle nozzle : getHead().getNozzles()) {
-            if (nozzle != this ) {
-                if (nozzle.getPart() != null) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    protected void actuatePump(boolean on) throws Exception {
-        Actuator pump = getHead().getPumpActuator();
-        if (pump != null && !hasPartOnAnyOtherNozzle()) {
-            pump.actuate(on);
-        }
-    }
-    
     protected void actuateVacuumValve(boolean on) throws Exception {
         if (on) {
-            actuatePump(true);
+            getHead().actuatePumpRequest(this, true);
         }
 
         getExpectedVacuumActuator().actuate(on);
 
         if (! on) {
-            actuatePump(false);
+            getHead().actuatePumpRequest(this, false);
         }
     }
 
     protected void actuateVacuumValve(double value) throws Exception {
-        actuatePump(true);
+        getHead().actuatePumpRequest(this, true);
 
         getExpectedVacuumActuator().actuate(value);
     }
@@ -1062,7 +1044,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     protected void actuateBlowValve(double value) throws Exception {
         getExpectedBlowOffActuator().actuate(value);
 
-        actuatePump(false);
+        getHead().actuatePumpRequest(this, false);
     }
 
     public double readVacuumLevel() throws Exception {
