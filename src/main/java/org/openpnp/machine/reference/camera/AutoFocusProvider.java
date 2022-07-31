@@ -101,10 +101,10 @@ public class AutoFocusProvider implements FocusProvider {
         // Try to start from a 1mm retract location to get rid of any backlash that may not be compensated (typical in Z axes).
         Location retract = location1.convertToUnits(LengthUnit.Millimeters).unitVectorTo(location0).multiply(1.0);
         Location retractedLocation = location0.add(retract);
-        if (! movable.isReachable(retractedLocation)) {
-            // OK, then not.
-            retractedLocation = location0;
-        }
+        // Limit to soft limits.
+        location0 = movable.getApproximativeLocation(location0, location0);
+        location1 = movable.getApproximativeLocation(location1, location1);
+        retractedLocation = movable.getApproximativeLocation(retractedLocation, location0);
         // Move the movable to the retracted location at safe Z.
         MovableUtils.moveToLocationAtSafeZ(movable, retractedLocation);
         // Switch on the light.
@@ -159,9 +159,11 @@ public class AutoFocusProvider implements FocusProvider {
                 location1 = oldLocation0.add(focalStep.multiply(nextFocus+1.0));
                 // Retract, same as at the start.
                 retractedLocation = location0.add(retract);
-                if (! movable.isReachable(retractedLocation)) {
-                    retractedLocation = location0;
-                }
+                // Limit to soft limits.
+                location0 = movable.getApproximativeLocation(location0, location0);
+                location1 = movable.getApproximativeLocation(location1, location1);
+                retractedLocation = movable.getApproximativeLocation(retractedLocation, retractedLocation);
+                // Retract for next pass.
                 movable.moveTo(retractedLocation);
             }
         }
@@ -171,7 +173,7 @@ public class AutoFocusProvider implements FocusProvider {
             if (bestFilteredImage != null) { 
                 cameraView.showFilteredImage(bestFilteredImage, "Auto Focus \u26AB", 2000);
             }
-        }   
+        }
     }
 
     /**
@@ -196,7 +198,7 @@ public class AutoFocusProvider implements FocusProvider {
         int [] pixelSamples = image.getRaster().getPixels(xCrop, yCrop, wCrop, hCrop, 
                 new int[wCrop*hCrop*bands]);
         final int maxSample = 255; // TODO: find out the effective sample range?
-        final int histogramSize = (int)Math.ceil(maxSample*Math.sqrt(bands*2));
+        final int histogramSize = 1+(int)Math.ceil(maxSample*Math.sqrt(bands*2));
         int [] edgeHistogram = new int[histogramSize];
         int xNext = bands;
         int yNext = bands*wCrop;
@@ -224,11 +226,6 @@ public class AutoFocusProvider implements FocusProvider {
                         edgeHistogram[edge]++;
                         if (edge >= over) {// && xi > 0 && yi > 0) {
                             filteredImage.setRGB(xi, yi, markupRGB);
-//                            filteredImage.setRGB(xi+1, yi, markupRGB);
-//                            filteredImage.setRGB(xi, yi+1, markupRGB);
-//                            filteredImage.setRGB(xi+1, yi+1, markupRGB);
-                            //filteredImage.setRGB(xi-1, yi, markupRGB);
-                            //filteredImage.setRGB(xi, yi-1, markupRGB);
                         }
                     }
                     else {
