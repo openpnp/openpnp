@@ -536,7 +536,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     gcodeDriver, 
                                     "Choose the simplest Motion Control Type for the first basic setup.", 
                                     "Set to "+newMotionControlType.name()+".", 
-                                    Severity.Suggestion,
+                                    Severity.Information,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
                                 @Override

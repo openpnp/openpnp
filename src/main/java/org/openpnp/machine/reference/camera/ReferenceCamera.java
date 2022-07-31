@@ -1282,6 +1282,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Override
     public void findIssues(Solutions solutions) {
         super.findIssues(solutions);
+        if (solutions.isTargeting(Milestone.Basics)) {
+            ActuatorSolutions.findActuateIssues(solutions, this, this.getLightActuator(), "camera light",
+                "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
+        }
         if (solutions.isTargeting(Milestone.Vision)) {
             final double previewFps = getPreviewFps();
             if (previewFps > 15) {
@@ -1351,8 +1355,6 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     });
                 }
             }
-            ActuatorSolutions.findActuateIssues(solutions, this, this.getLightActuator(), "camera light",
-                "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting");
         }
     }
 
