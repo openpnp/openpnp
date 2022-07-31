@@ -2,6 +2,7 @@
 Using the bottom camera and computer vision the position of the nozzle tip held above the camera can be precisely determined. By moving the nozzle tip in certain patterns, OpenPNP can calibrate the following things:
 1. The runout of the nozzle and nozzle tip.
 2. The true, tool specific location of the bottom camera i.e. where a nozzle tip has to be moved to, in order to appear precisely in the center of the camera view.
+3. The camera background, in order to properly mask it out in computer vision.
 
 # What is Runout and Runout Compensation?
 See the animations below. Left side is without compensation, right side is compensation enabled. The compensation algorithm removes the eccentricity of the nozzle tip to gain better placement accuracy. See the difference with a 3d printed demo-nozzle tip:
