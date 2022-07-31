@@ -229,6 +229,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
     protected Double recordedImagePlayed = null;
     private SimpleGraph settleGraph = null;
     private int recordedMaskDiameter;
+    private double recordedComputeMilliseconds;
 
     private SimpleGraph startDiagnostics() {
         if (settleDiagnostics) {
@@ -399,6 +400,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 lastSettleMat = mat;
 
                 long t = NanosecondTime.getRuntimeMilliseconds();
+                recordedComputeMilliseconds = (t-t1);
                 Logger.trace("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + String.format("%.3f", result) +" compute time: "+(t-t1));
 
                 // If the image changed at least a bit (due to noise) and less than our
@@ -431,7 +433,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                         setRecordedImages(settleImages);
                         recordedMaskDiameter = maskDiameter;
                     }
-                    Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t0);
+                    Logger.debug("autoSettleAndCapture in {} ms", NanosecondTime.getRuntimeMilliseconds() - t0);
                     return image;
                 }
             }
@@ -762,6 +764,10 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
             setSettleGraph(null);
             setRecordedImages(null);
         }
+    }
+
+    public double getRecordedComputeMilliseconds() {
+        return recordedComputeMilliseconds;
     }
 
     public SimpleGraph getSettleGraph() {

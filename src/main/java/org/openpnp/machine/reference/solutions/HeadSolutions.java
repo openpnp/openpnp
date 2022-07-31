@@ -135,7 +135,7 @@ public class HeadSolutions implements Solutions.Subject {
                                     + "<ol>"
                                     + "<li>The current machine configuration is saved (same as File/Save Configuration).</li>"
                                     + "<li>The new solution overwrites your existing nozzle and axis configuration.</li>"
-                                    + "<li>As far as nozzles and axes remain the same type and count, their detail configuration is preserved.</li>"
+                                    + "<li>As far as nozzles, actuators and axes remain the same type and count, their detail configuration is preserved (except for names).</li>"
                                     + "<li>A nozzle solution can be applied multiple times, you can revisit and expand it.</li>"
                                     + "<li><span color=\"red\">Caution:</span> Reopen will not restore the previous configuration, only enable a fresh choice.<br/>"
                                     + "If you want to restore previous configuration you must restore the saved configuration manually.</li>"

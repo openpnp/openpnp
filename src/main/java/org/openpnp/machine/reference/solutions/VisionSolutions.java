@@ -43,6 +43,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.camera.AbstractSettlingCamera.SettleMethod;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
@@ -157,6 +158,21 @@ public class VisionSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private double zeroKnowledgeBacklashSpeed = 0.2;
 
+    @Attribute(required = false)
+    private long zeroKnowledgeSettleTimeMs = 600;
+
+    @Attribute(required = false)
+    private double settleWantedResolutionMm = 0.025;
+
+    @Attribute(required = false)
+    private double settleAcceptableComputeTime = 15;
+
+    @Attribute(required = false)
+    private double settleMaximumPixelDiff = 8;
+
+    @Attribute(required = false)
+    private double settleTestMoveMm = 2;
+
     public VisionSolutions setMachine(ReferenceMachine machine) {
         this.machine = machine;
         return this;
@@ -168,6 +184,26 @@ public class VisionSolutions implements Solutions.Subject {
 
     public long getDiagnosticsMilliseconds() {
         return diagnosticsMilliseconds;
+    }
+
+    public long getZeroKnowledgeSettleTimeMs() {
+        return zeroKnowledgeSettleTimeMs;
+    }
+
+    public double getSettleWantedResolutionMm() {
+        return settleWantedResolutionMm;
+    }
+
+    public double getSettleAcceptableComputeTime() {
+        return settleAcceptableComputeTime;
+    }
+
+    public double getSettleMaximumPixelDiff() {
+        return settleMaximumPixelDiff;
+    }
+
+    public double getSettleTestMoveMm() {
+        return settleTestMoveMm;
     }
 
     private ReferenceMachine machine;
@@ -1068,6 +1104,11 @@ public class VisionSolutions implements Solutions.Subject {
                     + "because the Advanced Camera Calibration is already active.");
         }
         Location initialLocation = movable.getLocation();
+        // Temporarily set very conservative settling (calibration can happen before or after Camera Settling has been configured).
+        SettleMethod oldSettleMethod = camera.getSettleMethod();
+        long oldSettleTime = camera.getSettleTimeMs();
+        camera.setSettleMethod(SettleMethod.FixedTime);
+        camera.setSettleTimeMs(Math.max(oldSettleTime, zeroKnowledgeSettleTimeMs));
         try {
             if (!secondary) {
                 // Reset camera transforms.
@@ -1249,6 +1290,9 @@ public class VisionSolutions implements Solutions.Subject {
         finally {
             // Restore the camera location
             zeroKnowledgeMoveTo(movable, initialLocation, true);
+            // Restore settling.
+            camera.setSettleMethod(oldSettleMethod);
+            camera.setSettleTimeMs(oldSettleTime);
         }
     }
 

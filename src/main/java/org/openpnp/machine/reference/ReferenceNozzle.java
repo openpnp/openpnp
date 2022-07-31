@@ -237,48 +237,56 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
             // Changing a X, Y head offset invalidates the nozzle tip calibration. Just changing Z leaves it intact. 
             ReferenceNozzleTipCalibration.resetAllNozzleTips();
         }
-        if (offsetsDiff.isInitialized() && headOffsetsOld.isInitialized() && headOffsetsNew.isInitialized() && head != null) {
-            // The old offsets were not zero, adjust some dependent head offsets.
-            
-            // Where another HeadMountable, such as an Actuator, is fastened to the nozzle, it may have the same X, Y head offsets, i.e. these were very 
-            // likely copied over, like customary for the ReferencePushPullFeeder actuator. Adjust them likewise. 
-            for (HeadMountable hm : head.getHeadMountables()) {
-                if (this != hm 
-                        && (hm instanceof ReferenceHeadMountable)
-                        && !(hm instanceof ReferenceNozzle)) {
-                    ReferenceHeadMountable otherHeadMountable = (ReferenceHeadMountable) hm;
-                    Location otherHeadOffsets = otherHeadMountable.getHeadOffsets();
-                    if (otherHeadOffsets.isInitialized() 
-                            && headOffsetsOld.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(otherHeadOffsets) <= 0.01) {
-                        // Take X, Y (but not Z).
-                        Location hmOffsets = otherHeadOffsets.derive(headOffsetsNew, true, true, false, false);
-                        Logger.info("Set "+otherHeadMountable.getClass().getSimpleName()+" " + otherHeadMountable.getName() + " head offsets to " + hmOffsets
-                                + " (previously " + otherHeadOffsets + ")");
-                        otherHeadMountable.setHeadOffsets(hmOffsets);
+        if (offsetsDiff.isInitialized() && headOffsetsNew.isInitialized() && head != null) {
+            if (manualNozzleTipChangeLocation.isInitialized()) {
+                Location oldLocation = manualNozzleTipChangeLocation;
+                setManualNozzleTipChangeLocation(oldLocation.add(offsetsDiff));
+                Logger.info("Set manual nozzle tip change location for " + getName() + " to " + manualNozzleTipChangeLocation
+                        + " (previously " + oldLocation + ")");
+            }
+            if (headOffsetsOld.isInitialized()) {
+                // The old offsets were not zero, adjust some dependent head offsets.
+
+                // Where another HeadMountable, such as an Actuator, is fastened to the nozzle, it may have the same X, Y head offsets, i.e. these were very 
+                // likely copied over, like customary for the ReferencePushPullFeeder actuator. Adjust them likewise. 
+                for (HeadMountable hm : head.getHeadMountables()) {
+                    if (this != hm 
+                            && (hm instanceof ReferenceHeadMountable)
+                            && !(hm instanceof ReferenceNozzle)) {
+                        ReferenceHeadMountable otherHeadMountable = (ReferenceHeadMountable) hm;
+                        Location otherHeadOffsets = otherHeadMountable.getHeadOffsets();
+                        if (otherHeadOffsets.isInitialized() 
+                                && headOffsetsOld.convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(otherHeadOffsets) <= 0.01) {
+                            // Take X, Y (but not Z).
+                            Location hmOffsets = otherHeadOffsets.derive(headOffsetsNew, true, true, false, false);
+                            Logger.info("Set "+otherHeadMountable.getClass().getSimpleName()+" " + otherHeadMountable.getName() + " head offsets to " + hmOffsets
+                                    + " (previously " + otherHeadOffsets + ")");
+                            otherHeadMountable.setHeadOffsets(hmOffsets);
+                        }
                     }
                 }
-            }
 
-            // Also adjust up-looking camera offsets, as these were very likely calibrated using the default nozzle.
-            try {
-                if (this == head.getDefaultNozzle()) {
-                    for (Camera camera : getMachine().getCameras()) {
-                        if (camera instanceof ReferenceCamera 
-                                && camera.getLooking() == Looking.Up) {
-                            ReferenceHeadMountable upLookingCamera = (ReferenceHeadMountable) camera;
-                            Location cameraOffsets = upLookingCamera.getHeadOffsets();
-                            if (cameraOffsets.isInitialized()) {
-                                cameraOffsets = cameraOffsets.add(offsetsDiff);
-                                Logger.info("Set camera " + upLookingCamera.getName() + " head offsets to " + cameraOffsets
-                                        + " (previously " + upLookingCamera.getHeadOffsets() + ")");
-                                upLookingCamera.setHeadOffsets(cameraOffsets);
+                // Also adjust up-looking camera offsets, as these were very likely calibrated using the default nozzle.
+                try {
+                    if (this == head.getDefaultNozzle()) {
+                        for (Camera camera : getMachine().getCameras()) {
+                            if (camera instanceof ReferenceCamera 
+                                    && camera.getLooking() == Looking.Up) {
+                                ReferenceHeadMountable upLookingCamera = (ReferenceHeadMountable) camera;
+                                Location cameraOffsets = upLookingCamera.getHeadOffsets();
+                                if (cameraOffsets.isInitialized()) {
+                                    cameraOffsets = cameraOffsets.add(offsetsDiff);
+                                    Logger.info("Set camera " + upLookingCamera.getName() + " head offsets to " + cameraOffsets
+                                            + " (previously " + upLookingCamera.getHeadOffsets() + ")");
+                                    upLookingCamera.setHeadOffsets(cameraOffsets);
+                                }
                             }
                         }
                     }
                 }
-            }
-            catch (Exception e) {
-                Logger.warn(e);
+                catch (Exception e) {
+                    Logger.warn(e);
+                }
             }
         }
     }

@@ -16,6 +16,7 @@ import java.util.ConcurrentModificationException;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.SimulatedUpCameraConfigurationWizard;
+import org.openpnp.machine.reference.solutions.CameraSolutions;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
@@ -396,12 +397,12 @@ public class SimulatedUpCamera extends ReferenceCamera {
                 @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (state == Solutions.State.Solved) {
-                        OpenPnpCaptureCamera camera = createReplacementCamera();
-                        replaceCamera(camera);
+                        OpenPnpCaptureCamera camera = CameraSolutions.createReplacementCamera(SimulatedUpCamera.this);
+                        CameraSolutions.replaceCamera(camera);
                     }
                     else if (getState() == Solutions.State.Solved) {
                         // Place the old one back (from the captured SimulatedUpCamera.this).
-                        replaceCamera(SimulatedUpCamera.this);
+                        CameraSolutions.replaceCamera(SimulatedUpCamera.this);
                     }
                     super.setState(state);
                 }

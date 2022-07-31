@@ -696,8 +696,8 @@ public class GcodeServer extends Thread {
                                 -> (axis.getType() == Axis.Type.X ? homingError.getLengthX() :
                                     axis.getType() == Axis.Type.Y ? homingError.getLengthY() : 
                                         null));
-                        // Make it slower.
-                        speed = 0.5;
+                        // Make it a bit faster.
+                        speed = 2;
                         if (axesGiven.isEmpty()) {
                             // G28 has not axes, use preset homing coordinates.
                             axesLocation = new AxesLocation(machineLocation.getAxes(getDriver()), 
