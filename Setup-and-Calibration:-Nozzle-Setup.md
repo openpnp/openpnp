@@ -29,6 +29,11 @@ If you have more than one nozzle tip on your machine:
 4. Select the new nozzle tip to open it's properties.
 5. To use the machine with the nozzle tip you just created you need to load it onto the nozzle. Press the load button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to do this.
 
+## Nozzle to Nozzle Tip Compatibility
+Use the Nozzle Tips tab on a nozzle to determine which nozzle tips can be loaded on a Nozzle:
+
+![Nozzle tip compatibility](https://user-images.githubusercontent.com/9963310/182042739-ed3cd0de-3268-4b5e-8009-ba38215c37d2.png)
+
 ## Nozzle Mapped Axes
 Map the axes to the nozzle as explained on the [[Mapping Axes]] page.
 
