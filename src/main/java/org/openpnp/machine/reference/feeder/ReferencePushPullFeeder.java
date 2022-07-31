@@ -1543,12 +1543,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                                 calibrationToleranceMm : bestDistanceMm);
 
                         if (distanceMm >= minDistanceMm && distanceMm < maxDistanceMm) {
-                            // Take the first line that is close enough, as the lines are ordered by length (descending).
-                            // In autoSetupMode take the closest line.
                             bestLine = line;
                             bestUnitVector = aLocation.unitVectorTo(bLocation);
                             bestDistanceMm = distanceMm;
                             lines.add(line);
+                            if (autoSetupMode == FindFeaturesMode.CalibrateHoles) {
+                                // Take the first line that is close enough, as the lines are ordered by length (descending).
+                                break;
+                            }
+                            // Otherwise take the closest line, go on.
                         }
                         else if (autoSetupMode == null) {
                             lines.add(line);
