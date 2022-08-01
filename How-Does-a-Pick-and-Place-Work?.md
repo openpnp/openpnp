@@ -81,9 +81,9 @@ The most common type of motion controller is a Gcode step and direction stepper 
 
 - Gcode: [Gcode](https://en.wikipedia.org/wiki/G-code) is a text based language for telling machines how and where to move. OpenPnP can send Gcode commands to a motion controller to tell it where to move the head of the machine. Gcode can be incredibly complex, but OpenPnP only uses a very small subset of it. We'll touch on this more later.
 - Step and direction: Step and direction or step/dir is the most common method of driving a variety of motors commonly used for CNC. It is a simple interface with two pins: step and direction. You set the direction pin high or low based on whether you want the motor to turn clockwise or anti-clockwise and then you pulse the step pin once for each "step" you want the motor to take. We'll talk more about this in the motors section below.
-- Stepper motor: Stepper motors are the most common type of motor used in DIY CNC machines. They are commonly found in 3D printers. A stepper motor is differs from a "normal" motor like you'd find in a drill or washing machine in that the stepper motor moves in small, defined steps instead of continuously rotating.
+- Stepper motor: Stepper motors are the most common type of motor used in DIY CNC machines. They are commonly found in 3D printers. A stepper motor differs from a "normal" motor like you'd find in a drill or washing machine in that the stepper motor moves in small, defined steps instead of continuously rotating.
 
-So, putting that all back together, a *Gcode step and direction stepper motor controller* reads Gcode commands and converts them step and direction pulses to control a stepper motor.
+So, putting that all back together, a *Gcode step and direction stepper motor controller* reads Gcode commands and converts them into step and direction pulses to control a stepper motor.
 
 # Motors
 
@@ -115,4 +115,4 @@ Servos come in a variety of shapes, sizes, and configurations. They can be AC or
 
 ## Motor Drivers
 
-Motor drivers take a variety of low voltage, low current inputs, usually digital, and convert them to (sometimes) high voltage, high current outputs to drive the motor. We talked about step and direction a bit above, and that is the most common type of motor driver used for CNC. Motor drivers can be incredibly complex, incorporation PID control, encoder reading, tuning, and switching of massive voltages and currents. 
+Motor drivers take a variety of low voltage, low current inputs, usually digital, and convert them to (sometimes) high voltage, high current outputs to drive the motor. We talked about step and direction a bit above, and that is the most common type of motor driver used for CNC. Motor drivers can be incredibly complex, incorporating PID control, encoder reading, tuning, and switching of massive voltages and currents. 
