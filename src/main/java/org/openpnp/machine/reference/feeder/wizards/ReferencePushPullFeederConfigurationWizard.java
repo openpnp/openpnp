@@ -412,6 +412,14 @@ extends AbstractReferenceFeederConfigurationWizard {
         panelVisionEnabled.add(textFieldFontSizePt, "10, 10");
         textFieldFontSizePt.setColumns(10);
 
+        lblOcrOffset = new JLabel("OCR Offset");
+        lblOcrOffset.setToolTipText("OCR Camera offset along tape direction.");
+        panelVisionEnabled.add(lblOcrOffset, "8, 12, right, default");
+
+        textFieldOcrOffset = new JTextField();
+        panelVisionEnabled.add(textFieldOcrOffset, "10, 12");
+        textFieldOcrOffset.setColumns(10);
+
         btnEditPipeline = new JButton(editPipelineAction);
         btnEditPipeline.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -602,6 +610,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         addWrappedBinding(feeder, "ocrDiscoverOnJobStart", checkBoxDiscoverOnJobStart, "selected");
         addWrappedBinding(feeder, "ocrFontName", comboBoxFontName, "selectedItem");
         addWrappedBinding(feeder, "ocrFontSizePt", textFieldFontSizePt, "text", doubleConverter);
+        addWrappedBinding(feeder, "ocrOffset", textFieldOcrOffset, "text", doubleConverter);
         addWrappedBinding(feeder, "pipelineType", pipelineType, "selectedItem");
 
         addWrappedBinding(feeder, "cloneTemplateStatus", textPaneCloneTemplateStatus, "text");
@@ -617,6 +626,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldPartPitch);
         ComponentDecorators.decorateWithAutoSelectAndLengthConversion(textFieldFeedPitch);
         ComponentDecorators.decorateWithAutoSelect(textFieldFontSizePt);
+        ComponentDecorators.decorateWithAutoSelect(textFieldOcrOffset);
     }
 
     private Action editPipelineAction =
@@ -800,7 +810,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
+                MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getOcrVisionLocation());
                 MovableUtils.fireTargetedUserAction(feeder.getCamera());
                 SwingUtilities.invokeAndWait(() -> {
                     UiUtils.messageBoxOnException(() -> {
@@ -1011,6 +1021,8 @@ extends AbstractReferenceFeederConfigurationWizard {
     private JComboBox comboBoxFontName;
     private JLabel lblFontSizept;
     private JTextField textFieldFontSizePt;
+    private JLabel lblOcrOffset;
+    private JTextField textFieldOcrOffset;
     private JLabel lblOcrWrongPart;
     private JComboBox comboBoxWrongPartAction;
     private JLabel lblDiscoverOnJobStart;
