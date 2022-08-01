@@ -708,8 +708,8 @@ public class BlindsFeeder extends ReferenceFeeder {
 
                 Result ocrStageResult = pipeline.getResult("OCR"); 
                 if (ocrStageResult != null 
-                        && pipeline.getProperty("alphabet") instanceof String
-                        && ! ((String) pipeline.getProperty("alphabet")).isEmpty()) {
+                        && pipeline.getProperty("SimpleOcr.alphabet") instanceof String
+                        && ! ((String) pipeline.getProperty("SimpleOcr.alphabet")).isEmpty()) {
                     detectedOcrModel = ocrStageResult.getExpectedModel(SimpleOcr.OcrModel.class);
                 }
 
