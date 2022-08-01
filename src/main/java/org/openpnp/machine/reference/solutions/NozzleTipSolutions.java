@@ -22,7 +22,6 @@
 package org.openpnp.machine.reference.solutions;
 
 import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -118,7 +117,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
         }
         if (solutions.isTargeting(Milestone.Calibration)) {
             for (NozzleTip nt : machine.getNozzleTips()) {
-                if (nt instanceof ReferenceNozzleTip) {
+                if (nt instanceof ReferenceNozzleTip && !((ReferenceNozzleTip) nt).isUnloadedNozzleTipStandin()) {
                     ReferenceNozzleTip nozzleTip = (ReferenceNozzleTip) nt;
                     try {
                         Camera camera = VisionUtils.getBottomVisionCamera();
@@ -200,14 +199,18 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                 public Solutions.Issue.CustomProperty[] getProperties() {
                     Solutions.Issue.CustomProperty[] props1 = super.getProperties();
                     Solutions.Issue.CustomProperty[] props0 = new Solutions.Issue.CustomProperty[] {
+                            nozzleTipLoadActionProperty(this, nozzle, nozzleTip),
                             new Solutions.Issue.ActionProperty( 
                                     "", "Center nozzle "+nozzle.getName()+" over camera "+camera.getName()) {
                                 @Override
                                 public Action get() {
-                                    return new AbstractAction("Center nozzle", Icons.centerTool) {
+                                    return new AbstractAction("Center Nozzle", Icons.centerTool) {
                                         @Override
                                         public void actionPerformed(ActionEvent e) {
                                             UiUtils.submitUiMachineTask(() -> {
+                                                if (nozzleTip != nozzle.getNozzleTip()) {
+                                                    throw new Exception("The nozzle tip "+nozzleTip.getName()+" is not loaded on nozzle "+nozzle.getName()+".");
+                                                }
                                                 MovableUtils.moveToLocationAtSafeZ(nozzle, camera.getLocation(nozzle));
                                                 MovableUtils.fireTargetedUserAction(nozzle);
                                             });
@@ -289,6 +292,13 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                 }
 
                 @Override
+                public Solutions.Issue.CustomProperty[] getProperties() {
+                    return new Solutions.Issue.CustomProperty[] {
+                            nozzleTipLoadActionProperty(this, nozzle, nozzleTip),
+                    };
+                }
+
+                @Override
                 public Solutions.Issue.Choice[] getChoices() {
                     return new Solutions.Issue.Choice[] {
                             new Solutions.Issue.Choice(BackgroundCalibrationMethod.BrightnessAndKeyColor, 
@@ -313,11 +323,13 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                             state == State.Solved ? 
                                     (BackgroundCalibrationMethod) getChoice() : oldBackgroundCalibrationMethod);
                     if (state == State.Solved) {
+                        if (nozzleTip != nozzle.getNozzleTip()) {
+                            throw new Exception("The nozzle tip "+nozzleTip.getName()+" is not loaded on nozzle "+nozzle.getName()+".");
+                        }
                         UiUtils.submitUiMachineTask(() -> {
                             nozzleTip.getCalibration().calibrate((ReferenceNozzle) nozzle);
                             UiUtils.messageBoxOnExceptionLater(() -> {
                                 super.setState(state);
-                                BufferedImage[] backgroundCalibrationImages = nozzleTip.getCalibration().getBackgroundCalibrationImages();
                                 ReferenceNozzleTipCalibrationWizard.showBackgroundProblems(nozzleTip, false);
                             });
                         });
@@ -329,4 +341,26 @@ public class NozzleTipSolutions implements Solutions.Subject  {
             });
         }
     }
+    
+    protected Solutions.Issue.ActionProperty nozzleTipLoadActionProperty(Solutions.Issue issue, Nozzle nozzle,
+            ReferenceNozzleTip nozzleTip) {
+        return issue.new ActionProperty( 
+                "", "Load nozzle tip "+nozzleTip.getName()+" on "+nozzle.getName()) {
+            @Override
+            public Action get() {
+                return new AbstractAction("Load Nozzle Tip "+nozzleTip.getName(), Icons.nozzleTipLoad) {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        UiUtils.submitUiMachineTask(() -> {
+                            if (nozzleTip == nozzle.getNozzleTip()) {
+                                throw new Exception("The nozzle tip "+nozzleTip.getName()+" is already loaded on nozzle "+nozzle.getName()+".");
+                            }
+                            nozzle.loadNozzleTip(nozzleTip);
+                        });
+                    }
+                };
+            }
+        };
+    }
+
 }

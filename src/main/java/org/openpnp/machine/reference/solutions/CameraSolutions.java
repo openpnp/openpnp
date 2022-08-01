@@ -196,6 +196,9 @@ public class CameraSolutions implements Solutions.Subject  {
                                                 + "<tr><td>Compute time:</td><td>"+camera.getRecordedComputeMilliseconds()+" ms per frame</td></tr>"
                                                 + "<tr><td>Settle time:</td><td>"+camera.getRecordedSettleMilliseconds()+" ms</td></tr>"
                                                 + "</table><br/>"
+                                                + (camera.getRecordedSettleMilliseconds() > camera.getSettleTimeoutMs()/2 ?
+                                                        "<p>The settle time is rather large, perhaps due to excessive machine vibration. "
+                                                        + "Try setting stricter X/Y axes acceleration or jerk limits (if supported).</p><br/>" : "")
                                                 + "<p>More information on the Camera Settling tab of camera "+camera.getName()+".</p>"
                                                 : "")
                                         + "</html>";
@@ -254,7 +257,7 @@ public class CameraSolutions implements Solutions.Subject  {
             do {
                 // Try this.
                 performSettleTest(machine, movable, location, visionSolutions.getSettleTestMoveMm());
-                if (camera.getRecordedSettleMilliseconds() < camera.getSettleTimeoutMs()) {
+                if (camera.getRecordedSettleMilliseconds() < camera.getSettleTimeoutMs()/2) {
                     // OK, not timed out
                     break;
                 }
@@ -268,21 +271,17 @@ public class CameraSolutions implements Solutions.Subject  {
     private void performSettleTest(Machine machine, HeadMountable movable, Location location, double settleMoveMm)
             throws Exception, InterruptedException {
         if (movable != null) {
-            Location location0 = location.add(new Location(LengthUnit.Millimeters, settleMoveMm*0.5, settleMoveMm*0.5, 0, 0)); 
-            Location location1 = location.add(new Location(LengthUnit.Millimeters, -settleMoveMm*0.5, -settleMoveMm*0.5, 0, 0)); 
+            Location location0 = location.add(new Location(LengthUnit.Millimeters, settleMoveMm, settleMoveMm, 0, 0)); 
             MovableUtils.moveToLocationAtSafeZ(movable, location);
             machine.getMotionPlanner().waitForCompletion(movable, CompletionType.WaitForStillstand);
             Thread.sleep(1000);
             movable.moveTo(location0);
-            movable.moveTo(location1);
+            movable.moveTo(location);
         }
         camera.lightSettleAndCapture();
         Logger.debug("Settle test with method "+camera.getSettleMethod()+" has "
         + "compute time "+camera.getRecordedComputeMilliseconds()+"ms, "
         + "settle time "+camera.getRecordedSettleMilliseconds()+"ms.");
-        if (movable != null) {
-            movable.moveTo(location);
-        }
     }
 
     /**

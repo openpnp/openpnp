@@ -526,7 +526,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
             if (mask != null) {
                 // Adaptive gain.
                 double maxDiff = Core.norm(mat0, mat1,  Core.NORM_INF, mask);
-                int limit = (int)(Math.pow(maxDiff/255, 0.2)*255); 
+                int limit = Math.min(255, (int)(maxDiff*16)); 
                 Core.normalize(diffMat, normMat, limit, 0, 
                         Core.NORM_INF, 
                         0, mask);
@@ -534,7 +534,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
             else {
                 // Adaptive gain.
                 double maxDiff = Core.norm(mat0, mat1,  Core.NORM_INF);
-                int limit = (int)(Math.pow(maxDiff/255, 0.2)*255); 
+                int limit = Math.min(255, (int)(maxDiff*16)); 
                 Core.normalize(diffMat, normMat, limit, 0, 
                         Core.NORM_INF, 
                         0);

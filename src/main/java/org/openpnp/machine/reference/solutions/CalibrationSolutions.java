@@ -427,7 +427,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     Circle testObject = visionSolutions
-                                            .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null, null);
+                                            .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null, null, false);
                                     head.setCalibrationTestObjectDiameter(
                                             defaultCamera.getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
                                     calibrateNozzleOffsets(head, defaultCamera, nozzle);
