@@ -61,11 +61,9 @@ Mass plays an important role in frame design. The more mass your frame has, the 
 
 # Motion Control
 
-**Note to self: This 4D space stuff is bad terminology. Go back to 3D and refer to 4 axes.**
+Motion Control is a big topic, and arguably the most important. The ultimate goal of a motion control system is to be able to move an end effector - a pick and place nozzle in our case - to a specific position and rotation relative to our PCB. There's a lot of ways to do it.
 
-Motion Control is a big topic, and arguably the most important. The ultimate goal of a motion control system is to be able to move an end effector - a pick and place nozzle in our case - to a specific position in 4D space. There's a lot of ways to do it.
-
-Before we continue - let's talk about 4D space. Why 4D? If you have experience with CNC machines you might be used to 3D being X, Y, and Z. X is left and right, Y is front and back, and Z is up and down. Pick and place adds a 4th dimension which is rotation. To place a part perfectly on a board you need to move to the right X, Y, Z, and rotation to match where the board designer expected the part to go.
+If you have experience with CNC machines you might be used to X, Y, and Z coordinates. X is left and right, Y is front and back, and Z is up and down. Pick and place requires another axis which is rotation. To place a part perfectly on a board you need to move to the desired X, Y, Z, and rotation to match where the board designer expected the part to go.
 
 This means that our motion control system has to have a minimum of four axes. In the simplest designs this means 4 motors, one for each axis.
 
