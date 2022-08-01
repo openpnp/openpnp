@@ -177,10 +177,10 @@ public class CameraSolutions implements Solutions.Subject  {
                                         + "<p>For precision in computer vision it is very important that the camera image has settled down "
                                         + "after the machine has moved the camera or the subject. Some cameras exhibit a slight lag, where the "
                                         + "frames might still show the camera in motion. Motion might also cause vibration that must "
-                                        + "abate before computer vision is performed.</p><br/>"
+                                        + "abate sufficently before computer vision is performed.</p><br/>"
                                         + "<p>The simple solution is just to wait for a fixed amount of time. However, this is wasteful if there "
                                         + "was no motion in the first place. Using an adaptive settling method can reduce the wait time in these "
-                                        + "benign cases, i.e. one does not need to set a large worst case settle wait time.</p><br/>"
+                                        + "cases, i.e. one does not need to set a large worst case settle wait time.</p><br/>"
                                         + (movable == camera ? 
                                                 "<p><strong color=\"red\">CAUTION</strong>: The camera "+camera.getName()+" will move over the primary fiducial "
                                                 + "and then perform a camera settling test pattern.</p><br/>"
@@ -194,7 +194,9 @@ public class CameraSolutions implements Solutions.Subject  {
                                                 + "<table>"
                                                 + "<tr><td>Selected method:</td><td>"+camera.getSettleMethod()+"</td></tr>"
                                                 + "<tr><td>Compute time:</td><td>"+camera.getRecordedComputeMilliseconds()+" ms per frame</td></tr>"
-                                                + "</table>"
+                                                + "<tr><td>Settle time:</td><td>"+camera.getRecordedSettleMilliseconds()+" ms</td></tr>"
+                                                + "</table><br/>"
+                                                + "<p>More information on the Camera Settling tab of camera "+camera.getName()+".</p>"
                                                 : "")
                                         + "</html>";
                             }
@@ -247,9 +249,19 @@ public class CameraSolutions implements Solutions.Subject  {
         if (camera.getRecordedComputeMilliseconds() > visionSolutions.getSettleAcceptableComputeTime()) {
             camera.setSettleMethod(SettleMethod.Maximum);
             camera.setSettleMaskCircle(Math.sqrt(2));
+            camera.setSettleDebounce(3);
             camera.setSettleThreshold(visionSolutions.getSettleMaximumPixelDiff());
-            // Try this.
-            performSettleTest(machine, movable, location, visionSolutions.getSettleTestMoveMm());
+            do {
+                // Try this.
+                performSettleTest(machine, movable, location, visionSolutions.getSettleTestMoveMm());
+                if (camera.getRecordedSettleMilliseconds() < camera.getSettleTimeoutMs()) {
+                    // OK, not timed out
+                    break;
+                }
+                // Timed out, increase the pixel difference
+                camera.setSettleThreshold(Math.ceil(camera.getSettleThreshold()*1.4));
+            }
+            while (camera.getSettleThreshold() < 50);
         }
     }
 
@@ -265,7 +277,9 @@ public class CameraSolutions implements Solutions.Subject  {
             movable.moveTo(location1);
         }
         camera.lightSettleAndCapture();
-        Logger.debug("Settle test with method "+camera.getSettleMethod()+" has compute time "+camera.getRecordedComputeMilliseconds()+"ms.");
+        Logger.debug("Settle test with method "+camera.getSettleMethod()+" has "
+        + "compute time "+camera.getRecordedComputeMilliseconds()+"ms, "
+        + "settle time "+camera.getRecordedSettleMilliseconds()+"ms.");
         if (movable != null) {
             movable.moveTo(location);
         }

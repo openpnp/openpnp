@@ -22,6 +22,7 @@
 package org.openpnp.machine.reference.solutions;
 
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -35,6 +36,7 @@ import org.openpnp.machine.reference.ReferenceNozzleTip;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration.BackgroundCalibrationMethod;
 import org.openpnp.machine.reference.ReferenceNozzleTipCalibration.RecalibrationTrigger;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
+import org.openpnp.machine.reference.wizards.ReferenceNozzleTipCalibrationWizard;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
@@ -275,7 +277,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                             + "<p>Select the proper background calibration.</p><br/>"
                             + "<p><strong color=\"red\">CAUTION</strong>: Nozzle "+nozzle.getName()+" will move over camera "
                             + camera.getName()+" and perform a new nozzle tip calibration calibration, including the enabled "
-                            + "background calibration.</p><br/>"
+                            + "background calibration. Any problems will be indicated with purple highlights.</p><br/>"
                             + "<p>When ready, press Accept.</p>"
                             + (getState() == State.Solved ? 
                                     "<br/><h4>Results</h4>"
@@ -298,7 +300,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                                             null),
                             new Solutions.Issue.Choice(BackgroundCalibrationMethod.Brightness, 
                                     "<html><h3>Brightness</h3>"
-                                            + "<p>The background is just dark, the foreground is distinguised by "
+                                            + "<p>The background is just dark, the foreground is distinguished by "
                                             + "brighness only.</p><br/>"
                                             + "</html>",
                                             null),
@@ -313,7 +315,11 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                     if (state == State.Solved) {
                         UiUtils.submitUiMachineTask(() -> {
                             nozzleTip.getCalibration().calibrate((ReferenceNozzle) nozzle);
-                            UiUtils.messageBoxOnExceptionLater(() -> super.setState(state));
+                            UiUtils.messageBoxOnExceptionLater(() -> {
+                                super.setState(state);
+                                BufferedImage[] backgroundCalibrationImages = nozzleTip.getCalibration().getBackgroundCalibrationImages();
+                                ReferenceNozzleTipCalibrationWizard.showBackgroundProblems(nozzleTip, false);
+                            });
                         });
                     }
                     else {

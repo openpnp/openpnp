@@ -168,7 +168,7 @@ public class VisionSolutions implements Solutions.Subject {
     private double settleAcceptableComputeTime = 15;
 
     @Attribute(required = false)
-    private double settleMaximumPixelDiff = 8;
+    private double settleMaximumPixelDiff = 4;
 
     @Attribute(required = false)
     private double settleTestMoveMm = 2;

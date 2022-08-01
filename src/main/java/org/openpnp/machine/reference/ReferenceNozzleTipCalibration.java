@@ -1671,7 +1671,9 @@ public class ReferenceNozzleTipCalibration extends AbstractModelObject {
         this.pipeline = calibrationPipeline;
     }
 
-    public synchronized List<BufferedImage> getBackgroundCalibrationImages() {
-        return backgroundCalibrationImages;
+    public synchronized BufferedImage[] getBackgroundCalibrationImages() {
+        return backgroundCalibrationImages != null ? 
+                backgroundCalibrationImages.toArray(new BufferedImage[backgroundCalibrationImages.size()])
+                : null;
     }
 }

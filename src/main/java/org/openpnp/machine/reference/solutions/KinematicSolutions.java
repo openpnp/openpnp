@@ -49,6 +49,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.base.AbstractHeadMountable;
+import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 
 /**
@@ -87,17 +88,21 @@ public class KinematicSolutions implements Solutions.Subject {
                     @Override
                     public void setState(Solutions.State state) throws Exception {
                         if (state == State.Solved) {
-                            if (!machine.isEnabled()) {
-                                machine.setEnabled(true);
-                            }
-                            machine.execute(() -> {
-                                if (! machine.isHomed()) {
-                                    machine.home();
+                            UiUtils.messageBoxOnException(() -> {
+                                if (!machine.isEnabled()) {
+                                    machine.setEnabled(true);
                                 }
-                                return true;
+                                UiUtils.submitUiMachineTask(() -> {
+                                    if (! machine.isHomed()) {
+                                        machine.home();
+                                    }
+                                    UiUtils.messageBoxOnExceptionLater(() -> super.setState(state));
+                                });
                             });
                         }
-                        super.setState(state);
+                        else {
+                            super.setState(state);
+                        }
                     }
                 });
                 return;
