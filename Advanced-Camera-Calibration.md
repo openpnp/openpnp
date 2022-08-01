@@ -5,6 +5,8 @@ The purpose of advanced camera calibration is to:
 1. Correct for imperfections in how the camera is mounted, i.e., rotation from ideal about the X, Y and Z axis; and,
 1. Correct for lens imperfections, i.e., barrel/pincushion and tangential distortion.
 
+![perpendicular-constant-xy-diff-z](https://user-images.githubusercontent.com/9963310/182214401-8bcf0d07-6fc5-4d22-b0e8-7472a6c4739f.png)
+
 # How It Works
 Advanced Camera Calibration works by creating a mathematical model of the camera that basically takes machine 3D coordinates and maps them to image pixel 2D coordinates. Calibration data is collected that consists of a large set of machine 3D coordinates and their corresponding image pixel 2D coordinates. The camera model is then "fitted" to the data such that the difference between the modelled image coordinates and the actual image coordinates is minimized. The camera model is then used to generate a remapping of image pixels from the physical camera to correct for the above mentioned imperfections in the camera. The camera model also includes information used to determine the head offset (or absolute location for bottom cameras) as well as information to determine the scaling of machine units to the camera pixels at any given Z coordinate. 
 
