@@ -69,7 +69,7 @@ Before we continue - let's talk about 4D space. Why 4D? If you have experience w
 
 This means that our motion control system has to have a minimum of four axes. In the simplest designs this means 4 motors, one for each axis.
 
-OpenPnP speaks in real world units. When OpenPnP wants to place a part, it tells [[Motion Controllers]] to move to a real world coordinate, like 10mm in X, 20mm in Y, -10mm in Z and 90 degrees in rotation. A motion controller is a piece of hardware responsible for converting between those real world coordinates and electricity to move motors.
+OpenPnP speaks in real world units. When OpenPnP wants to place a part, it tells [[Motion Controllers]] to move to a real world coordinate, like 10mm in X, 20mm in Y, -10mm in Z and 90 degrees in rotation. A motion controller is a piece of hardware responsible for converting those real world coordinates into electrical instructions to move motors.
 
 ## Motion Control
 
