@@ -1,7 +1,7 @@
+> [![Search](https://user-images.githubusercontent.com/9963310/182446869-7a6e5ab4-6547-4a5b-9dbe-8a5a4588cf35.png) Search the Wiki](/openpnp/openpnp/search?type=wikis)
+
 OpenPnP
 -------
-
-[![Search](https://user-images.githubusercontent.com/9963310/182446869-7a6e5ab4-6547-4a5b-9dbe-8a5a4588cf35.png) Search the Wiki](/openpnp/openpnp/search?type=wikis)
 
 * [[Quick Start]]
 * [Hardware Build FAQ](https://github.com/openpnp/openpnp/wiki/Build-FAQ)
