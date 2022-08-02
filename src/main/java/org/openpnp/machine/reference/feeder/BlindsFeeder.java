@@ -1054,7 +1054,8 @@ public class BlindsFeeder extends ReferenceFeeder {
     public void ensureCameraZ(Camera camera) throws Exception {
         if (camera.isUnitsPerPixelAtZCalibrated()
                 && !getLocation().getLengthZ().isInitialized()) {
-            throw new Exception("Feeder "+getName()+": Please set the Part Z first.");
+            throw new Exception("Feeder "+getName()+": Please set the Part Z first, it is required to determine "
+                    + "the true scale of the camera view for accurate computer vision.");
         }
         if (getLocation().getLengthZ().isInitialized()) {
             // If we already have the Feeder Z, move the camera there to get the right units per pixel.
