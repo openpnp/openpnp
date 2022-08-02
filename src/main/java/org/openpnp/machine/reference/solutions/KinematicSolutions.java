@@ -49,6 +49,7 @@ import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
 import org.openpnp.spi.base.AbstractHeadMountable;
+import org.openpnp.util.UiUtils;
 import org.pmw.tinylog.Logger;
 
 /**
@@ -66,6 +67,46 @@ public class KinematicSolutions implements Solutions.Subject {
     @Override
     public void findIssues(Solutions solutions) {
         if (solutions.isTargeting(Milestone.Kinematics)) {
+            if (! machine.isHomed()) {
+                solutions.add(new Solutions.Issue(
+                        machine, 
+                        "To continue, the machine must be enabled and homed.", 
+                        "Home the machine now.",
+                        Severity.Fundamental,
+                        "https://github.com/openpnp/openpnp/wiki/User-Manual#machine-controls") {
+
+                    @Override 
+                    public String getExtendedDescription() {
+                        return "<html>"
+                                + "<p>You must be sure that your machine supports the homing command with the "
+                                + "proper axis end-switches wired and configured.</p><br/>"
+                                + "<p>Press <strong>Accept</strong> to perform the homing.</p><br/>"
+                                + "<p>Afterwards, press <strong>Find Issues & Solutions</strong> again.</p>"
+                                + "</html>";
+                    }
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (state == State.Solved) {
+                            UiUtils.messageBoxOnException(() -> {
+                                if (!machine.isEnabled()) {
+                                    machine.setEnabled(true);
+                                }
+                                UiUtils.submitUiMachineTask(() -> {
+                                    if (! machine.isHomed()) {
+                                        machine.home();
+                                    }
+                                    UiUtils.messageBoxOnExceptionLater(() -> super.setState(state));
+                                });
+                            });
+                        }
+                        else {
+                            super.setState(state);
+                        }
+                    }
+                });
+                return;
+            }
             // Dynamic Safe Z yes/no.
             boolean okDynamicSafeZ = true;
             for (Head head : machine.getHeads()) {
@@ -143,7 +184,8 @@ public class KinematicSolutions implements Solutions.Subject {
                                     final Length oldLimitLow = axisZ.getSafeZoneLow();
                                     final Length oldLimitHigh = axisZ.getSafeZoneHigh();  
                                     final boolean oldEnableLow = axisZ.isSafeZoneLowEnabled(); 
-                                    final boolean oldEnableHigh = axisZ.isSafeZoneHighEnabled();  
+                                    final boolean oldEnableHigh = axisZ.isSafeZoneHighEnabled();
+                                    boolean safeZSolved = false;
 
                                     if (axisZ.isSafeZoneLowEnabled() && axisZ.isSafeZoneHighEnabled()
                                             && axisZ.getSafeZoneLow().compareTo(axisZ.getSafeZoneHigh()) > 0) {
@@ -163,7 +205,7 @@ public class KinematicSolutions implements Solutions.Subject {
                                     }
                                     else {
 
-                                        solutions.add(new Solutions.Issue(
+                                        safeZSolved = solutions.add(new Solutions.Issue(
                                                 hm, 
                                                 "Set Safe Z of "+hm.getName()+".", 
                                                 "Jog "+hm.getName()+" over the tallest obstacle and capture.", 
@@ -178,7 +220,8 @@ public class KinematicSolutions implements Solutions.Subject {
                                             @Override 
                                             public String getExtendedDescription() {
                                                 return "<html>"
-                                                        + "<p>Jog "+hm.getName()+" over the tallest obstacle on your machine.</p><br/>"
+                                                        + "<p>Jog "+hm.getName()+" over the tallest obstacle on your machine, "
+                                                                + "including the the tallest parts that may be placed on the PCB.</p><br/>"
                                                         + "<p>Then lower it down so it still has sufficient clearance"
                                                         + (partClearance ? " even with the tallest part on the nozzle" : "")
                                                         + ".</p><br/>"
@@ -226,7 +269,7 @@ public class KinematicSolutions implements Solutions.Subject {
                                             }
                                         });
                                     }
-                                    if (hm instanceof ReferenceNozzle) {
+                                    if (safeZSolved && hm instanceof ReferenceNozzle) {
                                         // try to find a shared Z axis nozzle
                                         ReferenceNozzle sharedZNozzle = null;
                                         for (Nozzle nozzle2 : head.getNozzles()) {
@@ -479,8 +522,8 @@ public class KinematicSolutions implements Solutions.Subject {
                                                 + "<p>Please either enlarge the Safe Z Zone, by reducing the nozzle "+nozzle.getName()+" Z clearance, or reduce "
                                                 + "the <strong>Max. Part Height</strong> on nozzle tip "+nt.getName()+".</p><br/>"
                                                 + "<p>Reducing Z clearance is best done by revisiting the Safe Z solution for nozzle "+nozzle.getName()+". "
-                                                + "Disable the <strong>Safe Zone "+(signum1 > 0 ? "Low" : "High")+"  Enabled</strong> checkbox on axis "+rawAxisZ.getName()+", "
-                                                + "then come back here and press <strong>Find Issues &amp; Solutions</strong>.</p>"
+                                                + "Enable the <strong>Include Solved?</strong> checkbox at the top, "
+                                                + "then reopen the \"Set Safe Z of "+nozzle.getName()+"\" solution and redo it.</p>"
                                                 + "</html>";
                                     }
                                     @Override
@@ -526,8 +569,8 @@ public class KinematicSolutions implements Solutions.Subject {
                                                 + nt2.getName()+".</p><br/>"
                                                 + "<p>Reducing Z clearances is best done by revisiting the Safe Z solutions for nozzles "+nozzle.getName()+" and "
                                                 + nozzle2.getName()+". "
-                                                + "Disable the <strong>Safe Zone Low / High Enabled</strong> checkbox on axis "+rawAxisZ.getName()+", "
-                                                + "then come back here and press <strong>Find Issues &amp; Solutions</strong>.</p>"
+                                                + "Enable the <strong>Include Solved?</strong> checkbox at the top, "
+                                                + "then reopen the \"Set Safe Z of "+nozzle2.getName()+"\" solution and redo it.</p>"
                                                 + "</html>";
                                     }
                                     @Override

@@ -61,7 +61,15 @@ public class ActuatorSolutions implements Solutions.Subject {
     }
 
     public static void findActuateIssues(Solutions solutions, Solutions.Subject holder, Actuator actuator, String qualifier, String uri) {
-        if (actuator != null) { 
+        if (actuator == null) {
+            solutions.add(new Solutions.PlainIssue(
+                    holder, 
+                    holder.getSubjectText()+" is missing a "+qualifier+" actuator.", 
+                    "Create and assign a "+qualifier+" actuator as described in the Wiki.", 
+                    Severity.Warning,
+                    uri));
+        }
+        else {
             switch (actuator.getValueType()) {
                 case Double: {
                     HashMap<CommandType, String []> suggestions = new HashMap<>();

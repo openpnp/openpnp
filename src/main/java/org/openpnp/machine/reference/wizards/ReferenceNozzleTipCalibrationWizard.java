@@ -25,7 +25,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
-import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -430,7 +429,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         btnShowProblems = new JButton("Show Problems");
         btnShowProblems.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
-                showBackgroundProblems(nozzleTip);
+                showBackgroundProblems(nozzleTip, true);
             }
         });
         panelBackground.add(btnShowProblems, "8, 18, 3, 1");
@@ -721,31 +720,30 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         }
     }
 
-    protected void showBackgroundProblems(ReferenceNozzleTip nozzleTip) {
+    public static void showBackgroundProblems(ReferenceNozzleTip nozzleTip, boolean noProblems) {
         UiUtils.messageBoxOnException(() -> {
-            List<BufferedImage> backgroundCalibrationImages = nozzleTip.getCalibration().getBackgroundCalibrationImages();
+            BufferedImage[] backgroundCalibrationImages = nozzleTip.getCalibration().getBackgroundCalibrationImages();
             if (backgroundCalibrationImages == null) {
                 throw new Exception("No background calibration recorded for "+nozzleTip.getName());
             }
-            if (backgroundCalibrationImages.size() == 0) {
-                throw new Exception("Background calibration for "+nozzleTip.getName()+" does not indicate any problems.");
+            int n = backgroundCalibrationImages.length;
+            if (n == 0) {
+                if (noProblems) {
+                    throw new Exception("Background calibration for "+nozzleTip.getName()+" does not indicate any problems.");
+                }
+                else {
+                    return;
+                }
             }
-            btnShowProblems.setEnabled(false);
             Camera camera = VisionUtils.getBottomVisionCamera();
             camera.ensureCameraVisible();
             CameraView cameraView = MainFrame.get().getCameraViews().getCameraView(camera);
-            imageCount = 0;
-            cameraView.showFilteredImage(backgroundCalibrationImages.get(0), 2000);
-            timer = new Timer(1000, e ->  {
-                if (++imageCount >= backgroundCalibrationImages.size()) {
-                    timer.stop();
-                    timer = null;
-                    btnShowProblems.setEnabled(true);
-                    return;
-                }
-                cameraView.showFilteredImage(backgroundCalibrationImages.get(imageCount), 1100);
-            });
-            timer.start();
+            String [] texts = new String[n];
+            for (int i = 0; i < n; i++) {
+                texts[i] = "Background calibration problems: Frame "+(i/2 + 1)+"/"+(n/2);
+            }
+            cameraView.showFilteredImages(backgroundCalibrationImages, 
+                    texts, 1000);
         });
     }
 }

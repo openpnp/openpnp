@@ -64,7 +64,6 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persist;
 
 public class ContactProbeNozzle extends ReferenceNozzle {
 
@@ -371,14 +370,16 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         }
     }
 
-    @Persist
-    private void persist() {
+    @Override 
+    protected void loaded(Configuration configuration) {
+        super.loaded(configuration);
+        contactProbeActuator = getHead().getActuatorByName(contactProbeActuatorName);
+    }
+    @Override
+    protected void persist() {
+        super.persist();
         // Make sure the latest actuator name is persisted.
-        try {
-            setContactProbeActuator(getContactProbeActuator());
-        }
-        catch (Exception e) {
-        }
+        contactProbeActuatorName = (contactProbeActuator == null ? null : contactProbeActuator.getName());
     }
 
     /**
@@ -387,20 +388,13 @@ public class ContactProbeNozzle extends ReferenceNozzle {
      */
     public void setContactProbeActuator(Actuator actuator) {
         contactProbeActuator = actuator;
-        contactProbeActuatorName = (actuator != null ? actuator.getName() : null);
     }
 
     /**
      * @return The actuator used to contact probe with the Nozzle. 
      * @throws Exception when the actuator name cannot be resolved (dangling reference).
      */
-    public Actuator getContactProbeActuator() throws Exception {
-        if (contactProbeActuator == null && contactProbeActuatorName != null && !contactProbeActuatorName.isEmpty()) {
-            contactProbeActuator = getHead().getActuatorByName(contactProbeActuatorName);
-            if (contactProbeActuator == null) {
-                throw new Exception(String.format("Can't find contact probe actuator %s", contactProbeActuatorName));
-            }
-        }
+    public Actuator getContactProbeActuator() {
         return contactProbeActuator;
     }
 

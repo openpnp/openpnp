@@ -115,7 +115,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 // Found the shifted image, calculate the difference as the distance in pixels.
                 result = Math.hypot(match.maxLoc.x - margin, match.maxLoc.y - margin);
                 // Take the match value as kind of a "sub-pixel" value.
-                result += (1 - match.maxVal)/(1 - minMotionTemplateMatchScore); 
+                result += Math.pow((1 - match.maxVal)/(1 - minMotionTemplateMatchScore), 0.25); 
             }
             else {
                 // Shifted image not found, max out.
@@ -229,6 +229,8 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
     protected Double recordedImagePlayed = null;
     private SimpleGraph settleGraph = null;
     private int recordedMaskDiameter;
+    private double recordedComputeMilliseconds;
+    private long recordedSettleMilliseconds;
 
     private SimpleGraph startDiagnostics() {
         if (settleDiagnostics) {
@@ -399,6 +401,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 lastSettleMat = mat;
 
                 long t = NanosecondTime.getRuntimeMilliseconds();
+                recordedComputeMilliseconds = (t-t1);
                 Logger.trace("autoSettleAndCapture t="+(t-t0)+" auto settle score: " + String.format("%.3f", result) +" compute time: "+(t-t1));
 
                 // If the image changed at least a bit (due to noise) and less than our
@@ -431,7 +434,8 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                         setRecordedImages(settleImages);
                         recordedMaskDiameter = maskDiameter;
                     }
-                    Logger.debug("autoSettleAndCapture in {} ms", System.currentTimeMillis() - t0);
+                    recordedSettleMilliseconds = NanosecondTime.getRuntimeMilliseconds() - t0;
+                    Logger.debug("autoSettleAndCapture in {} ms", recordedSettleMilliseconds);
                     return image;
                 }
             }
@@ -520,12 +524,18 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
                 Imgproc.cvtColor(diffMat, diffMat, Imgproc.COLOR_BGR2GRAY);
             }
             if (mask != null) {
-                Core.normalize(diffMat, normMat, 255, 0, 
+                // Adaptive gain.
+                double maxDiff = Core.norm(mat0, mat1,  Core.NORM_INF, mask);
+                int limit = Math.min(255, (int)(maxDiff*16)); 
+                Core.normalize(diffMat, normMat, limit, 0, 
                         Core.NORM_INF, 
                         0, mask);
             }
             else {
-                Core.normalize(diffMat, normMat, 255, 0, 
+                // Adaptive gain.
+                double maxDiff = Core.norm(mat0, mat1,  Core.NORM_INF);
+                int limit = Math.min(255, (int)(maxDiff*16)); 
+                Core.normalize(diffMat, normMat, limit, 0, 
                         Core.NORM_INF, 
                         0);
             }
@@ -544,7 +554,7 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
 
             // Am I doing something wrong? This OpenCV arithmetic is awful to code. 
             Mat alphaMat = new Mat();
-            // Square the normed diff, to emphasize large mevements for the alpha channel.
+            // Square the normed diff, to emphasize large movements for the alpha channel.
             Core.multiply(normMat, normMat, alphaMat, 1/255.0/255.0, CvType.CV_32F);
             // Create the complement for the alpha channel.
             Mat oneMat = new Mat(alphaMat.rows(), alphaMat.cols(), alphaMat.type(), Scalar.all(1.0));
@@ -762,6 +772,14 @@ public abstract class AbstractSettlingCamera extends AbstractCamera {
             setSettleGraph(null);
             setRecordedImages(null);
         }
+    }
+
+    public double getRecordedComputeMilliseconds() {
+        return recordedComputeMilliseconds;
+    }
+
+    public long getRecordedSettleMilliseconds() {
+        return recordedSettleMilliseconds;
     }
 
     public SimpleGraph getSettleGraph() {

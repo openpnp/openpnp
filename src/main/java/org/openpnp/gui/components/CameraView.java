@@ -441,6 +441,42 @@ public class CameraView extends JComponent implements CameraListener {
     }
 
     /**
+     * Show an animation of N images instead of the camera image for milliseconds each frame. After 
+     * N*milliseconds elapses the view goes back to showing the camera image. See also showFilteredImage().
+     * 
+     * @param images
+     * @param texts
+     * @param millseconds
+     */
+    public void showFilteredImages(BufferedImage [] filteredImages, String [] texts, long milliseconds) {
+        setCameraViewFilter(new CameraViewFilter() {
+            long t = System.currentTimeMillis();
+            int n = filteredImages.length;
+
+            @Override
+            public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
+                long elapsed = System.currentTimeMillis() - t;
+                if (elapsed < milliseconds*n) {
+                    int i = (int) (elapsed/milliseconds);
+                    if (texts != null && i < texts.length) {
+                        setText(texts[i]);
+                    }
+                    return filteredImages[i];
+                }
+                else {
+                    if (texts != null) {
+                        setText(null);
+                    }
+                    setCameraViewFilter(null);
+                    return image;
+                }
+            }
+        });
+        // Make sure the filtered image is shown immediately and also counted as fps (for 0 or low fps cameras). 
+        frameReceived(null);
+    }
+
+    /**
      * Show image instead of the camera image for milliseconds. After milliseconds elapses the view
      * goes back to showing the camera image. The image should be the same width and height as the
      * camera image otherwise the behavior is undefined. This function is intended to be used to
@@ -455,28 +491,7 @@ public class CameraView extends JComponent implements CameraListener {
      * @param millseconds
      */
     public void showFilteredImage(BufferedImage filteredImage, String text, long milliseconds) {
-        if (text != null) {
-            setText(text);
-        }
-        setCameraViewFilter(new CameraViewFilter() {
-            long t = System.currentTimeMillis();
-
-            @Override
-            public BufferedImage filterCameraImage(Camera camera, BufferedImage image) {
-                if ((System.currentTimeMillis() - t) < milliseconds) {
-                    return filteredImage;
-                }
-                else {
-                    if (text != null) {
-                        setText(null);
-                    }
-                    setCameraViewFilter(null);
-                    return image;
-                }
-            }
-        });
-        // Make sure the filtered image is shown immediately and also counted as fps (for 0 or low fps cameras). 
-        frameReceived(null);
+        showFilteredImages(new BufferedImage[] { filteredImage }, text == null ? null : new String [] { text }, milliseconds);
     }
 
     public BufferedImage captureSelectionImage() {

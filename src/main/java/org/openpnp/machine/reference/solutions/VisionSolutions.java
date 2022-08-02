@@ -43,6 +43,7 @@ import org.openpnp.machine.reference.ReferenceHead;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.machine.reference.camera.AbstractSettlingCamera.SettleMethod;
 import org.openpnp.machine.reference.camera.AutoFocusProvider;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.camera.SimulatedUpCamera;
@@ -94,9 +95,9 @@ public class VisionSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private double minSymmetry = 1.5;
     @Attribute(required = false)
-    private int subSampling = 4;
+    private int subSampling = 8;
     @Attribute(required = false)
-    private int superSampling = 8;
+    private int superSampling = 4;
     @Attribute(required = false)
     private DetectCircularSymmetry.SymmetryScore symmetryScore = SymmetryScore.OverallVarianceVsRingVarianceSum;
 
@@ -112,7 +113,7 @@ public class VisionSolutions implements Solutions.Subject {
      * Maximum subject size, relative to the camera size (min of width and height). Larger sizes are needed for the test object.
      */
     @Attribute(required = false)
-    private double maxCameraRelativeSubjectDiameter = 0.5; 
+    private double maxCameraRelativeSubjectDiameter = 0.7; 
     /**
      * The extra search range, relative to the camera size (min of width and height) when 
      * doing auto-calibration, not knowing anything about the camera.
@@ -157,6 +158,21 @@ public class VisionSolutions implements Solutions.Subject {
     @Attribute(required = false)
     private double zeroKnowledgeBacklashSpeed = 0.2;
 
+    @Attribute(required = false)
+    private long zeroKnowledgeSettleTimeMs = 600;
+
+    @Attribute(required = false)
+    private double settleWantedResolutionMm = 0.05;
+
+    @Attribute(required = false)
+    private double settleAcceptableComputeTime = 25;
+
+    @Attribute(required = false)
+    private double settleMaximumPixelDiff = 8;
+
+    @Attribute(required = false)
+    private double settleTestMoveMm = 1;
+
     public VisionSolutions setMachine(ReferenceMachine machine) {
         this.machine = machine;
         return this;
@@ -168,6 +184,26 @@ public class VisionSolutions implements Solutions.Subject {
 
     public long getDiagnosticsMilliseconds() {
         return diagnosticsMilliseconds;
+    }
+
+    public long getZeroKnowledgeSettleTimeMs() {
+        return zeroKnowledgeSettleTimeMs;
+    }
+
+    public double getSettleWantedResolutionMm() {
+        return settleWantedResolutionMm;
+    }
+
+    public double getSettleAcceptableComputeTime() {
+        return settleAcceptableComputeTime;
+    }
+
+    public double getSettleMaximumPixelDiff() {
+        return settleMaximumPixelDiff;
+    }
+
+    public double getSettleTestMoveMm() {
+        return settleTestMoveMm;
     }
 
     private ReferenceMachine machine;
@@ -276,7 +312,8 @@ public class VisionSolutions implements Solutions.Subject {
                                 UiUtils.submitUiMachineTask(() -> {
                                     try {
                                         // This show a diagnostic detection image in the camera view.
-                                        getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.05, "Diameter "+(int)value+" px - Score {score} ", null);
+                                        getSubjectPixelLocation(camera, null, new Circle(0, 0, value), 0.05, 
+                                                "Diameter "+(int)value+" px - Score {score} ", null, true);
                                     }
                                     catch (Exception e) {
                                         Toolkit.getDefaultToolkit().beep();
@@ -303,7 +340,8 @@ public class VisionSolutions implements Solutions.Subject {
                                                 for (double diameter = 10; diameter <= maxDiameter; diameter = diameter*Math.sqrt(fiducialMargin) + 1) {
                                                     try {
                                                         ScoreRange scoreRange = new ScoreRange();
-                                                        Circle result = getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)diameter), 0.05, "Diameter "+(int)diameter+" px - Score {score} ", scoreRange);
+                                                        Circle result = getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)diameter), 0.05,
+                                                                "Diameter "+(int)diameter+" px - Score {score} ", scoreRange, true);
                                                         if (bestScore < scoreRange.finalScore) {
                                                             bestScore = scoreRange.finalScore;
                                                             featureDiameter = (int) Math.round(result.getDiameter());
@@ -315,7 +353,7 @@ public class VisionSolutions implements Solutions.Subject {
                                                 }
                                                 // Preview best diameter again.
                                                 try {
-                                                    getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)featureDiameter), 0.05, "Best Diameter "+(int)featureDiameter+" px", null);
+                                                    getSubjectPixelLocation(camera, null, new Circle(0, 0, (int)featureDiameter), 0.05, "Best Diameter "+(int)featureDiameter+" px", null, false);
                                                 }
                                                 catch (Exception e1) {
                                                 }
@@ -999,7 +1037,7 @@ public class VisionSolutions implements Solutions.Subject {
                         UiUtils.submitUiMachineTask(
                                 () -> {
                                     Circle fiducial = getSubjectPixelLocation(defaultCamera, null, 
-                                            new Circle(0, 0, featureDiameter), 0, null, null);
+                                            new Circle(0, 0, featureDiameter), 0, null, null, false);
                                     calibrateVisualHoming(head, defaultCamera, 
                                             defaultCamera.getUnitsPerPixelPrimary()
                                             .getLengthX().multiply(fiducial.getDiameter()));
@@ -1068,6 +1106,11 @@ public class VisionSolutions implements Solutions.Subject {
                     + "because the Advanced Camera Calibration is already active.");
         }
         Location initialLocation = movable.getLocation();
+        // Temporarily set very conservative settling (calibration can happen before or after Camera Settling has been configured).
+        SettleMethod oldSettleMethod = camera.getSettleMethod();
+        long oldSettleTime = camera.getSettleTimeMs();
+        camera.setSettleMethod(SettleMethod.FixedTime);
+        camera.setSettleTimeMs(Math.max(oldSettleTime, zeroKnowledgeSettleTimeMs));
         try {
             if (!secondary) {
                 // Reset camera transforms.
@@ -1079,12 +1122,12 @@ public class VisionSolutions implements Solutions.Subject {
             Circle expectedOffsetsAndDiameter; 
             if (expectedDiameter == null) { 
                 // Detect the diameter.
-                expectedOffsetsAndDiameter = getSubjectPixelLocation(camera, movable, null, zeroKnowledgeDisplacementRatio, diagnostics, null);
+                expectedOffsetsAndDiameter = getSubjectPixelLocation(camera, movable, null, zeroKnowledgeDisplacementRatio, diagnostics, null, false);
             }
             else {
                 expectedOffsetsAndDiameter = new Circle(0,  0, expectedDiameter);
                 // Detect the true diameter.
-                expectedOffsetsAndDiameter = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics, null);
+                expectedOffsetsAndDiameter = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics, null, false);
             }
             // Center offset 0, 0 expected.
             expectedOffsetsAndDiameter.setX(0); 
@@ -1111,14 +1154,14 @@ public class VisionSolutions implements Solutions.Subject {
                 if (featureDiameter != null) {
                     expectedOffsetsAndDiameter = getExpectedOffsetsAndDiameter(camera, movable, initialLocation, featureDiameter, secondary);
                 }
-                Circle originX = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics, null);
+                Circle originX = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics, null, false);
                 Location displacedXLocation = originLocationX.add(
                         new Location(LengthUnit.Millimeters, displacementMm, 0, 0, 0));
                 zeroKnowledgeMoveTo(movable, displacedXLocation, false);
                 if (featureDiameter != null) {
                     expectedOffsetsAndDiameter = getExpectedOffsetsAndDiameter(camera, movable, initialLocation, featureDiameter, secondary);
                 }
-                Circle displacedX = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics, null);
+                Circle displacedX = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics, null, false);
                 // Note: pixel coordinate system has flipped Y.
                 double dxX = displacedX.x - originX.x;
                 double dyX = -(displacedX.y - originX.y);
@@ -1130,14 +1173,14 @@ public class VisionSolutions implements Solutions.Subject {
                 if (featureDiameter != null) {
                     expectedOffsetsAndDiameter = getExpectedOffsetsAndDiameter(camera, movable, initialLocation, featureDiameter, secondary);
                 }
-                Circle originY = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics, null);
+                Circle originY = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics, null, false);
                 Location displacedYLocation = originLocationY.add(
                         new Location(LengthUnit.Millimeters, 0, displacementMm, 0, 0));
                 zeroKnowledgeMoveTo(movable, displacedYLocation, false);
                 if (featureDiameter != null) {
                     expectedOffsetsAndDiameter = getExpectedOffsetsAndDiameter(camera, movable, initialLocation, featureDiameter, secondary);
                 }
-                Circle displacedY = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics, null);
+                Circle displacedY = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, zeroKnowledgeDisplacementRatio, diagnostics, null, false);
                 // Note: pixel coordinate system has flipped Y.
                 double dxY = displacedY.x - originY.x;
                 double dyY = -(displacedY.y - originY.y);
@@ -1249,6 +1292,9 @@ public class VisionSolutions implements Solutions.Subject {
         finally {
             // Restore the camera location
             zeroKnowledgeMoveTo(movable, initialLocation, true);
+            // Restore settling.
+            camera.setSettleMethod(oldSettleMethod);
+            camera.setSettleTimeMs(oldSettleTime);
         }
     }
 
@@ -1271,7 +1317,7 @@ public class VisionSolutions implements Solutions.Subject {
                 getExpectedOffsetsAndDiameter(camera, movable, location, subjectDiameter, secondary);
         for (int pass = 0; pass < zeroKnowledgeFiducialLocatorPasses ; pass++) {
             // Note, we cannot use the VisionUtils functionality yet, need to do it ourselves. 
-            Circle detected = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, 0, diagnostics, null);
+            Circle detected = getSubjectPixelLocation(camera, movable, expectedOffsetsAndDiameter, 0, diagnostics, null, false);
             // Calculate the difference between the center of the image to the center of the match.
             double offsetX = detected.x - ((double) camera.getWidth() / 2);
             double offsetY = ((double) camera.getHeight() / 2) - detected.y;
@@ -1324,11 +1370,12 @@ public class VisionSolutions implements Solutions.Subject {
      * @param extraSearchRange   Specifies an extra search range, relative to the camera view size (minimum of width, height). 
      * @param diagnostics
      * @param scoreRange
+     * @param rough TODO
      * @return The match as a Circle.
      * @throws Exception
      */
     public Circle getSubjectPixelLocation(ReferenceCamera camera, HeadMountable movable, Circle expectedOffsetAndDiameter, double extraSearchRange, 
-            String diagnostics, ScoreRange scoreRange) throws Exception {
+            String diagnostics, ScoreRange scoreRange, boolean rough) throws Exception {
         if (scoreRange == null) {
             scoreRange = new ScoreRange();
         }
@@ -1345,7 +1392,7 @@ public class VisionSolutions implements Solutions.Subject {
             int minDiameter = (int) (expectedOffsetAndDiameter != null ? 
                     expectedDiameter/fiducialMargin - 1
                     : 7);
-            int maxDistance = (int) (Math.max(subjectAreaDiameter/2, maxDiameter*2*fiducialMargin)
+            int searchDiameter = (int) (Math.max(subjectAreaDiameter/2, maxDiameter*fiducialMargin)
                     + Math.min(image.cols(), image.rows())*extraSearchRange);
             int expectedX = bufferedImage.getWidth()/2 + (int) (expectedOffsetAndDiameter != null ? expectedOffsetAndDiameter.getX() : 0);
             int expectedY = bufferedImage.getHeight()/2 + (int) (expectedOffsetAndDiameter != null ? expectedOffsetAndDiameter.getY() : 0);
@@ -1378,8 +1425,8 @@ public class VisionSolutions implements Solutions.Subject {
                     image.release();
                     image = OpenCvUtils.toMat(bufferedImage);
                     result = getPixelLocationShot(camera, diagnostics, image, minDiameter,
-                            maxDiameter, maxDistance, expectedX, expectedY, 
-                            n == 0 ? scoreRange : new ScoreRange());
+                            maxDiameter, searchDiameter, expectedX, expectedY, 
+                            n == 0 ? scoreRange : new ScoreRange(), rough);
                     // Accumulate
                     x += result.getX();
                     y += result.getY();
@@ -1392,7 +1439,7 @@ public class VisionSolutions implements Solutions.Subject {
             else {
                 // Fiducial can be detected by one shot.
                 result = getPixelLocationShot(camera, diagnostics, image, minDiameter,
-                        maxDiameter, maxDistance, expectedX, expectedY, scoreRange);
+                        maxDiameter, searchDiameter, expectedX, expectedY, scoreRange, rough);
             }
             return result;
         }
@@ -1402,12 +1449,12 @@ public class VisionSolutions implements Solutions.Subject {
     }
 
     private Circle getPixelLocationShot(ReferenceCamera camera, String diagnostics, Mat image,
-            int minDiameter, int maxDiameter, int maxDistance, int expectedX, int expectedY, ScoreRange scoreRange) 
+            int minDiameter, int maxDiameter, int searchDiameter, int expectedX, int expectedY, ScoreRange scoreRange, boolean rough) 
                     throws Exception, IOException {
         List<Circle> results = DetectCircularSymmetry.findCircularSymmetry(image, 
                 expectedX, expectedY, 
-                minDiameter, maxDiameter, maxDistance, maxDistance, maxDistance, 1,
-                minSymmetry, 0.0, subSampling, superSampling, symmetryScore, diagnostics != null, false, scoreRange);
+                minDiameter, maxDiameter, searchDiameter, searchDiameter, searchDiameter, 1,
+                minSymmetry, 0.0, subSampling, rough ? 1 : superSampling, symmetryScore, diagnostics != null, false, scoreRange);
         if (diagnostics != null) {
             if (LogUtils.isDebugEnabled()) {
                 File file = Configuration.get().createResourceFile(getClass(), "loc_", ".png");
@@ -1445,7 +1492,7 @@ public class VisionSolutions implements Solutions.Subject {
     Location getDetectedLocation(ReferenceCamera camera, HeadMountable movable, Location expectedLocation, Length expectedDiameter, 
             String diagnostics, boolean secondary) throws Exception {
         Circle expectedFeature = getExpectedOffsetsAndDiameter(camera, movable, expectedLocation, expectedDiameter, secondary);
-        Circle detected = getSubjectPixelLocation(camera, movable, expectedFeature, 0.0, diagnostics, null);
+        Circle detected = getSubjectPixelLocation(camera, movable, expectedFeature, 0.0, diagnostics, null, false);
         Location subjectLocation = VisionUtils.getPixelLocation(camera, movable, detected.x, detected.y);
         // Make sure its in the expected units.
         return subjectLocation.convertToUnits(expectedLocation.getUnits());
