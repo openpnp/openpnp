@@ -685,7 +685,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
                 }
                 waitForCompletion(CompletionType.WaitForStillstand);
                 throw new JobProcessorException(this, 
-                        "Manual NozzleTip "+nt.getName()+" load on Nozzle "+getName()+" required!", 
+                        "Task interrupted: Please perform a manual nozzle tip "+nt.getName()+" load on nozzle "+getName()+" now. "
+                                + "You can then resume/restart the interrupted task.", 
                         true);
             }
         }
@@ -780,7 +781,8 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         if (!changerEnabled) {
             waitForCompletion(CompletionType.WaitForStillstand);
             throw new JobProcessorException(this, 
-                    "Manual NozzleTip "+nt.getName()+" unload from Nozzle "+getName()+" required!", 
+                    "Task interrupted: Please perform a manual nozzle tip "+nt.getName()+" unload from nozzle "+getName()+" now. "
+                            + "You can then resume/restart the interrupted task.",
                     true);
         }
 
