@@ -871,7 +871,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                             checkBoxCloneLocationSettings.isSelected(),
                             checkBoxCloneTapeSettings.isSelected(), 
                             checkBoxClonePushPullSettings.isSelected(),
-                            checkBoxCloneVisionSettings.isSelected());
+                            checkBoxCloneVisionSettings.isSelected(), checkBoxCloneVisionSettings.isSelected());
                 }
             });
         }
@@ -910,7 +910,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                                 checkBoxCloneLocationSettings.isSelected(),
                                 checkBoxCloneTapeSettings.isSelected(), 
                                 checkBoxClonePushPullSettings.isSelected(),
-                                checkBoxCloneVisionSettings.isSelected(),
+                                checkBoxCloneVisionSettings.isSelected(), checkBoxCloneVisionSettings.isSelected(),
                                 feeder);
                     }
                 }
