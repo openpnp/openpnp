@@ -370,10 +370,12 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         }
     }
 
-    @Override 
-    protected void loaded(Configuration configuration) {
-        super.loaded(configuration);
-        contactProbeActuator = getHead().getActuatorByName(contactProbeActuatorName);
+    @Override
+    public void applyConfiguration(Configuration configuration) {
+        super.applyConfiguration(configuration);
+        if (getHead() != null) {
+            contactProbeActuator = getHead().getActuatorByName(contactProbeActuatorName);
+        }
     }
     @Override
     protected void persist() {
@@ -1035,8 +1037,8 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         Serializer serIn = XmlSerialize.createSerializer();
         StringReader sr = new StringReader(serialized);
         ContactProbeNozzle contactProbeNozzle = serIn.read(ContactProbeNozzle.class, sr);
-        contactProbeNozzle.applyConfiguration(Configuration.get());
         contactProbeNozzle.setHead(nozzle.getHead());
+        contactProbeNozzle.applyConfiguration(Configuration.get());
         contactProbeNozzle.setNozzleTip(nozzle.nozzleTip);
         return contactProbeNozzle;
     }
@@ -1064,8 +1066,8 @@ public class ContactProbeNozzle extends ReferenceNozzle {
         Serializer serIn = XmlSerialize.createSerializer();
         StringReader sr = new StringReader(serialized);
         ReferenceNozzle referenceNozzle = serIn.read(ReferenceNozzle.class, sr);
-        referenceNozzle.applyConfiguration(Configuration.get());
         referenceNozzle.setHead(nozzle.getHead());
+        referenceNozzle.applyConfiguration(Configuration.get());
         referenceNozzle.setNozzleTip(nozzle.nozzleTip);
         return referenceNozzle;
     }
