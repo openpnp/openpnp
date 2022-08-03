@@ -1759,7 +1759,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Camera camera = getCamera();
         // First preliminary smart clone to get a pipeline from the most suitable template.
         if (getTemplateFeeder(null) != null) {
-            smartClone(null, true, false, false, true);
+            Logger.debug("Auto-Setup: trying with cloned pipeline, template: feeder "+getTemplateFeeder(null).getName());
+            smartClone(null, true, false, false, true, true);
+        }
+        else {
+            Logger.debug("Auto-Setup: trying with default pipeline (no template)");
         }
         if (calibrationTrigger == CalibrationTrigger.None) {
             // Just assume the user wants it now 
@@ -1768,17 +1772,22 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
         ensureCameraZ(camera);
         // Try with cloned pipeline.
-        if (autoSetupPipeline(camera, null) != null) {
+        Exception e = autoSetupPipeline(camera, null); 
+        if (e != null) {
+            Logger.debug(e, "Auto-Setup: exception");
             // Failed, try with pipeline type defaults.
-            Exception e = null;
             for (PipelineType type : PipelineType.values()) {
-               e = autoSetupPipeline(camera, type);
-               if (e == null) {
-                   // Success.
-                   return;
-               }
+                Logger.debug("Auto-Setup: trying with stock pipeline type "+type);
+                e = autoSetupPipeline(camera, type);
+                if (e == null) {
+                    // Success.
+                    Logger.debug(e, "Auto-Setup: success");
+                    return;
+                }
+                Logger.debug(e, "Auto-Setup: exception");
             }
             // Still no luck, throw.
+            Logger.debug(e, "Auto-Setup: final exception");
             throw e;
         }
     }
@@ -1800,7 +1809,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // this time with proper transformation. This may again be overwritten if
             // OCR recognizes the proper part.
             if (getTemplateFeeder(null) != null) {
-                smartClone(null, true, true, true, true);
+                Logger.debug("Auto-Setup: secondary clone"+(type == null ? " including pipeline" : " excluding pipeline")
+                        +", template feeder: "+getTemplateFeeder(null).getName());
+                smartClone(null, true, true, true, true, type == null);
             }
             // As we've changed all this -> reset any stats
             resetCalibrationStatistics();
@@ -2034,7 +2045,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public void smartClone(Part compatiblePart, 
-            boolean cloneLocationSettings, boolean cloneTapeSettings, boolean clonePushPullSettings, boolean cloneVisionSettings) throws Exception {
+            boolean cloneLocationSettings, boolean cloneTapeSettings, boolean clonePushPullSettings, boolean cloneVisionSettings, boolean clonePipeline) throws Exception {
         // get us the best template feeder
         ReferencePushPullFeeder templateFeeder = getTemplateFeeder(compatiblePart);
         if (templateFeeder == null) {
@@ -2045,12 +2056,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 throw new Exception("Feeder "+getName()+": No template feeder found to clone for part "+compatiblePart.getId()+" compatibility.");
             }
         }
-        cloneFeederSettings(cloneLocationSettings, cloneTapeSettings, clonePushPullSettings, cloneVisionSettings,
-                templateFeeder);
+        cloneFeederSettings(cloneLocationSettings, cloneTapeSettings, clonePushPullSettings, cloneVisionSettings, 
+                clonePipeline, templateFeeder);
     }
 
     public void cloneFeederSettings(boolean cloneLocationSettings, boolean cloneTapeSettings, boolean clonePushPullSettings,
-            boolean cloneVisionSettings, ReferencePushPullFeeder templateFeeder)
+            boolean cloneVisionSettings, boolean clonePipeline, ReferencePushPullFeeder templateFeeder)
                     throws CloneNotSupportedException {
         if (cloneLocationSettings) {
             // just the Z from the location
@@ -2109,6 +2120,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             resetCalibration();
             resetCalibrationStatistics();
             setFeedCount(0);
+        }
+        if (clonePipeline) {
             // clone the pipeline
             setPipeline(templateFeeder.getPipeline().clone());
             setPipelineType(templateFeeder.getPipelineType());
@@ -2228,11 +2241,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     otherFeeder = createNewAtLocation(newLocation, ocrPart, this);
                     if (compatiblePartPackages(ocrPart, currentPart)) {
                         // compatible parts, clone settings from this one
-                        otherFeeder.cloneFeederSettings(true, true, true, true, this);
+                        otherFeeder.cloneFeederSettings(true, true, true, true, true, this);
                     }
                     else {
                         // incompatible parts, do a smart clone
-                        otherFeeder.smartClone(ocrPart, true, true, true, true);
+                        otherFeeder.smartClone(ocrPart, true, true, true, true, true);
                     }
                     // disable this one
                     setEnabled(false);
@@ -2312,7 +2325,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
         Location newLocation = getLocation().add(rowUnit);
         ReferencePushPullFeeder newFeeder = createNewAtLocation(newLocation, null, this);
-        newFeeder.cloneFeederSettings(true, true, true, true, this);
+        newFeeder.cloneFeederSettings(true, true, true, true, true, this);
         return newFeeder;
     }
 
@@ -2327,7 +2340,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         else {
             setPart(ocrPart);
             if (clone) {
-                smartClone(ocrPart, true, true, true, true);
+                smartClone(ocrPart, true, true, true, true, true);
             }
         }
     }
