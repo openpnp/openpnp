@@ -4,7 +4,7 @@ This page lists Controllers and associated Firmware that are known to be compati
 
 ### Upgrading and Configuring Firmwares
 
-Open Source controller firmwares often have 3D-printing heritage, where there were only `X` `Y` `Z` axes, plus a limited-capabilities axis `E` for the extruder. Later these firmwares were extended to support more axes, e.g. `A` `B` `C`, with full capabilities like moving them at the same time and reporting back their positions. Make sure to have one of these modern firmwares loaded. Some firmwares also require you to configure the extra axes properly. For some well-supported firmwares, the following sections discuss required upgrades and instructions for configuration. 
+Open Source controller firmwares often have 3D-printing heritage, where only the `X` `Y` `Z` axes, plus a limited-capabilities axis `E` for the extruder were supported. Later these firmwares were extended to support more axes, e.g. `A` `B` `C`, with full capabilities like moving them at the same time and reporting back their positions. Make sure to have one of these modern firmware versions loaded. Some firmwares also require you to configure the extra axes properly. For some well-supported firmwares, the following sections discuss required upgrades and instructions for configuration. 
 
 This is an area where Wiki contributions are very welcome, so if you find your firmware was not documented well, consider donating your documentation after you figured it out.
 
