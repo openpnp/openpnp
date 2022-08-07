@@ -1755,12 +1755,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void autoSetup() throws Exception {
         Camera camera = getCamera();
         // First preliminary smart clone to get a pipeline from the most suitable template.
-        if (getTemplateFeeder(null) != null) {
+        if (!isUsedAsTemplate() && getTemplateFeeder(null) != null) {
             Logger.debug("Auto-Setup: trying with cloned pipeline, template: feeder "+getTemplateFeeder(null).getName());
             smartClone(null, true, false, false, true, true);
         }
         else {
-            Logger.debug("Auto-Setup: trying with default pipeline (no template)");
+            Logger.debug("Auto-Setup: trying with currently assigned pipeline");
         }
         if (calibrationTrigger == CalibrationTrigger.None) {
             // Just assume the user wants it now 
@@ -1805,18 +1805,22 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // Second preliminary smart clone to get pipeline, OCR region etc. from a template, 
             // this time with proper transformation. This may again be overwritten if
             // OCR recognizes the proper part.
-            if (getTemplateFeeder(null) != null) {
+            if (!isUsedAsTemplate() && getTemplateFeeder(null) != null) {
                 Logger.debug("Auto-Setup: secondary clone"+(type == null ? " including pipeline" : " excluding pipeline")
                         +", template feeder: "+getTemplateFeeder(null).getName());
                 smartClone(null, true, true, true, true, type == null);
             }
             // As we've changed all this -> reset any stats
             resetCalibrationStatistics();
-            // Now run a sprocket hole calibration, make sure to change the part (not swap it)
-            performVisionOperations(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePart, false, null);
-            // Move the camera back to the pick location
-            MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
-            MovableUtils.fireTargetedUserAction(camera);
+            try {
+                // Now run a sprocket hole calibration, make sure to change the part (not swap it)
+                performVisionOperations(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePart, false, null);
+            }
+            finally {
+                // Move the camera back to the pick location, including when there is an exception.
+                MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
+                MovableUtils.fireTargetedUserAction(camera);
+            }
             return null;
         }
         catch (Exception e) {
