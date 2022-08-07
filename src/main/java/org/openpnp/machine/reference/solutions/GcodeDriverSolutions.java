@@ -165,7 +165,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/GcodeDriver#connection"));
             }
-            if (gcodeDriver.isSpeakingGcode()) {
+            if (gcodeDriver.isSpeakingGcode() 
+                    && (gcodeDriver.getDetectedFirmware() == null
+                    || !gcodeDriver.getDetectedFirmware().equals(GcodeServer.getGenericFirmware()))) {
                 try {
                     machine.execute(
                             () -> {
