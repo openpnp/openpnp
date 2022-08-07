@@ -2,6 +2,11 @@
 
 This page lists Controllers and associated Firmware that are known to be compatible with [[GcodeAsyncDriver]] and [[Advanced Motion Control]] features. Other controllers may also support the needed features, if you think your controller provides the needed features, please [contact us in the user group](https://groups.google.com/forum/#!forum/openpnp). 
 
+## Upgrading and Configuring Firmwares
+
+Open Source controller firmwares often have 3D-printing heritage, where there were only `X` `Y` `Z` axes, plus a limited-capabilities axis `E` for the extruder. Later these firmwares were extended to support more axes, e.g. `A` `B` `C`, with full capabilities like moving them at the same time and reporting back their positions. Make sure to have one of these modern firmwares loaded. Some firmwares also require you to configure the extra axes properly. For some well-supported firmwares, the following sections discuss required upgrades and instructions for configuration. 
+
+This is an area where Wiki contributions are very welcome, so if you find your firmware was not documented well, consider donating your documentation after you figured it out.
 
 ### Key Features
 
