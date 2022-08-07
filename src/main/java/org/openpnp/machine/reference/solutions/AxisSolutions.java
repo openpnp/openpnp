@@ -91,9 +91,10 @@ public class AxisSolutions implements Solutions.Subject {
                     solutions.add(new AxisLetterIssue(
                             axis, 
                             "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
-                            "Check if your controller supports proper axes A B C (etc.) instead of E.", 
+                            "Check if your controller supports proper axes A B C (etc.) instead of \"extruder\" E. "
+                            + "Press the blue info button (below) for more information.", 
                             Severity.Warning,
-                            "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version"));
+                            "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#upgrading-and-configuring-firmwares"));
                 }
             }
             else if (!getValidAxisLetters().contains(axis.getLetter())) {
