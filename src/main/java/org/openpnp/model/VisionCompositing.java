@@ -1332,40 +1332,39 @@ public class VisionCompositing extends AbstractModelObject{
             return location;
         }
 
-        public Point[] convertToPoints(Shot shot, RotatedRect rect) {
-            rect = Utils2D.rotateToExpectedAngle(rect, expectedAngle);
-            // Convert to points. We don't use RotatedRect.point() as it does not document an order and might change in the future.
-            double angle = VisionUtils.getPixelAngle(camera, rect.angle);
-            Location center = VisionUtils.getPixelCenterOffsets(camera, rect.center.x, rect.center.y).convertToUnits(units);
-            Location size = new Location(units, rect.size.width*upp.getX(), rect.size.height*upp.getY(), 0, 0);
-            double s = Math.sin(Math.toRadians(angle));
-            double c = Math.cos(Math.toRadians(angle));
-            double sinHalfW = s*size.getX()/2;
-            double sinHalfH = s*size.getY()/2;
-            double cosHalfW = c*size.getX()/2;
-            double cosHalfH = c*size.getY()/2;
-            double ec = Math.cos(Math.toRadians(expectedAngle));
-            double es = Math.sin(Math.toRadians(expectedAngle));
-            double cx = center.getX() + ec*shot.getX() - es*shot.getY();
-            double cy = center.getY() + es*shot.getX() + ec*shot.getY();
-            // Row, then column sorting.
+        public Point[] convertToPoints(Shot shot, RotatedRect rect0) {
+            // Make sure we have it nearest to the expected angle.
+            RotatedRect rect = Utils2D.rotateToExpectedAngle(rect0, expectedAngle);
+            // Convert to points, this will give us the points clockwise from lower left.
+            org.opencv.core.Point[] rectPoints = new org.opencv.core.Point[4];
+            rect.points(rectPoints);
+            Location [] corners = new Location [4];
+            for (int i = 0; i < 4; i++) {
+                corners[i] = VisionUtils.getPixelCenterOffsets(camera, rectPoints[i].x, rectPoints[i].y).convertToUnits(units);
+            }
+            // Center, accounting for the shot displacement, rotated.
+            double c = Math.cos(Math.toRadians(expectedAngle));
+            double s = Math.sin(Math.toRadians(expectedAngle));
+            double cx = c*shot.getX() - s*shot.getY();
+            double cy = s*shot.getX() + c*shot.getY();
+            // Sort to "reading order", i.e. row, then column order.
             Point[] points = new Point[4];
             // Upper left.
             points[0] = new Point(
-                    cx - cosHalfW - sinHalfH, 
-                    cy - sinHalfW + cosHalfH);
+                    cx + corners[1].getX(), 
+                    cy + corners[1].getY());
             // Upper Right.
             points[1] = new Point(
-                    cx + cosHalfW - sinHalfH, 
-                    cy + sinHalfW + cosHalfH);
+                    cx + corners[2].getX(), 
+                    cy + corners[2].getY());
             // Lower left.
             points[2] = new Point(
-                    cx - cosHalfW + sinHalfH, 
-                    cy - sinHalfW - cosHalfH);
+                    cx + corners[0].getX(), 
+                    cy + corners[0].getY());
             // Lower Right.
             points[3] = new Point(
-                    cx + cosHalfW + sinHalfH, 
-                    cy + sinHalfW - cosHalfH);
+                    cx + corners[3].getX(), 
+                    cy + corners[3].getY());
             return points;
         }
 

@@ -510,12 +510,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         setFeedCount(getFeedCount()+1);
     }
 
-    public void ensureCameraZ(Camera camera) throws Exception {
+    public void ensureCameraZ(Camera camera, boolean setZ) throws Exception {
         if (camera.isUnitsPerPixelAtZCalibrated()
                 && !getLocation().getLengthZ().isInitialized()) {
-            throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first.");
+            throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first, "
+                    + "it is required to determine the true scale of the camera view for accurate computer vision.");
         }
-        if (getLocation().getLengthZ().isInitialized()) {
+        if (setZ && getLocation().getLengthZ().isInitialized()) {
             // If we already have the Feeder Z, move the camera there to get the right units per pixel.
             camera.moveTo(camera.getLocation().deriveLengths(null, null, getLocation().getLengthZ(), null));
         }
@@ -1218,11 +1219,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             return getCamera().getLocation();
         }
         else {
-            if (getCamera().isUnitsPerPixelAtZCalibrated()) {
-                if (!getLocation().getLengthZ().isInitialized()) {
-                    throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first.");
-                }
-            }
+            ensureCameraZ(getCamera(), false);
             return getHole1Location().add(getHole2Location()).multiply(0.5)
                     .deriveLengths(null, null, getLocation().getLengthZ(), 
                             getLocation().getRotation()+getRotationInFeeder());
@@ -1746,7 +1743,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public void showFeatures() throws Exception {
         Camera camera = getCamera();
-        ensureCameraZ(camera);
+        ensureCameraZ(camera, true);
         try (CvPipeline pipeline = getCvPipeline(camera, true, true, true)) {
 
             // Process vision and show feature without applying anything
@@ -1758,19 +1755,19 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void autoSetup() throws Exception {
         Camera camera = getCamera();
         // First preliminary smart clone to get a pipeline from the most suitable template.
-        if (getTemplateFeeder(null) != null) {
+        if (!isUsedAsTemplate() && getTemplateFeeder(null) != null) {
             Logger.debug("Auto-Setup: trying with cloned pipeline, template: feeder "+getTemplateFeeder(null).getName());
             smartClone(null, true, false, false, true, true);
         }
         else {
-            Logger.debug("Auto-Setup: trying with default pipeline (no template)");
+            Logger.debug("Auto-Setup: trying with currently assigned pipeline");
         }
         if (calibrationTrigger == CalibrationTrigger.None) {
             // Just assume the user wants it now 
             setCalibrationTrigger(CalibrationTrigger.UntilConfident);
         }
 
-        ensureCameraZ(camera);
+        ensureCameraZ(camera, true);
         // Try with cloned pipeline.
         Exception e = autoSetupPipeline(camera, null); 
         if (e != null) {
@@ -1808,18 +1805,22 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // Second preliminary smart clone to get pipeline, OCR region etc. from a template, 
             // this time with proper transformation. This may again be overwritten if
             // OCR recognizes the proper part.
-            if (getTemplateFeeder(null) != null) {
+            if (!isUsedAsTemplate() && getTemplateFeeder(null) != null) {
                 Logger.debug("Auto-Setup: secondary clone"+(type == null ? " including pipeline" : " excluding pipeline")
                         +", template feeder: "+getTemplateFeeder(null).getName());
                 smartClone(null, true, true, true, true, type == null);
             }
             // As we've changed all this -> reset any stats
             resetCalibrationStatistics();
-            // Now run a sprocket hole calibration, make sure to change the part (not swap it)
-            performVisionOperations(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePart, false, null);
-            // Move the camera back to the pick location
-            MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
-            MovableUtils.fireTargetedUserAction(camera);
+            try {
+                // Now run a sprocket hole calibration, make sure to change the part (not swap it)
+                performVisionOperations(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePart, false, null);
+            }
+            finally {
+                // Move the camera back to the pick location, including when there is an exception.
+                MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
+                MovableUtils.fireTargetedUserAction(camera);
+            }
             return null;
         }
         catch (Exception e) {
@@ -2441,7 +2442,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Location runningHole2Location = getHole2Location();
         Location runningPickLocation = getLocation();
         Location runningVisionOffset = getVisionOffset();
-        ensureCameraZ(camera);
+        ensureCameraZ(camera, true);
         // Calibrate the exact hole locations by obtaining a mid-point lock on them,
         // assuming that any camera lens and Z parallax distortion is symmetric.
         for (int i = 0; i < calibrateMaxPasses; i++) {

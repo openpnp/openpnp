@@ -99,9 +99,13 @@ public class AxisSolutions implements Solutions.Subject {
             else if (!getValidAxisLetters().contains(axis.getLetter())) {
                 solutions.add(new AxisLetterIssue(
                         axis, 
-                        "Axis letter "+axis.getLetter()+" is not a controller/G-code standard letter, one of "+String.join(" ", getValidAxisLetters())+".", 
-                        "Please assign the correct controller axis letter (some contoller may support an extended range of letters, "
-                                + "in which case you can dismiss this warning).", 
+                        "Axis letter "+axis.getLetter()+" is not a "+(getReportedAxisLetters() != null ? "controller reported" : "G-code standard")
+                        +" letter, one of "+String.join(" ", getValidAxisLetters())+".", 
+                        "Please assign the correct controller axis letter. Some controllers may "
+                                +(getReportedAxisLetters() != null ? 
+                                        "not report all axes on M114, in which case the letter might still be valid"
+                                        : "support an extended range of letters, in which case the letter might still be valid"
+                                        )+". Press the blue info button (below) for more information.", 
                                 Severity.Warning,
                         "https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings"));
             }
@@ -343,12 +347,20 @@ public class AxisSolutions implements Solutions.Subject {
         }
     }
 
-    protected List<String> getValidAxisLetters() {
+    protected List<String> getReportedAxisLetters() {
         if (axis.getDriver() instanceof GcodeDriver)  { 
             List<String> letters = ((GcodeDriver)axis.getDriver()).getReportedAxesLetters();
             if (letters.size() > 0) {
                 return letters;
             }
+        }
+        return null;
+    }
+
+    protected List<String> getValidAxisLetters() {
+        List<String> reportedAxisLetters = getReportedAxisLetters();
+        if (reportedAxisLetters != null) {
+            return reportedAxisLetters;
         }
         return Arrays.asList(AxisSolutions.VALID_AXIS_LETTERS);
     }
