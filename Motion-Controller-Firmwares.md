@@ -72,7 +72,7 @@ extruder.hotend.steps_per_mm                    8.8888      # Steps per mm for e
 
 Then you must remove the `extruder` parts and instead use the `delta`, `epsilon` and `zeta` definitions as described in the [Smoothieware 6axis page](https://smoothieware.org/6axis).
 
-If you skip this, you will get a complaint by [[Issues and Solutions]] saying "The driver does not report axes in the expected X Y Z A B C order".
+If you skip this, you will get a complaint by [[Issues and Solutions]] saying "The driver does not report axes in the expected X Y Z A B C order", or "Avoid axis letter E, if possible. Use proper rotation axes instead.":
 
 ![driver reported](https://user-images.githubusercontent.com/9963310/109156343-02633d00-7771-11eb-8f22-73a0af0ef0a7.png)
 
