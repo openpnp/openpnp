@@ -259,6 +259,13 @@ The **Speed** fields can be used to control the speed factor of the motion betwe
 
 All these Locations are handled like the Pick and Sprocket Hole Locations discussed in the [[Locations|ReferencePushPullFeeder#locations]] section above i.e. they are automatically vision calibrated and automatically transformed if a feeder is moved around on the machine e.g. by OCR detection or if a new feeder is created from a template. This even supports rotation, so if a "west" feeder is later loaded at a "south" slot, this is not a problem. 
 
+### Apply Vision Calibration, Not?
+
+Sometimes it is better to _not_ calibrate the coordinates of push-pull motions. This is the case when the motion directly transports the tape such as in drag feeding. In this case it is better to _disable_ the **Vision Calibrate?** switch of the coordinate going into the direction of transport. Otherwise, the drag might be offset more and more, and errors accumulate.
+
+![Vision Calibrate](https://user-images.githubusercontent.com/9963310/183599853-fb1adc39-c3c9-4bb9-847f-28f98283be8c.png)
+
+
 ### Coordinated Peeling
 
 Cover tape peeling can be done using motion that is coordinated with the push-pull articulation, as needed for drag feeders etc. This allows for an elaborate and coordinated motion pattern. Furthermore, it performs the peeling motion _in parallel_ with the other feeding articulation, potentially saving time. 
