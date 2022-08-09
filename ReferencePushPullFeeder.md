@@ -261,7 +261,9 @@ All these Locations are handled like the Pick and Sprocket Hole Locations discus
 
 ### Apply Vision Calibration, Not?
 
-Sometimes it is better to _not_ calibrate the coordinates of push-pull motions. This is the case when the motion directly transports the tape such as in drag feeding. In this case it is better to _disable_ the **Vision Calibrate?** switch of the coordinate going into the direction of transport. Otherwise, the drag might be offset more and more, and errors accumulate.
+Sometimes it is better to _not_ calibrate a coordinate axis of the push-pull motion. This is the case when the motion directly transports the tape such as in drag feeding. In this case it is better to _disable_ **Vision Calibrate?** for the coordinate going into the direction of transport. Otherwise, the drag might be offset more and more, as errors accumulate. 
+
+Note, if you _disable_ **Vision Calibrate?**, the transport motion will be applied "blindly" in the said coordinate, but this is likely OK, as the feeder will allow for some tolerances. For example, the drag needle is typically smaller in diameter than the sprocket hole it engages with. Make sure to make the insertion point go into the center of any wiggle room. 
 
 ![Vision Calibrate](https://user-images.githubusercontent.com/9963310/183599853-fb1adc39-c3c9-4bb9-847f-28f98283be8c.png)
 
