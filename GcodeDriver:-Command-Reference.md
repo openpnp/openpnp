@@ -135,7 +135,7 @@ This command is useful in systems that use multiple controllers where it is desi
 
 **Note**: For [[the most common controller firmwares|Motion-Controller-Firmwares]], OpenPnP can automatically configure this command for you. Use the [[Issues and Solutions]] system.
 
-This command can reset the axis coordinates at the current machine position to new values. This is used after [[Visual Homing]] but also if you use the [[rotational axis **Wrap around** feature|Machine-Axes#controller-settings-rotational-axis]]. 
+This command can reset the axis coordinates at the current machine position to new values. This is used after [[Visual Homing]] but also if you use the [rotational axis **Wrap around** feature](https://github.com/openpnp/openpnp/wiki/Machine-Axes#controller-settings). 
 
 Example:
 
