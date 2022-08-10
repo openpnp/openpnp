@@ -17,8 +17,18 @@ Using the [[Scripting]] system you can use Actuators to extend OpenPnP to contro
     * If you are adding a head mounted actuator, find the head in the tree on the left. Under the head look for Actuators and select it. Head mounted actuators are often attached to devices such as drag feed solenoids and nozzle change tools.
     * If you are adding a machine mounted actuator, find Actuators under the root of the tree and select it. Machine mounted actuators can be used for things like conveyors and lighting.
 3. Add an actuator by pressing the green plus button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/general-add.svg).  
-2. Select an actuator driver from the provided list and press the "Accept" button. The newly added actuator will show up in the actuators list.
-3. Click on the name of the new actuator to open its properties.
+   
+   ![Add Actuator](https://user-images.githubusercontent.com/9963310/183957702-706a9d6f-ea75-4910-a912-8f9ed60714f2.png)
+2. Select an actuator implementation from the provided list and press the "Accept" button. 
+   
+   ![Select Actuator Type](https://user-images.githubusercontent.com/9963310/183957798-81caddf2-b24b-405c-8d09-63a7b714621f.png)
+
+3. The newly added actuator will show up in the actuators list. Click on new actuator to open its properties.
+   
+   ![newly Created Actuator](https://user-images.githubusercontent.com/9963310/183958352-af96cbae-af5e-4e58-9c18-108ca8a1f126.png)
+
+4. Best immediately set the actuator **Name**.
+
 
 ## Actuator Settings
 
