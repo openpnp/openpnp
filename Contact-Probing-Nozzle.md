@@ -122,7 +122,9 @@ Notes: The Wizard will show different fields according to the selection. If at l
 
 With the Contact Sense Method you need a sensor actuator.
 
-Go to Head / Actuators, add a new probing Actuator. On the Nozzle, assign the probe:
+Go to Head / Actuators, [add a new probing Actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators#adding-actuators). 
+
+On the Nozzle, assign the probe:
 
 ![grafik](https://user-images.githubusercontent.com/9963310/69479673-33cbbb00-0e00-11ea-9401-dd438b180c86.png)
 
