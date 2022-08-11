@@ -23,6 +23,7 @@ import java.awt.geom.AffineTransform;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -40,6 +41,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.prefs.Preferences;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
@@ -631,10 +634,16 @@ public class Configuration extends AbstractModelObject {
         fireVisionSettingsChanged();
     }
 
+    /**
+     * @return an unmodifiable list of Boards loaded in the configuration
+     */
     public List<Board> getBoards() {
         return Collections.unmodifiableList(new ArrayList<>(boards.values()));
     }
 
+    /**
+     * @return an unmodifiable list of Panels loaded in the configuration
+     */
     public List<Panel> getPanels() {
         return Collections.unmodifiableList(new ArrayList<>(panels.values()));
     }
@@ -651,6 +660,10 @@ public class Configuration extends AbstractModelObject {
         return machine;
     }
 
+    /**
+     * Adds the specified panel to the configuration
+     * @param panel - the panel to be added
+     */
     public void addPanel(Panel panel) {
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(panel.getFile(), panel);
@@ -658,22 +671,48 @@ public class Configuration extends AbstractModelObject {
         firePropertyChange("panels", oldValue, panels);
     }
     
+    /**
+     * Loads a Panel into the configuration if it is not already loaded
+     * @param file - the file containing the Panel
+     * @throws Exception if the specified file does not exist or does not contain a valid Panel
+     */
     public void addPanel(File file) throws Exception {
-        getPanel(file);
+        file = file.getCanonicalFile();
+        if (panels.containsKey(file)) {
+            return;
+        }
+        Panel panel = loadPanel(file);
+        Logger.trace(String.format("Loaded new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
+        LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
+        panels.put(file, panel);
+        firePropertyChange("panels", oldValue, panels);
     }
     
+    /**
+     * Removes the specified panel from the configuration
+     * @param panel - the panel to remove
+     */
     public void removePanel(Panel panel) {
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.remove(panel.getFile());
         firePropertyChange("panels", oldValue, panels);
     }
     
+    /**
+     * Returns the Panel contained in the specified file. If the Panel is already loaded in the 
+     * configuration, it is found and returned. If it is not already loaded into the configuration, 
+     * the specified file is read and loaded into the configuration.  If the specified file does not
+     * exist, a new empty Panel is created and saved into the specified file and loaded into the
+     * configuration.
+     * @param file - the file containing the Panel
+     * @throws Exception if the specified file exists but does not contain a valid Panel
+     */
     public Panel getPanel(File file) throws Exception {
         if (!file.exists()) {
             Panel panel = new Panel(file);
-            Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
-//            panel.setName(file.getName());
-            panel.setName(file.getCanonicalPath());
+            Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", 
+                    panel.hashCode(), panel.getDefinedBy().hashCode()));
+            panel.setName(file.getName());
             Serializer serializer = createSerializer();
             serializer.write(panel, file);
         }
@@ -682,29 +721,59 @@ public class Configuration extends AbstractModelObject {
             return panels.get(file);
         }
         Panel panel = loadPanel(file);
-        Logger.trace(String.format("Loaded new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
+        Logger.trace(String.format("Loaded new Panel @%08x, defined by @%08x", 
+                panel.hashCode(), panel.getDefinedBy().hashCode()));
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(file, panel);
         firePropertyChange("panels", oldValue, panels);
         return panel;
     }
     
+    /**
+     * Adds the specified Board to the configuration
+     * @param board - the Board to be added
+     */
     public void addBoard(Board board) {
         LinkedHashMap<File, Board> oldValue = new LinkedHashMap<>(boards);
         boards.put(board.getFile(), board);
         firePropertyChange("boards", oldValue, boards);
     }
     
+    /**
+     * Loads a Board to the configuration if it is not already loaded
+     * @param file - the file containing the Board
+     * @throws Exception if the specified file does not exist or does not contain a valid Board
+     */
     public void addBoard(File file) throws Exception {
-        getBoard(file);
+        file = file.getCanonicalFile();
+        if (boards.containsKey(file)) {
+            return;
+        }
+        Board board = loadBoard(file);
+        LinkedHashMap<File, Board> oldValue = new LinkedHashMap<>(boards);
+        boards.put(file, board);
+        firePropertyChange("boards", oldValue, boards);
     }
     
+    /**
+     * Removes the specified Board from the configuration
+     * @param board - the Board to remove
+     */
     public void removeBoard(Board board) {
         LinkedHashMap<File, Board> oldValue = new LinkedHashMap<>(boards);
         boards.remove(board.getFile());
         firePropertyChange("boards", oldValue, boards);
     }
     
+    /**
+     * Returns the Board contained in the specified file. If the Board is already loaded in the 
+     * configuration, it is found and returned. If it is not already loaded into the configuration, 
+     * the specified file is read and loaded into the configuration.  If the specified file does not
+     * exist, a new empty Board is created and saved into the specified file and loaded into the
+     * configuration.
+     * @param file - the file containing the Board
+     * @throws Exception if the specified file exists but does not contain a valid Board
+     */
     public Board getBoard(File file) throws Exception {
         if (!file.exists()) {
             Board board = new Board(file);
@@ -775,28 +844,68 @@ public class Configuration extends AbstractModelObject {
         serializeObject(holder, file);
     }
 
+    /**
+     * Loads the Boards listed in the specified file into the configuration.  Any Boards listed that
+     * can't be loaded are skipped and an error message is logged.
+     * @param file - the file containing the list of boards
+     * @throws Exception - if the specified file can't be read successfully
+     */
     private void loadBoards(File file) throws Exception {
         Serializer serializer = createSerializer();
         BoardsConfigurationHolder holder = serializer.read(BoardsConfigurationHolder.class, file);
         for (File boardFile : holder.boards) {
-            addBoard(boardFile);
+            try {
+                addBoard(boardFile);
+            }
+            catch(FileNotFoundException e) {
+                Logger.error("Could not load board " + boardFile.getCanonicalPath() + ", file is missing.");
+            }
+            catch(Exception e) {
+                Logger.error("Could not load board " + boardFile.getCanonicalPath() + ", file may be corrupt.");
+                e.printStackTrace();
+            }
         }
     }
 
+    /**
+     * Saves the Boards that are currently loaded in the configuration to the specified file
+     * @param file - the file in which to save the Boards
+     * @throws Exception if the file can't be written successfully
+     */
     private void saveBoards(File file) throws Exception {
         BoardsConfigurationHolder holder = new BoardsConfigurationHolder();
         holder.boards = new ArrayList<>(boards.keySet());
         serializeObject(holder, file);
     }
 
+    /**
+     * Loads the Panels listed in the specified file into the configuration.  Any Panels listed that
+     * can't be loaded are skipped and an error message is logged.
+     * @param file - the file containing the list of panels
+     * @throws Exception - if the specified file can't be read successfully
+     */
     private void loadPanels(File file) throws Exception {
         Serializer serializer = createSerializer();
         PanelsConfigurationHolder holder = serializer.read(PanelsConfigurationHolder.class, file);
         for (File panelFile : holder.panels) {
-            addPanel(panelFile);
+            try {
+                addPanel(panelFile);
+            }
+            catch(FileNotFoundException e) {
+                Logger.error("Could not load panel " + panelFile.getCanonicalPath() + ", file is missing.");
+            }
+            catch(Exception e) {
+                Logger.error("Could not load panel " + panelFile.getCanonicalPath() + ", file may be corrupt.");
+                e.printStackTrace();
+            }
         }
     }
 
+    /**
+     * Saves the Panels that are currently loaded in the configuration to the specified file
+     * @param file - the file in which to save the Panels
+     * @throws Exception if the file can't be written successfully
+     */
     private void savePanels(File file) throws Exception {
         PanelsConfigurationHolder holder = new PanelsConfigurationHolder();
         holder.panels = new ArrayList<>(panels.keySet());
@@ -818,35 +927,19 @@ public class Configuration extends AbstractModelObject {
         serializeObject(holder, file);
     }
 
+    /**
+     * Returns the Job contained within the specified file 
+     * @param file - the file containing the Job
+     * @return the Job
+     * @throws Exception - if the file can't be read successfully
+     */
     public Job loadJob(File file) throws Exception {
         Serializer serializer = createSerializer();
         Job job = serializer.read(Job.class, file);
         job.setFile(file);
-
         
         resolvePanel(job, job.getRootPanelLocation());
-        
-        // Once the Job is loaded we need to resolve any Boards that it
-        // references.
-//        resolveBoards(job);
-
-//        for (PanelLocation panelLocation : job.panelLocations) {
-////            job.getRootPanelLocation().addChild(new PanelLocation(panelLocation));
-//            job.getRootPanelLocation().addChild(panelLocation);
-//        }
-//        for (BoardLocation boardLocation : job.getBoardLocations()) {
-////            job.getRootPanelLocation().addChild(new BoardLocation(boardLocation));
-//            job.getRootPanelLocation().addChild(boardLocation);
-//        }
-        
-//        Logger.trace("Dump of the job panelLocations");
-//        for (PanelLocation panelLocation : job.getPanelLocations()) {
-//            panelLocation.dump("");
-//        }
-//        Logger.trace("Dump of the job boardLocations");
-//        for (BoardLocation boardLocation : job.getBoardLocations()) {
-//            boardLocation.dump("");
-//        }
+        restoreJobEnabledAndErrorHandlingSettings(job, job.getRootPanelLocation());
         
         Logger.trace("Now a dump of the jobRootPanelLocation");
         job.getRootPanelLocation().dump("");
@@ -856,12 +949,13 @@ public class Configuration extends AbstractModelObject {
         return job;
     }
 
-    private void resolveBoards(Job job) throws Exception {
-        for (BoardLocation boardLocation : job.getBoardLocations()) {
-            resolveBoard(job, boardLocation);
-        }
-    }
-    
+    /**
+     * Attempts to load the Board associated with the given BoardLocation and assign it to the
+     * BoardLocation
+     * @param job - the Job
+     * @param boardLocation - the BoardLocation
+     * @throws Exception if the Board associated with the BoardLocation can't be loaded successfully
+     */
     public void resolveBoard(Job job, BoardLocation boardLocation) throws Exception {
         String boardFilename = boardLocation.getBoardFile();
         // First see if we can find the board at the given filename
@@ -872,7 +966,7 @@ public class Configuration extends AbstractModelObject {
             //If that didn't work, try to find it in the parent panel directory
             boardFile = new File(boardLocation.getParent().getFiducialLocatable().getFile().getParentFile(), boardFilename);
         }
-        if (!boardFile.exists()) {
+        if (!boardFile.exists() && job != null) {
             // If that fails, see if we can find it relative to the
             // directory the job was in
             boardFile = new File(job.getFile().getParentFile(), boardFilename);
@@ -882,36 +976,31 @@ public class Configuration extends AbstractModelObject {
         }
         Board board = new Board(getBoard(boardFile));
         boardLocation.setBoard(board);
-        
-//        job.getRootPanelLocation().addChild(boardLocation);
     }
 
-    public void resolvePanels(Job job, List<PanelLocation> panelLocations) throws Exception {
-        if (panelLocations == null || panelLocations.isEmpty()) {
-            return;
-        }
-        for (PanelLocation panelLocation : panelLocations) {
-            resolvePanel(job, panelLocation);
-        }
-    }
-    
+    /**
+     * Attempts to load the Panel associated with the given PanelLocation and assign it to the
+     * PanelLocation.  Recursively resolves the Panel's children.
+     * @param job - the Job
+     * @param panelLocation - the PanelLocation
+     * @throws Exception if the Panel and all of its descendants can't be loaded successfully
+     */
     public void resolvePanel(Job job, PanelLocation panelLocation) throws Exception {
         if (panelLocation == null) {
             return;
         }
-        Panel panel = null;
+        Panel panel = panelLocation.getPanel();
         if (job != null && panelLocation == job.getRootPanelLocation()) {
-            panel = panelLocation.getPanel();
             panel.setFile(job.getFile());
         }
-        else if (panelLocation.getPanel() == null || panelLocation.getPanel().getVersion() != null) {
+        else if (panel == null) {
             String panelFileName = panelLocation.getFileName();
             File panelFile = new File(panelFileName);
             if (!panelFile.exists() && panelLocation.getParent() != null) {
                 //If that didn't work, try to find it in the parent panel directory
                 panelFile = new File(panelLocation.getParent().getPanel().getFile().getParentFile(), panelFileName);
             }
-            if (job != null && !panelFile.exists()) {
+            if (!panelFile.exists() && job != null) {
                 // If that fails, see if we can find it relative to the
                 // directory the job was in
                 panelFile = new File(job.getFile().getParentFile(), panelFileName);
@@ -923,166 +1012,121 @@ public class Configuration extends AbstractModelObject {
             Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
             panelLocation.setPanel(panel);
         }
-//        else {
-//            //This fixes old style panels that were part of the job file - sets the panel file 
-//            //and moves the boards from the job to the panel
-//            panel = panelLocation.getPanel();
-//            
-//            //First resolve the root PCB as we need its dimensions
-//            BoardLocation rootPcb = job.getBoardLocations().get(0);
-////            BoardLocation rootPcb = (BoardLocation) panel.getChildren().get(0);
-//            resolveBoard(job, rootPcb);
-//            
-//            String boardFileName = rootPcb.getFileName();
-//            String panelFileName = boardFileName.substring(0, boardFileName.indexOf(".board.xml")) + ".panel.xml";
-////            File panelFile = new File(job.getFile().getParentFile(), panelFileName);
-//            File panelFile = new File(panelFileName);
-//            panelLocation.setFileName(panelFile.getCanonicalPath());
-//            panelLocation.setParent(null);
-////            panel.setName(panelFileName);
-//            panel.setName(panelFile.getName());
-//            panel.setFile(panelFile);
-//            
-//            Location rootDims = rootPcb.getBoard().getDimensions().
-//                    convertToUnits(Configuration.get().getSystemUnits());
-//            
-//            double pcbStepX = rootDims.getLengthX().add(panel.xGap).getValue();
-//            double pcbStepY = rootDims.getLengthY().add(panel.yGap).getValue();
-//          
-////            panel.removeAllChildren();
-//            Panel rootPanel = job.getRootPanelLocation().getPanel();
-//            List<FiducialLocatableLocation> rootChildren = rootPanel.getChildren();
-//            for (FiducialLocatableLocation child : rootChildren) {
-//                if (child instanceof BoardLocation) {
-//                    rootPanel.removeChild(child);
-//                    child.removePropertyChangeListener(job);
-//                }
-//            }
-//            for (int j = 0; j < panel.rows; j++) {
-//                for (int i = 0; i < panel.columns; i++) {
-//                    // deep copy the existing rootPcb
-//                    BoardLocation newPcb = new BoardLocation(rootPcb);
-////                    newPcb.setLocation(rootPcb.getLocation().derive(0.0, 0.0, null, 0.0));
-//                    newPcb.setLocation(Location.origin);
-//                    
-//                    // Offset the sub PCB
-//                    newPcb.setLocation(newPcb.getLocation()
-//                            .add(new Location(Configuration.get().getSystemUnits(),
-//                                    pcbStepX * i,
-//                                    pcbStepY * j, 0, 0)));
-//                    
-//                    panel.addChild(newPcb);
-//                    newPcb.addPropertyChangeListener(job);
-//                }
-//            }
-//            panel.setDimensions(Location.origin.deriveLengths(
-//                rootDims.getLengthX().add(panel.xGap).multiply(panel.columns).subtract(panel.xGap),
-//                rootDims.getLengthY().add(panel.yGap).multiply(panel.rows).subtract(panel.yGap),
-//                null, null));
-//            
-//            //Remove all the old boards from the job - they will get added back below
-////            job.removeAllBoards();
-//            
-//            Panel definingPanel = new Panel(panel);
-//            definingPanel.setDefinedBy(definingPanel);
-//            definingPanel.addPropertyChangeListener(panel);
-//            definingPanel.setDirty(true);
-//            panel.setDefinedBy(definingPanel);
-//            
-//            addPanel(definingPanel);
-//        }
-        
-//        job.getRootPanelLocation().addChild(panelLocation);
 
         for (FiducialLocatableLocation child : panel.getChildren()) {
             if (child instanceof PanelLocation) {
-//                PanelLocation childPanelLocation = new PanelLocation((PanelLocation) child);
                 PanelLocation childPanelLocation = (PanelLocation) child;
                 childPanelLocation.setParent(panelLocation);
-//                child.setParent(panelLocation);
-                
+                ((PanelLocation) childPanelLocation.getDefinedBy()).addPropertyChangeListener(childPanelLocation);
                 resolvePanel(job, childPanelLocation);
-                
-//                ((PanelLocation) child).setPanel(childPanelLocation.getPanel());
             }
-            if (child instanceof BoardLocation) {
-//                BoardLocation boardLocation = new BoardLocation((BoardLocation) child);
+            else if (child instanceof BoardLocation) {
                 BoardLocation boardLocation = (BoardLocation) child;
                 boardLocation.setParent(panelLocation);
                 ((BoardLocation) boardLocation.getDefinedBy()).addPropertyChangeListener(boardLocation);
-//                child.setParent(panelLocation);
-
                 resolveBoard(job, boardLocation);
-                
-//                ((BoardLocation) child).setBoard(boardLocation.getBoard());
+            }
+            else {
+                throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
             }
         }
         panel.setDirty(false);
     }
     
+    /**
+     * Recursively checks the enabled and error handling settings of all the boards, panels, and 
+     * placements of a job to see if they match that of the defining boards and panels. If not, 
+     * those that are different than their definition, are saved into the job so that when the 
+     * job is reloaded, their settings can be restored.
+     * @param job - the job to check
+     * @param panelLocation - the PanelLocation where the checking should begin
+     */
+    private void saveJobEnabledAndErrorHandlingSettings(Job job, PanelLocation panelLocation) {
+        if (panelLocation == job.getRootPanelLocation()) {
+            job.removeAllEnabled();
+            job.removeAllErrorHandling();
+        }
+        if (panelLocation != null) {
+            Panel panel = panelLocation.getPanel();
+            if (panel != null) {
+                for (FiducialLocatableLocation child : panel.getChildren()) {
+                    if (child.isLocallyEnabled() != ((FiducialLocatableLocation) child.getDefinedBy()).isLocallyEnabled()) {
+                        job.setEnabled(child, null, child.isLocallyEnabled());
+                    }
+                    if (child instanceof BoardLocation || child instanceof PanelLocation) {
+                        for (Placement placement : child.getFiducialLocatable().getPlacements()) {
+                            if (placement.isEnabled() != ((Placement) placement.getDefinedBy()).isEnabled()) {
+                                job.setEnabled(child, placement, placement.isEnabled());
+                            }
+                            if (placement.getErrorHandling() != ((Placement) placement.getDefinedBy()).getErrorHandling()) {
+                                job.setErrorHandling(child, placement, placement.getErrorHandling());
+                            }
+                        }
+                        if (child instanceof PanelLocation) {
+                            saveJobEnabledAndErrorHandlingSettings(job, (PanelLocation) child);
+                        }
+                    }
+                    else {
+                        throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Recursively restores the enabled and error handling settings of all the boards, panels, and 
+     * placements of a job.
+     * @param job - the job to restore
+     * @param panelLocation - the PanelLocation where the restoration should begin
+     */
+    private void restoreJobEnabledAndErrorHandlingSettings(Job job, PanelLocation panelLocation) {
+        if (panelLocation != null) {
+            Panel panel = panelLocation.getPanel();
+            if (panel != null) {
+                for (FiducialLocatableLocation child : panel.getChildren()) {
+                    child.setLocallyEnabled(job.getEnabled(child, null));
+                    if (child instanceof BoardLocation || child instanceof PanelLocation) {
+                        for (Placement placement : child.getFiducialLocatable().getPlacements()) {
+                            placement.setEnabled(job.getEnabled(child, placement));
+                            placement.setErrorHandling(job.getErrorHandling(child, placement));
+                        }
+                        if (child instanceof PanelLocation) {
+                            restoreJobEnabledAndErrorHandlingSettings(job, (PanelLocation) child);
+                        }
+                    }
+                    else {
+                        throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Serializes the specified job and writes it to the specified file
+     * @param job - the job to save
+     * @param file - the file into which the job is to be saved
+     * @throws Exception if the file can't be written successfully
+     */
     public void saveJob(Job job, File file) throws Exception {
+        saveJobEnabledAndErrorHandlingSettings(job, job.getRootPanelLocation());
         Serializer serializer = createSerializer();
-
-//        Set<Panel> panels = new HashSet<>();
-//        // Fix the paths to any panels in the Job
-//        for (PanelLocation panelLocation : job.getPanelLocations()) {
-//            Panel panel = (Panel) panelLocation.getPanel();
-//            panels.add(panel);
-//            try {
-//                String relativePath = ResourceUtils.getRelativePath(
-//                        panel.getFile().getAbsolutePath(), file.getAbsolutePath(), File.separator);
-//                panelLocation.setPanelFile(relativePath);
-//            }
-//            catch (ResourceUtils.PathResolutionException ex) {
-//                panelLocation.setPanelFile(panel.getFile().getAbsolutePath());
-//            }
-//        }
-//        // Save any panels in the job
-//        for (Panel panel : panels) {
-//            savePanel(panel);
-//        }
-//
-//        List<BoardLocation> savedBoardLocations = job.getBoardLocations();
-//        Set<Board> boards = new HashSet<>();
-//        // Fix the paths to any boards in the Job
-//        for (BoardLocation boardLocation : savedBoardLocations) {
-//            Board board = (Board) boardLocation.getBoard();
-//            boards.add(board);
-//            try {
-//                String relativePath = ResourceUtils.getRelativePath(
-//                        board.getFile().getAbsolutePath(), file.getAbsolutePath(), File.separator);
-//                boardLocation.setBoardFile(relativePath);
-//            }
-//            catch (ResourceUtils.PathResolutionException ex) {
-//                boardLocation.setBoardFile(board.getFile().getAbsolutePath());
-//            }
-//            if (boardLocation.getParent() != null) {
-//                Logger.trace("Not saving " + boardLocation + " because it is a child of a panel");
-//                job.removeBoardLocation(boardLocation);
-//            }
-//        }
-//        // Save any boards in the job
-//        for (Board board : boards) {
-//            saveBoard(board);
-//        }
-        
-        // Save the job - minus any board locations that are owned by a panel
         serializer.write(job, new ByteArrayOutputStream());
         serializer.write(job, file);
         job.setFile(file);
         job.setDirty(false);
-        
-        // Restore the board locations
-////        job.removeAllBoards();
-//        for (BoardLocation boardLocation : savedBoardLocations) {
-//            job.addBoardLocation(boardLocation);
-//        }
     }
     
     public String getImgurClientId() {
         return imgurClientId;
     }
 
+    /**
+     * Saves the specified Panel into its file
+     * @param panel - the Panel to save
+     * @throws Exception if the file can't be written successfully
+     */
     public void savePanel(Panel panel) throws Exception {
         Serializer serializer = createSerializer();
         serializer.write(panel, new ByteArrayOutputStream());
@@ -1090,11 +1134,18 @@ public class Configuration extends AbstractModelObject {
         panel.setDirty(false);
     }
 
+    /**
+     * Creates and returns a Panel based on the contents of the specified file.  Recursively loads 
+     * the Panel's descendants.
+     * @param file - the file to read
+     * @return the Panel
+     * @throws Exception if the specified file can't be read successfully or if any of the
+     * descendants of the panel can't be found
+     */
     private Panel loadPanel(File file) throws Exception {
         Serializer serializer = createSerializer();
         Panel panel = serializer.read(Panel.class, file);
         panel.setFile(file);
-//        load children here!!!
         for (FiducialLocatableLocation child : panel.getChildren()) {
             File childFile = new File(child.getFileName());
             if (childFile.exists()) {
@@ -1103,6 +1154,9 @@ public class Configuration extends AbstractModelObject {
                 }
                 else if (child instanceof PanelLocation) {
                     child.setFiducialLocatable(getPanel(childFile));
+                }
+                else {
+                    throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
                 }
             }
             else {
@@ -1113,6 +1167,11 @@ public class Configuration extends AbstractModelObject {
         return panel;
     }
 
+    /**
+     * Saves the specified Board into its file
+     * @param panel - the Board to save
+     * @throws Exception if the file can't be written successfully
+     */
     public void saveBoard(Board board) throws Exception {
         Serializer serializer = createSerializer();
         serializer.write(board, new ByteArrayOutputStream());
@@ -1120,6 +1179,12 @@ public class Configuration extends AbstractModelObject {
         board.setDirty(false);
     }
 
+    /**
+     * Creates and returns a Board based on the contents of the specified file
+     * @param file - the file to read
+     * @return the Board
+     * @throws Exception if the specified file can't be read successfully
+     */
     private Board loadBoard(File file) throws Exception {
         Serializer serializer = createSerializer();
         Board board = serializer.read(Board.class, file);

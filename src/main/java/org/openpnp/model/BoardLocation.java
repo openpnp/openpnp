@@ -21,6 +21,7 @@ package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
 import java.beans.PropertyChangeEvent;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,6 +62,16 @@ public class BoardLocation extends FiducialLocatableLocation {
     public BoardLocation(Board board) {
         this();
         setBoard(board);
+        if (board != null && board.getFile() != null) {
+            try {
+                this.setBoardFile(board.getFile().getCanonicalPath());
+            }
+            catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        
     }
 
     @Commit
@@ -81,40 +92,8 @@ public class BoardLocation extends FiducialLocatableLocation {
     @Persist
     protected void persist() {
         super.persist();
-//        if (MainFrame.get().getJobTab().getJob().getPanelLocations().get(parentId) == null) {
     }
     
-//    public int getTotalActivePlacements(){
-//    	if (fiducialLocatable == null) {
-//    		return 0;
-//    	}
-//    	int counter = 0;
-//    	for(Placement placement : fiducialLocatable.getPlacements()) {
-//    		if (placement.getSide() == getSide()
-//    		        && placement.getType() == Type.Placement
-//    		        && placement.isEnabled()) {
-//    				counter++;
-//        	}
-//    	}
-//    	return counter;
-//    }
-//    
-//    public int getActivePlacements() {
-//    	if (fiducialLocatable == null) {
-//    		return 0;
-//    	}
-//    	int counter = 0;
-//	    for(Placement placement : fiducialLocatable.getPlacements()) {
-//            if (placement.getSide() == getSide()
-//                    && placement.getType() == Type.Placement
-//                    && placement.isEnabled()
-//                    && !getPlaced(placement.getId())) {
-//                    counter++;
-//            }
-//        }
-//    	return counter;
-//    }
-//
     public Board getBoard() {
         return (Board) getFiducialLocatable();
     }
@@ -131,33 +110,6 @@ public class BoardLocation extends FiducialLocatableLocation {
         setFileName(boardFile);
     }
 
-//    public String getPanelId() {
-//        return getParentId();
-//    }
-//
-//    public void setPanelId(String id) {
-//        setParentId(id);
-//    }
-
-//    public void setPlaced(String placementId, boolean placed) {
-//        this.placed.put(placementId, placed);
-//        firePropertyChange("placed", null, this.placed);
-//    }
-//
-//    public boolean getPlaced(String placementId) {
-//        if (placed.containsKey(placementId)) {
-//            return placed.get(placementId);
-//        } 
-//        else {
-//            return false;
-//        }
-//    }
-//    
-//    public void clearAllPlaced() {
-//        this.placed.clear();
-//        firePropertyChange("placed", null, this.placed);
-//    }
-    
     public AffineTransform getPlacementTransform() {
         return getLocalToParentTransform();
     }

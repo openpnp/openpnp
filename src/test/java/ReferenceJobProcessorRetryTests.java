@@ -368,7 +368,7 @@ public class ReferenceJobProcessorRetryTests {
             board.setName(name);
             boardLocation = new BoardLocation(board);
             boardLocation.setLocation(new Location(LengthUnit.Millimeters, x, y, z, rotation));
-            job.addBoardLocation(boardLocation);
+            job.addBoardOrPanelLocation(boardLocation);
             return this;
         }
         

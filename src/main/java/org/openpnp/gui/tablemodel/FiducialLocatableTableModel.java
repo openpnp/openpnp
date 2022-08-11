@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -19,27 +19,16 @@
 
 package org.openpnp.gui.tablemodel;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.Callable;
 import java.util.function.Supplier;
-
-import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
-import org.pmw.tinylog.Logger;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.FiducialLocatable;
-import org.openpnp.model.FiducialLocatableLocation;
-import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
-import org.openpnp.model.PanelLocation;
 
 @SuppressWarnings("serial")
 public class FiducialLocatableTableModel extends AbstractObjectTableModel {

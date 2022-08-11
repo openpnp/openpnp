@@ -49,9 +49,6 @@ import org.simpleframework.xml.core.Persist;
  */
 @Root(name = "openpnp-job")
 public class Job extends AbstractModelObject implements PropertyChangeListener {
-//    @ElementList(required = false)
-//    protected IdentifiableList<PanelLocation> panelLocations = new IdentifiableList<>();
-
     private static final Double LATEST_VERSION = 2.0;
     
     @Attribute(required = false)
@@ -65,11 +62,18 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     @ElementList(required = false)
     private ArrayList<BoardLocation> boardLocations = new ArrayList<>();
 
+    @Element(required = false)
+    private Panel rootPanel = new Panel("root");
+    
     @ElementMap(required = false)
     private Map<String, Boolean> placed = new HashMap<>();
 
-    @Element(required = false)
-    private Panel rootPanel = new Panel("root");
+    @ElementMap(required = false)
+    private Map<String, Boolean> enabled = new HashMap<>();
+
+    @ElementMap(required = false)
+    private Map<String, Placement.ErrorHandling> errorHandling = new HashMap<>();
+
     
     private transient File file;
     private transient boolean dirty;
@@ -133,7 +137,6 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
                     newPcb.setParent(null);
                     newPcb.setDefinedBy(newPcb);
                     newPcb.setSide(Side.Top);
-//                    newPcb.setLocation(newPcb.getLocation().derive(0.0, 0.0, 0.0, null));
                     newPcb.getPlaced().clear();
                     
                     // Offset the sub PCB
@@ -150,7 +153,6 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
                     Map<String, Boolean> subBoardPlaced = subBoard.getPlaced();
                     for (String key : subBoardPlaced.keySet()) {
                         placed.put(keyRoot + key, subBoardPlaced.get(key));
-//                        setPlaced(newPcb, key, subBoardPlaced.get(key));
                     }
                 }
             }
@@ -168,7 +170,6 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
             panelLocation.setFileName(panelFileName);
             panelLocation.setLocation(rootBoardLocation.getLocation());
             panelLocation.setSide(rootBoardLocation.getSide());
-//            this.addPanelLocation(panelLocation);
             rootPanel.addChild(panelLocation);
             
             dirty = true;
@@ -178,14 +179,11 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         else if (boardLocations != null){
             //Add board locations to the root panel
             for (BoardLocation boardLocation : boardLocations) {
-//                rootPanelLocation.addChild(boardLocation);
                 rootPanel.addChild(boardLocation);
-//                boardLocation.addPropertyChangeListener(this);
                 
                 //Move the deprecated placement status from the boardLocation to the job
                 Map<String, Boolean> temp = boardLocation.getPlaced();
                 if (temp != null) {
-//                    String prefix = boardLocation.getUniqueId() + FiducialLocatableLocation.ID_SEPARATOR;
                     for (String placementId : temp.keySet()) {
                         setPlaced(boardLocation, placementId, temp.get(placementId));
                     }
@@ -202,128 +200,28 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     @Persist
     private void persist() {
         version = LATEST_VERSION;
-//        //Remove deprecated items
-//        panels = null;
-//        
-//        //Refresh the panel and board location lists with the children of the root panel
-//        panelLocations.clear();
-//        boardLocations.clear();
-//        for (FiducialLocatableLocation child : rootPanelLocation.getChildren()) {
-//            if (child instanceof PanelLocation) {
-//                panelLocations.add((PanelLocation) child);
-//            }
-//            else if (child instanceof BoardLocation) {
-//                boardLocations.add((BoardLocation) child);
-//            }
-//            else {
-//                throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
-//            }
-//        }
+        panels = null;
     }
     
     public List<BoardLocation> getBoardLocations() {
-        return Collections.unmodifiableList(boardLocations);
+        List<BoardLocation> ret = new ArrayList<>();
+        for (FiducialLocatableLocation fll : getBoardAndPanelLocations()) {
+            if (fll instanceof BoardLocation) {
+                ret.add((BoardLocation) fll);
+            }
+        }
+        return Collections.unmodifiableList(ret);
     }
-
-    public void addBoardLocation(BoardLocation boardLocation) {
-//        Object oldValue = boardLocations;
-//        boardLocations = new IdentifiableList<>(boardLocations);
-//        boardLocation.setId(boardLocations.createId("Brd"));
-//        boardLocations.add(boardLocation);
-//        firePropertyChange("boardLocations", oldValue, boardLocations);
-//        boardLocation.addPropertyChangeListener(this);
-        rootPanelLocation.addChild(boardLocation);
-    }
-
-    public void removeBoardLocation(BoardLocation boardLocation) {
-//        Object oldValue = boardLocations;
-//        boardLocations = new IdentifiableList<>(boardLocations);
-//        boardLocations.remove(boardLocation);
-//        firePropertyChange("boardLocations", oldValue, boardLocations);
-//        boardLocation.removePropertyChangeListener(this);
-//        ((AbstractModelObject) boardLocation.getDefinedBy()).removePropertyChangeListener(boardLocation);
-        rootPanelLocation.removeChild(boardLocation);
-    }
-
-//    public void removeAllBoards() {
-//        ArrayList<BoardLocation> oldValue = boardLocations;
-//        boardLocations = new IdentifiableList<>();
-//
-//        firePropertyChange("boardLocations", (Object) oldValue, boardLocations);
-//
-//        for (int i = 0; i < oldValue.size(); i++) {
-//            oldValue.get(i).removePropertyChangeListener(this);
-//            ((AbstractModelObject) oldValue.get(i).getDefinedBy()).removePropertyChangeListener(oldValue.get(i));
-//        }
-//    }
-//
-//    public void addPanel(Panel panel) {
-//        panels.add(panel);
-//    }
-//
-//    public void removeAllPanels() {
-//        panels.clear();
-//    }
-//
-    public List<Panel> getPanels() {
-        return panels;
-    }
-
-    // In the first release of the Auto Panelize software, there is assumed to be a
-    // single panel in use, even though the underlying plumbing supports a list of
-    // panels. This function is intended to let the rest of OpenPNP know if the
-    // autopanelize function is being used
-//    public boolean isUsingPanel() {
-//        if (panels == null) {
-//            return false;
-//        }
-//
-//        if (panels.size() >= 1) {
-//            return true;
-//        }
-//
-//        return false;
-//    }
 
     public List<PanelLocation> getPanelLocations() {
         List<PanelLocation> ret = new ArrayList<>();
-        for (FiducialLocatableLocation fll : getFiducialLocatableLocations()) {
+        for (FiducialLocatableLocation fll : getBoardAndPanelLocations()) {
             if (fll instanceof PanelLocation) {
                 ret.add((PanelLocation) fll);
             }
         }
         return Collections.unmodifiableList(ret);
     }
-
-    public void addPanelLocation(PanelLocation panelLocation) {
-//        Object oldValue = panelLocations;
-//        panelLocations = new IdentifiableList<>(panelLocations);
-//        panelLocation.setId(panelLocations.createId("Pnl"));
-//        panelLocations.add(panelLocation);
-//        firePropertyChange("panelLocations", oldValue, panelLocations);
-//        panelLocation.addPropertyChangeListener(this);
-        rootPanelLocation.addChild(panelLocation);
-    }
-
-    public void removePanelLocation(PanelLocation panelLocation) {
-//        Object oldValue = panelLocations;
-//        panelLocations = new IdentifiableList<>(panelLocations);
-//        panelLocations.remove(panelLocation);
-//        firePropertyChange("boardLocations", oldValue, boardLocations);
-//        panelLocation.removePropertyChangeListener(this);
-        rootPanelLocation.removeChild(panelLocation);
-    }
-
-//    public void removeAllPanelLocations() {
-//        List<PanelLocation> oldValue = panelLocations;
-//        panelLocations = new IdentifiableList<>();
-//
-//        firePropertyChange("panelLocations", (Object) oldValue, panelLocations);
-//
-//        for (int i = 0; i < oldValue.size(); i++) {
-//            oldValue.get(i).removePropertyChangeListener(this);
-//        }
-//    }
 
     private void panelLocationToList(PanelLocation panelLocation, List<FiducialLocatableLocation> list) {
         list.add(panelLocation);
@@ -340,53 +238,36 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         }
     }
     
-    public List<FiducialLocatableLocation> getFiducialLocatableLocations() {
+    public List<FiducialLocatableLocation> getBoardAndPanelLocations() {
         List<FiducialLocatableLocation> retList = new ArrayList<>();
         panelLocationToList(rootPanelLocation, retList);
         return Collections.unmodifiableList(retList);
     }
     
-    public void addFiducialLocatableLocation(FiducialLocatableLocation fiducialLocatableLocation) {
-        if (fiducialLocatableLocation instanceof PanelLocation) {
-            addPanelLocation((PanelLocation) fiducialLocatableLocation);
-        }
-        else if (fiducialLocatableLocation instanceof BoardLocation) {
-            addBoardLocation((BoardLocation) fiducialLocatableLocation);
-        }
-        else {
-            throw new UnsupportedOperationException("Instance type " + fiducialLocatableLocation.getClass() + " not supported.");
-        }
+    public void addBoardOrPanelLocation(FiducialLocatableLocation boardOrPanelLocation) {
+        rootPanelLocation.addChild(boardOrPanelLocation);
     }
 
-    public void removeFiducialLocatableLocation(FiducialLocatableLocation fiducialLocatableLocation) {
-        if (fiducialLocatableLocation instanceof PanelLocation) {
-            removePanelLocation((PanelLocation) fiducialLocatableLocation);
-        }
-        else if (fiducialLocatableLocation instanceof BoardLocation) {
-            removeBoardLocation((BoardLocation) fiducialLocatableLocation);
-        }
-        else {
-            throw new UnsupportedOperationException("Instance type " + fiducialLocatableLocation.getClass() + " not supported.");
-        }
+    public void removeBoardOrPanelLocation(FiducialLocatableLocation boardOrPanelLocation) {
+        rootPanelLocation.removeChild(boardOrPanelLocation);
     }
 
-    public List<FiducialLocatable> getFiducialLocatableInstancesOf(File file) {
-        List<FiducialLocatable> ret = new ArrayList<>();
-        if (file == null) {
-            return ret;
-        }
-        for (FiducialLocatableLocation fiducialLocatableLocation : getFiducialLocatableLocations()) {
-            if (fiducialLocatableLocation.getFiducialLocatable() != null) {
-                if (file.equals(fiducialLocatableLocation.getFiducialLocatable().getFile())) {
-                    ret.add(fiducialLocatableLocation.getFiducialLocatable());
-                }
-            }
-        }
-        return ret;
+    public int instanceCount(FiducialLocatable boardOrPanel) {
+        return instanceCount(rootPanelLocation, boardOrPanel);
     }
     
-    public int getNumberOfFiducialLocatableInstancesOf(File file) {
-        return getFiducialLocatableInstancesOf(file).size();
+    private int instanceCount(PanelLocation panelLocation, FiducialLocatable boardOrPanel) {
+        int count = 0;
+        for (FiducialLocatableLocation child : panelLocation.getChildren()) {
+            FiducialLocatable fl = child.getFiducialLocatable();
+            if (boardOrPanel.isDefinedBy(fl.getDefinedBy())) {
+                count++;
+            }
+            else if (child instanceof PanelLocation) {
+                count += instanceCount((PanelLocation) child, boardOrPanel);
+            }
+        }
+        return count;
     }
     
     public File getFile() {
@@ -434,7 +315,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
             }
         }
         else {
-            
+            throw new UnsupportedOperationException("Instance type " + fiducialLocatableLocation.getClass() + " not supported.");
         }
         return counter;
     }
@@ -461,7 +342,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
             }
         }
         else {
-            
+            throw new UnsupportedOperationException("Instance type " + fiducialLocatableLocation.getClass() + " not supported.");
         }
         return counter;
     }
@@ -485,11 +366,75 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     public void removePlaced(FiducialLocatableLocation fiducialLocatableLocation, String placementId) {
         String key = fiducialLocatableLocation.getUniqueId() + FiducialLocatableLocation.ID_SEPARATOR + placementId;
         placed.remove(key);
+        firePropertyChange("placed", null, placed);
     }
     
     public void clearAllPlaced() {
-        this.placed.clear();
-        firePropertyChange("placed", null, this.placed);
+        placed.clear();
+        firePropertyChange("placed", null, placed);
+    }
+    
+    public void setEnabled(FiducialLocatableLocation fiducialLocatableLocation, Placement placement, boolean enabled) {
+        String key = fiducialLocatableLocation.getUniqueId();
+        if (placement != null) {
+            key += FiducialLocatableLocation.ID_SEPARATOR + placement.getId();
+        }
+        this.enabled.put(key, enabled);
+        firePropertyChange("enabled", null, this.enabled);
+    }
+
+    public boolean getEnabled(FiducialLocatableLocation fiducialLocatableLocation, Placement placement) {
+        String key = fiducialLocatableLocation.getUniqueId();
+        if (placement != null) {
+            key += FiducialLocatableLocation.ID_SEPARATOR + placement.getId();
+        }
+        if (enabled.containsKey(key)) {
+            return enabled.get(key);
+        } 
+        else {
+            return placement != null ? placement.isEnabled() : fiducialLocatableLocation.isLocallyEnabled();
+        }
+    }
+    
+    public void removeEnabled(FiducialLocatableLocation fiducialLocatableLocation, Placement placement) {
+        String key = fiducialLocatableLocation.getUniqueId();
+        if (placement != null) {
+            key += FiducialLocatableLocation.ID_SEPARATOR + placement.getId();
+        }
+        enabled.remove(key);
+        firePropertyChange("enabled", null, enabled);
+    }
+    
+    public void removeAllEnabled() {
+        enabled.clear();
+        firePropertyChange("enabled", null, enabled);
+    }
+    
+    public void setErrorHandling(FiducialLocatableLocation fiducialLocatableLocation, Placement placement, Placement.ErrorHandling errorHandling) {
+        String key = fiducialLocatableLocation.getUniqueId() + FiducialLocatableLocation.ID_SEPARATOR + placement.getId();
+        this.errorHandling.put(key, errorHandling);
+        firePropertyChange("errorHandling", null, this.errorHandling);
+    }
+
+    public Placement.ErrorHandling getErrorHandling(FiducialLocatableLocation fiducialLocatableLocation, Placement placement) {
+        String key = fiducialLocatableLocation.getUniqueId() + FiducialLocatableLocation.ID_SEPARATOR + placement.getId();
+        if (errorHandling.containsKey(key)) {
+            return errorHandling.get(key);
+        } 
+        else {
+            return placement.getErrorHandling();
+        }
+    }
+    
+    public void removeErrorHandling(FiducialLocatableLocation fiducialLocatableLocation, Placement placement) {
+        String key = fiducialLocatableLocation.getUniqueId() + FiducialLocatableLocation.ID_SEPARATOR + placement.getId();
+        errorHandling.remove(key);
+        firePropertyChange("errorHandling", null, this.errorHandling);
+    }
+    
+    public void removeAllErrorHandling() {
+        errorHandling.clear();
+        firePropertyChange("errorHandling", null, errorHandling);
     }
     
     /**

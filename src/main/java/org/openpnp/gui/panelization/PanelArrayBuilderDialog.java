@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.gui.panelization;
 
 import java.awt.BasicStroke;
@@ -62,7 +81,7 @@ import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
-public class DlgPanelArrayBuilder extends JDialog {
+public class PanelArrayBuilderDialog extends JDialog {
 
     private enum ArrayType {
         Rectangular, Circular;
@@ -102,7 +121,7 @@ public class DlgPanelArrayBuilder extends JDialog {
     /**
      * Create the dialog.
      */
-    public DlgPanelArrayBuilder(PanelLocation panelLocation, FiducialLocatableLocation rootChildLocation) {
+    public PanelArrayBuilderDialog(PanelLocation panelLocation, FiducialLocatableLocation rootChildLocation) {
         this.panelLocation = panelLocation;
         this.rootChildLocation = rootChildLocation;
         this.addWindowListener(new WindowAdapter( ) {
@@ -500,8 +519,8 @@ public class DlgPanelArrayBuilder extends JDialog {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         newChildren.clear();
-                        DlgPanelArrayBuilder.this.dispatchEvent(new WindowEvent(
-                                DlgPanelArrayBuilder.this, WindowEvent.WINDOW_CLOSING));
+                        PanelArrayBuilderDialog.this.dispatchEvent(new WindowEvent(
+                                PanelArrayBuilderDialog.this, WindowEvent.WINDOW_CLOSING));
                     }});
                 buttonPane.add(okButton);
                 getRootPane().setDefaultButton(okButton);
@@ -514,8 +533,8 @@ public class DlgPanelArrayBuilder extends JDialog {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         cancel();
-                        DlgPanelArrayBuilder.this.dispatchEvent(new WindowEvent(
-                                DlgPanelArrayBuilder.this, WindowEvent.WINDOW_CLOSING));
+                        PanelArrayBuilderDialog.this.dispatchEvent(new WindowEvent(
+                                PanelArrayBuilderDialog.this, WindowEvent.WINDOW_CLOSING));
                     }});
                 buttonPane.add(cancelButton);
             }

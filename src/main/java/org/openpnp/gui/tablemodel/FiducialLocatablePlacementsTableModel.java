@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -19,13 +19,9 @@
 
 package org.openpnp.gui.tablemodel;
 
-import java.util.Locale;
-
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
-import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
-import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
@@ -35,7 +31,6 @@ import org.openpnp.model.FiducialLocatable;
 import org.openpnp.model.FiducialLocatableLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
-import org.openpnp.model.Panel;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
 
@@ -55,10 +50,6 @@ public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableMo
 
     private FiducialLocatableLocation parent = null;
 
-//    public BoardPlacementsTableModel(Board board) {
-//        this.board = board;
-//    }
-    
     public FiducialLocatable getFiducialLocatable() {
         return fiducialLocatable;
     }

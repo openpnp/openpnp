@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
+ * 
+ * This file is part of OpenPnP.
+ * 
+ * OpenPnP is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * OpenPnP is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+ * Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with OpenPnP. If not, see
+ * <http://www.gnu.org/licenses/>.
+ * 
+ * For more information about OpenPnP visit http://openpnp.org
+ */
+
 package org.openpnp.gui;
 
 import java.awt.BorderLayout;
@@ -32,6 +51,7 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
@@ -41,6 +61,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.events.DefinitionStructureChangedEvent;
+import org.openpnp.events.FiducialLocatableLocationSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.support.ActionGroup;
@@ -64,6 +86,9 @@ import org.openpnp.model.Placement;
 import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.util.IdentifiableList;
+import org.pmw.tinylog.Logger;
+
+import com.google.common.eventbus.Subscribe;
 
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
@@ -299,8 +324,21 @@ public class BoardPlacementsPanel extends JPanel {
         });
         panel_1.add(searchTextField);
         searchTextField.setColumns(15);
+
+        Configuration.get().getBus().register(this);
     }
     
+    @Subscribe
+    public void boardDefinitionStructureChanged(DefinitionStructureChangedEvent event) {
+        Logger.trace("boardDefinitionStructureChanged DefinitionStructureChangedEvent = " + event);
+        if (board != null && 
+                event.definition == board) {
+            SwingUtilities.invokeLater(() -> {
+                refresh();
+            });
+        }
+    }
+
     private void search() {
         updateRowFilter();
     }
@@ -315,6 +353,9 @@ public class BoardPlacementsPanel extends JPanel {
     }
 
     public void selectPlacement(Placement placement) {
+        if (placement == null) {
+            table.getSelectionModel().clearSelection();
+        }
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             if (tableModel.getRowObjectAt(i) == placement) {
                 int index = table.convertRowIndexToView(i);
@@ -406,6 +447,9 @@ public class BoardPlacementsPanel extends JPanel {
             board.addPlacement(placement);
             tableModel.fireTableDataChanged();
             Helpers.selectLastTableRow(table);
+
+            Configuration.get().getBus()
+                .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this));
         }
     };
 
@@ -422,6 +466,9 @@ public class BoardPlacementsPanel extends JPanel {
                 board.removePlacement(placement);
             }
             tableModel.fireTableDataChanged();
+
+            Configuration.get().getBus()
+                .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this));
         }
     };
 
@@ -490,6 +537,9 @@ public class BoardPlacementsPanel extends JPanel {
                             .convertToUnits(boardsPanel.getSelection().getDimensions().getUnits()));
                     existingBoard.addSolderPastePad(pad);
                 }
+
+                Configuration.get().getBus()
+                    .post(new DefinitionStructureChangedEvent(board, "placements", BoardPlacementsPanel.this));
             }
         }
         catch (Exception e) {

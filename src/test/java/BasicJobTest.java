@@ -144,7 +144,7 @@ public class BasicJobTest {
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
         boardLocation.setSide(Side.Top);
 
-        job.addBoardLocation(boardLocation);
+        job.addBoardOrPanelLocation(boardLocation);
 
         return job;
     }

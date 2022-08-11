@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -17,30 +17,24 @@
  * For more information about OpenPnP visit http://openpnp.org
  */
 
-package org.openpnp.gui.tablemodel;
+package org.openpnp.events;
 
-import javax.swing.table.AbstractTableModel;
+import java.util.List;
 
-@SuppressWarnings("serial")
-public abstract class AbstractObjectTableModel extends AbstractTableModel {
+import org.openpnp.spi.Definable;
 
-    /**
-     * @param index
-     * @return the object at the row index of the object table model.
-     */
-    public abstract Object getRowObjectAt(int index);
-
-    /**
-     * @param object
-     * @return the row index of the object in the object table model.
-     */
-    public int indexOf(Object object) {
-        int count = getRowCount();
-        for (int i = 0; i < count; i++) {
-            if (getRowObjectAt(i) == object) {
-                return i;
-            }
-        }
-        return -1;
+public class DefinitionStructureChangedEvent {
+    final public Definable<?> definition;
+    final public String changedName;
+    final public Object source;
+    
+    public DefinitionStructureChangedEvent(Definable<?> definition, String changedName, Object source) {
+        this.definition = definition;
+        this.changedName = changedName;
+        this.source = source;
+    }
+    
+    public String toString() {
+        return "definition: " + definition + " changedItem: " + changedName + " source: "+ source;
     }
 }

@@ -24,7 +24,6 @@ import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.core.Commit;
 
@@ -38,7 +37,6 @@ public class PanelLocation extends FiducialLocatableLocation {
     public PanelLocation(PanelLocation panelLocation) {
         super(panelLocation);
         if (panelLocation.getPanel() != null) {
-//            setPanel(new Panel(panelLocation.getPanel()));
             setPanel(panelLocation.getPanel());
             for (FiducialLocatableLocation child : getChildren()) {
                 child.setParent(this);
@@ -78,7 +76,8 @@ public class PanelLocation extends FiducialLocatableLocation {
 
     public void addChild(FiducialLocatableLocation child) {
         child.setParent(this);
-        getPanel().addChild(child);
+        Panel panel = getPanel();
+        panel.addChild(child);
     }
     
     public void removeChild(FiducialLocatableLocation child) {
@@ -103,6 +102,15 @@ public class PanelLocation extends FiducialLocatableLocation {
         super.setLocalToParentTransform(localToParentTransform);
         for (FiducialLocatableLocation child : getChildren()) {
             child.setLocalToParentTransform(null);
+        }
+    }
+    
+    public static void refreshStructure(PanelLocation panelLocation) {
+        for (FiducialLocatableLocation child : panelLocation.getChildren() ) {
+            child.setParent(panelLocation);
+            if (child instanceof PanelLocation) {
+                PanelLocation.refreshStructure((PanelLocation) child);
+            }
         }
     }
     

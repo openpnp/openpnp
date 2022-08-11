@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Jason von Nieda <jason@vonnieda.org>
+ * Copyright (C) 2022 Jason von Nieda <jason@vonnieda.org>, Tony Luken <tonyluken62+openpnp@gmail.com>
  * 
  * This file is part of OpenPnP.
  * 
@@ -49,8 +49,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+
 import org.openpnp.Translations;
 import org.openpnp.events.FiducialLocatableLocationSelectedEvent;
+import org.openpnp.events.FiducialLocatableSelectedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
@@ -61,6 +65,8 @@ import org.openpnp.gui.tablemodel.FiducialLocatableTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Placement;
+import org.openpnp.model.Configuration.TablesLinked;
 import org.pmw.tinylog.Logger;
 
 import com.google.common.eventbus.Subscribe;
@@ -126,6 +132,22 @@ public class BoardsPanel extends JPanel {
         };
 
         boardsTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+
+        boardsTable.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                Logger.trace("TableModelEvent = " +
+                    "col:" + e.getColumn() +
+                    " firstRow:" + e.getFirstRow() +
+                    " lastRow:" + e.getLastRow() +
+                    " source:" + e.getSource() +
+                    " type:" + e.getType() );
+                SwingUtilities.invokeLater(() -> {
+                    boardPlacementsPanel.refresh();
+                });
+            }
+        });
+
         boardsTable.getSelectionModel()
                 .addListSelectionListener(new ListSelectionListener() {
                     @Override
@@ -134,27 +156,36 @@ public class BoardsPanel extends JPanel {
                             return;
                         }
                         
+                        boolean updateLinkedTables = MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getBoardsTab() 
+                                && Configuration.get().getTablesLinked() == TablesLinked.Linked;
+
                         List<Board> selections = getSelections();
                         if (selections.size() == 0) {
                             singleSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(false);
                             boardPlacementsPanel.setBoard(null);
-//                            Configuration.get().getBus()
-//                                .post(new FiducialLocatableLocationSelectedEvent(null, BoardsPanel.this));
+                            if (updateLinkedTables) {
+                                Configuration.get().getBus()
+                                    .post(new FiducialLocatableSelectedEvent(null, BoardsPanel.this));
+                            }
                         }
                         else if (selections.size() == 1) {
                             multiSelectionActionGroup.setEnabled(false);
                             singleSelectionActionGroup.setEnabled(true);
                             boardPlacementsPanel.setBoard((Board) selections.get(0));
-//                            Configuration.get().getBus()
-//                                .post(new FiducialLocatableLocationSelectedEvent((BoardLocation) selections.get(0), BoardsPanel.this));
+                            if (updateLinkedTables) {
+                                Configuration.get().getBus()
+                                    .post(new FiducialLocatableSelectedEvent(selections.get(0), BoardsPanel.this));
+                            }
                         }
                         else {
                             singleSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(true);
                             boardPlacementsPanel.setBoard(null);
-//                            Configuration.get().getBus()
-//                                .post(new FiducialLocatableLocationSelectedEvent(null, BoardsPanel.this));
+                            if (updateLinkedTables) {
+                                Configuration.get().getBus()
+                                    .post(new FiducialLocatableSelectedEvent(null, BoardsPanel.this));
+                            }
                         }
                     }
                 });
@@ -230,7 +261,7 @@ public class BoardsPanel extends JPanel {
             return;
         }
         SwingUtilities.invokeLater(() -> {
-            selectBoard((Board) event.fiducialLocatableLocation.getFiducialLocatable());
+            selectBoard((Board) event.fiducialLocatableLocation.getFiducialLocatable().getDefinedBy());
         });
     }
 
@@ -239,9 +270,10 @@ public class BoardsPanel extends JPanel {
         if (event.source == this || event.source == boardPlacementsPanel || event.fiducialLocatableLocation == null || !(event.fiducialLocatableLocation.getFiducialLocatable() instanceof Board)) {
             return;
         }
+        Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinedBy();
         SwingUtilities.invokeLater(() -> {
-            selectBoard((Board) event.fiducialLocatableLocation.getFiducialLocatable());
-            boardPlacementsPanel.selectPlacement(event.placement);
+            selectBoard((Board) event.fiducialLocatableLocation.getFiducialLocatable().getDefinedBy());
+            boardPlacementsPanel.selectPlacement(placement);
         });
     }
 

@@ -34,6 +34,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.NozzleTip;
@@ -106,7 +107,9 @@ public class VisionCompositingTest {
                     }
                     camera.setErrorOffsets(error);
                     nozzle.pick(part);
-                    PartAlignmentOffset offset = bottomVision.findOffsets(part, null, Location.origin, nozzle);
+                    Placement placement = new Placement("Dummy");
+                    placement.setLocation(Location.origin);
+                    PartAlignmentOffset offset = bottomVision.findOffsets(part, null, placement, nozzle);
                     Location offsets = offset.getLocation();
                     assertMaxDelta(offsets.getX(), error.getX(), maxError.getX());
                     assertMaxDelta(offsets.getY(), error.getY(), maxError.getY());

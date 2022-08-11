@@ -117,16 +117,20 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
             Placement placement = fiducialLocatable.getPlacements().get(rowIndex);
+            Placement definedBy = (Placement) placement.getDefinedBy();
+            if (definedBy == null) {
+                definedBy = placement;
+            }
             if (columnIndex == 0) {
                 placement.setEnabled((Boolean) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 2) {
-                placement.setPart((Part) aValue);
+                definedBy.setPart((Part) aValue);
                 fireTableCellUpdated(rowIndex, 8);
             }
             else if (columnIndex == 3) {
-                placement.setSide((Side) aValue);
+                definedBy.setSide((Side) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 4) {
@@ -136,7 +140,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 Location location = placement.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X,
                         true);
-                placement.setLocation(location);
+                definedBy.setLocation(location);
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -145,28 +149,27 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 Location location = placement.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y,
                         true);
-                placement.setLocation(location);
+                definedBy.setLocation(location);
             }
             else if (columnIndex == 6) {
-                placement.setLocation(placement.getLocation().derive(null, null, null,
+                definedBy.setLocation(placement.getLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
             }
             else if (columnIndex == 7) {
-                placement.setType((Type) aValue);
+                definedBy.setType((Type) aValue);
                 fireTableCellUpdated(rowIndex, 8);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 8) {
-//                fiducialLocatableLocation.setPlaced(placement.getId(), (Boolean) aValue);
                 jobPlacementsPanel.getJobPanel().getJob()
                     .setPlaced(fiducialLocatableLocation, placement.getId(), (Boolean) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 10) {
-                placement.setErrorHandling((ErrorHandling) aValue);
-            }
+                definedBy.setErrorHandling((ErrorHandling) aValue);
+             }
             else if (columnIndex == 11) {
-                placement.setComments((String) aValue);
+                definedBy.setComments((String) aValue);
             }
         }
         catch (Exception e) {
@@ -208,7 +211,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
         Location loc = placement.getLocation();
         switch (col) {
 			case 0:
-				return placement.isEnabled();
+			    return placement.isEnabled();
             case 1:
                 return new PartCellValue(placement.getId());
             case 2:
@@ -228,7 +231,6 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 // in the render process. At the least we should cache this information but it
                 // would be better if the information was updated out of band by a listener.
             	jobPlacementsPanel.updateActivePlacements();
-//            	return fiducialLocatableLocation.getPlaced(placement.getId());
             	return jobPlacementsPanel.getJobPanel().getJob()
             	        .getPlaced(fiducialLocatableLocation, placement.getId());
             case 9:

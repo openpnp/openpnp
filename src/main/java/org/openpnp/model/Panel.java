@@ -3,6 +3,7 @@ package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
+import java.beans.IndexedPropertyChangeEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.openpnp.model.Board.Side;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.Utils2D;
@@ -156,9 +158,11 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         this.children = children;
     }
 
+    public void setChildren(int index, FiducialLocatableLocation child) {
+        children.add(index, child);
+    }
+
     public void addChild(FiducialLocatableLocation child) {
-        Object oldValue = children;
-        children = new IdentifiableList<>(children);
         String childId = null;
         if (child instanceof BoardLocation) {
             childId = children.createId("Brd");
@@ -166,21 +170,25 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         else if (child instanceof PanelLocation) {
             childId = children.createId("Pnl");
         }
-        child.setId(childId);
-        children.add(child);
-        firePropertyChange("children", oldValue, children);
         if (child != null) {
+            child.setId(childId);
+            children.add(child);
+            fireIndexedPropertyChange("children", children.indexOf(child), null, child);
             child.addPropertyChangeListener(this);
+            child.getDefinedBy().addPropertyChangeListener(child);
         }
+        
     }
     
     public void removeChild(FiducialLocatableLocation child) {
-        Object oldValue = children;
-        children = new IdentifiableList<>(children);
-        children.remove(child);
-        firePropertyChange("children", oldValue, children);
         if (child != null) {
-            child.removePropertyChangeListener(this);
+            int index = children.indexOf(child);
+            if (index >= 0) {
+                children.remove(child);
+                fireIndexedPropertyChange("children", index, child, null);
+                child.removePropertyChangeListener(this);
+                child.getDefinedBy().removePropertyChangeListener(child);
+            }
         }
     }
     
@@ -188,6 +196,7 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
         Object oldValue = children;
         for (FiducialLocatableLocation child : children) {
             child.removePropertyChangeListener(this);
+            child.getDefinedBy().removePropertyChangeListener(child);
         }
         children = new IdentifiableList<>(children);
         firePropertyChange("children", oldValue, children);
@@ -238,8 +247,32 @@ public class Panel extends FiducialLocatable implements PropertyChangeListener {
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-//        Logger.trace(String.format("PropertyChangeEvent handled by Panel @%08x = %s", this.hashCode(), evt));
-        super.propertyChange(evt);
+        Logger.trace(String.format("PropertyChangeEvent handled by Panel @%08x = %s", this.hashCode(), evt));
+        if (evt.getSource() != this && evt.getSource() == definedBy && evt.getPropertyName().equals("children")) {
+            dirty = true;
+            int index = ((IndexedPropertyChangeEvent) evt).getIndex();
+            if (evt.getNewValue() instanceof BoardLocation) {
+                BoardLocation boardLocation = new BoardLocation((BoardLocation) evt.getNewValue());
+                boardLocation.addPropertyChangeListener(this);
+                boardLocation.getDefinedBy().addPropertyChangeListener(boardLocation);
+                children.add(boardLocation);
+            }
+            else if (evt.getNewValue() instanceof PanelLocation) {
+                PanelLocation panelLocation = new PanelLocation((PanelLocation) evt.getNewValue());
+                panelLocation.addPropertyChangeListener(this);
+                panelLocation.getDefinedBy().addPropertyChangeListener(panelLocation);
+                children.add(panelLocation);
+            }
+            else if (evt.getOldValue() != null) {
+                FiducialLocatableLocation fiducialLocatableLocation = children.get(index);
+                fiducialLocatableLocation.removePropertyChangeListener(this);
+                fiducialLocatableLocation.getDefinedBy().removePropertyChangeListener(fiducialLocatableLocation);
+                children.remove(index);
+            }
+        }
+        else {
+            super.propertyChange(evt);
+        }
     }
 
 }
