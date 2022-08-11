@@ -216,7 +216,8 @@ public class ReferenceStripFeeder extends ReferenceFeeder {
     public void ensureFeederZ(Camera camera) throws Exception {
         if (camera.isUnitsPerPixelAtZCalibrated()
                 && !getReferenceHoleLocation().getLengthZ().isInitialized()) {
-            throw new Exception("Feeder "+getName()+": please set the Reference Hole Location Z coordinate first.");
+            throw new Exception("Feeder "+getName()+": please set the Reference Hole Location Z coordinate first, "
+                    + "it is required to determine the true scale of the camera view for accurate computer vision.");
         }
     }
 

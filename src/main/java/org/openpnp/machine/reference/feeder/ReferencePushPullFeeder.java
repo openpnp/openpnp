@@ -510,12 +510,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         setFeedCount(getFeedCount()+1);
     }
 
-    public void ensureCameraZ(Camera camera) throws Exception {
+    public void ensureCameraZ(Camera camera, boolean setZ) throws Exception {
         if (camera.isUnitsPerPixelAtZCalibrated()
                 && !getLocation().getLengthZ().isInitialized()) {
-            throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first.");
+            throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first, "
+                    + "it is required to determine the true scale of the camera view for accurate computer vision.");
         }
-        if (getLocation().getLengthZ().isInitialized()) {
+        if (setZ && getLocation().getLengthZ().isInitialized()) {
             // If we already have the Feeder Z, move the camera there to get the right units per pixel.
             camera.moveTo(camera.getLocation().deriveLengths(null, null, getLocation().getLengthZ(), null));
         }
@@ -1218,11 +1219,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             return getCamera().getLocation();
         }
         else {
-            if (getCamera().isUnitsPerPixelAtZCalibrated()) {
-                if (!getLocation().getLengthZ().isInitialized()) {
-                    throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first.");
-                }
-            }
+            ensureCameraZ(getCamera(), false);
             return getHole1Location().add(getHole2Location()).multiply(0.5)
                     .deriveLengths(null, null, getLocation().getLengthZ(), 
                             getLocation().getRotation()+getRotationInFeeder());
@@ -1336,8 +1333,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             }
             for (Result.Circle circle : features) {
                 org.opencv.core.Point c =  new org.opencv.core.Point(circle.x, circle.y);
-                Imgproc.circle(mat, c, (int) (circle.diameter+0.5)/2, FluentCv.colorToScalar(color), 2);
-                Imgproc.circle(mat, c, 2, FluentCv.colorToScalar(color), 3);
+                Imgproc.circle(mat, c, (int) (circle.diameter+0.5)/2, FluentCv.colorToScalar(color), 2, Imgproc.LINE_AA);
+                Imgproc.circle(mat, c, 1, FluentCv.colorToScalar(color), 3, Imgproc.LINE_AA);
             }
         }
 
@@ -1346,7 +1343,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 return;
             }
             for (Line line : lines) {
-                Imgproc.line(mat, line.a, line.b, FluentCv.colorToScalar(color), 2);
+                Imgproc.line(mat, line.a, line.b, FluentCv.colorToScalar(color), 2, Imgproc.LINE_AA);
             }
         }
 
@@ -1514,7 +1511,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     for (Result.Circle circle : results) {
                         points.add(new Point(circle.x, circle.y));
                     }
-                    List<Ransac.Line> ransacLines = Ransac.ransac(points, 100, sprocketHoleTolerancePx, sprocketHolePitchPx, sprocketHoleTolerancePx);
+                    List<Ransac.Line> ransacLines = Ransac.ransac(points, 100, sprocketHoleTolerancePx, 
+                            sprocketHolePitchPx, sprocketHoleTolerancePx, false);
                     // Get the best line within the calibration tolerance
                     Ransac.Line bestLine = null;
                     Location bestUnitVector = null;
@@ -1542,12 +1540,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                                 calibrationToleranceMm : bestDistanceMm);
 
                         if (distanceMm >= minDistanceMm && distanceMm < maxDistanceMm) {
-                            // Take the first line that is close enough, as the lines are ordered by length (descending).
-                            // In autoSetupMode take the closest line.
                             bestLine = line;
                             bestUnitVector = aLocation.unitVectorTo(bLocation);
                             bestDistanceMm = distanceMm;
                             lines.add(line);
+                            if (autoSetupMode == FindFeaturesMode.CalibrateHoles) {
+                                // Take the first line that is close enough, as the lines are ordered by length (descending).
+                                break;
+                            }
+                            // Otherwise take the closest line, go on.
                         }
                         else if (autoSetupMode == null) {
                             lines.add(line);
@@ -1718,9 +1719,9 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     drawOcrText(resultMat, Color.orange);
                     if (getHoles().isEmpty()) {
                         Imgproc.line(resultMat, new Point(0, 0), new Point(resultMat.cols()-1, resultMat.rows()-1), 
-                                FluentCv.colorToScalar(Color.red), 2);
+                                FluentCv.colorToScalar(Color.red), 2, Imgproc.LINE_AA);
                         Imgproc.line(resultMat, new Point(0, resultMat.rows()-1), new Point(resultMat.cols()-1, 0), 
-                                FluentCv.colorToScalar(Color.red), 2);
+                                FluentCv.colorToScalar(Color.red), 2, Imgproc.LINE_AA);
                     }
 
                     if (Logger.getLevel() == org.pmw.tinylog.Level.DEBUG || Logger.getLevel() == org.pmw.tinylog.Level.TRACE) {
@@ -1742,7 +1743,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public void showFeatures() throws Exception {
         Camera camera = getCamera();
-        ensureCameraZ(camera);
+        ensureCameraZ(camera, true);
         try (CvPipeline pipeline = getCvPipeline(camera, true, true, true)) {
 
             // Process vision and show feature without applying anything
@@ -1754,27 +1755,36 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     public void autoSetup() throws Exception {
         Camera camera = getCamera();
         // First preliminary smart clone to get a pipeline from the most suitable template.
-        if (getTemplateFeeder(null) != null) {
-            smartClone(null, true, false, false, true);
+        if (!isUsedAsTemplate() && getTemplateFeeder(null) != null) {
+            Logger.debug("Auto-Setup: trying with cloned pipeline, template: feeder "+getTemplateFeeder(null).getName());
+            smartClone(null, true, false, false, true, true);
+        }
+        else {
+            Logger.debug("Auto-Setup: trying with currently assigned pipeline");
         }
         if (calibrationTrigger == CalibrationTrigger.None) {
             // Just assume the user wants it now 
             setCalibrationTrigger(CalibrationTrigger.UntilConfident);
         }
 
-        ensureCameraZ(camera);
+        ensureCameraZ(camera, true);
         // Try with cloned pipeline.
-        if (autoSetupPipeline(camera, null) != null) {
+        Exception e = autoSetupPipeline(camera, null); 
+        if (e != null) {
+            Logger.debug(e, "Auto-Setup: exception");
             // Failed, try with pipeline type defaults.
-            Exception e = null;
             for (PipelineType type : PipelineType.values()) {
-               e = autoSetupPipeline(camera, type);
-               if (e == null) {
-                   // Success.
-                   return;
-               }
+                Logger.debug("Auto-Setup: trying with stock pipeline type "+type);
+                e = autoSetupPipeline(camera, type);
+                if (e == null) {
+                    // Success.
+                    Logger.debug(e, "Auto-Setup: success");
+                    return;
+                }
+                Logger.debug(e, "Auto-Setup: exception");
             }
             // Still no luck, throw.
+            Logger.debug(e, "Auto-Setup: final exception");
             throw e;
         }
     }
@@ -1795,16 +1805,22 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             // Second preliminary smart clone to get pipeline, OCR region etc. from a template, 
             // this time with proper transformation. This may again be overwritten if
             // OCR recognizes the proper part.
-            if (getTemplateFeeder(null) != null) {
-                smartClone(null, true, true, true, true);
+            if (!isUsedAsTemplate() && getTemplateFeeder(null) != null) {
+                Logger.debug("Auto-Setup: secondary clone"+(type == null ? " including pipeline" : " excluding pipeline")
+                        +", template feeder: "+getTemplateFeeder(null).getName());
+                smartClone(null, true, true, true, true, type == null);
             }
             // As we've changed all this -> reset any stats
             resetCalibrationStatistics();
-            // Now run a sprocket hole calibration, make sure to change the part (not swap it)
-            performVisionOperations(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePart, false, null);
-            // Move the camera back to the pick location
-            MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
-            MovableUtils.fireTargetedUserAction(camera);
+            try {
+                // Now run a sprocket hole calibration, make sure to change the part (not swap it)
+                performVisionOperations(camera, pipeline, true, true, false, OcrWrongPartAction.ChangePart, false, null);
+            }
+            finally {
+                // Move the camera back to the pick location, including when there is an exception.
+                MovableUtils.moveToLocationAtSafeZ(camera, getLocation());
+                MovableUtils.fireTargetedUserAction(camera);
+            }
             return null;
         }
         catch (Exception e) {
@@ -2030,7 +2046,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     public void smartClone(Part compatiblePart, 
-            boolean cloneLocationSettings, boolean cloneTapeSettings, boolean clonePushPullSettings, boolean cloneVisionSettings) throws Exception {
+            boolean cloneLocationSettings, boolean cloneTapeSettings, boolean clonePushPullSettings, boolean cloneVisionSettings, boolean clonePipeline) throws Exception {
         // get us the best template feeder
         ReferencePushPullFeeder templateFeeder = getTemplateFeeder(compatiblePart);
         if (templateFeeder == null) {
@@ -2041,12 +2057,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 throw new Exception("Feeder "+getName()+": No template feeder found to clone for part "+compatiblePart.getId()+" compatibility.");
             }
         }
-        cloneFeederSettings(cloneLocationSettings, cloneTapeSettings, clonePushPullSettings, cloneVisionSettings,
-                templateFeeder);
+        cloneFeederSettings(cloneLocationSettings, cloneTapeSettings, clonePushPullSettings, cloneVisionSettings, 
+                clonePipeline, templateFeeder);
     }
 
     public void cloneFeederSettings(boolean cloneLocationSettings, boolean cloneTapeSettings, boolean clonePushPullSettings,
-            boolean cloneVisionSettings, ReferencePushPullFeeder templateFeeder)
+            boolean cloneVisionSettings, boolean clonePipeline, ReferencePushPullFeeder templateFeeder)
                     throws CloneNotSupportedException {
         if (cloneLocationSettings) {
             // just the Z from the location
@@ -2105,6 +2121,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             resetCalibration();
             resetCalibrationStatistics();
             setFeedCount(0);
+        }
+        if (clonePipeline) {
             // clone the pipeline
             setPipeline(templateFeeder.getPipeline().clone());
             setPipelineType(templateFeeder.getPipelineType());
@@ -2224,11 +2242,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     otherFeeder = createNewAtLocation(newLocation, ocrPart, this);
                     if (compatiblePartPackages(ocrPart, currentPart)) {
                         // compatible parts, clone settings from this one
-                        otherFeeder.cloneFeederSettings(true, true, true, true, this);
+                        otherFeeder.cloneFeederSettings(true, true, true, true, true, this);
                     }
                     else {
                         // incompatible parts, do a smart clone
-                        otherFeeder.smartClone(ocrPart, true, true, true, true);
+                        otherFeeder.smartClone(ocrPart, true, true, true, true, true);
                     }
                     // disable this one
                     setEnabled(false);
@@ -2308,7 +2326,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
         Location newLocation = getLocation().add(rowUnit);
         ReferencePushPullFeeder newFeeder = createNewAtLocation(newLocation, null, this);
-        newFeeder.cloneFeederSettings(true, true, true, true, this);
+        newFeeder.cloneFeederSettings(true, true, true, true, true, this);
         return newFeeder;
     }
 
@@ -2323,7 +2341,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         else {
             setPart(ocrPart);
             if (clone) {
-                smartClone(ocrPart, true, true, true, true);
+                smartClone(ocrPart, true, true, true, true, true);
             }
         }
     }
@@ -2424,7 +2442,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Location runningHole2Location = getHole2Location();
         Location runningPickLocation = getLocation();
         Location runningVisionOffset = getVisionOffset();
-        ensureCameraZ(camera);
+        ensureCameraZ(camera, true);
         // Calibrate the exact hole locations by obtaining a mid-point lock on them,
         // assuming that any camera lens and Z parallax distortion is symmetric.
         for (int i = 0; i < calibrateMaxPasses; i++) {

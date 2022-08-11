@@ -743,18 +743,19 @@ extends AbstractReferenceFeederConfigurationWizard {
         @Override
         public void actionPerformed(ActionEvent e) {
             UiUtils.messageBoxOnException(() -> {
-                if (checkBoxUsedAsTemplate.isSelected()) {
-                    throw new Exception("This feeder is used as a template and cannot be overwritten.");
-                }
                 int result;
-                if (!feeder.getLocation().isInitialized()) {
-                    // if the feeder.location is completely zero, we assume this is a freshly created feeder 
+                if (!feeder.getLocation().multiply(1, 1, 0, 0).isInitialized()) {
+                    // if the feeder.location X, Y is zero, we assume this is a freshly created feeder 
                     result = JOptionPane.YES_OPTION; 
                 }
                 else {
                     // ask the user
                     result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                            "This may overwrite all your current settings. Are you sure?",
+                            "<html>"
+                            + "<p>This may overwrite all your current settings. Are you sure?</p>"
+                            +(feeder.isUsedAsTemplate() ? 
+                                    "<br/><p color=\"red\">This feeder is marked as template. Are you really, really sure?</p>" : "")
+                            + "</html>",
                             null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 }
                 if (result == JOptionPane.YES_OPTION) {
@@ -871,7 +872,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                             checkBoxCloneLocationSettings.isSelected(),
                             checkBoxCloneTapeSettings.isSelected(), 
                             checkBoxClonePushPullSettings.isSelected(),
-                            checkBoxCloneVisionSettings.isSelected());
+                            checkBoxCloneVisionSettings.isSelected(), checkBoxCloneVisionSettings.isSelected());
                 }
             });
         }
@@ -910,7 +911,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                                 checkBoxCloneLocationSettings.isSelected(),
                                 checkBoxCloneTapeSettings.isSelected(), 
                                 checkBoxClonePushPullSettings.isSelected(),
-                                checkBoxCloneVisionSettings.isSelected(),
+                                checkBoxCloneVisionSettings.isSelected(), checkBoxCloneVisionSettings.isSelected(),
                                 feeder);
                     }
                 }

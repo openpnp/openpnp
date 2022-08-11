@@ -83,6 +83,7 @@ import org.openpnp.machine.reference.signaler.ActuatorSignaler;
 import org.openpnp.machine.reference.signaler.SoundSignaler;
 import org.openpnp.machine.reference.solutions.CalibrationSolutions;
 import org.openpnp.machine.reference.solutions.KinematicSolutions;
+import org.openpnp.machine.reference.solutions.NozzleTipSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
@@ -574,6 +575,9 @@ public class ReferenceMachine extends AbstractMachine {
     //@Element(required = false)
     private KinematicSolutions kinematicSolutions = new KinematicSolutions(); 
 
+    //@Element(required = false)
+    private NozzleTipSolutions nozzleTipSolutions = new NozzleTipSolutions();
+
     @Element(required = false)
     private VisionSolutions visualSolutions = new VisionSolutions();
 
@@ -591,6 +595,7 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public void findIssues(Solutions solutions) {
         kinematicSolutions.setMachine(this).findIssues(solutions);
+        nozzleTipSolutions.setMachine(this).findIssues(solutions);
         visualSolutions.setMachine(this).findIssues(solutions);
         calibrationSolutions.setMachine(this).findIssues(solutions);
 

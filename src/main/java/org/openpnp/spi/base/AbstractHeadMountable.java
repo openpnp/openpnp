@@ -1,6 +1,7 @@
 package org.openpnp.spi.base;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.openpnp.ConfigurationListener;
 import org.openpnp.machine.reference.ReferenceHeadMountable;
@@ -387,6 +388,7 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
     @Override
     public Location getApproximativeLocation(Location currentLocation, Location desiredLocation, LocationOption... options) 
             throws Exception {
+        List<LocationOption> oplist = Arrays.asList(options);
         // Inverse-transform the desired location to a raw location, applying the approximation options, which means some 
         // compensation effects are suppressed.
         desiredLocation = substituteUnchangedCoordinates(desiredLocation, currentLocation);
@@ -398,19 +400,39 @@ public abstract class AbstractHeadMountable extends AbstractModelObject implemen
         for (Axis axis : desiredRawLocation.getAxes()) {
             if (axis instanceof ControllerAxis) {
                 ControllerAxis rawAxis = (ControllerAxis)axis;
-                if ((rawAxis.getType() == Axis.Type.X && Arrays.asList(options).contains(LocationOption.KeepX)) 
-                        && (rawAxis.getType() == Axis.Type.Y && Arrays.asList(options).contains(LocationOption.KeepY)) 
-                        && (rawAxis.getType() == Axis.Type.Z && Arrays.asList(options).contains(LocationOption.KeepZ)) 
-                        && (rawAxis.getType() == Axis.Type.Rotation && Arrays.asList(options).contains(LocationOption.KeepRotation))) {
+                if ((rawAxis.getType() == Axis.Type.X && oplist.contains(LocationOption.KeepX)) 
+                        && (rawAxis.getType() == Axis.Type.Y && oplist.contains(LocationOption.KeepY)) 
+                        && (rawAxis.getType() == Axis.Type.Z && oplist.contains(LocationOption.KeepZ)) 
+                        && (rawAxis.getType() == Axis.Type.Rotation && oplist.contains(LocationOption.KeepRotation))) {
                     desiredRawLocation = desiredRawLocation
                             .put(new AxesLocation(rawAxis, currentRawLocation.getCoordinate(rawAxis)));
                 }
             }
             else if ((axis instanceof ReferenceVirtualAxis) 
-                && (Arrays.asList(options).contains(LocationOption.ReplaceVirtual))) {
+                && (oplist.contains(LocationOption.ReplaceVirtual))) {
                 // Replace the virtual axis coordinate with zero
                 desiredRawLocation = desiredRawLocation
                         .put(new AxesLocation(axis, new Length(0.0, LengthUnit.Millimeters)));
+            }
+            if (axis instanceof ReferenceControllerAxis) {
+                ReferenceControllerAxis rawAxis = (ReferenceControllerAxis) axis;
+                if (oplist.contains(LocationOption.ApplySoftLimits)) {
+                    double softLimitLow = rawAxis.getSoftLimitLow().convertToUnits(AxesLocation.getUnits()).getValue();
+                    double softLimitHigh = rawAxis.getSoftLimitHigh().convertToUnits(AxesLocation.getUnits()).getValue();
+                    double coordinate = desiredRawLocation.getCoordinate(rawAxis);
+                    if (rawAxis.isSoftLimitLowEnabled()
+                            && coordinate < softLimitLow
+                            && ! rawAxis.coordinatesMatch(coordinate, softLimitLow)) {
+                        desiredRawLocation = desiredRawLocation
+                                .put(new AxesLocation(axis, rawAxis.getSoftLimitLow()));
+                    }
+                    if (rawAxis.isSoftLimitHighEnabled()
+                            && coordinate > softLimitHigh
+                            && ! rawAxis.coordinatesMatch(coordinate, softLimitHigh)) {
+                        desiredRawLocation = desiredRawLocation
+                                .put(new AxesLocation(axis, rawAxis.getSoftLimitHigh()));
+                    }
+                }
             }
         }
         // Now transform it forward, NOT applying any options, i.e. when a moveTo() is later made, it will effectively reverse 

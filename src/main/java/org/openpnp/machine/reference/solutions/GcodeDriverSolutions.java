@@ -165,7 +165,9 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                         Severity.Fundamental,
                         "https://github.com/openpnp/openpnp/wiki/GcodeDriver#connection"));
             }
-            if (gcodeDriver.isSpeakingGcode()) {
+            if (gcodeDriver.isSpeakingGcode() 
+                    && (gcodeDriver.getDetectedFirmware() == null
+                    || !gcodeDriver.getDetectedFirmware().equals(GcodeServer.getGenericFirmware()))) {
                 try {
                     machine.execute(
                             () -> {
@@ -338,8 +340,8 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     else {
                         solutions.add(new Solutions.PlainIssue(
                                 gcodeDriver, 
-                                "There is a better Marlin firmware available. "+gcodeDriver.getDetectedFirmware(), 
-                                "Please upgrade to the special PnP version. See info link.", 
+                                "Marlin firmware is not reporting support for rotation axes (A B C). "+gcodeDriver.getDetectedFirmware(), 
+                                "Please upgrade the firmware and/or axis configuration. See the info link.", 
                                 Severity.Error, 
                                 "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#marlin-20"));
                     }
@@ -536,7 +538,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                                     gcodeDriver, 
                                     "Choose the simplest Motion Control Type for the first basic setup.", 
                                     "Set to "+newMotionControlType.name()+".", 
-                                    Severity.Suggestion,
+                                    Severity.Information,
                                     "https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings") {
 
                                 @Override

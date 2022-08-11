@@ -50,6 +50,10 @@ public interface Locatable {
          */
         ReplaceVirtual, 
         /**
+         * Apply soft limits.
+         */
+        ApplySoftLimits, 
+        /**
          * Be quiet about transforms. 
          */
         Quiet

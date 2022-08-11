@@ -37,6 +37,7 @@ import org.openpnp.machine.reference.axis.ReferenceMappedAxis;
 import org.openpnp.machine.reference.axis.ReferenceVirtualAxis;
 import org.openpnp.machine.reference.driver.GcodeDriver;
 import org.openpnp.machine.reference.driver.GcodeDriver.CommandType;
+import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.Solutions;
@@ -134,7 +135,7 @@ public class HeadSolutions implements Solutions.Subject {
                                     + "<ol>"
                                     + "<li>The current machine configuration is saved (same as File/Save Configuration).</li>"
                                     + "<li>The new solution overwrites your existing nozzle and axis configuration.</li>"
-                                    + "<li>As far as nozzles and axes remain the same type and count, their detail configuration is preserved.</li>"
+                                    + "<li>As far as nozzles, actuators and axes remain the same type and count, their detail configuration is preserved (except for names).</li>"
                                     + "<li>A nozzle solution can be applied multiple times, you can revisit and expand it.</li>"
                                     + "<li><span color=\"red\">Caution:</span> Reopen will not restore the previous configuration, only enable a fresh choice.<br/>"
                                     + "If you want to restore previous configuration you must restore the saved configuration manually.</li>"
@@ -221,10 +222,8 @@ public class HeadSolutions implements Solutions.Subject {
                     }
                 }
 
-                if (head.getPumpActuator() != null) {
-                    ActuatorSolutions.findActuateIssues(solutions, head, head.getPumpActuator(), "pump control",
+                ActuatorSolutions.findActuateIssues(solutions, head, head.getPumpActuator(), "pump control",
                         "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup#pump-control-setup");
-                }
                 if (head.getzProbeActuator() != null) {
                     ActuatorSolutions.findActuatorReadIssues(solutions, head, head.getzProbeActuator(), "Z probe",
                         "https://github.com/openpnp/openpnp/wiki/Z-Probing");
@@ -580,10 +579,20 @@ public class HeadSolutions implements Solutions.Subject {
                 head.getMachine().permutateAxis(axis, -1);
                 pos--;
             }
-            if (axis instanceof AbstractControllerAxis 
+            if (axis instanceof AbstractControllerAxis  
                     && camera.getAxisX() instanceof AbstractControllerAxis) {
                 // Inherit the driver.
                 ((AbstractControllerAxis) axis).setDriver(((AbstractControllerAxis) camera.getAxisX()).getDriver());
+            }
+            if (axis instanceof ReferenceControllerAxis) {
+                if (type == Type.Rotation) {
+                    ((ReferenceControllerAxis) axis).setLimitRotation(true);
+                    ((ReferenceControllerAxis) axis).setSoftLimitLow(new Length(-180, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setSoftLimitHigh(new Length(+180, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setFeedratePerSecond(new Length(200000.0/60, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setAccelerationPerSecond2(new Length(2*200000.0/60, AxesLocation.getUnits()));
+                    ((ReferenceControllerAxis) axis).setJerkPerSecond3(new Length(0, AxesLocation.getUnits()));
+                }
             }
         }
         else {

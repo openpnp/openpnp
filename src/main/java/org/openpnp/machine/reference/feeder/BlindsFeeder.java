@@ -576,7 +576,7 @@ public class BlindsFeeder extends ReferenceFeeder {
                 double x = rect.center.x;
                 double y = rect.center.y;
                 FluentCv.drawRotatedRect(mat, rect, color, 3);
-                Imgproc.circle(mat, new org.opencv.core.Point(x, y), 2, FluentCv.colorToScalar(centerColor), 3);
+                Imgproc.circle(mat, new org.opencv.core.Point(x, y), 2, FluentCv.colorToScalar(centerColor), 3, Imgproc.LINE_AA);
             }
         }
 
@@ -708,8 +708,8 @@ public class BlindsFeeder extends ReferenceFeeder {
 
                 Result ocrStageResult = pipeline.getResult("OCR"); 
                 if (ocrStageResult != null 
-                        && pipeline.getProperty("alphabet") instanceof String
-                        && ! ((String) pipeline.getProperty("alphabet")).isEmpty()) {
+                        && pipeline.getProperty("SimpleOcr.alphabet") instanceof String
+                        && ! ((String) pipeline.getProperty("SimpleOcr.alphabet")).isEmpty()) {
                     detectedOcrModel = ocrStageResult.getExpectedModel(SimpleOcr.OcrModel.class);
                 }
 
@@ -1054,7 +1054,8 @@ public class BlindsFeeder extends ReferenceFeeder {
     public void ensureCameraZ(Camera camera) throws Exception {
         if (camera.isUnitsPerPixelAtZCalibrated()
                 && !getLocation().getLengthZ().isInitialized()) {
-            throw new Exception("Feeder "+getName()+": Please set the Part Z first.");
+            throw new Exception("Feeder "+getName()+": Please set the Part Z first, it is required to determine "
+                    + "the true scale of the camera view for accurate computer vision.");
         }
         if (getLocation().getLengthZ().isInitialized()) {
             // If we already have the Feeder Z, move the camera there to get the right units per pixel.

@@ -788,7 +788,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 points.add(new Point(circle.x, circle.y));
             }
 
-            lines = Ransac.ransac(points, 100, maxDistanceToLine, holePitchPx, holePitchPx - minHolePitchPx);
+            lines = Ransac.ransac(points, 100, maxDistanceToLine, holePitchPx, holePitchPx - minHolePitchPx, true);
 
             bestLine = null;
             for (Ransac.Line line : lines) {
@@ -881,8 +881,8 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
             double x = circle.x;
             double y = circle.y;
             double radius = circle.diameter / 2.0;
-            Imgproc.circle(mat, new Point(x, y), (int) radius, FluentCv.colorToScalar(color), 2);
-            Imgproc.circle(mat, new Point(x, y), 1, FluentCv.colorToScalar(centerColor), 2);
+            Imgproc.circle(mat, new Point(x, y), (int) radius, FluentCv.colorToScalar(color), 2, Imgproc.LINE_AA);
+            Imgproc.circle(mat, new Point(x, y), 1, FluentCv.colorToScalar(centerColor), 2, Imgproc.LINE_AA);
         }
     }
 

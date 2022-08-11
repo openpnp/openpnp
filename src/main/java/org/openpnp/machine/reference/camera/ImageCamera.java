@@ -41,6 +41,7 @@ import org.opencv.imgproc.Imgproc;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.SimulationModeMachine;
 import org.openpnp.machine.reference.camera.wizards.ImageCameraConfigurationWizard;
+import org.openpnp.machine.reference.solutions.CameraSolutions;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Length;
@@ -694,12 +695,12 @@ public class ImageCamera extends ReferenceCamera {
                 @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (state == Solutions.State.Solved) {
-                        OpenPnpCaptureCamera camera = createReplacementCamera();
-                        replaceCamera(camera);
+                        OpenPnpCaptureCamera camera = CameraSolutions.createReplacementCamera(ImageCamera.this);
+                        CameraSolutions.replaceCamera(camera);
                     }
                     else if (getState() == Solutions.State.Solved) {
                         // Place the old one back (from the captured ImageCamera.this).
-                        replaceCamera(ImageCamera.this);
+                        CameraSolutions.replaceCamera(ImageCamera.this);
                     }
                     super.setState(state);
                 }
