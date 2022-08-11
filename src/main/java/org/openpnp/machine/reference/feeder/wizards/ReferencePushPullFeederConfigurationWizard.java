@@ -50,7 +50,7 @@ import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
-import org.openpnp.gui.processes.RegionOfInterestProcess;
+import org.openpnp.gui.processes.RegionOfInterestOffsetProcess;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
@@ -62,6 +62,7 @@ import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPart
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.PipelineType;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.RegionOfInterest;
+import org.openpnp.model.RegionOfInterestLocation;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.util.MovableUtils;
@@ -805,15 +806,11 @@ extends AbstractReferenceFeederConfigurationWizard {
                 MovableUtils.fireTargetedUserAction(feeder.getCamera());
                 SwingUtilities.invokeAndWait(() -> {
                     UiUtils.messageBoxOnException(() -> {
-                        new RegionOfInterestProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region") {
+                        new RegionOfInterestOffsetProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region") {
                             @Override 
-                            public void setResult(RegionOfInterest roi) {
-                                try {
-                                    feeder.setOcrOffsetLocation();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                                feeder.setOcrRegion(roi);
+                            public void setResult(RegionOfInterestLocation roi) {
+                                feeder.setOcrRegion((RegionOfInterest) roi);
+                                feeder.setOcrLocation(roi.getLocation());
                             }
                         };
                     });

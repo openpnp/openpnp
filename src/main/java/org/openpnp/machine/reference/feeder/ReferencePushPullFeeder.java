@@ -212,7 +212,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Element(required = false)
     protected RegionOfInterest ocrRegion = null; 
     @Element(required = false)
-    protected Location ocrOffset = new Location(LengthUnit.Millimeters);
+    protected Location ocrOffset = null; 
     
     public enum OcrWrongPartAction {
         None,
@@ -1238,6 +1238,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
     
+    public void setOcrLocation(Location ocrLocation) {
+        setOcrOffset(backwardTransform(ocrLocation, getLocation())) ;
+    };
+    
     public Location getOcrLocation() throws Exception {
         if (!(hole1Location.isInitialized() && hole2Location.isInitialized())) {
             // not yet initialized, just return the current camera location
@@ -1249,22 +1253,12 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first.");
                 }
             }
-            Location hole1 = getHole1Location();
-            Location hole2 = getHole2Location();
-            Location rotatedOcrOffset = new Location(LengthUnit.Millimeters);
-            if(ocrOffset.isInitialized()) {
-                Location feederRotationVector = (hole1.unitVectorTo(hole2));
-                double angle = Math.toDegrees(Math.atan2(feederRotationVector.getY(), feederRotationVector.getX()));
-                rotatedOcrOffset = ocrOffset.rotateXy(angle);
-            }
-            return hole1.add(hole2).multiply(0.5).add(rotatedOcrOffset)
-                    .deriveLengths(null, null, getLocation().getLengthZ(), 
-                            getLocation().getRotation()+getRotationInFeeder());
+            return forwardTransform(getOcrOffset(), getLocation());
         }
     }
     
     protected void setupOcr(Camera camera, CvPipeline pipeline, Location hole1, Location hole2, Location pickLocation) {
-        pipeline.setProperty("regionOfInterest", getOcrRegion());
+        pipeline.setProperty("regionOfInterest", (RegionOfInterest) getOcrRegion());
         pipeline.setProperty("SimpleOcr.fontName", getOcrFontName());
         pipeline.setProperty("SimpleOcr.fontSizePt", getOcrFontSizePt());
         pipeline.setProperty("SimpleOcr.alphabet", OcrUtils.getConsolidatedPartsAlphabet(null, "\\"));
@@ -2407,31 +2401,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
     
-    public void setOcrOffsetLocation() throws Exception {
-        Location hole1Location = getHole1Location();
-        Location hole2Location = getHole2Location();
-        
-        Location feederDirection = hole1Location.unitVectorTo(hole2Location);
-        Location absOcrOffset = getCamera().getLocation().subtract(getNominalVisionLocation());
-        
-        double feederRotation = Math.toDegrees(Math.atan2(feederDirection.getY() , feederDirection.getX()));
-                
-        setOcrOffset(absOcrOffset.rotateXy(-feederRotation));
-    };
-
-    Location getOcrOffsetLocation(Camera camera, Location newLocation)  throws Exception {
-        Location hole1Location = getHole1Location();
-        Location hole2Location = getHole2Location();
-        
-        Location feederDirection = hole1Location.unitVectorTo(hole2Location);
-        Location ocrRotatedOffset = getOcrOffset().rotateXy(feederDirection.getRotation());
-        
-        Location ocrLocation = hole1Location.add(hole2Location).multiply(0.5, 0.5, 0, 0).add(ocrRotatedOffset)
-                .derive(getCamera().getLocation(), false, false, true, false);
-        
-        return ocrLocation;
-    };
-
     public void performOcrOnFeederList(List<ReferencePushPullFeeder> ocrFeederList, 
             OcrWrongPartAction ocrAction, boolean ocrStop, StringBuilder report) throws Exception {
         // Note, we want to be able to swap out feeders' locations while doing the OCR process, so we need 
