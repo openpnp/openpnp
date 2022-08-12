@@ -50,7 +50,7 @@ import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
-import org.openpnp.gui.processes.RegionOfInterestLocationProcess;
+import org.openpnp.gui.processes.RegionOfInterestOffsetProcess;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
@@ -61,8 +61,8 @@ import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.PipelineType;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.RegionOfInterest;
-import org.openpnp.model.RegionOfInterestLocation;
+//import org.openpnp.model.RegionOfInterest;
+import org.openpnp.model.RegionOfInterestOffset;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.util.MovableUtils;
@@ -806,11 +806,10 @@ extends AbstractReferenceFeederConfigurationWizard {
                 MovableUtils.fireTargetedUserAction(feeder.getCamera());
                 SwingUtilities.invokeAndWait(() -> {
                     UiUtils.messageBoxOnException(() -> {
-                        new RegionOfInterestLocationProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region") {
+                        new RegionOfInterestOffsetProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region", true) {
                             @Override 
-                            public void setResult(RegionOfInterestLocation roi) {
-                                feeder.setOcrRegion((RegionOfInterest) roi);
-                                feeder.setOcrLocation(roi.getLocation());
+                            public void setResult(RegionOfInterestOffset roi) {
+                                feeder.setOcrRegion((RegionOfInterestOffset) roi);
                             }
                         };
                     });

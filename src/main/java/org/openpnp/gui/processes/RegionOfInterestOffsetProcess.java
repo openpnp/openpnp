@@ -41,7 +41,7 @@ import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.model.RegionOfInterestLocation;
+import org.openpnp.model.RegionOfInterestOffset;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
 
@@ -49,7 +49,7 @@ import org.openpnp.util.UiUtils;
 /**
  * Guides the user through the three point region of interest operation using step by step instructions.
  */
-public class RegionOfInterestLocationProcess {
+public class RegionOfInterestOffsetProcess {
     private final MainFrame mainFrame;
     private String processTitle;
     private final Camera camera;
@@ -88,13 +88,21 @@ public class RegionOfInterestLocationProcess {
 
     private static final String PROCESS_RETICLE_KEY = "PROCESS_RETICLE_KEY";
 
-    RegionOfInterestLocation regionOfInterestLocation= null;
+    private RegionOfInterestOffset regionOfInterestOffset= null;
+    private boolean doLocation = false;
+    private Location startLocation = null;
     
 
-    public RegionOfInterestLocationProcess(MainFrame mainFrame, Camera camera, String processTitle )
+    public RegionOfInterestOffsetProcess(MainFrame mainFrame, Camera camera, String processTitle) 
+            throws Exception{
+        this(mainFrame, camera, processTitle, false);
+    }
+    
+    public RegionOfInterestOffsetProcess(MainFrame mainFrame, Camera camera, String processTitle, boolean doLocation)
             throws Exception {
         this.mainFrame = mainFrame;
         this.processTitle = processTitle;
+        this.doLocation = doLocation;
         // setup the process
         this.camera = camera;
         SwingUtilities.invokeLater(() -> {
@@ -245,9 +253,20 @@ public class RegionOfInterestLocationProcess {
     private void advance() {
         boolean stepResult = true;
         mouseClickCount = 0;
+        
+        if (step == ROIStep.Init) {
+            startLocation = camera.getLocation();
+        }
+
         stepIndex += 1;
         step = stepSequence.get(stepIndex);
-
+        
+        //Skip camera offset if it is not required
+        if(!doLocation && step == ROIStep.CameraOffset ) {
+            stepIndex += 1;
+            step = stepSequence.get(stepIndex);
+        }
+        
         if (step == ROIStep.Save) {
             saveResults();
             cleanup();
@@ -261,16 +280,17 @@ public class RegionOfInterestLocationProcess {
     }
 
     private boolean saveResults() {
-        Location location = camera.getLocation();
+        Location endLocation = camera.getLocation();
+        Location location = this.doLocation ? (endLocation.subtract(startLocation)) : null;
         // calculate the Locations from pixels
-        regionOfInterestLocation = new RegionOfInterestLocation(
+        regionOfInterestOffset = new RegionOfInterestOffset(
                 cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.UpperLeft).x, regionStakeout.get(ROIStep.UpperLeft).y),
                 cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.UpperRight).x, regionStakeout.get(ROIStep.UpperRight).y),
                 cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.LowerLeft).x, regionStakeout.get(ROIStep.LowerLeft).y),
                 rectify,
                 location);
         UiUtils.messageBoxOnException(() -> {
-            setResult(regionOfInterestLocation);
+            setResult(regionOfInterestOffset);
         });
         return true;
     }
@@ -293,9 +313,10 @@ public class RegionOfInterestLocationProcess {
         }
     };
 
-    public void setResult(RegionOfInterestLocation roi) {
+    public void setResult(RegionOfInterestOffset roi) {
     }
-    public RegionOfInterestLocation getRegionOfInterestPosition() {
-        return regionOfInterestLocation;
+    
+    public RegionOfInterestOffset getRegionOfInterestPosition() {
+        return regionOfInterestOffset;
     }
 }

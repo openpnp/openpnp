@@ -52,7 +52,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.model.RegionOfInterest;
+import org.openpnp.model.RegionOfInterestOffset;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
@@ -210,9 +210,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     protected double ocrFontSizePt = 7.0;
     @Element(required = false)
-    protected RegionOfInterest ocrRegion = null; 
-    @Element(required = false)
-    protected Location ocrOffset = null; 
+    protected RegionOfInterestOffset ocrRegion = null; 
     
     public enum OcrWrongPartAction {
         None,
@@ -996,24 +994,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("ocrFontSizePt", oldValue, ocrFontSizePt);
     }
 
-    public RegionOfInterest getOcrRegion() {
+    public RegionOfInterestOffset getOcrRegion() {
         return ocrRegion;
     }
 
-    public void setOcrRegion(RegionOfInterest ocrRegion) {
+    public void setOcrRegion(RegionOfInterestOffset ocrRegion) {
         Object oldValue = this.ocrRegion;
         this.ocrRegion = ocrRegion;
         firePropertyChange("ocrRegion", oldValue, ocrRegion);
-    }
-
-    public Location getOcrOffset() {
-        return ocrOffset;
-    }
-
-    public void setOcrOffset(Location ocrOffset) {
-        Object oldValue = this.ocrOffset;
-        this.ocrOffset = ocrOffset;
-        firePropertyChange("ocrOffset", oldValue, ocrOffset);
     }
 
     public OcrWrongPartAction getOcrWrongPartAction() {
@@ -1237,28 +1225,21 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                             getLocation().getRotation()+getRotationInFeeder());
         }
     }
-    
-    public void setOcrLocation(Location ocrLocation) {
-        setOcrOffset(backwardTransform(ocrLocation, getLocation())) ;
-    };
-    
+
     public Location getOcrLocation() throws Exception {
-        if (!(hole1Location.isInitialized() && hole2Location.isInitialized())) {
-            // not yet initialized, just return the current camera location
-            return getCamera().getLocation();
+        Location offset = ocrRegion.getOffset();
+        if (offset == null) {
+            return getNominalVisionLocation();
         }
-        else {
-            if (getCamera().isUnitsPerPixelAtZCalibrated()) {
-                if (!getLocation().getLengthZ().isInitialized()) {
-                    throw new Exception("Feeder "+getName()+": Please set the Pick Location Z coordinate first.");
-                }
-            }
-            return forwardTransform(getOcrOffset(), getLocation());
+        
+        if(!offset.isInitialized()) {
+            return getNominalVisionLocation();
         }
+        return getNominalVisionLocation().add(ocrRegion.getOffset());
     }
-    
+
     protected void setupOcr(Camera camera, CvPipeline pipeline, Location hole1, Location hole2, Location pickLocation) {
-        pipeline.setProperty("regionOfInterest", (RegionOfInterest) getOcrRegion());
+        pipeline.setProperty("regionOfInterest", (RegionOfInterestOffset) getOcrRegion());
         pipeline.setProperty("SimpleOcr.fontName", getOcrFontName());
         pipeline.setProperty("SimpleOcr.fontSizePt", getOcrFontSizePt());
         pipeline.setProperty("SimpleOcr.alphabet", OcrUtils.getConsolidatedPartsAlphabet(null, "\\"));
@@ -2151,7 +2132,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             setOcrWrongPartAction(templateFeeder.getOcrWrongPartAction());
             setOcrDiscoverOnJobStart(templateFeeder.isOcrDiscoverOnJobStart());
             setOcrStopAfterWrongPart(templateFeeder.isOcrStopAfterWrongPart());
-            setOcrOffset(templateFeeder.getOcrOffset());
             // reset statistics
             resetCalibration();
             resetCalibrationStatistics();
