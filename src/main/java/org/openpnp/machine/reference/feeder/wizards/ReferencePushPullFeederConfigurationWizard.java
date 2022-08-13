@@ -61,7 +61,6 @@ import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.PipelineType;
 import org.openpnp.model.Configuration;
-//import org.openpnp.model.RegionOfInterest;
 import org.openpnp.model.RegionOfInterestOffset;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
