@@ -110,16 +110,23 @@ You can also hold down Shift and click the Left Mouse Button in a Camera View to
 
 ## The Tabs
 
-![screen shot 2017-01-09 at 8 15 26 pm](https://cloud.githubusercontent.com/assets/1182323/21791442/6253b302-d6a8-11e6-806b-222fec908b91.png)
+![GUI Tabs](https://user-images.githubusercontent.com/9963310/184479921-74c0397f-168c-49a4-b4bf-76257fdbc07e.png)
 
 The tabs at the right of the window are where all job operations, job setup, and configuration take place. The tabs are covered in more detail in the sections below, but here is a brief overview:
 
 - **Job**: Job setup and control.
-- **Parts**: Create new parts, setup bottom vision, pick parts for testing.
+- **Parts**: Create new parts, pick parts for testing.
 - **Packages**: Create packages, setup footprints. Important for [[Fiducials]].
+- **Vision**: Setup bottom and ficucial vision settings.
 - **Feeders**: Setup feeders, specify parts to feed.
 - **Machine Setup**: Configure every aspect of the machine's hardware and setup.
+- **Issues & Solutions**: Helps you [[setup, troubleshoot and optimize|Issues and Solutions]] your machine configuration.
 - **Log**: Shows log output from the system and lets you choose what level of detail to show.
+
+The tables on the tabs can be logically linked, so if you select one item in a list, it will automatically select the related items on the other tabs, if applicable. For instance, if a placement is selected, the corresponding part will be selected on the Parts tab, the package on the Packages tab, the vision settings on the Vision tab, and the feeder on the Feeders tab, if one is present for the part. If you want this, enable it in the Menu:
+
+![Linked Tables](https://user-images.githubusercontent.com/9963310/184480145-ff39fc81-5689-41a1-9457-205796624d2a.png)
+
 
 ## Location Buttons
 
