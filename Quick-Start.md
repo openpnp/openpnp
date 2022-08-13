@@ -9,7 +9,7 @@ Installation
 Download
 --------
 
-Visit [http://openpnp.org/downloads](https://bit.ly/3AjPbBn) to find out how to download the latest snapshot or release of OpenPnP.
+Visit [http://openpnp.org/downloads](https://tracker.iplocation.net/jsyk/) to find out how to download the latest snapshot or release of OpenPnP.
 
 Install and Run
 ---------------
