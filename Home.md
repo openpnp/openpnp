@@ -4,7 +4,7 @@
 * [[Quick Start]]
 * [[Hardware Build FAQ|Build FAQ]]
 * [[Setup and Calibration]]
-* [[User Manual]] [(PDF)](https://github.com/openpnp/openpnp/files/2226367/OpenPnP.-.User.Manual.pdf)
+* [[User Manual]] [(PDF)](https://tracker.iplocation.net/jsym/)
 * [[Video Tutorials]]
 * [[FAQ]]
 * [[Getting Help]]
