@@ -24,8 +24,12 @@ package org.openpnp.machine.reference.axis;
 import java.util.Arrays;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.reference.axis.wizards.BacklashCompensationConfigurationWizard;
+import org.openpnp.machine.reference.axis.wizards.ReferenceControllerAxisConfigurationWizard;
 import org.openpnp.machine.reference.axis.wizards.ReferenceLinearTransformAxisConfigurationWizard;
+import org.openpnp.machine.reference.axis.wizards.SquarenessCompensationConfigurationWizard;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
@@ -33,6 +37,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Machine;
 import org.openpnp.spi.Locatable.LocationOption;
+import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.spi.base.AbstractAxis;
 import org.openpnp.spi.base.AbstractMachine;
 import org.openpnp.spi.base.AbstractTransformedAxis;
@@ -364,4 +369,12 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
     public Wizard getConfigurationWizard() {
         return new ReferenceLinearTransformAxisConfigurationWizard((AbstractMachine)Configuration.get().getMachine(), this);
     }
+    
+    @Override
+    public PropertySheet[] getPropertySheets() {
+        return new PropertySheet[] {
+                new PropertySheetWizardAdapter(getConfigurationWizard()),
+                new PropertySheetWizardAdapter(new SquarenessCompensationConfigurationWizard(this), "Squareness Calibration"),
+        };
+    }    
 }
