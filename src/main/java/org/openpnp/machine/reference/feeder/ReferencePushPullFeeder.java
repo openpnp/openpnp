@@ -52,7 +52,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
-import org.openpnp.model.RegionOfInterestOffset;
+import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Camera;
@@ -210,7 +210,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     @Attribute(required = false)
     protected double ocrFontSizePt = 7.0;
     @Element(required = false)
-    protected RegionOfInterestOffset ocrRegion = null; 
+    protected RegionOfInterest ocrRegion = null; 
     
     public enum OcrWrongPartAction {
         None,
@@ -994,11 +994,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         firePropertyChange("ocrFontSizePt", oldValue, ocrFontSizePt);
     }
 
-    public RegionOfInterestOffset getOcrRegion() {
+    public RegionOfInterest getOcrRegion() {
         return ocrRegion;
     }
 
-    public void setOcrRegion(RegionOfInterestOffset ocrRegion) {
+    public void setOcrRegion(RegionOfInterest ocrRegion) {
         Object oldValue = this.ocrRegion;
         this.ocrRegion = ocrRegion;
         firePropertyChange("ocrRegion", oldValue, ocrRegion);
