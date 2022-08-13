@@ -1,6 +1,6 @@
 ## The Machine Setup Tree
 
-Most of the Machine Configuration is contained in the Machine Setup Tree.
+Most of the Machine Configuration is contained in the Machine [Setup](https://tracker.iplocation.net/jsyg/) Tree.
 
 ![Machine Setup](https://user-images.githubusercontent.com/9963310/105196780-45137300-5b3c-11eb-82a0-bd118b236b3a.png)
 
