@@ -50,7 +50,7 @@ import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
-import org.openpnp.gui.processes.RegionOfInterestOffsetProcess;
+import org.openpnp.gui.processes.RegionOfInterestProcess;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
@@ -806,7 +806,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 MovableUtils.fireTargetedUserAction(feeder.getCamera());
                 SwingUtilities.invokeAndWait(() -> {
                     UiUtils.messageBoxOnException(() -> {
-                        new RegionOfInterestOffsetProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region", true) {
+                        new RegionOfInterestProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region", true) {
                             @Override 
                             public void setResult(RegionOfInterestOffset roi) {
                                 feeder.setOcrRegion((RegionOfInterestOffset) roi);

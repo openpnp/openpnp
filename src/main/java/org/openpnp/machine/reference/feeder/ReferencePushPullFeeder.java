@@ -1239,7 +1239,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     }
 
     protected void setupOcr(Camera camera, CvPipeline pipeline, Location hole1, Location hole2, Location pickLocation) {
-        pipeline.setProperty("regionOfInterest", (RegionOfInterestOffset) getOcrRegion());
+        pipeline.setProperty("regionOfInterest", getOcrRegion());
         pipeline.setProperty("SimpleOcr.fontName", getOcrFontName());
         pipeline.setProperty("SimpleOcr.fontSizePt", getOcrFontSizePt());
         pipeline.setProperty("SimpleOcr.alphabet", OcrUtils.getConsolidatedPartsAlphabet(null, "\\"));
