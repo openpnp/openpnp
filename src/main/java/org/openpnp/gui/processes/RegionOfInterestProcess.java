@@ -163,6 +163,9 @@ public class RegionOfInterestProcess {
                         drawRegion(g2d);
                     }
                     break;
+                    case CameraOffset :{
+                        break;
+                    }
                     default: 
                         drawRegion(g2d);
                         break;
@@ -279,9 +282,16 @@ public class RegionOfInterestProcess {
     }
 
     private boolean saveResults() {
-        // calculate the Locations from pixels
+        //Get camera offset between now and the start of the process
         Location endLocation = camera.getLocation();
         Location location = this.doLocation ? (endLocation.subtract(startLocation)) : null;
+
+        // If camera offset is small then consider it zero and set it to null
+        if (location.getLinearDistanceTo(Location.origin) < 0.1){
+            location = null;
+        }
+        
+        // calculate the Locations from pixels        
         regionOfInterest = new RegionOfInterest(
                 cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.UpperLeft).x, regionStakeout.get(ROIStep.UpperLeft).y),
                 cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.UpperRight).x, regionStakeout.get(ROIStep.UpperRight).y),
