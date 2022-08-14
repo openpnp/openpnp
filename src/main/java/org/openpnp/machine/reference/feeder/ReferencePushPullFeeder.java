@@ -1479,8 +1479,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 holes = new ArrayList<>();
                 lines = new ArrayList<>();
 
-                if (autoSetupMode != FindFeaturesMode.OcrOnly) {
-                if (calibrationTrigger == CalibrationTrigger.None) {
+                if (autoSetupMode == FindFeaturesMode.OcrOnly || calibrationTrigger == CalibrationTrigger.None) {
                     // No vision calibration wanted - just copy the pre-set locations
                     calibratedHole1Location = getHole1Location();
                     calibratedHole2Location = getHole2Location();
@@ -1718,7 +1717,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                         }
                     }
                 }
-		}
 
                 Result ocrStageResult = pipeline.getResult("OCR"); 
                 if (ocrStageResult != null) {
