@@ -208,7 +208,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
 
         lblMaxPartDiameter = new JLabel("Max. Part Diameter");
         lblMaxPartDiameter.setToolTipText(
-                "<html>\nMaximum diameter/diagonal of parts picked with this nozzle tip, <br/>\nincluding tolerances.\n</html>\n");
+                "<html>\nMaximum diameter/diagonal of parts picked with this nozzle tip.<br/>\n<br/>\nNote, when using Vision Compositing (bottom vision multi-shot), this does<br/>\nnot limit the parts size, but rather the size of a single shot (mask diameter).\n</html>\n");
         panelPartDimensions.add(lblMaxPartDiameter, "2, 4, right, default");
 
         maxPartDiameter = new JTextField();
