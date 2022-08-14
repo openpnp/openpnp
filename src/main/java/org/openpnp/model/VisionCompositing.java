@@ -799,8 +799,10 @@ public class VisionCompositing extends AbstractModelObject{
                         .convertToUnits(units).getValue();
             }
             upp = camera.getUnitsPerPixel().convertToUnits(units);
-            cameraViewRadius = Math.min(camera.getWidth()*upp.getX(), camera.getHeight()*upp.getY()) / 2; 
-            double maxPartDiameter = nozzleTip.getMaxPartDiameter().convertToUnits(units).getValue();
+            double maxPartDiameter = nozzleTip.getMaxPartDiameter().convertToUnits(units).getValue() 
+                    + 2*tolerance;
+            // Note, the effective camera view radius is limited to maxPartDiameter 
+            cameraViewRadius = Math.min(maxPartDiameter, Math.min(camera.getWidth()*upp.getX(), camera.getHeight()*upp.getY())) / 2; 
             if (footprint.getPads().isEmpty() 
                     || visionSettings.getVisionOffset().isInitialized()
                     || !camera.getRoamingRadius().isInitialized()) {
@@ -895,13 +897,12 @@ public class VisionCompositing extends AbstractModelObject{
             // Start composing results.
             compositeShots = new ArrayList<>();
             double minRadius = overallDiagonal/2 + tolerance;
-            double cameraRoamingRadius = camera.getRoamingRadius().convertToUnits(units).getValue()/2;
             if (compositingMethod == CompositingMethod.None 
                     || (isSymmetric && minRadius < cameraViewRadius && !compositingMethod.isEnforced())) {
                 // Whole footprint fits in camera.
                 compositeShots.add(new Shot(cornerSolution, 0, 0, 
                         overallWidth+2*tolerance, overallHeight+2*tolerance, 
-                        overallDiagonal+2*tolerance, overallDiagonal+2*tolerance,
+                        minRadius, cameraViewRadius,
                         false, ShotConfiguration.Unknown));
                 compositeSolution = (minRadius < cameraViewRadius ? 
                         CompositingSolution.Small : CompositingSolution.RestrictedCameraRoaming);
@@ -914,7 +915,7 @@ public class VisionCompositing extends AbstractModelObject{
                 // No solution, resort to single shot, but mark it invalid
                 compositeShots.add(new Shot(corners, 0, 0, 
                         overallWidth+2*tolerance, overallHeight+2*tolerance, 
-                        overallDiagonal+2*tolerance, overallDiagonal+2*tolerance,
+                        minRadius, cameraViewRadius,
                         false, ShotConfiguration.Unknown));
                 if (outOfRoamingCandidates > 0) {
                     compositeSolution = CompositingSolution.RestrictedCameraRoaming;

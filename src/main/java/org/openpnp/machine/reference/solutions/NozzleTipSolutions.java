@@ -179,7 +179,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                 @Override 
                 public String getExtendedDescription() {
                     return "<html>"
-                            + "<p>It is recommended to enable nozzle tip calibration for run-out, offsets and background calibration. "
+                            + "<p>It is recommended to enable nozzle tip calibration for run-out and precision camera offsets. "
                             + "For more information, press the blue Info button (below) to open the Wiki.</p><br/>"
                             + (nozzleTip != nozzle.getNozzleTip() ?
                                     "<p>Load nozzle tip "+nozzleTip.getName()+" to nozzle "+nozzle.getName() + ".</p><br/>"
