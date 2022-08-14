@@ -2458,6 +2458,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Location runningPickLocation = getLocation();
         Location runningVisionOffset = getVisionOffset();
         ensureCameraZ(camera, true);
+        
+        FindFeatures feature = null;
 
         // Calibrate the exact hole locations by obtaining a mid-point lock on them,
         // assuming that any camera lens and Z parallax distortion is symmetric.
@@ -2468,11 +2470,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     .derive(null, null, null, runningPickLocation.getRotation()+getRotationInFeeder());
             Logger.debug("calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
             MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
-            disableOcr(camera, pipeline);
-
+            setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
             // take a new shot
             pipeline.process();
-            FindFeatures feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.CalibrateHoles)
+            feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.CalibrateHoles)
                     .invoke();
             runningHole1Location = feature.calibratedHole1Location;
             runningHole2Location = feature.calibratedHole2Location;
@@ -2516,13 +2517,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             if (ocrOffsets != null && ocrOffsets.isInitialized()) {
                 Location ocrLocation = getOcrLocation();
                 MovableUtils.moveToLocationAtSafeZ(camera, ocrLocation);
+                setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
+                pipeline.process();
+                feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.OcrOnly)
+                        .invoke();
             }
-            // Re-process the pipeline with ocr on
-            setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
-            pipeline.process();
-            FindFeatures feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.OcrOnly)
-                    .invoke();
-            
             if (feature.detectedOcrModel == null) {
                 Logger.warn("Feeder "+getName()+" OCR operation expected, but no \"OCR\" stage result obtained from pipeline.");
             }
