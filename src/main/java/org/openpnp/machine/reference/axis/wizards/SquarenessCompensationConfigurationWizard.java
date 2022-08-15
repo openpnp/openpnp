@@ -53,6 +53,7 @@ import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Axis.Type;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Camera.Looking;
 import org.openpnp.spi.Driver;
 import org.openpnp.spi.HeadMountable;
@@ -113,15 +114,11 @@ public class SquarenessCompensationConfigurationWizard extends AbstractConfigura
                 AbstractAxis primaryAxis = axis.getPrimaryInputAxis();
                 String primaryAxisId = primaryAxis.getId();
                 
-                
-//                HeadMountable hm = ((AbstractCoordinateAxis) axis.getPrimaryInputAxis()).getDefaultHeadMountable();
-//                if (hm instanceof ReferenceCamera) {
-//                    ReferenceCamera camera = (ReferenceCamera) hm;
-//                    if (camera.getHead() != null && camera.getLooking() == Looking.Down) {
-//                        if (Configuration.get().getMachine() instanceof ReferenceMachine) {
+                Camera camera = axis.getDefaultHeadCamera();
+//                if (camera.getHead() != null && camera.getLooking() == Looking.Down) {
+//                    if (Configuration.get().getMachine() instanceof ReferenceMachine) {
 //                            ReferenceMachine refMachine = (ReferenceMachine) Configuration.get().getMachine();
-//                            refMachine.getCalibrationSolutions()
-//                            .calibrateAxisBacklash((ReferenceHead)(camera.getHead()), camera,
+//                            refMachine.getCalibrationSolutions().calibrateAxisBacklash((ReferenceHead)(camera.getHead()), camera,
 //                                    camera, (ReferenceControllerAxis)axis);
 //                            MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
 //                            return true;
