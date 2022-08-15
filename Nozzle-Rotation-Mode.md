@@ -72,7 +72,7 @@ The **Rotation Mode** entries work as follows:
 
   Once the part is picked, only the placement angle is guaranteed to be reachable. This means you _must_ enable the **Pre-Rotate** option [in bottom vision](https://github.com/openpnp/openpnp/wiki/Bottom-Vision#global-configuration). In this mode, the nozzle must be able to articulate 180° plus an allowance for part alignment offsets, e.g. 200° or more. This mode can also make sense for nozzles that can reach 360°, but you still want to limit the articulation to a minimum, to ease the stress on tubes etc. and to avoid "pirouetting", that you might get with the default **AbsolutePartAngle** method. 
 
-## Align Nozzle Rotation with Part
+### Align Nozzle Rotation with Part
 
 Regardles of the **Rotation Mode**, it is recommended to enable the **Align with Part?** option on the nozzles:
 
