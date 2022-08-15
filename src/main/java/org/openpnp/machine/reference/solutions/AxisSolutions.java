@@ -210,6 +210,22 @@ public class AxisSolutions implements Solutions.Subject {
                             }
                         });
                     }
+                    if (!nozzle.isAligningRotationMode()) {
+                        solutions.add(new Solutions.Issue(
+                                nozzle, 
+                                "Align nozzle "+nozzle.getName()+" rotation with part.", 
+                                        "Enable part aligned nozzle rotation mode, so camera view cross-hairs and DRO-coordinates show the "
+                                        + "bottom vision aligned part rotation instead of the unadjusted nozzle rotation.", 
+                                        Severity.Suggestion,
+                                "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode#align-nozzle-rotation-with-part") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                nozzle.setAligningRotationMode((state == Solutions.State.Solved));
+                                super.setState(state);
+                            }
+                        });
+                    }
                     if (!isUnlimitedArticulation) {
                         // Checking that ReferenceBottomVision has pre-rotate enabled. 
                         for (PartAlignment partAlignment : machine.getPartAlignments()) {
