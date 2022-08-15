@@ -72,7 +72,7 @@ It is recommended to enable the **Align with Part?** option on the nozzles:
 
 ![Align with part switch](https://user-images.githubusercontent.com/9963310/178480834-200e20d4-8640-46c4-8143-14903fdadc3d.png)
 
-It offsets the nozzle rotation coordinate to match that of the part, once the part is aligned. This means that the cross-hairs and the DRO are nicely aligned with the part. This is especially useful in the multi-shot scenario, where you often only see a fraction of the whole part, and the reticle (cross-hairs, grid etc.) provides valuable visual feedback, 
+It offsets the nozzle rotation coordinate to match that of the part, once the part is aligned. This means that the cross-hairs and the DRO are nicely aligned with the part. This is especially useful in the multi-shot scenario, where you often only see a fraction of the whole part, and the reticle (cross-hairs, grid etc.) provides valuable visual feedback. 
 
 ## Package Footprint
 
