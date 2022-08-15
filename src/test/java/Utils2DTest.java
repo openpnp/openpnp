@@ -1,4 +1,5 @@
 import java.awt.geom.AffineTransform;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 import org.openpnp.model.Board;
@@ -6,6 +7,7 @@ import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
+import org.openpnp.model.Triangle;
 import org.openpnp.model.Placement;
 import org.openpnp.util.Utils2D;
 
@@ -161,6 +163,93 @@ public class Utils2DTest {
         }
     }
 
-}
+    /**
+     * Test calculating a board location with affine transformations and without. Check that
+     * the results are the same and that they match the gold results.
+     * @throws Exception
+     */
+    @Test
+    public void testSquarenessFromRotatedTriangles() throws Exception {
+        boolean debug = false;
+        
+        //Reference triangle shape.  This will be rotated and translated (not scaled) later.
+        Location ref1 = new Location(LengthUnit.Millimeters, 0, -98.0, 0.0, 0.0);
+        Location ref2 = new Location(LengthUnit.Millimeters, .0, 0.0, 0.0, 0.0);
+        Location ref3 = new Location(LengthUnit.Millimeters, 75.0, 2.0, 0.0, 0.0);
+        
+        final double skewX = 0.1;
+        final double skewY = 0.00;
+        System.out.println("skewX:" + skewX + "  skewY:" + skewY);
 
+        Triangle ref = new Triangle(ref1, ref2, ref3);
+        
+        final double rot1angle = -2.25;
+        final double rot2angle = 94.5;
+        final Location rot1center = new Location(LengthUnit.Millimeters, -1.0, 1.5, 0.0, 0.0);
+        final Location rot2center = new Location(LengthUnit.Millimeters, 35.0, 85, 0.0, 0.0);
+        
+        System.out.println("rot1angle:" + rot1angle + " rot1center:" + rot1center);
+        System.out.println("rot2angle:" + rot2angle + " rot2center:" + rot2center);
+
+        Triangle rot1 = ref.rotate(rot1angle,   rot1center);
+        Triangle rot2 = ref.rotate(rot2angle,   rot2center);
+        
+        Triangle rot1skew = rot1.skew(skewX, skewY);
+        Triangle rot2skew = rot2.skew(skewX, skewY);
+        
+        if (debug) {
+            double[] refAngles = ref.getLineAngles();
+            String outstr = "Ref triangle line angles";
+            for (double angle : refAngles) {
+                outstr = outstr.concat(" :" + angle);
+            }
+            System.out.println(outstr);
+            
+            double[] internalAngles = ref.getInternalAngles();
+            outstr = "Ref triangle internal angles";
+            for (double angle : internalAngles) {
+                outstr = outstr.concat(" :" + angle);
+            }
+            System.out.println(outstr);
+
+            internalAngles = rot1.getInternalAngles();
+            outstr = "rot1 internal angles";
+            for (double angle : internalAngles) {
+                outstr = outstr.concat(" :" + angle);
+            }
+            outstr = outstr.concat(" : total angle:" + Arrays.stream(internalAngles).sum());
+            System.out.println(outstr);
+
+            internalAngles = rot2.getInternalAngles();
+            outstr = "rot2 internal angles";
+            for (double angle : internalAngles) {
+                outstr = outstr.concat(" :" + angle);
+            }
+            outstr = outstr.concat(" : total angle:" + Arrays.stream(internalAngles).sum());
+            System.out.println(outstr);
+            
+            internalAngles = rot1skew.getInternalAngles();
+            outstr = "rot1skew internal angles";
+            for (double angle : internalAngles) {
+                outstr = outstr.concat(" :" + angle);
+            }
+            outstr = outstr.concat(" : total angle:" + Arrays.stream(internalAngles).sum());
+            System.out.println(outstr);
+
+            internalAngles = rot2skew.getInternalAngles();
+            outstr = "rot2skew internal angles";
+            for (double angle : internalAngles) {
+                outstr = outstr.concat(" :" + angle);
+            }
+            outstr = outstr.concat(" : total angle:" + Arrays.stream(internalAngles).sum());
+            System.out.println(outstr);
+        }
+
+        
+        double skewAngle = Utils2D.squarenessFromRotatedTriangles(rot1skew, rot2skew);
+        System.out.println("skewAngle:" + skewAngle);
+        final double skewOut = Math.sin(Math.toRadians(skewAngle));
+        System.out.println("skewOut:" + skewOut);
+    }
+}
 

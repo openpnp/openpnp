@@ -39,6 +39,7 @@ import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Point;
+import org.openpnp.model.Triangle;
 import org.pmw.tinylog.Logger;
 
 
@@ -691,4 +692,21 @@ public class Utils2D {
         results.add(maxB);
         return results;
     }
+
+    /**
+     * Calculate the machine non squareness by measuring a reference angle in two different rotations
+     * Requires a fixed pattern of three reference points at approximately 90degrees pattern.
+     * Measure point positions with reference in two positions with approx 90deg rotation between.
+     * @param rotation1 - Triangle in first position
+     * @param rotation2 - Triangle in second position
+     * @return angle error
+     */
+    public static double squarenessFromRotatedTriangles(Triangle rotation1, Triangle rotation2) {
+        double[] angles1 = rotation1.getInternalAngles();
+        double[] angles2 = rotation2.getInternalAngles();
+        
+        double error = (angles2[0] - angles1[0]) * 0.5;
+        return error;
+    }
+        
 }

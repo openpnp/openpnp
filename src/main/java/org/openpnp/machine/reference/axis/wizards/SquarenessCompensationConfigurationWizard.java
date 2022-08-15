@@ -114,21 +114,21 @@ public class SquarenessCompensationConfigurationWizard extends AbstractConfigura
                 String primaryAxisId = primaryAxis.getId();
                 
                 
-                HeadMountable hm = ((AbstractCoordinateAxis) axis.getPrimaryInputAxis()).getDefaultHeadMountable();
-                if (hm instanceof ReferenceCamera) {
-                    ReferenceCamera camera = (ReferenceCamera) hm;
-                    if (camera.getHead() != null && camera.getLooking() == Looking.Down) {
-                        if (Configuration.get().getMachine() instanceof ReferenceMachine) {
+//                HeadMountable hm = ((AbstractCoordinateAxis) axis.getPrimaryInputAxis()).getDefaultHeadMountable();
+//                if (hm instanceof ReferenceCamera) {
+//                    ReferenceCamera camera = (ReferenceCamera) hm;
+//                    if (camera.getHead() != null && camera.getLooking() == Looking.Down) {
+//                        if (Configuration.get().getMachine() instanceof ReferenceMachine) {
 //                            ReferenceMachine refMachine = (ReferenceMachine) Configuration.get().getMachine();
 //                            refMachine.getCalibrationSolutions()
 //                            .calibrateAxisBacklash((ReferenceHead)(camera.getHead()), camera,
 //                                    camera, (ReferenceControllerAxis)axis);
 //                            MainFrame.get().getMachineSetupTab().selectCurrentTreePath();
-                            return true;
-                        }
-                    }
-                }
-                throw new Exception("Only an axis on a down-looking camera can be calibrated.");
+//                            return true;
+//                        }
+//                    }
+//                }
+                throw new Exception("Nothing to see here.");
             });
         }
     };    
