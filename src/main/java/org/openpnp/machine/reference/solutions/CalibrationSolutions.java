@@ -309,6 +309,102 @@ public class CalibrationSolutions implements Solutions.Subject {
                     }
                 }
             }
+            if (camera == defaultCamera) {
+                CoordinateAxis rawAxisX = HeadSolutions.getRawAxis(machine, camera.getAxisX());
+                CoordinateAxis rawAxisY = HeadSolutions.getRawAxis(machine, camera.getAxisY());
+                
+                solutions.add(new Solutions.Issue(
+                        camera, 
+                        "Calibrate machine squareness", 
+                        "Automatically calibrates machine squareness using a reference shape", 
+                        Solutions.Severity.Suggestion,
+                        "https://github.com/openpnp") {
+
+                    {
+                        tolerance = new Length(0.25, LengthUnit.Millimeters);
+                    }
+                    
+                    private Length tolerance;
+                    
+                    @Override 
+                    public void activate() throws Exception {
+                        MainFrame.get().getMachineControls().setSelectedTool(camera);
+                        camera.ensureCameraVisible();
+                    }
+
+                    @Override 
+                    public String getExtendedDescription() {
+                        return "<html>"
+                                + "<p>Squareness compensation calibrates for misalignment between x and y axis. "
+                                + "linkages of machine axes. More information can be found in the Wiki (press the blue Info button below).</p><br/>"
+                                + "<p><strong color=\"red\">CAUTION 1</strong>: The camera "+camera.getName()+" will move over the primary fiducial "
+                                + "and then perform a calibration motion pattern, moving the axis "+" over its full soft-limit range.</p><br/>"
+                                + "<p>When ready, press Accept.</p>"
+                                + (getState() == State.Solved ? 
+                                        "<br/><h4>Results:</h4>"
+                                        + "<table>"
+                                        + "<tr><td align=\"right\">Detected alignment:</td>"
+                                        + "<tr><td align=\"right\">Applicable Resolution:</td>"
+                                        + "</table>" 
+                                        : "")
+                                + "</html>";
+                    }
+
+                    @Override
+                    public Solutions.Issue.CustomProperty[] getProperties() {
+                        return new Solutions.Issue.CustomProperty[] {
+                                new Solutions.Issue.LengthProperty(
+                                        "Tolerance ±",
+                                        "Set the targe tolerance.") {
+                                    @Override
+                                    public Length get() {
+                                        return tolerance;
+                                    }
+                                    @Override
+                                    public void set(Length value) {
+                                        tolerance = value;
+                                    }
+                                },
+                        };
+                    }
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        if (state == State.Solved) {
+                            if (! visionSolutions.isSolvedPrimaryXY(head)) {
+                                throw new Exception("The head "+head.getName()+" primary fiducial location X and Y must be set first.");
+                            }
+
+                            final State oldState = getState();
+                            UiUtils.submitUiMachineTask(
+                                    () -> {
+                                        calibrateSquareness(head, camera, camera);
+                                        return true;
+                                    },
+                                    (result) -> {
+                                        UiUtils.messageBoxOnException(() -> super.setState(state));
+                                        // Persist this solved state.
+                                        solutions.setSolutionsIssueSolved(this, true);
+                                    },
+                                    (t) -> {
+                                        UiUtils.showError(t);
+                                        // restore old state
+                                        UiUtils.messageBoxOnException(() -> setState(oldState));
+                                    });
+                        }
+                        else {
+//                            axis.setBacklashCompensationMethod(oldMethod);
+//                            axis.setBacklashOffset(oldOffset);
+//                            axis.setSneakUpOffset(oldSneakUp);
+//                            axis.setBacklashSpeedFactor(oldSpeed);
+//                            axis.setAcceptableTolerance(oldAcceptableTolerance);
+                            // Persist this unsolved state.
+                            solutions.setSolutionsIssueSolved(this, false);
+                            super.setState(state);
+                        }
+                    }
+                });
+            }
             if (visionSolutions.isSolvedPrimaryZ(head) // In addition to XY checked in the outer if()
                     && visionSolutions.isSolvedSecondaryXY(head)
                     && visionSolutions.isSolvedSecondaryZ(head)
@@ -1309,4 +1405,31 @@ public class CalibrationSolutions implements Solutions.Subject {
             throw e;
         }
     }
+
+    public void calibrateSquareness(ReferenceHead head, ReferenceCamera camera,
+            HeadMountable movable) throws Exception {
+        // Check pre-conditions (this method can be called from outside Issues & Solutions).
+        if (! head.getCalibrationPrimaryFiducialLocation().isInitialized()) {
+            throw new Exception("Head "+head.getName()+" primary fiducial location must be set for backlash calibration.");
+        }
+        if (head.getCalibrationPrimaryFiducialDiameter() == null 
+                || ! head.getCalibrationPrimaryFiducialDiameter().isInitialized()) {
+            throw new Exception("Head "+head.getName()+" primary fiducial diameter must be set for backlash calibration.");
+        }
+
+        // Use the primary calibration fiducial for calibration.
+        Location location = head.getCalibrationPrimaryFiducialLocation();
+        Length fiducialDiameter = head.getCalibrationPrimaryFiducialDiameter();
+        MovableUtils.moveToLocationAtSafeZ(movable, location);
+        location = machine.getVisionSolutions()
+                .centerInOnSubjectLocation(camera, movable,
+                        fiducialDiameter, "Backlash Calibration Speed Control Test", false);
+
+////        // Measure times used for same distance at different speeds.
+////        MovableUtils.moveToLocationAtSafeZ(movable, location);
+////        movable.waitForCompletion(CompletionType.WaitForStillstand);
+////        Location timedLocation = displacedAxisLocation(movable, axis, location, -backlashTestMoveMm*mmAxis, false);
+    //
+    }
+
 }
