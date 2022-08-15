@@ -18,11 +18,13 @@ Depending on the make and model of your camera, different properties will be ava
 
 Generally, **Auto** settings should be avoided, as they lead to unstable conditions for computer vision. We need to be able to set stable thresholds, e.g. for brightness, color hue, saturation etc. which is not possible if they fluctuate between camera subjects. If your camera does not support switching off automatic exposure, consider replacing it. Seriously. 
 
-Unlike humans, computer vision does not care about the aesthetics of an image. Avoid all settings that aim at "pleasing" images. Disable/minimize sharpness, contrast enhancements, gamma etc. as these can be detrimental to the accuracy of computer vision. The raw, unmanipulated image at the right exposure is what we want, so computer vision gets the best quality _real world_ information from the sensor, even if it looks not so crispy to you.
+Unlike humans, computer vision does not care about the aesthetics of an image. Avoid all settings that aim at "pleasing" images, these can be detrimental to the accuracy of computer vision. The raw, unmanipulated image at the right exposure is what we want, so computer vision gets the original _real world_ information from the sensor, even if it looks not so crispy to you. Therefore, minimize **Sharpness**, set **Contrast**, **Gamma** etc. to their respective **Default** values indicated on the right side. 
 
 The optimal image is optimized for the brightest scene that is encountered in operation. In other scenes it might appear too dark to humans, however computer vision can still get enough information from even a fraction of the dynamic range, it is much more important that levels remain stable between scenes. 
 
-![Camera Properties](https://user-images.githubusercontent.com/9963310/184720401-2db1c30e-f7ca-456f-b49a-951423e4cddd.png)
+If in doubt, set to the **Default** value indicated on the right side. 
+
+![Camera Properties](https://user-images.githubusercontent.com/9963310/184723700-9d25ca1f-5c94-4a33-9579-e3ce2f9aba3c.png)
 
 # Troubleshooting
 
