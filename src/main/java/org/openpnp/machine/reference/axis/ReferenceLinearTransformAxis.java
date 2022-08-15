@@ -36,6 +36,7 @@ import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.spi.Axis;
 import org.openpnp.spi.Machine;
+import org.openpnp.spi.Camera;
 import org.openpnp.spi.Locatable.LocationOption;
 import org.openpnp.spi.PropertySheetHolder.PropertySheet;
 import org.openpnp.spi.base.AbstractAxis;
@@ -58,6 +59,7 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
     private AbstractAxis inputAxisY;
     private AbstractAxis inputAxisZ;
     private AbstractAxis inputAxisRotation;
+    private Camera camera;
 
     @Attribute(required = false)
     private String inputAxisXId;
@@ -90,6 +92,7 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
                 inputAxisY = (AbstractAxis) configuration.getMachine().getAxis(inputAxisYId);
                 inputAxisZ = (AbstractAxis) configuration.getMachine().getAxis(inputAxisZId);
                 inputAxisRotation = (AbstractAxis) configuration.getMachine().getAxis(inputAxisRotationId);
+                camera = configuration.getMachine().getDefaultHead().getDefaultCamera();
             }
         });
     }
@@ -154,6 +157,10 @@ public class ReferenceLinearTransformAxis extends AbstractTransformedAxis {
         this.inputAxisRotation = inputAxisRotation;
         this.inputAxisRotationId = (inputAxisRotation == null) ? null : inputAxisRotation.getId();
         firePropertyChange("inputAxisRotation", oldValue, inputAxisRotation);
+    }
+    
+    public Camera getDefaultHeadCamera() {
+        return camera;
     }
 
     public double getFactorX() {
