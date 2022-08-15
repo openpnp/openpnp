@@ -61,7 +61,7 @@ import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.OcrWrongPartAction;
 import org.openpnp.machine.reference.feeder.ReferencePushPullFeeder.PipelineType;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.RegionOfInterestOffset;
+import org.openpnp.model.RegionOfInterest;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
 import org.openpnp.util.MovableUtils;
@@ -807,8 +807,8 @@ extends AbstractReferenceFeederConfigurationWizard {
                     UiUtils.messageBoxOnException(() -> {
                         new RegionOfInterestProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region", true) {
                             @Override 
-                            public void setResult(RegionOfInterestOffset roi) {
-                                feeder.setOcrRegion((RegionOfInterestOffset) roi);
+                            public void setResult(RegionOfInterest roi) {
+                                feeder.setOcrRegion(roi);
                             }
                         };
                     });

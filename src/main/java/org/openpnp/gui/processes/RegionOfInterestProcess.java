@@ -42,7 +42,6 @@ import org.openpnp.gui.components.reticle.Reticle;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.RegionOfInterest;
-import org.openpnp.model.RegionOfInterestOffset;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.UiUtils;
 
@@ -89,7 +88,6 @@ public class RegionOfInterestProcess {
     private static final String PROCESS_RETICLE_KEY = "PROCESS_RETICLE_KEY";
 
     private RegionOfInterest regionOfInterest = null;
-    private RegionOfInterestOffset regionOfInterestOffset= null;
     private boolean doLocation = false;
     private Location startLocation = null;
     
@@ -165,6 +163,9 @@ public class RegionOfInterestProcess {
                         drawRegion(g2d);
                     }
                     break;
+                    case CameraOffset :{
+                        break;
+                    }
                     default: 
                         drawRegion(g2d);
                         break;
@@ -281,16 +282,17 @@ public class RegionOfInterestProcess {
     }
 
     private boolean saveResults() {
-        // calculate the Locations from pixels
-        regionOfInterest = new RegionOfInterest(
-                cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.UpperLeft).x, regionStakeout.get(ROIStep.UpperLeft).y),
-                cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.UpperRight).x, regionStakeout.get(ROIStep.UpperRight).y),
-                cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.LowerLeft).x, regionStakeout.get(ROIStep.LowerLeft).y),
-                rectify);
-
+        //Get camera offset between now and the start of the process
         Location endLocation = camera.getLocation();
         Location location = this.doLocation ? (endLocation.subtract(startLocation)) : null;
-        regionOfInterestOffset = new RegionOfInterestOffset(
+
+        // If camera offset is small then consider it zero and set it to null
+        if (location.getLinearDistanceTo(Location.origin) < 0.1){
+            location = null;
+        }
+        
+        // calculate the Locations from pixels        
+        regionOfInterest = new RegionOfInterest(
                 cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.UpperLeft).x, regionStakeout.get(ROIStep.UpperLeft).y),
                 cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.UpperRight).x, regionStakeout.get(ROIStep.UpperRight).y),
                 cameraView.getCameraViewCenterOffsetsFromXy(regionStakeout.get(ROIStep.LowerLeft).x, regionStakeout.get(ROIStep.LowerLeft).y),
@@ -298,7 +300,6 @@ public class RegionOfInterestProcess {
                 location);
 
         UiUtils.messageBoxOnException(() -> {
-            setResult(regionOfInterestOffset);
             setResult(regionOfInterest);
         });
         return true;
@@ -325,7 +326,4 @@ public class RegionOfInterestProcess {
     public void setResult(RegionOfInterest roi) {
     }
 
-    public void setResult(RegionOfInterestOffset roi) {
-    }    
-    
 }
