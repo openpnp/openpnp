@@ -78,7 +78,7 @@ Regardles of the **Rotation Mode**, it is recommended to enable the **Align with
 
 ![Align with part switch](https://user-images.githubusercontent.com/9963310/178480834-200e20d4-8640-46c4-8143-14903fdadc3d.png)
 
-It offsets the nozzle rotation coordinate to match that of the part, once the part is aligned. This means that the cross-hairs and the DRO are nicely aligned with the part. 
+It offsets the nozzle rotation coordinate to match that of the part, once the part is aligned in bottom vision. This means that the cross-hairs and the DRO are precisely aligned with the part. 
 
 ## Working with Limited Articulation
 
