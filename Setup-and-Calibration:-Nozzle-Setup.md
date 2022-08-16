@@ -29,6 +29,20 @@ If you have more than one nozzle tip on your machine:
 4. Select the new nozzle tip to open it's properties.
 5. To use the machine with the nozzle tip you just created you need to load it onto the nozzle. Press the load button ![](https://rawgit.com/openpnp/openpnp/develop/src/main/resources/icons/nozzletip-load.svg) to do this.
 
+## Nozzle Tip Configuration
+
+The nozzle tip contains some important dimensions for use in bottom vision: 
+
+![Nozzle tip configuration](https://user-images.githubusercontent.com/9963310/156925117-1c2fbd35-3003-4354-96bd-6481b9920342.png)
+
+**Min. Part Diameter** sets the minimum part dimension assumed to be picked with this nozzle tip. This diameter is used to calculate an _inner_ diameter of the nozzle tip that will always be covered by the part (**Min. Part Diameter** minus two times the **Maximum Pick Tolerance**). The pixels in the _inner_ diameter are then disregarded/blotted-out  by the [Background Calibration](/openpnp/openpnp/wiki/Nozzle-Tip-Background-Calibration).
+
+**Max. Part Diameter** sets the maximum part dimensions (diagonal) assumed to be picked with this nozzle tip. This diameter is used to limit the image area that is taken into consideration. In the computer vision pipeline, this is aplied as a black MaskCircle mask, suppressing any disruptive elements in the camera view periphery (visible diffuser, reflections etc.). The same Mask is used in [Background Calibration](/openpnp/openpnp/wiki/Nozzle-Tip-Background-Calibration) to calibrate for the expected brightness/color of the background. 
+
+Notes: this diameter is also important to limit the computation time of some stages, you should reduce it as far as possible. When using [[Vision Compositing]] a.k.a. Multi-Shot Bottom Vision, the **Max. Part Diameter** limit does not actually _limit_ the part diameter, but rather sets the _threshold_ when multiple-shots become necessary. The individual corner shots are again restricted to this mask size. 
+
+**Maximum Pick Tolerance** sets the maximum allowed distance of the detected part, from its expected location. If it is larger than the given distance, an error will be thrown. This also controls some stages in the pipeline, by limiting the maximum search distance and lessening the computational cost. 
+
 ## Nozzle to Nozzle Tip Compatibility
 Use the Nozzle Tips tab on a nozzle to determine which nozzle tips can be loaded on a Nozzle:
 
