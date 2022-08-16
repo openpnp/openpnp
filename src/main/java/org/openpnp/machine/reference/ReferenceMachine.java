@@ -82,6 +82,7 @@ import org.openpnp.machine.reference.psh.SignalersPropertySheetHolder;
 import org.openpnp.machine.reference.signaler.ActuatorSignaler;
 import org.openpnp.machine.reference.signaler.SoundSignaler;
 import org.openpnp.machine.reference.solutions.CalibrationSolutions;
+import org.openpnp.machine.reference.solutions.GeometrySolutions;
 import org.openpnp.machine.reference.solutions.KinematicSolutions;
 import org.openpnp.machine.reference.solutions.NozzleTipSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
@@ -581,6 +582,9 @@ public class ReferenceMachine extends AbstractMachine {
     @Element(required = false)
     private VisionSolutions visualSolutions = new VisionSolutions();
 
+    @Element(required = false)
+    private GeometrySolutions geometrySolutions = new GeometrySolutions();
+
     public VisionSolutions getVisionSolutions() {
         return visualSolutions;
     }
@@ -597,6 +601,7 @@ public class ReferenceMachine extends AbstractMachine {
         kinematicSolutions.setMachine(this).findIssues(solutions);
         nozzleTipSolutions.setMachine(this).findIssues(solutions);
         visualSolutions.setMachine(this).findIssues(solutions);
+        geometrySolutions.setMachine(this).findIssues(solutions);
         calibrationSolutions.setMachine(this).findIssues(solutions);
 
         if (solutions.isTargeting(Milestone.Advanced)) {

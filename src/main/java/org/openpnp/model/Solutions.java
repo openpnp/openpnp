@@ -77,6 +77,7 @@ public class Solutions extends AbstractTableModel {
         Basics      ("Basics",      "basics",       "Configure basic machine axes, motion, vacuum switching, light switching."),
         Kinematics  ("Kinematics",  "kinematics",   "Define machine kinematics: Safe Z, soft limits, motion control model, feed-rates, accelerations etc."),
         Vision      ("Vision",      "vision",       "Setup cameras and computer vision."),
+        Geometry    ("Geometry",    "geometry",     "Correct for squareness and step scale."),
         Calibration ("Calibration", "calibration",  "Calibrate the machine for precision motion and vision."),
         Production  ("Production",  "production",   "Configure feeders and solve other production related issues."), 
         Advanced    ("Advanced",    "advanced",     "Enable more advanced features for a faster and more automatic machine.");
