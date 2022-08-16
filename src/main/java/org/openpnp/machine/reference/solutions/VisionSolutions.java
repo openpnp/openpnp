@@ -50,6 +50,7 @@ import org.openpnp.machine.reference.camera.SimulatedUpCamera;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
 import org.openpnp.model.Configuration;
+import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.FiducialVisionSettings;
 import org.openpnp.model.Footprint;
 import org.openpnp.model.Footprint.Pad;
@@ -211,6 +212,26 @@ public class VisionSolutions implements Solutions.Subject {
 
     @Override
     public void findIssues(Solutions solutions) {
+        if (solutions.isTargeting(Milestone.Production)) {
+            if (Configuration.get().getTablesLinked() == TablesLinked.Unlinked) {
+                solutions.add(new Solutions.Issue(
+                        machine, 
+                        "Link the Placements/Parts/Packages/Vision Settings/Feeders tables between tabs.", 
+                        "When a table row is selected on one tab, automatically select the corresponding ones on the other tabs. "
+                        + "For instance, if a placement is selected, the corresponding part will be selected on the Parts tab, "
+                        + "the package on the Packages tab, the vision settings on the Vision tab, and the feeder on "
+                        + "the Feeders tab, if one is present for the part.", 
+                        Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/User-Manual#the-tabs") {
+
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        Configuration.get().setTablesLinked(state == State.Solved ? TablesLinked.Linked : TablesLinked.Unlinked);
+                        super.setState(state);
+                    }
+                });
+            }
+        }
         if (solutions.isTargeting(Milestone.Vision)) {
             for (Head h : machine.getHeads()) {
                 if (h instanceof ReferenceHead) {

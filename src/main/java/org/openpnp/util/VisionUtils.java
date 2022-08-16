@@ -294,10 +294,10 @@ public class VisionUtils {
     }
 
     /**
-     * Compute an RGB histogram over the provided image.
+     * Compute an HSV histogram over the provided image.
      * 
      * @param image
-     * @return the histogram as long[channel][value] with channel 0=Red 1=Green 2=Blue and value 0...255.
+     * @return the histogram as long[channel][value] with channel 0=Hue 1=Saturation 2=Value and value 0...255.
      */
     public static long[][] computeImageHistogramHsv(BufferedImage image) {
         long[][] histogram = new long[3][256];
