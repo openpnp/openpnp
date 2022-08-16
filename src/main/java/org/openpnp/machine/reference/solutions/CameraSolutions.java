@@ -333,8 +333,8 @@ public class CameraSolutions implements Solutions.Subject  {
                                             + "by Issues & Solutions. Press <strong>Find Issues & Solutions</strong> to check for the latest status. "
                                             + "Proceed only when you are sure the properties are OK, white balance must be computed as the last step.</p><br/>")
                                     + "<p>Color-keyed computer vision needs stable, and accurate colors. Neither the unstable Auto white balance, "
-                                    + "nor the one-dimensional/rudimentary device white balance is suitable."
-                                    + "Therefore OpenPnP offers its own true and static white balance. You can automatically calibrate it now.</p><br/>"
+                                    + "nor the device manual white balance is suitable (it us typically merely a red-blue-shift)."
+                                    + "Therefore OpenPnP offers its own elaborate and static white balance. You can automatically calibrate it now.</p><br/>"
                                     + "<p>Make sure a suitable white balance calibration object is visible in the camera view. "
                                     + "Brushed metal and paper are recommended. The camera should see all brightness levels, i.e., "
                                     + "an assortment of metal objects with holes, bevels, shadows etc. usually provides good gradients."
