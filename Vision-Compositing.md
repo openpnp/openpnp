@@ -74,6 +74,8 @@ It is recommended to enable the **Align with Part?** option on the nozzles:
 
 It offsets the nozzle rotation coordinate to match that of the part, once the part is aligned. This means that the cross-hairs and the DRO are nicely aligned with the part. This is especially useful in the multi-shot scenario, where you often only see a fraction of the whole part, and the reticle (cross-hairs, grid etc.) provides valuable visual feedback. 
 
+Furthermore, revisit the [Nozzle Tip Configuration](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Nozzle-Setup#nozzle-tip-configuration), **Max. Part Diameter** and **Max. Pick Tolerance** are important inputs for the multi-shot operation. 
+
 ## Package Footprint
 
 In order for Multi-Shot Bottom Vision to work, the footprint must be defined. Most common footprints can easily be generated from very few datasheet parameters, right inside OpenPnP:
