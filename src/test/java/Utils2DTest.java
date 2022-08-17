@@ -178,7 +178,7 @@ public class Utils2DTest {
         Location ref3 = new Location(LengthUnit.Millimeters, 75.0, 2.0, 0.0, 0.0);
         
         final double skewX = 0.1;
-        final double skewY = 0.00;
+        final double skewY = 0.1;
         System.out.println("skewX:" + skewX + "  skewY:" + skewY);
 
         Triangle ref = new Triangle(ref1, ref2, ref3);
@@ -249,6 +249,14 @@ public class Utils2DTest {
         double skewAngle = Utils2D.squarenessFromRotatedTriangles(rot1skew, rot2skew);
         System.out.println("skewAngle:" + skewAngle);
         final double skewOut = Math.sin(Math.toRadians(skewAngle));
+        System.out.println("skewOut:" + skewOut);
+        final double skewInputDiff = (skewX+skewY);
+        System.out.println("skewDiff:" + skewInputDiff);
+        final double skewError = Math.abs(skewOut-skewInputDiff);
+        System.out.println("skewError:" + skewError);
+        if (skewError > 0.05) {
+            throw new Exception("Output skew:" + skewOut + "is out of range of input skew:" + skewInputDiff + " skewX:" + skewX + " skewY:" + skewY);
+        }
         System.out.println("skewOut:" + skewOut);
     }
 }
