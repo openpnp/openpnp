@@ -129,7 +129,7 @@ If you switch **Confirmation Flow Control** off, make sure you have flow-control
 
 ![Serial Port Flow Control](https://user-images.githubusercontent.com/9963310/96151994-51b87780-0f0c-11eb-8bf6-771492d04862.png)
 
-**RtsCts** has been confirmed to work for [[the tested controllers|Motion-Controller-Firmwares]] over USB. 
+**RtsCts** has been confirmed to work for Smoothieboard and Duet 3 over USB, but not for TinyG. See also the [Motion Controller Firmwares] page. 
 
 ### Interpolation 
 
