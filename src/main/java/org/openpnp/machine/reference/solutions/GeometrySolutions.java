@@ -57,6 +57,7 @@ import org.openpnp.model.Part;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
 import org.openpnp.model.Solutions.State;
+import org.openpnp.model.Triangle;
 import org.openpnp.spi.Axis.Type;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.CoordinateAxis;
@@ -70,6 +71,7 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.util.NanosecondTime;
 import org.openpnp.util.SimpleGraph;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.Utils2D;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvStage.Result.Circle;
 import org.pmw.tinylog.Logger;
@@ -84,25 +86,18 @@ public class GeometrySolutions implements Solutions.Subject {
     @Element(required = false)
     private Length fiducialDiameter = null;
 
-    private Location rot1pt1 = null;
-    private Location rot1pt2 = null;
-    private Location rot1pt3 = null;
-
-    private Location rot2pt1 = null;
-    private Location rot2pt2 = null;
-    private Location rot2pt3 = null;
+    private Location[][] locations = new Location[2][3];
     
     private double maxCameraRelativeSubjectDiameter = 0.7;
-
     
     public GeometrySolutions setMachine(ReferenceMachine machine) {
         this.machine = machine;
-        
         return this;
     }
 
     private ReferenceMachine machine;
-    protected int featureDiameter;
+    protected double skewAngle = 0.0;
+    protected double skewCoefficient = 0.0;
 
     @Override
     public void findIssues(Solutions solutions) {
@@ -153,6 +148,8 @@ public class GeometrySolutions implements Solutions.Subject {
                 public void activate() throws Exception {
                     MainFrame.get().getMachineControls().setSelectedTool(camera);
                     camera.ensureCameraVisible();
+                    checkCaptureComplete();
+                    calibrateSquareness();
                 }
 
                 @Override 
@@ -163,11 +160,17 @@ public class GeometrySolutions implements Solutions.Subject {
                             + "<p><strong color=\"red\">CAUTION 1</strong>: The camera "+camera.getName()+" will move over the primary fiducial "
                             + "and then perform a calibration motion pattern, moving the axis "+" over its full soft-limit range.</p><br/>"
                             + "<p>When ready, press Accept.</p>"
+//                            + 
+//                                    "<br/><h4>Results:</h4>"
+//                                    + "<table>"
+//                                    + "<tr><td align=\"right\">Current rotation:" + String.valueOf(currentRotation) + "</td>"
+//                                    + "<tr><td align=\"right\">Current position:" + String.valueOf(currentPosition) + "</td>"
+//                                    + "</table>" 
                             + (getState() == State.Solved ? 
                                     "<br/><h4>Results:</h4>"
                                     + "<table>"
-                                    + "<tr><td align=\"right\">Detected alignment:</td>"
-                                    + "<tr><td align=\"right\">Applicable Resolution:</td>"
+                                    + "<tr><td align=\"right\">Skew angle:" + String.valueOf(skewAngle) + "deg</td>"
+                                    + "<tr><td align=\"right\">Skew coefficient:" + String.valueOf(skewCoefficient) + "deg</td>"
                                     + "</table>" 
                                     : "")
                             + "</html>";
@@ -176,19 +179,20 @@ public class GeometrySolutions implements Solutions.Subject {
                 @Override
                 public Solutions.Issue.CustomProperty[] getProperties() {
                     int maxDiameter = (int)(Math.min(camera.getWidth(), camera.getHeight())*maxCameraRelativeSubjectDiameter);
-                    Solutions.Issue.CustomProperty[] props1 = super.getProperties();
-                    Solutions.Issue.CustomProperty[] props0 = new Solutions.Issue.CustomProperty[] {
-                            new Solutions.Issue.IntegerProperty(
-                                    "Feature diameter",
-                                    "Adjust the feature diameter that should be detected.",
-                                    3, maxDiameter) {
+                    Solutions.Issue.CustomProperty[] propsSuper = super.getProperties();
+                    
+                    Solutions.Issue.CustomProperty[] propsItems = new Solutions.Issue.CustomProperty[] {
+                            
+                            new Solutions.Issue.LengthProperty(
+                                    "Fiducial diameter",
+                                    "Adjust the fiducial diameter that should be detected.") {
                                 @Override
-                                public int get() {
-                                    return featureDiameter;
+                                public Length get() {
+                                    return fiducialDiameter;
                                 }
                                 @Override
-                                public void set(int value) {
-                                    featureDiameter = value;
+                                public void set(Length value) {
+                                    fiducialDiameter = value;
 //                                    try {
 //                                        UiUtils.submitUiMachineTask(() -> {
 //                                            try {
@@ -205,69 +209,98 @@ public class GeometrySolutions implements Solutions.Subject {
 //                                        Logger.warn(e);
 //                                    }
                                 }
+
+
                             },
                             new Solutions.Issue.ActionProperty( 
-                                    "", "Capture position 1, triangle point 1") {
+                                    "", "Capture location for rotation 1 and position 1") {
                                 @Override
                                 public Action get() {
-                                    return new AbstractAction("Capture pos1 pt1", Icons.captureCamera) {
+                                    return new AbstractAction("Capture rotation 1 point 1", Icons.captureCamera) {
                                         @Override
                                         public void actionPerformed(ActionEvent e) {
                                             UiUtils.submitUiMachineTask(() -> {
-                                                rot1pt1 = camera.getLocation();
-//                                                rot1pt1 = (boolean) getChoice() ? findFiducial(fiducialDiameter, camera) : camera.getLocation();
+                                                captureLocation(camera, 0, 0);
                                             });
                                         }
                                     };
                                 }
                             },
                             new Solutions.Issue.ActionProperty( 
-                                    "", "Capture position 1, triangle point 2") {
+                                    "", "Capture location for rotation 1 and position 2") {
                                 @Override
                                 public Action get() {
-                                    return new AbstractAction("Capture pos1 pt2", Icons.captureCamera) {
+                                    return new AbstractAction("Capture rotation 1 point 2", Icons.captureCamera) {
                                         @Override
                                         public void actionPerformed(ActionEvent e) {
                                             UiUtils.submitUiMachineTask(() -> {
-                                                rot1pt2 = camera.getLocation();
+                                                captureLocation(camera, 0, 1);
                                             });
                                         }
                                     };
                                 }
                             },
                             new Solutions.Issue.ActionProperty( 
-                                    "", "Capture position 1, triangle point 3") {
+                                    "", "Capture location for rotation 1 and position 3") {
                                 @Override
                                 public Action get() {
-                                    return new AbstractAction("Capture pos1 pt3", Icons.captureCamera) {
+                                    return new AbstractAction("Capture rotation 1 point 3", Icons.captureCamera) {
                                         @Override
                                         public void actionPerformed(ActionEvent e) {
                                             UiUtils.submitUiMachineTask(() -> {
-                                                rot1pt3 = camera.getLocation();
+                                                captureLocation(camera, 0, 2);
                                             });
                                         }
                                     };
                                 }
                             },
+                            new Solutions.Issue.ActionProperty( 
+                                    "", "Capture location for rotation 2 and position 1") {
+                                @Override
+                                public Action get() {
+                                    return new AbstractAction("Capture rotation 2 point 1", Icons.captureCamera) {
+                                        @Override
+                                        public void actionPerformed(ActionEvent e) {
+                                            UiUtils.submitUiMachineTask(() -> {
+                                                captureLocation(camera, 1, 0);
+                                            });
+                                        }
+                                    };
+                                }
+                            },
+                            new Solutions.Issue.ActionProperty( 
+                                    "", "Capture location for rotation 2 and position 2") {
+                                @Override
+                                public Action get() {
+                                    return new AbstractAction("Capture rotation 2 point 2", Icons.captureCamera) {
+                                        @Override
+                                        public void actionPerformed(ActionEvent e) {
+                                            UiUtils.submitUiMachineTask(() -> {
+                                                captureLocation(camera, 1, 1);
+                                            });
+                                        }
+                                    };
+                                }
+                            },
+                            new Solutions.Issue.ActionProperty( 
+                                    "", "Capture location for rotation 2 and position 3") {
+                                @Override
+                                public Action get() {
+                                    return new AbstractAction("Capture rotation 12 point 3", Icons.captureCamera) {
+                                        @Override
+                                        public void actionPerformed(ActionEvent e) {
+                                            UiUtils.submitUiMachineTask(() -> {
+                                                captureLocation(camera, 1, 2);
+                                            });
+                                        }
+                                    };
+                                }
+                            },
+                            
                     };
-                    return Collect.concat(props0, props1);
+                    return Collect.concat(propsItems, propsSuper);
                 }
                 
-                @Override
-                public Solutions.Issue.Choice[] getChoices() {
-                    return new Solutions.Issue.Choice[] {
-                            new Solutions.Issue.Choice(true, 
-                                    "<html><h3>Locate fiducial</h3>"
-                                            + "<p>Use camera to locate fiducial.</p>"
-                                            + "</html>",
-                                            null),
-                            new Solutions.Issue.Choice(false, 
-                                    "<html><h3>Manual</h3>"
-                                            + "<p>Capture camera location directly</p><br/>"
-                                            + "</html>",
-                                            null),
-                    };
-                }
                 @Override
                 public void setState(Solutions.State state) throws Exception {
                     if (state == State.Solved) {
@@ -318,8 +351,11 @@ public class GeometrySolutions implements Solutions.Subject {
 
                     @Override 
                     public void activate() throws Exception {
-                        MainFrame.get().getMachineControls().setSelectedTool(camera);
-                        camera.ensureCameraVisible();
+//                        MainFrame.get().getMachineControls().setSelectedTool(camera);
+//                        camera.ensureCameraVisible();
+//                            checkCaptureComplete();
+//                        checkCaptureComplete();
+//                        calibrateSquareness();
                     }
 
                     @Override 
@@ -342,11 +378,8 @@ public class GeometrySolutions implements Solutions.Subject {
                     @Override
                     public void setState(Solutions.State state) throws Exception {
                         if (state == State.Solved) {
-//                            advancedCameraCalibration(camera, defaultNozzle, head, this);
                         }
                         else {
-                            camera.getAdvancedCalibration()
-                            .setOverridingOldTransformsAndDistortionCorrectionSettings(false);
                         }
                         super.setState(state);
                     }
@@ -354,34 +387,68 @@ public class GeometrySolutions implements Solutions.Subject {
             }
         }
     }
+    
+    public void captureLocation(ReferenceCamera camera, int rot, int pt) {
+        Location loc = null;
+        try {
+            loc = findFiducial(fiducialDiameter, camera, camera);
+        }
+        catch (Exception e){
+            loc = camera.getLocation();
+        }
+        locations[rot][pt] = loc;
+    }
 
-    public Location findFiducial(Length fiducialDiameter , ReferenceCamera camera,
+    protected Location findFiducial(Length fiducialDiameter , ReferenceCamera camera,
             HeadMountable movable) throws Exception {
         Location location = machine.getVisionSolutions()
                 .centerInOnSubjectLocation(camera, movable,
-                        fiducialDiameter, "Backlash Calibration Speed Control Test", false);
+                        fiducialDiameter, "Machine squareness - Triangle point capture", false);
         return location;
     }
+    
+    protected boolean checkCaptureComplete() throws Exception {
+        for (int rot=0; rot<2; rot++) {
+            for(int pt=0; pt<3; pt++) {
+                if (locations[rot][pt] == null || !locations[rot][pt].isInitialized()) {
+                    throw new Exception("Rotation" + String.valueOf(rot+1) + " Position:" + String.valueOf(pt+1) + "is not set");
+                }
+            }
+        }
+        return true;
+    }
 
-
+    public void calibrateSquareness() throws Exception {
+      Triangle rot1 = new Triangle(locations[0][0], locations[0][1], locations[0][2]);
+      Triangle rot2 = new Triangle(locations[1][0], locations[1][1], locations[1][2]);
+      skewAngle= Utils2D.squarenessFromRotatedTriangles(rot1, rot2);
+      skewCoefficient = Math.sin(Math.toRadians(skewAngle)); 
+    }
+    
     public void calibrateSquareness(ReferenceHead head, ReferenceCamera camera,
-            HeadMountable movable) throws Exception {
+        HeadMountable movable) throws Exception {
         // Check pre-conditions (this method can be called from outside Issues & Solutions).
-        if (! head.getCalibrationPrimaryFiducialLocation().isInitialized()) {
-            throw new Exception("Head "+head.getName()+" primary fiducial location must be set for backlash calibration.");
-        }
-        if (head.getCalibrationPrimaryFiducialDiameter() == null 
-                || ! head.getCalibrationPrimaryFiducialDiameter().isInitialized()) {
-            throw new Exception("Head "+head.getName()+" primary fiducial diameter must be set for backlash calibration.");
-        }
+//        if (! head.getCalibrationPrimaryFiducialLocation().isInitialized()) {
+//            throw new Exception("Head "+head.getName()+" primary fiducial location must be set for backlash calibration.");
+//        }
+//        if (head.getCalibrationPrimaryFiducialDiameter() == null 
+//                || ! head.getCalibrationPrimaryFiducialDiameter().isInitialized()) {
+//            throw new Exception("Head "+head.getName()+" primary fiducial diameter must be set for backlash calibration.");
+//        }
+        
 
-        // Use the primary calibration fiducial for calibration.
-        Location location = head.getCalibrationPrimaryFiducialLocation();
-        Length fiducialDiameter = head.getCalibrationPrimaryFiducialDiameter();
-        MovableUtils.moveToLocationAtSafeZ(movable, location);
-        location = machine.getVisionSolutions()
-                .centerInOnSubjectLocation(camera, movable,
-                        fiducialDiameter, "Backlash Calibration Speed Control Test", false);
+        
+//        Triangle rot1 = new Triangle(rot1pt1, rot1pt2, rot1pt3);
+//        Triangle rot2 = new Triangle(rot2pt1, rot2pt2, rot2pt3);
+
+//        double skew = Utils2D.squarenessFromRotatedTriangles(rot1, rot2);
+//        // Use the primary calibration fiducial for calibration.
+//        Location location = head.getCalibrationPrimaryFiducialLocation();
+//        Length fiducialDiameter = head.getCalibrationPrimaryFiducialDiameter();
+//        MovableUtils.moveToLocationAtSafeZ(movable, location);
+//        location = machine.getVisionSolutions()
+//                .centerInOnSubjectLocation(camera, movable,
+//                        fiducialDiameter, "Backlash Calibration Speed Control Test", false);
 
 ////        // Measure times used for same distance at different speeds.
 ////        MovableUtils.moveToLocationAtSafeZ(movable, location);
