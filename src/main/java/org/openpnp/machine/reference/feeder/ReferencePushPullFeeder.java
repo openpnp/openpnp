@@ -2456,6 +2456,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         
         FindFeatures feature = null;
 
+        final boolean ocrPass = (ocrAction != OcrWrongPartAction.None && getOcrRegion() != null);
+
         // Calibrate the exact hole locations by obtaining a mid-point lock on them,
         // assuming that any camera lens and Z parallax distortion is symmetric.
         for (int i = 0; i < calibrateMaxPasses; i++) {
@@ -2465,7 +2467,11 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     .derive(null, null, null, runningPickLocation.getRotation()+getRotationInFeeder());
             Logger.debug("calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
             MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
-            setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
+            if(ocrPass) {
+                setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
+            } else {
+                disableOcr(camera, pipeline);
+            }
             // take a new shot
             pipeline.process();
             feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.CalibrateHoles)
@@ -2504,7 +2510,6 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             runningVisionOffset = feature.calibratedVisionOffset;
         }
         
-        boolean ocrPass = (ocrAction != OcrWrongPartAction.None && getOcrRegion() != null);
         // setup OCR if wanted
         if (ocrPass) {
             //If ROI offset is not null then use the existing capture.
