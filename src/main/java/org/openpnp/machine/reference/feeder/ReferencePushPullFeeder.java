@@ -1228,13 +1228,10 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public Location getOcrLocation() throws Exception {
         Location offsets = ocrRegion.getOffsets();
-        if (offsets == null) {
+        if ( offsets == null || !offsets.isInitialized() ) {
             return getNominalVisionLocation();
         }
-        
-        if(!offsets.isInitialized()) {
-            return getNominalVisionLocation();
-        }
+
         return getNominalVisionLocation().add(offsets);
     }
 
