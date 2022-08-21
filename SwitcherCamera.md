@@ -2,9 +2,9 @@ SwitcherCamera lets you have multiple virtual cameras sharing the same physical 
 
 * [Video Demonstration](https://www.youtube.com/watch?v=gFXqbMJM2wM) 
    
-   Note: the above video is outdated. In newer OpenPnP version, each switched camera view will always only show images that come from the right perspective, i.e. if the camera is currently not the switched-to camera, the view is simply frozen. The capture card camera can also be hidden, so you will never confuse cameras. 
+   Note: the above video is outdated. In newer OpenPnP versions, each switched camera view will always only show images that come from the right perspective, i.e. if the camera is currently not the switched-to camera, the view is frozen on the last frame before the switch. 
 * [Related Issue](https://github.com/openpnp/openpnp/issues/851)
-* [Code](https://github.com/openpnp/openpnp/commit/44ad98d8c66338558c616b33e7eda7f61bdd9996)
+
 
 ## Configuration
 
@@ -24,3 +24,13 @@ Please see the [Video Demonstration](https://www.youtube.com/watch?v=gFXqbMJM2wM
 To switch between cameras double click on the camera in the camera view. Note that this will capture a screenshot in your OpenPnP configuration directory. This process will be improved soon.
 
 OpenPnP will automatically switch between the two cameras for vision operations without capturing a screenshot.
+
+# Hide the Capturing Device camera
+Cameras can be shown/not shown in multi camera view panels (**Show All Horizontal**/**Show All Vertical**). This is typically used to hide the capture card in a SwitcherCamera setup. The Camera can still be selected as a single CameraView.
+
+![Show All](https://user-images.githubusercontent.com/9963310/106962435-6761df00-673f-11eb-8d8e-4098cbacb094.png)
+
+Disable the **Show in multi camera view?** option if you want to hide the capture device camera:
+
+![Show option](https://user-images.githubusercontent.com/9963310/106962570-9aa46e00-673f-11eb-99ae-a0c88732dd14.png)
+
