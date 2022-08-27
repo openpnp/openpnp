@@ -105,10 +105,10 @@ public class ImageUtils {
             fy = upp.getLengthY().divide(uppCamera.getLengthY());
         }
         Imgproc.resize(image, image, new Size(), fx, fy, Imgproc.INTER_LANCZOS4);
-        int bx = Math.max(0, camera.getWidth() - image.cols())/2;
-        int by = Math.max(0, camera.getHeight() - image.rows())/2;
+        int bx = Math.max(0, camera.getWidth() - image.cols());
+        int by = Math.max(0, camera.getHeight() - image.rows());
         if (bx > 0 || by > 0) {
-            Core.copyMakeBorder(image, image, by, by, bx, bx, Core.BORDER_CONSTANT);
+            Core.copyMakeBorder(image, image, by/2, (by+1)/2, bx/2, (bx+1)/2, Core.BORDER_CONSTANT);
         }
         int cx = Math.max(0, image.cols() - camera.getWidth())/2;
         int cy = Math.max(0, image.rows() - camera.getHeight())/2;
