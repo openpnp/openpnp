@@ -149,6 +149,9 @@ public class ReferenceMachine extends AbstractMachine {
     private Length unsafeZRoamingDistance = new Length(10, LengthUnit.Millimeters);
 
     @Element(required = false)
+    private boolean cacheScriptingEngines = false;
+
+    @Element(required = false)
     private Solutions solutions = new Solutions();
 
     @Deprecated // now in the Solutions object.
@@ -326,6 +329,16 @@ public class ReferenceMachine extends AbstractMachine {
         this.unsafeZRoamingDistance = unsafeZRoamingDistance;
         firePropertyChange("safeRoamingDistance", oldValue, unsafeZRoamingDistance);
     }
+
+    @Override
+    public boolean isCacheScriptingEngines() {
+        return cacheScriptingEngines;
+    }
+
+    public void setCacheScriptingEngines(boolean cacheScriptingEngines) {
+        this.cacheScriptingEngines = cacheScriptingEngines;
+    }
+
 
     @Override
     public Wizard getConfigurationWizard() {

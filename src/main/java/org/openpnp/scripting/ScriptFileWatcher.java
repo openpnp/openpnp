@@ -100,6 +100,16 @@ public class ScriptFileWatcher {
                 });
             }
         });
+        menu.add(new AbstractAction(Translations.getString("Scripting.Action.ClearScriptingEnginesCache")) {
+            {
+                putValue(MNEMONIC_KEY, KeyEvent.VK_C);
+            }
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                scripting.clearScriptingEnginesCache();
+            }
+        });
 
         // Synchronize the menu
         synchronizeMenu(menu, scripting.getScriptsDirectory());
