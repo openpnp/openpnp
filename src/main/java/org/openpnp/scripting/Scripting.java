@@ -116,13 +116,12 @@ public class Scripting {
             if (useCache) {
                 Logger.trace(engine + "scripting engine not found in cache, loaded in "
                         + elapsedTimeNs / 1E6 + " milliseconds");
+                engineCache.put(extension, engine);
             }
             else {
                 Logger.trace("Caching disabled, " + engine + "scripting engine loaded in "
                         + elapsedTimeNs / 1E6 + " milliseconds");
             }
-
-            engineCache.put(extension, engine);
         }
 
         engine.put("config", Configuration.get());
