@@ -125,8 +125,6 @@ public class Scripting {
             engineCache.put(extension, engine);
         }
 
-        startTimeNs = System.nanoTime();
-
         engine.put("config", Configuration.get());
         engine.put("machine", Configuration.get()
                                            .getMachine());
@@ -139,10 +137,6 @@ public class Scripting {
                 engine.put(name, additionalGlobals.get(name));
             }
         }
-
-        elapsedTimeNs = System.nanoTime() - startTimeNs;
-        Logger.trace(engine + "scripting engine state configured in " + elapsedTimeNs / 1E6
-                + " milliseconds");
 
         try (FileReader reader = new FileReader(script)) {
             startTimeNs = System.nanoTime();
