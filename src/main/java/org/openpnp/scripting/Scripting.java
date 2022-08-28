@@ -177,8 +177,7 @@ public class Scripting {
                 + String.join(", ", clearedEngines));
     }
 
-    // To be used to disable/enable the cache clear menu button
-    // public int getCachedScriptingEnginesCount() {
-    //     return engineCache.size();
-    // }
+    public int getCachedScriptingEnginesCount() {
+        return engineCache.size();
+    }
 }

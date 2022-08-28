@@ -5,6 +5,9 @@ import org.openpnp.Translations;
 import org.openpnp.util.UiUtils;
 
 import javax.swing.*;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -100,7 +103,8 @@ public class ScriptFileWatcher {
                 });
             }
         });
-        menu.add(new AbstractAction(Translations.getString("Scripting.Action.ClearScriptingEnginesCache")) {
+        AbstractAction btnClearCache = new AbstractAction(
+                Translations.getString("Scripting.Action.ClearScriptingEnginesCache")) {
             {
                 putValue(MNEMONIC_KEY, KeyEvent.VK_C);
             }
@@ -109,7 +113,21 @@ public class ScriptFileWatcher {
             public void actionPerformed(ActionEvent e) {
                 scripting.clearScriptingEnginesCache();
             }
+        };
+        menu.addMenuListener(new MenuListener() {
+            @Override
+            public void menuSelected(MenuEvent e) {
+                btnClearCache.setEnabled(scripting.getCachedScriptingEnginesCount() > 0);
+            }
+
+            @Override
+            public void menuDeselected(MenuEvent e) {}
+
+            @Override
+            public void menuCanceled(MenuEvent e) {}
         });
+
+        menu.add(btnClearCache);
 
         // Synchronize the menu
         synchronizeMenu(menu, scripting.getScriptsDirectory());
