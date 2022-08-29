@@ -103,21 +103,21 @@ public class ScriptFileWatcher {
                 });
             }
         });
-        AbstractAction btnClearCache = new AbstractAction(
-                Translations.getString("Scripting.Action.ClearScriptingEnginesCache")) {
+        AbstractAction btnClearPool = new AbstractAction(
+                Translations.getString("Scripting.Action.ClearScriptingEnginePool")) {
             {
                 putValue(MNEMONIC_KEY, KeyEvent.VK_C);
             }
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                scripting.clearScriptingEnginesCache();
+                scripting.clearScriptingEnginePool();
             }
         };
         menu.addMenuListener(new MenuListener() {
             @Override
             public void menuSelected(MenuEvent e) {
-                btnClearCache.setEnabled(scripting.getCachedScriptingEnginesCount() > 0);
+                btnClearPool.setEnabled(scripting.getScriptingEnginePoolObjectCount() > 0);
             }
 
             @Override
@@ -127,7 +127,7 @@ public class ScriptFileWatcher {
             public void menuCanceled(MenuEvent e) {}
         });
 
-        menu.add(btnClearCache);
+        menu.add(btnClearPool);
 
         // Synchronize the menu
         synchronizeMenu(menu, scripting.getScriptsDirectory());

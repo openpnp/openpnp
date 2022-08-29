@@ -98,11 +98,10 @@ public class Scripting {
 
     public void execute(File script, Map<String, Object> additionalGlobals) throws Exception {
         String extension = Files.getFileExtension(script.getName());
-        ScriptEngine engine;
         boolean useCache = Configuration.get()
                                         .getMachine()
-                                        .isCacheScriptingEngines();
-
+                                        .isPoolScriptingEngines();
+        ScriptEngine engine;
         long startTimeNs;
         long elapsedTimeNs;
 
@@ -167,7 +166,7 @@ public class Scripting {
         }
     }
 
-    public void clearScriptingEnginesCache() {
+    public void clearScriptingEnginePool() {
         if (engineCache.size() == 0) {
             Logger.info("No scripting engines cached, nothing to do");
         }
@@ -182,7 +181,7 @@ public class Scripting {
                 + String.join(", ", clearedEngines));
     }
 
-    public int getCachedScriptingEnginesCount() {
+    public int getScriptingEnginePoolObjectCount() {
         return engineCache.size();
     }
 }

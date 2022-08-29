@@ -382,7 +382,7 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
     public Length getUnsafeZRoamingDistance();
     
     /**
-     * @return True if the scripting engines should be cached between invocations.
+     * @return True if scripting engines should be pooled for faster reuse.
      */
-    public boolean isCacheScriptingEngines();
+    public boolean isPoolScriptingEngines();
 }

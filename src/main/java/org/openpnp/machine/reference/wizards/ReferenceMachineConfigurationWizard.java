@@ -40,7 +40,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
     private JCheckBox safeZPark;
     private JTextField unsafeZRoamingDistance;
     private JCheckBox parkAfterHomed;
-    private JCheckBox cacheScriptingEngines;
+    private JCheckBox poolScriptingEngines;
 
     public ReferenceMachineConfigurationWizard(ReferenceMachine machine) {
         this.machine = machine;
@@ -117,11 +117,11 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         motionPlannerClass = new JComboBox(classNames);
         panelGeneral.add(motionPlannerClass, "4, 16, fill, default");
         
-        JLabel lblCacheScriptingEngines = new JLabel("Cache scripting engines?");
-        panelGeneral.add(lblCacheScriptingEngines, "2, 18, right, default");
+        JLabel lblPoolScriptingEngines = new JLabel("Pool scripting engines?");
+        panelGeneral.add(lblPoolScriptingEngines, "2, 18, right, default");
 
-        cacheScriptingEngines = new JCheckBox("");
-        panelGeneral.add(cacheScriptingEngines, "4, 18");
+        poolScriptingEngines = new JCheckBox("");
+        panelGeneral.add(poolScriptingEngines, "4, 18");
 
                 JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
@@ -201,7 +201,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         motionPlannerClassName = machine.getMotionPlanner().getClass().getSimpleName();
         addWrappedBinding(this, "motionPlannerClassName", motionPlannerClass, "selectedItem");
 
-        addWrappedBinding(machine, "cacheScriptingEngines", cacheScriptingEngines, "selected");
+        addWrappedBinding(machine, "poolScriptingEngines", poolScriptingEngines, "selected");
 
         MutableLocationProxy discardLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, machine, "discardLocation", discardLocation, "location");

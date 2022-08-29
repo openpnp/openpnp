@@ -149,7 +149,7 @@ public class ReferenceMachine extends AbstractMachine {
     private Length unsafeZRoamingDistance = new Length(10, LengthUnit.Millimeters);
 
     @Element(required = false)
-    private boolean cacheScriptingEngines = false;
+    private boolean poolScriptingEngines = false;
 
     @Element(required = false)
     private Solutions solutions = new Solutions();
@@ -331,12 +331,12 @@ public class ReferenceMachine extends AbstractMachine {
     }
 
     @Override
-    public boolean isCacheScriptingEngines() {
-        return cacheScriptingEngines;
+    public boolean isPoolScriptingEngines() {
+        return poolScriptingEngines;
     }
 
-    public void setCacheScriptingEngines(boolean cacheScriptingEngines) {
-        this.cacheScriptingEngines = cacheScriptingEngines;
+    public void setPoolScriptingEngines(boolean poolScriptingEngines) {
+        this.poolScriptingEngines = poolScriptingEngines;
     }
 
 
