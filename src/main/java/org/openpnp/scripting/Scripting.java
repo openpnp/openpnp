@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
@@ -124,18 +126,21 @@ public class Scripting {
             }
         }
 
-        engine.put("config", Configuration.get());
-        engine.put("machine", Configuration.get()
-                                           .getMachine());
-        engine.put("gui", MainFrame.get());
-        engine.put("scripting", this);
-        engine.put(ScriptEngine.FILENAME, script.getName());
+        Bindings bindings = engine.createBindings();
+        bindings.put("config", Configuration.get());
+        bindings.put("machine", Configuration.get()
+                                             .getMachine());
+        bindings.put("gui", MainFrame.get());
+        bindings.put("scripting", this);
+        bindings.put(ScriptEngine.FILENAME, script.getName());
 
         if (additionalGlobals != null) {
             for (String name : additionalGlobals.keySet()) {
-                engine.put(name, additionalGlobals.get(name));
+                bindings.put(name, additionalGlobals.get(name));
             }
         }
+
+        engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
 
         try (FileReader reader = new FileReader(script)) {
             startTimeNs = System.nanoTime();
