@@ -3,6 +3,8 @@ package org.openpnp.scripting;
 import java.io.File;
 import java.util.HashMap;
 
+import javax.script.ScriptException;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -40,6 +42,9 @@ public class ScriptingTest {
                 ClassLoader.getSystemResource("config/ScriptingTest/callScriptFromScript.java"),
                 new File(scriptsDirectory, "callScriptFromScript.java"));
         FileUtils.copyURLToFile(
+                ClassLoader.getSystemResource("config/ScriptingTest/throwException.java"),
+                new File(scriptsDirectory, "throwException.java"));
+        FileUtils.copyURLToFile(
                 ClassLoader.getSystemResource("config/ScriptingTest/Events/testEvent.java"),
                 new File(scriptsDirectory, "Events/testEvent.java"));
         FileUtils.copyURLToFile(
@@ -69,6 +74,30 @@ public class ScriptingTest {
         }
 
         referenceMachine.setPoolScriptingEngines(true);
+
+        boolean scriptError = false;
+        try {
+            scripting.execute(new File(scriptsDirectory, "throwException.java"), testGlobals);
+        }
+        catch (ScriptException e) {
+            scriptError = true;
+            System.out.println("Catched test exception from script");
+        }
+        if (!scriptError) {
+            throw new Exception("Test script failed to throw exception");
+        }
+
+        // Do the same thing again to test if engines are returned to the pool even if the script
+        // throws an exception
+        try {
+            scripting.execute(new File(scriptsDirectory, "throwException.java"), testGlobals);
+        }
+        catch (ScriptException e) {
+        }
+        if (scripting.getScriptingEnginePoolObjectCount() != 1) {
+            throw new Exception("Failed to return engine to the pool after script exception");
+        }
+
         scripting.on("testEvent", testGlobals);
 
         if (scripting.getScriptingEnginePoolObjectCount() != 3) {
