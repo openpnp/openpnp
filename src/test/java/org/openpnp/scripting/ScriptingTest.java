@@ -82,7 +82,7 @@ public class ScriptingTest {
         }
 
         testGlobals.put("testGlobals", testGlobals);
-        scripting.execute(new File(scriptsDirectory, "CallScriptFromScript.java"), testGlobals);
+        scripting.execute(new File(scriptsDirectory, "callScriptFromScript.java"), testGlobals);
 
         if (scripting.getScriptingEnginePoolObjectCount() != 4) {
             throw new Exception("Number of engines in pool didn't match expectations");
