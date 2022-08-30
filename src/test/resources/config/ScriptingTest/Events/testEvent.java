@@ -1,0 +1,1 @@
+testResults.put("java", "ok");

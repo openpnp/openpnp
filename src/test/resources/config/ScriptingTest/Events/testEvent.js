@@ -1,0 +1,1 @@
+testResults.put("js", "ok");
