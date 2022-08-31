@@ -1,7 +1,11 @@
 package org.openpnp.scripting;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.script.ScriptException;
 
@@ -33,36 +37,49 @@ public class ScriptingTest {
                                                                             .getMachine();
         Scripting scripting = new Scripting(scriptsDirectory);
 
-        HashMap<String, String> testResults = new HashMap<>();
-        HashMap<String, Object> testGlobals = new HashMap<>();
-        testGlobals.put("testResults", testResults);
+        // File extensions that there are test files for
+        List<String> availableTestFileExtensions = Arrays.asList("java", "bsh", "js", "py");
+        // Only retain the set of extensions for which there is also a matching
+        // scripting engine, avoids environment-dependent test failures
+        List<String> supportedTestFileExtensions = new ArrayList<>(availableTestFileExtensions);
+        supportedTestFileExtensions.retainAll(Arrays.asList(scripting.getExtensions()));
+
+        if (supportedTestFileExtensions.size() != availableTestFileExtensions.size()) {
+            List<String> engineMissingTestFileExtensions = new ArrayList<>(availableTestFileExtensions);
+            engineMissingTestFileExtensions.removeAll(Arrays.asList(scripting.getExtensions()));
+            System.out.println(
+                    "Warning: Some script engine types for which test files exist are missing from the environment, these engines cannot be tested: "
+                            + engineMissingTestFileExtensions);
+        }
+
+        // Copy the supported scripts over to the scripts directory.
+        for (String testFileExtension : supportedTestFileExtensions) {
+            String testFileName = "testEvent." + testFileExtension;
+            FileUtils.copyURLToFile(
+                    ClassLoader.getSystemResource("config/ScriptingTest/Events/" + testFileName),
+                    new File(scriptsDirectory, "Events/" + testFileName));
+        }
 
         // Copy the required scripts over to the scripts directory.
         FileUtils.copyURLToFile(
                 ClassLoader.getSystemResource("config/ScriptingTest/callScriptFromScript.java"),
                 new File(scriptsDirectory, "callScriptFromScript.java"));
+
         FileUtils.copyURLToFile(
                 ClassLoader.getSystemResource("config/ScriptingTest/throwException.java"),
                 new File(scriptsDirectory, "throwException.java"));
-        FileUtils.copyURLToFile(
-                ClassLoader.getSystemResource("config/ScriptingTest/Events/testEvent.java"),
-                new File(scriptsDirectory, "Events/testEvent.java"));
-        FileUtils.copyURLToFile(
-                ClassLoader.getSystemResource("config/ScriptingTest/Events/testEvent.bsh"),
-                new File(scriptsDirectory, "Events/testEvent.bsh"));
-        FileUtils.copyURLToFile(
-                ClassLoader.getSystemResource("config/ScriptingTest/Events/testEvent.js"),
-                new File(scriptsDirectory, "Events/testEvent.js"));
-        FileUtils.copyURLToFile(
-                ClassLoader.getSystemResource("config/ScriptingTest/Events/testEvent.py"),
-                new File(scriptsDirectory, "Events/testEvent.py"));
+
+        ConcurrentHashMap<String, String> testResults = new ConcurrentHashMap<>();
+        HashMap<String, Object> testGlobals = new HashMap<>();
+        testGlobals.put("testResults", testResults);
 
         referenceMachine.setPoolScriptingEngines(false);
         scripting.on("testEvent", testGlobals);
         System.out.println("Results from scripts: " + testResults);
 
-        // Check if all scripts have been executed and if the execution yielded the expected result
-        for (String extension : new String[] {"bsh", "java", "js", "py"}) {
+        // Check if all scripts have been executed and if the execution yielded the
+        // expected result
+        for (String extension : supportedTestFileExtensions) {
             if (testResults.get(extension) != "ok") {
                 throw new Exception("Script execution for " + extension
                         + " file extension didn't return expected result");
