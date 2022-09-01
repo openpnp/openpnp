@@ -131,6 +131,11 @@
 			<version>2.0b5</version>
 		</dependency>
 		<dependency>
+			<groupId>org.openjdk.nashorn</groupId>
+			<artifactId>nashorn-core</artifactId>
+			<version>15.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.tinylog</groupId>
 			<artifactId>tinylog</artifactId>
 			<version>1.3</version>
