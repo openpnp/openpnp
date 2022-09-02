@@ -123,8 +123,11 @@ public class Scripting {
         long elapsedTimeNs;
 
         if (usePool) {
+            startTimeNs = System.nanoTime();
             engine = enginePool.borrowObject(extensionToEngineNameMap.get(extension));
-            Logger.trace(engine + " scripting engine borrowed from pool");
+            elapsedTimeNs = System.nanoTime() - startTimeNs;
+            Logger.trace(engine + " scripting engine borrowed from pool in " + elapsedTimeNs / 1E6
+                    + " milliseconds");
         }
         else {
             startTimeNs = System.nanoTime();
