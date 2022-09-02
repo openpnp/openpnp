@@ -106,6 +106,14 @@ public class Scripting {
         return eventsDirectory;
     }
 
+    public void setPoolMaxIdlePerKey(int poolMaxIdlePerKey) {
+        enginePool.setMaxIdlePerKey(poolMaxIdlePerKey);
+    }
+
+    public int getPoolMaxIdlePerKey() {
+        return enginePool.getMaxIdlePerKey();
+    }
+
     public void execute(String script) throws Exception {
         execute(new File(script), null);
     }

@@ -1,8 +1,9 @@
-one = new Thread() {
+testResults.put("base" + threadId, "ok");
+
+thread = new Thread() {
     public void run() {
         scripting.on("testEvent", testGlobals);
     }  
 };
-
-one.start();
-one.join();
+thread.start();
+thread.join();

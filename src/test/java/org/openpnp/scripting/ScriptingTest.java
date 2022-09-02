@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.script.ScriptException;
 
@@ -73,6 +76,7 @@ public class ScriptingTest {
         ConcurrentHashMap<String, String> testResults = new ConcurrentHashMap<>();
         HashMap<String, Object> testGlobals = new HashMap<>();
         testGlobals.put("testResults", testResults);
+        testGlobals.put("threadedTest", false);
 
         // ==== Test 1 ====
         // Check that general script execution works
@@ -145,12 +149,55 @@ public class ScriptingTest {
             throw new Exception("Engines left in the pool after the pool was cleared");
         }
 
-        testGlobals.put("testGlobals", testGlobals);
-        scripting.execute(new File(scriptsDirectory, "callScriptFromScript.java"), testGlobals);
+        // ==== Test 5 ====
+        // Do some heavy parallel threaded execution of scripts to validate robustness
+        // ================
 
-        if (scripting.getScriptingEnginePoolObjectCount() != 4) {
-            throw new Exception("Number of engines in pool didn't match expectations");
+        testGlobals.put("threadedTest", true);
+
+        int numThreads = 20;
+        ExecutorService es = Executors.newCachedThreadPool();
+        for (int threadId = 0; threadId < numThreads; threadId++) {
+            final Integer innerThreadId = new Integer(threadId);
+            es.execute(new Runnable() {
+                @Override
+                public void run() {
+                    HashMap<String, Object> testGlobalsCopy = new HashMap<>(testGlobals);
+                    testGlobalsCopy.put("threadId", innerThreadId);
+                    testGlobalsCopy.put("testGlobals", testGlobalsCopy);
+                    try {
+                        scripting.execute(new File(scriptsDirectory, "callScriptFromScript.java"),
+                                testGlobalsCopy);
+                    }
+                    catch (Exception e) {
+                        // Exception can be ignored here as the test results are vaildated
+                        // explicitly later on
+                    }
+                }
+            });
+        }
+        es.shutdown();
+        // 3 minutes for slow systems
+        es.awaitTermination(3, TimeUnit.MINUTES);
+
+        for (int threadId = 0; threadId < numThreads; threadId++) {
+            for (String extension : supportedTestFileExtensions) {
+                if (testResults.getOrDefault(extension + threadId, "") != "ok") {
+                    throw new Exception("Threading test didn't return a OK result for thread "
+                            + extension + threadId);
+                }
+            }
+            if (testResults.getOrDefault("base" + threadId, "") != "ok") {
+                throw new Exception(
+                        "Threading test didn't return a OK result for thread base" + threadId);
+            }
         }
 
+        if (scripting.getScriptingEnginePoolObjectCount() < scripting.getPoolMaxIdlePerKey() * scripting.getEngineNames().length) {
+            throw new Exception(
+                "Number of engines in pool after threading test is too low");
+        }
+
+        System.out.println("All " + numThreads + " threads returned the expected results");
     }
 }

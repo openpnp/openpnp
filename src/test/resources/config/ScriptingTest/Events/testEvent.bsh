@@ -1,1 +1,4 @@
 testResults.put("bsh", "ok");
+if (threadedTest) {
+    testResults.put("bsh" + threadId, "ok");
+}
