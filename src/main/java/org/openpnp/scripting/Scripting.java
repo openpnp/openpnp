@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -91,6 +92,10 @@ public class Scripting {
     public String[] getExtensions() {
         return extensionToEngineNameMap.keySet()
                                        .toArray(new String[0]);
+    }
+
+    public String[] getEngineNames() {
+        return new HashSet<String>(extensionToEngineNameMap.values()).toArray(new String[0]);
     }
 
     public File getScriptsDirectory() {
