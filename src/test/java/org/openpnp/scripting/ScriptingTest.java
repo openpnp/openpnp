@@ -192,12 +192,6 @@ public class ScriptingTest {
                         "Threading test didn't return a OK result for thread base" + threadId);
             }
         }
-
-        if (scripting.getScriptingEnginePoolObjectCount() < scripting.getPoolMaxIdlePerKey() * scripting.getEngineNames().length) {
-            throw new Exception(
-                "Number of engines in pool after threading test is too low");
-        }
-
         System.out.println("All " + numThreads + " threads returned the expected results");
     }
 }
