@@ -2,6 +2,7 @@ package org.openpnp.scripting;
 
 import java.io.File;
 import java.io.FileReader;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,11 @@ public class Scripting {
         extensionToEngineNameMap = new HashMap<>();
         enginePool = new GenericKeyedObjectPool<>(
                 new ScriptEngineKeyedPooledObjectFactory(this.manager));
+        // Allow unlimited engines, but evict all but five per key after a short idle time
+        enginePool.setMaxTotal(-1);
+        enginePool.setMaxTotalPerKey(-1);
+        enginePool.setMaxIdlePerKey(8);
+        enginePool.setTimeBetweenEvictionRuns(Duration.ofSeconds(5));
 
         if (scriptsDirectory == null) {
             eventsDirectory = null;
