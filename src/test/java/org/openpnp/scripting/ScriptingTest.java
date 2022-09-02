@@ -45,7 +45,8 @@ public class ScriptingTest {
         supportedTestFileExtensions.retainAll(Arrays.asList(scripting.getExtensions()));
 
         if (supportedTestFileExtensions.size() != availableTestFileExtensions.size()) {
-            List<String> engineMissingTestFileExtensions = new ArrayList<>(availableTestFileExtensions);
+            List<String> engineMissingTestFileExtensions =
+                    new ArrayList<>(availableTestFileExtensions);
             engineMissingTestFileExtensions.removeAll(Arrays.asList(scripting.getExtensions()));
             System.out.println(
                     "Warning: Some script engine types for which test files exist are missing from the environment, these engines cannot be tested: "
@@ -73,6 +74,10 @@ public class ScriptingTest {
         HashMap<String, Object> testGlobals = new HashMap<>();
         testGlobals.put("testResults", testResults);
 
+        // ==== Test 1 ====
+        // Check that general script execution works
+        // ================
+
         referenceMachine.setPoolScriptingEngines(false);
         scripting.on("testEvent", testGlobals);
         System.out.println("Results from scripts: " + testResults);
@@ -90,6 +95,11 @@ public class ScriptingTest {
             throw new Exception("Engines in the pool even if pooling is disabled");
         }
 
+        // ==== Test 2 ====
+        // Check if engines are returned to the pool correctly even when the script throws an
+        // exception
+        // ================
+
         referenceMachine.setPoolScriptingEngines(true);
 
         boolean scriptError = false;
@@ -104,8 +114,8 @@ public class ScriptingTest {
             throw new Exception("Test script failed to throw exception");
         }
 
-        // Do the same thing again to test if engines are returned to the pool even if the script
-        // throws an exception
+        // Do the same thing again to test if engines are returned to the pool even if
+        // the script throws an exception
         try {
             scripting.execute(new File(scriptsDirectory, "throwException.java"), testGlobals);
         }
@@ -115,11 +125,19 @@ public class ScriptingTest {
             throw new Exception("Failed to return engine to the pool after script exception");
         }
 
+        // ==== Test 3 ====
+        // Check if engines are cached correctly in general
+        // ================
+
         scripting.on("testEvent", testGlobals);
 
-        if (scripting.getScriptingEnginePoolObjectCount() != 3) {
+        if (scripting.getScriptingEnginePoolObjectCount() != scripting.getEngineNames().length) {
             throw new Exception("Number of engines in pool didn't match expectations");
         }
+
+        // ==== Test 4 ====
+        // Check if clearing the pool works
+        // ================
 
         scripting.clearScriptingEnginePool();
 
