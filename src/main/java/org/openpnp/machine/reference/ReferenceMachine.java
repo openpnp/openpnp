@@ -84,6 +84,7 @@ import org.openpnp.machine.reference.signaler.SoundSignaler;
 import org.openpnp.machine.reference.solutions.CalibrationSolutions;
 import org.openpnp.machine.reference.solutions.KinematicSolutions;
 import org.openpnp.machine.reference.solutions.NozzleTipSolutions;
+import org.openpnp.machine.reference.solutions.ScriptingSolutions;
 import org.openpnp.machine.reference.solutions.VisionSolutions;
 import org.openpnp.machine.reference.vision.ReferenceBottomVision;
 import org.openpnp.machine.reference.vision.ReferenceFiducialLocator;
@@ -605,12 +606,15 @@ public class ReferenceMachine extends AbstractMachine {
         return calibrationSolutions;
     }
 
+    private ScriptingSolutions scriptingSolutions = new ScriptingSolutions();
+
     @Override
     public void findIssues(Solutions solutions) {
         kinematicSolutions.setMachine(this).findIssues(solutions);
         nozzleTipSolutions.setMachine(this).findIssues(solutions);
         visualSolutions.setMachine(this).findIssues(solutions);
         calibrationSolutions.setMachine(this).findIssues(solutions);
+        scriptingSolutions.setMachine(this).findIssues(solutions);
 
         if (solutions.isTargeting(Milestone.Advanced)) {
             if (getMotionPlanner() instanceof NullMotionPlanner) {
