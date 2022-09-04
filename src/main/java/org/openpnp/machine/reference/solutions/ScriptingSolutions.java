@@ -9,7 +9,7 @@ import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 
 /**
- * This helper class implements the Issues & Solutions for the Vision milestone.
+ * This helper class implements the Issues & Solutions for the Scripting class.
  *
  */
 public class ScriptingSolutions implements Solutions.Subject {
