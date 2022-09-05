@@ -875,8 +875,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     break;
                 case MOVE_TO_COMPLETE_COMMAND:
                     // This is provided even if there are no axes on the driver. M400 may still be useful for actuator coordination.
-                    if (command == null 
-                    && gcodeDriver.getCommand(null, CommandType.MOVE_TO_COMPLETE_REGEX) == null) {
+                    if (gcodeDriver.getCommand(null, CommandType.MOVE_TO_COMPLETE_REGEX) == null) {
                         if (dialect == FirmwareType.Grbl) {
                             commandBuilt = "G4 P0 ; Wait for moves to complete before returning";
                         }
