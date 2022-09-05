@@ -2457,7 +2457,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         FindFeatures feature = null;
 
         final boolean ocrPass = (ocrAction != OcrWrongPartAction.None && getOcrRegion() != null);
-        Location ocrOffsets = getOcrRegion().getOffsets();
+        Location ocrOffsets = ocrPass ? getOcrRegion().getOffsets() : null;
         final boolean ocrZeroOffset = (ocrOffsets == null || !ocrOffsets.isInitialized());
 
         // Calibrate the exact hole locations by obtaining a mid-point lock on them,
