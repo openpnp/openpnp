@@ -41,10 +41,23 @@ public class ScriptingTest {
         Scripting scripting = new Scripting(scriptsDirectory);
 
         // File extensions that there are test files for
-        List<String> testFileExtensions = Arrays.asList("java", "bsh", "js", "py");
+        List<String> availableTestFileExtensions = Arrays.asList("java", "bsh", "js", "py");
+        // Only retain the set of extensions for which there is also a matching
+        // scripting engine, avoids environment-dependent test failures
+        List<String> supportedTestFileExtensions = new ArrayList<>(availableTestFileExtensions);
+        supportedTestFileExtensions.retainAll(Arrays.asList(scripting.getExtensions()));
+
+        if (supportedTestFileExtensions.size() != availableTestFileExtensions.size()) {
+            List<String> engineMissingTestFileExtensions =
+                    new ArrayList<>(availableTestFileExtensions);
+            engineMissingTestFileExtensions.removeAll(Arrays.asList(scripting.getExtensions()));
+            System.out.println(
+                    "Warning: Some script engine types for which test files exist are missing from the environment, these engines cannot be tested: "
+                            + engineMissingTestFileExtensions);
+        }
 
         // Copy the supported scripts over to the scripts directory.
-        for (String testFileExtension : testFileExtensions) {
+        for (String testFileExtension : supportedTestFileExtensions) {
             String testFileName = "testEvent." + testFileExtension;
             FileUtils.copyURLToFile(
                     ClassLoader.getSystemResource("config/ScriptingTest/Events/" + testFileName),
@@ -75,7 +88,7 @@ public class ScriptingTest {
 
         // Check if all scripts have been executed and if the execution yielded the
         // expected result
-        for (String extension : testFileExtensions) {
+        for (String extension : supportedTestFileExtensions) {
             if (testResults.get(extension) != "ok") {
                 throw new Exception("Script execution for " + extension
                         + " file extension didn't return expected result");
@@ -168,7 +181,7 @@ public class ScriptingTest {
         es.awaitTermination(3, TimeUnit.MINUTES);
 
         for (int threadId = 0; threadId < numThreads; threadId++) {
-            for (String extension : testFileExtensions) {
+            for (String extension : supportedTestFileExtensions) {
                 if (testResults.getOrDefault(extension + threadId, "") != "ok") {
                     throw new Exception("Threading test didn't return a OK result for thread "
                             + extension + threadId);
