@@ -112,7 +112,7 @@ public class ScriptingTest {
         }
         catch (ScriptException e) {
             scriptError = true;
-            System.out.println("Catched test exception from script");
+            System.out.println("Caught test exception from script");
         }
         if (!scriptError) {
             throw new Exception("Test script failed to throw exception");

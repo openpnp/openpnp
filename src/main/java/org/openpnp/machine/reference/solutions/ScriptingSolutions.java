@@ -27,7 +27,7 @@ public class ScriptingSolutions implements Solutions.Subject {
                              .getMachine()
                              .isPoolScriptingEngines() == false) {
                 solutions.add(new Solutions.Issue(machine,
-                        "Script exeuction performance can be improved by enabling engine pooling.",
+                        "Script execuction performance can be improved by enabling engine pooling.",
                         "Enable script engine pooling.", Severity.Suggestion,
                         "https://github.com/openpnp/openpnp/wiki/Scripting#script-engine-pooling") {
 
