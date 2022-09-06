@@ -369,9 +369,14 @@ public class JogControlsPanel extends JPanel {
         speedSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                Configuration.get()
-                .getMachine()
-                .setSpeed(speedSlider.getValue() * 0.01);
+                try {
+                    Configuration.get()
+                    .getMachine()
+                    .setSpeed(speedSlider.getValue() * 0.01);
+                }
+                catch (Exception ex) {
+                    // TODO: I don't like this
+                };
             }
         });
 
@@ -768,6 +773,8 @@ public class JogControlsPanel extends JPanel {
         @Override
         public void configurationComplete(Configuration configuration) throws Exception {
             setUnits(configuration.getSystemUnits());
+            speedSlider.setMinimum((int) (configuration.getMachine().getSpeedLimitLow() * 100));
+            speedSlider.setMaximum((int) (configuration.getMachine().getSpeedLimitHigh() * 100));
             speedSlider.setValue((int) (configuration.getMachine()
                     .getSpeed()
                     * 100));
