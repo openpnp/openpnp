@@ -16,6 +16,7 @@ import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.gui.support.MutableLocationProxy;
+import org.openpnp.gui.support.PercentConverter;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Configuration;
 import org.openpnp.spi.MotionPlanner;
@@ -41,6 +42,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
     private JTextField unsafeZRoamingDistance;
     private JCheckBox parkAfterHomed;
     private JCheckBox poolScriptingEngines;
+    private JTextField speedLimitLow;
+    private JTextField speedLimitHigh;
 
     public ReferenceMachineConfigurationWizard(ReferenceMachine machine) {
         this.machine = machine;
@@ -57,6 +60,10 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -122,6 +129,20 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
 
         poolScriptingEngines = new JCheckBox("");
         panelGeneral.add(poolScriptingEngines, "4, 18");
+
+        JLabel lblSpeedLimitLow = new JLabel("Speed limit low");
+        panelGeneral.add(lblSpeedLimitLow, "2, 20, right, default");
+        
+        speedLimitLow = new JTextField("");
+        panelGeneral.add(speedLimitLow, "4, 20, fill, default");
+        speedLimitLow.setColumns(10);
+
+        JLabel lblSpeedLimitHigh = new JLabel("Speed limit high");
+        panelGeneral.add(lblSpeedLimitHigh, "2, 22, right, default");
+        
+        speedLimitHigh = new JTextField("");
+        panelGeneral.add(speedLimitHigh, "4, 22, fill, default");
+        speedLimitHigh.setColumns(10);
 
                 JPanel panelLocations = new JPanel();
         panelLocations.setBorder(new TitledBorder(null, "Locations", TitledBorder.LEADING,
@@ -191,6 +212,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         DoubleConverter doubleConverter =
                 new DoubleConverter(Configuration.get().getLengthDisplayFormat());
         LengthConverter lengthConverter = new LengthConverter();
+        PercentConverter percentConverter = new PercentConverter();
 
         addWrappedBinding(machine, "homeAfterEnabled", checkBoxHomeAfterEnabled, "selected");
         addWrappedBinding(machine, "parkAfterHomed", parkAfterHomed, "selected");
@@ -202,6 +224,8 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
         addWrappedBinding(this, "motionPlannerClassName", motionPlannerClass, "selectedItem");
 
         addWrappedBinding(machine, "poolScriptingEngines", poolScriptingEngines, "selected");
+        addWrappedBinding(machine, "speedLimitLow", speedLimitLow, "text", percentConverter);
+        addWrappedBinding(machine, "speedLimitHigh", speedLimitHigh, "text", percentConverter);
 
         MutableLocationProxy discardLocation = new MutableLocationProxy();
         bind(UpdateStrategy.READ_WRITE, machine, "discardLocation", discardLocation, "location");
