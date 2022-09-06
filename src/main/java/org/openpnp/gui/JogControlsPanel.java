@@ -364,15 +364,7 @@ public class JogControlsPanel extends JPanel {
         speedSlider.setMajorTickSpacing(25);
         speedSlider.setSnapToTicks(true);
         speedSlider.setPaintLabels(true);
-        speedSlider.setMinimum(1);
         speedSlider.setOrientation(SwingConstants.VERTICAL);
-        Hashtable<Integer, JLabel> speedSliderLabels = new Hashtable<Integer, JLabel>();
-        speedSliderLabels.put(1, new JLabel("1"));
-        speedSliderLabels.put(25, new JLabel("25"));
-        speedSliderLabels.put(50, new JLabel("50"));
-        speedSliderLabels.put(75, new JLabel("75"));
-        speedSliderLabels.put(100, new JLabel("100"));
-        speedSlider.setLabelTable(speedSliderLabels);
         panelControls.add(speedSlider, "20, 4, 1, 9"); //$NON-NLS-1$
         speedSlider.addChangeListener(new ChangeListener() {
             @Override
