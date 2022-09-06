@@ -330,9 +330,17 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
 
     public Location getDiscardLocation();
 
-    public void setSpeed(double speed);
+    public void setSpeed(double speed) throws Exception;
 
     public double getSpeed();
+
+    public void setSpeedLimitLow(double speed);
+
+    public double getSpeedLimitLow();
+
+    public void setSpeedLimitHigh(double speed);
+
+    public double getSpeedLimitHigh();
     
     public Object getProperty(String name);
     

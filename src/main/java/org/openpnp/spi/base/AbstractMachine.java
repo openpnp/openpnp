@@ -93,6 +93,12 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
 
     @Attribute(required = false)
     protected double speed = 1.0D;
+
+    @Attribute(required = false)
+    protected double speedLimitLow = 0.05D;
+
+    @Attribute(required = false)
+    protected double speedLimitHigh = 1.0D;
     
     @ElementMap(required = false)
     protected HashMap<String, Object> properties = new HashMap<>();
@@ -733,13 +739,44 @@ public abstract class AbstractMachine extends AbstractModelObject implements Mac
     }
 
     @Override
-    public void setSpeed(double speed) {
+    public void setSpeed(double speed) throws Exception {
+        if (speed < speedLimitLow) {
+            throw new Exception("A speed lower than the low speed limit cannot be set.");
+        }
+        else if (speed > speedLimitHigh) {
+            throw new Exception("A speed higher than the high speed limit cannot be set.");
+        }
+
         this.speed = speed;
     }
 
     @Override
     public double getSpeed() {
         return speed;
+    }
+
+    @Override
+    public void setSpeedLimitLow(double speedLimitLowPercent) {
+        // if (speedLimitLowPercent < 0 || speedLimitLowPercent > speedLimitHighPercent) {
+        //     throw new Exception("The lower speed limit is invalid.");
+        // }
+
+        this.speedLimitLow = speedLimitLowPercent;
+    }
+
+    @Override
+    public double getSpeedLimitLow() {
+        return speedLimitLow;
+    }
+
+    @Override
+    public void setSpeedLimitHigh(double speedLimitHighPercent) {
+        this.speedLimitHigh = speedLimitHighPercent;
+    }
+
+    @Override
+    public double getSpeedLimitHigh() {
+        return speedLimitHigh;
     }
 
     @Override
