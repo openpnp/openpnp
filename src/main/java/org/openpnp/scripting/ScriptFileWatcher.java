@@ -5,6 +5,9 @@ import org.openpnp.Translations;
 import org.openpnp.util.UiUtils;
 
 import javax.swing.*;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -100,6 +103,31 @@ public class ScriptFileWatcher {
                 });
             }
         });
+        AbstractAction btnClearPool = new AbstractAction(
+                Translations.getString("Scripting.Action.ClearScriptingEnginePool")) {
+            {
+                putValue(MNEMONIC_KEY, KeyEvent.VK_C);
+            }
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                scripting.clearScriptingEnginePool();
+            }
+        };
+        menu.addMenuListener(new MenuListener() {
+            @Override
+            public void menuSelected(MenuEvent e) {
+                btnClearPool.setEnabled(scripting.getScriptingEnginePoolObjectCount() > 0);
+            }
+
+            @Override
+            public void menuDeselected(MenuEvent e) {}
+
+            @Override
+            public void menuCanceled(MenuEvent e) {}
+        });
+
+        menu.add(btnClearPool);
 
         // Synchronize the menu
         synchronizeMenu(menu, scripting.getScriptsDirectory());

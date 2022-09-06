@@ -380,4 +380,9 @@ public interface Machine extends WizardConfigurable, PropertySheetHolder, Closea
      * @return Maximum allowable roaming distance at unsafe Z. 
      */
     public Length getUnsafeZRoamingDistance();
+    
+    /**
+     * @return True if scripting engines should be pooled for faster reuse.
+     */
+    public boolean isPoolScriptingEngines();
 }
