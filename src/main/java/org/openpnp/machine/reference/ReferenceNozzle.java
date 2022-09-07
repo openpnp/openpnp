@@ -91,7 +91,7 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     private String blowOffActuatorName;
 
     @Attribute(required = false)
-    private boolean blowOffClosingValve;
+    private boolean blowOffClosingValve = true;
 
     @Attribute(required = false)
     private int version; // the OpenPnP target version/migration status (version x 100)
