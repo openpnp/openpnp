@@ -983,6 +983,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         blowOffActuator = actuator;
     }
 
+    public boolean isBlowOffClosingValve() {
+        return blowOffClosingValve;
+    }
+
+    public void setBlowOffClosingValve(boolean blowOffClosingValve) {
+        this.blowOffClosingValve = blowOffClosingValve;
+    }
+
     protected void actuateVacuumValve(boolean on) throws Exception {
         if (on) {
             getHead().actuatePumpRequest(this, true);

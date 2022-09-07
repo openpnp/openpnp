@@ -21,6 +21,7 @@ package org.openpnp.machine.reference.wizards;
 
 import java.awt.BorderLayout;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -46,6 +47,8 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
     private JComboBox blowOffComboBoxActuator;
     private JLabel lblSensingActuator;
     private JComboBox vacuumSenseActuator;
+    private JLabel lblClosingValve;
+    private JCheckBox blowOffClosingValve;
 
     public ReferenceNozzleVacuumWizard(ReferenceNozzle nozzle) {
         this.nozzle = nozzle;
@@ -61,9 +64,11 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
-                FormSpecs.DEFAULT_COLSPEC,
+                ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
+                FormSpecs.RELATED_GAP_COLSPEC,
+                ColumnSpec.decode("max(50dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,},
             new RowSpec[] {
@@ -88,6 +93,13 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         blowOffComboBoxActuator.setMaximumRowCount(15);
         blowOffComboBoxActuator.setModel(new ActuatorsComboBoxModel(nozzle.getHead()));
         panel.add(blowOffComboBoxActuator, "4, 4");
+        
+        lblClosingValve = new JLabel("Closes Vacuum Actuator?");
+        lblClosingValve.setToolTipText("<html>\r\nActuating the Blow-Off actuator also <em>implicitly</em> actuates the Vacuum actuator off.<br/>\r\nIf this is enabled, the <em>explicit</em> Off-actuation of the Vacuum actuator is ommitted.\r\n</html>");
+        panel.add(lblClosingValve, "6, 4, right, default");
+        
+        blowOffClosingValve = new JCheckBox("");
+        panel.add(blowOffClosingValve, "8, 4");
         lblSensingActuator = new JLabel("Sensing Actuator");
         panel.add(lblSensingActuator, "2, 6, right, default");
 
@@ -102,5 +114,6 @@ public class ReferenceNozzleVacuumWizard extends AbstractConfigurationWizard {
         addWrappedBinding(nozzle, "vacuumActuator", vacuumComboBoxActuator, "selectedItem", actuatorConverter);
         addWrappedBinding(nozzle, "blowOffActuator", blowOffComboBoxActuator, "selectedItem", actuatorConverter);
         addWrappedBinding(nozzle, "vacuumSenseActuator", vacuumSenseActuator, "selectedItem", actuatorConverter);
+        addWrappedBinding(nozzle, "blowOffClosingValve", blowOffClosingValve, "selected");
     }
 }
