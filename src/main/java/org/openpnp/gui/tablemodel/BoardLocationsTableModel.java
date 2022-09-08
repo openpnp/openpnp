@@ -115,7 +115,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
-                boardLocation.setSide((Side) aValue);
+                boardLocation.setGlobalSide((Side) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 4) {
@@ -173,7 +173,7 @@ public class BoardLocationsTableModel extends AbstractTableModel {
             case 2:
                 return new LengthCellValue(dim.getLengthY());
             case 3:
-                return boardLocation.getSide();
+                return boardLocation.getGlobalSide();
             case 4:
                 return new LengthCellValue(loc.getLengthX());
             case 5:

@@ -36,7 +36,7 @@ import org.simpleframework.xml.core.Persist;
  * 
  * @author jason
  */
-public class Placement extends AbstractLocatable {
+public class Placement extends AbstractLocatable<Placement> {
     public enum Type {
         Placement, 
         Fiducial,
@@ -199,7 +199,7 @@ public class Placement extends AbstractLocatable {
     
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        Logger.trace(String.format("PropertyChangeEvent handled by Placement %s @%08x = %s", id, this.hashCode(), evt));
+//        Logger.trace(String.format("PropertyChangeEvent handled by Placement %s @%08x = %s", id, this.hashCode(), evt));
         super.propertyChange(evt);
     }
 }

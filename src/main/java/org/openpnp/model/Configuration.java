@@ -19,7 +19,6 @@
 
 package org.openpnp.model;
 
-import java.awt.geom.AffineTransform;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -42,19 +41,13 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
-import javax.xml.stream.XMLStreamException;
-
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
 import org.openpnp.gui.components.ThemeInfo;
 import org.openpnp.gui.components.ThemeSettingsPanel;
-import org.openpnp.model.Board.Side;
 import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
-import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.NanosecondTime;
-import org.openpnp.util.ResourceUtils;
-import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -766,13 +759,14 @@ public class Configuration extends AbstractModelObject {
     }
     
     /**
-     * Returns the Board contained in the specified file. If the Board is already loaded in the 
-     * configuration, it is found and returned. If it is not already loaded into the configuration, 
+     * Returns the Board definition contained in the specified file. If the Board definition is 
+     * already loaded in the configuration, it is found and returned. If it is not already loaded, 
      * the specified file is read and loaded into the configuration.  If the specified file does not
-     * exist, a new empty Board is created and saved into the specified file and loaded into the
-     * configuration.
-     * @param file - the file containing the Board
-     * @throws Exception if the specified file exists but does not contain a valid Board
+     * exist, a new empty Board definition is created and saved into the specified file and then is
+     * loaded into the configuration.
+     * @param file - the file containing the Board definition
+     * @return the Board definition
+     * @throws Exception if the specified file exists but does not contain a valid Board definition
      */
     public Board getBoard(File file) throws Exception {
         if (!file.exists()) {
@@ -950,11 +944,12 @@ public class Configuration extends AbstractModelObject {
     }
 
     /**
-     * Attempts to load the Board associated with the given BoardLocation and assign it to the
-     * BoardLocation
+     * Attempts to find the Board definition associated with the given BoardLocation, creates a copy
+     * of it, and then assigns the copy to the given BoardLocation
      * @param job - the Job
      * @param boardLocation - the BoardLocation
-     * @throws Exception if the Board associated with the BoardLocation can't be loaded successfully
+     * @throws Exception if the Board definition associated with the BoardLocation can't be loaded 
+     * successfully
      */
     public void resolveBoard(Job job, BoardLocation boardLocation) throws Exception {
         String boardFilename = boardLocation.getBoardFile();
@@ -963,8 +958,9 @@ public class Configuration extends AbstractModelObject {
         // to the working directory
         File boardFile = new File(boardFilename);
         if (!boardFile.exists() && boardLocation.getParent() != null) {
-            //If that didn't work, try to find it in the parent panel directory
-            boardFile = new File(boardLocation.getParent().getFiducialLocatable().getFile().getParentFile(), boardFilename);
+            //If that didn't work, try to find it in the parent's panel directory
+            boardFile = new File(boardLocation.getParent().getPlacementsHolder().getFile().
+                    getParentFile(), boardFilename);
         }
         if (!boardFile.exists() && job != null) {
             // If that fails, see if we can find it relative to the
@@ -974,13 +970,14 @@ public class Configuration extends AbstractModelObject {
         if (!boardFile.exists()) {
             throw new Exception("Board file not found: " + boardFilename);
         }
+        //Create a deep copy of the board's definition and assign it to the BoardLocation
         Board board = new Board(getBoard(boardFile));
         boardLocation.setBoard(board);
     }
 
     /**
-     * Attempts to load the Panel associated with the given PanelLocation and assign it to the
-     * PanelLocation.  Recursively resolves the Panel's children.
+     * Attempts to find the Panel definition associated with the given PanelLocation, creates a copy
+     * of it, and assigns the copy to the PanelLocation. Recursively resolves the Panel's children.
      * @param job - the Job
      * @param panelLocation - the PanelLocation
      * @throws Exception if the Panel and all of its descendants can't be loaded successfully
@@ -993,7 +990,7 @@ public class Configuration extends AbstractModelObject {
         if (job != null && panelLocation == job.getRootPanelLocation()) {
             panel.setFile(job.getFile());
         }
-        else if (panel == null) {
+        else /*if (panel == null)*/ {
             String panelFileName = panelLocation.getFileName();
             File panelFile = new File(panelFileName);
             if (!panelFile.exists() && panelLocation.getParent() != null) {
@@ -1008,28 +1005,31 @@ public class Configuration extends AbstractModelObject {
             if (!panelFile.exists()) {
                 throw new Exception("Panel file not found: " + panelFileName);
             }
+            //Create a deep copy of the Panel definition and assign it to the PanelLocation
             panel = new Panel(getPanel(panelFile));
             Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
             panelLocation.setPanel(panel);
         }
 
-        for (FiducialLocatableLocation child : panel.getChildren()) {
+        //Recursively resolve all the panel's children
+        for (PlacementsHolderLocation<?> child : panel.getChildren()) {
             if (child instanceof PanelLocation) {
                 PanelLocation childPanelLocation = (PanelLocation) child;
                 childPanelLocation.setParent(panelLocation);
-                ((PanelLocation) childPanelLocation.getDefinedBy()).addPropertyChangeListener(childPanelLocation);
+                childPanelLocation.getDefinedBy().addPropertyChangeListener(childPanelLocation);
                 resolvePanel(job, childPanelLocation);
             }
             else if (child instanceof BoardLocation) {
                 BoardLocation boardLocation = (BoardLocation) child;
                 boardLocation.setParent(panelLocation);
-                ((BoardLocation) boardLocation.getDefinedBy()).addPropertyChangeListener(boardLocation);
+                boardLocation.getDefinedBy().addPropertyChangeListener(boardLocation);
                 resolveBoard(job, boardLocation);
             }
             else {
                 throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
             }
         }
+        
         panel.setDirty(false);
     }
     
@@ -1041,7 +1041,7 @@ public class Configuration extends AbstractModelObject {
      * @param job - the job to check
      * @param panelLocation - the PanelLocation where the checking should begin
      */
-    private void saveJobEnabledAndErrorHandlingSettings(Job job, PanelLocation panelLocation) {
+    private static void saveJobEnabledAndErrorHandlingSettings(Job job, PanelLocation panelLocation) {
         if (panelLocation == job.getRootPanelLocation()) {
             job.removeAllEnabled();
             job.removeAllErrorHandling();
@@ -1049,12 +1049,15 @@ public class Configuration extends AbstractModelObject {
         if (panelLocation != null) {
             Panel panel = panelLocation.getPanel();
             if (panel != null) {
-                for (FiducialLocatableLocation child : panel.getChildren()) {
-                    if (child.isLocallyEnabled() != ((FiducialLocatableLocation) child.getDefinedBy()).isLocallyEnabled()) {
+                for (PlacementsHolderLocation<?> child : panel.getChildren()) {
+                    if (child.isLocallyEnabled() != child.getDefinedBy().isLocallyEnabled()) {
                         job.setEnabled(child, null, child.isLocallyEnabled());
                     }
+                    if (child.isCheckFiducials() != child.getDefinedBy().isCheckFiducials()) {
+                        job.setCheckFiducials(child, child.isCheckFiducials());
+                    }
                     if (child instanceof BoardLocation || child instanceof PanelLocation) {
-                        for (Placement placement : child.getFiducialLocatable().getPlacements()) {
+                        for (Placement placement : child.getPlacementsHolder().getPlacements()) {
                             if (placement.isEnabled() != ((Placement) placement.getDefinedBy()).isEnabled()) {
                                 job.setEnabled(child, placement, placement.isEnabled());
                             }
@@ -1080,16 +1083,19 @@ public class Configuration extends AbstractModelObject {
      * @param job - the job to restore
      * @param panelLocation - the PanelLocation where the restoration should begin
      */
-    private void restoreJobEnabledAndErrorHandlingSettings(Job job, PanelLocation panelLocation) {
+    private static void restoreJobEnabledAndErrorHandlingSettings(Job job, PanelLocation panelLocation) {
         if (panelLocation != null) {
             Panel panel = panelLocation.getPanel();
             if (panel != null) {
-                for (FiducialLocatableLocation child : panel.getChildren()) {
+                for (PlacementsHolderLocation<?> child : panel.getChildren()) {
                     child.setLocallyEnabled(job.getEnabled(child, null));
+                    child.setCheckFiducials(job.getCheckFiducials(child));
                     if (child instanceof BoardLocation || child instanceof PanelLocation) {
-                        for (Placement placement : child.getFiducialLocatable().getPlacements()) {
-                            placement.setEnabled(job.getEnabled(child, placement));
-                            placement.setErrorHandling(job.getErrorHandling(child, placement));
+                        if (child.getPlacementsHolder() != null) {
+                            for (Placement placement : child.getPlacementsHolder().getPlacements()) {
+                                placement.setEnabled(job.getEnabled(child, placement));
+                                placement.setErrorHandling(job.getErrorHandling(child, placement));
+                            }
                         }
                         if (child instanceof PanelLocation) {
                             restoreJobEnabledAndErrorHandlingSettings(job, (PanelLocation) child);
@@ -1135,10 +1141,10 @@ public class Configuration extends AbstractModelObject {
     }
 
     /**
-     * Creates and returns a Panel based on the contents of the specified file.  Recursively loads 
-     * the Panel's descendants.
-     * @param file - the file to read
-     * @return the Panel
+     * Returns the Panel definition contained in the specified file.  Recursively loads the Panel's
+     * descendants.
+     * @param file - the file containing the Panel definition
+     * @return the Panel definition
      * @throws Exception if the specified file can't be read successfully or if any of the
      * descendants of the panel can't be found
      */
@@ -1146,14 +1152,15 @@ public class Configuration extends AbstractModelObject {
         Serializer serializer = createSerializer();
         Panel panel = serializer.read(Panel.class, file);
         panel.setFile(file);
-        for (FiducialLocatableLocation child : panel.getChildren()) {
+        for (PlacementsHolderLocation<?> child : panel.getChildren()) {
             File childFile = new File(child.getFileName());
             if (childFile.exists()) {
                 if (child instanceof BoardLocation) {
-                    child.setFiducialLocatable(getBoard(childFile));
+                    child.setPlacementsHolder(new Board(getBoard(childFile)));
                 }
                 else if (child instanceof PanelLocation) {
-                    child.setFiducialLocatable(getPanel(childFile));
+                    child.setPlacementsHolder(new Panel(getPanel(childFile)));
+                    PanelLocation.setParentsOfAllDescendants((PanelLocation) child);
                 }
                 else {
                     throw new UnsupportedOperationException("Instance type " + child.getClass() + " not supported.");
@@ -1166,7 +1173,7 @@ public class Configuration extends AbstractModelObject {
         panel.setDirty(false);
         return panel;
     }
-
+    
     /**
      * Saves the specified Board into its file
      * @param panel - the Board to save

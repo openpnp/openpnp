@@ -25,21 +25,21 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.table.TableRowSorter;
-
 import org.openpnp.gui.MultisortTableHeaderCellRenderer;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.tablemodel.FiducialLocatablePlacementsTableModel;
-import org.openpnp.model.AbstractLocatable;
-import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.PlacementsHolderLocation;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
 
 import javax.swing.JLabel;
@@ -47,45 +47,61 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
-import javax.swing.RowFilter;
-
 import javax.swing.UIManager;
 import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableModel;
-
-import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Point;
 import org.openpnp.model.Board.Side;
-import org.openpnp.gui.support.IdentifiableListCellRenderer;
+import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+import org.openpnp.util.Collect;
+import org.openpnp.util.QuickHull;
 import org.openpnp.util.Utils2D;
-import org.pmw.tinylog.Logger;
+import javax.swing.border.BevelBorder;
+import java.awt.Component;
+import javax.swing.Box;
+import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 public class ChildFiducialSelectorDialog extends JDialog {
 
+    private enum PlacementTypes {FiducialsOnly, PlacementsOnly, Both};
+        
+    private PlacementTypes placementTypes = PlacementTypes.FiducialsOnly;
     private JTable childFiducialsTable;
     private FiducialLocatablePlacementsTableModel tableModel;
     private PanelLocation panelLocation;
-    private FiducialLocatableLocation child;
-    private JRadioButton childFrame;
-    private JRadioButton parentFrame;
+    private JRadioButton placementsButton;
+    private JRadioButton fiducialsButton;
+    private JRadioButton bothButton;
+    private List<Placement> allPseudoPlacements;
+    private List<Placement> filteredPseudoPlacements;
+    private List<Placement> filteredPseudoPlacementsHull;
+    private List<Placement> bestPseudoPlacements;
+    protected boolean showHullOnly = true;;
 
     /**
      * Create the dialog.
      */
-    public ChildFiducialSelectorDialog(PanelLocation panelLocation, FiducialLocatableLocation child) {
+    public ChildFiducialSelectorDialog(PanelLocation panelLocation) {
         this.panelLocation = panelLocation;
-        this.child = child;
-        this.setTitle("Create Copy of Child Fiducial(s) To Use As Panel Fiducial(s)");
+        
+        allPseudoPlacements = new ArrayList<>();
+        generateAllPseudoPlacementsList(panelLocation);
+
+        this.setTitle(panelLocation.getPanel().getName() + " - Select Child Fiducial(s)/Placement(s) For Panel Alignment");
         setModalityType(ModalityType.APPLICATION_MODAL);
-        setBounds(100, 100, 600, 400);
+        setBounds(100, 100, 800, 600);
         getContentPane().setLayout(new BorderLayout());
         {
+            JPanel panel = new JPanel();
+            panel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+            getContentPane().add(panel, BorderLayout.CENTER);
+            panel.setLayout(new BorderLayout(0, 0));
             JPanel instructionPanel = new JPanel();
+            panel.add(instructionPanel, BorderLayout.NORTH);
             instructionPanel.setLayout(new BorderLayout());
-            getContentPane().add(instructionPanel, BorderLayout.NORTH);
             
             {
                 JTextArea txtrSelectOneOr = new JTextArea();
@@ -94,113 +110,151 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 txtrSelectOneOr.setBackground(UIManager.getColor("Label.background"));
                 txtrSelectOneOr.setFont(UIManager.getFont("Label.font"));
                 txtrSelectOneOr.setText(
-                        "Select one or more child fiducials from the list below to act as panel "
-                        + "fiducials. Hold down the Control or Shift keys to select multiple items."
-                        + "  IMPORTANT - Once the fiducials are added to the panel, changes to the "
-                        + "child's position or orientation on the panel will NOT automatically "
-                        + "update the panel's fiducials.");
+                        "Select one or more child fiducials/placements from the list below for "
+                        + "panel alignment. Hold down the Control or Shift keys to select multiple "
+                        + "items. Use the Auto Select button to automatically select a good set. "
+                        + "If one of the of the automatically chosen items is undesirable such "
+                        + "as being too large, disable it and re-click on the Auto Select button.");
                 txtrSelectOneOr.setEditable(false);
                 instructionPanel.add(txtrSelectOneOr, BorderLayout.NORTH);
             }
-            
+            JPanel radioPanel = new JPanel();
+            radioPanel.setLayout(new FlowLayout());
+            instructionPanel.add(radioPanel, BorderLayout.SOUTH);
             {
-                JPanel radioPanel = new JPanel();
-                radioPanel.setLayout(new FlowLayout());
-                instructionPanel.add(radioPanel, BorderLayout.SOUTH);
-                {
-                    JLabel lblNewLabel = new JLabel("Display Side and Coordinates relative to: ");
-                    radioPanel.add(lblNewLabel);
-                }
-                {
-                    parentFrame = new JRadioButton("Panel");
-                    parentFrame.setSelected(true);
-                    parentFrame.addActionListener(new ActionListener() {
-
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            tableModel.setLocalReferenceFrame(false);
-                        }});
-                    radioPanel.add(parentFrame);
-                }
-                {
-                    childFrame = new JRadioButton("Child");
-                    childFrame.addActionListener(new ActionListener() {
-
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            tableModel.setLocalReferenceFrame(true);
-                        }});
-                    radioPanel.add(childFrame);
-                }
-                ButtonGroup buttonGroup = new ButtonGroup();
-                buttonGroup.add(childFrame);
-                buttonGroup.add(parentFrame);
+                JLabel lblNewLabel = new JLabel("Show ");
+                radioPanel.add(lblNewLabel);
             }
-        }
-        {
-            @SuppressWarnings("unchecked")
-            JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox<>(new PartsComboBoxModel());
-            partsComboBox.setMaximumRowCount(20);
-            partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
+            {
+                JCheckBox chckbxHullOnly = new JCheckBox("Hull Only");
+                chckbxHullOnly.setSelected(true);
+                chckbxHullOnly.setToolTipText("Show only those fiducials/placements that are on the outermost periphery of the panel.");
+                chckbxHullOnly.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        showHullOnly  = chckbxHullOnly.isSelected();
+                        updateTable();
+                    }
+                });
+                radioPanel.add(chckbxHullOnly);
+            }
+            {
+                fiducialsButton = new JRadioButton("Fiducials");
+                fiducialsButton.setSelected(true);
+                fiducialsButton.setToolTipText("Use this selection if the plan is to use fiducials to automatically align the panel.");
+                fiducialsButton.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        placementTypes = PlacementTypes.FiducialsOnly;
+                        updateTable();
+                    }
+                });
+                radioPanel.add(fiducialsButton);
+            }
+            {
+                placementsButton = new JRadioButton("Placements");
+                placementsButton.setToolTipText("Use this selection if the plan is to manually align the panel with multiple placements.");
+                placementsButton.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        placementTypes = PlacementTypes.PlacementsOnly;
+                        updateTable();
+                    }
+                });
+                radioPanel.add(placementsButton);
+            }
+            {
+                bothButton = new JRadioButton("Both");
+                bothButton.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        placementTypes = PlacementTypes.Both;
+                        updateTable();
+                    }
+                });
+                radioPanel.add(bothButton);
+            }
+            {
+                ButtonGroup buttonGroup = new ButtonGroup();
+                buttonGroup.add(placementsButton);
+                buttonGroup.add(fiducialsButton);
+                buttonGroup.add(bothButton);
+            }
+            {
+                Component horizontalStrut = Box.createHorizontalStrut(40);
+                radioPanel.add(horizontalStrut);
+            }
+            {
+                JButton btnSelectBest = new JButton("Auto Select");
+                btnSelectBest.setToolTipText("Computes a good set of items to use for panel alignment and selects them.");
+                btnSelectBest.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        generateFilteredList();
+                        generateBestList();
+                        Helpers.selectObjectTableRows(childFiducialsTable, bestPseudoPlacements);
+                    }
+                });
+                radioPanel.add(btnSelectBest);
+            }
             
             tableModel = new FiducialLocatablePlacementsTableModel() {
                 @Override
                 public boolean isCellEditable(int rowIndex, int columnIndex) {
-                    return false; //Shouldn't be able to edit anything from this dialog
+                    return columnIndex == 0; //Only the enabled setting is editable
                 }
 
             };
-            tableModel.setFiducialLocatable(child.getFiducialLocatable());
-            tableModel.setParentLocation(child);
-            tableModel.setLocalReferenceFrame(false);
-            childFiducialsTable = new AutoSelectTextTable(tableModel);
             
-            //Filter out all rows except for the fiducials
-            RowFilter<Object, Object> rowFilter = new RowFilter<Object, Object>() {
-                public boolean include(Entry<? extends Object, ? extends Object> entry) {
-                    return (Placement.Type) entry.getValue(7) == Placement.Type.Fiducial;
-                }};
+            tableModel.setLocalReferenceFrame(false);
+            
+            childFiducialsTable = new AutoSelectTextTable(tableModel);
             childFiducialsTable.setAutoCreateRowSorter(true);
-            ((TableRowSorter<? extends TableModel>) childFiducialsTable.getRowSorter()).setRowFilter(rowFilter);
-
-            //No need to see the Enabled, Error Handling, or Comments columns so remove them
-            TableColumnModel tcm = childFiducialsTable.getColumnModel();
-            tcm.removeColumn(tcm.getColumn(9)); //skip Comments column
-            tcm.removeColumn(tcm.getColumn(8)); //skip Error Handling column
-            tcm.removeColumn(tcm.getColumn(0)); //skip Enabled column
-
             childFiducialsTable.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
             childFiducialsTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
             childFiducialsTable.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
+            
+            //No need to see the Error Handling or Comments columns so remove them
+            TableColumnModel tcm = childFiducialsTable.getColumnModel();
+            tcm.removeColumn(tcm.getColumn(9)); //skip Comments column
+            tcm.removeColumn(tcm.getColumn(8)); //skip Error Handling column
+            
             JScrollPane scrollPane = new JScrollPane(childFiducialsTable);
-            getContentPane().add(scrollPane, BorderLayout.CENTER);
-        }
-        {
-            JPanel buttonPane = new JPanel();
-            buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
-            getContentPane().add(buttonPane, BorderLayout.SOUTH);
+            panel.add(scrollPane, BorderLayout.CENTER);
             {
-                JButton okButton = new JButton("OK");
-                okButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        addSelectedFiducials();
-                    }});
-                okButton.setActionCommand("OK");
-                buttonPane.add(okButton);
-                getRootPane().setDefaultButton(okButton);
-            }
-            {
-                JButton cancelButton = new JButton("Cancel");
-                cancelButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        close();
-                    }});
-                cancelButton.setActionCommand("Cancel");
-                buttonPane.add(cancelButton);
+                JPanel buttonPane = new JPanel();
+                panel.add(buttonPane, BorderLayout.SOUTH);
+                buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+                {
+                    JButton okButton = new JButton("OK");
+                    okButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            addSelectedItemsToPanel();
+                        }});
+                    okButton.setActionCommand("OK");
+                    buttonPane.add(okButton);
+                    getRootPane().setDefaultButton(okButton);
+                }
+                {
+                    JButton cancelButton = new JButton("Cancel");
+                    cancelButton.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            close();
+                        }});
+                    cancelButton.setActionCommand("Cancel");
+                    buttonPane.add(cancelButton);
+                }
             }
         }
+
+        updateTable();
     }
 
     
@@ -209,30 +263,122 @@ public class ChildFiducialSelectorDialog extends JDialog {
         int[] selectedRows = childFiducialsTable.getSelectedRows();
         for (int selectedRow : selectedRows) {
             selectedRow = childFiducialsTable.convertRowIndexToModel(selectedRow);
-            selections.add(child.getFiducialLocatable().getPlacements().get(selectedRow));
+            selections.add((showHullOnly ? filteredPseudoPlacementsHull : filteredPseudoPlacements).get(selectedRow));
         }
         return selections;
     }
 
-    public void addSelectedFiducials() {
-        Side childGlobalSide = child.getSide();
+    public void addSelectedItemsToPanel() {
+        ArrayList<String> pseudoPlacementIds = new ArrayList<>();
         for (Placement fiducial : getSelections()) {
-            Logger.trace("Copying fiducial = " + fiducial);
-            Placement newFiducial = new Placement(panelLocation.getPanel().getPlacements().createId(fiducial.getId() + "-"));
-            newFiducial.setType(Placement.Type.Fiducial);
-            newFiducial.setEnabled(true);
-            newFiducial.setPart(fiducial.getPart());
-            newFiducial.setLocation(Utils2D.calculateBoardPlacementLocation(child, fiducial));
-            newFiducial.setSide(fiducial.getSide().flip(childGlobalSide == Side.Bottom));
-            newFiducial.setDefinedBy(fiducial.getDefinedBy());
-            ((AbstractLocatable) fiducial.getDefinedBy()).addPropertyChangeListener(newFiducial);
-            Logger.trace("newFiducial = " + newFiducial);
-            panelLocation.getPanel().addPlacement(newFiducial);
+            pseudoPlacementIds.add(fiducial.getId());
         }
+        panelLocation.getPanel().getDefinedBy().setPseudoPlacementIds(pseudoPlacementIds);
         close();
     }
     
     public void close() {
         dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+    }
+    
+    private void updateTable() {
+        generateFilteredList();
+        if (showHullOnly) {
+            tableModel.setPlacements(filteredPseudoPlacementsHull);
+        }
+        else {
+            tableModel.setPlacements(filteredPseudoPlacements);
+        }
+    }
+    
+    private void generateAllPseudoPlacementsList(PanelLocation panelLocation) {
+        for (PlacementsHolderLocation<?> child : panelLocation.getChildren()) {
+            for (Placement placement : child.getPlacementsHolder().getPlacements()) {
+                String uniqueId = child.getUniqueId();
+                String id = (uniqueId != null ? uniqueId : "") + placement.getId();
+                
+                Placement pseudoPlacement = new Placement(placement);
+                pseudoPlacement.setDefinedBy(pseudoPlacement);
+                pseudoPlacement.setEnabled(true);
+                pseudoPlacement.setLocation(Utils2D.calculateBoardPlacementLocation(child, placement).derive(null, null, 0.0, null));
+                pseudoPlacement.setId(id);
+                pseudoPlacement.setSide(placement.getSide().flip(child.getGlobalSide() == Side.Bottom));
+                
+                allPseudoPlacements.add(pseudoPlacement);
+            }
+            if (child instanceof PanelLocation) {
+                generateAllPseudoPlacementsList((PanelLocation) child);
+            }
+        }
+    }
+    
+    private void generateFilteredList() {
+        filteredPseudoPlacements = new ArrayList<>();
+        for (Placement placement : allPseudoPlacements) {
+            if (((placement.getType() == Placement.Type.Placement && (placementTypes == PlacementTypes.PlacementsOnly || placementTypes == PlacementTypes.Both)) ||
+                    (placement.getType() == Placement.Type.Fiducial && (placementTypes == PlacementTypes.FiducialsOnly || placementTypes == PlacementTypes.Both)))) {
+                filteredPseudoPlacements.add(placement);
+            }
+        }
+        generateHullList();
+    }
+    
+    private void generateHullList() {
+        filteredPseudoPlacementsHull = new ArrayList<>();
+        for (int iSide=0; iSide<2; iSide++) {
+            Map<Point, Placement> pointToPlacementMap = new HashMap<>();
+            List<Point> allPoints = new ArrayList<>();
+            for (Placement placement : filteredPseudoPlacements) {
+                if (placement.getSide() == (iSide == 0 ? Side.Top : Side.Bottom)) {
+                    Location loc = placement.getLocation().convertToUnits(LengthUnit.Millimeters);
+                    Point point = new Point(loc.getX(), loc.getY());
+                    allPoints.add(point);
+                    pointToPlacementMap.put(point, placement);
+                }
+            }
+            List<Point> hullPoints = null;
+            try {
+                hullPoints = QuickHull.quickHull(allPoints);
+            }
+            catch (Exception ex) {
+                hullPoints = allPoints;
+            }
+            
+            for (Point point : hullPoints) {
+                filteredPseudoPlacementsHull.add(pointToPlacementMap.get(point));
+            }
+
+        }
+    }
+    
+    private void generateBestList() {
+        bestPseudoPlacements = new ArrayList<>();
+        
+        for (int iSide=0; iSide<2; iSide++) {
+            List<Point> candidatePoints = new ArrayList<>();
+            Map<Point, Placement> pointToPlacementMap = new HashMap<>(); 
+            for (Placement placement : filteredPseudoPlacementsHull) {
+                if (placement.isEnabled() && placement.getSide() == (iSide == 0 ? Side.Top : Side.Bottom)) {
+                    Location loc = placement.getLocation().convertToUnits(LengthUnit.Millimeters);
+                    Point point = new Point(loc.getX(), loc.getY());
+                    candidatePoints.add(point);
+                    pointToPlacementMap.put(point, placement);
+                }
+            }
+            
+            List<Point> bestPoints = null;
+            int bestSize = Math.min(4, candidatePoints.size());
+            double bestArea = 0;
+            for (List<Point> points : Collect.allCombinationsOfSize(candidatePoints, bestSize)) {
+                double a = Utils2D.polygonArea(points);
+                if (bestPoints == null || a > bestArea) {
+                    bestPoints = points;
+                    bestArea = a;
+                }
+            }
+            for (Point point : bestPoints) {
+                bestPseudoPlacements.add(pointToPlacementMap.get(point));
+            }
+        }
     }
 }

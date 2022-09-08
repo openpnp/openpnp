@@ -78,7 +78,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setSide(Side.Top);
+        boardLocation.setGlobalSide(Side.Top);
 
         // no offset
         bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
@@ -123,7 +123,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setSide(Side.Top);
+        boardLocation.setGlobalSide(Side.Top);
 
         // no offset
         bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
@@ -169,7 +169,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setSide(Side.Top);
+        boardLocation.setGlobalSide(Side.Top);
 
         // 1mm offset in both directions
         bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 1.0, 1.0, 0.0, 0.0));
@@ -217,7 +217,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setSide(Side.Top);
+        boardLocation.setGlobalSide(Side.Top);
 
         // no offset
         bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
@@ -264,7 +264,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setSide(Side.Top);
+        boardLocation.setGlobalSide(Side.Top);
 
         // no offset
         bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters));
@@ -310,7 +310,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setSide(Side.Top);
+        boardLocation.setGlobalSide(Side.Top);
 
         // no offset
         bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
@@ -356,7 +356,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setSide(Side.Top);
+        boardLocation.setGlobalSide(Side.Top);
 
         // 1mm offset in both directions
         bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
@@ -401,7 +401,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setSide(Side.Top);
+        boardLocation.setGlobalSide(Side.Top);
 
         // no offset
         bottomVisionSettings.setVisionOffset(new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0));
@@ -452,7 +452,7 @@ public class ReferenceBottomVisionOffsetTest {
         
         BoardLocation boardLocation = new BoardLocation(new Board());
         boardLocation.setLocation(new Location(LengthUnit.Millimeters, 0, 0, -10, 0));
-        boardLocation.setSide(Side.Top);
+        boardLocation.setGlobalSide(Side.Top);
 
         // 0.5mm offset in both directions
         Location partVisionOffset = new Location(LengthUnit.Millimeters, 0.5, -0.5, 0.0, 0.0);

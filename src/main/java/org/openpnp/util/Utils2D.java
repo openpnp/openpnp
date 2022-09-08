@@ -30,8 +30,10 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
-import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.AbstractLocatable;
+import org.openpnp.model.Area;
+import org.openpnp.model.AreaUnit;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -102,17 +104,17 @@ public class Utils2D {
      * @param bl
      * @return
      */
-    public static AffineTransform getDefaultBoardPlacementLocationTransform(FiducialLocatableLocation bl) {
+    public static AffineTransform getDefaultBoardPlacementLocationTransform(PlacementsHolderLocation bl) {
         Location l = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
         AffineTransform tx = new AffineTransform();
         tx.translate(l.getX(), l.getY());
         tx.rotate(Math.toRadians(l.getRotation()));
-        if (bl.getLocalSide() == Side.Bottom) {
+        if (bl.getSide() == Side.Bottom) {
             /**
              * Translate by the board width. This is used to support the "New" Board Location
              * system ala https://github.com/openpnp/openpnp/wiki/Board-Locations.
              */
-            tx.translate(bl.getFiducialLocatable().getDimensions().convertToUnits(LengthUnit.Millimeters).getX(), 0);
+            tx.translate(bl.getPlacementsHolder().getDimensions().convertToUnits(LengthUnit.Millimeters).getX(), 0);
             tx.scale(-1, 1);
         }
         return tx;
@@ -206,34 +208,38 @@ public class Utils2D {
         return ret;
     }
 
-    public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl) {
+    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation bl) {
         return calculateBoardPlacementLocation(bl, Location.origin);
     }
     
-    public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl, Location location) {
+    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation bl, Location location) {
         Placement p = new Placement("dummy");
         p.setLocation(location);
         return calculateBoardPlacementLocation(bl, p);
     }
 
-    public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl,
+    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation bl,
             AbstractLocatable locatable) {
         return calculateBoardPlacementLocation(bl, locatable, false);
     }
     
-    public static Location calculateBoardPlacementLocation(FiducialLocatableLocation bl,
+    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation bl,
             AbstractLocatable locatable, boolean local) {
         
         Location placementLocation = null;
+        double angleSign = 1.0;
         if (locatable instanceof Placement) {
             placementLocation = locatable.getLocation();
         }
-        else if (locatable instanceof FiducialLocatableLocation) {
-            FiducialLocatableLocation fiducialLocatableLocation = (FiducialLocatableLocation) locatable;
+        else if (locatable instanceof PlacementsHolderLocation) {
+            PlacementsHolderLocation fiducialLocatableLocation = (PlacementsHolderLocation) locatable;
             Placement dummy = new Placement("dummy");
-            if (fiducialLocatableLocation.getSide() == Side.Bottom) {
-                Location dims = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
+            if (fiducialLocatableLocation.getGlobalSide() == Side.Bottom) {
+                Location dims = fiducialLocatableLocation.getPlacementsHolder().getDimensions();
                 dummy.setLocation(dims.derive(null, 0.0, 0.0, 0.0));
+            }
+            if (bl.getGlobalSide() == Side.Bottom) {
+                angleSign = -1.0;
             }
             placementLocation = calculateBoardPlacementLocation(fiducialLocatableLocation, dummy, true);
         }
@@ -242,11 +248,14 @@ public class Utils2D {
         }
         
         AffineTransform tx;
+        Location boardLocation;
         if (local) {
             tx = bl.getLocalToParentTransform();
+            boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
         }
         else {
             tx = bl.getLocalToGlobalTransform();
+            boardLocation = bl.getGlobalLocation().convertToUnits(LengthUnit.Millimeters);
         }
         if (tx == null) {
             tx = getDefaultBoardPlacementLocationTransform(bl);
@@ -256,7 +265,6 @@ public class Utils2D {
         // before we start calculating and then we'll convert it back to the original
         // units at the end.
         LengthUnit placementUnits = placementLocation.getUnits();
-        Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
         placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
 
         double angle = getTransformAngle(tx);
@@ -270,12 +278,22 @@ public class Utils2D {
                 p.getX(), 
                 p.getY(), 
                 boardLocation.getZ() + placementLocation.getZ(), 
-                angle + placementLocation.getRotation());
+                angle + angleSign*placementLocation.getRotation());
         l = l.convertToUnits(placementUnits);
         return l;
     }
 
-    public static Location calculateBoardPlacementLocationInverse(FiducialLocatableLocation bl,
+    public static Location calculateRelativeBoardPlacementLocation(PlacementsHolderLocation parent,
+            PlacementsHolderLocation bl, AbstractLocatable locatable) {
+        if (parent == null) {
+            return calculateBoardPlacementLocation(bl, locatable);
+        }
+        Location parentLocation = calculateBoardPlacementLocation(parent);
+        Location globalLocation = calculateBoardPlacementLocation(bl, locatable);
+        return globalLocation.getLocalLocationRelativeTo(parentLocation);
+    }
+    
+    public static Location calculateBoardPlacementLocationInverse(PlacementsHolderLocation bl,
             Location placementLocation) {
         AffineTransform tx = bl.getLocalToGlobalTransform();
         if (tx == null) {
@@ -293,7 +311,7 @@ public class Utils2D {
         // before we start calculating and then we'll convert it back to the original
         // units at the end.
         LengthUnit placementUnits = placementLocation.getUnits();
-        Location boardLocation = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
+        Location boardLocation = bl.getGlobalLocation().convertToUnits(LengthUnit.Millimeters);
         placementLocation = placementLocation.convertToUnits(LengthUnit.Millimeters);
 
         double angle = getTransformAngle(tx);
@@ -311,78 +329,83 @@ public class Utils2D {
         Location l = new Location(LengthUnit.Millimeters, 
                 p.getX(), 
                 p.getY(), 
-                boardLocation.getZ() + placementLocation.getZ(), 
-                angle + placementLocation.getRotation());
+                placementLocation.getZ() - boardLocation.getZ(), 
+                placementLocation.getRotation() + angle);
         l = l.convertToUnits(placementUnits);
+        if (l.getZ() < -37) {
+            Logger.trace("Oh-Oh!");
+        }
         return l;
     }
 
-    /**
-     * Given an existing BoardLocation, two Placements and the observed location of those
-     * two Placements, calculate the actual Location of the BoardLocation. Note that the
-     * BoardLocation is only used to determine which side of the board the Placements
-     * are on - it's existing Location is not considered. The returned Location is the
-     * absolute Location of the board, including it's angle, with the Z value set to the
-     * Z value in the input BoardLocation.
-     * 
-     * TODO Replace this with deriveAffineTransform. This is essentially a two fiducial check.
-     * 
-     * @param boardLocation
-     * @param placementA
-     * @param placementB
-     * @param observedLocationA
-     * @param observedLocationB
-     * @return
-     */
-    public static Location calculateBoardLocation(FiducialLocatableLocation boardLocation, Placement placementA,
-            Placement placementB, Location observedLocationA, Location observedLocationB) {
-        // Create a new BoardLocation based on the input except with a zeroed
-        // Location. This will be used to calculate our ideal placement locations.
-        FiducialLocatableLocation bl = new FiducialLocatableLocation(boardLocation.getFiducialLocatable());
-        bl.setLocation(new Location(boardLocation.getLocation().getUnits()));
-        bl.setSide(boardLocation.getSide());
-
-        // Calculate the ideal placement locations. This is where we would expect the
-        // placements to be if the board was at 0,0,0,0.
-        Location idealA = calculateBoardPlacementLocation(bl, placementA.getLocation());
-        Location idealB = calculateBoardPlacementLocation(bl, placementB.getLocation());
-
-        // Just rename a couple variables to make the code easier to read.
-        Location actualA = observedLocationA;
-        Location actualB = observedLocationB;
-
-        // Make sure all locations are using the same units.
-        idealA = idealA.convertToUnits(boardLocation.getLocation().getUnits());
-        idealB = idealB.convertToUnits(boardLocation.getLocation().getUnits());
-        actualA = actualA.convertToUnits(boardLocation.getLocation().getUnits());
-        actualB = actualB.convertToUnits(boardLocation.getLocation().getUnits());
-
-        // Calculate the angle that we expect to see between the two placements
-        double idealAngle = Math.toDegrees(
-                Math.atan2(idealB.getY() - idealA.getY(), idealB.getX() - idealA.getX()));
-        // Now calculate the angle that we observed between the two placements
-        double actualAngle = Math.toDegrees(
-                Math.atan2(actualB.getY() - actualA.getY(), actualB.getX() - actualA.getX()));
-
-        // The difference in angles is the angle of the board
-        double angle = actualAngle - idealAngle;
-
-        // Now we rotate the first placement by the angle, which gives us the location
-        // that the placement would be had the board been rotated by that angle.
-        Location idealARotated = idealA.rotateXy(angle);
-
-        // And now we subtract that rotated location from the observed location to get
-        // the real offset of the board.
-        Location location = actualA.subtract(idealARotated);
-
-        // And set the calculated angle and original Z
-        location = location.derive(null, null,
-                boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), angle);
-
-        return location;
-    }
-
-
+// The following code has been removed due to it being replaced by a call to 
+// deriveAffineTransform(List<Location> source, List<Location> destination)
+//    /**
+//     * Given an existing BoardLocation, two Placements and the observed location of those
+//     * two Placements, calculate the actual Location of the BoardLocation. Note that the
+//     * BoardLocation is only used to determine which side of the board the Placements
+//     * are on - it's existing Location is not considered. The returned Location is the
+//     * absolute Location of the board, including it's angle, with the Z value set to the
+//     * Z value in the input BoardLocation.
+//     * 
+//     * TODO Replace this with deriveAffineTransform. This is essentially a two fiducial check.
+//     * 
+//     * @param boardLocation
+//     * @param placementA
+//     * @param placementB
+//     * @param observedLocationA
+//     * @param observedLocationB
+//     * @return
+//     */
+//    public static Location calculateBoardLocation(FiducialLocatableLocation boardLocation, Placement placementA,
+//            Placement placementB, Location observedLocationA, Location observedLocationB) {
+//        // Create a new BoardLocation based on the input except with a zeroed
+//        // Location. This will be used to calculate our ideal placement locations.
+//        FiducialLocatableLocation bl = new FiducialLocatableLocation(boardLocation.getFiducialLocatable());
+//        bl.setLocation(new Location(boardLocation.getLocation().getUnits()));
+//        bl.setGlobalSide(boardLocation.getGlobalSide());
+//
+//        // Calculate the ideal placement locations. This is where we would expect the
+//        // placements to be if the board was at 0,0,0,0.
+//        Location idealA = calculateBoardPlacementLocation(bl, placementA.getLocation());
+//        Location idealB = calculateBoardPlacementLocation(bl, placementB.getLocation());
+//
+//        // Just rename a couple variables to make the code easier to read.
+//        Location actualA = observedLocationA;
+//        Location actualB = observedLocationB;
+//
+//        // Make sure all locations are using the same units.
+//        idealA = idealA.convertToUnits(boardLocation.getLocation().getUnits());
+//        idealB = idealB.convertToUnits(boardLocation.getLocation().getUnits());
+//        actualA = actualA.convertToUnits(boardLocation.getLocation().getUnits());
+//        actualB = actualB.convertToUnits(boardLocation.getLocation().getUnits());
+//
+//        // Calculate the angle that we expect to see between the two placements
+//        double idealAngle = Math.toDegrees(
+//                Math.atan2(idealB.getY() - idealA.getY(), idealB.getX() - idealA.getX()));
+//        // Now calculate the angle that we observed between the two placements
+//        double actualAngle = Math.toDegrees(
+//                Math.atan2(actualB.getY() - actualA.getY(), actualB.getX() - actualA.getX()));
+//
+//        // The difference in angles is the angle of the board
+//        double angle = actualAngle - idealAngle;
+//
+//        // Now we rotate the first placement by the angle, which gives us the location
+//        // that the placement would be had the board been rotated by that angle.
+//        Location idealARotated = idealA.rotateXy(angle);
+//
+//        // And now we subtract that rotated location from the observed location to get
+//        // the real offset of the board.
+//        Location location = actualA.subtract(idealARotated);
+//
+//        // And set the calculated angle and original Z
+//        location = location.derive(null, null,
+//                boardLocation.getLocation().convertToUnits(location.getUnits()).getZ(), angle);
+//
+//        return location;
+//    }
+//
+//
     /**
      * Normalizes the angle to be greater than or equal to 0 and less than or equal to +360 degrees
      * @param angle
@@ -736,4 +759,26 @@ public class Utils2D {
         results.add(maxB);
         return results;
     }
+    
+    public static double polygonArea(List<Point> vertices)
+    {
+        // Initialize area
+        double area = 0;
+        
+        // Calculate the area using the shoelace formula
+        int j = vertices.size() - 1;
+        for (int i = 0; i < vertices.size(); i++)
+        {
+            Point vi = vertices.get(i);
+            Point vj = vertices.get(j);
+            area += (vj.x + vi.x) * (vj.y - vi.y);
+        
+            // j is previous vertex to i
+            j = i;
+        }
+        
+        // Return absolute value
+        return Math.abs(0.5*area);
+    }
+
 }

@@ -20,15 +20,16 @@
 package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
-import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.core.Commit;
 
-public class PanelLocation extends FiducialLocatableLocation {
-
+public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
+    
+    public static final String ID_PREFIX = "Pnl";
+    
     public PanelLocation() {
         super();
     }
@@ -37,8 +38,8 @@ public class PanelLocation extends FiducialLocatableLocation {
     public PanelLocation(PanelLocation panelLocation) {
         super(panelLocation);
         if (panelLocation.getPanel() != null) {
-            setPanel(panelLocation.getPanel());
-            for (FiducialLocatableLocation child : getChildren()) {
+//            setPanel(panelLocation.getPanel());
+            for (PlacementsHolderLocation<?> child : getChildren()) {
                 child.setParent(this);
             }
         }
@@ -55,15 +56,11 @@ public class PanelLocation extends FiducialLocatableLocation {
     }
     
     public Panel getPanel() {
-        FiducialLocatable panel = getFiducialLocatable();
-        if (panel instanceof Panel) {
-            return (Panel) panel;
-        }
-        return null;
+        return (Panel) getPlacementsHolder();
     }
 
     public void setPanel(Panel panel) {
-        setFiducialLocatable(panel);
+        setPlacementsHolder(panel);
     }
 
     public String getPanelFile() {
@@ -74,17 +71,17 @@ public class PanelLocation extends FiducialLocatableLocation {
         setFileName(panelFile);
     }
 
-    public void addChild(FiducialLocatableLocation child) {
+    public void addChild(PlacementsHolderLocation<?> child) {
         child.setParent(this);
         Panel panel = getPanel();
         panel.addChild(child);
     }
     
-    public void removeChild(FiducialLocatableLocation child) {
+    public void removeChild(PlacementsHolderLocation<?> child) {
         getPanel().removeChild(child);
     }
     
-    public List<FiducialLocatableLocation> getChildren() {
+    public List<PlacementsHolderLocation<?>> getChildren() {
         if (getPanel() == null) {
             return new ArrayList<>();
         }
@@ -93,23 +90,23 @@ public class PanelLocation extends FiducialLocatableLocation {
     
     public void flipSide() {
         super.flipSide();
-        for (FiducialLocatableLocation child : getChildren()) {
+        for (PlacementsHolderLocation<?> child : getChildren()) {
             child.flipSide();
         }
     }
     
     public void setLocalToParentTransform(AffineTransform localToParentTransform) {
         super.setLocalToParentTransform(localToParentTransform);
-        for (FiducialLocatableLocation child : getChildren()) {
+        for (PlacementsHolderLocation<?> child : getChildren()) {
             child.setLocalToParentTransform(null);
         }
     }
     
-    public static void refreshStructure(PanelLocation panelLocation) {
-        for (FiducialLocatableLocation child : panelLocation.getChildren() ) {
+    public static void setParentsOfAllDescendants(PanelLocation panelLocation) {
+        for (PlacementsHolderLocation<?> child : panelLocation.getChildren() ) {
             child.setParent(panelLocation);
             if (child instanceof PanelLocation) {
-                PanelLocation.refreshStructure((PanelLocation) child);
+                PanelLocation.setParentsOfAllDescendants((PanelLocation) child);
             }
         }
     }
@@ -120,8 +117,8 @@ public class PanelLocation extends FiducialLocatableLocation {
      * @return the direct parent of potentialDecendant or null if potentialDecendant is not a 
      * decendant of this PanelLocation
      */
-    public PanelLocation getParentOfDecendant(FiducialLocatableLocation potentialDecendant) {
-        for (FiducialLocatableLocation child : getChildren()) {
+    public PanelLocation getParentOfDecendant(PlacementsHolderLocation<?> potentialDecendant) {
+        for (PlacementsHolderLocation<?> child : getChildren()) {
             if (child == potentialDecendant) {
                 return this;
             }
@@ -146,10 +143,15 @@ public class PanelLocation extends FiducialLocatableLocation {
         if (parentPanelLocation != null) {
             parentHashCode = parentPanelLocation.hashCode();
         }
-        Logger.trace(String.format("%sPanelLocation:@%08x defined by @%08x child of @%08x, %s, location=%s , globalLocation=%s side=%s (%s)", leader,  this.hashCode(), this.definedBy.hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getPanel() == null ? "Null" : getPanel().toString()));
+        Logger.trace(String.format("%s (%s) PanelLocation:@%08x defined by @%08x child of @%08x, %s, location=%s , globalLocation=%s side=%s (%s)", leader,  this.id, this.hashCode(), this.definedBy.hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getPanel() == null ? "Null" : getPanel().toString()));
         if (getPanel() != null) {
-            leader = leader + "    ";
-            for (FiducialLocatableLocation child : getPanel().getChildren()) {
+            if (leader.isEmpty()) {
+                leader = "  +--";
+            }
+            else {
+                leader = "    " + leader;
+            }
+            for (PlacementsHolderLocation<?> child : getPanel().getChildren()) {
                 if (child instanceof PanelLocation) {
                     ((PanelLocation) child).dump(leader);
                 }
@@ -160,9 +162,9 @@ public class PanelLocation extends FiducialLocatableLocation {
         }
     }
 
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        Logger.trace(String.format("PropertyChangeEvent handled by PanelLocation @%08x = %s", this.hashCode(), evt));
-        super.propertyChange(evt);
-    }
+//    @Override
+//    public void propertyChange(PropertyChangeEvent evt) {
+//        Logger.trace(String.format("PropertyChangeEvent handled by PanelLocation @%08x = %s", this.hashCode(), evt));
+//        super.propertyChange(evt);
+//    }
 }

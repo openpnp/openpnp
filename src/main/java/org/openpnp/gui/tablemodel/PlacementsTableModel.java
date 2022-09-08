@@ -23,12 +23,10 @@ import org.openpnp.gui.JobPlacementsPanel;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
-import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.FiducialLocatable;
-import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.PlacementsHolder;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -45,6 +43,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
             new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Placed", 
                     "Status", "Error Handling", "Comments"};
 
+    @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {Boolean.class, PartCellValue.class, Part.class, 
             Side.class, LengthCellValue.class, LengthCellValue.class, RotationCellValue.class, 
             Type.class, Boolean.class, Status.class, ErrorHandling.class, String.class};
@@ -57,8 +56,8 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
         Disabled
     }
 
-    private FiducialLocatable fiducialLocatable;
-    private FiducialLocatableLocation fiducialLocatableLocation;
+    private PlacementsHolder<?> fiducialLocatable;
+    private PlacementsHolderLocation fiducialLocatableLocation;
     private JobPlacementsPanel jobPlacementsPanel;
 
     public PlacementsTableModel(Configuration configuration) {
@@ -69,13 +68,13 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     	this.jobPlacementsPanel = jobPlacementsPanel;
     }
 
-    public void setFiducialLocatableLocation(FiducialLocatableLocation fiducialLocatableLocation) {
+    public void setFiducialLocatableLocation(PlacementsHolderLocation fiducialLocatableLocation) {
         this.fiducialLocatableLocation = fiducialLocatableLocation;
         if (fiducialLocatableLocation == null) {
             this.fiducialLocatable = null;
         }
         else {
-            this.fiducialLocatable = fiducialLocatableLocation.getFiducialLocatable();
+            this.fiducialLocatable = fiducialLocatableLocation.getPlacementsHolder();
         }
         fireTableDataChanged();
     }
@@ -123,11 +122,12 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
             }
             if (columnIndex == 0) {
                 placement.setEnabled((Boolean) aValue);
+                fireTableCellUpdated(rowIndex, 9);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 2) {
                 definedBy.setPart((Part) aValue);
-                fireTableCellUpdated(rowIndex, 8);
+                fireTableCellUpdated(rowIndex, 9);
             }
             else if (columnIndex == 3) {
                 definedBy.setSide((Side) aValue);
@@ -157,7 +157,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
             }
             else if (columnIndex == 7) {
                 definedBy.setType((Type) aValue);
-                fireTableCellUpdated(rowIndex, 8);
+                fireTableCellUpdated(rowIndex, 9);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 8) {

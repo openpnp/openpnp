@@ -436,6 +436,12 @@ public class Location {
     	return (x >= x1) && (x <= x2) && (y > y1) && (y < y2);
     }
 
+    /**
+     * Treats this as local location relative to baseLocation and returns the global location 
+     * of this in the same reference frame as baseLocation
+     * @param baseLocation
+     * @return
+     */
     public Location offsetWithRotationFrom(Location baseLocation) {
         // Start with the base location.
         // Rotate the feeder's offsets by the base's rotation making the offsets
@@ -447,6 +453,17 @@ public class Location {
         return baseLocation.addWithRotation(offsets);
     }
 
+    /**
+     * Treats this as a global location in the same reference frame as baseLocation and
+     * returns the local location of this relative to the baseLocation
+     * @param baseLocation
+     * @return
+     */
+    public Location getLocalLocationRelativeTo(Location baseLocation) {
+        Location ret = subtractWithRotation(baseLocation);
+        return ret.rotateXy(-baseLocation.getRotation());
+    }
+    
     /**
      * Performs a unit agnostic equality check. If the Object being tested is a Location in a
      * different unit, it is first converted to the units of this Location and then each value field

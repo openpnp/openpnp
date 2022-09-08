@@ -19,10 +19,16 @@
 
 package org.openpnp.spi;
 
+/**
+ * 
+ * @author Tony
+ *
+ * @param <T>
+ */
 public interface Definable<T> {
     public T getDefinedBy();
     
     public void setDefinedBy(T definable);
     
-    public boolean isDefinedBy(T definable);
+    public boolean isDefinedBy(Object definable);
 }

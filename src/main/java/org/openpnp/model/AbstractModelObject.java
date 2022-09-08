@@ -22,6 +22,8 @@ package org.openpnp.model;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
+import org.pmw.tinylog.Logger;
+
 public abstract class AbstractModelObject {
     protected final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
@@ -39,6 +41,14 @@ public abstract class AbstractModelObject {
 
     public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
         propertyChangeSupport.removePropertyChangeListener(propertyName, listener);
+    }
+    
+    public void dispose() {
+       Logger.trace(String.format("Disposing of %s @%08x", this.getClass().getSimpleName(), this.hashCode()));
+       for (PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners()) {
+            Logger.warn("Removing listener " + listener);
+            propertyChangeSupport.removePropertyChangeListener(listener);
+        }
     }
 
     protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {

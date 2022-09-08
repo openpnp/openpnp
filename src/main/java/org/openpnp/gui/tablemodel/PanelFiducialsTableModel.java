@@ -19,6 +19,8 @@
 
 package org.openpnp.gui.tablemodel;
 
+import java.util.List;
+
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
@@ -56,12 +58,12 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
 
     @Override
     public Placement getRowObjectAt(int index) {
-        return panel.getFiducials().get(index);
+        return panel.getPlacements().get(index);
     }
 
     @Override
     public int indexOf(Object object) {
-        return panel.getFiducials().indexOf(object);
+        return panel.getPlacements().indexOf(object);
     }
 
     @Override
@@ -74,7 +76,7 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
     }
 
     public int getRowCount() {
-        return (panel == null) ? 0 : panel.getFiducials().size();
+        return (panel == null) ? 0 : panel.getPlacements().size();
     }
 
     @Override
@@ -90,7 +92,7 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            Placement placement = panel.getFiducials().get(rowIndex);
+            Placement placement = panel.getPlacements().get(rowIndex);
             if (columnIndex == 0) {
                 placement.setEnabled((Boolean) aValue);
             }
@@ -135,7 +137,7 @@ public class PanelFiducialsTableModel extends AbstractObjectTableModel {
     }
 
     public Object getValueAt(int row, int col) {
-        Placement placement = panel.getFiducials().get(row);
+        Placement placement = panel.getPlacements().get(row);
         Location loc = placement.getLocation();
         switch (col) {
 			case 0:

@@ -23,20 +23,17 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.swing.event.TableModelEvent;
-import javax.swing.table.AbstractTableModel;
-
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board.Side;
-import org.pmw.tinylog.Logger;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
 
 @SuppressWarnings("serial")
-public class FiducialLocatableLocationsTableModel extends AbstractObjectTableModel {
+public class PlacementsHolderLocationsTableModel extends AbstractObjectTableModel {
     private final Configuration configuration;
 
     private String[] columnNames = new String[] {"Id", "Panel/Board", "Width", "Length", "Side", "X", "Y", "Z",
@@ -51,9 +48,9 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
 
     private PanelLocation rootPanelLocation;
 
-    private List<FiducialLocatableLocation> fiducialLocatableLocations;
+    private List<PlacementsHolderLocation<?>> placementsHolderLocations;
 
-    public FiducialLocatableLocationsTableModel(Configuration configuration) {
+    public PlacementsHolderLocationsTableModel(Configuration configuration) {
         this.configuration = configuration;
     }
 
@@ -81,22 +78,22 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
         fireTableDataChanged();
     }
 
-    public List<FiducialLocatableLocation> getFiducialLocatableLocations() {
+    public List<PlacementsHolderLocation<?>> getPlacementsHolderLocations() {
         if (job != null) {
             return job.getBoardAndPanelLocations();
         }
         else {
-            return fiducialLocatableLocations;
+            return placementsHolderLocations;
         }
     }
 
-    public void setFiducialLocatableLocations(List<FiducialLocatableLocation> fiducialLocatableLocations) {
-        this.fiducialLocatableLocations = fiducialLocatableLocations;
+    public void setPlacementsHolderLocations(List<PlacementsHolderLocation<?>> placementsHolderLocations) {
+        this.placementsHolderLocations = placementsHolderLocations;
         fireTableDataChanged();
     }
 
-    public FiducialLocatableLocation getFiducialLocatableLocation(int index) {
-        return getFiducialLocatableLocations().get(index);
+    public PlacementsHolderLocation<?> getPlacementsHolderLocation(int index) {
+        return getPlacementsHolderLocations().get(index);
     }
 
     @Override
@@ -109,10 +106,10 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
     }
 
     public int getRowCount() {
-        if (getFiducialLocatableLocations() == null) {
+        if (getPlacementsHolderLocations() == null) {
             return 0;
         }
-        return getFiducialLocatableLocations().size();
+        return getPlacementsHolderLocations().size();
     }
 
     @Override
@@ -125,7 +122,7 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
         if (columnIndex == 0 || columnIndex == 1) {
             return false;
         }
-        if ((getFiducialLocatableLocation(rowIndex).getParent() == rootPanelLocation) ||
+        if ((getPlacementsHolderLocation(rowIndex).getParent() == rootPanelLocation) ||
                 (columnIndex == 9) || (columnIndex == 10)) {
             return true;
         }
@@ -135,77 +132,77 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            FiducialLocatableLocation fiducialLocatableLocation = getFiducialLocatableLocation(rowIndex);
+            PlacementsHolderLocation<?> placementsHolderLocation = getPlacementsHolderLocation(rowIndex);
             if (columnIndex == 0) {
-                fiducialLocatableLocation.setId((String) aValue);
+                placementsHolderLocation.setId((String) aValue);
             }
             else if (columnIndex == 1) {
-                fiducialLocatableLocation.getFiducialLocatable().setName((String) aValue);
+                placementsHolderLocation.getPlacementsHolder().setName((String) aValue);
             }
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location dims = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
+                Location dims = placementsHolderLocation.getPlacementsHolder().getDimensions();
                 dims = Length.setLocationField(configuration, dims, length, Length.Field.X);
-                fiducialLocatableLocation.getFiducialLocatable().getDefinedBy().setDimensions(dims);
+                placementsHolderLocation.getPlacementsHolder().getDefinedBy().setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location dims = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
+                Location dims = placementsHolderLocation.getPlacementsHolder().getDimensions();
                 dims = Length.setLocationField(configuration, dims, length, Length.Field.Y);
-                fiducialLocatableLocation.getFiducialLocatable().getDefinedBy().setDimensions(dims);
+                placementsHolderLocation.getPlacementsHolder().getDefinedBy().setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 4) {
-                Side oldSide = fiducialLocatableLocation.getSide();
+                Side oldSide = placementsHolderLocation.getGlobalSide();
                 Side newSide = (Side) aValue;
                 if (newSide != oldSide) {
-                    Location savedLocation = fiducialLocatableLocation.getGlobalLocation();
-                    fiducialLocatableLocation.setSide(newSide);
-                    if (fiducialLocatableLocation.getParent() == rootPanelLocation) {
-                        fiducialLocatableLocation.setGlobalLocation(savedLocation);
+                    Location savedLocation = placementsHolderLocation.getGlobalLocation();
+                    placementsHolderLocation.setGlobalSide(newSide);
+                    if (placementsHolderLocation.getParent() == rootPanelLocation) {
+                        placementsHolderLocation.setGlobalLocation(savedLocation);
                     }
-                    fiducialLocatableLocation.setLocalToParentTransform(null);
+                    placementsHolderLocation.setLocalToParentTransform(null);
                 }
                 fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = fiducialLocatableLocation.getGlobalLocation();
+                Location location = placementsHolderLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X);
-                fiducialLocatableLocation.setGlobalLocation(location);
+                placementsHolderLocation.setGlobalLocation(location);
                 fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 6) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = fiducialLocatableLocation.getGlobalLocation();
+                Location location = placementsHolderLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y);
-                fiducialLocatableLocation.setGlobalLocation(location);
+                placementsHolderLocation.setGlobalLocation(location);
                 fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 7) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location location = fiducialLocatableLocation.getGlobalLocation();
+                Location location = placementsHolderLocation.getGlobalLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Z);
-                fiducialLocatableLocation.setGlobalLocation(location);
+                placementsHolderLocation.setGlobalLocation(location);
                 fireDecendantsCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 8) {
-                fiducialLocatableLocation.setGlobalLocation(fiducialLocatableLocation.getGlobalLocation().derive(null, null, null,
+                placementsHolderLocation.setGlobalLocation(placementsHolderLocation.getGlobalLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
                 fireDecendantsCellUpdated(rowIndex, TableModelEvent.ALL_COLUMNS);
             }
             else if (columnIndex == 9) {
-                fiducialLocatableLocation.setLocallyEnabled((Boolean) aValue);
+                placementsHolderLocation.setLocallyEnabled((Boolean) aValue);
                 fireDecendantsCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 10) {
-                fiducialLocatableLocation.setCheckFiducials((Boolean) aValue);
+                placementsHolderLocation.setCheckFiducials((Boolean) aValue);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
         }
@@ -214,8 +211,8 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
         }
     }
 
-    public void fireDecendantsUpdated(FiducialLocatableLocation fiducialLocatableLocation) {
-        int idx = indexOf(fiducialLocatableLocation);
+    public void fireDecendantsUpdated(PlacementsHolderLocation<?> placementsHolderLocation) {
+        int idx = indexOf(placementsHolderLocation);
         if (idx >= 0) {
             fireDecendantsCellUpdated(idx, TableModelEvent.ALL_COLUMNS);
         }
@@ -223,9 +220,9 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
     
     private void fireDecendantsCellUpdated(int rowIndex, int columnIndex) {
         fireTableCellUpdated(rowIndex, columnIndex);
-        FiducialLocatableLocation fll = getFiducialLocatableLocation(rowIndex);
+        PlacementsHolderLocation<?> fll = getPlacementsHolderLocation(rowIndex);
         if (fll instanceof PanelLocation) {
-            for (FiducialLocatableLocation child : ((PanelLocation) fll).getChildren()) {
+            for (PlacementsHolderLocation<?> child : ((PanelLocation) fll).getChildren()) {
                 int idx = indexOf(child);
                 if (idx >= 0) {
                     fireDecendantsCellUpdated(idx, columnIndex);
@@ -235,20 +232,20 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
     }
     
     public Object getValueAt(int row, int col) {
-        FiducialLocatableLocation fiducialLocatableLocation = getFiducialLocatableLocation(row);
-        Location loc = fiducialLocatableLocation.getGlobalLocation();
-        Location dim = fiducialLocatableLocation.getFiducialLocatable().getDimensions();
+        PlacementsHolderLocation<?> placementsHolderLocation = getPlacementsHolderLocation(row);
+        Location loc = placementsHolderLocation.getGlobalLocation();
+        Location dim = placementsHolderLocation.getPlacementsHolder().getDimensions();
         switch (col) {
             case 0:
-                return fiducialLocatableLocation.getId();
+                return placementsHolderLocation.getId();
             case 1:
-                return fiducialLocatableLocation.getFiducialLocatable().getName();
+                return placementsHolderLocation.getPlacementsHolder().getName();
             case 2:
                 return new LengthCellValue(dim.getLengthX());
             case 3:
                 return new LengthCellValue(dim.getLengthY());
             case 4:
-                return fiducialLocatableLocation.getSide();
+                return placementsHolderLocation.getGlobalSide();
             case 5:
                 return new LengthCellValue(loc.getLengthX());
             case 6:
@@ -259,9 +256,9 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
                 return String.format(Locale.US, configuration.getLengthDisplayFormat(),
                         loc.getRotation(), "");
             case 9:
-                return fiducialLocatableLocation.isEnabled();
+                return placementsHolderLocation.isEnabled();
             case 10:
-                return fiducialLocatableLocation.isCheckFiducials();
+                return placementsHolderLocation.isCheckFiducials();
             default:
                 return null;
         }
@@ -269,6 +266,6 @@ public class FiducialLocatableLocationsTableModel extends AbstractObjectTableMod
 
     @Override
     public Object getRowObjectAt(int index) {
-        return getFiducialLocatableLocation(index);
+        return getPlacementsHolderLocation(index);
     }
 }

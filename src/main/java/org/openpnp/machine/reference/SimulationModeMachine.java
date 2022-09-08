@@ -310,8 +310,8 @@ public class SimulationModeMachine extends ReferenceMachine {
             }
         }
         for (BoardLocation boardLocation : MainFrame.get().getJobTab().getJob().getBoardLocations()) {
-            boardLocation.setLocation(boardLocation.getLocation().derive(null, null, 
-                    machineTableZ.convertToUnits(boardLocation.getLocation().getUnits())
+            boardLocation.setGlobalLocation(boardLocation.getGlobalLocation().derive(null, null, 
+                    machineTableZ.convertToUnits(boardLocation.getGlobalLocation().getUnits())
                     .getValue(), 
                     null));
         }

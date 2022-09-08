@@ -25,7 +25,7 @@ import java.util.function.Supplier;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.FiducialLocatable;
+import org.openpnp.model.PlacementsHolder;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
@@ -40,11 +40,11 @@ public class FiducialLocatableTableModel extends AbstractObjectTableModel {
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class};
 
-    private Supplier<List<? extends FiducialLocatable>> fiducialLocatables;
+    private Supplier<List<? extends PlacementsHolder>> fiducialLocatables;
 
-    private Class<? extends FiducialLocatable> classType;
+    private Class<? extends PlacementsHolder> classType;
 
-    public FiducialLocatableTableModel(Configuration configuration, Supplier<List<? extends FiducialLocatable>> fiducialLocatables, Class<? extends FiducialLocatable> classType) {
+    public FiducialLocatableTableModel(Configuration configuration, Supplier<List<? extends PlacementsHolder>> fiducialLocatables, Class<? extends PlacementsHolder> classType) {
         this.configuration = configuration;
         this.fiducialLocatables = fiducialLocatables;
         this.classType = classType;
@@ -90,7 +90,7 @@ public class FiducialLocatableTableModel extends AbstractObjectTableModel {
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            FiducialLocatable fiducialLocatable = fiducialLocatables.get().get(rowIndex);
+            PlacementsHolder fiducialLocatable = fiducialLocatables.get().get(rowIndex);
             if (columnIndex == 0) {
                 fiducialLocatable.setName((String) aValue);
             }
@@ -117,7 +117,7 @@ public class FiducialLocatableTableModel extends AbstractObjectTableModel {
     }
 
     public Object getValueAt(int row, int col) {
-        FiducialLocatable fiducialLocatable = fiducialLocatables.get().get(row);
+        PlacementsHolder fiducialLocatable = fiducialLocatables.get().get(row);
         Location dim = fiducialLocatable.getDimensions();
         switch (col) {
             case 0:

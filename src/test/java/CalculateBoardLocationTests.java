@@ -247,7 +247,7 @@ public class CalculateBoardLocationTests {
         Location fid2l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid2.getLocation());
         Location fid3l = Utils2D.calculateBoardPlacementLocation(boardLocation, fid3.getLocation());
         
-        if (boardLocation.getSide() == Side.Bottom) {
+        if (boardLocation.getGlobalSide() == Side.Bottom) {
             fid1.setLocation(fid1.getLocation().multiply(-1, 1, 1, 1));
             fid2.setLocation(fid2.getLocation().multiply(-1, 1, 1, 1));
             fid3.setLocation(fid3.getLocation().multiply(-1, 1, 1, 1));
@@ -284,7 +284,7 @@ public class CalculateBoardLocationTests {
         }
         
         BoardLocation boardLocation = new BoardLocation(board);
-        boardLocation.setSide(side);
+        boardLocation.setGlobalSide(side);
         if (side == Side.Top) {
             Placement r6 = new Placement("R6");
             r6.setLocation(new Location(LengthUnit.Millimeters, 25, 22, 0, 45));

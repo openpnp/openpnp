@@ -22,15 +22,17 @@ package org.openpnp.gui.processes;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -72,7 +74,7 @@ public class MultiPlacementBoardLocationProcess {
     private List<Location> measuredLocations;
     private int nPlacements;
     private int idxPlacement = 0;
-    private FiducialLocatableLocation boardLocation;
+    private PlacementsHolderLocation boardLocation;
     private Side boardSide;
     private Location savedBoardLocation;
     private AffineTransform savedPlacementTransform;
@@ -98,10 +100,10 @@ public class MultiPlacementBoardLocationProcess {
         measuredLocations = new ArrayList<Location>();
         
         boardLocation = jobPanel.getSelection();
-        boardSide = boardLocation.getSide();
+        boardSide = boardLocation.getGlobalSide();
         
         //Save the current board location and transform in case it needs to be restored
-        savedBoardLocation = boardLocation.getLocation();
+        savedBoardLocation = boardLocation.getGlobalLocation();
         savedPlacementTransform = boardLocation.getLocalToParentTransform();
         
         // Clear the current transform so it doesn't potentially send us to the wrong spot
@@ -251,19 +253,24 @@ public class MultiPlacementBoardLocationProcess {
             setBoardLocationAndPlacementTransform();
             
             //Refresh the job panel so that the new board location is visible
-            jobPanel.refreshSelectedRow();           
+            jobPanel.refreshSelectedRow();
+            jobPanel.selectFiducialLocatableLocation(boardLocation);
             
             //Check the results to make sure they are valid
-            double boardOffset = boardLocation.getLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(savedBoardLocation);
+            double boardOffset = boardLocation.getGlobalLocation().convertToUnits(LengthUnit.Millimeters).getLinearDistanceTo(savedBoardLocation);
             Logger.info("Board origin offset distance: " + boardOffset + " mm");
            
             Utils2D.AffineInfo ai = Utils2D.affineInfo(boardLocation.getLocalToParentTransform());
             Logger.info("Placement affine transform: " + ai);
             
             String errString = "";
-            if (Math.abs(ai.xScale-1) > props.scalingTolerance) {
+            if (ai.xScale > 0 && Math.abs(ai.xScale-1) > props.scalingTolerance) {
                 errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
                         String.format("%.5f", 1-props.scalingTolerance) + ", " + String.format("%.5f", 1+props.scalingTolerance) + "], ";
+            }
+            else if (ai.xScale < 0 && Math.abs(ai.xScale+1) > props.scalingTolerance) {
+                errString += "x scaling = " + String.format("%.5f", ai.xScale) + " which is outside the expected range of [" +
+                        String.format("-%.5f", 1+props.scalingTolerance) + ", " + String.format("-%.5f", 1-props.scalingTolerance) + "], ";
             }
             if (Math.abs(ai.yScale-1) > props.scalingTolerance) {
                 errString += "y scaling = " + String.format("%.5f", ai.yScale) + " which is outside the expected range of [" +
@@ -294,7 +301,7 @@ public class MultiPlacementBoardLocationProcess {
 
     private boolean step3() {
         UiUtils.submitUiMachineTask(() -> {
-            Location location = jobPanel.getSelection().getLocation();
+            Location location = jobPanel.getSelection().getGlobalLocation();
             MovableUtils.moveToLocationAtSafeZ(camera, location);
             MovableUtils.fireTargetedUserAction(camera);
         });
@@ -305,25 +312,44 @@ public class MultiPlacementBoardLocationProcess {
     private Location setBoardLocationAndPlacementTransform() {
         AffineTransform tx = Utils2D.deriveAffineTransform(expectedLocations, measuredLocations);
         
-        //Set the transform
-        boardLocation.setLocalToParentTransform(tx);
+        if (boardSide == Side.Bottom) {
+            tx.scale(-1, 1);
+        }
+        
+        // Set the transform.
+        try {
+            boardLocation.setLocalToGlobalTransform(tx);
+        }
+        catch (NoninvertibleTransformException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         
         // Compute the compensated board location
         Location origin = new Location(LengthUnit.Millimeters);
         if (boardSide == Side.Bottom) {
-            origin = origin.add(boardLocation.getFiducialLocatable().getDimensions().derive(null, 0., 0., 0.));
+            origin = origin.add(boardLocation.getPlacementsHolder().getDimensions().derive(null, 0., 0., 0.));
         }
         Location newBoardLocation = Utils2D.calculateBoardPlacementLocation(boardLocation, origin);
-        newBoardLocation = newBoardLocation.convertToUnits(boardLocation.getLocation().getUnits());
-        newBoardLocation = newBoardLocation.derive(null, null, boardLocation.getLocation().getZ(), null);
+        newBoardLocation = newBoardLocation.convertToUnits(boardLocation.getGlobalLocation().getUnits());
+        newBoardLocation = newBoardLocation.derive(null, null, boardLocation.getGlobalLocation().getZ(), null);
 
-        //Set the board's new location
-        boardLocation.setLocation(newBoardLocation);
-
-        //Need to set transform again because setting the location clears the transform - shouldn't the 
-        //BoardLocation.setPlacementTransform method perform the above calculations and set the location
-        //itself since it already has all the needed information???
-        boardLocation.setLocalToParentTransform(tx);
+        //Don't change the location if the board/panel is part of another panel
+        if (boardLocation.getParent() == jobPanel.getJob().getRootPanelLocation()) {
+            //Set the board's new location
+            boardLocation.setLocation(newBoardLocation);
+    
+            //Need to set transform again because setting the location clears the transform - shouldn't the 
+            //BoardLocation.setPlacementTransform method perform the above calculations and set the location
+            //itself since it already has all the needed information???
+            try {
+                boardLocation.setLocalToGlobalTransform(tx);
+            }
+            catch (NoninvertibleTransformException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
         
         return newBoardLocation;
     }
@@ -341,7 +367,7 @@ public class MultiPlacementBoardLocationProcess {
                 // start from current camera location
                 camera.getLocation(),
                 // and end at the board origin
-                boardLocation.getLocation());
+                boardLocation.getGlobalLocation());
 
         // Solve it using the default heuristics.
         tsm.solve();

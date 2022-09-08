@@ -20,21 +20,26 @@
 package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
-import java.beans.PropertyChangeEvent;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openpnp.gui.MainFrame;
-import org.openpnp.model.Placement.Type;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.core.Commit;
 import org.simpleframework.xml.core.Persist;
 
-public class BoardLocation extends FiducialLocatableLocation {
+/**
+ * A container for a Board that gives the board a physical Location relative to its parent. It 
+ * also holds a coordinate transformation that is used to convert the board's local coordinates to
+ * its parent's coordinates.  In addition, it contains information on where the Board's definition 
+ * is stored in the file system.
+ */
+public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
 
+    public static final String ID_PREFIX = "Brd";
+    
     @Deprecated
     @Attribute(required = false)
     private String boardFile;
@@ -47,30 +52,41 @@ public class BoardLocation extends FiducialLocatableLocation {
     @Attribute(required = false)
     private Boolean enabled; 
 
+    @Deprecated
+    @ElementMap(required = false)
+    private Map<String, Boolean> placed = new HashMap<>();
+
+    /**
+     * Constructs an empty BoardLocation
+     */
     BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
     }
 
-    // Copy constructor needed for deep copy of object.
+    /**
+     * Creates a deep copy of the specified BoardLocation
+     * @param boardLocation
+     */
     public BoardLocation(BoardLocation boardLocation) {
         super(boardLocation);
-        if (boardLocation.getBoard() != null) {
-            setBoard(boardLocation.getBoard());
-        }
     }
 
+    /**
+     * Creates a BoardLocation for the specified Board
+     * @param board - the specified board
+     */
     public BoardLocation(Board board) {
         this();
         setBoard(board);
-        if (board != null && board.getFile() != null) {
-            try {
-                this.setBoardFile(board.getFile().getCanonicalPath());
-            }
-            catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
+//        if (board != null && board.getFile() != null) {
+//            try {
+//                this.setBoardFile(board.getFile().getCanonicalPath());
+//            }
+//            catch (IOException e) {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
+//        }
         
     }
 
@@ -91,29 +107,62 @@ public class BoardLocation extends FiducialLocatableLocation {
     
     @Persist
     protected void persist() {
-        super.persist();
+        placed = null;
     }
     
+    /**
+     * 
+     * @return - the Board associated with this BoardLocation
+     */
     public Board getBoard() {
-        return (Board) getFiducialLocatable();
+        return (Board) getPlacementsHolder();
     }
 
+    /**
+     * Sets the board associated with this BoardLocation
+     * @param board - the board to set
+     */
     public void setBoard(Board board) {
-        setFiducialLocatable(board);
+        setPlacementsHolder(board);
     }
 
+    /**
+     * 
+     * @return - the filename where the Board associated with this BoardLocation is stored
+     */
     String getBoardFile() {
         return getFileName();
     }
 
-    void setBoardFile(String boardFile) {
-        setFileName(boardFile);
+    /**
+     * Sets the filename where the Board associated with this BoardLocation is stored
+     * @param boardFileName - the filename to set
+     */
+    void setBoardFile(String boardFileName) {
+        setFileName(boardFileName);
     }
 
+    /**
+     * @deprecated placement status is now saved with the job
+     * @return the placement status
+     */
+    @Deprecated
+    public Map<String, Boolean> getPlaced() {
+        return placed;
+    }
+    
+    /**
+     * 
+     * @return - the transform that converts the Board's local coordinates to those of its parent
+     */
     public AffineTransform getPlacementTransform() {
         return getLocalToParentTransform();
     }
 
+    /**
+     * Sets the transform that converts the Board's local coordinates to those of its parent
+     * @param placementTransform - the transform to set
+     */
     public void setPlacementTransform(AffineTransform placementTransform) {
         setLocalToParentTransform(placementTransform);
     }
@@ -123,18 +172,17 @@ public class BoardLocation extends FiducialLocatableLocation {
         return String.format("board (%s), location (%s), side (%s)", getFileName(), getLocation(), side);
     }
     
+    /**
+     * Provides a formated dump to the log file
+     * @param leader - prefix to indent the dump 
+     */
     public void dump(String leader) {
         PanelLocation parentPanelLocation = getParent();
         int parentHashCode = 0;
         if (parentPanelLocation != null) {
             parentHashCode = parentPanelLocation.hashCode();
         }
-        Logger.trace(String.format("%sBoardLocation:@%08x defined by @%08x child of @%08x, %s, location=%s globalLocation=%s, side=%s (%s)", leader,  this.hashCode(), this.getDefinedBy().hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getBoard() == null ? "Null" : getBoard().toString()));
+        Logger.trace(String.format("%s (%s) BoardLocation:@%08x defined by @%08x child of @%08x, %s, location=%s globalLocation=%s, side=%s (%s)", leader,  this.id, this.hashCode(), this.getDefinedBy().hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getBoard() == null ? "Null" : getBoard().toString()));
     }
 
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        Logger.trace(String.format("PropertyChangeEvent handled by BoardLocation @%08x = %s", this.hashCode(), evt));
-        super.propertyChange(evt);
-    }
 }

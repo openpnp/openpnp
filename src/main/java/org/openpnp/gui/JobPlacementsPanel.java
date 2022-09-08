@@ -63,7 +63,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.events.DefinitionStructureChangedEvent;
-import org.openpnp.events.FiducialLocatableLocationSelectedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
@@ -78,11 +77,9 @@ import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
-import org.openpnp.model.FiducialLocatable;
-import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Job;
 import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
@@ -110,8 +107,7 @@ public class JobPlacementsPanel extends JPanel {
     private ActionGroup multiSelectionActionGroup;
     private ActionGroup positionActionGroup;
     private ActionGroup captureActionGroup;
-//    private BoardLocation boardLocation;
-    private FiducialLocatableLocation boardOrPanelLocation;
+    private PlacementsHolderLocation<?> boardOrPanelLocation;
     private JobPanel jobPanel;
     private boolean topLevel;
     private boolean singleInstance;
@@ -157,13 +153,18 @@ public class JobPlacementsPanel extends JPanel {
                 captureToolPlacementLocation);
         captureActionGroup.setEnabled(false);
 
+        // Suppress because adding the type specifiers breaks WindowBuilder.
+        @SuppressWarnings({"unchecked", "rawtypes"})
         JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox(new PartsComboBoxModel());
         partsComboBox.setMaximumRowCount(20);
         partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
+        @SuppressWarnings({"unchecked", "rawtypes"})
         JComboBox<Side> sidesComboBox = new JComboBox(Side.values());
         // Note we don't use Type.values() here because there are a couple Types that are only
         // there for backwards compatibility and we don't want them in the list.
+        @SuppressWarnings({"unchecked", "rawtypes"})
         JComboBox<Type> typesComboBox = new JComboBox(new Type[] { Type.Placement, Type.Fiducial });
+        @SuppressWarnings({"unchecked", "rawtypes"})
         JComboBox<Type> errorHandlingComboBox = new JComboBox(ErrorHandling.values());
         
         setLayout(new BorderLayout(0, 0));
@@ -217,9 +218,9 @@ public class JobPlacementsPanel extends JPanel {
                     singleSelectionActionGroup.setEnabled(getSelection() != null);
                     editFeederActionGroup.setEnabled(getSelection() != null && getSelection().getType() == Placement.Type.Placement);
                     positionActionGroup.setEnabled(getSelection() != null
-                            && getSelection().getSide() == boardOrPanelLocation.getSide());
+                            && getSelection().getSide() == boardOrPanelLocation.getGlobalSide());
                     captureActionGroup.setEnabled(topLevel && singleInstance && getSelection() != null
-                            && getSelection().getSide() == boardOrPanelLocation.getSide());
+                            && getSelection().getSide() == boardOrPanelLocation.getGlobalSide());
                     if (updateLinkedTables) {
                         Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
                                 boardOrPanelLocation, JobPlacementsPanel.this));
@@ -376,13 +377,24 @@ public class JobPlacementsPanel extends JPanel {
     public void boardOrPanelDefinitionStructureChanged(DefinitionStructureChangedEvent event) {
         Logger.trace("DefinitionStructureChangedEvent = " + event);
         if (event.source != this && boardOrPanelLocation != null && 
-                boardOrPanelLocation.getFiducialLocatable() != null &&
-                event.definition == boardOrPanelLocation.getFiducialLocatable().getDefinedBy() &&
+                boardOrPanelLocation.getPlacementsHolder() != null &&
+                event.definition == boardOrPanelLocation.getPlacementsHolder().getDefinedBy() &&
                 event.changedName.equals("placements")) {
             SwingUtilities.invokeLater(() -> {
                 refresh();
             });
         }
+    }
+
+    @Subscribe
+    public void placementSelected(PlacementSelectedEvent event) {
+        if (event.source == this) {
+            return;
+        }
+        
+        SwingUtilities.invokeLater(() -> {
+            selectPlacement(event.placement);
+        });
     }
 
     private void search() {
@@ -405,7 +417,7 @@ public class JobPlacementsPanel extends JPanel {
             return;
         }
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            if (tableModel.getRowObjectAt(i) == placement) {
+            if (tableModel.getRowObjectAt(i).getDefinedBy() == placement) {
                 int index = table.convertRowIndexToView(i);
                 table.getSelectionModel().setSelectionInterval(index, index);
                 table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
@@ -439,7 +451,7 @@ public class JobPlacementsPanel extends JPanel {
                 }
                 PlacementsTableModel model = entry.getModel();
                 Placement placement = model.getRowObjectAt(entry.getIdentifier());
-                return placement.getSide() == boardOrPanelLocation.getSide();
+                return placement.getSide() == boardOrPanelLocation.getGlobalSide();
             }
         };
         filters.add(sideFilter);
@@ -455,7 +467,7 @@ public class JobPlacementsPanel extends JPanel {
     }
     
     
-    public void setBoardOrPanelLocation(FiducialLocatableLocation boardOrPanelLocation) {
+    public void setBoardOrPanelLocation(PlacementsHolderLocation<?> boardOrPanelLocation) {
         this.boardOrPanelLocation = boardOrPanelLocation;
         if (boardOrPanelLocation == null) {
             tableModel.setFiducialLocatableLocation(null);
@@ -467,7 +479,7 @@ public class JobPlacementsPanel extends JPanel {
                     boardOrPanelLocation.getParent() == jobPanel.getJob().getRootPanelLocation();
             Logger.trace("topLevel = " + topLevel);
             singleInstance = boardOrPanelLocation != null && 
-                    1 == jobPanel.getJob().instanceCount(boardOrPanelLocation.getFiducialLocatable());
+                    1 == jobPanel.getJob().instanceCount(boardOrPanelLocation.getPlacementsHolder());
             Logger.trace("singleInstance = " + singleInstance);
             topLevelSingleInstanceActionGroup.setEnabled(topLevel && singleInstance);
 
@@ -492,7 +504,7 @@ public class JobPlacementsPanel extends JPanel {
         int[] selectedRows = table.getSelectedRows();
         for (int selectedRow : selectedRows) {
             selectedRow = table.convertRowIndexToModel(selectedRow);
-            placements.add(boardOrPanelLocation.getFiducialLocatable().getPlacements().get(selectedRow));
+            placements.add(boardOrPanelLocation.getPlacementsHolder().getPlacements().get(selectedRow));
         }
         return placements;
     }
@@ -526,7 +538,7 @@ public class JobPlacementsPanel extends JPanel {
             }
             
             // Check if the new placement ID is unique
-            for(Placement compareplacement : boardOrPanelLocation.getFiducialLocatable().getPlacements()) {
+            for(Placement compareplacement : boardOrPanelLocation.getPlacementsHolder().getPlacements()) {
             	if (compareplacement.getId().equals(id)) {
             		MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
                             "The ID for the new placement already exists");
@@ -538,11 +550,14 @@ public class JobPlacementsPanel extends JPanel {
 
             placement.setPart(Configuration.get().getParts().get(0));
             placement.setLocation(new Location(Configuration.get().getSystemUnits()));
-            placement.setSide(boardOrPanelLocation.getSide());
+            placement.setSide(boardOrPanelLocation.getGlobalSide());
 
-            boardOrPanelLocation.getFiducialLocatable().getDefinedBy().addPlacement(placement);
+            if (boardOrPanelLocation instanceof PanelLocation) {
+                placement.setType(Type.Fiducial);
+            }
+            boardOrPanelLocation.getPlacementsHolder().getDefinedBy().addPlacement(placement);
             Configuration.get().getBus()
-                .post(new DefinitionStructureChangedEvent(boardOrPanelLocation.getFiducialLocatable().getDefinedBy(), "placements", JobPlacementsPanel.this));
+                .post(new DefinitionStructureChangedEvent(boardOrPanelLocation.getPlacementsHolder().getDefinedBy(), "placements", JobPlacementsPanel.this));
             jobPanel.getJob().removePlaced(boardOrPanelLocation, placement.getId());
             tableModel.fireTableDataChanged();
             Helpers.selectLastTableRow(table);
@@ -561,10 +576,10 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-                boardOrPanelLocation.getFiducialLocatable().getDefinedBy().removePlacement((Placement) placement.getDefinedBy());
+                boardOrPanelLocation.getPlacementsHolder().getDefinedBy().removePlacement((Placement) placement.getDefinedBy());
             }
             Configuration.get().getBus()
-                .post(new DefinitionStructureChangedEvent(boardOrPanelLocation.getFiducialLocatable().getDefinedBy(), "placements", JobPlacementsPanel.this));
+                .post(new DefinitionStructureChangedEvent(boardOrPanelLocation.getPlacementsHolder().getDefinedBy(), "placements", JobPlacementsPanel.this));
             tableModel.fireTableDataChanged();
             updateActivePlacements();
         }
@@ -660,7 +675,7 @@ public class JobPlacementsPanel extends JPanel {
                 Camera camera = tool.getHead().getDefaultCamera();
                 Location placementLocation = Utils2D.calculateBoardPlacementLocationInverse(
                         boardOrPanelLocation, camera.getLocation());
-                getSelection().setLocation(placementLocation);
+                getSelection().getDefinedBy().setLocation(placementLocation.derive(null, null, 0.0, null));
                 table.repaint();
             });
         }
@@ -680,7 +695,7 @@ public class JobPlacementsPanel extends JPanel {
                 Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
                 Location placementLocation = Utils2D
                         .calculateBoardPlacementLocationInverse(boardOrPanelLocation, nozzle.getLocation());
-                getSelection().setLocation(placementLocation);
+                getSelection().getDefinedBy().setLocation(placementLocation.derive(null, null, 0.0, null));
                 table.repaint();
             });
         }
@@ -781,7 +796,6 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setErrorHandling(errorHandling);
-//                jobPanel.getJob().setErrorHandling(fiducialLocatableLocation, placement, errorHandling);
                 tableModel.fireTableDataChanged();
                 updateActivePlacements();
             }
@@ -811,7 +825,6 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-//                fiducialLocatableLocation.setPlaced(placement.getId(), placed);
                 jobPanel.getJob().setPlaced(boardOrPanelLocation, placement.getId(), placed);
                 tableModel.fireTableDataChanged();   
                 updateActivePlacements();
@@ -844,7 +857,6 @@ public class JobPlacementsPanel extends JPanel {
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
                 placement.setEnabled(enabled);
-//                jobPanel.getJob().setEnabled(fiducialLocatableLocation, placement, enabled);
                 tableModel.fireTableDataChanged();   
                 updateActivePlacements();
             }

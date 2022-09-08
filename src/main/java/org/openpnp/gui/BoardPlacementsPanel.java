@@ -62,7 +62,8 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.events.DefinitionStructureChangedEvent;
-import org.openpnp.events.FiducialLocatableLocationSelectedEvent;
+import org.openpnp.events.PlacementsHolderLocationSelectedEvent;
+import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.support.ActionGroup;
@@ -77,6 +78,7 @@ import org.openpnp.gui.tablemodel.FiducialLocatablePlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
 import org.openpnp.model.Board.Side;
+import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
@@ -157,6 +159,9 @@ public class BoardPlacementsPanel extends JPanel {
                     return;
                 }
 
+                boolean updateLinkedTables = MainFrame.get().getTabs().getSelectedComponent() == MainFrame.get().getBoardsTab() 
+                        && Configuration.get().getTablesLinked() == TablesLinked.Linked;
+                
                 if (getSelections().size() > 1) {
                     // multi select
                     singleSelectionActionGroup.setEnabled(false);
@@ -168,6 +173,10 @@ public class BoardPlacementsPanel extends JPanel {
                     singleSelectionActionGroup.setEnabled(getSelection() != null);
                     MainFrame mainFrame = MainFrame.get();
                     Component selectedComponent = mainFrame.getTabs().getSelectedComponent();
+                    if (updateLinkedTables) {
+                        Configuration.get().getBus().post(new PlacementSelectedEvent(getSelection(),
+                                new BoardLocation(board), BoardPlacementsPanel.this));
+                    }
                     if (getSelection() != null
                             && (selectedComponent == mainFrame.getJobTab() ||
                                     selectedComponent == mainFrame.getBoardsTab())

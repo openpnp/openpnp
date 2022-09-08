@@ -19,18 +19,18 @@
 
 package org.openpnp.events;
 
-import org.openpnp.model.FiducialLocatable;
+import org.openpnp.model.PlacementsHolderLocation;
 
-public class FiducialLocatableSelectedEvent {
-    final public FiducialLocatable fiducialLocatable;
+public class PlacementsHolderLocationSelectedEvent {
+    final public PlacementsHolderLocation<?> placementsHolderLocation;
     final public Object source;
     
-    public FiducialLocatableSelectedEvent(FiducialLocatable fiducialLocatable) {
-        this(fiducialLocatable, null);
+    public PlacementsHolderLocationSelectedEvent(PlacementsHolderLocation<?> placementsHolderLocation) {
+        this(placementsHolderLocation, null);
     }
     
-    public FiducialLocatableSelectedEvent(FiducialLocatable fiducialLocatable, Object source) {
-        this.fiducialLocatable = fiducialLocatable;
+    public PlacementsHolderLocationSelectedEvent(PlacementsHolderLocation<?> placementsHolderLocation, Object source) {
+        this.placementsHolderLocation = placementsHolderLocation;
         this.source = source;
     }
 }

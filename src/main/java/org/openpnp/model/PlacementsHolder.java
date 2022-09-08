@@ -24,11 +24,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.beanutils.BeanUtils;
-import org.openpnp.gui.MainFrame;
 import org.openpnp.spi.Definable;
 import org.openpnp.util.IdentifiableList;
 import org.pmw.tinylog.Logger;
@@ -36,120 +32,132 @@ import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
-public abstract class FiducialLocatable extends AbstractModelObject implements Definable<FiducialLocatable>, PropertyChangeListener {
+/**
+ * A PlacementsHolder is an abstraction of an object that has physical 2D extent and contains
+ * Placements
+ */
+public abstract class PlacementsHolder<T extends PlacementsHolder<T>> 
+        extends AbstractModelObject implements Definable<T>, PropertyChangeListener {
     
+    /**
+     * The name of this PlacementsHolder
+     */
     @Attribute(required = false)
     private String name;
     
+    /**
+     * The physical extent of this PlacementsHolder
+     */
     @Element(required = false)
     protected Location dimensions = new Location(LengthUnit.Millimeters);
 
+    /**
+     * The list of Placements contained by this PlacementsHolder
+     */
     @ElementList(required = false)
     protected IdentifiableList<Placement> placements = new IdentifiableList<>();
 
-    protected transient FiducialLocatable definedBy;
+    protected transient T definedBy;
     protected transient File file;
-    
     protected transient boolean dirty;
 
 
-    public FiducialLocatable() {
-        definedBy = this;
+    /**
+     * Constructs a new PlacementsHolder
+     */
+    @SuppressWarnings("unchecked")
+    public PlacementsHolder() {
+        definedBy = (T) this;
+        addPropertyChangeListener(this);
     }
     
-    public FiducialLocatable(FiducialLocatable fiducialLocatable) {
-        name = fiducialLocatable.name;
-        dimensions = fiducialLocatable.dimensions;
+    /**
+     * Constructs a deep copy of the specified PlacementsHolder
+     * @param holderToCopy
+     */
+    public PlacementsHolder(PlacementsHolder<T> holderToCopy) {
+        name = holderToCopy.name;
+        dimensions = holderToCopy.dimensions;
         placements = new IdentifiableList<>();
-        for (Placement placement : fiducialLocatable.placements) {
+        for (Placement placement : holderToCopy.placements) {
             placements.add(new Placement(placement));
         }
-        file = fiducialLocatable.file;
-        dirty = fiducialLocatable.dirty;
-        setDefinedBy(fiducialLocatable.definedBy);
+        file = holderToCopy.file;
+        dirty = holderToCopy.dirty;
+        setDefinedBy(holderToCopy.definedBy);
+        addPropertyChangeListener(this);
     }
     
-    public void setTo(FiducialLocatable fiducialLocatable) {
-        name = fiducialLocatable.name;
-        dimensions = fiducialLocatable.dimensions;
-        placements = new IdentifiableList<>();
-        for (Placement placement : fiducialLocatable.placements) {
-            placements.add(new Placement(placement));
+    /**
+     * Cleans-up property change listeners associated with this PlacementsHolder
+     */
+    @Override
+    public void dispose() {
+        removePropertyChangeListener(this);
+        for (Placement placement : placements) {
+            placement.dispose();
         }
-        file = fiducialLocatable.file;
-        dirty = fiducialLocatable.dirty;
-        setDefinedBy(fiducialLocatable.definedBy);
+        setDefinedBy(null);
+        super.dispose();
     }
     
+    /**
+     * 
+     * @return the name of this PlacementsHolder
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the name of this PlacementsHolder
+     * @param name - the name to set
+     */
     public void setName(String name) {
         Object oldValue = this.name;
         this.name = name;
         firePropertyChange("name", oldValue, name);
     }
 
+    /**
+     * 
+     * @return the dimensions (physical extent) of this PlacementsHolder
+     */
     public Location getDimensions() {
         return dimensions;
     }
 
-    public void setDimensions(Location location) {
+    /**
+     * Sets the dimensions (physical extent) of this PlacementsHolder
+     * @param dimensions
+     */
+    public void setDimensions(Location dimensions) {
         Location oldValue = this.dimensions;
-        this.dimensions = location;
-        firePropertyChange("dimensions", oldValue, location);
+        this.dimensions = dimensions;
+        firePropertyChange("dimensions", oldValue, dimensions);
     }
 
+    /**
+     * 
+     * @return a list of placements contained by this PlacementsHolder
+     */
     public IdentifiableList<Placement> getPlacements() {
         return new IdentifiableList<>(placements);
     }
 
-//    public void setPlacements(IdentifiableList<Placement> placements) {
-//        IdentifiableList<Placement> oldValue = this.placements;
-//        this.placements = placements;
-//        for (Placement placement : oldValue) {
-//            placement.removePropertyChangeListener(this);
-//        }
-//        for (Placement placement : this.placements) {
-//            placement.addPropertyChangeListener(this);
-//        }
-//        firePropertyChange("placements", oldValue, placements);
-//    }
-//    
-//    public void addPlacement(Placement placement) {
-//        Object oldValue = placements;
-//        placements = new IdentifiableList<>(placements);
-//        placements.add(placement);
-//        firePropertyChange("placements", oldValue, placements);
-//        if (placement != null) {
-//            placement.addPropertyChangeListener(this);
-//        }
-//    }
-//
-//    public void removePlacement(Placement placement) {
-//        Object oldValue = placements;
-//        placements = new IdentifiableList<>(placements);
-//        placements.remove(placement);
-//        firePropertyChange("placements", oldValue, placements);
-//        if (placement != null) {
-//            placement.removePropertyChangeListener(this);
-//        }
-//    }
-//
-//    public void removeAllPlacements() {
-//        IdentifiableList<Placement> oldValue = placements;
-//        placements = new IdentifiableList<>();
-//        firePropertyChange("placements", oldValue, placements);
-//        for (Placement placement : oldValue) {
-//            placement.removePropertyChangeListener(this);
-//        }
-//    }
-
+    /**
+     * Sets the list of placements contained by this PlacementsHolder
+     * @param placements - the list of placements to set
+     */
     public void setPlacements(IdentifiableList<Placement> placements) {
         this.placements = placements;
     }
 
+    /**
+     * 
+     * @param index
+     * @param placement
+     */
     public void setPlacements(int index, Placement placement) {
         placements.add(index, placement);
     }
@@ -170,17 +178,30 @@ public abstract class FiducialLocatable extends AbstractModelObject implements D
             if (index >= 0) {
                 placements.remove(placement);
                 fireIndexedPropertyChange("placements", index, placement, null);
-                placement.removePropertyChangeListener(this);
-                placement.getDefinedBy().removePropertyChangeListener(placement);
+                placement.dispose();
+//                placement.removePropertyChangeListener(this);
+//                placement.getDefinedBy().removePropertyChangeListener(placement);
             }
+        }
+    }
+    
+    public void removePlacement(int index) {
+        if (index >= 0 && index < placements.size()) {
+            Placement placement = placements.get(index);
+            placements.remove(index);
+            fireIndexedPropertyChange("placements", index, placement, null);
+            placement.dispose();
+//            placement.removePropertyChangeListener(this);
+//            placement.getDefinedBy().removePropertyChangeListener(placement);
         }
     }
     
     public void removeAllPlacements() {
         Object oldValue = new IdentifiableList<>(placements);
         for (Placement placement : placements) {
-            placement.removePropertyChangeListener(this);
-            placement.getDefinedBy().removePropertyChangeListener(placement);
+            placement.dispose();
+//            placement.removePropertyChangeListener(this);
+//            placement.getDefinedBy().removePropertyChangeListener(placement);
         }
         placements = new IdentifiableList<>();
         firePropertyChange("placements", oldValue, placements);
@@ -207,13 +228,13 @@ public abstract class FiducialLocatable extends AbstractModelObject implements D
     }
 
     @Override
-    public FiducialLocatable getDefinedBy() {
+    public T getDefinedBy() {
         return definedBy;
     }
 
     @Override
-    public void setDefinedBy(FiducialLocatable definedBy) {
-        FiducialLocatable oldValue = this.definedBy;
+    public void setDefinedBy(T definedBy) {
+        PlacementsHolder<T> oldValue = this.definedBy;
         this.definedBy = definedBy;
         firePropertyChange("definedBy", oldValue, definedBy);
         if (oldValue != null) {
@@ -225,34 +246,31 @@ public abstract class FiducialLocatable extends AbstractModelObject implements D
     }
 
     @Override
-    public boolean isDefinedBy(FiducialLocatable definedBy) {
+    public boolean isDefinedBy(Object definedBy) {
         return this.definedBy == definedBy;
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        Logger.trace(String.format("PropertyChangeEvent handled by FiducialLocatable @%08x = %s", this.hashCode(), evt));
-        if (evt.getSource() != FiducialLocatable.this && evt.getPropertyName() != "dirty") {
+//        Logger.trace(String.format("PropertyChangeEvent handled by AbstractBoard @%08x = %s", this.hashCode(), evt));
+        if (evt.getSource() != PlacementsHolder.this || !evt.getPropertyName().equals("dirty")) {
             dirty = true;
-            if (evt.getSource() == definedBy) {
-                if (evt.getPropertyName() == "placements") {
-                    int index = ((IndexedPropertyChangeEvent) evt).getIndex();
-                    if (evt.getNewValue() instanceof Placement) {
-                        Placement placement = new Placement((Placement) evt.getNewValue());
-                        placement.addPropertyChangeListener(this);
-                        placement.getDefinedBy().addPropertyChangeListener(placement);
-                        placements.add(placement);
-                    }
-                    else if (evt.getOldValue() instanceof Placement) {
-                        Placement placement = placements.get(index);
-                        placement.removePropertyChangeListener(this);
-                        placement.getDefinedBy().removePropertyChangeListener(placement);
-                        placements.remove(index);
+            if (PlacementsHolder.this != definedBy && evt.getSource() == definedBy) {
+                Logger.trace(String.format("Attempting to set %s @%08x property %s = %s", this.getClass().getSimpleName(), this.hashCode(), evt.getPropertyName(), evt.getNewValue()));
+                if (evt instanceof IndexedPropertyChangeEvent) {
+                    if (evt.getPropertyName() == "placements") {
+                        int index = ((IndexedPropertyChangeEvent) evt).getIndex();
+                        if (evt.getNewValue() instanceof Placement) {
+                            addPlacement(new Placement((Placement) evt.getNewValue()));
+                        }
+                        else if (evt.getOldValue() instanceof Placement) {
+                            removePlacement(index);
+                            ((Placement) evt.getOldValue()).dispose();
+                        }
                     }
                 }
                 else {
                     try {
-                        Logger.trace("setting property: " + evt.getPropertyName() + " = " + evt.getNewValue());
                         BeanUtils.setProperty(this, evt.getPropertyName(), evt.getNewValue());
                     }
                     catch (IllegalAccessException e) {

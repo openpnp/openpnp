@@ -70,7 +70,7 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -89,7 +89,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     
     private LengthUnit systemUnit = Configuration.get().getSystemUnits();
 
-    private List<FiducialLocatableLocation> newChildren = new ArrayList<>();
+    private List<PlacementsHolderLocation> newChildren = new ArrayList<>();
     private ArrayType arrayType = ArrayType.Rectangular;
     private final JPanel contentPanel = new JPanel();
     private JTextField textFieldColumns;
@@ -102,7 +102,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     private final ButtonGroup buttonGroup = new ButtonGroup();
     private JPanel panelControls;
     private PanelLocation panelLocation;
-    private FiducialLocatableLocation rootChildLocation;
+    private PlacementsHolderLocation rootChildLocation;
     protected BufferedImage panelImage;
     private int columnCount = 1;
     private int rowCount = 1;
@@ -121,7 +121,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     /**
      * Create the dialog.
      */
-    public PanelArrayBuilderDialog(PanelLocation panelLocation, FiducialLocatableLocation rootChildLocation) {
+    public PanelArrayBuilderDialog(PanelLocation panelLocation, PlacementsHolderLocation rootChildLocation) {
         this.panelLocation = panelLocation;
         this.rootChildLocation = rootChildLocation;
         this.addWindowListener(new WindowAdapter( ) {
@@ -542,7 +542,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     }
 
     protected void cancel() {
-        for (FiducialLocatableLocation newChild : newChildren) {
+        for (PlacementsHolderLocation newChild : newChildren) {
             panelLocation.removeChild(newChild);
         }
         newChildren.clear();
@@ -729,7 +729,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     }
 
     protected void generateArray() {
-        for (FiducialLocatableLocation newChild : newChildren) {
+        for (PlacementsHolderLocation newChild : newChildren) {
             panelLocation.removeChild(newChild);
         }
         newChildren.clear();
@@ -743,7 +743,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                             Location offset = new Location(systemUnit);
                             offset = offset.deriveLengths(columnSpacing.multiply(j).add(rowOffset),
                                     rowSpacing.multiply(i), null, null);
-                            FiducialLocatableLocation newChildLocation = null;
+                            PlacementsHolderLocation newChildLocation = null;
                             if (rootChildLocation instanceof BoardLocation) {
                                 newChildLocation = new BoardLocation((BoardLocation) rootChildLocation);
                             }
@@ -784,7 +784,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                                     radius.multiply(Math.sin(angleRad)), null, null);
                             loc = loc.add(center);
                             loc = loc.derive(null, null, null, rootChildLocation.getLocation().getRotation() + angleStep*j);
-                            FiducialLocatableLocation newChildLocation = null;
+                            PlacementsHolderLocation newChildLocation = null;
                             if (rootChildLocation instanceof BoardLocation) {
                                 newChildLocation = new BoardLocation((BoardLocation) rootChildLocation);
                             }
@@ -845,9 +845,9 @@ public class PanelArrayBuilderDialog extends JDialog {
         
         drawCoordinateFrameMarker(offScr, at, 10, Color.RED, Color.CYAN, true);
         
-        for (FiducialLocatableLocation child : panelLocation.getChildren()) {
+        for (PlacementsHolderLocation child : panelLocation.getChildren()) {
             Location loc = child.getLocation().convertToUnits(systemUnit);
-            Location dims = child.getFiducialLocatable().getDimensions().convertToUnits(systemUnit);
+            Location dims = child.getPlacementsHolder().getDimensions().convertToUnits(systemUnit);
             AffineTransform at2 = new AffineTransform(at);
             at2.translate(loc.getX(), loc.getY());
             at2.rotate(Math.toRadians(loc.getRotation()));
@@ -876,7 +876,7 @@ public class PanelArrayBuilderDialog extends JDialog {
         }
         
         for (Placement fid : panelLocation.getPanel().getPlacements()) {
-            if (fid.getSide() == panelLocation.getSide()) {
+            if (fid.getSide() == panelLocation.getGlobalSide()) {
                 Location loc = fid.getLocation().convertToUnits(systemUnit);
                 AffineTransform at2 = new AffineTransform(at);
                 at2.translate(loc.getX(), loc.getY());

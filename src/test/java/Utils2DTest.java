@@ -10,52 +10,53 @@ import org.openpnp.model.Placement;
 import org.openpnp.util.Utils2D;
 
 public class Utils2DTest {
-    /**
-     * Test Utils2D.calculateBoardLocation with 100k random BoardLocations.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testCalculateBoardLocationRandom() throws Exception {
-        for (int i = 0; i < 100000; i++) {
-            // The actual board location that we are looking for. This is where the board actually
-            // is on the table.
-            BoardLocation actualBoardLocation = randomBoardLocation();
-
-            // Two sample placements
-            Placement placementA = randomPlacement();
-
-            Placement placementB = randomPlacement();
-
-            // Given the actual board location and the two placements, calculate where they should
-            // be after transforming. This calculation is known to be good.
-            Location actualLocationA = Utils2D
-                    .calculateBoardPlacementLocation(actualBoardLocation, placementA.getLocation())
-                    .derive(null, null, null, 0d);
-            Location actualLocationB = Utils2D
-                    .calculateBoardPlacementLocation(actualBoardLocation, placementB.getLocation())
-                    .derive(null, null, null, 0d);
-
-            // Using a random input board location, which should not actually affect the result,
-            // calculate the board location from the known actual locations. The result
-            // should be the actual board location.
-            BoardLocation testBoardLocation = randomBoardLocation();
-            testBoardLocation.setSide(actualBoardLocation.getSide());
-            Location location = Utils2D.calculateBoardLocation(testBoardLocation, placementA,
-                    placementB, actualLocationA, actualLocationB);
-
-            try {
-                checkNormalized(actualBoardLocation.getLocation(), location);
-            }
-            catch (Exception e) {
-                throw new Exception(String.format(
-                        "actualBoardLocation %s, placementA %s, placementB %s, testBoardLocation %s, location %s",
-                        actualBoardLocation, placementA, placementB, testBoardLocation, location),
-                        e);
-            }
-        }
-    }
-
+// The following test has been removed due to Utils2D.calculateBoardPlacementLocation being removed
+//    /**
+//     * Test Utils2D.calculateBoardLocation with 100k random BoardLocations.
+//     * 
+//     * @throws Exception
+//     */
+//    @Test
+//    public void testCalculateBoardLocationRandom() throws Exception {
+//        for (int i = 0; i < 100000; i++) {
+//            // The actual board location that we are looking for. This is where the board actually
+//            // is on the table.
+//            BoardLocation actualBoardLocation = randomBoardLocation();
+//
+//            // Two sample placements
+//            Placement placementA = randomPlacement();
+//
+//            Placement placementB = randomPlacement();
+//
+//            // Given the actual board location and the two placements, calculate where they should
+//            // be after transforming. This calculation is known to be good.
+//            Location actualLocationA = Utils2D
+//                    .calculateBoardPlacementLocation(actualBoardLocation, placementA.getLocation())
+//                    .derive(null, null, null, 0d);
+//            Location actualLocationB = Utils2D
+//                    .calculateBoardPlacementLocation(actualBoardLocation, placementB.getLocation())
+//                    .derive(null, null, null, 0d);
+//
+//            // Using a random input board location, which should not actually affect the result,
+//            // calculate the board location from the known actual locations. The result
+//            // should be the actual board location.
+//            BoardLocation testBoardLocation = randomBoardLocation();
+//            testBoardLocation.setGlobalSide(actualBoardLocation.getGlobalSide());
+//            Location location = Utils2D.calculateBoardLocation(testBoardLocation, placementA,
+//                    placementB, actualLocationA, actualLocationB);
+//
+//            try {
+//                checkNormalized(actualBoardLocation.getLocation(), location);
+//            }
+//            catch (Exception e) {
+//                throw new Exception(String.format(
+//                        "actualBoardLocation %s, placementA %s, placementB %s, testBoardLocation %s, location %s",
+//                        actualBoardLocation, placementA, placementB, testBoardLocation, location),
+//                        e);
+//            }
+//        }
+//    }
+//
     public static Placement randomPlacement() {
         Placement placement = new Placement("" + Math.random());
         placement.setLocation(randomLocation());
@@ -65,7 +66,7 @@ public class Utils2DTest {
     public static BoardLocation randomBoardLocation() {
         BoardLocation bl = new BoardLocation(new Board());
         bl.setLocation(randomLocation());
-        bl.setSide(randomSide());
+        bl.setGlobalSide(randomSide());
         return bl;
     }
 

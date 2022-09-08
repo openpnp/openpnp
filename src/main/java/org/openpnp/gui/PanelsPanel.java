@@ -30,6 +30,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -53,8 +54,8 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import org.openpnp.Translations;
-import org.openpnp.events.FiducialLocatableLocationSelectedEvent;
-import org.openpnp.events.FiducialLocatableSelectedEvent;
+import org.openpnp.events.PlacementsHolderLocationSelectedEvent;
+import org.openpnp.events.PlacementsHolderSelectedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
@@ -66,8 +67,6 @@ import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Configuration.TablesLinked;
-import org.openpnp.model.Board;
-import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.pmw.tinylog.Logger;
 
@@ -163,28 +162,46 @@ public class PanelsPanel extends JPanel {
                         if (selections.size() == 0) {
                             singleSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(false);
-                            panelDefinitionPanel.setPanel(null);
+                            try {
+                                panelDefinitionPanel.setPanel(null);
+                            }
+                            catch (IOException e1) {
+                                // TODO Auto-generated catch block
+                                e1.printStackTrace();
+                            }
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
-                                    .post(new FiducialLocatableSelectedEvent(null, PanelsPanel.this));
+                                    .post(new PlacementsHolderSelectedEvent(null, PanelsPanel.this));
                             }
                         }
                         else if (selections.size() == 1) {
                             multiSelectionActionGroup.setEnabled(false);
                             singleSelectionActionGroup.setEnabled(true);
-                            panelDefinitionPanel.setPanel((Panel) selections.get(0));
+                            try {
+                                panelDefinitionPanel.setPanel((Panel) selections.get(0));
+                            }
+                            catch (IOException e1) {
+                                // TODO Auto-generated catch block
+                                e1.printStackTrace();
+                            }
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
-                                    .post(new FiducialLocatableSelectedEvent(selections.get(0), PanelsPanel.this));
+                                    .post(new PlacementsHolderSelectedEvent(selections.get(0), PanelsPanel.this));
                             }
                         }
                         else {
                             singleSelectionActionGroup.setEnabled(false);
                             multiSelectionActionGroup.setEnabled(true);
-                            panelDefinitionPanel.setPanel(null);
+                            try {
+                                panelDefinitionPanel.setPanel(null);
+                            }
+                            catch (IOException e1) {
+                                // TODO Auto-generated catch block
+                                e1.printStackTrace();
+                            }
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
-                                    .post(new FiducialLocatableSelectedEvent(null, PanelsPanel.this));
+                                    .post(new PlacementsHolderSelectedEvent(null, PanelsPanel.this));
                             }
                         }
                     }
@@ -248,36 +265,36 @@ public class PanelsPanel extends JPanel {
         Configuration.get().getBus().register(this);
     }
     
-    public JTable getFiducialLocatableLocationsTable() {
+    public JTable getPanelsTable() {
         return panelsTable;
     }
 
     @Subscribe
-    public void fiducialLocatableLocationSelected(FiducialLocatableLocationSelectedEvent event) {
-        if (event.source == this || event.source == panelDefinitionPanel || event.fiducialLocatableLocation == null) {
+    public void panelLocationSelected(PlacementsHolderLocationSelectedEvent event) {
+        if (event.source == this || event.source == panelDefinitionPanel || event.placementsHolderLocation == null) {
             return;
         }
-        if (event.fiducialLocatableLocation.getFiducialLocatable() instanceof Panel) {
+        if (event.placementsHolderLocation.getPlacementsHolder() instanceof Panel) {
             SwingUtilities.invokeLater(() -> {
-                selectPanel((Panel) event.fiducialLocatableLocation.getFiducialLocatable().getDefinedBy());
+                selectPanel((Panel) event.placementsHolderLocation.getPlacementsHolder().getDefinedBy());
             });
         }
-        else if (event.fiducialLocatableLocation.getParent() instanceof PanelLocation) {
+        else if (event.placementsHolderLocation.getParent() instanceof PanelLocation) {
             SwingUtilities.invokeLater(() -> {
-                selectPanel((Panel) event.fiducialLocatableLocation.getParent().getFiducialLocatable().getDefinedBy());
-                panelDefinitionPanel.selectChild(event.fiducialLocatableLocation);
+                selectPanel((Panel) event.placementsHolderLocation.getParent().getPlacementsHolder().getDefinedBy());
+                panelDefinitionPanel.selectChild(event.placementsHolderLocation);
             });
         }
     }
 
     @Subscribe
     public void placementSelected(PlacementSelectedEvent event) {
-        if (event.source == this || event.source == panelDefinitionPanel || event.fiducialLocatableLocation == null || !(event.fiducialLocatableLocation.getFiducialLocatable() instanceof Panel)) {
+        if (event.source == this || event.source == panelDefinitionPanel || event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Panel)) {
             return;
         }
         Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinedBy();
         SwingUtilities.invokeLater(() -> {
-            selectPanel((Panel) event.fiducialLocatableLocation.getFiducialLocatable().getDefinedBy());
+            selectPanel((Panel) event.placementsHolderLocation.getPlacementsHolder().getDefinedBy());
             panelDefinitionPanel.selectFiducial(placement);
         });
     }
@@ -329,9 +346,9 @@ public class PanelsPanel extends JPanel {
 
     public final Action addPanelAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("PanelsPanel.Action.AddPanel")); //$NON-NLS-1$
             putValue(SMALL_ICON, Icons.add);
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.AddBoard.Description")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PanelsPanel.Action.AddPanel.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_A);
         }
 
@@ -341,39 +358,39 @@ public class PanelsPanel extends JPanel {
 
     public final Action addNewPanelAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard.NewBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.AddBoard.NewBoard.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("PanelsPanel.Action.AddPanel.NewPanel")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PanelsPanel.Action.AddPanel.NewPanel.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_N);
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            FileDialog fileDialog = new FileDialog(frame, Translations.getString("BoardPanel.Action.AddBoard.NewBoard.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
+            FileDialog fileDialog = new FileDialog(frame, Translations.getString("PanelsPanel.Action.AddPanel.NewPanel.SaveDialog"), FileDialog.SAVE); //$NON-NLS-1$
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    return name.toLowerCase().endsWith(".board.xml"); //$NON-NLS-1$
+                    return name.toLowerCase().endsWith(".panel.xml"); //$NON-NLS-1$
                 }
             });
-            fileDialog.setFile("*.board.xml");
+            fileDialog.setFile("*.panel.xml");
             fileDialog.setVisible(true);
             try {
                 String filename = fileDialog.getFile();
                 if (filename == null) {
                     return;
                 }
-                if (!filename.toLowerCase().endsWith(".board.xml")) { //$NON-NLS-1$
-                    filename = filename + ".board.xml"; //$NON-NLS-1$
+                if (!filename.toLowerCase().endsWith(".panle.xml")) { //$NON-NLS-1$
+                    filename = filename + ".panel.xml"; //$NON-NLS-1$
                 }
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
-                addBoard(file);
+                addPanel(file);
 
                 Helpers.selectLastTableRow(panelsTable);
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, Translations.getString("BoardPanel.Action.AddBoard.NewBoard.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, Translations.getString("PanelsPanel.Action.AddPanel.NewPanel.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
             }
 //            updatePanelizationIconState();
         }
@@ -381,8 +398,8 @@ public class PanelsPanel extends JPanel {
 
     public final Action addExistingPanelAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("PanelsPanel.Action.AddPanel.ExistingPanel")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PanelsPanel.Action.AddPanel.ExistingPanel.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_E);
         }
 
@@ -392,10 +409,10 @@ public class PanelsPanel extends JPanel {
             fileDialog.setFilenameFilter(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    return name.toLowerCase().endsWith(".board.xml"); //$NON-NLS-1$
+                    return name.toLowerCase().endsWith(".panel.xml"); //$NON-NLS-1$
                 }
             });
-            fileDialog.setFile("*.board.xml");
+            fileDialog.setFile("*.panel.xml");
             fileDialog.setVisible(true);
             try {
                 if (fileDialog.getFile() == null) {
@@ -403,29 +420,29 @@ public class PanelsPanel extends JPanel {
                 }
                 File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
 
-                addBoard(file);
+                addPanel(file);
 
                 Helpers.selectLastTableRow(panelsTable);
             }
             catch (Exception e) {
                 e.printStackTrace();
-                MessageBoxes.errorBox(frame, Translations.getString("BoardPanel.Action.AddBoard.ExistingBoard.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
+                MessageBoxes.errorBox(frame, Translations.getString("PanelsPanel.Action.AddPanel.ExistingPanel.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
             }
         }
     };
 
-    protected void addBoard(File file) throws Exception {
-        Board board = configuration.getBoard(file);
-        BoardLocation boardLocation = new BoardLocation(board);
+    protected void addPanel(File file) throws Exception {
+        Panel panel = configuration.getPanel(file);
+//        PanelLocation boardLocation = new PanelLocation(panel);
         // TODO: Move to a list property listener.
         panelsTableModel.fireTableDataChanged();
     }
     
-    public final Action removePanelAction = new AbstractAction("Remove Board") { //$NON-NLS-1$
+    public final Action removePanelAction = new AbstractAction("Remove Panel") { //$NON-NLS-1$
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getString("BoardPanel.Action.RemoveBoard")); //$NON-NLS-1$
-            putValue(SHORT_DESCRIPTION, Translations.getString("BoardPanel.Action.RemoveBoard.Description")); //$NON-NLS-1$
+            putValue(NAME, Translations.getString("PanelsPanel.Action.RemovePanel")); //$NON-NLS-1$
+            putValue(SHORT_DESCRIPTION, Translations.getString("PanelsPanel.Action.RemovePanel.Description")); //$NON-NLS-1$
             putValue(MNEMONIC_KEY, KeyEvent.VK_R);
         }
 

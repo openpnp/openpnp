@@ -20,16 +20,12 @@
 
 package org.openpnp.model;
 
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.pmw.tinylog.Logger;
-import org.simpleframework.xml.Attribute;
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Version;
@@ -40,7 +36,7 @@ import org.simpleframework.xml.core.Commit;
  * to specify pick and place operations.
  */
 @Root(name = "openpnp-board")
-public class Board extends FiducialLocatable implements PropertyChangeListener {
+public class Board extends PlacementsHolder<Board> implements PropertyChangeListener {
     public enum Side {
         Bottom, Top;
         
@@ -65,6 +61,10 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
     @Version(revision=1.1)
     private double version;    
 
+    /**
+     * @deprecated Use PlacementsHolder.placements instead
+     */
+    @Deprecated
     @ElementList(required = false)
     private ArrayList<Fiducial> fiducials = new ArrayList<>();
 
@@ -72,22 +72,29 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
     private ArrayList<BoardPad> solderPastePads = new ArrayList<>();
 
     public Board() {
+        super();
         setFile(null);
-        addPropertyChangeListener(this);
     }
 
     public Board(File file) {
+        super();
         setFile(file);
-        addPropertyChangeListener(this);
     }
     
     public Board(Board board) {
         super(board);
         this.fiducials = new ArrayList<>(board.fiducials);
         this.solderPastePads = new ArrayList<>(board.solderPastePads);
-        addPropertyChangeListener(this);
     }
 
+    @Override
+    public void dispose() {
+        for (BoardPad pad : solderPastePads) {
+            pad.dispose();
+        }
+        super.dispose();
+    }
+    
     @Commit
     private void commit() {
         for (Placement placement : placements) {
@@ -98,24 +105,13 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
         }
     }
 
-    public List<Fiducial> getFiducials() {
-        return Collections.unmodifiableList(fiducials);
-    }
-
-    public void addFiducial(Fiducial fiducial) {
-        ArrayList<Fiducial> oldValue = fiducials;
-        fiducials = new ArrayList<>(fiducials);
-        fiducials.add(fiducial);
-        firePropertyChange("fiducials", oldValue, fiducials);
-    }
-
-    public void removeFiducial(Fiducial fiducial) {
-        ArrayList<Fiducial> oldValue = fiducials;
-        fiducials = new ArrayList<>(fiducials);
-        fiducials.remove(fiducial);
-        firePropertyChange("fiducials", oldValue, fiducials);
-    }
-
+    //Note that when/if solder paste dispensing is added back to OpenPnp, the following three 
+    //methods and the field solderPastePads should be reviewed.  BoardPad should probably be changed
+    //to extent AbstractLocatable and be handled similarly to how placements are handled in 
+    //PlacementsHolder.  On second thought, it might make more sense to move all this to the 
+    //footprint associated with each package. And then change the enabled field of Placement to 
+    //be an enumeration with the following values: Place Only, Paste Only, Paste and Place, and 
+    //Disabled.
     public List<BoardPad> getSolderPastePads() {
         return Collections.unmodifiableList(solderPastePads);
     }
@@ -145,9 +141,9 @@ public class Board extends FiducialLocatable implements PropertyChangeListener {
         return String.format("Board @%08x defined by @%08x: file %s, dims: %sx%s, placements: %d", hashCode(), definedBy.hashCode(), file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
     }
 
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-//        Logger.trace(String.format("PropertyChangeEvent handled by Board @%08x = %s", this.hashCode(), evt));
-        super.propertyChange(evt);
-    }
+//    @Override
+//    public void propertyChange(PropertyChangeEvent evt) {
+////        Logger.trace(String.format("PropertyChangeEvent handled by Board @%08x = %s", this.hashCode(), evt));
+//        super.propertyChange(evt);
+//    }
 }

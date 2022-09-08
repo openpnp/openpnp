@@ -19,8 +19,6 @@
 
 package org.openpnp.events;
 
-import java.util.List;
-
 import org.openpnp.spi.Definable;
 
 public class DefinitionStructureChangedEvent {

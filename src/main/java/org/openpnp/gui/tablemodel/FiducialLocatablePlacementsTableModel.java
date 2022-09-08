@@ -19,6 +19,8 @@
 
 package org.openpnp.gui.tablemodel;
 
+import java.util.List;
+
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
@@ -27,8 +29,8 @@ import org.openpnp.model.Placement.ErrorHandling;
 import org.openpnp.model.Placement.Type;
 import org.openpnp.util.Utils2D;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.FiducialLocatable;
-import org.openpnp.model.FiducialLocatableLocation;
+import org.openpnp.model.PlacementsHolder;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 import org.openpnp.model.Part;
@@ -36,7 +38,7 @@ import org.openpnp.model.Placement;
 
 @SuppressWarnings("serial")
 public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableModel {
-    private FiducialLocatable fiducialLocatable = null;
+    private PlacementsHolder fiducialLocatable = null;
 
     private String[] columnNames =
             new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Error Handling", "Comments"};
@@ -48,30 +50,38 @@ public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableMo
 
     private boolean localReferenceFrame = true;
 
-    private FiducialLocatableLocation parent = null;
+    private PlacementsHolderLocation parent = null;
 
-    public FiducialLocatable getFiducialLocatable() {
+    private List<Placement> placements = null;
+    
+    public PlacementsHolder getFiducialLocatable() {
         return fiducialLocatable;
     }
 
-    public void setFiducialLocatable(FiducialLocatable fiducialLocatable) {
+    public void setFiducialLocatable(PlacementsHolder fiducialLocatable) {
         this.fiducialLocatable = fiducialLocatable;
+        placements = fiducialLocatable.getPlacements();
         fireTableDataChanged();
     }
     
-    public void setParentLocation(FiducialLocatableLocation parent) {
+    public void setParentLocation(PlacementsHolderLocation parent) {
         this.parent = parent;
+        fireTableDataChanged();
+    }
+    
+    public void setPlacements(List<Placement> placements) {
+        this.placements = placements;
         fireTableDataChanged();
     }
 
     @Override
     public Placement getRowObjectAt(int index) {
-        return fiducialLocatable.getPlacements().get(index);
+        return placements.get(index);
     }
 
     @Override
     public int indexOf(Object object) {
-        return fiducialLocatable.getPlacements().indexOf(object);
+        return placements.indexOf(object);
     }
 
     @Override
@@ -84,7 +94,7 @@ public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableMo
     }
 
     public int getRowCount() {
-        return (fiducialLocatable == null) ? 0 : fiducialLocatable.getPlacements().size();
+        return (placements == null) ? 0 : placements.size();
     }
 
     @Override
@@ -100,7 +110,7 @@ public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableMo
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            Placement placement = fiducialLocatable.getPlacements().get(rowIndex);
+            Placement placement = placements.get(rowIndex);
             if (columnIndex == 0) {
                 placement.setEnabled((Boolean) aValue);
             }
@@ -157,7 +167,7 @@ public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableMo
     }
 
     public Object getValueAt(int row, int col) {
-        Placement placement = fiducialLocatable.getPlacements().get(row);
+        Placement placement = placements.get(row);
         Location loc;
         Side side;
         if (localReferenceFrame || parent == null) {
@@ -166,7 +176,7 @@ public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableMo
         }
         else {
             loc = Utils2D.calculateBoardPlacementLocation(parent, placement);
-            side = placement.getSide().flip(parent.getSide() == Side.Bottom);
+            side = placement.getSide().flip(parent.getGlobalSide() == Side.Bottom);
         }
         switch (col) {
 			case 0:

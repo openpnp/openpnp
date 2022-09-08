@@ -29,7 +29,8 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
-public abstract class AbstractLocatable extends AbstractModelObject implements Definable<AbstractLocatable>, Identifiable, PropertyChangeListener {
+public abstract class AbstractLocatable<T extends AbstractLocatable<T>> extends AbstractModelObject
+        implements Definable<T>, Identifiable, PropertyChangeListener {
 
     @Element
     protected Location location;
@@ -37,24 +38,35 @@ public abstract class AbstractLocatable extends AbstractModelObject implements D
     @Attribute(required = false)
     protected String id;
     
-    protected transient AbstractLocatable definedBy;
+    protected transient T definedBy;
 
-    private transient boolean dirty;
+    protected transient boolean dirty;
     
+    @SuppressWarnings("unchecked")
     AbstractLocatable() {
-        definedBy = this;
+        super();
+        definedBy = (T) this;
+        addPropertyChangeListener(this);
     }
     
-    AbstractLocatable(AbstractLocatable abstractLocatable) {
+    AbstractLocatable(AbstractLocatable<T> abstractLocatable) {
         super();
         location = abstractLocatable.location;
         setDefinedBy(abstractLocatable.getDefinedBy());
         id = abstractLocatable.id;
+        addPropertyChangeListener(this);
     }
     
     AbstractLocatable(Location location) {
         this();
         this.location = location;
+    }
+    
+    @Override
+    public void dispose() {
+        removePropertyChangeListener(this);
+        setDefinedBy(null);
+        super.dispose();
     }
     
     public Location getLocation() {
@@ -67,23 +79,23 @@ public abstract class AbstractLocatable extends AbstractModelObject implements D
         firePropertyChange("location", oldValue, location);
     }
 
-    public AbstractLocatable getDefinedBy() {
+    public T getDefinedBy() {
         return definedBy;
     }
     
-    public void setDefinedBy(AbstractLocatable definedBy) {
-        AbstractLocatable oldValue = this.definedBy;
+    public void setDefinedBy(T definedBy) {
+        T oldValue = this.definedBy;
         this.definedBy = definedBy;
         firePropertyChange("definedBy", oldValue, definedBy);
         if (oldValue != null) {
             oldValue.removePropertyChangeListener(this);
         }
-        if (definedBy != null) {
+        if (definedBy != null && definedBy != this) {
             definedBy.addPropertyChangeListener(this);
         }
     }
     
-    public boolean isDefinedBy(AbstractLocatable definedBy) {
+    public boolean isDefinedBy(Object definedBy) {
         return this.definedBy == definedBy;
     };
 
@@ -110,11 +122,13 @@ public abstract class AbstractLocatable extends AbstractModelObject implements D
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
 //        Logger.trace(String.format("PropertyChangeEvent handled by AbstractLocatable @%08x = %s", this.hashCode(), evt));
-        if (evt.getSource() != AbstractLocatable.this || evt.getPropertyName() != "dirty") {
+        if (evt.getSource() != AbstractLocatable.this || !evt.getPropertyName().equals("dirty")) {
             dirty = true;
-            if (evt.getSource() == definedBy) {
+            if (AbstractLocatable.this != definedBy && evt.getSource() == definedBy) {
                 try {
-                    Logger.trace("Attempting to set property: " + evt.getPropertyName() + " = " + evt.getNewValue());
+                    Logger.trace(String.format("Attempting to set %s %s @%08x property %s = %s", 
+                            this.getClass().getSimpleName(), this.getId(), this.hashCode(), 
+                            evt.getPropertyName(), evt.getNewValue()));
                     BeanUtils.setProperty(this, evt.getPropertyName(), evt.getNewValue());
                 }
                 catch (IllegalAccessException e) {

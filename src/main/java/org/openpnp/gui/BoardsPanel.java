@@ -53,8 +53,8 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import org.openpnp.Translations;
-import org.openpnp.events.FiducialLocatableLocationSelectedEvent;
-import org.openpnp.events.FiducialLocatableSelectedEvent;
+import org.openpnp.events.PlacementsHolderLocationSelectedEvent;
+import org.openpnp.events.PlacementsHolderSelectedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
@@ -166,7 +166,7 @@ public class BoardsPanel extends JPanel {
                             boardPlacementsPanel.setBoard(null);
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
-                                    .post(new FiducialLocatableSelectedEvent(null, BoardsPanel.this));
+                                    .post(new PlacementsHolderSelectedEvent(null, BoardsPanel.this));
                             }
                         }
                         else if (selections.size() == 1) {
@@ -175,7 +175,7 @@ public class BoardsPanel extends JPanel {
                             boardPlacementsPanel.setBoard((Board) selections.get(0));
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
-                                    .post(new FiducialLocatableSelectedEvent(selections.get(0), BoardsPanel.this));
+                                    .post(new PlacementsHolderSelectedEvent(selections.get(0), BoardsPanel.this));
                             }
                         }
                         else {
@@ -184,7 +184,7 @@ public class BoardsPanel extends JPanel {
                             boardPlacementsPanel.setBoard(null);
                             if (updateLinkedTables) {
                                 Configuration.get().getBus()
-                                    .post(new FiducialLocatableSelectedEvent(null, BoardsPanel.this));
+                                    .post(new PlacementsHolderSelectedEvent(null, BoardsPanel.this));
                             }
                         }
                     }
@@ -256,23 +256,23 @@ public class BoardsPanel extends JPanel {
     }
 
     @Subscribe
-    public void fiducialLocatableLocationSelected(FiducialLocatableLocationSelectedEvent event) {
-        if (event.source == this || event.fiducialLocatableLocation == null || !(event.fiducialLocatableLocation.getFiducialLocatable() instanceof Board)) {
+    public void boardLocationSelected(PlacementsHolderLocationSelectedEvent event) {
+        if (event.source == this || event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Board)) {
             return;
         }
         SwingUtilities.invokeLater(() -> {
-            selectBoard((Board) event.fiducialLocatableLocation.getFiducialLocatable().getDefinedBy());
+            selectBoard((Board) event.placementsHolderLocation.getPlacementsHolder().getDefinedBy());
         });
     }
 
     @Subscribe
     public void placementSelected(PlacementSelectedEvent event) {
-        if (event.source == this || event.source == boardPlacementsPanel || event.fiducialLocatableLocation == null || !(event.fiducialLocatableLocation.getFiducialLocatable() instanceof Board)) {
+        if (event.source == this || event.source == boardPlacementsPanel || event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Board)) {
             return;
         }
         Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinedBy();
         SwingUtilities.invokeLater(() -> {
-            selectBoard((Board) event.fiducialLocatableLocation.getFiducialLocatable().getDefinedBy());
+            selectBoard((Board) event.placementsHolderLocation.getPlacementsHolder().getDefinedBy());
             boardPlacementsPanel.selectPlacement(placement);
         });
     }
