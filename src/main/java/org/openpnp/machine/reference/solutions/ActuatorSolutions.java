@@ -105,9 +105,13 @@ public class ActuatorSolutions implements Solutions.Subject {
                     break;
                 }
                 case Profile: {
-                    // Recurse into single profile actuators.
-                    for (Actuator profileActuator : ((ReferenceActuator) actuator).getActuatorProfiles().getAll()) {
-                        findActuateIssues(solutions, holder, profileActuator, qualifier, uri); 
+                    // Recurse into single profile actuators, but only when the holder is not itself an actuator (prevent endless recursion).
+                    if (!(holder instanceof Actuator)) {
+                        for (Actuator profileActuator : ((ReferenceActuator) actuator).getActuatorProfiles().getAll()) {
+                            if (profileActuator != actuator) {
+                                findActuateIssues(solutions, actuator, profileActuator, qualifier, uri); 
+                            }
+                        }
                     }
                     break;
                 }

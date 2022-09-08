@@ -376,7 +376,8 @@ public class SimulationModeMachine extends ReferenceMachine {
                                             }
                                         }
                                         if (nozzle instanceof AbstractNozzle) {
-                                            rotationModeOffsetAtPick.put(nozzle, ((AbstractNozzle) nozzle).getRotationModeOffset());
+                                            Double rotationModeOffset = ((AbstractNozzle) nozzle).getRotationModeOffset();
+                                            rotationModeOffsetAtPick.put(nozzle, rotationModeOffset == null ? 0.0 : rotationModeOffset);
                                         }
                                     }
                                     else {

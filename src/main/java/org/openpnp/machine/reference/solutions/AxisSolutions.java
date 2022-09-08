@@ -91,9 +91,10 @@ public class AxisSolutions implements Solutions.Subject {
                     solutions.add(new AxisLetterIssue(
                             axis, 
                             "Avoid axis letter E, if possible. Use proper rotation axes instead.", 
-                            "Check if your controller supports proper axes A B C (etc.) instead of E.", 
+                            "Check if your controller supports proper axes A B C (etc.) instead of \"extruder\" E. "
+                            + "Press the blue info button (below) for more information.", 
                             Severity.Warning,
-                            "https://github.com/openpnp/openpnp/wiki/Advanced-Motion-Control#migration-from-a-previous-version"));
+                            "https://github.com/openpnp/openpnp/wiki/Motion-Controller-Firmwares#upgrading-and-configuring-firmwares"));
                 }
             }
             else if (!getValidAxisLetters().contains(axis.getLetter())) {
@@ -205,6 +206,22 @@ public class AxisSolutions implements Solutions.Subject {
                                 nozzle.setRotationMode((state == Solutions.State.Solved) ?
                                         RotationMode.LimitedArticulation :
                                             oldRotationMode);
+                                super.setState(state);
+                            }
+                        });
+                    }
+                    if (!nozzle.isAligningRotationMode()) {
+                        solutions.add(new Solutions.Issue(
+                                nozzle, 
+                                "Align nozzle "+nozzle.getName()+" rotation with part.", 
+                                        "Enable part aligned nozzle rotation mode, so camera view cross-hairs and DRO-coordinates show the "
+                                        + "bottom vision aligned part rotation instead of the unadjusted nozzle rotation.", 
+                                        Severity.Suggestion,
+                                "https://github.com/openpnp/openpnp/wiki/Nozzle-Rotation-Mode#align-nozzle-rotation-with-part") {
+
+                            @Override
+                            public void setState(Solutions.State state) throws Exception {
+                                nozzle.setAligningRotationMode((state == Solutions.State.Solved));
                                 super.setState(state);
                             }
                         });

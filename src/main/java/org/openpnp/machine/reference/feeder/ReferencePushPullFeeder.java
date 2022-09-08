@@ -211,7 +211,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
     protected double ocrFontSizePt = 7.0;
     @Element(required = false)
     protected RegionOfInterest ocrRegion = null; 
-
+    
     public enum OcrWrongPartAction {
         None,
         SwapFeeders,
@@ -1226,6 +1226,15 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         }
     }
 
+    public Location getOcrLocation() throws Exception {
+        Location offsets = ocrRegion.getOffsets();
+        if ( offsets == null || !offsets.isInitialized() ) {
+            return getNominalVisionLocation();
+        }
+
+        return getNominalVisionLocation().add(offsets);
+    }
+
     protected void setupOcr(Camera camera, CvPipeline pipeline, Location hole1, Location hole2, Location pickLocation) {
         pipeline.setProperty("regionOfInterest", getOcrRegion());
         pipeline.setProperty("SimpleOcr.fontName", getOcrFontName());
@@ -1295,7 +1304,8 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
 
     public enum FindFeaturesMode {
         FromPickLocationGetHoles,
-        CalibrateHoles
+        CalibrateHoles,
+        OcrOnly
     }
 
     public class FindFeatures {
@@ -1466,7 +1476,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 holes = new ArrayList<>();
                 lines = new ArrayList<>();
 
-                if (calibrationTrigger == CalibrationTrigger.None) {
+                if (autoSetupMode == FindFeaturesMode.OcrOnly || calibrationTrigger == CalibrationTrigger.None) {
                     // No vision calibration wanted - just copy the pre-set locations
                     calibratedHole1Location = getHole1Location();
                     calibratedHole2Location = getHole2Location();
@@ -2365,7 +2375,7 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
             performOcr(OcrWrongPartAction.None, true, null);
         }
     }
-
+    
     public void performOcrOnFeederList(List<ReferencePushPullFeeder> ocrFeederList, 
             OcrWrongPartAction ocrAction, boolean ocrStop, StringBuilder report) throws Exception {
         // Note, we want to be able to swap out feeders' locations while doing the OCR process, so we need 
@@ -2443,6 +2453,13 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
         Location runningPickLocation = getLocation();
         Location runningVisionOffset = getVisionOffset();
         ensureCameraZ(camera, true);
+        
+        FindFeatures feature = null;
+
+        final boolean ocrPass = (ocrAction != OcrWrongPartAction.None && getOcrRegion() != null);
+        Location ocrOffsets = getOcrRegion().getOffsets();
+        final boolean ocrZeroOffset = (ocrOffsets == null || !ocrOffsets.isInitialized());
+
         // Calibrate the exact hole locations by obtaining a mid-point lock on them,
         // assuming that any camera lens and Z parallax distortion is symmetric.
         for (int i = 0; i < calibrateMaxPasses; i++) {
@@ -2452,17 +2469,14 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                     .derive(null, null, null, runningPickLocation.getRotation()+getRotationInFeeder());
             Logger.debug("calibrating sprocket holes pass "+ i+ " midPoint is "+midPoint);
             MovableUtils.moveToLocationAtSafeZ(camera, midPoint);
-            // setup OCR if wanted
-            boolean ocrPass = (i == 0 && ocrAction != OcrWrongPartAction.None && getOcrRegion() != null);
-            if (ocrPass) { 
+            if(ocrPass && ocrZeroOffset) {
                 setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
-            }
-            else {
+            } else {
                 disableOcr(camera, pipeline);
             }
             // take a new shot
             pipeline.process();
-            FindFeatures feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.CalibrateHoles)
+            feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.CalibrateHoles)
                     .invoke();
             runningHole1Location = feature.calibratedHole1Location;
             runningHole2Location = feature.calibratedHole2Location;
@@ -2491,20 +2505,32 @@ public class ReferencePushPullFeeder extends ReferenceFeeder {
                 }
                 setVisionOffset(feature.calibratedVisionOffset);
             }
-            if (ocrPass) {
-                if (feature.detectedOcrModel == null) {
-                    Logger.warn("Feeder "+getName()+" OCR operation expected, but no \"OCR\" stage result obtained from pipeline.");
-                }
-                else {
-                    Logger.trace("got OCR text "+feature.detectedOcrModel.getText());
-                    triggerOcrAction(feature.detectedOcrModel, ocrAction, ocrStop, report);
-                }
-            }
             // is it good enough? Compare with running offset.
             if (error.convertToUnits(LengthUnit.Millimeters).getValue() < calibrateToleranceMm) {
                 break;
             }
             runningVisionOffset = feature.calibratedVisionOffset;
+        }
+        
+        // setup OCR if wanted
+        if (ocrPass) {
+            //If ROI offset is not null then use the existing capture.
+            if (!ocrZeroOffset) {
+                Location ocrLocation = getOcrLocation();
+                MovableUtils.moveToLocationAtSafeZ(camera, ocrLocation);
+                setupOcr(camera, pipeline, runningHole1Location, runningHole2Location, runningPickLocation);
+                pipeline.process();
+                feature = new FindFeatures(camera, pipeline, 2000, FindFeaturesMode.OcrOnly)
+                        .invoke();
+            }
+            if (feature.detectedOcrModel == null) {
+                Logger.warn("Feeder "+getName()+" OCR operation expected, but no \"OCR\" stage result obtained from pipeline.");
+            }
+            else {
+                Logger.trace("got OCR text "+feature.detectedOcrModel.getText());
+                triggerOcrAction(feature.detectedOcrModel, ocrAction, ocrStop, report);
+            }
+            disableOcr(camera, pipeline);
         }
     }
 

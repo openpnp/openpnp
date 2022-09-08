@@ -21,7 +21,12 @@
 
 package org.openpnp.machine.reference.solutions;
 
+import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
+
+import javax.swing.SwingUtilities;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraPanel;
@@ -32,6 +37,7 @@ import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.camera.AbstractBroadcastingCamera;
 import org.openpnp.machine.reference.camera.AbstractSettlingCamera.SettleMethod;
 import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera;
+import org.openpnp.machine.reference.camera.OpenPnpCaptureCamera.CapturePropertyHolder;
 import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
@@ -47,6 +53,7 @@ import org.openpnp.spi.Machine;
 import org.openpnp.spi.MotionPlanner.CompletionType;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.UiUtils;
+import org.openpnp.util.VisionUtils;
 import org.pmw.tinylog.Logger;
 
 public class CameraSolutions implements Solutions.Subject  {
@@ -230,7 +237,258 @@ public class CameraSolutions implements Solutions.Subject  {
                     }
                 }
             }
+            boolean propertiesOK = true;
+            if (camera instanceof OpenPnpCaptureCamera) {
+                OpenPnpCaptureCamera pnpCamera = (OpenPnpCaptureCamera) camera;
+                // Some properties just need to be set to best values.
+                propertiesOK = addCapturePropertyValueSolution(solutions, 
+                        "brightness", pnpCamera.getBrightness(), 
+                        "revert to the default setting", null, 
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
+                        && propertiesOK;
+                propertiesOK = addCapturePropertyValueSolution(solutions, 
+                        "contrast", pnpCamera.getContrast(), 
+                        "revert to the default setting", null, 
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
+                        && propertiesOK;
+                propertiesOK = addCapturePropertyValueSolution(solutions, 
+                        "gamma", pnpCamera.getGamma(), 
+                        "revert to the default setting", null, 
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
+                        && propertiesOK;
+                propertiesOK = addCapturePropertyValueSolution(solutions, 
+                        "gain", pnpCamera.getGain(), 
+                        "revert to the default setting", null, 
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
+                        && propertiesOK;
+
+                // Exposure needs special logic.
+                final CapturePropertyHolder exposureProperty = pnpCamera.getExposure();
+                propertiesOK = addCapturePropertyAutoSolution(solutions, 
+                        "exposure", exposureProperty, 
+                        "set to a static exposure. The camera should look at a representative, rather bright subject when you press Accept",
+                        (Solutions.Issue issue) -> {
+                            final long adaptMilliseconds = 700;
+                            final State oldState = issue.getState();
+                            UiUtils.submitUiMachineTask(() -> {
+                                setStaticExposure(pnpCamera, exposureProperty, adaptMilliseconds);
+                                return true;
+                            },
+                                    (result) -> {
+                                    },
+                                    (t) -> {
+                                        UiUtils.showError(t);
+                                        // restore old state
+                                        UiUtils.messageBoxOnException(() -> issue.setState(oldState));
+                                    });
+                            return true;
+                        }, 
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
+                        && propertiesOK;
+                // More regular props.
+                addCapturePropertyValueSolution(solutions, 
+                        "sharpness", pnpCamera.getSharpness(), 
+                        "set to the minimum", pnpCamera.getSharpness().getMin(), 
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties");
+                propertiesOK = addCapturePropertyValueSolution(solutions, 
+                        "hue", pnpCamera.getHue(), 
+                        "revert to the default setting", null, 
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
+                        && propertiesOK;
+                propertiesOK = addCapturePropertyValueSolution(solutions, 
+                        "saturation", pnpCamera.getSaturation(), 
+                        "revert to the default setting", null, 
+                        "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera#camera-properties")
+                        && propertiesOK;
+                propertiesOK = addCapturePropertyValueSolution(solutions, 
+                        "white balance", pnpCamera.getWhiteBalance(), 
+                        "revert to the default setting. Issues & Solutions will propose calibrating static white balance instead", null, 
+                        "https://github.com/openpnp/openpnp/wiki/Camera-White-Balance#problems-with-device-white-balance")
+                        && propertiesOK;
+            }
+
+            if (!camera.isWhiteBalanced()) {
+                BufferedImage image = camera.captureRaw();
+                long [][] histogram = VisionUtils.computeImageHistogram(image);
+                if (!(Arrays.equals(histogram[0], histogram[1]) || Arrays.equals(histogram[0], histogram[2]))) {
+                    // Image is not monochrome.
+                    final boolean _propertiesOK = propertiesOK;
+                    solutions.add(new Solutions.Issue(
+                            camera, 
+                            "Calibrate static white balance for camera "+camera.getName()+".", 
+                            "For best results with color-keyed computer vision, it is recommended to use static white balance.", 
+                            Severity.Suggestion,
+                            "https://github.com/openpnp/openpnp/wiki/Camera-White-Balance") {
+
+                        @Override 
+                        public void activate() throws Exception {
+                            MainFrame.get().getMachineControls().setSelectedTool(camera);
+                            camera.ensureCameraVisible();
+                        }
+
+                        @Override 
+                        public String getExtendedDescription() {
+                            return "<html>"
+                                    + (_propertiesOK ? "" : "<p><strong color=\"red\">WARNING:</strong> make sure the device properties are set as recommended "
+                                            + "by Issues & Solutions. Press <strong>Find Issues & Solutions</strong> to check for the latest status. "
+                                            + "Proceed only when you are sure the properties are OK, white balance must be computed as the last step.</p><br/>")
+                                    + "<p>Color-keyed computer vision needs stable, and accurate colors. Neither the unstable Auto white balance, "
+                                    + "nor the device manual white balance is suitable (it us typically merely a red-blue-shift)."
+                                    + "Therefore OpenPnP offers its own elaborate and static white balance. You can automatically calibrate it now.</p><br/>"
+                                    + "<p>Make sure a suitable white balance calibration object is visible in the camera view. "
+                                    + "Brushed metal and paper are recommended. The camera should see all brightness levels, i.e., "
+                                    + "an assortment of metal objects with holes, bevels, shadows etc. usually provides good gradients."
+                                    + "Conversely, make sure there are no colored objects visible. Lighting conditions must be as in operation.<p><br/>"
+                                    + "<p>Press the blue info button (below) for more information. Alternatively, you can perform white "
+                                    + "balance on camera "+camera.getName()+"'s <strong>White Balance</strong> tab.</p><br>"
+                                    + "<p>When ready, press Accept.</p>"
+                                    + "</html>";
+                        }
+
+                        @Override
+                        public void setState(Solutions.State state) throws Exception {
+                            if (state == Solutions.State.Solved) {
+                                camera.autoAdjustWhiteBalanceMapped(8);
+                            }
+                            else {
+                                camera.resetWhiteBalance();
+                            }
+                            super.setState(state);
+                        }
+                    });
+                }
+            }
         }
+    }
+
+    protected void setStaticExposure(OpenPnpCaptureCamera camera,
+            final CapturePropertyHolder exposureProperty, final long adaptMilliseconds)
+            throws Exception, InterruptedException {
+        CameraView cameraView = MainFrame.get().getCameraViews().ensureCameraVisible(camera); 
+        // Capture a reference image.
+        if (!exposureProperty.isAuto()) {
+            exposureProperty.setAuto(true);
+            Thread.sleep(adaptMilliseconds);
+        }
+        BufferedImage frame0 = camera.lightSettleAndCapture();
+        SwingUtilities.invokeLater(() -> cameraView.showFilteredImage(frame0, "Auto Exposure", adaptMilliseconds*3));
+        long [][] autoHistogram = VisionUtils.computeImageHistogramHsv(frame0);
+        // Switch off Auto, and increase the manual value, until it best matches the Auto exposed.
+        exposureProperty.setAuto(false);
+        Thread.sleep(adaptMilliseconds); // sleep more for initial auto exposure
+        int bestValue = exposureProperty.getDefault();
+        long bestDiff = Long.MAX_VALUE;
+        for (int value = exposureProperty.getMin(); 
+                value <=  exposureProperty.getMax();
+                value++) {
+            exposureProperty.setValue(value);
+            Thread.sleep(adaptMilliseconds);
+            BufferedImage frame = camera.lightSettleAndCapture();
+            final String msg = "Exposure "+value;
+            SwingUtilities.invokeLater(() -> cameraView.showFilteredImage(frame, msg, adaptMilliseconds*2));
+            long [][] histogram = VisionUtils.computeImageHistogramHsv(frame);
+            long diff = 0;
+            for (int v = 0; v <= 255; v++) {
+                diff += Math.pow(histogram[2][v] - autoHistogram[2][v], 2);
+            }
+            if (bestDiff > diff) {
+                bestDiff = diff;
+                bestValue = value;
+            }
+        }
+        exposureProperty.setValue(bestValue);
+        Thread.sleep(adaptMilliseconds);
+        BufferedImage frame1 = camera.lightSettleAndCapture();
+        final String msg = "Exposure "+bestValue+" (set)";
+        SwingUtilities.invokeLater(() -> cameraView.showFilteredImage(frame1, msg, adaptMilliseconds*2));
+    }
+
+    protected boolean addCapturePropertyAutoSolution(Solutions solutions, 
+            String propertyName, CapturePropertyHolder property, 
+            String valueName, Function<Solutions.Issue, Boolean> valueSetter, 
+            String uri) {
+        if (property.isAuto()) {
+            final int oldValue = property.getValue();
+            solutions.add(new Solutions.Issue(
+                    camera, 
+                    "The "+propertyName+" of camera "+camera.getName()+" should not be set to Auto.", 
+                    "Computer vision can only be robust and repeatable if the effect of "+propertyName+" is stable. "
+                            + "Switch off the Auto "+propertyName+" and "+valueName+".", 
+                            Severity.Suggestion,
+                            uri) {
+
+                @Override 
+                public void activate() throws Exception {
+                    MainFrame.get().getMachineControls().setSelectedTool(camera);
+                    camera.ensureCameraVisible();
+                }
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (state == Solutions.State.Solved) {
+                        if (valueSetter == null) {
+                            property.setAuto(false);
+                            property.setValue(property.getDefault());
+                        }
+                        else {
+                            valueSetter.apply(this);
+                        }
+                    }
+                    else {
+                        property.setAuto(true);
+                        property.setValue(oldValue);
+                    }
+                    camera.lightSettleAndCapture();
+                    camera.ensureCameraVisible();
+                    super.setState(state);
+                }
+            });
+            return false;
+        }
+        return true;
+    }
+
+    protected boolean addCapturePropertyValueSolution(Solutions solutions, 
+            String propertyName, CapturePropertyHolder property, 
+            String valueName, Integer suggestedValue, 
+            String uri) {
+        final int wantedValue = (suggestedValue != null ? suggestedValue : property.getDefault());
+        if (property.getValue() != wantedValue) {
+            final boolean oldAuto = property.isAuto();
+            final int oldValue = property.getValue();
+            solutions.add(new Solutions.Issue(
+                    camera, 
+                    "The "+propertyName+" of camera "+camera.getName()+" should be set to "+wantedValue+".", 
+                    "Computer vision works best with raw information from the camera sensor, "
+                            + "even if the images look less appealing to humans. "
+                            + (oldAuto ? "Switch off the Auto "+propertyName+" and " : "Therefore, ")+valueName+".", 
+                            Severity.Suggestion,
+                            uri) {
+
+                @Override 
+                public void activate() throws Exception {
+                    MainFrame.get().getMachineControls().setSelectedTool(camera);
+                    camera.ensureCameraVisible();
+                }
+
+                @Override
+                public void setState(Solutions.State state) throws Exception {
+                    if (state == Solutions.State.Solved) {
+                        property.setAuto(false);
+                        property.setValue(wantedValue);
+                    }
+                    else {
+                        property.setAuto(oldAuto);
+                        property.setValue(oldValue);
+                    }
+                    camera.lightSettleAndCapture();
+                    camera.ensureCameraVisible();
+                    super.setState(state);
+                }
+            });
+            return false;
+        }
+        return true;
     }
 
     public void calibrateCameraSettling(Solutions.Issue issue, ReferenceMachine machine, HeadMountable movable, Location location) throws Exception {

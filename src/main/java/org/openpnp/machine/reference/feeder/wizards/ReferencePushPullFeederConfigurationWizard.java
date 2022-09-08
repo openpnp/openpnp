@@ -805,7 +805,7 @@ extends AbstractReferenceFeederConfigurationWizard {
                 MovableUtils.fireTargetedUserAction(feeder.getCamera());
                 SwingUtilities.invokeAndWait(() -> {
                     UiUtils.messageBoxOnException(() -> {
-                        new RegionOfInterestProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region") {
+                        new RegionOfInterestProcess(MainFrame.get(), feeder.getCamera(), "Setup OCR Region", true) {
                             @Override 
                             public void setResult(RegionOfInterest roi) {
                                 feeder.setOcrRegion(roi);
@@ -828,7 +828,7 @@ extends AbstractReferenceFeederConfigurationWizard {
         public void actionPerformed(ActionEvent e) {
             applyAction.actionPerformed(e);
             UiUtils.submitUiMachineTask(() -> {
-                MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getNominalVisionLocation());
+                MovableUtils.moveToLocationAtSafeZ(feeder.getCamera(), feeder.getOcrLocation());
                 MovableUtils.fireTargetedUserAction(feeder.getCamera());
                 StringBuilder report = new StringBuilder();
                 feeder.performOcr(OcrWrongPartAction.ChangePart, false, report);

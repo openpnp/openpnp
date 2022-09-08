@@ -29,6 +29,7 @@ import javax.swing.Icon;
 
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
+import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.machine.reference.ReferenceNozzle;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
@@ -37,9 +38,11 @@ import org.openpnp.machine.reference.ReferenceNozzleTipCalibration.Recalibration
 import org.openpnp.machine.reference.camera.ReferenceCamera;
 import org.openpnp.machine.reference.wizards.ReferenceNozzleTipCalibrationWizard;
 import org.openpnp.model.Length;
+import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Solutions;
 import org.openpnp.model.Solutions.Milestone;
+import org.openpnp.model.Solutions.Severity;
 import org.openpnp.model.Solutions.State;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Head;
@@ -159,7 +162,8 @@ public class NozzleTipSolutions implements Solutions.Subject  {
         final RecalibrationTrigger oldRecalibrationTrigger = nozzleTip.getCalibration().getRecalibrationTrigger();
         final boolean oldFailHoming = nozzleTip.getCalibration().isFailHoming();
         final BackgroundCalibrationMethod oldBackgroundCalibrationMethod = nozzleTip.getCalibration().getBackgroundCalibrationMethod();
-        
+        LengthConverter lengthConverter = new LengthConverter(); 
+
         if (!nozzleTip.getCalibration().isEnabled()) {
             solutions.add(machine.getVisionSolutions().new VisionFeatureIssue(
                     nozzleTip,
@@ -179,7 +183,7 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                 @Override 
                 public String getExtendedDescription() {
                     return "<html>"
-                            + "<p>It is recommended to enable nozzle tip calibration for run-out, offsets and background calibration. "
+                            + "<p>It is recommended to enable nozzle tip calibration for run-out and precision camera offsets. "
                             + "For more information, press the blue Info button (below) to open the Wiki.</p><br/>"
                             + (nozzleTip != nozzle.getNozzleTip() ?
                                     "<p>Load nozzle tip "+nozzleTip.getName()+" to nozzle "+nozzle.getName() + ".</p><br/>"
@@ -261,87 +265,117 @@ public class NozzleTipSolutions implements Solutions.Subject  {
                 }
             });
         }
-        else if (oldBackgroundCalibrationMethod == BackgroundCalibrationMethod.None) {
-            solutions.add(new Solutions.Issue(
-                    nozzleTip, 
-                    "Set background calibration method for "+nozzleTip.getName()+".", 
-                    "Depending on the type of nozzle tip or shade, select the proper background calibration.", 
-                    Solutions.Severity.Suggestion,
-                    "https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Background-Calibration") {
+        else { 
+            if (nozzleTip.getMaxPickTolerance().compareTo(new Length(1.0, LengthUnit.Millimeters)) > 0) {
+                solutions.add(new Solutions.PlainIssue(
+                        nozzleTip, 
+                        "Nozzle tip "+nozzleTip.getName()+" has a large Max. Pick Tolerance of "+lengthConverter.convertForward(nozzleTip.getMaxPickTolerance())+".",
+                        "Set the Max. Pick Tolerance to the actual pick errors you expect. "
+                        + "Press the blue info button (below) for more information.",
+                        Severity.Error,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Nozzle-Setup#nozzle-tip-configuration"));
+            }
+            else if (nozzleTip.getMinPartDiameter().compareTo(nozzleTip.getMaxPickTolerance().multiply(2)) <= 0) {
+                solutions.add(new Solutions.PlainIssue(
+                        nozzleTip, 
+                        "Nozzle tip "+nozzleTip.getName()+" has an invalid Min. Part Diameter of "+lengthConverter.convertForward(nozzleTip.getMinPartDiameter())+".",
+                        "Make the Min. Part Diameter at least as big as the nozzle tip air bore plus two times the Max. Pick Tolerance of "
+                        + lengthConverter.convertForward(nozzleTip.getMaxPickTolerance())+". "
+                        + "Press the blue info button (below) for more information.",
+                        Severity.Error,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Nozzle-Setup#nozzle-tip-configuration"));
+            }
+            else if (nozzleTip.getMinPartDiameter().compareTo(nozzleTip.getMaxPartDiameter()) >= 0) {
+                solutions.add(new Solutions.PlainIssue(
+                        nozzleTip, 
+                        "Nozzle tip "+nozzleTip.getName()+" has a Max. Part Diameter that is not larger than the Min. Part Diameter.",
+                        "Make sure the Max. Part Diameter is larger than the Min. Part Diameter. "
+                        + "Press the blue info button (below) for more information.",
+                        Severity.Error,
+                        "https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Nozzle-Setup#nozzle-tip-configuration"));
+            }
+            if (oldBackgroundCalibrationMethod == BackgroundCalibrationMethod.None) {
+                solutions.add(new Solutions.Issue(
+                        nozzleTip, 
+                        "Set background calibration method for "+nozzleTip.getName()+".", 
+                        "Depending on the type of nozzle tip or shade, select the proper background calibration.", 
+                        Solutions.Severity.Suggestion,
+                        "https://github.com/openpnp/openpnp/wiki/Nozzle-Tip-Background-Calibration") {
 
-                @Override 
-                public void activate() throws Exception {
-                    MainFrame.get().getMachineControls().setSelectedTool(nozzle);
-                }
+                    @Override 
+                    public void activate() throws Exception {
+                        MainFrame.get().getMachineControls().setSelectedTool(nozzle);
+                    }
 
-                @Override 
-                public String getExtendedDescription() {
-                    return "<html>"
-                            + "<p>Select the proper background calibration.</p><br/>"
-                            + "<p><strong color=\"red\">CAUTION</strong>: Nozzle "+nozzle.getName()+" will move over camera "
-                            + camera.getName()+" and perform a new nozzle tip calibration calibration, including the enabled "
-                            + "background calibration. Any problems will be indicated with purple highlights.</p><br/>"
-                            + "<p>When ready, press Accept.</p>"
-                            + (getState() == State.Solved ? 
-                                    "<br/><h4>Results</h4>"
-                                    + "<p style=\"max-width: 40em\">"+nozzleTip.getCalibration().getBackgroundDiagnostics()
-                                    .replace("<html>", "").replace("</html>", "").replace("<hr/>", "<br/>")+"</p><br/>" 
-                                            + "<p>More information on the Calibration tab of nozzle tip "+nozzleTip.getName()+".</p>"
-                                            : "")
-                            + "</html>";
-                }
+                    @Override 
+                    public String getExtendedDescription() {
+                        return "<html>"
+                                + "<p>Select the proper background calibration.</p><br/>"
+                                + "<p><strong color=\"red\">CAUTION</strong>: Nozzle "+nozzle.getName()+" will move over camera "
+                                + camera.getName()+" and perform a new nozzle tip calibration calibration, including the enabled "
+                                + "background calibration. Any problems will be indicated with purple highlights.</p><br/>"
+                                + "<p>When ready, press Accept.</p>"
+                                + (getState() == State.Solved ? 
+                                        "<br/><h4>Results</h4>"
+                                        + "<p style=\"max-width: 40em\">"+nozzleTip.getCalibration().getBackgroundDiagnostics()
+                                        .replace("<html>", "").replace("</html>", "").replace("<hr/>", "<br/>")+"</p><br/>" 
+                                        + "<p>More information on the Calibration tab of nozzle tip "+nozzleTip.getName()+".</p>"
+                                        : "")
+                                + "</html>";
+                    }
 
-                @Override
-                public Solutions.Issue.CustomProperty[] getProperties() {
-                    return new Solutions.Issue.CustomProperty[] {
-                            nozzleTipLoadActionProperty(this, nozzle, nozzleTip),
-                    };
-                }
+                    @Override
+                    public Solutions.Issue.CustomProperty[] getProperties() {
+                        return new Solutions.Issue.CustomProperty[] {
+                                nozzleTipLoadActionProperty(this, nozzle, nozzleTip),
+                        };
+                    }
 
-                @Override
-                public Solutions.Issue.Choice[] getChoices() {
-                    return new Solutions.Issue.Choice[] {
-                            new Solutions.Issue.Choice(BackgroundCalibrationMethod.BrightnessAndKeyColor, 
-                                    "<html><h3>Brighness and Key-Color</h3>"
-                                            + "<p>The nozzle tip and/or background (shade) is color-keyed "
-                                            + "so computer vision can robustly distinguish background pixels from "
-                                            + "foreground pixels (\"green-screening\"). Use for green Juki style nozzles.</p>"
-                                            + "</html>",
-                                            null),
-                            new Solutions.Issue.Choice(BackgroundCalibrationMethod.Brightness, 
-                                    "<html><h3>Brightness</h3>"
-                                            + "<p>The background is just dark, the foreground is distinguished by "
-                                            + "brighness only.</p><br/>"
-                                            + "</html>",
-                                            null),
-                    };
-                }
+                    @Override
+                    public Solutions.Issue.Choice[] getChoices() {
+                        return new Solutions.Issue.Choice[] {
+                                new Solutions.Issue.Choice(BackgroundCalibrationMethod.BrightnessAndKeyColor, 
+                                        "<html><h3>Brighness and Key-Color</h3>"
+                                                + "<p>The nozzle tip and/or background (shade) is color-keyed "
+                                                + "so computer vision can robustly distinguish background pixels from "
+                                                + "foreground pixels (\"green-screening\"). Use for green Juki style nozzles.</p>"
+                                                + "</html>",
+                                                null),
+                                new Solutions.Issue.Choice(BackgroundCalibrationMethod.Brightness, 
+                                        "<html><h3>Brightness</h3>"
+                                                + "<p>The background is just dark, the foreground is distinguished by "
+                                                + "brighness only.</p><br/>"
+                                                + "</html>",
+                                                null),
+                        };
+                    }
 
-                @Override
-                public void setState(Solutions.State state) throws Exception {
-                    nozzleTip.getCalibration().setBackgroundCalibrationMethod(
-                            state == State.Solved ? 
-                                    (BackgroundCalibrationMethod) getChoice() : oldBackgroundCalibrationMethod);
-                    if (state == State.Solved) {
-                        if (nozzleTip != nozzle.getNozzleTip()) {
-                            throw new Exception("The nozzle tip "+nozzleTip.getName()+" is not loaded on nozzle "+nozzle.getName()+".");
-                        }
-                        UiUtils.submitUiMachineTask(() -> {
-                            nozzleTip.getCalibration().calibrate((ReferenceNozzle) nozzle);
-                            UiUtils.messageBoxOnExceptionLater(() -> {
-                                super.setState(state);
-                                ReferenceNozzleTipCalibrationWizard.showBackgroundProblems(nozzleTip, false);
+                    @Override
+                    public void setState(Solutions.State state) throws Exception {
+                        nozzleTip.getCalibration().setBackgroundCalibrationMethod(
+                                state == State.Solved ? 
+                                        (BackgroundCalibrationMethod) getChoice() : oldBackgroundCalibrationMethod);
+                        if (state == State.Solved) {
+                            if (nozzleTip != nozzle.getNozzleTip()) {
+                                throw new Exception("The nozzle tip "+nozzleTip.getName()+" is not loaded on nozzle "+nozzle.getName()+".");
+                            }
+                            UiUtils.submitUiMachineTask(() -> {
+                                nozzleTip.getCalibration().calibrate((ReferenceNozzle) nozzle);
+                                UiUtils.messageBoxOnExceptionLater(() -> {
+                                    super.setState(state);
+                                    ReferenceNozzleTipCalibrationWizard.showBackgroundProblems(nozzleTip, false);
+                                });
                             });
-                        });
+                        }
+                        else {
+                            super.setState(state);
+                        }
                     }
-                    else {
-                        super.setState(state);
-                    }
-                }
-            });
+                });
+            }
         }
     }
-    
+
     protected Solutions.Issue.ActionProperty nozzleTipLoadActionProperty(Solutions.Issue issue, Nozzle nozzle,
             ReferenceNozzleTip nozzleTip) {
         return issue.new ActionProperty( 

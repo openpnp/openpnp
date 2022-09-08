@@ -228,10 +228,12 @@ public class JobPlacementsPanel extends JPanel {
                     MainFrame mainFrame = MainFrame.get();
                     if (getSelection() != null && updateLinkedTables) {
                         Part selectedPart = getSelection().getPart();
-                        mainFrame.getPartsTab().selectPartInTable(selectedPart);
-                        mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
-                        mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
-                        mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(selectedPart);
+                        if (selectedPart != null) {
+                            mainFrame.getPartsTab().selectPartInTable(selectedPart);
+                            mainFrame.getPackagesTab().selectPackageInTable(selectedPart.getPackage());
+                            mainFrame.getFeedersTab().selectFeederForPart(selectedPart);
+                            mainFrame.getVisionSettingsTab().selectVisionSettingsInTable(selectedPart);
+                        }
                     }
                 }
             }

@@ -879,11 +879,10 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
                     else {
                         if (colorMap[ch][level-1] > colorMap[ch][level+1]) {
                             throw new Exception("Image does not contain grayscales at level "+100*level/levels+" ... "+100*(level+1)/levels+"%.");
-//                            colorMap[ch][level] = colorMap[ch][level-1];
                         }
                         else {
-                        // Simply interpolate.
-                        colorMap[ch][level] = (colorMap[ch][level-1] + colorMap[ch][level+1])/2;
+                            // Simply interpolate.
+                            colorMap[ch][level] = (colorMap[ch][level-1] + colorMap[ch][level+1])/2;
                         }
                     }
                 }
