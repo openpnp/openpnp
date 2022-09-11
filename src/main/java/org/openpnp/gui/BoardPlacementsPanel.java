@@ -62,7 +62,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
 import org.openpnp.events.DefinitionStructureChangedEvent;
-import org.openpnp.events.PlacementsHolderLocationSelectedEvent;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.importer.BoardImporter;
@@ -74,10 +73,10 @@ import org.openpnp.gui.support.IdentifiableListCellRenderer;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
-import org.openpnp.gui.tablemodel.FiducialLocatablePlacementsTableModel;
+import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardPad;
 import org.openpnp.model.Configuration;
@@ -100,8 +99,8 @@ import io.github.classgraph.ScanResult;
 @SuppressWarnings("serial")
 public class BoardPlacementsPanel extends JPanel {
     private JTable table;
-    private FiducialLocatablePlacementsTableModel tableModel;
-    private TableRowSorter<FiducialLocatablePlacementsTableModel> tableSorter;
+    private PlacementsHolderPlacementsTableModel tableModel;
+    private TableRowSorter<PlacementsHolderPlacementsTableModel> tableSorter;
     private ActionGroup singleSelectionActionGroup;
     private ActionGroup multiSelectionActionGroup;
     private BoardsPanel boardsPanel;
@@ -128,6 +127,7 @@ public class BoardPlacementsPanel extends JPanel {
                 setTypeAction, setSideAction, setErrorHandlingAction, setEnabledAction);
         multiSelectionActionGroup.setEnabled(false);
 
+        @SuppressWarnings("unchecked")
         JComboBox<PartsComboBoxModel> partsComboBox = new JComboBox<>(new PartsComboBoxModel());
         partsComboBox.setMaximumRowCount(20);
         partsComboBox.setRenderer(new IdentifiableListCellRenderer<Part>());
@@ -138,7 +138,7 @@ public class BoardPlacementsPanel extends JPanel {
         JComboBox<ErrorHandling> errorHandlingComboBox = new JComboBox<>(ErrorHandling.values());
         
         setLayout(new BorderLayout(0, 0));
-        tableModel = new FiducialLocatablePlacementsTableModel();
+        tableModel = new PlacementsHolderPlacementsTableModel();
         tableSorter = new TableRowSorter<>(tableModel);
         
         table = new AutoSelectTextTable(tableModel);
@@ -228,7 +228,7 @@ public class BoardPlacementsPanel extends JPanel {
         popupMenu.add(setTypeMenu);
 
         JMenu setSideMenu = new JMenu(setSideAction);
-        for (Board.Side side : Board.Side.values()) {
+        for (Side side : Side.values()) {
             setSideMenu.add(new SetSideAction(side));
         }
         popupMenu.add(setSideMenu);
@@ -376,10 +376,10 @@ public class BoardPlacementsPanel extends JPanel {
     }
     
     private void updateRowFilter() {
-        List<RowFilter<FiducialLocatablePlacementsTableModel, Integer>> filters = new ArrayList<>();
+        List<RowFilter<PlacementsHolderPlacementsTableModel, Integer>> filters = new ArrayList<>();
         
         try {
-            RowFilter<FiducialLocatablePlacementsTableModel, Integer> searchFilter = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
+            RowFilter<PlacementsHolderPlacementsTableModel, Integer> searchFilter = RowFilter.regexFilter("(?i)" + searchTextField.getText().trim());
             filters.add(searchFilter);
         }
         catch (PatternSyntaxException e) {
@@ -607,9 +607,9 @@ public class BoardPlacementsPanel extends JPanel {
     };
 
     class SetSideAction extends AbstractAction {
-        final Board.Side side;
+        final Side side;
 
-        public SetSideAction(Board.Side side) {
+        public SetSideAction(Side side) {
             this.side = side;
             putValue(NAME, side.toString());
             putValue(SHORT_DESCRIPTION, "Set placement side(s) to " + side.toString());

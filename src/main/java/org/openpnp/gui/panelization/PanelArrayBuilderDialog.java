@@ -21,21 +21,14 @@ package org.openpnp.gui.panelization;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.JComboBox;
-import javax.swing.DefaultComboBoxModel;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.GridBagLayout;
-import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.Shape;
@@ -43,25 +36,27 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JTextField;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import java.awt.Dimension;
-
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.Action;
-import javax.swing.ButtonGroup;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
@@ -70,15 +65,14 @@ import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Placement;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.util.BeanUtils;
 import org.openpnp.util.Utils2D;
-import org.pmw.tinylog.Logger;
 
 @SuppressWarnings("serial")
 public class PanelArrayBuilderDialog extends JDialog {
@@ -89,7 +83,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     
     private LengthUnit systemUnit = Configuration.get().getSystemUnits();
 
-    private List<PlacementsHolderLocation> newChildren = new ArrayList<>();
+    private List<PlacementsHolderLocation<?>> newChildren = new ArrayList<>();
     private ArrayType arrayType = ArrayType.Rectangular;
     private final JPanel contentPanel = new JPanel();
     private JTextField textFieldColumns;
@@ -102,7 +96,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     private final ButtonGroup buttonGroup = new ButtonGroup();
     private JPanel panelControls;
     private PanelLocation panelLocation;
-    private PlacementsHolderLocation rootChildLocation;
+    private PlacementsHolderLocation<?> rootChildLocation;
     protected BufferedImage panelImage;
     private int columnCount = 1;
     private int rowCount = 1;
@@ -121,7 +115,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     /**
      * Create the dialog.
      */
-    public PanelArrayBuilderDialog(PanelLocation panelLocation, PlacementsHolderLocation rootChildLocation) {
+    public PanelArrayBuilderDialog(PanelLocation panelLocation, PlacementsHolderLocation<?> rootChildLocation) {
         this.panelLocation = panelLocation;
         this.rootChildLocation = rootChildLocation;
         this.addWindowListener(new WindowAdapter( ) {
@@ -279,7 +273,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                                 "one more column than the first row", 
                                 "one less column than the first row"};
 
-                        JComboBox<String> comboBoxAlternateRows = new JComboBox();
+                        JComboBox<String> comboBoxAlternateRows = new JComboBox<String>();
                         comboBoxAlternateRows.setToolTipText("Selects the number of columns in the even rows of the array");
                         comboBoxAlternateRows.setModel(new DefaultComboBoxModel<String>(alternateOptions));
                         GridBagConstraints gbc_comboBoxAlternateRows = new GridBagConstraints();
@@ -542,7 +536,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     }
 
     protected void cancel() {
-        for (PlacementsHolderLocation newChild : newChildren) {
+        for (PlacementsHolderLocation<?> newChild : newChildren) {
             panelLocation.removeChild(newChild);
         }
         newChildren.clear();
@@ -729,7 +723,7 @@ public class PanelArrayBuilderDialog extends JDialog {
     }
 
     protected void generateArray() {
-        for (PlacementsHolderLocation newChild : newChildren) {
+        for (PlacementsHolderLocation<?> newChild : newChildren) {
             panelLocation.removeChild(newChild);
         }
         newChildren.clear();
@@ -743,7 +737,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                             Location offset = new Location(systemUnit);
                             offset = offset.deriveLengths(columnSpacing.multiply(j).add(rowOffset),
                                     rowSpacing.multiply(i), null, null);
-                            PlacementsHolderLocation newChildLocation = null;
+                            PlacementsHolderLocation<?> newChildLocation = null;
                             if (rootChildLocation instanceof BoardLocation) {
                                 newChildLocation = new BoardLocation((BoardLocation) rootChildLocation);
                             }
@@ -784,7 +778,7 @@ public class PanelArrayBuilderDialog extends JDialog {
                                     radius.multiply(Math.sin(angleRad)), null, null);
                             loc = loc.add(center);
                             loc = loc.derive(null, null, null, rootChildLocation.getLocation().getRotation() + angleStep*j);
-                            PlacementsHolderLocation newChildLocation = null;
+                            PlacementsHolderLocation<?> newChildLocation = null;
                             if (rootChildLocation instanceof BoardLocation) {
                                 newChildLocation = new BoardLocation((BoardLocation) rootChildLocation);
                             }
@@ -845,7 +839,7 @@ public class PanelArrayBuilderDialog extends JDialog {
         
         drawCoordinateFrameMarker(offScr, at, 10, Color.RED, Color.CYAN, true);
         
-        for (PlacementsHolderLocation child : panelLocation.getChildren()) {
+        for (PlacementsHolderLocation<?> child : panelLocation.getChildren()) {
             Location loc = child.getLocation().convertToUnits(systemUnit);
             Location dims = child.getPlacementsHolder().getDimensions().convertToUnits(systemUnit);
             AffineTransform at2 = new AffineTransform(at);

@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Placement.Type;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -232,11 +232,11 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         firePropertyChange("rootPanelLocation", null, rootPanelLocation);
     }
 
-    public int instanceCount(PlacementsHolder<? extends PlacementsHolder<?>> boardOrPanel) {
+    public int instanceCount(PlacementsHolder<?> boardOrPanel) {
         return instanceCount(rootPanelLocation, boardOrPanel);
     }
     
-    private int instanceCount(PanelLocation panelLocation, PlacementsHolder<? extends PlacementsHolder<?>> boardOrPanel) {
+    private int instanceCount(PanelLocation panelLocation, PlacementsHolder<?> boardOrPanel) {
         int count = 0;
         for (PlacementsHolderLocation<?> child : panelLocation.getChildren()) {
             PlacementsHolder<? extends PlacementsHolder<?>> fl = child.getPlacementsHolder();

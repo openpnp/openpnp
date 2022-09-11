@@ -1043,6 +1043,8 @@ public class Configuration extends AbstractModelObject {
      */
     private static void saveJobEnabledAndErrorHandlingSettings(Job job, PanelLocation panelLocation) {
         if (panelLocation == job.getRootPanelLocation()) {
+            //Clear everything when starting from the root panel so that we don't end up with a mix
+            //of old and new settings
             job.removeAllEnabled();
             job.removeAllErrorHandling();
         }

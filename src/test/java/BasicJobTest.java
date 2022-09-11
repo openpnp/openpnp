@@ -11,7 +11,7 @@ import org.openpnp.machine.reference.driver.test.TestDriver.TestDriverDelegate;
 import org.openpnp.machine.reference.feeder.ReferenceTubeFeeder;
 import org.openpnp.model.AxesLocation;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;

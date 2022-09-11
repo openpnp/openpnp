@@ -30,17 +30,15 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
-import org.openpnp.model.PlacementsHolderLocation;
-import org.openpnp.model.AbstractLocatable;
-import org.openpnp.model.Area;
-import org.openpnp.model.AreaUnit;
 import org.opencv.core.RotatedRect;
-import org.opencv.core.Size;import org.openpnp.model.Board.Side;
-import org.openpnp.model.BoardLocation;
+import org.opencv.core.Size;
+import org.openpnp.model.AbstractLocatable;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Point;
 import org.pmw.tinylog.Logger;
 
@@ -104,7 +102,7 @@ public class Utils2D {
      * @param bl
      * @return
      */
-    public static AffineTransform getDefaultBoardPlacementLocationTransform(PlacementsHolderLocation bl) {
+    public static AffineTransform getDefaultBoardPlacementLocationTransform(PlacementsHolderLocation<?> bl) {
         Location l = bl.getLocation().convertToUnits(LengthUnit.Millimeters);
         AffineTransform tx = new AffineTransform();
         tx.translate(l.getX(), l.getY());
@@ -208,23 +206,23 @@ public class Utils2D {
         return ret;
     }
 
-    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation bl) {
+    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation<?> bl) {
         return calculateBoardPlacementLocation(bl, Location.origin);
     }
     
-    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation bl, Location location) {
+    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation<?> bl, Location location) {
         Placement p = new Placement("dummy");
         p.setLocation(location);
         return calculateBoardPlacementLocation(bl, p);
     }
 
-    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation bl,
-            AbstractLocatable locatable) {
+    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation<?> bl,
+            AbstractLocatable<?> locatable) {
         return calculateBoardPlacementLocation(bl, locatable, false);
     }
     
-    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation bl,
-            AbstractLocatable locatable, boolean local) {
+    public static Location calculateBoardPlacementLocation(PlacementsHolderLocation<?> bl,
+            AbstractLocatable<?> locatable, boolean local) {
         
         Location placementLocation = null;
         double angleSign = 1.0;
@@ -232,7 +230,7 @@ public class Utils2D {
             placementLocation = locatable.getLocation();
         }
         else if (locatable instanceof PlacementsHolderLocation) {
-            PlacementsHolderLocation fiducialLocatableLocation = (PlacementsHolderLocation) locatable;
+            PlacementsHolderLocation<?> fiducialLocatableLocation = (PlacementsHolderLocation<?>) locatable;
             Placement dummy = new Placement("dummy");
             if (fiducialLocatableLocation.getGlobalSide() == Side.Bottom) {
                 Location dims = fiducialLocatableLocation.getPlacementsHolder().getDimensions();
@@ -283,8 +281,8 @@ public class Utils2D {
         return l;
     }
 
-    public static Location calculateRelativeBoardPlacementLocation(PlacementsHolderLocation parent,
-            PlacementsHolderLocation bl, AbstractLocatable locatable) {
+    public static Location calculateRelativeBoardPlacementLocation(PlacementsHolderLocation<?> parent,
+            PlacementsHolderLocation<?> bl, AbstractLocatable<?> locatable) {
         if (parent == null) {
             return calculateBoardPlacementLocation(bl, locatable);
         }
@@ -293,7 +291,7 @@ public class Utils2D {
         return globalLocation.getLocalLocationRelativeTo(parentLocation);
     }
     
-    public static Location calculateBoardPlacementLocationInverse(PlacementsHolderLocation bl,
+    public static Location calculateBoardPlacementLocationInverse(PlacementsHolderLocation<?> bl,
             Location placementLocation) {
         AffineTransform tx = bl.getLocalToGlobalTransform();
         if (tx == null) {

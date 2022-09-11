@@ -77,7 +77,7 @@ import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
 import org.openpnp.gui.tablemodel.PanelFiducialsTableModel;
 import org.openpnp.model.AbstractLocatable;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
@@ -314,7 +314,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         JPopupMenu childrenPopupMenu = new JPopupMenu();
 
         JMenu setChildrenSideMenu = new JMenu(setSideAction);
-        for (Board.Side side : Board.Side.values()) {
+        for (Side side : Side.values()) {
             setChildrenSideMenu.add(new SetChildrenSideAction(side));
         }
         childrenPopupMenu.add(setChildrenSideMenu);
@@ -410,7 +410,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         JPopupMenu fiducialPopupMenu = new JPopupMenu();
 
         JMenu setFiducialSideMenu = new JMenu(setSideAction);
-        for (Board.Side side : Board.Side.values()) {
+        for (Side side : Side.values()) {
             setFiducialSideMenu.add(new SetFiducialSideAction(side));
         }
         fiducialPopupMenu.add(setFiducialSideMenu);
@@ -861,9 +861,9 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
     };
 
     class SetFiducialSideAction extends AbstractAction {
-        final Board.Side side;
+        final Side side;
 
-        public SetFiducialSideAction(Board.Side side) {
+        public SetFiducialSideAction(Side side) {
             this.side = side;
             putValue(NAME, side.toString());
             putValue(SHORT_DESCRIPTION, "Set fiducial side(s) to " + side.toString());
@@ -879,9 +879,9 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
     };
     
     class SetChildrenSideAction extends AbstractAction {
-        final Board.Side side;
+        final Side side;
 
-        public SetChildrenSideAction(Board.Side side) {
+        public SetChildrenSideAction(Side side) {
             this.side = side;
             putValue(NAME, side.toString());
             putValue(SHORT_DESCRIPTION, "Set children side(s) to " + side.toString());

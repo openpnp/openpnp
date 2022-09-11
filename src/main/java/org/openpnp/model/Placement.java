@@ -21,7 +21,6 @@ package org.openpnp.model;
 
 import java.beans.PropertyChangeEvent;
 
-import org.openpnp.model.Board.Side;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -59,9 +58,6 @@ public class Placement extends AbstractLocatable<Placement> {
      */
     @Version(revision = 1.4)
     private double version;
-
-    @Attribute
-    private Side side = Side.Top;
 
     @Attribute(required = false)
     private String partId;
@@ -139,16 +135,6 @@ public class Placement extends AbstractLocatable<Placement> {
         if (part != null) {
             part.setPlacementCount(+1);
         }
-    }
-
-    public Side getSide() {
-        return side;
-    }
-
-    public void setSide(Side side) {
-        Object oldValue = this.side;
-        this.side = side;
-        firePropertyChange("side", oldValue, side);
     }
 
     public Type getType() {

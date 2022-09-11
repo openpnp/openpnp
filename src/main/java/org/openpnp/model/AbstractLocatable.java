@@ -29,9 +29,44 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 
+/**
+ * A class to represent an abstraction of a physical 2D object that has a position and orientation
+ * in 3D space
+ *
+ * @param <T> - the type of the object that extends AbstractLocatable
+ */
 public abstract class AbstractLocatable<T extends AbstractLocatable<T>> extends AbstractModelObject
         implements Definable<T>, Identifiable, PropertyChangeListener {
 
+    /**
+     * An enumeration to identify how the 2D object's surface is oriented with respect to the 3D
+     * space's +Z direction 
+     */
+    public enum Side {
+        Bottom, Top;
+        
+        public Side flip() {
+            if (this.equals(Side.Top)) {
+                return Side.Bottom;
+            }
+            else {
+                return Side.Top;
+            }
+        }
+        
+        public Side flip(boolean value) {
+            if (value) {
+                return flip();
+            }
+            else {
+                return this;
+            }
+        }
+    }
+
+    @Attribute
+    protected Side side = Side.Top;
+    
     @Element
     protected Location location;
 
@@ -41,7 +76,7 @@ public abstract class AbstractLocatable<T extends AbstractLocatable<T>> extends 
     protected transient T definedBy;
 
     protected transient boolean dirty;
-    
+
     @SuppressWarnings("unchecked")
     AbstractLocatable() {
         super();
@@ -69,6 +104,23 @@ public abstract class AbstractLocatable<T extends AbstractLocatable<T>> extends 
         super.dispose();
     }
     
+
+    /**
+     * @return the side
+     */
+    public Side getSide() {
+        return side;
+    }
+
+    /**
+     * Sets the side
+     * @param side - the side to set
+     */
+    public void setSide(Side side) {
+        Object oldValue = this.side;
+        this.side = side;
+        firePropertyChange("side", oldValue, side);
+    }
     public Location getLocation() {
         return location;
     }
@@ -121,12 +173,11 @@ public abstract class AbstractLocatable<T extends AbstractLocatable<T>> extends 
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-//        Logger.trace(String.format("PropertyChangeEvent handled by AbstractLocatable @%08x = %s", this.hashCode(), evt));
         if (evt.getSource() != AbstractLocatable.this || !evt.getPropertyName().equals("dirty")) {
             dirty = true;
             if (AbstractLocatable.this != definedBy && evt.getSource() == definedBy) {
                 try {
-                    Logger.trace(String.format("Attempting to set %s %s @%08x property %s = %s", 
+                    Logger.trace(String.format("Setting %s %s @%08x property %s = %s", 
                             this.getClass().getSimpleName(), this.getId(), this.hashCode(), 
                             evt.getPropertyName(), evt.getNewValue()));
                     BeanUtils.setProperty(this, evt.getPropertyName(), evt.getNewValue());

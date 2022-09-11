@@ -24,21 +24,21 @@ import java.util.List;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
-import org.openpnp.model.Board.Side;
-import org.openpnp.model.Placement.ErrorHandling;
-import org.openpnp.model.Placement.Type;
-import org.openpnp.util.Utils2D;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.PlacementsHolder;
-import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
+import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Part;
 import org.openpnp.model.Placement;
+import org.openpnp.model.Placement.ErrorHandling;
+import org.openpnp.model.Placement.Type;
+import org.openpnp.model.PlacementsHolder;
+import org.openpnp.util.Utils2D;
 
 @SuppressWarnings("serial")
-public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableModel {
-    private PlacementsHolder fiducialLocatable = null;
+public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableModel {
+    private PlacementsHolder<?> fiducialLocatable = null;
 
     private String[] columnNames =
             new String[] {"Enabled", "ID", "Part", "Side", "X", "Y", "Rot.", "Type", "Error Handling", "Comments"};
@@ -50,7 +50,7 @@ public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableMo
 
     private boolean localReferenceFrame = true;
 
-    private PlacementsHolderLocation parent = null;
+    private PanelLocation parent = null;
 
     private List<Placement> placements = null;
     
@@ -64,7 +64,7 @@ public class FiducialLocatablePlacementsTableModel extends AbstractObjectTableMo
         fireTableDataChanged();
     }
     
-    public void setParentLocation(PlacementsHolderLocation parent) {
+    public void setParentLocation(PanelLocation parent) {
         this.parent = parent;
         fireTableDataChanged();
     }

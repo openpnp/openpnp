@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.util.IdentifiableList;
 import org.openpnp.util.Pair;
 import org.openpnp.util.Utils2D;
@@ -148,10 +148,6 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         this.version = LATEST_VERSION;
     }
 
-    public List<String> getPseudoPlacementIds() {
-        return pseudoPlacementIds;
-    }
-
     @Override
     public void dispose() {
         for (PlacementsHolderLocation<?> child : getChildren()) {
@@ -160,6 +156,10 @@ public class Panel extends PlacementsHolder<Panel> implements PropertyChangeList
         super.dispose();
     }
     
+    public List<String> getPseudoPlacementIds() {
+        return pseudoPlacementIds;
+    }
+
     public void setPseudoPlacementIds(ArrayList<String> pseudoPlacementIds) {
         Object oldValue = new ArrayList<>(this.pseudoPlacementIds);
         this.pseudoPlacementIds = pseudoPlacementIds;

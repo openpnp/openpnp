@@ -24,19 +24,21 @@ import java.util.Locale;
 import javax.swing.table.AbstractTableModel;
 
 import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Job;
 import org.openpnp.model.Length;
 import org.openpnp.model.Location;
 
+@SuppressWarnings("serial")
 public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
 
     private String[] columnNames = new String[] {"Board", "Width", "Length", "Side", "X", "Y", "Z",
             "Rot.", "Enabled?", "Check Fids?"};
 
+    @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
             LengthCellValue.class, String.class, Boolean.class, Boolean.class};
@@ -83,11 +85,6 @@ public class BoardLocationsTableModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-//        if (job.isUsingPanel()) {
-//            if (rowIndex >= 1) {
-//                return false;
-//            }
-//        }
         return (columnIndex != 0);
     }
 

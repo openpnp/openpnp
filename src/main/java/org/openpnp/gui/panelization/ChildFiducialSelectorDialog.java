@@ -20,6 +20,7 @@
 package org.openpnp.gui.panelization;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -29,39 +30,38 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import org.openpnp.gui.MultisortTableHeaderCellRenderer;
-import org.openpnp.gui.components.AutoSelectTextTable;
-import org.openpnp.gui.tablemodel.FiducialLocatablePlacementsTableModel;
-import org.openpnp.model.PlacementsHolderLocation;
-import org.openpnp.model.LengthUnit;
-import org.openpnp.model.Location;
-import org.openpnp.model.PanelLocation;
-
-import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
+import javax.swing.border.BevelBorder;
 import javax.swing.table.TableColumnModel;
-import org.openpnp.model.Part;
-import org.openpnp.model.Placement;
-import org.openpnp.model.Point;
-import org.openpnp.model.Board.Side;
+
+import org.openpnp.gui.MultisortTableHeaderCellRenderer;
+import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
+import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
+import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.LengthUnit;
+import org.openpnp.model.Location;
+import org.openpnp.model.PanelLocation;
+import org.openpnp.model.Part;
+import org.openpnp.model.Placement;
+import org.openpnp.model.PlacementsHolderLocation;
+import org.openpnp.model.Point;
 import org.openpnp.util.Collect;
 import org.openpnp.util.QuickHull;
 import org.openpnp.util.Utils2D;
-import javax.swing.border.BevelBorder;
-import java.awt.Component;
-import javax.swing.Box;
-import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 public class ChildFiducialSelectorDialog extends JDialog {
@@ -70,7 +70,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
         
     private PlacementTypes placementTypes = PlacementTypes.FiducialsOnly;
     private JTable childFiducialsTable;
-    private FiducialLocatablePlacementsTableModel tableModel;
+    private PlacementsHolderPlacementsTableModel tableModel;
     private PanelLocation panelLocation;
     private JRadioButton placementsButton;
     private JRadioButton fiducialsButton;
@@ -203,7 +203,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 radioPanel.add(btnSelectBest);
             }
             
-            tableModel = new FiducialLocatablePlacementsTableModel() {
+            tableModel = new PlacementsHolderPlacementsTableModel() {
                 @Override
                 public boolean isCellEditable(int rowIndex, int columnIndex) {
                     return columnIndex == 0; //Only the enabled setting is editable

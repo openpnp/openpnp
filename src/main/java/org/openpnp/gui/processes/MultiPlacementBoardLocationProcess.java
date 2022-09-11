@@ -28,24 +28,20 @@ import java.util.List;
 
 import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.MainFrame;
-import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.model.BoardLocation;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Configuration;
-import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.Placement;
-import org.openpnp.model.AbstractModelObject;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.spi.Camera;
 import org.openpnp.util.MovableUtils;
 import org.openpnp.util.TravellingSalesman;
 import org.openpnp.util.UiUtils;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
-import org.simpleframework.xml.Attribute;
 
 /**
  * Guides the user through the multi-placement board location operation using step by step instructions.
@@ -74,7 +70,7 @@ public class MultiPlacementBoardLocationProcess {
     private List<Location> measuredLocations;
     private int nPlacements;
     private int idxPlacement = 0;
-    private PlacementsHolderLocation boardLocation;
+    private PlacementsHolderLocation<?> boardLocation;
     private Side boardSide;
     private Location savedBoardLocation;
     private AffineTransform savedPlacementTransform;

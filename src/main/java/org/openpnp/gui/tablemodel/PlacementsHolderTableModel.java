@@ -31,22 +31,24 @@ import org.openpnp.model.Location;
 import org.openpnp.model.Panel;
 
 @SuppressWarnings("serial")
-public class FiducialLocatableTableModel extends AbstractObjectTableModel {
+public class PlacementsHolderTableModel extends AbstractObjectTableModel {
     private final Configuration configuration;
 
-    private String[] columnNames = new String[] {"FiducialLocatable Name", "Width", "Length"};
+    private String[] columnNames = new String[] {"PlacementsHolder Name", "Width", "Length"};
 
     @SuppressWarnings("rawtypes")
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class};
 
-    private Supplier<List<? extends PlacementsHolder>> fiducialLocatables;
+    private Supplier<List<? extends PlacementsHolder<?>>> placementsHolders;
 
-    private Class<? extends PlacementsHolder> classType;
+    private Class<? extends PlacementsHolder<?>> classType;
 
-    public FiducialLocatableTableModel(Configuration configuration, Supplier<List<? extends PlacementsHolder>> fiducialLocatables, Class<? extends PlacementsHolder> classType) {
+    public PlacementsHolderTableModel(Configuration configuration, 
+            Supplier<List<? extends PlacementsHolder<?>>> placementsHolders, 
+            Class<? extends PlacementsHolder<?>> classType) {
         this.configuration = configuration;
-        this.fiducialLocatables = fiducialLocatables;
+        this.placementsHolders = placementsHolders;
         this.classType = classType;
     }
 
@@ -68,10 +70,10 @@ public class FiducialLocatableTableModel extends AbstractObjectTableModel {
     }
 
     public int getRowCount() {
-        if (fiducialLocatables.get() == null) {
+        if (placementsHolders.get() == null) {
             return 0;
         }
-        return fiducialLocatables.get().size();
+        return placementsHolders.get().size();
     }
 
     @Override
@@ -90,24 +92,24 @@ public class FiducialLocatableTableModel extends AbstractObjectTableModel {
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
-            PlacementsHolder fiducialLocatable = fiducialLocatables.get().get(rowIndex);
+            PlacementsHolder<?> placementsHolder = placementsHolders.get().get(rowIndex);
             if (columnIndex == 0) {
-                fiducialLocatable.setName((String) aValue);
+                placementsHolder.setName((String) aValue);
             }
             else if (columnIndex == 1) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location dims = fiducialLocatable.getDimensions();
+                Location dims = placementsHolder.getDimensions();
                 dims = Length.setLocationField(configuration, dims, length, Length.Field.X);
-                fiducialLocatable.setDimensions(dims);
+                placementsHolder.setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 2) {
                 LengthCellValue value = (LengthCellValue) aValue;
                 Length length = value.getLength();
-                Location dims = fiducialLocatable.getDimensions();
+                Location dims = placementsHolder.getDimensions();
                 dims = Length.setLocationField(configuration, dims, length, Length.Field.Y);
-                fiducialLocatable.setDimensions(dims);
+                placementsHolder.setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
         }
@@ -117,11 +119,11 @@ public class FiducialLocatableTableModel extends AbstractObjectTableModel {
     }
 
     public Object getValueAt(int row, int col) {
-        PlacementsHolder fiducialLocatable = fiducialLocatables.get().get(row);
-        Location dim = fiducialLocatable.getDimensions();
+        PlacementsHolder<?> placementsHolder = placementsHolders.get().get(row);
+        Location dim = placementsHolder.getDimensions();
         switch (col) {
             case 0:
-                return fiducialLocatable.getName();
+                return placementsHolder.getName();
             case 1:
                 return new LengthCellValue(dim.getLengthX());
             case 2:
@@ -133,6 +135,6 @@ public class FiducialLocatableTableModel extends AbstractObjectTableModel {
 
     @Override
     public Object getRowObjectAt(int index) {
-        return fiducialLocatables.get().get(index);
+        return placementsHolders.get().get(index);
     }
 }

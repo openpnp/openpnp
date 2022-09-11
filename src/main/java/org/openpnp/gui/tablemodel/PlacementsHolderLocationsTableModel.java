@@ -24,7 +24,7 @@ import java.util.Locale;
 
 import javax.swing.event.TableModelEvent;
 import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Job;
@@ -124,6 +124,10 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
         }
         if ((getPlacementsHolderLocation(rowIndex).getParent() == rootPanelLocation) ||
                 (columnIndex == 9) || (columnIndex == 10)) {
+            if (((columnIndex == 2) || (columnIndex == 3)) &&
+                    (job.instanceCount(getPlacementsHolderLocation(rowIndex).getPlacementsHolder()) > 1)) {
+                return false;
+            }
             return true;
         }
         return false;

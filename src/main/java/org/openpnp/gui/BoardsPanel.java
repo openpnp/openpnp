@@ -61,7 +61,7 @@ import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
-import org.openpnp.gui.tablemodel.FiducialLocatableTableModel;
+import org.openpnp.gui.tablemodel.PlacementsHolderTableModel;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
@@ -79,7 +79,7 @@ public class BoardsPanel extends JPanel {
     private static final String PREF_DIVIDER_POSITION = "BoardsPanel.dividerPosition"; //$NON-NLS-1$
     private static final int PREF_DIVIDER_POSITION_DEF = -1;
 
-    private FiducialLocatableTableModel boardsTableModel;
+    private PlacementsHolderTableModel boardsTableModel;
     private JTable boardsTable;
     private JSplitPane splitPane;
 
@@ -102,7 +102,7 @@ public class BoardsPanel extends JPanel {
         multiSelectionActionGroup = new ActionGroup(removeBoardAction);
         multiSelectionActionGroup.setEnabled(false);
         
-        boardsTableModel = new FiducialLocatableTableModel(configuration, 
+        boardsTableModel = new PlacementsHolderTableModel(configuration, 
                 () -> configuration.getBoards(), Board.class);
         configuration.addPropertyChangeListener("boards", new PropertyChangeListener() {
 

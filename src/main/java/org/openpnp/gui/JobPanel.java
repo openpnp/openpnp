@@ -83,7 +83,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardPad;
@@ -433,7 +433,7 @@ public class JobPanel extends JPanel {
         JPopupMenu popupMenu = new JPopupMenu();
 
         JMenu setSideMenu = new JMenu(setSideAction);
-        for (Board.Side side : Board.Side.values()) {
+        for (Side side : Side.values()) {
             setSideMenu.add(new SetSideAction(side));
         }
         popupMenu.add(setSideMenu);
@@ -520,7 +520,7 @@ public class JobPanel extends JPanel {
         for (PlacementsHolderLocation<?> child : this.job.getBoardAndPanelLocations()) {
             child.addPropertyChangeListener(this.job);
         }
-       jobTableModel.setJob(job);
+        jobTableModel.setJob(job);
         job.addPropertyChangeListener("dirty", titlePropertyChangeListener); //$NON-NLS-1$
         job.addPropertyChangeListener("file", titlePropertyChangeListener); //$NON-NLS-1$
         updateTitle();
@@ -1477,7 +1477,7 @@ public class JobPanel extends JPanel {
     public final Action setEnabledAction = new AbstractAction() {
         {
             putValue(NAME, "Set Enabled");
-            putValue(SHORT_DESCRIPTION, "Set board(s) enabled to...");
+            putValue(SHORT_DESCRIPTION, "Set board(s)/panel(s) enabled to...");
         }
 
         @Override
@@ -1491,7 +1491,7 @@ public class JobPanel extends JPanel {
             this.value = value;
             String name = value ? "Enabled" : "Disabled";
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, "Set board(s) enabled to " + value);
+            putValue(SHORT_DESCRIPTION, "Set board(s)/panel(s) enabled to " + value);
         }
 
         @Override
@@ -1538,7 +1538,7 @@ public class JobPanel extends JPanel {
     public final Action setSideAction = new AbstractAction() {
         {
             putValue(NAME, "Set Side");
-            putValue(SHORT_DESCRIPTION, "Set board side(s) to...");
+            putValue(SHORT_DESCRIPTION, "Set board/panel side(s) to...");
         }
 
         @Override
@@ -1546,12 +1546,12 @@ public class JobPanel extends JPanel {
     };
 
     class SetSideAction extends AbstractAction {
-        final Board.Side side;
+        final Side side;
 
-        public SetSideAction(Board.Side side) {
+        public SetSideAction(Side side) {
             this.side = side;
             putValue(NAME, side.toString());
-            putValue(SHORT_DESCRIPTION, "Set board side(s) to " + side.toString());
+            putValue(SHORT_DESCRIPTION, "Set board/panel side(s) to " + side.toString());
         }
 
         @Override

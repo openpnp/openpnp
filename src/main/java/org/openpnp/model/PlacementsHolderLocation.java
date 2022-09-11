@@ -21,9 +21,7 @@ package org.openpnp.model;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
-import java.beans.PropertyChangeEvent;
 import java.io.IOException;
-import org.openpnp.model.Board.Side;
 import org.openpnp.util.Utils2D;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.core.Commit;
@@ -35,12 +33,6 @@ import org.simpleframework.xml.core.Commit;
  */
 public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocation<T>> 
         extends AbstractLocatable<T> {
-
-    /**
-     * The side of the PlacementsHolder that faces the Top side of its parent
-     */
-    @Attribute
-    protected Side side = Side.Top;
 
     @Attribute(required = false)
     protected String fileName;
@@ -110,23 +102,6 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
     }
 
     /**
-     * @return the side of the PlacementsHolder that is facing the Top side of its parent
-     */
-    public Side getSide() {
-        return side;
-    }
-    
-    /**
-     * Sets the side of the PlacementsHolder that is facing the Top side of its parent
-     * @param side - the side that is to be facing the Top side of its parent
-     */
-    public void setSide(Side side) {
-        Object oldValue = this.side;
-        this.side = side;
-        firePropertyChange("side", oldValue, side);
-    }
-    
-    /**
      * @return the side of the PlacementsHolder that is facing the top side of its most distant
      * ancestor (which is usually the machine)
      */
@@ -165,7 +140,7 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
      * 
      * @return the PlacementsHolder associated with this PlacementsHolderLocation
      */
-    public PlacementsHolder<? extends PlacementsHolder<?>> getPlacementsHolder() {
+    public PlacementsHolder<?> getPlacementsHolder() {
         return placementsHolder;
     }
 
@@ -175,7 +150,7 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
      * PlacementsHolderLocation
      */
     public void setPlacementsHolder(PlacementsHolder<? extends PlacementsHolder<?>> placementsHolder) {
-        PlacementsHolder<? extends PlacementsHolder<?>> oldValue = this.placementsHolder;
+        PlacementsHolder<?> oldValue = this.placementsHolder;
         this.placementsHolder = placementsHolder;
         if (placementsHolder != null && placementsHolder.getFile() != null) {
             try {

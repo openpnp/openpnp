@@ -78,16 +78,6 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
     public BoardLocation(Board board) {
         this();
         setBoard(board);
-//        if (board != null && board.getFile() != null) {
-//            try {
-//                this.setBoardFile(board.getFile().getCanonicalPath());
-//            }
-//            catch (IOException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            }
-//        }
-        
     }
 
     @Commit
@@ -169,7 +159,8 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
 
     @Override
     public String toString() {
-        return String.format("board (%s), location (%s), side (%s)", getFileName(), getLocation(), side);
+        return String.format("BoardLocation (%s), location (%s), side (%s)", getFileName(), 
+                getLocation(), side);
     }
     
     /**
@@ -182,7 +173,11 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
         if (parentPanelLocation != null) {
             parentHashCode = parentPanelLocation.hashCode();
         }
-        Logger.trace(String.format("%s (%s) BoardLocation:@%08x defined by @%08x child of @%08x, %s, location=%s globalLocation=%s, side=%s (%s)", leader,  this.id, this.hashCode(), this.getDefinedBy().hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getBoard() == null ? "Null" : getBoard().toString()));
+        Logger.trace(String.format("%s (%s) BoardLocation:@%08x defined by @%08x child of @%08x, "
+                + "%s, location=%s globalLocation=%s, side=%s (%s)", leader,  this.id, 
+                this.hashCode(), this.getDefinedBy().hashCode(), parentHashCode, fileName, 
+                getLocation(), getGlobalLocation(), side, 
+                getBoard() == null ? "Null" : getBoard().toString()));
     }
 
 }

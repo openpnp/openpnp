@@ -50,7 +50,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;

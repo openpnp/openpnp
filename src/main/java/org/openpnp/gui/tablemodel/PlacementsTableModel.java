@@ -23,7 +23,7 @@ import org.openpnp.gui.JobPlacementsPanel;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.PlacementsHolder;
 import org.openpnp.model.PlacementsHolderLocation;
@@ -57,8 +57,9 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     }
 
     private PlacementsHolder<?> fiducialLocatable;
-    private PlacementsHolderLocation fiducialLocatableLocation;
+    private PlacementsHolderLocation<?> fiducialLocatableLocation;
     private JobPlacementsPanel jobPlacementsPanel;
+    private boolean editDefinition;
 
     public PlacementsTableModel(Configuration configuration) {
         this.configuration = configuration;
@@ -68,8 +69,10 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     	this.jobPlacementsPanel = jobPlacementsPanel;
     }
 
-    public void setFiducialLocatableLocation(PlacementsHolderLocation fiducialLocatableLocation) {
+    public void setFiducialLocatableLocation(PlacementsHolderLocation<?> fiducialLocatableLocation,
+            boolean editDefinition) {
         this.fiducialLocatableLocation = fiducialLocatableLocation;
+        this.editDefinition = editDefinition;
         if (fiducialLocatableLocation == null) {
             this.fiducialLocatable = null;
         }
@@ -116,21 +119,26 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
             Placement placement = fiducialLocatable.getPlacements().get(rowIndex);
-            Placement definedBy = (Placement) placement.getDefinedBy();
-            if (definedBy == null) {
-                definedBy = placement;
+            Placement definition = (Placement) placement.getDefinedBy();
+            if (definition == null) {
+                definition = placement;
             }
             if (columnIndex == 0) {
-                placement.setEnabled((Boolean) aValue);
-                fireTableCellUpdated(rowIndex, 9);
+                if (editDefinition) {
+                    definition.setEnabled((Boolean) aValue);
+                }
+                else {
+                    placement.setEnabled((Boolean) aValue);
+                }
+                fireTableCellUpdated(rowIndex, 0);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 2) {
-                definedBy.setPart((Part) aValue);
-                fireTableCellUpdated(rowIndex, 9);
+                definition.setPart((Part) aValue);
+                fireTableCellUpdated(rowIndex, 2);
             }
             else if (columnIndex == 3) {
-                definedBy.setSide((Side) aValue);
+                definition.setSide((Side) aValue);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 4) {
@@ -140,7 +148,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 Location location = placement.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.X,
                         true);
-                definedBy.setLocation(location);
+                definition.setLocation(location);
             }
             else if (columnIndex == 5) {
                 LengthCellValue value = (LengthCellValue) aValue;
@@ -149,15 +157,15 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 Location location = placement.getLocation();
                 location = Length.setLocationField(configuration, location, length, Length.Field.Y,
                         true);
-                definedBy.setLocation(location);
+                definition.setLocation(location);
             }
             else if (columnIndex == 6) {
-                definedBy.setLocation(placement.getLocation().derive(null, null, null,
+                definition.setLocation(placement.getLocation().derive(null, null, null,
                         Double.parseDouble(aValue.toString())));
             }
             else if (columnIndex == 7) {
-                definedBy.setType((Type) aValue);
-                fireTableCellUpdated(rowIndex, 9);
+                definition.setType((Type) aValue);
+                fireTableCellUpdated(rowIndex, 7);
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 8) {
@@ -166,10 +174,16 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
                 jobPlacementsPanel.updateActivePlacements();
             }
             else if (columnIndex == 10) {
-                definedBy.setErrorHandling((ErrorHandling) aValue);
+                if (editDefinition) {
+                    definition.setErrorHandling((ErrorHandling) aValue);
+                }
+                else {
+                    placement.setErrorHandling((ErrorHandling) aValue);
+                }
+                fireTableCellUpdated(rowIndex, 10);
              }
             else if (columnIndex == 11) {
-                definedBy.setComments((String) aValue);
+                definition.setComments((String) aValue);
             }
         }
         catch (Exception e) {

@@ -1,7 +1,7 @@
 package org.openpnp.events;
 
-import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Placement;
+import org.openpnp.model.PlacementsHolderLocation;
 
 public class PlacementSelectedEvent {
     final public Placement placement;

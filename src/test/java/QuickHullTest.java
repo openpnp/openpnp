@@ -1,11 +1,9 @@
-import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -15,8 +13,6 @@ import org.openpnp.util.Collect;
 import org.openpnp.util.QuickHull;
 import org.openpnp.util.Utils2D;
 import org.pmw.tinylog.Logger;
-
-import com.google.common.collect.Sets;
 
 public class QuickHullTest {
     public static Placement randomPlacement() {

@@ -76,7 +76,7 @@ import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
-import org.openpnp.model.Board.Side;
+import org.openpnp.model.AbstractLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.PlacementsHolderLocation;
@@ -277,7 +277,7 @@ public class JobPlacementsPanel extends JPanel {
         popupMenu.add(setTypeMenu);
 
         JMenu setSideMenu = new JMenu(setSideAction);
-        for (Board.Side side : Board.Side.values()) {
+        for (Side side : Side.values()) {
             setSideMenu.add(new SetSideAction(side));
         }
         popupMenu.add(setSideMenu);
@@ -472,17 +472,17 @@ public class JobPlacementsPanel extends JPanel {
     public void setBoardOrPanelLocation(PlacementsHolderLocation<?> boardOrPanelLocation) {
         this.boardOrPanelLocation = boardOrPanelLocation;
         if (boardOrPanelLocation == null) {
-            tableModel.setFiducialLocatableLocation(null);
+            tableModel.setFiducialLocatableLocation(null, false);
             topLevelSingleInstanceActionGroup.setEnabled(false);
         }
         else {
-            tableModel.setFiducialLocatableLocation(boardOrPanelLocation);
             topLevel = boardOrPanelLocation != null && 
                     boardOrPanelLocation.getParent() == jobPanel.getJob().getRootPanelLocation();
             Logger.trace("topLevel = " + topLevel);
             singleInstance = boardOrPanelLocation != null && 
                     1 == jobPanel.getJob().instanceCount(boardOrPanelLocation.getPlacementsHolder());
             Logger.trace("singleInstance = " + singleInstance);
+            tableModel.setFiducialLocatableLocation(boardOrPanelLocation, topLevel && singleInstance);
             topLevelSingleInstanceActionGroup.setEnabled(topLevel && singleInstance);
 
             updateRowFilter();
@@ -749,7 +749,7 @@ public class JobPlacementsPanel extends JPanel {
     public final Action setSideAction = new AbstractAction() {
         {
             putValue(NAME, "Set Side");
-            putValue(SHORT_DESCRIPTION, "Set placement side(s) to...");
+            putValue(SHORT_DESCRIPTION, "Set placement(s) side to...");
         }
 
         @Override
@@ -757,12 +757,12 @@ public class JobPlacementsPanel extends JPanel {
     };
 
     class SetSideAction extends AbstractAction {
-        final Board.Side side;
+        final Side side;
 
-        public SetSideAction(Board.Side side) {
+        public SetSideAction(Side side) {
             this.side = side;
             putValue(NAME, side.toString());
-            putValue(SHORT_DESCRIPTION, "Set placement side(s) to " + side.toString());
+            putValue(SHORT_DESCRIPTION, "Set placement(s) side to " + side.toString());
         }
 
         @Override
@@ -778,7 +778,7 @@ public class JobPlacementsPanel extends JPanel {
     public final Action setErrorHandlingAction = new AbstractAction() {
         {
             putValue(NAME, "Set Error Handling");
-            putValue(SHORT_DESCRIPTION, "Set placement error handling(s) to...");
+            putValue(SHORT_DESCRIPTION, "Set placement(s) error handling to...");
         }
 
         @Override
@@ -791,7 +791,7 @@ public class JobPlacementsPanel extends JPanel {
         public SetErrorHandlingAction(Placement.ErrorHandling errorHandling) {
             this.errorHandling = errorHandling;
             putValue(NAME, errorHandling.toString());
-            putValue(SHORT_DESCRIPTION, "Set placement error handling(s) to " + errorHandling.toString());
+            putValue(SHORT_DESCRIPTION, "Set placement(s) error handling to " + errorHandling.toString());
         }
 
         @Override
@@ -837,7 +837,7 @@ public class JobPlacementsPanel extends JPanel {
     public final Action setEnabledAction = new AbstractAction() {
         {
             putValue(NAME, "Set Enabled");
-            putValue(SHORT_DESCRIPTION, "Set placement enabled to...");
+            putValue(SHORT_DESCRIPTION, "Set placement(s) enabled to...");
         }
 
         @Override
@@ -852,7 +852,7 @@ public class JobPlacementsPanel extends JPanel {
             this.enabled = enabled;
             String name = enabled ? "Enabled" : "Disabled";
             putValue(NAME, name);
-            putValue(SHORT_DESCRIPTION, "Set placement enabled to " + name);
+            putValue(SHORT_DESCRIPTION, "Set placement(s) enabled to " + name);
         }
 
         @Override

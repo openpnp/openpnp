@@ -37,26 +37,6 @@ import org.simpleframework.xml.core.Commit;
  */
 @Root(name = "openpnp-board")
 public class Board extends PlacementsHolder<Board> implements PropertyChangeListener {
-    public enum Side {
-        Bottom, Top;
-        
-        public Side flip(boolean value) {
-            if (value) {
-                return flip();
-            }
-            else {
-                return this;
-            }
-        }
-        public Side flip() {
-            if (this.equals(Side.Top)) {
-                return Side.Bottom;
-            }
-            else {
-                return Side.Top;
-            }
-        }
-    }
 
     @Version(revision=1.1)
     private double version;    
@@ -83,8 +63,7 @@ public class Board extends PlacementsHolder<Board> implements PropertyChangeList
     
     public Board(Board board) {
         super(board);
-        this.fiducials = new ArrayList<>(board.fiducials);
-        this.solderPastePads = new ArrayList<>(board.solderPastePads);
+        this.solderPastePads = new ArrayList<>(board.solderPastePads); //needs to be a deep copy
     }
 
     @Override
@@ -140,10 +119,4 @@ public class Board extends PlacementsHolder<Board> implements PropertyChangeList
     public String toString() {
         return String.format("Board @%08x defined by @%08x: file %s, dims: %sx%s, placements: %d", hashCode(), definedBy.hashCode(), file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
     }
-
-//    @Override
-//    public void propertyChange(PropertyChangeEvent evt) {
-////        Logger.trace(String.format("PropertyChangeEvent handled by Board @%08x = %s", this.hashCode(), evt));
-//        super.propertyChange(evt);
-//    }
 }
