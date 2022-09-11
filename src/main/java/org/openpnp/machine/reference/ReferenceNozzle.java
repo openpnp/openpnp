@@ -91,6 +91,9 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     private String blowOffActuatorName;
 
     @Attribute(required = false)
+    private boolean blowOffClosingValve = true;
+
+    @Attribute(required = false)
     private int version; // the OpenPnP target version/migration status (version x 100)
 
     @Deprecated
@@ -390,12 +393,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
         // if the method needs it, store one measurement up front
         storeBeforePlaceVacuumLevel();
 
-        if (getPart() != null) {
-            double placeBlowLevel = getPart().getPackage().getPlaceBlowOffLevel();
-            if (Double.compare(placeBlowLevel, Double.valueOf(0.0)) != 0) {
-                actuateBlowValve(placeBlowLevel);
-            } 
-            else {
+        double placeBlowLevel = nozzleTip.getPlaceBlowOffLevel();
+        if (getPart() != null 
+                && getPart().getPackage().getPlaceBlowOffLevel() != 0) {
+            placeBlowLevel = getPart().getPackage().getPlaceBlowOffLevel();
+        }
+        if (placeBlowLevel != 0) {
+            actuateBlowValve(placeBlowLevel);
+            if (!blowOffClosingValve) {
                 actuateVacuumValve(false);
             }
         }
@@ -976,6 +981,14 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
      */
     public void setBlowOffActuator(Actuator actuator) {
         blowOffActuator = actuator;
+    }
+
+    public boolean isBlowOffClosingValve() {
+        return blowOffClosingValve;
+    }
+
+    public void setBlowOffClosingValve(boolean blowOffClosingValve) {
+        this.blowOffClosingValve = blowOffClosingValve;
     }
 
     protected void actuateVacuumValve(boolean on) throws Exception {

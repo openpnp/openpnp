@@ -1101,10 +1101,14 @@ public class CalibrationSolutions implements Solutions.Subject {
             throws Exception {
         try {
             // Create a pseudo part, package and feeder to enable pick and place.
-            Part testPart = new Part("TEST-OBJECT");
-            testPart.setHeight(new Length(0.01, LengthUnit.Millimeters));
-            Package packag = new Package("TEST-OBJECT-PACKAGE");
-            testPart.setPackage(packag);
+            Part testPart = Configuration.get().getPart("TEST-OBJECT");
+            if (testPart == null) {
+                // No predefined part, create one temporarily 
+                testPart = new Part("TEST-OBJECT");
+                testPart.setHeight(new Length(0.01, LengthUnit.Millimeters));
+                Package packag = new Package("TEST-OBJECT-PACKAGE");
+                testPart.setPackage(packag);
+            }
             ReferenceTubeFeeder feeder = new ReferenceTubeFeeder();
             feeder.setPart(testPart);
             // Get the initial precise test object location. It must lay on the primary fiducial. 

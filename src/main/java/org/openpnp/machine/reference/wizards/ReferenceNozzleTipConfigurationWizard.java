@@ -19,6 +19,7 @@
 
 package org.openpnp.machine.reference.wizards;
 
+import java.awt.Color;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,15 +27,18 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
+import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceNozzleTip;
+import org.openpnp.model.Configuration;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.ColumnSpec;
@@ -44,10 +48,10 @@ import com.jgoodies.forms.layout.RowSpec;
 
 public class ReferenceNozzleTipConfigurationWizard extends AbstractConfigurationWizard {
     private final ReferenceNozzleTip nozzleTip;
-    private JPanel panelDwellTime;
+    private JPanel panelPickAndPlace;
     private JLabel lblPickDwellTime;
     private JLabel lblPlaceDwellTime;
-    private JLabel lblDwellTime;
+    private JTextArea lblDwellTime;
     private JTextField pickDwellTf;
     private JTextField placeDwellTf;
 
@@ -69,6 +73,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     private JTextField minPartDiameter;
     private JLabel lblMaxPickTolerance;
     private JTextField maxPickTolerance;
+    private JLabel lblPlaceBlowoffLevel;
+    private JTextField placeBlowOffLevel;
 
 
     public ReferenceNozzleTipConfigurationWizard(ReferenceNozzleTip nozzleTip) {
@@ -93,17 +99,19 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         panel.add(nameTf, "4, 2, fill, default");
         nameTf.setColumns(10);
         
-        panelDwellTime = new JPanel();
-        panelDwellTime.setBorder(new TitledBorder(null, "Dwell Times", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        contentPanel.add(panelDwellTime);
-        panelDwellTime.setLayout(new FormLayout(new ColumnSpec[] {
+        panelPickAndPlace = new JPanel();
+        panelPickAndPlace.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Pick & Place", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        contentPanel.add(panelPickAndPlace);
+        panelPickAndPlace.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
                 FormSpecs.RELATED_GAP_COLSPEC,
-                ColumnSpec.decode("default:grow"),},
+                ColumnSpec.decode("min(100dlu;pref):grow"),},
             new RowSpec[] {
+                FormSpecs.RELATED_GAP_ROWSPEC,
+                FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,
                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -112,22 +120,36 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.DEFAULT_ROWSPEC,}));
           
         lblPickDwellTime = new JLabel("Pick Dwell Time (ms)");
-        panelDwellTime.add(lblPickDwellTime, "2, 2, right, default");
+        panelPickAndPlace.add(lblPickDwellTime, "2, 2, right, default");
         
         pickDwellTf = new JTextField();
-        panelDwellTime.add(pickDwellTf, "4, 2");
+        panelPickAndPlace.add(pickDwellTf, "4, 2");
         pickDwellTf.setColumns(10);
+        lblDwellTime = new JTextArea ("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
+        lblDwellTime.setBackground(UIManager.getColor("Label.background"));
+        lblDwellTime.setForeground(UIManager.getColor("Label.foreground"));
+        lblDwellTime.setFont(UIManager.getFont("Label.font"));
+        lblDwellTime.setWrapStyleWord(true);
+        lblDwellTime.setLineWrap(true);
+        lblDwellTime.setEditable(false);
+        panelPickAndPlace.add(lblDwellTime, "6, 2, 1, 3, fill, center");
         
         lblPlaceDwellTime = new JLabel("Place Dwell Time (ms)");
-        panelDwellTime.add(lblPlaceDwellTime, "2, 4, right, default");
+        panelPickAndPlace.add(lblPlaceDwellTime, "2, 4, right, default");
         
         placeDwellTf = new JTextField();
-        panelDwellTime.add(placeDwellTf, "4, 4");
+        panelPickAndPlace.add(placeDwellTf, "4, 4");
         placeDwellTf.setColumns(10);
         
         CellConstraints cc = new CellConstraints();
-        lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
-        panelDwellTime.add(lblDwellTime, cc.xywh(2, 6, 5, 1));
+        
+        lblPlaceBlowoffLevel = new JLabel("Place Blow-Off Level");
+        lblPlaceBlowoffLevel.setToolTipText("Default placement blow-off level, if none is given on the Package. ");
+        panelPickAndPlace.add(lblPlaceBlowoffLevel, "2, 8, right, default");
+        
+        placeBlowOffLevel = new JTextField();
+        panelPickAndPlace.add(placeBlowOffLevel, "4, 8, fill, default");
+        placeBlowOffLevel.setColumns(10);
 
         panelPushAndDrag = new JPanel();
         panelPushAndDrag.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Push and Drag Usage", TitledBorder.LEADING, TitledBorder.TOP, null));
@@ -238,11 +260,13 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
     public void createBindings() {
         IntegerConverter intConverter = new IntegerConverter();
         LengthConverter lengthConverter = new LengthConverter();
-
+        DoubleConverter doubleConverter = new DoubleConverter(Configuration.get().getLengthDisplayFormat());
+        
         addWrappedBinding(nozzleTip, "name", nameTf, "text");
 
         addWrappedBinding(nozzleTip, "pickDwellMilliseconds", pickDwellTf, "text", intConverter);
         addWrappedBinding(nozzleTip, "placeDwellMilliseconds", placeDwellTf, "text", intConverter);
+        addWrappedBinding(nozzleTip, "placeBlowOffLevel", placeBlowOffLevel, "text", doubleConverter);
 
         addWrappedBinding(nozzleTip, "diameterLow", textFieldLowDiameter, "text", lengthConverter);
 

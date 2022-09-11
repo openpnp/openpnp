@@ -54,6 +54,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     @Attribute(required = false)
     private int placeDwellMilliseconds;
 
+    @Attribute(required = false)
+    private double placeBlowOffLevel;
+
     @Element(required = false)
     private Location changerStartLocation = new Location(LengthUnit.Millimeters);
 
@@ -393,6 +396,14 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
 
     public void setPlaceDwellMilliseconds(int placeDwellMilliseconds) {
         this.placeDwellMilliseconds = placeDwellMilliseconds;
+    }
+
+    public double getPlaceBlowOffLevel() {
+        return placeBlowOffLevel;
+    }
+
+    public void setPlaceBlowOffLevel(double placeBlowOffLevel) {
+        this.placeBlowOffLevel = placeBlowOffLevel;
     }
 
     public Location getChangerStartLocation() {
