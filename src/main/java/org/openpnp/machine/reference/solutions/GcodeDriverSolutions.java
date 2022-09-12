@@ -813,32 +813,33 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                     }
                     break;
                 case HOME_COMMAND:
-                    if (command == null) {
-                        if (dialect == FirmwareType.SmoothiewareGrblSyntax || dialect == FirmwareType.Grbl) {
-                            commandBuilt = "$H ; Home all axes";
-                        }
-                        else if (dialect == FirmwareType.TinyG) {
-                            commandBuilt = "G28.2 ";
-                            for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                if ("XYZ".indexOf(variable) >= 0) {
-                                    // In TinyG you need to indicate the axis and only 0 is possible as coordinate.
-                                    commandBuilt += variable+"0 ";  
-                                }
+                    if (dialect == FirmwareType.SmoothiewareGrblSyntax || dialect == FirmwareType.Grbl) {
+                        commandBuilt = "$H ; Home all axes";
+                    }
+                    else if (dialect == FirmwareType.TinyG) {
+                        commandBuilt = "G28.2 ";
+                        for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                            if ("XYZ".indexOf(variable) >= 0) {
+                                // In TinyG you need to indicate the axis and only 0 is possible as coordinate.
+                                commandBuilt += variable+"0 ";  
                             }
-                            commandBuilt += "; Home all axes\n";
-                            commandBuilt += "G28.3";
-                            for (String variable : gcodeDriver.getAxisVariables(machine)) {
-                                commandBuilt += " {"+variable+":"+variable+"%.4f}";
-                            }
-                            commandBuilt += " ; Set all axes to home coordinates\n";
-                            commandBuilt += "G92.1 ; Reset all offsets\n";
                         }
-                        else {
-                            // Reset the acceleration (it is not automatically reset on some controllers). 
-                            commandBuilt = "{Acceleration:M204 S%.2f} ; Initialize acceleration\n";
-                            // Home all axes.
-                            commandBuilt += "G28 ; Home all axes";
+                        commandBuilt += "; Home all axes\n";
+                        commandBuilt += "G28.3";
+                        for (String variable : gcodeDriver.getAxisVariables(machine)) {
+                            commandBuilt += " {"+variable+":"+variable+"%.4f}";
                         }
+                        commandBuilt += " ; Set all axes to home coordinates\n";
+                        commandBuilt += "G92.1 ; Reset all offsets\n";
+                    }
+                    else {
+                        // Reset the acceleration (it is not automatically reset on some controllers). 
+                        commandBuilt = "{Acceleration:M204 S%.2f} ; Initialize acceleration\n";
+                        // Home all axes.
+                        commandBuilt += "G28 ; Home all axes";
+                    }
+                    if (command != null && command.contains(commandBuilt)) {
+                        commandBuilt = null;
                     }
                     break;
                 case MOVE_TO_COMMAND:
