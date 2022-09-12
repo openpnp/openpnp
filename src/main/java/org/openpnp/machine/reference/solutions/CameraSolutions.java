@@ -333,14 +333,14 @@ public class CameraSolutions implements Solutions.Subject  {
                                             + "by Issues & Solutions. Press <strong>Find Issues & Solutions</strong> to check for the latest status. "
                                             + "Proceed only when you are sure the properties are OK, white balance must be computed as the last step.</p><br/>")
                                     + "<p>Color-keyed computer vision needs stable, and accurate colors. Neither the unstable Auto white balance, "
-                                    + "nor the device manual white balance is suitable (it us typically merely a red-blue-shift)."
+                                    + "nor the device manual white balance is suitable (typically merely a red-blue-shift)."
                                     + "Therefore OpenPnP offers its own elaborate and static white balance. You can automatically calibrate it now.</p><br/>"
                                     + "<p>Make sure a suitable white balance calibration object is visible in the camera view. "
                                     + "Brushed metal and paper are recommended. The camera should see all brightness levels, i.e., "
                                     + "an assortment of metal objects with holes, bevels, shadows etc. usually provides good gradients."
                                     + "Conversely, make sure there are no colored objects visible. Lighting conditions must be as in operation.<p><br/>"
-                                    + "<p>Press the blue info button (below) for more information. Alternatively, you can perform white "
-                                    + "balance on camera "+camera.getName()+"'s <strong>White Balance</strong> tab.</p><br>"
+                                    + "<p>Alternatively, you can perform white balance on camera "+camera.getName()+"'s <strong>White Balance</strong> tab.</p><br>"
+                                    + "<p>Press the blue info button (below) for more information.</p><br>"
                                     + "<p>When ready, press Accept.</p>"
                                     + "</html>";
                         }
