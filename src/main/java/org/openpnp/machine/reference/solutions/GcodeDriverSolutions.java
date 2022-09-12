@@ -830,7 +830,7 @@ public class GcodeDriverSolutions implements Solutions.Subject {
                             commandBuilt += " {"+variable+":"+variable+"%.4f}";
                         }
                         commandBuilt += " ; Set all axes to home coordinates\n";
-                        commandBuilt += "G92.1 ; Reset all offsets\n";
+                        commandBuilt += "G92.1 ; Reset all offsets";
                     }
                     else {
                         // Reset the acceleration (it is not automatically reset on some controllers). 
