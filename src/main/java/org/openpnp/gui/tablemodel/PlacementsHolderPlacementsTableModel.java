@@ -54,13 +54,15 @@ public class PlacementsHolderPlacementsTableModel extends AbstractObjectTableMod
 
     private List<Placement> placements = null;
     
-    public PlacementsHolder getFiducialLocatable() {
+    public PlacementsHolder<?> getFiducialLocatable() {
         return fiducialLocatable;
     }
 
-    public void setFiducialLocatable(PlacementsHolder fiducialLocatable) {
+    public void setFiducialLocatable(PlacementsHolder<?> fiducialLocatable) {
         this.fiducialLocatable = fiducialLocatable;
-        placements = fiducialLocatable.getPlacements();
+        if (fiducialLocatable != null) {
+            placements = fiducialLocatable.getPlacements();
+        }
         fireTableDataChanged();
     }
     

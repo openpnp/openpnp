@@ -41,10 +41,14 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
+import javax.swing.JOptionPane;
+
 import org.apache.commons.io.FileUtils;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ThemeInfo;
 import org.openpnp.gui.components.ThemeSettingsPanel;
+import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.scripting.Scripting;
 import org.openpnp.spi.Machine;
 import org.openpnp.util.NanosecondTime;
@@ -870,6 +874,25 @@ public class Configuration extends AbstractModelObject {
         BoardsConfigurationHolder holder = new BoardsConfigurationHolder();
         holder.boards = new ArrayList<>(boards.keySet());
         serializeObject(holder, file);
+        
+        for (Board board : getBoards()) {
+            if (board.isDirty()) {
+                int result = JOptionPane.showConfirmDialog(MainFrame.get(),
+                        "Do you want to save your changes to " + board.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
+                                + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
+                        "Save " + board.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
+                        JOptionPane.YES_NO_CANCEL_OPTION);
+                if (result == JOptionPane.YES_OPTION) {
+                    try {
+                        saveBoard(board);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(MainFrame.get(), "Board Save Error", //$NON-NLS-1$
+                                e.getMessage());
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -904,6 +927,25 @@ public class Configuration extends AbstractModelObject {
         PanelsConfigurationHolder holder = new PanelsConfigurationHolder();
         holder.panels = new ArrayList<>(panels.keySet());
         serializeObject(holder, file);
+        
+        for (Panel panel : getPanels()) {
+            if (panel.isDirty()) {
+                int result = JOptionPane.showConfirmDialog(MainFrame.get(),
+                        "Do you want to save your changes to " + panel.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
+                                + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
+                        "Save " + panel.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
+                        JOptionPane.YES_NO_CANCEL_OPTION);
+                if (result == JOptionPane.YES_OPTION) {
+                    try {
+                        savePanel(panel);
+                    }
+                    catch (Exception e) {
+                        MessageBoxes.errorBox(MainFrame.get(), "Panel Save Error", //$NON-NLS-1$
+                                e.getMessage());
+                    }
+                }
+            }
+        }
     }
 
     private void loadVisionSettings(File file) throws Exception {

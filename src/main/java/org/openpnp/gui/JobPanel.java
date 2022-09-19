@@ -78,6 +78,7 @@ import org.openpnp.gui.importer.BoardImporter;
 import org.openpnp.gui.processes.MultiPlacementBoardLocationProcess;
 import org.openpnp.gui.support.ActionGroup;
 import org.openpnp.gui.support.CustomBooleanRenderer;
+import org.openpnp.gui.support.CustomPlacementsHolderRenderer;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -224,6 +225,7 @@ public class JobPanel extends JPanel {
         jobTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         jobTable.setDefaultEditor(Side.class, new DefaultCellEditor(sidesComboBox));
         jobTable.setDefaultRenderer(Boolean.class, new CustomBooleanRenderer());
+        jobTable.getColumnModel().getColumn(0).setCellRenderer(new CustomPlacementsHolderRenderer());
         jobTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
@@ -619,12 +621,12 @@ public class JobPanel extends JPanel {
      * @return
      */
     public boolean checkForModifications() {
-        if (!checkForPanelModifications()) {
-            return false;
-        }
-        if (!checkForBoardModifications()) {
-            return false;
-        }
+//        if (!checkForPanelModifications()) {
+//            return false;
+//        }
+//        if (!checkForBoardModifications()) {
+//            return false;
+//        }
         if (!checkForJobModifications()) {
             return false;
         }
@@ -648,57 +650,57 @@ public class JobPanel extends JPanel {
         return true;
     }
 
-    private boolean checkForBoardModifications() {
-        for (Board board : configuration.getBoards()) {
-            if (board.isDirty()) {
-                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "Do you want to save your changes to " + board.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
-                                + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
-                        "Save " + board.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
-                        JOptionPane.YES_NO_CANCEL_OPTION);
-                if (result == JOptionPane.YES_OPTION) {
-                    try {
-                        configuration.saveBoard(board);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(), "Board Save Error", //$NON-NLS-1$
-                                e.getMessage());
-                        return false;
-                    }
-                }
-                else if (result == JOptionPane.CANCEL_OPTION) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean checkForPanelModifications() {
-        for (Panel panel : configuration.getPanels()) {
-            if (panel.isDirty()) {
-                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "Do you want to save your changes to " + panel.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
-                                + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
-                        "Save " + panel.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
-                        JOptionPane.YES_NO_CANCEL_OPTION);
-                if (result == JOptionPane.YES_OPTION) {
-                    try {
-                        configuration.savePanel(panel);
-                    }
-                    catch (Exception e) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(), "Panel Save Error", //$NON-NLS-1$
-                                e.getMessage());
-                        return false;
-                    }
-                }
-                else if (result == JOptionPane.CANCEL_OPTION) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+//    private boolean checkForBoardModifications() {
+//        for (Board board : configuration.getBoards()) {
+//            if (board.isDirty()) {
+//                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+//                        "Do you want to save your changes to " + board.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
+//                                + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
+//                        "Save " + board.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
+//                        JOptionPane.YES_NO_CANCEL_OPTION);
+//                if (result == JOptionPane.YES_OPTION) {
+//                    try {
+//                        configuration.saveBoard(board);
+//                    }
+//                    catch (Exception e) {
+//                        MessageBoxes.errorBox(getTopLevelAncestor(), "Board Save Error", //$NON-NLS-1$
+//                                e.getMessage());
+//                        return false;
+//                    }
+//                }
+//                else if (result == JOptionPane.CANCEL_OPTION) {
+//                    return false;
+//                }
+//            }
+//        }
+//        return true;
+//    }
+//
+//    private boolean checkForPanelModifications() {
+//        for (Panel panel : configuration.getPanels()) {
+//            if (panel.isDirty()) {
+//                int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
+//                        "Do you want to save your changes to " + panel.getFile().getName() + "?" //$NON-NLS-1$ //$NON-NLS-2$
+//                                + "\n" + "If you don't save, your changes will be lost.", //$NON-NLS-1$ //$NON-NLS-2$
+//                        "Save " + panel.getFile().getName() + "?", //$NON-NLS-1$ //$NON-NLS-2$
+//                        JOptionPane.YES_NO_CANCEL_OPTION);
+//                if (result == JOptionPane.YES_OPTION) {
+//                    try {
+//                        configuration.savePanel(panel);
+//                    }
+//                    catch (Exception e) {
+//                        MessageBoxes.errorBox(getTopLevelAncestor(), "Panel Save Error", //$NON-NLS-1$
+//                                e.getMessage());
+//                        return false;
+//                    }
+//                }
+//                else if (result == JOptionPane.CANCEL_OPTION) {
+//                    return false;
+//                }
+//            }
+//        }
+//        return true;
+//    }
 
     private boolean saveJob() {
         if (getJob().getFile() == null) {

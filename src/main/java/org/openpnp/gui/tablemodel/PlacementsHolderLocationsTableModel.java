@@ -36,7 +36,7 @@ import org.openpnp.model.PanelLocation;
 public class PlacementsHolderLocationsTableModel extends AbstractObjectTableModel {
     private final Configuration configuration;
 
-    private String[] columnNames = new String[] {"Id", "Panel/Board", "Width", "Length", "Side", "X", "Y", "Z",
+    private String[] columnNames = new String[] {"Panel/Board Id", "Name", "Width", "Length", "Side", "X", "Y", "Z",
             "Rot.", "Enabled?", "Check Fids?"};
 
     @SuppressWarnings("rawtypes")
@@ -241,7 +241,13 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
         Location dim = placementsHolderLocation.getPlacementsHolder().getDimensions();
         switch (col) {
             case 0:
-                return placementsHolderLocation.getId();
+//                PanelLocation parent = placementsHolderLocation.getParent();
+//                String leader = "";
+//                while (parent.getParent() != null) {
+//                    leader = leader + "    ";
+//                    parent = parent.getParent();
+//                }
+                return placementsHolderLocation.getUniqueId();
             case 1:
                 return placementsHolderLocation.getPlacementsHolder().getName();
             case 2:

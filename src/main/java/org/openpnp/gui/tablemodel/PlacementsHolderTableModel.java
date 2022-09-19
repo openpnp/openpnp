@@ -95,6 +95,7 @@ public class PlacementsHolderTableModel extends AbstractObjectTableModel {
             PlacementsHolder<?> placementsHolder = placementsHolders.get().get(rowIndex);
             if (columnIndex == 0) {
                 placementsHolder.setName((String) aValue);
+                fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 1) {
                 LengthCellValue value = (LengthCellValue) aValue;

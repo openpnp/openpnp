@@ -360,15 +360,15 @@ public class BoardsPanel extends JPanel {
                 }
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
-                addBoard(file);
+                Board board = addBoard(file);
 
-                Helpers.selectLastTableRow(boardsTable);
+//                Helpers.selectLastTableRow(boardsTable);
+                selectBoard(board);
             }
             catch (Exception e) {
                 e.printStackTrace();
                 MessageBoxes.errorBox(frame, Translations.getString("BoardPanel.Action.AddBoard.NewBoard.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
             }
-//            updatePanelizationIconState();
         }
     };
 
@@ -396,9 +396,10 @@ public class BoardsPanel extends JPanel {
                 }
                 File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
 
-                addBoard(file);
+                Board board = addBoard(file);
 
-                Helpers.selectLastTableRow(boardsTable);
+//                Helpers.selectLastTableRow(boardsTable);
+                selectBoard(board);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -407,11 +408,11 @@ public class BoardsPanel extends JPanel {
         }
     };
 
-    protected void addBoard(File file) throws Exception {
+    protected Board addBoard(File file) throws Exception {
         Board board = configuration.getBoard(file);
-        BoardLocation boardLocation = new BoardLocation(board);
         // TODO: Move to a list property listener.
         boardsTableModel.fireTableDataChanged();
+        return board;
     }
     
     public final Action removeBoardAction = new AbstractAction("Remove Board") { //$NON-NLS-1$
@@ -465,10 +466,12 @@ public class BoardsPanel extends JPanel {
                 Board newBoard = new Board(boardToCopy);
                 newBoard.setFile(file);
                 newBoard.setName(file.getName());
-                newBoard.setDirty(true);
+                newBoard.setDirty(false);
                 configuration.addBoard(newBoard);
+                configuration.saveBoard(newBoard);
                 boardsTableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(boardsTable);
+//                Helpers.selectLastTableRow(boardsTable);
+                selectBoard(newBoard);
             }
             catch (Exception e) {
                 e.printStackTrace();

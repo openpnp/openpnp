@@ -384,9 +384,10 @@ public class PanelsPanel extends JPanel {
                 }
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
-                addPanel(file);
+                Panel panel = addPanel(file);
 
-                Helpers.selectLastTableRow(panelsTable);
+//                Helpers.selectLastTableRow(panelsTable);
+                selectPanel(panel);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -420,9 +421,10 @@ public class PanelsPanel extends JPanel {
                 }
                 File file = new File(new File(fileDialog.getDirectory()), fileDialog.getFile());
 
-                addPanel(file);
+                Panel panel = addPanel(file);
 
-                Helpers.selectLastTableRow(panelsTable);
+//                Helpers.selectLastTableRow(panelsTable);
+                selectPanel(panel);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -431,11 +433,12 @@ public class PanelsPanel extends JPanel {
         }
     };
 
-    protected void addPanel(File file) throws Exception {
+    protected Panel addPanel(File file) throws Exception {
         Panel panel = configuration.getPanel(file);
 //        PanelLocation boardLocation = new PanelLocation(panel);
         // TODO: Move to a list property listener.
         panelsTableModel.fireTableDataChanged();
+        return panel;
     }
     
     public final Action removePanelAction = new AbstractAction("Remove Panel") { //$NON-NLS-1$
@@ -490,10 +493,12 @@ public class PanelsPanel extends JPanel {
                 Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", newPanel.hashCode(), newPanel.getDefinedBy().hashCode()));
                 newPanel.setFile(file);
                 newPanel.setName(file.getName());
-                newPanel.setDirty(true);
+                newPanel.setDirty(false);
                 configuration.addPanel(newPanel);
+                configuration.savePanel(newPanel);
                 panelsTableModel.fireTableDataChanged();
-                Helpers.selectLastTableRow(panelsTable);
+//                Helpers.selectLastTableRow(panelsTable);
+                selectPanel(newPanel);
             }
             catch (Exception e) {
                 e.printStackTrace();

@@ -130,6 +130,9 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
     	frame = MainFrame.get();
     	configuration = Configuration.get();
         createUi();
+        addChildAction.setEnabled(false);
+        addFiducialAction.setEnabled(false);
+        useChildFiducialAction.setEnabled(false);
     }
     
     private void createUi() {
@@ -460,6 +463,9 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         rootPanelLocation.dump("");
         childrenTableModel.setPlacementsHolderLocations(rootPanelLocation.getChildren());
         fiducialTableModel.setPanel(rootPanelLocation.getPanel());
+        addChildAction.setEnabled(panel != null);
+        addFiducialAction.setEnabled(panel != null);
+        useChildFiducialAction.setEnabled(panel != null);
     }
     
     public void refresh() {
@@ -587,7 +593,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
 
     public final Action useChildFiducialAction = new AbstractAction() {
         {
-            putValue(SMALL_ICON, Icons.autoPanelizeFidCheck);
+            putValue(SMALL_ICON, Icons.useChildFiducial);
             putValue(NAME, "Use Child Fiducial");
             putValue(SHORT_DESCRIPTION, "Copy the selected child's fiducial(s) to use as this panel's fiducial(s).");
         }

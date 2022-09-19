@@ -560,7 +560,7 @@ public class BoardPlacementsPanel extends JPanel {
         {
             putValue(SMALL_ICON, Icons.importt);
             putValue(NAME, "Import Placements");
-            putValue(SHORT_DESCRIPTION, "Import placements from CAD output files");
+            putValue(SHORT_DESCRIPTION, "Import placements from CAD files");
         }
 
         @Override
