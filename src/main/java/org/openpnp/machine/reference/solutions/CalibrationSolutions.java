@@ -367,7 +367,6 @@ public class CalibrationSolutions implements Solutions.Subject {
         if (visionSolutions.isSolvedPrimaryXY(head) 
                 && visionSolutions.isSolvedPrimaryZ(head) 
                 && (nozzle.getHeadOffsets().isInitialized() || isSimulatedNozzle)) {
-            final Location oldNozzleOffsets = nozzle.getHeadOffsets();
             final Length oldTestObjectDiameter = head.getCalibrationTestObjectDiameter(); 
             // Get the test subject diameter.
             solutions.add(visionSolutions.new VisionFeatureIssue(
@@ -378,6 +377,8 @@ public class CalibrationSolutions implements Solutions.Subject {
                     "Use a test object to perform the precision camera ↔ nozzle "+nozzle.getName()+" offsets calibration.", 
                     Solutions.Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets") {
+
+                private Location oldNozzleOffsets = null;
 
                 @Override 
                 public String getExtendedDescription() {
@@ -430,6 +431,7 @@ public class CalibrationSolutions implements Solutions.Subject {
                                             .getSubjectPixelLocation(defaultCamera, null, new Circle(0, 0, featureDiameter), 0, null, null, false);
                                     head.setCalibrationTestObjectDiameter(
                                             defaultCamera.getUnitsPerPixelPrimary().getLengthX().multiply(testObject.getDiameter()));
+                                    oldNozzleOffsets = nozzle.getHeadOffsets();
                                     calibrateNozzleOffsets(head, defaultCamera, nozzle);
                                     return true;
                                 },
@@ -445,8 +447,11 @@ public class CalibrationSolutions implements Solutions.Subject {
                                 });
                     }
                     else {
-                        // Restore the head offset
-                        nozzle.setHeadOffsets(oldNozzleOffsets);
+                        // Restore the head offsets
+                        if (oldNozzleOffsets != null) {
+                            nozzle.setHeadOffsets(oldNozzleOffsets);
+                            oldNozzleOffsets = null;
+                        }
                         head.setCalibrationTestObjectDiameter(oldTestObjectDiameter);
                         // Persist this unsolved state.
                         solutions.setSolutionsIssueSolved(this, false);
