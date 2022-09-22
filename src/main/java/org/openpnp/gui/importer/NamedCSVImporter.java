@@ -408,7 +408,7 @@ public class NamedCSVImporter implements BoardImporter {
                     new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                             FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-            JLabel lblTopFilemnt = new JLabel("Centeroid File (.csv)");
+            JLabel lblTopFilemnt = new JLabel("Centroid File (.csv)");
             panel.add(lblTopFilemnt, "2, 2, right, default");
 
             textFieldTopFile = new JTextField();
