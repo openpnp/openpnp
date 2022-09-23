@@ -75,9 +75,9 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
 import org.openpnp.gui.tablemodel.PanelFiducialsTableModel;
-import org.openpnp.model.AbstractLocatable;
+import org.openpnp.model.Abstract2DLocatable;
 import org.openpnp.model.Board;
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
@@ -827,7 +827,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (PlacementsHolderLocation<?> child : getChildrenSelections()) {
-                rootPanelLocation.getPanel().getDefinedBy().removeChild(child);
+                rootPanelLocation.getPanel().getDefinition().removeChild(child);
                 child.dispose();
             }
             childrenTableModel.fireTableDataChanged();
@@ -878,7 +878,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement fiducial : getFiducialSelections()) {
-                fiducial.getDefinedBy().setSide(side);
+                fiducial.getDefinition().setSide(side);
                 fiducialTableModel.fireTableDataChanged();
             }
         }
@@ -896,7 +896,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (PlacementsHolderLocation<?> child : getChildrenSelections()) {
-                child.getDefinedBy().setGlobalSide(side);
+                child.getDefinition().setGlobalSide(side);
                 childrenTableModel.fireTableDataChanged();
             }
         }
@@ -925,7 +925,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement fiducial : getFiducialSelections()) {
-                ((Placement) fiducial.getDefinedBy()).setEnabled(enabled);
+                ((Placement) fiducial.getDefinition()).setEnabled(enabled);
             }
             fiducialTableModel.fireTableDataChanged();   
         }
@@ -944,7 +944,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (PlacementsHolderLocation<?> child : getChildrenSelections()) {
-                child.getDefinedBy().setLocallyEnabled(enabled);
+                child.getDefinition().setLocallyEnabled(enabled);
             }
             childrenTableModel.fireTableDataChanged();   
         }
@@ -973,7 +973,7 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (PlacementsHolderLocation<?> child : getChildrenSelections()) {
-                child.getDefinedBy().setCheckFiducials(value);
+                child.getDefinition().setCheckFiducials(value);
             }
             childrenTableModel.fireTableDataChanged();   
         }
@@ -996,10 +996,10 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             fiducialTable.getSelectionModel().clearSelection();
             return;
         }
-        Logger.trace(String.format("Attempting to select Placement @%08x defined by @%08x", placement.hashCode(), placement.getDefinedBy().hashCode()));
+        Logger.trace(String.format("Attempting to select Placement @%08x defined by @%08x", placement.hashCode(), placement.getDefinition().hashCode()));
         for (int i = 0; i < fiducialTableModel.getRowCount(); i++) {
-            Logger.trace(String.format("...found Placement @%08x defined by @%08x", fiducialTableModel.getRowObjectAt(i).hashCode(), fiducialTableModel.getRowObjectAt(i).getDefinedBy().hashCode()));
-            if (fiducialTableModel.getRowObjectAt(i) == placement.getDefinedBy()) {
+            Logger.trace(String.format("...found Placement @%08x defined by @%08x", fiducialTableModel.getRowObjectAt(i).hashCode(), fiducialTableModel.getRowObjectAt(i).getDefinition().hashCode()));
+            if (fiducialTableModel.getRowObjectAt(i) == placement.getDefinition()) {
                 int index = fiducialTable.convertRowIndexToView(i);
                 fiducialTable.getSelectionModel().setSelectionInterval(index, index);
                 fiducialTable.scrollRectToVisible(new Rectangle(fiducialTable.getCellRect(index, 0, true)));
@@ -1013,10 +1013,10 @@ public class PanelDefinitionPanel extends JPanel implements PropertyChangeListen
             childrenTable.getSelectionModel().clearSelection();
             return;
         }
-        Logger.trace(String.format("Attempting to select %s @%08x defined by @%08x", child.getClass().getSimpleName(), child.hashCode(), child.getDefinedBy().hashCode()));
+        Logger.trace(String.format("Attempting to select %s @%08x defined by @%08x", child.getClass().getSimpleName(), child.hashCode(), child.getDefinition().hashCode()));
         for (int i = 0; i < childrenTableModel.getRowCount(); i++) {
-            Logger.trace(String.format("...found %s @%08x defined by @%08x", childrenTableModel.getRowObjectAt(i).getClass().getSimpleName(), childrenTableModel.getRowObjectAt(i).hashCode(), ((AbstractLocatable<?>) childrenTableModel.getRowObjectAt(i)).getDefinedBy().hashCode()));
-            if (childrenTableModel.getRowObjectAt(i) == child.getDefinedBy()) {
+            Logger.trace(String.format("...found %s @%08x defined by @%08x", childrenTableModel.getRowObjectAt(i).getClass().getSimpleName(), childrenTableModel.getRowObjectAt(i).hashCode(), ((Abstract2DLocatable<?>) childrenTableModel.getRowObjectAt(i)).getDefinition().hashCode()));
+            if (childrenTableModel.getRowObjectAt(i) == child.getDefinition()) {
                 int index = childrenTable.convertRowIndexToView(i);
                 childrenTable.getSelectionModel().setSelectionInterval(index, index);
                 childrenTable.scrollRectToVisible(new Rectangle(childrenTable.getCellRect(index, 0, true)));

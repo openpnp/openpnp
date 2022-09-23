@@ -32,8 +32,8 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
-import org.openpnp.model.AbstractLocatable;
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Length;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
@@ -217,12 +217,12 @@ public class Utils2D {
     }
 
     public static Location calculateBoardPlacementLocation(PlacementsHolderLocation<?> bl,
-            AbstractLocatable<?> locatable) {
+            Abstract2DLocatable<?> locatable) {
         return calculateBoardPlacementLocation(bl, locatable, false);
     }
     
     public static Location calculateBoardPlacementLocation(PlacementsHolderLocation<?> bl,
-            AbstractLocatable<?> locatable, boolean local) {
+            Abstract2DLocatable<?> locatable, boolean local) {
         
         Location placementLocation = null;
         double angleSign = 1.0;
@@ -282,7 +282,7 @@ public class Utils2D {
     }
 
     public static Location calculateRelativeBoardPlacementLocation(PlacementsHolderLocation<?> parent,
-            PlacementsHolderLocation<?> bl, AbstractLocatable<?> locatable) {
+            PlacementsHolderLocation<?> bl, Abstract2DLocatable<?> locatable) {
         if (parent == null) {
             return calculateBoardPlacementLocation(bl, locatable);
         }

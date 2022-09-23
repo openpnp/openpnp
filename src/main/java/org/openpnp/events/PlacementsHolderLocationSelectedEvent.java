@@ -19,7 +19,7 @@
 
 package org.openpnp.events;
 
-import org.openpnp.model.AbstractLocatable;
+import org.openpnp.model.Abstract2DLocatable;
 import org.openpnp.model.PlacementsHolderLocation;
 
 public class PlacementsHolderLocationSelectedEvent {

@@ -1,6 +1,6 @@
 package org.openpnp.model;
 
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 

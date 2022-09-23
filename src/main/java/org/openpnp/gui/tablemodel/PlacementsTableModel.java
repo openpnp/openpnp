@@ -23,7 +23,7 @@ import org.openpnp.gui.JobPlacementsPanel;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.gui.support.PartCellValue;
 import org.openpnp.gui.support.RotationCellValue;
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.PlacementsHolder;
 import org.openpnp.model.PlacementsHolderLocation;
@@ -119,7 +119,7 @@ public class PlacementsTableModel extends AbstractObjectTableModel {
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         try {
             Placement placement = fiducialLocatable.getPlacements().get(rowIndex);
-            Placement definition = (Placement) placement.getDefinedBy();
+            Placement definition = (Placement) placement.getDefinition();
             if (definition == null) {
                 definition = placement;
             }

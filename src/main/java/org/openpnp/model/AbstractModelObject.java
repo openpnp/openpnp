@@ -43,6 +43,9 @@ public abstract class AbstractModelObject {
         propertyChangeSupport.removePropertyChangeListener(propertyName, listener);
     }
     
+    /**
+     * Removes all property change listeners from this object
+     */
     public void dispose() {
        Logger.trace(String.format("Disposing of %s @%08x", this.getClass().getSimpleName(), this.hashCode()));
        for (PropertyChangeListener listener : propertyChangeSupport.getPropertyChangeListeners()) {

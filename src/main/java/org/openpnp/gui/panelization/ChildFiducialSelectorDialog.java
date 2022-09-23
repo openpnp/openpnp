@@ -51,7 +51,7 @@ import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.IdentifiableTableCellRenderer;
 import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
 import org.openpnp.model.PanelLocation;
@@ -78,7 +78,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
     private List<Placement> allPseudoPlacements;
     private List<Placement> filteredPseudoPlacements;
     private List<Placement> filteredPseudoPlacementsHull;
-    private List<Placement> bestPseudoPlacements;
+    private List<Placement> goodPseudoPlacements;
     protected boolean showHullOnly = true;;
 
     /**
@@ -128,7 +128,9 @@ public class ChildFiducialSelectorDialog extends JDialog {
             {
                 JCheckBox chckbxHullOnly = new JCheckBox("Hull Only");
                 chckbxHullOnly.setSelected(true);
-                chckbxHullOnly.setToolTipText("Show only those fiducials/placements that are on the outermost periphery of the panel.");
+                chckbxHullOnly.setToolTipText("Show only those fiducials/placements that are on "
+                        + "the outermost periphery of the panel (which are generally the best "
+                        + "ones to use for alignment purposes).");
                 chckbxHullOnly.addActionListener(new ActionListener() {
 
                     @Override
@@ -142,7 +144,8 @@ public class ChildFiducialSelectorDialog extends JDialog {
             {
                 fiducialsButton = new JRadioButton("Fiducials");
                 fiducialsButton.setSelected(true);
-                fiducialsButton.setToolTipText("Use this selection if the plan is to use fiducials to automatically align the panel.");
+                fiducialsButton.setToolTipText("Use this selection if the plan is to use fiducials"
+                        + " to automatically align the panel.");
                 fiducialsButton.addActionListener(new ActionListener() {
 
                     @Override
@@ -155,7 +158,8 @@ public class ChildFiducialSelectorDialog extends JDialog {
             }
             {
                 placementsButton = new JRadioButton("Placements");
-                placementsButton.setToolTipText("Use this selection if the plan is to manually align the panel with multiple placements.");
+                placementsButton.setToolTipText("Use this selection if the plan is to manually "
+                        + "align the panel with multiple placements.");
                 placementsButton.addActionListener(new ActionListener() {
 
                     @Override
@@ -189,18 +193,19 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 radioPanel.add(horizontalStrut);
             }
             {
-                JButton btnSelectBest = new JButton("Auto Select");
-                btnSelectBest.setToolTipText("Computes a good set of items to use for panel alignment and selects them.");
-                btnSelectBest.addActionListener(new ActionListener() {
+                JButton btnSelectGood = new JButton("Auto Select");
+                btnSelectGood.setToolTipText("Selects a good set of items to use for panel "
+                        + "alignment.");
+                btnSelectGood.addActionListener(new ActionListener() {
 
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         generateFilteredList();
-                        generateBestList();
-                        Helpers.selectObjectTableRows(childFiducialsTable, bestPseudoPlacements);
+                        generateGoodList();
+                        Helpers.selectObjectTableRows(childFiducialsTable, goodPseudoPlacements);
                     }
                 });
-                radioPanel.add(btnSelectBest);
+                radioPanel.add(btnSelectGood);
             }
             
             tableModel = new PlacementsHolderPlacementsTableModel() {
@@ -215,9 +220,11 @@ public class ChildFiducialSelectorDialog extends JDialog {
             
             childFiducialsTable = new AutoSelectTextTable(tableModel);
             childFiducialsTable.setAutoCreateRowSorter(true);
-            childFiducialsTable.getTableHeader().setDefaultRenderer(new MultisortTableHeaderCellRenderer());
+            childFiducialsTable.getTableHeader()
+                .setDefaultRenderer(new MultisortTableHeaderCellRenderer());
             childFiducialsTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-            childFiducialsTable.setDefaultRenderer(Part.class, new IdentifiableTableCellRenderer<Part>());
+            childFiducialsTable.setDefaultRenderer(Part.class, 
+                    new IdentifiableTableCellRenderer<Part>());
             
             //No need to see the Error Handling or Comments columns so remove them
             TableColumnModel tcm = childFiducialsTable.getColumnModel();
@@ -263,7 +270,8 @@ public class ChildFiducialSelectorDialog extends JDialog {
         int[] selectedRows = childFiducialsTable.getSelectedRows();
         for (int selectedRow : selectedRows) {
             selectedRow = childFiducialsTable.convertRowIndexToModel(selectedRow);
-            selections.add((showHullOnly ? filteredPseudoPlacementsHull : filteredPseudoPlacements).get(selectedRow));
+            selections.add((showHullOnly ? filteredPseudoPlacementsHull : 
+                filteredPseudoPlacements).get(selectedRow));
         }
         return selections;
     }
@@ -273,7 +281,7 @@ public class ChildFiducialSelectorDialog extends JDialog {
         for (Placement fiducial : getSelections()) {
             pseudoPlacementIds.add(fiducial.getId());
         }
-        panelLocation.getPanel().getDefinedBy().setPseudoPlacementIds(pseudoPlacementIds);
+        panelLocation.getPanel().getDefinition().setPseudoPlacementIds(pseudoPlacementIds);
         close();
     }
     
@@ -295,14 +303,16 @@ public class ChildFiducialSelectorDialog extends JDialog {
         for (PlacementsHolderLocation<?> child : panelLocation.getChildren()) {
             for (Placement placement : child.getPlacementsHolder().getPlacements()) {
                 String uniqueId = child.getUniqueId();
-                String id = (uniqueId != null ? uniqueId : "") + placement.getId();
+                String id = (uniqueId != null ? uniqueId + PlacementsHolderLocation.ID_DELIMITTER : "") + placement.getId();
                 
                 Placement pseudoPlacement = new Placement(placement);
-                pseudoPlacement.setDefinedBy(pseudoPlacement);
+                pseudoPlacement.setDefinition(pseudoPlacement);
                 pseudoPlacement.setEnabled(true);
-                pseudoPlacement.setLocation(Utils2D.calculateBoardPlacementLocation(child, placement).derive(null, null, 0.0, null));
+                pseudoPlacement.setLocation(Utils2D.calculateBoardPlacementLocation(child, 
+                        placement).derive(null, null, 0.0, null));
                 pseudoPlacement.setId(id);
-                pseudoPlacement.setSide(placement.getSide().flip(child.getGlobalSide() == Side.Bottom));
+                pseudoPlacement.setSide(placement.getSide().
+                        flip(child.getGlobalSide() == Side.Bottom));
                 
                 allPseudoPlacements.add(pseudoPlacement);
             }
@@ -315,8 +325,12 @@ public class ChildFiducialSelectorDialog extends JDialog {
     private void generateFilteredList() {
         filteredPseudoPlacements = new ArrayList<>();
         for (Placement placement : allPseudoPlacements) {
-            if (((placement.getType() == Placement.Type.Placement && (placementTypes == PlacementTypes.PlacementsOnly || placementTypes == PlacementTypes.Both)) ||
-                    (placement.getType() == Placement.Type.Fiducial && (placementTypes == PlacementTypes.FiducialsOnly || placementTypes == PlacementTypes.Both)))) {
+            if (((placement.getType() == Placement.Type.Placement && 
+                    (placementTypes == PlacementTypes.PlacementsOnly || 
+                    placementTypes == PlacementTypes.Both)) ||
+                    (placement.getType() == Placement.Type.Fiducial && 
+                    (placementTypes == PlacementTypes.FiducialsOnly || 
+                    placementTypes == PlacementTypes.Both)))) {
                 filteredPseudoPlacements.add(placement);
             }
         }
@@ -351,8 +365,8 @@ public class ChildFiducialSelectorDialog extends JDialog {
         }
     }
     
-    private void generateBestList() {
-        bestPseudoPlacements = new ArrayList<>();
+    private void generateGoodList() {
+        goodPseudoPlacements = new ArrayList<>();
         
         for (int iSide=0; iSide<2; iSide++) {
             List<Point> candidatePoints = new ArrayList<>();
@@ -366,18 +380,18 @@ public class ChildFiducialSelectorDialog extends JDialog {
                 }
             }
             
-            List<Point> bestPoints = null;
-            int bestSize = Math.min(4, candidatePoints.size());
-            double bestArea = 0;
-            for (List<Point> points : Collect.allCombinationsOfSize(candidatePoints, bestSize)) {
-                double a = Utils2D.polygonArea(points);
-                if (bestPoints == null || a > bestArea) {
-                    bestPoints = points;
-                    bestArea = a;
+            List<Point> goodPoints = null;
+            int goodSize = Math.min(4, candidatePoints.size());
+            double maxArea = 0;
+            for (List<Point> points : Collect.allCombinationsOfSize(candidatePoints, goodSize)) {
+                double area = Utils2D.polygonArea(points);
+                if (goodPoints == null || area > maxArea) {
+                    goodPoints = points;
+                    maxArea = area;
                 }
             }
-            for (Point point : bestPoints) {
-                bestPseudoPlacements.add(pointToPlacementMap.get(point));
+            for (Point point : goodPoints) {
+                goodPseudoPlacements.add(pointToPlacementMap.get(point));
             }
         }
     }

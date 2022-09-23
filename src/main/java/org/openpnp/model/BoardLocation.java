@@ -57,14 +57,14 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
     private Map<String, Boolean> placed = new HashMap<>();
 
     /**
-     * Constructs an empty BoardLocation
+     * Default constructor
      */
     BoardLocation() {
         setLocation(new Location(LengthUnit.Millimeters));
     }
 
     /**
-     * Creates a deep copy of the specified BoardLocation
+     * Constructs a deep copy of the specified BoardLocation
      * @param boardLocation
      */
     public BoardLocation(BoardLocation boardLocation) {
@@ -72,7 +72,7 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
     }
 
     /**
-     * Creates a BoardLocation for the specified Board
+     * Constructs a BoardLocation for the specified Board
      * @param board - the specified board
      */
     public BoardLocation(Board board) {
@@ -80,6 +80,9 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
         setBoard(board);
     }
 
+    /**
+     * Called immediately after de-serialization
+     */
     @Commit
     protected void commit() {
         super.commit();
@@ -95,6 +98,9 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
         }
     }
     
+    /**
+     * Called just prior to serialization
+     */
     @Persist
     protected void persist() {
         placed = null;
@@ -175,7 +181,7 @@ public class BoardLocation extends PlacementsHolderLocation<BoardLocation> {
         }
         Logger.trace(String.format("%s (%s) BoardLocation:@%08x defined by @%08x child of @%08x, "
                 + "%s, location=%s globalLocation=%s, side=%s (%s)", leader,  this.id, 
-                this.hashCode(), this.getDefinedBy().hashCode(), parentHashCode, fileName, 
+                this.hashCode(), this.getDefinition().hashCode(), parentHashCode, fileName, 
                 getLocation(), getGlobalLocation(), side, 
                 getBoard() == null ? "Null" : getBoard().toString()));
     }

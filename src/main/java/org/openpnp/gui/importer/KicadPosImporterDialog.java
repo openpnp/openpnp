@@ -27,7 +27,7 @@ import javax.swing.border.TitledBorder;
 
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.model.Board;
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Placement;
 
 import com.jgoodies.forms.layout.ColumnSpec;

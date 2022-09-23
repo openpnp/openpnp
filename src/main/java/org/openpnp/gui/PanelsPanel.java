@@ -67,6 +67,7 @@ import org.openpnp.model.Panel;
 import org.openpnp.model.PanelLocation;
 import org.openpnp.model.Placement;
 import org.openpnp.model.Configuration.TablesLinked;
+import org.openpnp.model.Board;
 import org.openpnp.model.Configuration;
 import org.pmw.tinylog.Logger;
 
@@ -135,12 +136,6 @@ public class PanelsPanel extends JPanel {
         panelsTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
-                Logger.trace("TableModelEvent = " +
-                    "col:" + e.getColumn() +
-                    " firstRow:" + e.getFirstRow() +
-                    " lastRow:" + e.getLastRow() +
-                    " source:" + e.getSource() +
-                    " type:" + e.getType() );
                 SwingUtilities.invokeLater(() -> {
                     panelDefinitionPanel.refresh();
                 });
@@ -276,12 +271,12 @@ public class PanelsPanel extends JPanel {
         }
         if (event.placementsHolderLocation.getPlacementsHolder() instanceof Panel) {
             SwingUtilities.invokeLater(() -> {
-                selectPanel((Panel) event.placementsHolderLocation.getPlacementsHolder().getDefinedBy());
+                selectPanel((Panel) event.placementsHolderLocation.getPlacementsHolder().getDefinition());
             });
         }
         else if (event.placementsHolderLocation.getParent() instanceof PanelLocation) {
             SwingUtilities.invokeLater(() -> {
-                selectPanel((Panel) event.placementsHolderLocation.getParent().getPlacementsHolder().getDefinedBy());
+                selectPanel((Panel) event.placementsHolderLocation.getParent().getPlacementsHolder().getDefinition());
                 panelDefinitionPanel.selectChild(event.placementsHolderLocation);
             });
         }
@@ -292,9 +287,9 @@ public class PanelsPanel extends JPanel {
         if (event.source == this || event.source == panelDefinitionPanel || event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Panel)) {
             return;
         }
-        Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinedBy();
+        Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinition();
         SwingUtilities.invokeLater(() -> {
-            selectPanel((Panel) event.placementsHolderLocation.getPlacementsHolder().getDefinedBy());
+            selectPanel((Panel) event.placementsHolderLocation.getPlacementsHolder().getDefinition());
             panelDefinitionPanel.selectFiducial(placement);
         });
     }
@@ -304,9 +299,9 @@ public class PanelsPanel extends JPanel {
             panelsTable.getSelectionModel().clearSelection();
             return;
         }
-        Logger.trace(String.format("Attempting to select Panel @%08x defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
+//        Logger.trace(String.format("Attempting to select Panel @%08x defined by @%08x", panel.hashCode(), panel.getDefinition().hashCode()));
         for (int i = 0; i < panelsTableModel.getRowCount(); i++) {
-            Logger.trace(String.format("...found Panel @%08x defined by @%08x", configuration.getPanels().get(i).hashCode(), configuration.getPanels().get(i).getDefinedBy().hashCode()));
+//            Logger.trace(String.format("...found Panel @%08x defined by @%08x", configuration.getPanels().get(i).hashCode(), configuration.getPanels().get(i).getDefinition().hashCode()));
             if (configuration.getPanels().get(i) == panel) {
                 int index = panelsTable.convertRowIndexToView(i);
                 panelsTable.getSelectionModel().setSelectionInterval(index, index);
@@ -393,7 +388,6 @@ public class PanelsPanel extends JPanel {
                 e.printStackTrace();
                 MessageBoxes.errorBox(frame, Translations.getString("PanelsPanel.Action.AddPanel.NewPanel.ErrorMessage"), e.getMessage()); //$NON-NLS-1$
             }
-//            updatePanelizationIconState();
         }
     };
 
@@ -435,7 +429,6 @@ public class PanelsPanel extends JPanel {
 
     protected Panel addPanel(File file) throws Exception {
         Panel panel = configuration.getPanel(file);
-//        PanelLocation boardLocation = new PanelLocation(panel);
         // TODO: Move to a list property listener.
         panelsTableModel.fireTableDataChanged();
         return panel;
@@ -452,8 +445,15 @@ public class PanelsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Panel selection : getSelections()) {
-                configuration.removePanel(selection);
-
+                if (configuration.isInUse(selection)) {
+                    MessageBoxes.errorBox(PanelsPanel.this, "Error Removing Panel", 
+                            "Could not remove " + selection.getName() + " because it is either "
+                                    + "being used by the current job or is a subpanel of "
+                                    + "another panel that is loaded in the current configuration.");
+                }
+                else {
+                    configuration.removePanel(selection);
+                }
             }
             panelsTableModel.fireTableDataChanged();
         }
@@ -490,7 +490,7 @@ public class PanelsPanel extends JPanel {
                 File file = new File(new File(fileDialog.getDirectory()), filename);
 
                 Panel newPanel = new Panel(panelToCopy);
-                Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", newPanel.hashCode(), newPanel.getDefinedBy().hashCode()));
+                Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", newPanel.hashCode(), newPanel.getDefinition().hashCode()));
                 newPanel.setFile(file);
                 newPanel.setName(file.getName());
                 newPanel.setDirty(false);

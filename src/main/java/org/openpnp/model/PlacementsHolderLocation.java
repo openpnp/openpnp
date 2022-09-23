@@ -32,8 +32,10 @@ import org.simpleframework.xml.core.Commit;
  * to its parent.
  */
 public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocation<T>> 
-        extends AbstractLocatable<T> {
+        extends Abstract2DLocatable<T> {
 
+    public static final String ID_DELIMITTER = "\u21D2"; //unicode ⇒ 
+    
     @Attribute(required = false)
     protected String fileName;
 
@@ -88,7 +90,7 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
         else {
             this.localToParentTransform = null;
         }
-        setDefinedBy(placementsHolderLocationToCopy.getDefinedBy());
+        setDefinition(placementsHolderLocationToCopy.getDefinition());
     }
     
     /**
@@ -375,17 +377,10 @@ public abstract class PlacementsHolderLocation<T extends PlacementsHolderLocatio
      */
     public String getUniqueId() {
         if (parent != null && parent.getUniqueId() != null) {
-            return parent.getUniqueId() + getId();
+            return parent.getUniqueId() + ID_DELIMITTER + getId();
         }
         else {
             return getId();
         }
     }
-    
-//    @Override
-//    public void propertyChange(PropertyChangeEvent evt) {
-////        Logger.trace(String.format("PropertyChangeEvent handled by FiducialLocatable @%08x = %s", this.hashCode(), evt));
-//        super.propertyChange(evt);
-//    }
-
 }

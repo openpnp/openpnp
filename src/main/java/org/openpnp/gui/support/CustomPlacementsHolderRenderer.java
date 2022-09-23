@@ -7,6 +7,8 @@ import javax.swing.plaf.UIResource;
 import javax.swing.table.TableCellRenderer;
 
 import org.openpnp.model.PanelLocation;
+import org.openpnp.model.PlacementsHolderLocation;
+
 import java.awt.*;
 import java.util.Arrays;
 
@@ -55,25 +57,18 @@ public class CustomPlacementsHolderRenderer extends JLabel implements TableCellR
         }
 
         String uniqueId = (String) value;
-        int i = uniqueId.length()-1;
-        while (i>=0 && uniqueId.charAt(i) >= '0' &&  uniqueId.charAt(i) <= '9') {
-            i--;
-        }
-        while (i>=0 && (uniqueId.charAt(i) < '0' ||  uniqueId.charAt(i) > '9')) {
-            i--;
-        }
-        String id = uniqueId.substring(i+1);
-        uniqueId = uniqueId.substring(0, i+1);
-        
+        String id = uniqueId.substring(uniqueId.lastIndexOf(PlacementsHolderLocation.ID_DELIMITTER)+1);
         int depth = 0;
-        while (uniqueId.indexOf(PanelLocation.ID_PREFIX) >= 0) {
+        int idx = -1;
+        while ((idx = uniqueId.indexOf(PlacementsHolderLocation.ID_DELIMITTER, idx+1)) >= 0) {
             depth += 4;
-            uniqueId = uniqueId.substring(uniqueId.indexOf(PanelLocation.ID_PREFIX) + 3);
         }
+        
         char[] charArray = new char[depth];
         Arrays.fill(charArray, ' ');
         left.setText(new String(charArray));
         right.setText(id);
+        
         right.setIcon(id.startsWith("Brd") ? Icons.board : Icons.panel);
         
         if (hasFocus) {

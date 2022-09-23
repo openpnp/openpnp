@@ -134,7 +134,7 @@ public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
 
     @Override
     public String toString() {
-        return String.format("PanelLocation @%08x defined by @%08x: (%s), location (%s), side (%s)", hashCode(), definedBy.hashCode(), fileName, getLocation(), side);
+        return String.format("PanelLocation @%08x defined by @%08x: (%s), location (%s), side (%s)", hashCode(), definition.hashCode(), fileName, getLocation(), side);
     }
 
     public void dump(String leader) {
@@ -143,7 +143,7 @@ public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
         if (parentPanelLocation != null) {
             parentHashCode = parentPanelLocation.hashCode();
         }
-        Logger.trace(String.format("%s (%s) PanelLocation:@%08x defined by @%08x child of @%08x, %s, location=%s , globalLocation=%s side=%s (%s)", leader,  this.id, this.hashCode(), this.definedBy.hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getPanel() == null ? "Null" : getPanel().toString()));
+        Logger.trace(String.format("%s (%s) PanelLocation:@%08x defined by @%08x child of @%08x, %s, location=%s , globalLocation=%s side=%s (%s)", leader,  this.id, this.hashCode(), this.definition.hashCode(), parentHashCode, fileName, getLocation(), getGlobalLocation(), side, getPanel() == null ? "Null" : getPanel().toString()));
         if (getPanel() != null) {
             if (leader.isEmpty()) {
                 leader = "  +--";
@@ -161,10 +161,4 @@ public class PanelLocation extends PlacementsHolderLocation<PanelLocation> {
             }
         }
     }
-
-//    @Override
-//    public void propertyChange(PropertyChangeEvent evt) {
-//        Logger.trace(String.format("PropertyChangeEvent handled by PanelLocation @%08x = %s", this.hashCode(), evt));
-//        super.propertyChange(evt);
-//    }
 }

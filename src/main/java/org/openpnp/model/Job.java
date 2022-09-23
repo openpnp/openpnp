@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Placement.Type;
 import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
@@ -82,7 +82,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
         rootPanelLocation = new PanelLocation(rootPanel);
         rootPanelLocation.setLocalToParentTransform(new AffineTransform());
         rootPanelLocation.setCheckFiducials(false);
-        Logger.trace(String.format("Created new Job Panel @%08x, defined by @%08x", rootPanelLocation.getPanel().hashCode(), rootPanelLocation.getPanel().getDefinedBy().hashCode()));
+        Logger.trace(String.format("Created new Job Panel @%08x, defined by @%08x", rootPanelLocation.getPanel().hashCode(), rootPanelLocation.getPanel().getDefinition().hashCode()));
         addPropertyChangeListener(this);
     }
 
@@ -108,7 +108,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
             Panel panel = panels.get(0);
             panel.setFile(panelFile);
             panel.setName(panelFile.getName());
-            panel.setDefinedBy(panel);
+            panel.setDefinition(panel);
             panel.setDimensions(Location.origin);
             
             Configuration configuration = Configuration.get();
@@ -135,7 +135,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
                     // deep copy the existing rootPcb
                     BoardLocation newPcb = new BoardLocation(rootBoardLocation);
                     newPcb.setParent(null);
-                    newPcb.setDefinedBy(newPcb);
+                    newPcb.setDefinition(newPcb);
                     newPcb.setGlobalSide(Side.Top);
                     newPcb.getPlaced().clear();
                     
@@ -149,14 +149,15 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
                     int boardNum = j*panel.columns + (rootBoardLocation.getGlobalSide() == Side.Top ? i : panel.columns - 1 - i);
                     BoardLocation subBoard = boardLocations.get(boardNum);
                     
-                    String keyRoot = PanelLocation.ID_PREFIX + "1" + newPcb.getUniqueId();
+                    String keyRoot = PanelLocation.ID_PREFIX + "1" + PlacementsHolderLocation.ID_DELIMITTER + newPcb.getUniqueId();
                     Map<String, Boolean> subBoardPlaced = subBoard.getPlaced();
                     for (String key : subBoardPlaced.keySet()) {
                         placed.put(keyRoot + key, subBoardPlaced.get(key));
                     }
                 }
             }
-
+            boolean savedCheckFids = panel.isCheckFiducials();
+            
             try {
                 configuration.savePanel(panel);
             }
@@ -170,6 +171,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
             panelLocation.setFileName(panelFileName);
             panelLocation.setGlobalLocation(rootBoardLocation.getGlobalLocation());
             panelLocation.setGlobalSide(rootBoardLocation.getGlobalSide());
+            panelLocation.setCheckFiducials(savedCheckFids);
             rootPanel.addChild(panelLocation);
             
             dirty = true;
@@ -233,21 +235,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     }
 
     public int instanceCount(PlacementsHolder<?> boardOrPanel) {
-        return instanceCount(rootPanelLocation, boardOrPanel);
-    }
-    
-    private int instanceCount(PanelLocation panelLocation, PlacementsHolder<?> boardOrPanel) {
-        int count = 0;
-        for (PlacementsHolderLocation<?> child : panelLocation.getChildren()) {
-            PlacementsHolder<? extends PlacementsHolder<?>> fl = child.getPlacementsHolder();
-            if (boardOrPanel.isDefinedBy(fl.getDefinedBy())) {
-                count++;
-            }
-            else if (child instanceof PanelLocation) {
-                count += instanceCount((PanelLocation) child, boardOrPanel);
-            }
-        }
-        return count;
+        return rootPanelLocation.getPanel().getInstanceCount(boardOrPanel);
     }
     
     public File getFile() {
@@ -330,13 +318,13 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     }
 
     public void setPlaced(PlacementsHolderLocation<?> placementsHolderLocation, String placementId, boolean placed) {
-        String key = placementsHolderLocation.getUniqueId() + placementId;
+        String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placementId;
         this.placed.put(key, placed);
         firePropertyChange("placed", null, this.placed);
     }
 
     public boolean getPlaced(PlacementsHolderLocation<?> placementsHolderLocation, String placementId) {
-        String key = placementsHolderLocation.getUniqueId() + placementId;
+        String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placementId;
         if (placed.containsKey(key)) {
             return placed.get(key);
         } 
@@ -346,7 +334,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     }
     
     public void removePlaced(PlacementsHolderLocation<?> placementsHolderLocation, String placementId) {
-        String key = placementsHolderLocation.getUniqueId() + placementId;
+        String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placementId;
         placed.remove(key);
         firePropertyChange("placed", null, placed);
     }
@@ -359,7 +347,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     public void setEnabled(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement, boolean enabled) {
         String key = placementsHolderLocation.getUniqueId();
         if (placement != null) {
-            key += placement.getId();
+            key += PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
         }
         this.enabled.put(key, enabled);
         firePropertyChange("enabled", null, this.enabled);
@@ -368,7 +356,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     public boolean getEnabled(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
         String key = placementsHolderLocation.getUniqueId();
         if (placement != null) {
-            key += placement.getId();
+            key += PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
         }
         if (enabled.containsKey(key)) {
             return enabled.get(key);
@@ -381,7 +369,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     public void removeEnabled(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
         String key = placementsHolderLocation.getUniqueId();
         if (placement != null) {
-            key += placement.getId();
+            key += PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
         }
         enabled.remove(key);
         firePropertyChange("enabled", null, enabled);
@@ -420,13 +408,13 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     }
     
     public void setErrorHandling(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement, Placement.ErrorHandling errorHandling) {
-        String key = placementsHolderLocation.getUniqueId() + placement.getId();
+        String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
         this.errorHandling.put(key, errorHandling);
         firePropertyChange("errorHandling", null, this.errorHandling);
     }
 
     public Placement.ErrorHandling getErrorHandling(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
-        String key = placementsHolderLocation.getUniqueId() + placement.getId();
+        String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
         if (errorHandling.containsKey(key)) {
             return errorHandling.get(key);
         } 
@@ -436,7 +424,7 @@ public class Job extends AbstractModelObject implements PropertyChangeListener {
     }
     
     public void removeErrorHandling(PlacementsHolderLocation<?> placementsHolderLocation, Placement placement) {
-        String key = placementsHolderLocation.getUniqueId() + placement.getId();
+        String key = placementsHolderLocation.getUniqueId() + PlacementsHolderLocation.ID_DELIMITTER + placement.getId();
         errorHandling.remove(key);
         firePropertyChange("errorHandling", null, this.errorHandling);
     }

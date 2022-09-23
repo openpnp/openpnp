@@ -76,7 +76,7 @@ import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
 import org.openpnp.model.Board;
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.PlacementsHolderLocation;
@@ -380,7 +380,7 @@ public class JobPlacementsPanel extends JPanel {
         Logger.trace("DefinitionStructureChangedEvent = " + event);
         if (event.source != this && boardOrPanelLocation != null && 
                 boardOrPanelLocation.getPlacementsHolder() != null &&
-                event.definition == boardOrPanelLocation.getPlacementsHolder().getDefinedBy() &&
+                event.definition == boardOrPanelLocation.getPlacementsHolder().getDefinition() &&
                 event.changedName.equals("placements")) {
             SwingUtilities.invokeLater(() -> {
                 refresh();
@@ -419,7 +419,7 @@ public class JobPlacementsPanel extends JPanel {
             return;
         }
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            if (tableModel.getRowObjectAt(i).getDefinedBy() == placement) {
+            if (tableModel.getRowObjectAt(i).getDefinition() == placement) {
                 int index = table.convertRowIndexToView(i);
                 table.getSelectionModel().setSelectionInterval(index, index);
                 table.scrollRectToVisible(new Rectangle(table.getCellRect(index, 0, true)));
@@ -557,9 +557,9 @@ public class JobPlacementsPanel extends JPanel {
             if (boardOrPanelLocation instanceof PanelLocation) {
                 placement.setType(Type.Fiducial);
             }
-            boardOrPanelLocation.getPlacementsHolder().getDefinedBy().addPlacement(placement);
+            boardOrPanelLocation.getPlacementsHolder().getDefinition().addPlacement(placement);
             Configuration.get().getBus()
-                .post(new DefinitionStructureChangedEvent(boardOrPanelLocation.getPlacementsHolder().getDefinedBy(), "placements", JobPlacementsPanel.this));
+                .post(new DefinitionStructureChangedEvent(boardOrPanelLocation.getPlacementsHolder().getDefinition(), "placements", JobPlacementsPanel.this));
             jobPanel.getJob().removePlaced(boardOrPanelLocation, placement.getId());
             tableModel.fireTableDataChanged();
             Helpers.selectLastTableRow(table);
@@ -578,10 +578,10 @@ public class JobPlacementsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Placement placement : getSelections()) {
-                boardOrPanelLocation.getPlacementsHolder().getDefinedBy().removePlacement((Placement) placement.getDefinedBy());
+                boardOrPanelLocation.getPlacementsHolder().getDefinition().removePlacement((Placement) placement.getDefinition());
             }
             Configuration.get().getBus()
-                .post(new DefinitionStructureChangedEvent(boardOrPanelLocation.getPlacementsHolder().getDefinedBy(), "placements", JobPlacementsPanel.this));
+                .post(new DefinitionStructureChangedEvent(boardOrPanelLocation.getPlacementsHolder().getDefinition(), "placements", JobPlacementsPanel.this));
             tableModel.fireTableDataChanged();
             updateActivePlacements();
         }
@@ -677,7 +677,7 @@ public class JobPlacementsPanel extends JPanel {
                 Camera camera = tool.getHead().getDefaultCamera();
                 Location placementLocation = Utils2D.calculateBoardPlacementLocationInverse(
                         boardOrPanelLocation, camera.getLocation());
-                getSelection().getDefinedBy().setLocation(placementLocation.derive(null, null, 0.0, null));
+                getSelection().getDefinition().setLocation(placementLocation.derive(null, null, 0.0, null));
                 table.repaint();
             });
         }
@@ -697,7 +697,7 @@ public class JobPlacementsPanel extends JPanel {
                 Nozzle nozzle = MainFrame.get().getMachineControls().getSelectedNozzle();
                 Location placementLocation = Utils2D
                         .calculateBoardPlacementLocationInverse(boardOrPanelLocation, nozzle.getLocation());
-                getSelection().getDefinedBy().setLocation(placementLocation.derive(null, null, 0.0, null));
+                getSelection().getDefinition().setLocation(placementLocation.derive(null, null, 0.0, null));
                 table.repaint();
             });
         }

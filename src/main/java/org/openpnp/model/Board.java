@@ -51,21 +51,43 @@ public class Board extends PlacementsHolder<Board> implements PropertyChangeList
     @ElementList(required = false)
     private ArrayList<BoardPad> solderPastePads = new ArrayList<>();
 
+    @Commit
+    protected void commit() {
+        super.commit();
+        for (BoardPad pad : solderPastePads) {
+            pad.addPropertyChangeListener(this);
+        }
+    }
+
+    /**
+     * Default constructor
+     */
     public Board() {
         super();
         setFile(null);
     }
 
+    /**
+     * Constructs a new board and sets its file
+     * @param file - the file in which this board will be stored
+     */
     public Board(File file) {
         super();
         setFile(file);
     }
     
-    public Board(Board board) {
-        super(board);
-        this.solderPastePads = new ArrayList<>(board.solderPastePads); //needs to be a deep copy
+    /**
+     * Constructs a deep copy of the specified Board
+     * @param boardToCopy
+     */
+    public Board(Board boardToCopy) {
+        super(boardToCopy);
+        this.solderPastePads = new ArrayList<>(boardToCopy.solderPastePads); //really should be be a deep copy
     }
 
+    /**
+     * Cleans-up (removes all property change listeners) from this Board
+     */
     @Override
     public void dispose() {
         for (BoardPad pad : solderPastePads) {
@@ -74,23 +96,12 @@ public class Board extends PlacementsHolder<Board> implements PropertyChangeList
         super.dispose();
     }
     
-    @Commit
-    private void commit() {
-        for (Placement placement : placements) {
-            placement.addPropertyChangeListener(this);
-        }
-        for (BoardPad pad : solderPastePads) {
-            pad.addPropertyChangeListener(this);
-        }
-    }
-
     //Note that when/if solder paste dispensing is added back to OpenPnp, the following three 
     //methods and the field solderPastePads should be reviewed.  BoardPad should probably be changed
     //to extent AbstractLocatable and be handled similarly to how placements are handled in 
     //PlacementsHolder.  On second thought, it might make more sense to move all this to the 
     //footprint associated with each package. And then change the enabled field of Placement to 
-    //be an enumeration with the following values: Place Only, Paste Only, Paste and Place, and 
-    //Disabled.
+    //be an enumeration something like: Place Only, Paste Only, Paste and Place, and Disabled.
     public List<BoardPad> getSolderPastePads() {
         return Collections.unmodifiableList(solderPastePads);
     }
@@ -117,6 +128,6 @@ public class Board extends PlacementsHolder<Board> implements PropertyChangeList
 
     @Override
     public String toString() {
-        return String.format("Board @%08x defined by @%08x: file %s, dims: %sx%s, placements: %d", hashCode(), definedBy.hashCode(), file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
+        return String.format("Board @%08x defined by @%08x: file %s, dims: %sx%s, placements: %d", hashCode(), definition.hashCode(), file, dimensions.getLengthX(), dimensions.getLengthY(), placements.size());
     }
 }

@@ -31,6 +31,7 @@ import org.pmw.tinylog.Logger;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.core.Commit;
 
 /**
  * A PlacementsHolder is an abstraction of an object that has physical 2D extent and contains
@@ -43,7 +44,7 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
      * The name of this PlacementsHolder
      */
     @Attribute(required = false)
-    private String name;
+    protected String name;
     
     /**
      * The physical extent of this PlacementsHolder
@@ -57,17 +58,23 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
     @ElementList(required = false)
     protected IdentifiableList<Placement> placements = new IdentifiableList<>();
 
-    protected transient T definedBy;
+    protected transient T definition;
     protected transient File file;
     protected transient boolean dirty;
 
-
+    @Commit
+    protected void commit() {
+        for (Placement placement : placements) {
+            placement.addPropertyChangeListener(this);
+        }
+    }
+    
     /**
      * Constructs a new PlacementsHolder
      */
     @SuppressWarnings("unchecked")
     public PlacementsHolder() {
-        definedBy = (T) this;
+        definition = (T) this;
         addPropertyChangeListener(this);
     }
     
@@ -84,7 +91,7 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         }
         file = holderToCopy.file;
         dirty = holderToCopy.dirty;
-        setDefinedBy(holderToCopy.definedBy);
+        setDefinition(holderToCopy.definition);
         addPropertyChangeListener(this);
     }
     
@@ -97,7 +104,7 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
         for (Placement placement : placements) {
             placement.dispose();
         }
-        setDefinedBy(null);
+        setDefinition(null);
         super.dispose();
     }
     
@@ -121,19 +128,21 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
 
     /**
      * 
-     * @return the dimensions (physical extent) of this PlacementsHolder
+     * @return the dimensions (physical extent) of this PlacementsHolder (contained in the X and Y 
+     * fields)
      */
     public Location getDimensions() {
         return dimensions;
     }
 
     /**
-     * Sets the dimensions (physical extent) of this PlacementsHolder
+     * Sets the dimensions (physical extent) of this PlacementsHolder (contained in the X and Y 
+     * fields)
      * @param dimensions
      */
     public void setDimensions(Location dimensions) {
         Location oldValue = this.dimensions;
-        this.dimensions = dimensions;
+        this.dimensions = dimensions.derive(null, null, 0.0, 0.0);
         firePropertyChange("dimensions", oldValue, dimensions);
     }
 
@@ -154,24 +163,32 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
     }
 
     /**
-     * 
-     * @param index
-     * @param placement
+     * Sets the placement at the specified index
+     * @param index - the index of the placement to set
+     * @param placement - the placement to set
      */
     public void setPlacements(int index, Placement placement) {
         placements.add(index, placement);
     }
 
+    /**
+     * Adds a placement to the list of placements
+     * @param placement - the placement to add
+     */
     public void addPlacement(Placement placement) {
         if (placement != null) {
             placements.add(placement);
             fireIndexedPropertyChange("placements", placements.indexOf(placement), null, placement);
             placement.addPropertyChangeListener(this);
-            placement.getDefinedBy().addPropertyChangeListener(placement);
+            placement.getDefinition().addPropertyChangeListener(placement);
         }
         
     }
     
+    /**
+     * Removes the specified placement from the list of placements
+     * @param placement - the placement to remove
+     */
     public void removePlacement(Placement placement) {
         if (placement != null) {
             int index = placements.indexOf(placement);
@@ -179,48 +196,65 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
                 placements.remove(placement);
                 fireIndexedPropertyChange("placements", index, placement, null);
                 placement.dispose();
-//                placement.removePropertyChangeListener(this);
-//                placement.getDefinedBy().removePropertyChangeListener(placement);
             }
         }
     }
     
+    /**
+     * Removes the placement at the specified index 
+     * @param index - the index of the placement to remove
+     */
     public void removePlacement(int index) {
         if (index >= 0 && index < placements.size()) {
             Placement placement = placements.get(index);
             placements.remove(index);
             fireIndexedPropertyChange("placements", index, placement, null);
             placement.dispose();
-//            placement.removePropertyChangeListener(this);
-//            placement.getDefinedBy().removePropertyChangeListener(placement);
         }
     }
     
+    /**
+     * Removes all placements
+     */
     public void removeAllPlacements() {
         Object oldValue = new IdentifiableList<>(placements);
         for (Placement placement : placements) {
             placement.dispose();
-//            placement.removePropertyChangeListener(this);
-//            placement.getDefinedBy().removePropertyChangeListener(placement);
         }
         placements = new IdentifiableList<>();
         firePropertyChange("placements", oldValue, placements);
     }
     
+    /**
+     * Gets the file where this PlacementsHolder is stored
+     * @return
+     */
     public File getFile() {
         return file;
     }
 
+    /**
+     * Sets the file where this PlacementsHolder will be stored
+     * @param file
+     */
     public void setFile(File file) {
         Object oldValue = this.file;
         this.file = file;
         firePropertyChange("file", oldValue, file);
     }
 
+    /**
+     * @return true if this PlacementsHolder has been modified
+     */
     public boolean isDirty() {
         return dirty;
     }
 
+    /**
+     * Sets the state of the dirty flag (used to indicate that this PlacementsHolder has been 
+     * modified) to the specified value
+     * @param dirty - the state to set the flag
+     */
     public void setDirty(boolean dirty) {
         boolean oldValue = this.dirty;
         this.dirty = dirty;
@@ -228,14 +262,14 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
     }
 
     @Override
-    public T getDefinedBy() {
-        return definedBy;
+    public T getDefinition() {
+        return definition;
     }
 
     @Override
-    public void setDefinedBy(T definedBy) {
-        PlacementsHolder<T> oldValue = this.definedBy;
-        this.definedBy = definedBy;
+    public void setDefinition(T definedBy) {
+        PlacementsHolder<T> oldValue = this.definition;
+        this.definition = definedBy;
         firePropertyChange("definedBy", oldValue, definedBy);
         if (oldValue != null) {
             oldValue.removePropertyChangeListener(this);
@@ -247,7 +281,7 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
 
     @Override
     public boolean isDefinedBy(Object definedBy) {
-        return this.definedBy == definedBy;
+        return this.definition == definedBy;
     }
 
     @Override
@@ -255,7 +289,7 @@ public abstract class PlacementsHolder<T extends PlacementsHolder<T>>
 //        Logger.trace(String.format("PropertyChangeEvent handled by AbstractBoard @%08x = %s", this.hashCode(), evt));
         if (evt.getSource() != PlacementsHolder.this || !evt.getPropertyName().equals("dirty")) {
             dirty = true;
-            if (PlacementsHolder.this != definedBy && evt.getSource() == definedBy) {
+            if (PlacementsHolder.this != definition && evt.getSource() == definition) {
                 Logger.trace(String.format("Attempting to set %s @%08x property %s = %s", this.getClass().getSimpleName(), this.hashCode(), evt.getPropertyName(), evt.getNewValue()));
                 if (evt instanceof IndexedPropertyChangeEvent) {
                     if (evt.getPropertyName() == "placements") {

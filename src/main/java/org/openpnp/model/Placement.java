@@ -35,7 +35,7 @@ import org.simpleframework.xml.core.Persist;
  * 
  * @author jason
  */
-public class Placement extends AbstractLocatable<Placement> {
+public class Placement extends Abstract2DLocatable<Placement> {
     public enum Type {
         Placement, 
         Fiducial,

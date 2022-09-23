@@ -24,7 +24,7 @@ import java.util.Locale;
 
 import javax.swing.event.TableModelEvent;
 import org.openpnp.gui.support.LengthCellValue;
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Job;
@@ -148,7 +148,7 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
                 Length length = value.getLength();
                 Location dims = placementsHolderLocation.getPlacementsHolder().getDimensions();
                 dims = Length.setLocationField(configuration, dims, length, Length.Field.X);
-                placementsHolderLocation.getPlacementsHolder().getDefinedBy().setDimensions(dims);
+                placementsHolderLocation.getPlacementsHolder().getDefinition().setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 3) {
@@ -156,7 +156,7 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
                 Length length = value.getLength();
                 Location dims = placementsHolderLocation.getPlacementsHolder().getDimensions();
                 dims = Length.setLocationField(configuration, dims, length, Length.Field.Y);
-                placementsHolderLocation.getPlacementsHolder().getDefinedBy().setDimensions(dims);
+                placementsHolderLocation.getPlacementsHolder().getDefinition().setDimensions(dims);
                 fireTableCellUpdated(rowIndex, columnIndex);
             }
             else if (columnIndex == 4) {
@@ -241,12 +241,6 @@ public class PlacementsHolderLocationsTableModel extends AbstractObjectTableMode
         Location dim = placementsHolderLocation.getPlacementsHolder().getDimensions();
         switch (col) {
             case 0:
-//                PanelLocation parent = placementsHolderLocation.getParent();
-//                String leader = "";
-//                while (parent.getParent() != null) {
-//                    leader = leader + "    ";
-//                    parent = parent.getParent();
-//                }
                 return placementsHolderLocation.getUniqueId();
             case 1:
                 return placementsHolderLocation.getPlacementsHolder().getName();

@@ -679,7 +679,7 @@ public class Configuration extends AbstractModelObject {
             return;
         }
         Panel panel = loadPanel(file);
-        Logger.trace(String.format("Loaded new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
+        Logger.trace(String.format("Loaded new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinition().hashCode()));
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(file, panel);
         firePropertyChange("panels", oldValue, panels);
@@ -708,7 +708,7 @@ public class Configuration extends AbstractModelObject {
         if (!file.exists()) {
             Panel panel = new Panel(file);
             Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", 
-                    panel.hashCode(), panel.getDefinedBy().hashCode()));
+                    panel.hashCode(), panel.getDefinition().hashCode()));
             panel.setName(file.getName());
             Serializer serializer = createSerializer();
             serializer.write(panel, file);
@@ -719,7 +719,7 @@ public class Configuration extends AbstractModelObject {
         }
         Panel panel = loadPanel(file);
         Logger.trace(String.format("Loaded new Panel @%08x, defined by @%08x", 
-                panel.hashCode(), panel.getDefinedBy().hashCode()));
+                panel.hashCode(), panel.getDefinition().hashCode()));
         LinkedHashMap<File, Panel> oldValue = new LinkedHashMap<>(panels);
         panels.put(file, panel);
         firePropertyChange("panels", oldValue, panels);
@@ -1049,7 +1049,7 @@ public class Configuration extends AbstractModelObject {
             }
             //Create a deep copy of the Panel definition and assign it to the PanelLocation
             panel = new Panel(getPanel(panelFile));
-            Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinedBy().hashCode()));
+            Logger.trace(String.format("Created new Panel @%08x, defined by @%08x", panel.hashCode(), panel.getDefinition().hashCode()));
             panelLocation.setPanel(panel);
         }
 
@@ -1058,13 +1058,13 @@ public class Configuration extends AbstractModelObject {
             if (child instanceof PanelLocation) {
                 PanelLocation childPanelLocation = (PanelLocation) child;
                 childPanelLocation.setParent(panelLocation);
-                childPanelLocation.getDefinedBy().addPropertyChangeListener(childPanelLocation);
+                childPanelLocation.getDefinition().addPropertyChangeListener(childPanelLocation);
                 resolvePanel(job, childPanelLocation);
             }
             else if (child instanceof BoardLocation) {
                 BoardLocation boardLocation = (BoardLocation) child;
                 boardLocation.setParent(panelLocation);
-                boardLocation.getDefinedBy().addPropertyChangeListener(boardLocation);
+                boardLocation.getDefinition().addPropertyChangeListener(boardLocation);
                 resolveBoard(job, boardLocation);
             }
             else {
@@ -1073,6 +1073,19 @@ public class Configuration extends AbstractModelObject {
         }
         
         panel.setDirty(false);
+    }
+    
+    public boolean isInUse(PlacementsHolder<?> placementsHolder) {
+        if (MainFrame.get().getJobTab().getJob().instanceCount(placementsHolder) > 0) {
+            return true;
+        }
+        for (Panel panel : getPanels()) {
+            if (panel.getDefinition() != placementsHolder.getDefinition() && 
+                    panel.getInstanceCount(placementsHolder) > 0) {
+                return true;
+            }
+        }
+        return false;
     }
     
     /**
@@ -1094,18 +1107,18 @@ public class Configuration extends AbstractModelObject {
             Panel panel = panelLocation.getPanel();
             if (panel != null) {
                 for (PlacementsHolderLocation<?> child : panel.getChildren()) {
-                    if (child.isLocallyEnabled() != child.getDefinedBy().isLocallyEnabled()) {
+                    if (child.isLocallyEnabled() != child.getDefinition().isLocallyEnabled()) {
                         job.setEnabled(child, null, child.isLocallyEnabled());
                     }
-                    if (child.isCheckFiducials() != child.getDefinedBy().isCheckFiducials()) {
+                    if (child.isCheckFiducials() != child.getDefinition().isCheckFiducials()) {
                         job.setCheckFiducials(child, child.isCheckFiducials());
                     }
                     if (child instanceof BoardLocation || child instanceof PanelLocation) {
                         for (Placement placement : child.getPlacementsHolder().getPlacements()) {
-                            if (placement.isEnabled() != ((Placement) placement.getDefinedBy()).isEnabled()) {
+                            if (placement.isEnabled() != ((Placement) placement.getDefinition()).isEnabled()) {
                                 job.setEnabled(child, placement, placement.isEnabled());
                             }
-                            if (placement.getErrorHandling() != ((Placement) placement.getDefinedBy()).getErrorHandling()) {
+                            if (placement.getErrorHandling() != ((Placement) placement.getDefinition()).getErrorHandling()) {
                                 job.setErrorHandling(child, placement, placement.getErrorHandling());
                             }
                         }

@@ -66,7 +66,9 @@ import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Placement;
+import org.openpnp.model.PlacementsHolderLocation;
 import org.openpnp.model.Configuration.TablesLinked;
+import org.openpnp.model.Panel;
 import org.pmw.tinylog.Logger;
 
 import com.google.common.eventbus.Subscribe;
@@ -136,12 +138,6 @@ public class BoardsPanel extends JPanel {
         boardsTable.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
-                Logger.trace("TableModelEvent = " +
-                    "col:" + e.getColumn() +
-                    " firstRow:" + e.getFirstRow() +
-                    " lastRow:" + e.getLastRow() +
-                    " source:" + e.getSource() +
-                    " type:" + e.getType() );
                 SwingUtilities.invokeLater(() -> {
                     boardPlacementsPanel.refresh();
                 });
@@ -261,7 +257,7 @@ public class BoardsPanel extends JPanel {
             return;
         }
         SwingUtilities.invokeLater(() -> {
-            selectBoard((Board) event.placementsHolderLocation.getPlacementsHolder().getDefinedBy());
+            selectBoard((Board) event.placementsHolderLocation.getPlacementsHolder().getDefinition());
         });
     }
 
@@ -270,9 +266,9 @@ public class BoardsPanel extends JPanel {
         if (event.source == this || event.source == boardPlacementsPanel || event.placementsHolderLocation == null || !(event.placementsHolderLocation.getPlacementsHolder() instanceof Board)) {
             return;
         }
-        Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinedBy();
+        Placement placement = event.placement == null ? null : (Placement) event.placement.getDefinition();
         SwingUtilities.invokeLater(() -> {
-            selectBoard((Board) event.placementsHolderLocation.getPlacementsHolder().getDefinedBy());
+            selectBoard((Board) event.placementsHolderLocation.getPlacementsHolder().getDefinition());
             boardPlacementsPanel.selectPlacement(placement);
         });
     }
@@ -362,7 +358,6 @@ public class BoardsPanel extends JPanel {
 
                 Board board = addBoard(file);
 
-//                Helpers.selectLastTableRow(boardsTable);
                 selectBoard(board);
             }
             catch (Exception e) {
@@ -398,7 +393,6 @@ public class BoardsPanel extends JPanel {
 
                 Board board = addBoard(file);
 
-//                Helpers.selectLastTableRow(boardsTable);
                 selectBoard(board);
             }
             catch (Exception e) {
@@ -426,8 +420,15 @@ public class BoardsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             for (Board selection : getSelections()) {
-                configuration.removeBoard(selection);
-
+                if (configuration.isInUse(selection)) {
+                    MessageBoxes.errorBox(BoardsPanel.this, "Error Removing Board", 
+                            "Could not remove " + selection.getName() + " because it is either "
+                                    + "being used by the current job or by a panel that is loaded "
+                                    + "in the current configuration.");
+                }
+                else {
+                    configuration.removeBoard(selection);
+                }
             }
             boardsTableModel.fireTableDataChanged();
         }
@@ -470,7 +471,6 @@ public class BoardsPanel extends JPanel {
                 configuration.addBoard(newBoard);
                 configuration.saveBoard(newBoard);
                 boardsTableModel.fireTableDataChanged();
-//                Helpers.selectLastTableRow(boardsTable);
                 selectBoard(newBoard);
             }
             catch (Exception e) {

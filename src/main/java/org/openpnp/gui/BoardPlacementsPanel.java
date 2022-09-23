@@ -75,7 +75,7 @@ import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.support.PartsComboBoxModel;
 import org.openpnp.gui.tablemodel.PlacementsHolderPlacementsTableModel;
 import org.openpnp.gui.tablemodel.PlacementsTableModel.Status;
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Board;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardPad;
@@ -504,7 +504,11 @@ public class BoardPlacementsPanel extends JPanel {
                 IdentifiableList<Placement> existingPlacements = existingBoard.getPlacements();
                 int importOption = 1;
                 if (!existingPlacements.isEmpty()) {
-                    //Option 0: Merge imported placements with existing placements
+                    //Option 0: Merge imported placements with existing placements - existing 
+                    //          placements with Ids matching those in the imported set are updated,
+                    //          existing placements with Ids that don't match any in the imported 
+                    //          set are left unchanged, and placements in the imported set that 
+                    //          don't match any in the existing set are added 
                     //Option 1: Import after deleting all existing placements
                     //Option 2: Cancel the import
                     Object[] options = {"Merge new with existing",
@@ -531,6 +535,7 @@ public class BoardPlacementsPanel extends JPanel {
                         existingPlacement.setPart(placement.getPart());
                         existingPlacement.setSide(placement.getSide());
                         existingPlacement.setLocation(placement.getLocation());
+                        existingPlacement.setComments(placement.getComments());
                     }
                     else {
                         existingBoard.addPlacement(placement);

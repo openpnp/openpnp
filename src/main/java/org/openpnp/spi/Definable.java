@@ -20,15 +20,30 @@
 package org.openpnp.spi;
 
 /**
- * 
- * @author Tony
- *
- * @param <T>
+ * An interface used to indicate a one-way relationship of one object (the definition) to one or 
+ * more other objects (the defined objects).  Changes to the definition object should flow to the 
+ * defined objects but changes made locally to any of the defined objects should not affect the 
+ * definition. Typically, property change listeners are used to update the defined objects when the
+ * definition is changed.
+ * @param <T> the type of the Definable
  */
 public interface Definable<T> {
-    public T getDefinedBy();
+    /**
+     * 
+     * @return the defining object
+     */
+    public T getDefinition();
     
-    public void setDefinedBy(T definable);
+    /**
+     * Sets the defining object
+     * @param definable - the definition
+     */
+    public void setDefinition(T definable);
     
-    public boolean isDefinedBy(Object definable);
+    /**
+     * Tests to see if this object is defined by another
+     * @param potentialDefinition - the other object 
+     * @return
+     */
+    public boolean isDefinedBy(Object potentialDefinition);
 }

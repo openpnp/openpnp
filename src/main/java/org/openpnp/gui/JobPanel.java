@@ -84,7 +84,7 @@ import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
 import org.openpnp.gui.tablemodel.PlacementsHolderLocationsTableModel;
 import org.openpnp.model.Board;
-import org.openpnp.model.AbstractLocatable.Side;
+import org.openpnp.model.Abstract2DLocatable.Side;
 import org.openpnp.model.Configuration.TablesLinked;
 import org.openpnp.model.BoardLocation;
 import org.openpnp.model.BoardPad;
@@ -197,7 +197,13 @@ public class JobPanel extends JPanel {
                 int col = columnAtPoint(p);
 
                 if (row >= 0) {
-                    if (col == 1) {
+                    if (col == 0) {
+                        row = jobTable.convertRowIndexToModel(row);
+                        PlacementsHolderLocation<?> placementsHolderLocation =
+                                job.getBoardAndPanelLocations().get(row);
+                        return placementsHolderLocation.getUniqueId();
+                    }
+                    else if (col == 1) {
                         row = jobTable.convertRowIndexToModel(row);
                         PlacementsHolderLocation<?> placementsHolderLocation =
                                 job.getBoardAndPanelLocations().get(row);
@@ -275,10 +281,10 @@ public class JobPanel extends JPanel {
                             if (updateLinkedTables) {
                                 if (selections.get(0).getParent() != job.getRootPanelLocation()) {
                                     Configuration.get().getBus()
-                                    .post(new PlacementsHolderLocationSelectedEvent(selections.get(0).getParent().getDefinedBy(), JobPanel.this));
+                                    .post(new PlacementsHolderLocationSelectedEvent(selections.get(0).getParent().getDefinition(), JobPanel.this));
                                 }
                                 Configuration.get().getBus()
-                                    .post(new PlacementsHolderLocationSelectedEvent(selections.get(0).getDefinedBy(), JobPanel.this));
+                                    .post(new PlacementsHolderLocationSelectedEvent(selections.get(0).getDefinition(), JobPanel.this));
                                 Configuration.get().getBus()
                                     .post(new PlacementSelectedEvent(null, selections.get(0), JobPanel.this));
                             }
@@ -479,7 +485,7 @@ public class JobPanel extends JPanel {
         Logger.trace("panelStructureChanged DefinitionStructureChangedEvent = " + event);
         for (PanelLocation panelLocation : job.getPanelLocations()) {
             if (event.source != this && panelLocation.getPanel() != null && 
-                    event.definition == panelLocation.getPanel().getDefinedBy() && 
+                    event.definition == panelLocation.getPanel().getDefinition() && 
                     event.changedName.contentEquals("children")) {
                 PanelLocation.setParentsOfAllDescendants(job.getRootPanelLocation());
                 SwingUtilities.invokeLater(() -> {
@@ -496,7 +502,7 @@ public class JobPanel extends JPanel {
             jobTable.getSelectionModel().clearSelection();
         }
         for (int i = 0; i < jobTableModel.getRowCount(); i++) {
-            if (job.getBoardAndPanelLocations().get(i).getDefinedBy() == placementsHolderLocation) {
+            if (job.getBoardAndPanelLocations().get(i).getDefinition() == placementsHolderLocation) {
                 int index = jobTable.convertRowIndexToView(i);
                 jobTable.getSelectionModel().setSelectionInterval(index, index);
                 jobTable.scrollRectToVisible(
@@ -1197,7 +1203,7 @@ public class JobPanel extends JPanel {
 
     protected void addBoard(File file) throws Exception {
         Board board = new Board(configuration.getBoard(file));
-        Logger.trace(String.format("Added board %08x defined by %08x to job", board.hashCode(), board.getDefinedBy().hashCode()));
+        Logger.trace(String.format("Added board %08x defined by %08x to job", board.hashCode(), board.getDefinition().hashCode()));
         BoardLocation boardLocation = new BoardLocation(board);
         job.addBoardOrPanelLocation(boardLocation);
         job.getRootPanelLocation().dump("");
@@ -1237,7 +1243,7 @@ public class JobPanel extends JPanel {
                 PanelLocation panelLocation = new PanelLocation(panel);
                 job.addBoardOrPanelLocation(panelLocation);
                 jobTableModel.fireTableDataChanged();
-                Logger.trace(String.format("Added panel %08x defined by %08x to job", panel.hashCode(), panel.getDefinedBy().hashCode()));
+                Logger.trace(String.format("Added panel %08x defined by %08x to job", panel.hashCode(), panel.getDefinition().hashCode()));
 
                 Helpers.selectObjectTableRow(jobTable, panelLocation);
             }
@@ -1277,7 +1283,7 @@ public class JobPanel extends JPanel {
             jobTableModel.fireTableDataChanged();
 
             Helpers.selectObjectTableRow(jobTable, panelLocation);
-            Logger.trace(String.format("Added panel %08x defined by %08x to job", panelLocation.getPanel().hashCode(), panelLocation.getPanel().getDefinedBy().hashCode()));
+            Logger.trace(String.format("Added panel %08x defined by %08x to job", panelLocation.getPanel().hashCode(), panelLocation.getPanel().getDefinition().hashCode()));
             job.getRootPanelLocation().dump("");
         }
     };
