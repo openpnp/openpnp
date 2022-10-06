@@ -45,6 +45,8 @@ If you want to do it _manually_, you can use the following guide.
 ![Nozzle Tip Calibration Wizard](https://user-images.githubusercontent.com/9963310/59954597-da90e180-9485-11e9-8560-8157bdaa5453.png)
 
 # Bottom Camera Calibration
+**Note:** It is strongly recommended the let [[Issues and Solutions]] propose and perform camera calibration (both the "Preliminary" and the "Advanced" calibration) in the right sequence. Therefore you do _not_ normally need to perform the following _legacy_ method anymore.  
+
 Once you have your nozzle tip calibrated precisely, you can use the "Calibrate Camera Position and Rotation" button. OpenPNP will rotate the nozzle tip in a wide circle to not only get the precise center, but also the rotation of the camera in relation to the X and Y axes. 
 
 ![Rotating the nozzle tip in a large circle.](https://user-images.githubusercontent.com/9963310/56699028-2f1d1800-66f4-11e9-9b77-4a75719ee138.gif)
