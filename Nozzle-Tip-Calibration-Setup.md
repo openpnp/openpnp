@@ -27,7 +27,9 @@ The calibration can only work correctly if the location and rotation of the nozz
 Use Issues & Solutions [[Vision Solutions]] and at least the [precision Nozzle offsets calibration](https://github.com/openpnp/openpnp/wiki/Calibration-Solutions#calibrating-precision-camera-to-nozzle-offsets) from the [[Calibration Solutions]], to set up the machine to be ready for Nozzle tip calibration.
 
 # Basic Calibration Setup
-You can setup the calibration features per nozzle tip. This allows you to tune the pipeline well to the different nozzle tips' diameter sizes. 
+You can setup the calibration features per nozzle tip. [[Issues and Solutions]] will propose an _automatic_ calibration for you, so it is strongly recommnded to use that solution. It also makes sure that all the prerequisites are in order.
+
+If you want to do it _manually_, you can use the following guide.  
 1. Enable the feature for each nozzle tip you have issues with runout. If you have a multi-nozzle machine with potential camera focal plane offsets, you need to enable it for all the tips.
 2. The calibration algorithm needs measurements of the nozzle tip location at different angles to calculate the runout and offsets. You may set the circle divisions as low as 3, making 3 measurements at -180°, -60° and 60°. For higher accuracy you may want to choose 6. 
 3. Set the allowed misdetects, so the calibration becomes more robust and won't interrupt a job just because of a single calibration misdetect. At least 3 measurements must remain.  
