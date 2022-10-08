@@ -6,7 +6,7 @@ Hence, the Issues & Solutions system was born. It has these features:
 
 1. Tracks your progress in the machine setup process (Milestones).
 2. Detects issues and (most of the time) proposes a solution.
-3. Lists issues from outright mistakes to suggestions for optimization.
+3. Lists issues from the next step to setup a new machine, suggestions for optimization, to fixing mistakes.
 4. The user is the boss: proposed solutions can be accepted or dismissed.
 5. Accept solutions, explore them and undo them, if you don't like them.
 6. Significantly lowers the required expertise of users. Solutions generate machine-specific, ready-to-use Gcode commands and regular expressions.
