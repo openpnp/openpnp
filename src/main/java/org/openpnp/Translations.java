@@ -22,6 +22,14 @@ public class Translations {
         }
     }
 
+    public static String getStringOrDefault(String key, String defaultValue) {
+        try {
+            return RESOURCE_BUNDLE.getString(key);
+        } catch (MissingResourceException e) {
+            return defaultValue;
+        }
+    }
+
     public static class UTF8Control extends ResourceBundle.Control {
         public ResourceBundle newBundle
                 (String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
