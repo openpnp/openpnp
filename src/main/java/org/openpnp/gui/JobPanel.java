@@ -1426,8 +1426,10 @@ public class JobPanel extends JPanel {
     
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Enabled");
-            putValue(SHORT_DESCRIPTION, "Set board(s) enabled to...");
+            putValue(NAME, Translations.getStringOrDefault("JobPanel.Action.Job.Board.SetEnabled",
+                    "Set Enabled"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("JobPanel.Action.Job.Board.Description",
+                    "Set board(s) enabled to..."));
         }
 
         @Override
@@ -1454,8 +1456,10 @@ public class JobPanel extends JPanel {
 
     public final Action setCheckFidsAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Check Fids");
-            putValue(SHORT_DESCRIPTION, "Set check fids to...");
+            putValue(NAME, Translations.getStringOrDefault("JobPanel.Action.Job.Board.SetCheckFids",
+                    "Set Check Fids"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPanel.Action.Job.Board.SetCheckFids.Description", "Set check fids to..."));
         }
 
         @Override
@@ -1482,8 +1486,10 @@ public class JobPanel extends JPanel {
     
     public final Action setSideAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Side");
-            putValue(SHORT_DESCRIPTION, "Set board side(s) to...");
+            putValue(NAME, Translations.getStringOrDefault("JobPanel.Action.Job.Board.SetSide",
+                    "Set Side"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPanel.Action.Job.Board.SetSide.Description", "Set board side(s) to..."));
         }
 
         @Override

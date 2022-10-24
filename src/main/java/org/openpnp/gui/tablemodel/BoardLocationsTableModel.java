@@ -23,6 +23,7 @@ import java.util.Locale;
 
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Board.Side;
 import org.openpnp.model.BoardLocation;
@@ -34,8 +35,16 @@ import org.openpnp.model.Location;
 public class BoardLocationsTableModel extends AbstractTableModel {
     private final Configuration configuration;
 
-    private String[] columnNames = new String[] {"Board", "Width", "Length", "Side", "X", "Y", "Z",
-            "Rot.", "Enabled?", "Check Fids?"};
+    private String[] columnNames = new String[] {
+            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Board", "Board"),
+            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Width", "Width"),
+            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Length", "Length"),
+            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Side", "Side"),
+            "X", "Y", "Z",
+            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Rotation", "Rot."),
+            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.Enabled", "Enabled?"),
+            Translations.getStringOrDefault("BoardLocationsTableModel.ColumnName.CheckFids",
+                    "Check Fids?")};
 
     private Class[] columnTypes = new Class[] {String.class, LengthCellValue.class,
             LengthCellValue.class, Side.class, LengthCellValue.class, LengthCellValue.class,
