@@ -667,16 +667,25 @@ public class MainFrame extends JFrame {
                     }
                 });
 
-        tabs.addTab("Job", null, jobPanel, null); //$NON-NLS-1$
-        tabs.addTab("Parts", null, partsPanel, null); //$NON-NLS-1$
-        tabs.addTab("Packages", null, packagesPanel, null); //$NON-NLS-1$
-        tabs.addTab("Vision", null, visionSettingsPanel, null); //$NON-NLS-1$
-        tabs.addTab("Feeders", null, feedersPanel, null); //$NON-NLS-1$
-        tabs.addTab("Machine Setup", null, machineSetupPanel, null); //$NON-NLS-1$
-        tabs.addTab("Issues & Solutions", null, issuesAndSolutionsPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getStringOrDefault("MainFrame.RightComponent.tabs.Job", "Job"),
+                null, jobPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getStringOrDefault("MainFrame.RightComponent.tabs.Parts", "Parts"),
+                null, partsPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getStringOrDefault("MainFrame.RightComponent.tabs.Packages",
+                "Packages"),null, packagesPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getStringOrDefault("MainFrame.RightComponent.tabs.Vision", "Vision"),
+                null, visionSettingsPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getStringOrDefault("MainFrame.RightComponent.tabs.Feeders", "Feeders"),
+                null, feedersPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getStringOrDefault("MainFrame.RightComponent.tabs.MachineSetup",
+                        "Machine Setup"),
+                null, machineSetupPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getStringOrDefault("MainFrame.RightComponent.tabs.IssuesAndSolutions",
+                "Issues & Solutions"), null, issuesAndSolutionsPanel, null); //$NON-NLS-1$
 
         LogPanel logPanel = new LogPanel();
-        tabs.addTab("Log", null, logPanel, null); //$NON-NLS-1$
+        tabs.addTab(Translations.getStringOrDefault("MainFrame.RightComponent.tabs.Log", "Log"),
+                null, logPanel, null); //$NON-NLS-1$
 
         panelStatusAndDros = new JPanel();
         panelStatusAndDros.setBorder(null);
@@ -719,8 +728,10 @@ public class MainFrame extends JFrame {
         droLbl.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(droLbl, "8, 1"); //$NON-NLS-1$
 
-        cameraPanel.setBorder(new TitledBorder(null, "Cameras", TitledBorder.LEADING, //$NON-NLS-1$
-                TitledBorder.TOP, null, null));
+        cameraPanel.setBorder(new TitledBorder(null,
+                Translations.getStringOrDefault("MainFrame.CameraPanel.Border.title", "Cameras"),
+                TitledBorder.LEADING,
+                TitledBorder.TOP, null, null)); //$NON-NLS-1$
         panelCameraAndInstructions.add(cameraPanel, BorderLayout.CENTER);
 
         registerBoardImporters();

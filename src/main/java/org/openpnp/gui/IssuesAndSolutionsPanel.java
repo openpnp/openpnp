@@ -60,6 +60,7 @@ import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.IssuePanel;
 import org.openpnp.gui.support.ActionGroup;
@@ -384,12 +385,16 @@ public class IssuesAndSolutionsPanel extends JPanel {
                     int indicatorUnicode = 0x2B24;
                     Color color = maxSeverity.color;
                     color = saturate(color);
-                    tabs.setTitleAt(index, "<html>Issues &amp; Solutions <span style=\"color:#"
+                    //"<html>Issues &amp; Solutions <span style=\"color:#"
+                    tabs.setTitleAt(index, Translations.getStringOrDefault(
+                            "MainFrame.RightComponent.tabs.IssuesAndSolutionsHtml",
+                            "<html>Issues &amp; Solutions <span style=\"color:#")
                             +String.format("%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue())
                             +";\">&#"+(indicatorUnicode)+";</span></html>");
                 }
                 else {
-                    tabs.setTitleAt(index, "Issues & Solutions");
+                    tabs.setTitleAt(index, Translations.getStringOrDefault(
+                            "MainFrame.RightComponent.tabs.IssuesAndSolutions","Issues & Solutions"));
                 }
             }
         }
