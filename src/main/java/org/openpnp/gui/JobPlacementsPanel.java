@@ -42,6 +42,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Translations;
 import org.openpnp.events.PlacementSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.ActionGroup;
@@ -94,7 +95,9 @@ public class JobPlacementsPanel extends JPanel {
         createUi();
     }
     private void createUi() {
-        setBorder(new TitledBorder(null, "Placements", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        setBorder(new TitledBorder(null,
+                Translations.getStringOrDefault("JobPlacementsPanel.Border.title", "Placements"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         
         Configuration configuration = Configuration.get();
         
@@ -288,7 +291,8 @@ public class JobPlacementsPanel extends JPanel {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblNewLabel = new JLabel("Search");
+        JLabel lblNewLabel = new JLabel(
+                Translations.getStringOrDefault("JobPlacementsPanel.SearchLabel.text", "Search"));
         panel_1.add(lblNewLabel);
 
         searchTextField = new JTextField();
@@ -430,20 +434,30 @@ public class JobPlacementsPanel extends JPanel {
     public final Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Placement");
-            putValue(SHORT_DESCRIPTION, "Create a new placement and add it to the board.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.NewPlacement.Name",
+                    "New Placement"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.NewPlacement.ShortDescription",
+                    "Create a new placement and add it to the board."));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (Configuration.get().getParts().size() == 0) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                        "There are currently no parts defined in the system. Please create at least one part before creating a placement.");
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getStringOrDefault(
+                        "JobPlacementsPanel.NewPlacement.ErrorMessageBox.title",
+                        "Error"),
+                        Translations.getStringOrDefault(
+                                "JobPlacementsPanel.NewPlacement.ErrorMessageBox.NoPartsMessage",
+                                "There are currently no parts defined in the system. Please create at least one part before creating a placement."
+                        ));
                 return;
             }
 
             String id = JOptionPane.showInputDialog(getTopLevelAncestor(),
-                    "Please enter an ID for the new placement.");
+                    Translations.getStringOrDefault("JobPlacementsPanel.NewPlacement.InputDialog.enterIdMessage",
+                            "Please enter an ID for the new placement."));
             if (id == null) {
                 return;
             }
@@ -451,8 +465,12 @@ public class JobPlacementsPanel extends JPanel {
             // Check if the new placement ID is unique
             for(Placement compareplacement : boardLocation.getBoard().getPlacements()) {
             	if (compareplacement.getId().equals(id)) {
-            		MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                            "The ID for the new placement already exists");
+            		MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getStringOrDefault(
+                                    "JobPlacementsPanel.NewPlacement.ErrorMessageBox.title",
+                                    "Error"),
+                            Translations.getStringOrDefault(
+                                    "JobPlacementsPanel.NewPlacement.ErrorMessageBox.IdAlreadyExistsMessage",
+                                    "The ID for the new placement already exists"));
                     return;
             	}
             }
@@ -474,8 +492,12 @@ public class JobPlacementsPanel extends JPanel {
     public final Action removeAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Remove Placement(s)");
-            putValue(SHORT_DESCRIPTION, "Remove the currently selected placement(s).");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.RemovePlacement.Name",
+                    "Remove Placement(s)"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.RemovePlacement.ShortDescription",
+                    "Remove the currently selected placement(s)."));
         }
 
         @Override
@@ -491,8 +513,13 @@ public class JobPlacementsPanel extends JPanel {
     public final Action moveCameraToPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCamera);
-            putValue(NAME, "Move Camera To Placement Location");
-            putValue(SHORT_DESCRIPTION, "Position the camera at the placement's location.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.PositionCameraAtPlacement.Name",
+                    "Move Camera To Placement Location"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.PositionCameraAtPlacement.ShortDescription",
+                    "Position the camera at the placement's location."
+            ));
         }
 
         @Override
@@ -515,9 +542,13 @@ public class JobPlacementsPanel extends JPanel {
     public final Action moveCameraToPlacementLocationNext = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCameraMoveNext);
-            putValue(NAME, "Move Camera To Next Placement Location ");
-            putValue(SHORT_DESCRIPTION,
-                    "Position the camera at the next placements location.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.PositionCameraAtNextPlacement.Name",
+                    "Move Camera To Next Placement Location"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                            "JobPlacementsPanel.PositionCameraAtNextPlacement.ShortDescription",
+                            "Position the camera at the next placements location."
+                    ));
         }
 
         @Override
@@ -546,8 +577,13 @@ public class JobPlacementsPanel extends JPanel {
     public final Action moveToolToPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerTool);
-            putValue(NAME, "Move Tool To Placement Location");
-            putValue(SHORT_DESCRIPTION, "Position the tool at the placement's location.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.PositionToolAtPlacement.Name",
+                    "Move Tool To Placement Location"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.PositionToolAtPlacement.ShortDescription",
+                    "Position the tool at the placement's location."
+            ));
         }
 
         @Override
@@ -566,9 +602,12 @@ public class JobPlacementsPanel extends JPanel {
     public final Action captureCameraPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.captureCamera);
-            putValue(NAME, "Capture Camera Placement Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Set the placement's location to the camera's current position.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.CaptureCameraPlacementLocation.Name",
+                    "Capture Camera Placement Location"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.CaptureCameraPlacementLocation.ShortDescription",
+                    "Set the placement's location to the camera's current position."));
         }
 
         @Override
@@ -587,9 +626,12 @@ public class JobPlacementsPanel extends JPanel {
     public final Action captureToolPlacementLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.captureTool);
-            putValue(NAME, "Capture Tool Placement Location");
-            putValue(SHORT_DESCRIPTION,
-                    "Set the placement's location to the tool's current position.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.CaptureToolPlacementLocation.Name",
+                    "Capture Tool Placement Location"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.CaptureToolPlacementLocation.ShortDescription",
+                    "Set the placement's location to the tool's current position."));
         }
 
         @Override
@@ -607,8 +649,13 @@ public class JobPlacementsPanel extends JPanel {
     public final Action editPlacementFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.editFeeder);
-            putValue(NAME, "Edit Placement Feeder");
-            putValue(SHORT_DESCRIPTION, "Edit the placement's associated feeder definition.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.EditPlacementFeeder.Name",
+                    "Edit Placement Feeder"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.EditPlacementFeeder.ShortDescription",
+                    "Edit the placement's associated feeder definition."
+            ));
         }
 
         @Override
@@ -620,8 +667,12 @@ public class JobPlacementsPanel extends JPanel {
 
     public final Action setTypeAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Type");
-            putValue(SHORT_DESCRIPTION, "Set placement type(s) to...");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.SetType.Name",
+                    "Set Type"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.SetType.ShortDescription",
+                    "Set placement type(s) to..."));
         }
 
         @Override
@@ -649,8 +700,12 @@ public class JobPlacementsPanel extends JPanel {
 
     public final Action setSideAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Side");
-            putValue(SHORT_DESCRIPTION, "Set placement side(s) to...");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.SetSide.Name",
+                    "Set Side"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.SetSide.ShortDescription",
+                    "Set placement side(s) to..."));
         }
 
         @Override
@@ -678,8 +733,12 @@ public class JobPlacementsPanel extends JPanel {
     
     public final Action setErrorHandlingAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Error Handling");
-            putValue(SHORT_DESCRIPTION, "Set placement error handling(s) to...");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.SetErrorHandling.Name",
+                    "Set Error Handling"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.SetErrorHandling.ShortDescription",
+                    "Set placement error handling(s) to..."));
         }
 
         @Override
@@ -707,8 +766,12 @@ public class JobPlacementsPanel extends JPanel {
     
     public final Action setPlacedAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Placed");
-            putValue(SHORT_DESCRIPTION, "Set placed to...");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.SetPlaced.Name",
+                    "Set Placed"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.SetPlaced.ShortDescription",
+                    "Set placed to..."));
         }
 
         @Override
@@ -737,8 +800,11 @@ public class JobPlacementsPanel extends JPanel {
 
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Enabled");
-            putValue(SHORT_DESCRIPTION, "Set placement enabled to...");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.SetEnabled.Name","Set Enabled"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "JobPlacementsPanel.SetEnabled.ShortDescription",
+                    "Set placement enabled to..."));
         }
 
         @Override
@@ -806,31 +872,37 @@ public class JobPlacementsPanel extends JPanel {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorReady);
-                setText("Ready");
+                setText(Translations.getStringOrDefault(
+                        "JobPlacementsPanel.StatusRenderer.StatusReady","Ready"));
             }
             else if (status == Status.MissingFeeder) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorError);
-                setText("Missing Feeder");
+                setText(Translations.getStringOrDefault(
+                        "JobPlacementsPanel.StatusRenderer.StatusMissingFeeder", "Missing Feeder"));
             }
             else if (status == Status.ZeroPartHeight) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorWarning);
-                setText("Part Height");
+                setText(Translations.getStringOrDefault(
+                        "JobPlacementsPanel.StatusRenderer.StatusPartHeight", "Part Height"));
             }
             else if (status == Status.MissingPart) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorError);
-                setText("Missing Part");
+                setText(Translations.getStringOrDefault(
+                        "JobPlacementsPanel.StatusRenderer.StatusMissingPart", "Missing Part"));
             }
             else if (status == Status.Disabled) {
                 setBorder(new LineBorder(getBackground()));
                 setForeground(Color.black);
                 setBackground(statusColorDisabled);
-                setText("Disabled");
+                setText(Translations.getStringOrDefault(
+                        "JobPlacementsPanel.StatusRenderer.StatusDisabled", "Disabled"
+                ));
             }
             else {
                 setBorder(new LineBorder(getBackground()));
