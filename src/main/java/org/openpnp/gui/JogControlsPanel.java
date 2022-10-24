@@ -291,7 +291,9 @@ public class JogControlsPanel extends JPanel {
         add(tabbedPane_1);
 
         JPanel panelControls = new JPanel();
-        tabbedPane_1.addTab("Jog", null, panelControls, null); //$NON-NLS-1$
+        //tabbedPane_1.addTab("Jog", null, panelControls, null); //$NON-NLS-1$
+        tabbedPane_1.addTab(Translations.getStringOrDefault("JogControlsPanel.Tab.Jog", "Jog"),
+                null, panelControls, null); //$NON-NLS-1$
         panelControls.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
@@ -451,15 +453,19 @@ public class JogControlsPanel extends JPanel {
         panelSpecial.add(btnRecycle);
 
         panelActuators = new JPanel();
-        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"), null, panelActuators, null); //$NON-NLS-1$
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Actuators"),
+                null, panelActuators, null); //$NON-NLS-1$
         panelActuators.setLayout(new WrapLayout(WrapLayout.LEFT));
 
         JPanel panelSafety = new JPanel();
-        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Safety"), null, panelSafety, null); //$NON-NLS-1$
+        tabbedPane_1.addTab(Translations.getString("JogControlsPanel.Tab.Safety"),
+                null, panelSafety, null); //$NON-NLS-1$
         panelSafety.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
 
-        boardProtectionOverrideCheck = new JCheckBox(Translations.getString("JogControlsPanel.Label.OverrideBoardProtection")); //$NON-NLS-1$
-        boardProtectionOverrideCheck.setToolTipText(Translations.getString("JogControlsPanel.Label.OverrideBoardProtection.Description")); //$NON-NLS-1$
+        boardProtectionOverrideCheck = new JCheckBox(
+                Translations.getString("JogControlsPanel.Label.OverrideBoardProtection")); //$NON-NLS-1$
+        boardProtectionOverrideCheck.setToolTipText(
+                Translations.getString("JogControlsPanel.Label.OverrideBoardProtection.Description")); //$NON-NLS-1$
         panelSafety.add(boardProtectionOverrideCheck, "1, 1"); //$NON-NLS-1$
     }
 
