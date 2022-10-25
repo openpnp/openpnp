@@ -49,6 +49,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.opencv.core.Mat;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -340,12 +341,14 @@ public abstract class PipelineControls extends JPanel {
                 FormSpecs.DEFAULT_COLSPEC,},
             dynamicRowspec(rows)));
 
-        JLabel lblPipeline = new JLabel("Pipeline");
+        JLabel lblPipeline = new JLabel(Translations.getStringOrDefault("PipelinePanel.PipelineLabel.title",
+                "Pipeline"));
         lblPipeline.setEnabled(isEnabled());
         panel.add(lblPipeline, "2, 2, right, default");
 
-        btnEdit = new JButton("Edit");
-        btnEdit.setToolTipText("Edit the pipeline in the Pipeline Editor");
+        btnEdit = new JButton(Translations.getStringOrDefault("PipelinePanel.EditButton.title", "Edit"));
+        btnEdit.setToolTipText(Translations.getStringOrDefault("PipelinePanel.EditButton.toolTip.text",
+                "Edit the pipeline in the Pipeline Editor"));
         btnEdit.setEnabled(isEnabled());
         btnEdit.setVisible(editable);
         btnEdit.addActionListener(new ActionListener() {
@@ -355,8 +358,9 @@ public abstract class PipelineControls extends JPanel {
         });
         panel.add(btnEdit, "4, 2, default, fill");
 
-        btnReset = new JButton("Reset");
-        btnReset.setToolTipText("Reset the pipeline to the default.");
+        btnReset = new JButton(Translations.getStringOrDefault("PipelinePanel.ResetButton.text","Reset"));
+        btnReset.setToolTipText(Translations.getStringOrDefault("PipelinePanel.ResetButton.toolTip.text",
+                "Reset the pipeline to the default."));
         btnReset.setEnabled(isEnabled());
         btnReset.setVisible(resetable);
         btnReset.addActionListener(new ActionListener() {
@@ -426,7 +430,9 @@ public abstract class PipelineControls extends JPanel {
         {
             putValue(SMALL_ICON, Icons.copy);
             //putValue(NAME, "Copy pipeline to clipboard");
-            putValue(SHORT_DESCRIPTION, "Copy the pipeline to the clipboard in text format.");
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "PipelinePanel.Action.CopyPipeline.Description",
+                    "Copy the pipeline to the clipboard in text format."));
         }
 
         @Override
@@ -438,7 +444,8 @@ public abstract class PipelineControls extends JPanel {
                 clipboard.setContents(stringSelection, null);
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Copy failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getStringOrDefault(
+                        "PipelinePanel.Action.CopyPipeline.errorMessage", "Copy failed"), e);
             }
         }
     };
@@ -447,16 +454,18 @@ public abstract class PipelineControls extends JPanel {
         {
             putValue(SMALL_ICON, Icons.paste);
             //putValue(NAME, "Create pipeline from clipboard");
-            putValue(SHORT_DESCRIPTION,
-                    "Create a new pipeline from a definition on the clipboard.");
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "PipelinePanel.Action.PastePipeline.Description",
+                    "Create a new pipeline from a definition on the clipboard."));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             try {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                        "This will replace the Pipeline with the one on the clipboard.\n\nAre you sure?", null,
-                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                        Translations.getStringOrDefault("PipelinePanel.Action.PasteConfirmDialog.message",
+                                "This will replace the Pipeline with the one on the clipboard.\n\nAre you sure?"
+                        ), null, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (result == JOptionPane.YES_OPTION) {
                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                     String s = (String) clipboard.getData(DataFlavor.stringFlavor);
@@ -467,7 +476,8 @@ public abstract class PipelineControls extends JPanel {
                 }
             }
             catch (Exception e) {
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Paste failed", e);
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getStringOrDefault(
+                        "PipelinePanel.Action.PastePipeline.errorMessage", "Paste failed"), e);
             }
         }
     };
