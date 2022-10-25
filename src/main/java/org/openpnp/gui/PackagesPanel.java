@@ -59,6 +59,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.ActionGroup;
@@ -128,7 +129,8 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel("Search");
+        JLabel lblSearch = new JLabel(Translations.getStringOrDefault("PackagesPanel.SearchLabel.text",
+                "Search"));
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -274,8 +276,10 @@ public class PackagesPanel extends JPanel implements WizardContainer {
     public final Action newPackageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Package...");
-            putValue(SHORT_DESCRIPTION, "Create a new package, specifying it's ID.");
+            putValue(NAME, Translations.getStringOrDefault("PackagesPanel.Action.NewPackage",
+                    "New Package..."));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("PackagesPanel.Action.NewPackage.Description",
+                    "Create a new package, specifying it's ID."));
         }
 
         @Override
@@ -300,8 +304,11 @@ public class PackagesPanel extends JPanel implements WizardContainer {
     public final Action deletePackageAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Package");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected package.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "PackagesPanel.Action.DeletePackage", "Delete Package"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "PackagesPanel.Action.DeletePackage.Description",
+                    "Delete the currently selected package."));
         }
 
         @Override
@@ -342,9 +349,11 @@ public class PackagesPanel extends JPanel implements WizardContainer {
     public final Action copyPackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Package to Clipboard");
-            putValue(SHORT_DESCRIPTION,
-                    "Copy the currently selected package to the clipboard in text format.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "PackagesPanel.Action.CopyPackage", "Copy Package to Clipboard"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "PackagesPanel.Action.CopyPackage.Description",
+                    "Copy the currently selected package to the clipboard in text format."));
         }
 
         @Override
@@ -370,8 +379,11 @@ public class PackagesPanel extends JPanel implements WizardContainer {
     public final Action pastePackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create Package from Clipboard");
-            putValue(SHORT_DESCRIPTION, "Create a new package from a definition on the clipboard.");
+            putValue(NAME, Translations.getStringOrDefault("PackagesPanel.Action.PastePackage",
+                    "Create Package from Clipboard"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "PackagesPanel.Action.PastePackage.Description",
+                    "Create a new package from a definition on the clipboard."));
         }
 
         @Override
@@ -427,9 +439,12 @@ public class PackagesPanel extends JPanel implements WizardContainer {
         }
         tabbedPane.removeAll();
         if (selectedPackage != null) {
-            tabbedPane.add("Nozzle Tips", new PackageNozzleTipsPanel(selectedPackage));
-            tabbedPane.add("Vision", new JScrollPane(new PackageVisionPanel(selectedPackage)));
-            tabbedPane.add("Settings", new JScrollPane(new PackageSettingsPanel(selectedPackage)));
+            tabbedPane.add(Translations.getStringOrDefault("PackagesPanel.NozzleTipsTab.title","Nozzle Tips"),
+                    new PackageNozzleTipsPanel(selectedPackage));
+            tabbedPane.add(Translations.getStringOrDefault("PackagesPanel.VisionTab.title", "Vision"),
+                    new JScrollPane(new PackageVisionPanel(selectedPackage)));
+            tabbedPane.add(Translations.getStringOrDefault("PackagesPanel.SettingsTab.title", "Settings"),
+                    new JScrollPane(new PackageSettingsPanel(selectedPackage)));
             Machine machine = Configuration.get().getMachine();
             for (PartAlignment partAlignment : machine.getPartAlignments()) {
                 Wizard wizard = partAlignment.getPartConfigurationWizard(selectedPackage);
