@@ -15,6 +15,7 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.PipelinePanel;
@@ -85,7 +86,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
     private void createUi() {
         createPanel();
 
-        lblName = new JLabel("Name");
+        lblName = new JLabel(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.NameLabel.text", "Name"));
         panel.add(lblName, "2, 2, right, default");
 
         name = new JTextField();
@@ -103,21 +105,29 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         usedIn = new JLabel("None");
         panelAssignedTo.add(usedIn, "1, 1, fill, fill");
 
-        JLabel lblAssignedTo = new JLabel("Assigned to");
+        JLabel lblAssignedTo = new JLabel(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.AssignedToLabel.text", "Assigned to"));
         panel.add(lblAssignedTo, "2, 4");
 
-        JLabel lblSettings = new JLabel("Manage Settings");
+        JLabel lblSettings = new JLabel(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.ManageSettingsLabel.text", "Manage Settings"));
         panel.add(lblSettings, "2, 6");
 
         btnSpecializeSetting = new JButton();
         btnSpecializeSetting.setText(" ");
         if (settingsHolder != null && bottomVision.getParentHolder(settingsHolder) != null) {
-            btnSpecializeSetting.setText("Specialize for "+settingsHolder.getShortName());
-            btnSpecializeSetting.setToolTipText("Create a copy of these Bottom Vision Settings and assign to "
+            btnSpecializeSetting.setText(Translations.getStringOrDefault(
+                    "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.SpecializeForText",
+                    "Specialize for") + " " +settingsHolder.getShortName());
+            btnSpecializeSetting.setToolTipText(Translations.getStringOrDefault(
+                    "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.toolTip",
+                    "Create a copy of these Bottom Vision Settings and assign to") + " "
                     +settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName());
         }
         else if (settingsHolder != null) {
-            btnSpecializeSetting.setText("Optimize");
+            btnSpecializeSetting.setText(Translations.getStringOrDefault(
+                    "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.OptimizeText",
+                    "Optimize"));
             btnSpecializeSetting.setToolTipText("<html>Optimize the Bottom Vision Settings and their assignments:<br/>"
                     + "<ul>"
                     + "<li>Consolidate duplicate settings.</li>"
@@ -129,7 +139,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         }
         else {
             btnSpecializeSetting.setEnabled(false);
-            btnSpecializeSetting.setText("Specialize");
+            btnSpecializeSetting.setText(Translations.getStringOrDefault(
+                    "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.SpecializeText",
+                    "Specialize"));
             btnSpecializeSetting.setToolTipText("");
         }
 
@@ -156,7 +168,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         panel.add(btnSpecializeSetting, "4, 6, 3, 1");
 
         final String subjects = settingsHolder instanceof Package ? "Parts" : "Parts and Packages";
-        btnGeneralizeSettings = new JButton("Generalize");
+        btnGeneralizeSettings = new JButton(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.GeneralizeButton.text",
+                "Generalize"));
         btnGeneralizeSettings.addActionListener((e) -> {
             UiUtils.messageBoxOnException(() -> {
                 List<PartSettingsHolder> list = settingsHolder.getSpecializedBottomVisionIn();
@@ -181,7 +195,10 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
             btnGeneralizeSettings.setEnabled(false);
         }
         else {
-            btnGeneralizeSettings.setText("Generalize for "+settingsHolder.getShortName());
+            btnGeneralizeSettings.setText(Translations.getStringOrDefault(
+                    "BottomVisionSettingsConfigurationWizard.GeneralizeButton.GeneralizeFor.text",
+                    "Generalize for "
+            )+settingsHolder.getShortName());
             btnGeneralizeSettings.setToolTipText("<html>Generalize these Bottom Vision Settings for all the "
                     + subjects
                     + " with the "+ settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName()+".<br/>"
@@ -189,7 +206,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                     + "Bottom Vision Settings that are no longer used elsewhere.</html>");
         }
 
-        JButton resetButton = new JButton("Reset to Default");
+        JButton resetButton = new JButton(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.ResetButton.text",
+                "Reset to Default"));
         resetButton.addActionListener(e -> {
             UiUtils.messageBoxOnException(() -> {
                 int result = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
@@ -211,33 +230,45 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         });
         panel.add(resetButton, "12, 6");
 
-        JLabel lblEnabled = new JLabel("Enabled?");
+        JLabel lblEnabled = new JLabel(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.EnabledLabel.text",
+                "Enabled?"));
         panel.add(lblEnabled, "2, 8");
 
         enabledCheckbox = new JCheckBox("");
         panel.add(enabledCheckbox, "4, 8");
 
-        JLabel lblPrerotate = new JLabel("Pre-rotate");
+        JLabel lblPrerotate = new JLabel(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PreRotateLabel.text",
+                "Pre-rotate"));
         panel.add(lblPrerotate, "2, 10, right, default");
 
         comboBoxPreRotate = new JComboBox(ReferenceBottomVision.PreRotateUsage.values());
         panel.add(comboBoxPreRotate, "4, 10");
 
-        JLabel lblMaxRotation = new JLabel("Rotation");
+        JLabel lblMaxRotation = new JLabel(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.RotationLabel.text",
+                "Rotation"));
         panel.add(lblMaxRotation, "2, 12, right, default");
 
         comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
-        comboBoxMaxRotation.setToolTipText(
-                "Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1");
+        comboBoxMaxRotation.setToolTipText(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.ComboMaxRotationToolTip.text",
+                "Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1"
+                ));
         panel.add(comboBoxMaxRotation, "4, 12, fill, default");
 
-        JLabel lblPartCheckType = new JLabel("Part size check");
+        JLabel lblPartCheckType = new JLabel(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PartSizeCheckLabel.text",
+                "Part size check"));
         panel.add(lblPartCheckType, "2, 14");
 
         comboBoxCheckPartSizeMethod = new JComboBox(ReferenceBottomVision.PartSizeCheckMethod.values());
         panel.add(comboBoxCheckPartSizeMethod, "4, 14, fill, default");
 
-        JLabel lblPartSizeTolerance = new JLabel("Size tolerance (%)");
+        JLabel lblPartSizeTolerance = new JLabel(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PartSizeToleranceLabel.text",
+                "Size tolerance (%)"));
         panel.add(lblPartSizeTolerance, "2, 16");
 
         textPartSizeTolerance = new JTextField();
@@ -282,7 +313,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         JPanel panelAlign = new JPanel();
         contentPanel.add(panelAlign);
-        panelAlign.setBorder(new TitledBorder(null, "Test Alignment", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelAlign.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PanelAlign.Border.title", "Test Alignment"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelAlign.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
@@ -300,19 +333,27 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblTestPlacementAngle = new JLabel("Placement Angle");
+        JLabel lblTestPlacementAngle = new JLabel(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PanelAlign.TestPlacementAngleLabel.text",
+                "Placement Angle"));
         panelAlign.add(lblTestPlacementAngle, "2, 2");
 
         testAlignmentAngle = new JTextField();
         panelAlign.add(testAlignmentAngle, "4, 2");
         testAlignmentAngle.setColumns(10);
 
-        JButton btnTestAlighment = new JButton("Test Alignment");
+        JButton btnTestAlighment = new JButton(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PanelAlign.TestAlignmentButton.text",
+                "Test Alignment"));
         panelAlign.add(btnTestAlighment, "6, 2");
 
-        chckbxCenterAfterTest = new JCheckBox("Center After Test");
+        chckbxCenterAfterTest = new JCheckBox(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PanelAlign.CenterAfterTestChkbox.text",
+                "Center After Test"));
         panelAlign.add(chckbxCenterAfterTest, "8, 2");
-        chckbxCenterAfterTest.setToolTipText("Center and rotate the part after the test.");
+        chckbxCenterAfterTest.setToolTipText(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PanelAlign.CenterAfterTestChkbox.toolTip.text",
+                "Center and rotate the part after the test."));
         chckbxCenterAfterTest.setSelected(true);
         btnTestAlighment.addActionListener((e) -> {
             UiUtils.submitUiMachineTask(() -> {
@@ -323,7 +364,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         panelDetectOffset = new JPanel();
         contentPanel.add(panelDetectOffset);
-        panelDetectOffset.setBorder(new TitledBorder(null, "Vision Offsets", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelDetectOffset.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.Border.title",
+                "Vision Offsets"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         panelDetectOffset.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("right:max(70dlu;default)"),
@@ -347,9 +390,14 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         JLabel lblY = new JLabel("Y");
         panelDetectOffset.add(lblY, "6, 2, center, default");
 
-        JLabel lblVisionCenterOffset = new JLabel("Vision Center Offset");
+        JLabel lblVisionCenterOffset = new JLabel(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.VisionCenterOffsetLabel.text",
+                "Vision Center Offset"));
         panelDetectOffset.add(lblVisionCenterOffset, "2, 4");
-        lblVisionCenterOffset.setToolTipText("Offset relative to the pick location/center of the part to the center of the rectangle detected by the bottom vision");
+        lblVisionCenterOffset.setToolTipText(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.VisionCenterOffsetLabel.toolTip.text",
+                "Offset relative to the pick location/center of the part to the center of the rectangle detected by the bottom vision"
+        ));
 
         tfBottomVisionOffsetX = new JTextField();
         panelDetectOffset.add(tfBottomVisionOffsetX, "4, 4");
@@ -360,9 +408,14 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
         tfBottomVisionOffsetY.setText("");
         tfBottomVisionOffsetY.setColumns(10);
 
-        JButton btnAutoVisionCenterOffset = new JButton("Detect");
+        JButton btnAutoVisionCenterOffset = new JButton(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.AutoVisionCenterOffsetButton.text",
+                "Detect"));
         panelDetectOffset.add(btnAutoVisionCenterOffset, "8, 4");
-        btnAutoVisionCenterOffset.setToolTipText("Center part over bottom vision camera. Button will run bottom vision and calculates the offset.");
+        btnAutoVisionCenterOffset.setToolTipText(Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.AutoVisionCenterOffsetButton.toolTip.text",
+                "Center part over bottom vision camera. Button will run bottom vision and calculates the offset."
+        ));
         btnAutoVisionCenterOffset.addActionListener((e) -> {
             UiUtils.submitUiMachineTask(() -> {
                 applyAction.actionPerformed(null);
@@ -418,7 +471,9 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
     private void createPanel() {
         panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "BottomVisionSettingsConfigurationWizard.GeneralPanel.Border.title",
+                "General"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -575,7 +630,8 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
     @Override
     public String getWizardName() {
-        return "Bottom Vision Settings";
+        return Translations.getStringOrDefault("BottomVisionSettingsConfigurationWizard.wizardName",
+                "Bottom Vision Settings");
     }
 
 }

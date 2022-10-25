@@ -29,6 +29,7 @@ import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.model.Part;
 
@@ -54,7 +55,9 @@ public class PartSettingsPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
         pickConditionsPanel = new JPanel();
-        pickConditionsPanel.setBorder(new TitledBorder(null, "Pick Conditions", TitledBorder.LEADING, TitledBorder.TOP, null));
+        pickConditionsPanel.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "PartSettingsPanel.pickConditionsPanel.Border.title",
+                "Pick Conditions"), TitledBorder.LEADING, TitledBorder.TOP, null));
         add(pickConditionsPanel);
         pickConditionsPanel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -65,7 +68,9 @@ public class PartSettingsPanel extends JPanel {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblNewLabel = new JLabel("Pick Retry Count");
+        lblNewLabel = new JLabel(Translations.getStringOrDefault(
+                "PartSettingsPanel.pickConditionsPanel.pickRetryCountLabel.text",
+                "Pick Retry Count"));
         pickConditionsPanel.add(lblNewLabel, "2, 2, right, default");
         
         pickRetryCount = new JTextField();
