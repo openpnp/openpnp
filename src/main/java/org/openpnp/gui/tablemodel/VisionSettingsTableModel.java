@@ -5,13 +5,16 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openpnp.Translations;
 import org.openpnp.model.AbstractVisionSettings;
 import org.openpnp.model.Configuration;
 
 public class VisionSettingsTableModel extends AbstractObjectTableModel implements PropertyChangeListener {
 
-    private String[] columnNames =
-            new String[]{"Name", "Assigned To"};
+    private String[] columnNames = new String[]{
+            Translations.getStringOrDefault("VisionSettingsTableModel.ColumnName.Name", "Name"),
+            Translations.getStringOrDefault("VisionSettingsTableModel.ColumnName.AssignedTo", "Assigned To")
+    };
     private Class[] columnTypes = new Class[] {String.class, String.class};
 
     private List<AbstractVisionSettings> visionSettings;

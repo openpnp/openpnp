@@ -32,6 +32,7 @@ import javax.swing.RowFilter;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Helpers;
 import org.openpnp.gui.support.Icons;
@@ -141,7 +142,8 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
         JPanel filterPanel = new JPanel();
         toolbarPanel.add(filterPanel, BorderLayout.EAST);
         
-        JLabel lblFilterType = new JLabel("Type");
+        JLabel lblFilterType = new JLabel(Translations.getStringOrDefault("VisionSettingsPanel.TypeLabel.text",
+                "Type"));
         filterPanel.add(lblFilterType);
         
         visionTypeFilter = new JComboBox(VisionTypeFilter.values());
@@ -186,8 +188,10 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action newSettingsAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Settings");
-            putValue(SHORT_DESCRIPTION, "Create a new Bottom Vision Settings.");
+            putValue(NAME, Translations.getStringOrDefault("VisionSettingsPanel.Action.NewSettings",
+                    "New Settings"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "VisionSettingsPanel.Action.NewSettings.Description","Create a new Bottom Vision Settings."));
         }
 
         @Override
@@ -202,8 +206,11 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action deleteSettingsAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Settings");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected settings.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "VisionSettingsPanel.Action.DeleteSettings", "Delete Settings"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "VisionSettingsPanel.Action.DeleteSettings.Description",
+                    "Delete the currently selected settings."));
         }
 
         @Override
@@ -244,9 +251,11 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action copyPackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, "Copy Vision Settings to Clipboard");
-            putValue(SHORT_DESCRIPTION,
-                    "Copy the currently selected vision settings to the clipboard in text format.");
+            putValue(NAME, Translations.getStringOrDefault("VisionSettingsPanel.Action.CopySettingsToClipboard",
+                    "Copy Vision Settings to Clipboard"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "VisionSettingsPanel.Action.CopySettingsToClipboard.Description",
+                    "Copy the currently selected vision settings to the clipboard in text format."));
         }
 
         @Override
@@ -274,8 +283,12 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
     public final Action pastePackageToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, "Create Vision Settings from Clipboard");
-            putValue(SHORT_DESCRIPTION, "Create a new vision setting from a definition on the clipboard.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "VisionSettingsPanel.Action.CreateSettingsFromClipboard",
+                    "Create Vision Settings from Clipboard"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "VisionSettingsPanel.Action.CreateSettingsFromClipboard.Description",
+                    "Create a new vision setting from a definition on the clipboard."));
         }
 
         @Override

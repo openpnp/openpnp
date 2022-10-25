@@ -23,6 +23,7 @@ import java.util.Locale;
 
 import javax.swing.table.AbstractTableModel;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthCellValue;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Footprint;
@@ -31,7 +32,14 @@ import org.openpnp.model.Length;
 
 public class FootprintTableModel extends AbstractTableModel {
     private String[] columnNames =
-            new String[] {"Name", "X", "Y", "Width", "Length", "Rot.", "% Round"};
+            new String[] {
+                    Translations.getStringOrDefault("FootPrintTableModel.ColumnName.Name", "Name"),
+                    "X", "Y",
+                    Translations.getStringOrDefault("FootPrintTableModel.ColumnName.Width", "Width"),
+                    Translations.getStringOrDefault("FootPrintTableModel.ColumnName.Length", "Length"),
+                    Translations.getStringOrDefault("FootPrintTableModel.ColumnName.Rotate", "Rot."),
+                    Translations.getStringOrDefault("FootPrintTableModel.ColumnName.Round", "% Round")
+    };
 
     private Class[] columnTypes =
             new Class[] {String.class, LengthCellValue.class, LengthCellValue.class,
