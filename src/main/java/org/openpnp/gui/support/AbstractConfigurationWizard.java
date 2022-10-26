@@ -35,6 +35,7 @@ import javax.swing.JScrollPane;
 import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.Converter;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.JBindings.WrappedBinding;
 import org.openpnp.model.Configuration;
@@ -176,7 +177,8 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         return null;
     }
 
-    protected Action applyAction = new AbstractAction("Apply") {
+    protected Action applyAction = new AbstractAction(Translations.getStringOrDefault(
+            "AbstractConfigurationWizard.Action.Apply", "Apply")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             saveToModel();
@@ -184,7 +186,8 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         }
     };
 
-    protected Action resetAction = new AbstractAction("Reset") {
+    protected Action resetAction = new AbstractAction(Translations.getStringOrDefault(
+            "AbstractConfigurationWizard.Action.Reset", "Reset")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             loadFromModel();
