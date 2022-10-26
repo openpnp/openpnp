@@ -55,6 +55,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableRowSorter;
 
+import org.openpnp.Translations;
 import org.openpnp.events.FeederSelectedEvent;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.components.ClassSelectionDialog;
@@ -472,14 +473,18 @@ public class FeedersPanel extends JPanel implements WizardContainer {
 
         String title;
         if (part == null) {
-            title = "Select Feeder...";
+            title = Translations.getStringOrDefault("FeedersPanel.SelectFeederImplementationDialog.Select.title",
+                    "Select Feeder...");
         }
         else {
-            title = "Select Feeder for " + part.getId() + "...";
+            title = Translations.getStringOrDefault("FeedersPanel.SelectFeederImplementationDialog.SelectFor.title",
+                    "Select Feeder for") + " " + part.getId() + "...";
         }
         ClassSelectionDialog<Feeder> dialog =
                 new ClassSelectionDialog<>(JOptionPane.getFrameForComponent(FeedersPanel.this),
-                        title, "Please select a Feeder implemention from the list below.",
+                        title, Translations.getStringOrDefault(
+                                "FeedersPanel.SelectFeederImplementationDialog.Description",
+                        "Please select a Feeder implemention from the list below."),
                         configuration.getMachine().getCompatibleFeederClasses());
         dialog.setVisible(true);
         Class<? extends Feeder> feederClass = dialog.getSelectedClass();
@@ -524,8 +529,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action newFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Feeder...");
-            putValue(SHORT_DESCRIPTION, "Create a new feeder.");
+            putValue(NAME, Translations.getStringOrDefault("FeedersPanel.Action.NewFeeder", "New Feeder..."));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("FeedersPanel.Action.NewFeeder.Description",
+                    "Create a new feeder."));
         }
 
         @Override
@@ -537,8 +543,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action deleteFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Feeder");
-            putValue(SHORT_DESCRIPTION, "Delete the selected feeder.");
+            putValue(NAME, Translations.getStringOrDefault("FeedersPanel.Action.DeleteFeeder","Delete Feeder"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("FeedersPanel.Action.DeleteFeeder.Description",
+                    "Delete the selected feeder."));
         }
 
         @Override
@@ -568,8 +575,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action feedFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.feed);
-            putValue(NAME, "Feed");
-            putValue(SHORT_DESCRIPTION, "Command the selected feeder to perform a feed operation.");
+            putValue(NAME, Translations.getStringOrDefault("FeedersPanel.Action.FeedFeeder", "Feed"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("FeedersPanel.Action.FeedFeeder.Description",
+                    "Command the selected feeder to perform a feed operation."));
         }
 
         @Override
@@ -592,8 +600,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action pickFeederAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.pick);
-            putValue(NAME, "Pick");
-            putValue(SHORT_DESCRIPTION, "Perform a feed and pick on the selected feeder.");
+            putValue(NAME, Translations.getStringOrDefault("FeedersPanel.Action.PickFeeder", "Pick"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("FeedersPanel.Action.PickFeeder.Description",
+                    "Perform a feed and pick on the selected feeder."));
         }
 
         @Override
@@ -744,9 +753,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action moveCameraToPickLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerCameraOnFeeder);
-            putValue(NAME, "Move Camera");
-            putValue(SHORT_DESCRIPTION,
-                    "Move the camera to the selected feeder's current pick location.");
+            putValue(NAME, Translations.getStringOrDefault("FeedersPanel.Action.MoveCameraToPick", "Move Camera"));
+            putValue(SHORT_DESCRIPTION,Translations.getStringOrDefault("FeedersPanel.Action.MoveCameraToPick.Description",
+                    "Move the camera to the selected feeder's current pick location."));
         }
 
         @Override
@@ -772,9 +781,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     public Action moveToolToPickLocation = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.centerNozzleOnFeeder);
-            putValue(NAME, "Move Tool");
-            putValue(SHORT_DESCRIPTION,
-                    "Move the tool to the selected feeder's current pick location.");
+            putValue(NAME, Translations.getStringOrDefault("FeedersPanel.Action.MoveToolToPick", "Move Tool"));
+            putValue(SHORT_DESCRIPTION,Translations.getStringOrDefault("FeedersPanel.Action.MoveToolToPick.Description",
+                    "Move the tool to the selected feeder's current pick location."));
         }
 
         @Override
@@ -792,8 +801,9 @@ public class FeedersPanel extends JPanel implements WizardContainer {
     
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, "Set Enabled");
-            putValue(SHORT_DESCRIPTION, "Set board(s) enabled to...");
+            putValue(NAME, Translations.getStringOrDefault("FeedersPanel.Action.SetEnabled", "Set Enabled"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("FeedersPanel.Action.SetEnabled.Description",
+                    "Set board(s) enabled to..."));
         }
 
         @Override

@@ -19,6 +19,8 @@
 
 package org.openpnp.gui.components;
 
+import org.openpnp.Translations;
+
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -119,7 +121,8 @@ public class ClassSelectionDialog<T> extends JDialog {
         selectAction.setEnabled(false);
     }
 
-    private final Action selectAction = new AbstractAction("Accept") {
+    private final Action selectAction = new AbstractAction(Translations.getStringOrDefault(
+            "ClassSelectionDialog.Action.Accept", "Accept")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             selectedClass = ((ClassListItem<T>) list.getSelectedValue()).getTheClass();
@@ -127,7 +130,8 @@ public class ClassSelectionDialog<T> extends JDialog {
         }
     };
 
-    private final Action cancelAction = new AbstractAction("Cancel") {
+    private final Action cancelAction = new AbstractAction(Translations.getStringOrDefault(
+            "ClassSelectionDialog.Action.Cancel", "Cancel")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             setVisible(false);

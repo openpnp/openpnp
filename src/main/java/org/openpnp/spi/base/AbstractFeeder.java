@@ -3,6 +3,7 @@ package org.openpnp.spi.base;
 import javax.swing.Icon;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.model.AbstractModelObject;
@@ -151,7 +152,8 @@ public abstract class AbstractFeeder extends AbstractModelObject implements Feed
 
     @Override
     public PropertySheet[] getPropertySheets() {
-        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(), "Configuration")};
+        return new PropertySheet[] {new PropertySheetWizardAdapter(getConfigurationWizard(),
+                Translations.getStringOrDefault("AbstractFeeder.ConfigurationWizard.title", "Configuration"))};
     }
     
     public void postPick(Nozzle nozzle) throws Exception { }
