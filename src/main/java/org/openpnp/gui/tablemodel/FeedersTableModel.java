@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Part;
 import org.openpnp.spi.Feeder;
@@ -31,7 +32,13 @@ import org.openpnp.util.BeanUtils;
 public class FeedersTableModel extends AbstractObjectTableModel {
     final private Configuration configuration;
 
-    private String[] columnNames = new String[] {"Name", "Type", "Part", "Enabled"};
+    private String[] columnNames = new String[] {
+            Translations.getStringOrDefault("FeedersTableModel.ColumnName.Name", "Name"),
+            Translations.getStringOrDefault("FeedersTableModel.ColumnName.Type", "Type"),
+            Translations.getStringOrDefault("FeedersTableModel.ColumnName.Part", "Part"),
+            Translations.getStringOrDefault("FeedersTableModel.ColumnName.Enabled", "Enabled")
+    };
+
     private List<Feeder> feeders;
 
     public FeedersTableModel(Configuration configuration) {
