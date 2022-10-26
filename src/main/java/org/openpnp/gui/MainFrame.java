@@ -705,7 +705,8 @@ public class MainFrame extends JFrame {
         
         
         // Placement Information
-        lblPlacements = new JLabel(" Placements: 0 / 0 Total | 0 / 0 Selected Board "); //$NON-NLS-1$
+        lblPlacements = new JLabel(Translations.getStringOrDefault("MainFrame.StatusPanel.PlacementsLabel.initial.text",
+                " Placements: 0 / 0 Total | 0 / 0 Selected Board ")); //$NON-NLS-1$
         lblPlacements.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panelStatusAndDros.add(lblPlacements, "4, 1"); //$NON-NLS-1$
         
@@ -1037,7 +1038,10 @@ public class MainFrame extends JFrame {
     
     public void setPlacementCompletionStatus(int totalPlacementsCompleted, int totalPlacements, int boardPlacementsCompleted, int boardPlacements) {
         SwingUtilities.invokeLater(() -> {
-            lblPlacements.setText(String.format(" Placements: %d / %d Total | %d / %d Selected Board ", totalPlacementsCompleted, totalPlacements, boardPlacementsCompleted, boardPlacements));
+            lblPlacements.setText(String.format(Translations.getStringOrDefault(
+                    "MainFrame.StatusPanel.PlacementsLabel.initial.format.text",
+                    " Placements: %d / %d Total | %d / %d Selected Board "
+            ), totalPlacementsCompleted, totalPlacements, boardPlacementsCompleted, boardPlacements));
         	prgbrPlacements.setValue((int)(((float)totalPlacementsCompleted / (float)totalPlacements) * 100.0f));
         });
     }
