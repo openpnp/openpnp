@@ -147,7 +147,7 @@ public class FeedersPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel("Search");
+        JLabel lblSearch = new JLabel(Translations.getStringOrDefault("FeedersPanel.SearchLabel.text","Search"));
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
