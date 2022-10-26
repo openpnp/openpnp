@@ -59,6 +59,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.gui.support.WizardContainer;
 import org.openpnp.model.Configuration;
@@ -233,7 +234,8 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                         String title = propertySheet.getPropertySheetTitle();
                         JPanel panel = propertySheet.getPropertySheetPanel();
                         if (title == null) {
-                            title = "Configuration";
+                            title = Translations.getStringOrDefault(
+                                    "MechineSetupPanel.RightComponent.tabs.configuration.title","Configuration");
                         }
                         if (panel != null) {
                             tabbedPane.add(title, panel);
