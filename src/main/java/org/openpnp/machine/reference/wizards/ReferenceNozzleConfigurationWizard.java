@@ -28,6 +28,7 @@ import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.AxesComboBoxModel;
@@ -86,7 +87,9 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         this.nozzle = nozzle;
         
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelProperties.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.PropertiesPanel.Border.title",
+                "Properties"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -97,7 +100,9 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblName = new JLabel("Name");
+        lblName = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.PropertiesPanel.NameLabel.text",
+                "Name"));
         panelProperties.add(lblName, "2, 2, right, default");
         
         nameTf = new JTextField();
@@ -105,8 +110,9 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         nameTf.setColumns(20);
 
         panelOffsets = new JPanel();
-        panelOffsets.setBorder(new TitledBorder(null,
-                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelOffsets.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.OffsetsPanel.Border.title",
+                "Coordinate System"), TitledBorder.LEADING, TitledBorder.TOP, null));
         panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -139,10 +145,13 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         JLabel lblZ = new JLabel("Z");
         panelOffsets.add(lblZ, "8, 2");
 
-        lblRotation = new JLabel("Rotation");
+        lblRotation = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.OffsetsPanel.RotationLabel.text",
+                "Rotation"));
         panelOffsets.add(lblRotation, "10, 2");
 
-        lblAxis = new JLabel("Axis");
+        lblAxis = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.OffsetsPanel.AxisLabel.text", "Axis"));
         panelOffsets.add(lblAxis, "2, 4, right, default");
 
         axisX = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.X, true));
@@ -157,7 +166,8 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         axisRotation = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Rotation, true));
         panelOffsets.add(axisRotation, "10, 4, fill, default");
 
-        lblOffset = new JLabel("Offset");
+        lblOffset = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.OffsetsPanel.OffsetLabel.text", "Offset"));
         panelOffsets.add(lblOffset, "2, 6, right, default");
 
         locationX = new JTextField();
@@ -178,7 +188,9 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         panelOffsets.add(locationRotation, "10, 6, fill, default");
         locationRotation.setColumns(10);
         
-        lblRotationMode = new JLabel("Rotation Mode");
+        lblRotationMode = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.OffsetsPanel.RotationModeLabel.text",
+                "Rotation Mode"));
         panelOffsets.add(lblRotationMode, "2, 10, right, default");
         
         rotationMode = new JComboBox(RotationMode.values());
@@ -192,8 +204,9 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         panelOffsets.add(aligningRotationMode, "8, 10");
 
         JPanel panelSafeZ = new JPanel();
-        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        panelSafeZ.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.SafeZPanel.Border.title", "Safe Z"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelSafeZ);
         panelSafeZ.setLayout(new FormLayout(new ColumnSpec[] {
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -205,7 +218,8 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 RowSpec.decode("24px"),
                 RowSpec.decode("19px"),}));
         
-                JLabel lblSafeZ = new JLabel("Safe Z");
+                JLabel lblSafeZ = new JLabel(Translations.getStringOrDefault(
+                        "ReferenceNozzleConfigurationWizard.SafeZPanel.SafeZLabel.text", "Safe Z"));
                 panelSafeZ.add(lblSafeZ, "1, 1, right, center");
         
                 textFieldSafeZ = new JTextField();
@@ -213,19 +227,25 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 panelSafeZ.add(textFieldSafeZ, "3, 1, fill, top");
                 textFieldSafeZ.setColumns(10);
                 
-                lblDynamicSafeZ = new JLabel("Dynamic Safe Z");
+                lblDynamicSafeZ = new JLabel(Translations.getStringOrDefault(
+                        "ReferenceNozzleConfigurationWizard.SafeZPanel.DynamicSafeZLabel.text",
+                        "Dynamic Safe Z"));
                 lblDynamicSafeZ.setToolTipText("<html>\r\nWhen moving to Safe Z, account for the part height on the nozzle i.e. lift the nozzle higher with a taller part.<br/>\r\nThis allows you to use a lower Safe Z which might improve the machine speed. \r\n</html>");
                 lblDynamicSafeZ.setHorizontalAlignment(SwingConstants.TRAILING);
                 panelSafeZ.add(lblDynamicSafeZ, "1, 2");
                 
                 chckbxDynamicsafez = new JCheckBox("");
-                chckbxDynamicsafez.setToolTipText("dynamicaly adjust the safeZ, so the bottom of a loaded part is at safeZ if possible");
+                chckbxDynamicsafez.setToolTipText(Translations.getStringOrDefault(
+                        "ReferenceNozzleConfigurationWizard.SafeZPanel.DynamicSafeZChkbox.toolTip.text",
+                        "dynamicaly adjust the safeZ, so the bottom of a loaded part is at safeZ if possible"
+                ));
                 panelSafeZ.add(chckbxDynamicsafez, "3, 2");
 
 
         panelChanger = new JPanel();
-        panelChanger.setBorder(new TitledBorder(null,
-                "Settings", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelChanger.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.ChangerPanel.Border.title", "Settings"),
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelChanger);
         panelChanger
                 .setLayout(
@@ -248,14 +268,18 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblPickDwellTime = new JLabel("Pick Dwell Time (ms)");
+        lblPickDwellTime = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.ChangerPanel.PickDwellTimeLabel.text",
+                "Pick Dwell Time (ms)"));
         panelChanger.add(lblPickDwellTime, "2, 2, right, default");
         
         pickDwellTf = new JTextField();
         panelChanger.add(pickDwellTf, "4, 2, fill, default");
         pickDwellTf.setColumns(10);
         
-        lblPlaceDwellTime = new JLabel("Place Dwell Time (ms)");
+        lblPlaceDwellTime = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.ChangerPanel.PlaceDwellTimeLabel.text",
+                "Place Dwell Time (ms)"));
         panelChanger.add(lblPlaceDwellTime, "2, 4, right, default");
         
         placeDwellTf = new JTextField();
@@ -263,7 +287,9 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
         placeDwellTf.setColumns(10);
         
         CellConstraints cc = new CellConstraints();
-        lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
+        lblDwellTime = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleConfigurationWizard.ChangerPanel.DwellTimeLabel.text",
+                "Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time."));
         panelChanger.add(lblDwellTime, "2, 6, 9, 1, fill, default");
     }
 

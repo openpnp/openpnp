@@ -21,6 +21,7 @@
 
 package org.openpnp.machine.reference.axis;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.axis.wizards.BacklashCompensationConfigurationWizard;
@@ -467,7 +468,10 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new BacklashCompensationConfigurationWizard(this), "Backlash Compensation"),
+                new PropertySheetWizardAdapter(new BacklashCompensationConfigurationWizard(this),
+                        Translations.getStringOrDefault(
+                                "ReferenceControllerAxis.BacklashCompensationConfigurationWizard.title",
+                                "Backlash Compensation")),
         };
     }
 
