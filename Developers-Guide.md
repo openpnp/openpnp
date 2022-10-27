@@ -81,7 +81,7 @@ If you want to do development on OpenPnP or recompile it, you should install the
 
 JDKs later than version 15 [have incompatibities that need to be addressed](https://github.com/openpnp/openpnp/issues?q=is%3Aopen+is%3Aissue+label%3Ajdk). Help is welcome! 
 
-You can download the latest revision of the JDK or JRE at:
+You can download the JDKs or JREs at:
 
 http://java.com/getjava
 https://openjdk.org/
