@@ -38,6 +38,7 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.SimpleGraphView;
@@ -98,15 +99,19 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         adaptDialog();
     }
 
-    private Action backlashCalibrateAction = new AbstractAction("Calibrate now", Icons.axisCartesian) {
+    private Action backlashCalibrateAction = new AbstractAction(Translations.getStringOrDefault(
+            "BacklashCompensationConfigurationWizard.Action.Calibrate","Calibrate now"),
+            Icons.axisCartesian) {
         {
-            putValue(Action.SHORT_DESCRIPTION,
-                    "<html>\r\n" + 
-                            "<p>Calibrate the axis backlash compensation settings using the calibration fiducial.</p>\r\n" + 
+            putValue(Action.SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "BacklashCompensationConfigurationWizard.Action.Calibrate.Description",
+                    "<html>\r\n" +
+                            "<p>Calibrate the axis backlash compensation settings using the calibration fiducial.</p>\r\n" +
                             "<p>Make sure the calibration rig is set up and present.</p>" +
-                            "<p>Consider using this function from Issues & Solutions where you get step by step instructions,<br/>\r\n" + 
-                            "for the needed preparatory steps and the calibration in proper sequence. You also get extensive Wiki links.</p>\r\n" + 
-                    "</html>");
+                            "<p>Consider using this function from Issues & Solutions where you get step by step instructions,<br/>\r\n" +
+                            "for the needed preparatory steps and the calibration in proper sequence. You also get extensive Wiki links.</p>\r\n" +
+                            "</html>"
+            ));
         }
 
         @Override
@@ -135,7 +140,11 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
     public BacklashCompensationConfigurationWizard(ReferenceControllerAxis axis) {
         this.axis = axis;
         panelBacklashDiagnostics = new JPanel();
-        panelBacklashDiagnostics.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Backlash Compensation and Calibration", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelBacklashDiagnostics.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
+                Translations.getStringOrDefault(
+                        "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.Border.title",
+                        "Backlash Compensation and Calibration"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         contentPanel.add(panelBacklashDiagnostics);
         panelBacklashDiagnostics.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -162,9 +171,45 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         RowSpec.decode("default:grow"),}));
 
-        lblBacklashCompensation = new JLabel("Compensation Method");
+        lblBacklashCompensation = new JLabel(Translations.getStringOrDefault(
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.CompensationMethodLabel.text",
+                "Compensation Method"));
         panelBacklashDiagnostics.add(lblBacklashCompensation, "2, 2, right, default");
-        lblBacklashCompensation.setToolTipText("<html>\r\n<p>Backlash compensation is used to avoid the effects of any looseness or play in the <br/>\r\nmechanical linkages of the given axis.  When the actuator reverses the direction of travel, <br/>\r\nthere is often a moment where nothing happens, because the slack from a belt or play <br/>\r\nfrom a screw or rack and pinion etc. needs to be bridged, before mechanical force can again <br/>\r\nbe transmitted.</p>\r\n\r\n<ul>\r\n<li>\r\n<strong>None:</strong>\r\nNo backlash compensation is performed. </li>\r\n<li>\r\n<strong>OneSidedPositioning:</strong><br/>\r\nBacklash compensation is applied by always moving to the end position from one side.<br/>\r\nThe backlash offset does not need to be very precise, i.e. it can be larger than the actual<br/> \r\nbacklash and the machine will still end up in the correct precise position.<br/>\r\nThe machine always needs to perform an extra move and it will force a complete machine<br/>\r\n still-stand between motion segments.</li>\r\n<li>\r\n<strong>OneSidedOptimizedPositioning:</strong><br/>\r\nWorks like OneSidedPositioning except it will only perform an extra move when moving <br/>\r\nfrom the wrong side. Only half of the extra moves are needed.</li>\r\n<li>\r\n<strong>DirectionalCompensation (Experimental!):</strong><br/>\r\nBacklash compensation is applied in the direction of travel. The offset is added to the <br/>\r\nactual target coordinate, if moving in the direction of the offset (which can be positive <br/>\r\nor negative), no offset is added if moving against the offset.<br/>\r\nNo extra moves are needed. The machine can also move more fluidly, as there is no <br/>\r\ndirection change needed.<br/>\r\nHowever: the offset needs to precisely match the physical backlash.</li>\r\n</ul>\r\n</html>");
+        lblBacklashCompensation.setToolTipText(Translations.getStringOrDefault(
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.CompensationMethodLabel.toolTip.text",
+                "<html>\n" +
+                        "<p>Backlash compensation is used to avoid the effects of any looseness or play in the <br/>\n" +
+                        "mechanical linkages of the given axis.  When the actuator reverses the direction of travel, <br/>\n" +
+                        "there is often a moment where nothing happens, because the slack from a belt or play <br/>\n" +
+                        "from a screw or rack and pinion etc. needs to be bridged, before mechanical force can again <br/>\n" +
+                        "be transmitted.</p>\n" +
+                        "\n" +
+                        "<ul>\n" +
+                        "<li>\n" +
+                        "<strong>None:</strong>\n" +
+                        "No backlash compensation is performed. </li>\n" +
+                        "<li>\n" +
+                        "<strong>OneSidedPositioning:</strong><br/>\n" +
+                        "Backlash compensation is applied by always moving to the end position from one side.<br/>\n" +
+                        "The backlash offset does not need to be very precise, i.e. it can be larger than the actual<br/> \n" +
+                        "backlash and the machine will still end up in the correct precise position.<br/>\n" +
+                        "The machine always needs to perform an extra move and it will force a complete machine<br/>\n" +
+                        " still-stand between motion segments.</li>\n" +
+                        "<li>\n" +
+                        "<strong>OneSidedOptimizedPositioning:</strong><br/>\n" +
+                        "Works like OneSidedPositioning except it will only perform an extra move when moving <br/>\n" +
+                        "from the wrong side. Only half of the extra moves are needed.</li>\n" +
+                        "<li>\n" +
+                        "<strong>DirectionalCompensation (Experimental!):</strong><br/>\n" +
+                        "Backlash compensation is applied in the direction of travel. The offset is added to the <br/>\n" +
+                        "actual target coordinate, if moving in the direction of the offset (which can be positive <br/>\n" +
+                        "or negative), no offset is added if moving against the offset.<br/>\n" +
+                        "No extra moves are needed. The machine can also move more fluidly, as there is no <br/>\n" +
+                        "direction change needed.<br/>\n" +
+                        "However: the offset needs to precisely match the physical backlash.</li>\n" +
+                        "</ul>\n" +
+                        "</html>"
+        ));
 
         backlashCompensationMethod = new JComboBox(BacklashCompensationMethod.values());
         panelBacklashDiagnostics.add(backlashCompensationMethod, "4, 2");
@@ -174,8 +219,16 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
             }
         });
 
-        lblAcceptableTolerance = new JLabel("Tolerance ±");
-        lblAcceptableTolerance.setToolTipText("<html>\r\n<p>Acceptable backlash compensation tolerance (±) for calibration.</p>\r\n<p>A larger tolerance will possibly allow for a more efficient backlash compensation method.</p>\r\n</html>");
+        lblAcceptableTolerance = new JLabel(Translations.getStringOrDefault(
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.ToleranceLabel.text",
+                "Tolerance ±"));
+        lblAcceptableTolerance.setToolTipText(Translations.getStringOrDefault(
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.ToleranceLabel.toolTip.text",
+                "<html>\n" +
+                        "<p>Acceptable backlash compensation tolerance (±) for calibration.</p>\n" +
+                        "<p>A larger tolerance will possibly allow for a more efficient backlash compensation method.</p>\n" +
+                        "</html>"
+        ));
         panelBacklashDiagnostics.add(lblAcceptableTolerance, "6, 2, right, default");
 
         acceptableTolerance = new JTextField();
@@ -192,21 +245,48 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         panelBacklashDiagnostics.add(backlashOffset, "4, 4");
         backlashOffset.setColumns(10);
 
-        lblSneakupDistance = new JLabel("Sneak-up Distance");
+        lblSneakupDistance = new JLabel(Translations.getStringOrDefault(
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.SneakUpDistanceLabel.text",
+                "Sneak-up Distance"));
         panelBacklashDiagnostics.add(lblSneakupDistance, "6, 4, right, default");
 
         sneakUpOffset = new JTextField();
         panelBacklashDiagnostics.add(sneakUpOffset, "8, 4");
         sneakUpOffset.setColumns(10);
 
-        lblBacklashSpeedFactor = new JLabel("Speed Factor");
+        lblBacklashSpeedFactor = new JLabel(Translations.getStringOrDefault(
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.SpeedFactorLabel.text",
+                "Speed Factor"));
         panelBacklashDiagnostics.add(lblBacklashSpeedFactor, "2, 6, right, default");
 
         backlashSpeedFactor = new JTextField();
         panelBacklashDiagnostics.add(backlashSpeedFactor, "4, 6");
         backlashSpeedFactor.setColumns(10);
 
-        lblStepTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nAbsolute <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRelative <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRandom <span style=\"color:#BB7700\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nTolerance <span style=\"color:#000077\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nerror at step.\r\n</p>\r\n</body>\r\n</html>");
+        lblStepTest = new JLabel(Translations.getStringOrDefault(
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.StepTestLabel.text",
+                "<html>\n" +
+                        "<body style=\"text-align:right\">\n" +
+                        "<p>\n" +
+                        "Absolute <span style=\"color:#FF0000\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<p>\n" +
+                        "Relative <span style=\"color:#005BD9\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<p>\n" +
+                        "Random <span style=\"color:#BB7700\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<br/>\n" +
+                        "<p>\n" +
+                        "Tolerance <span style=\"color:#000077\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<br/>\n" +
+                        "<p>\n" +
+                        "error at step.\n" +
+                        "</p>\n" +
+                        "</body>\n" +
+                        "</html>"
+        ));
         panelBacklashDiagnostics.add(lblStepTest, "2, 8, right, default");
 
         stepTestGraph = new SimpleGraphView();
@@ -214,7 +294,35 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         stepTestGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelBacklashDiagnostics.add(stepTestGraph, "4, 8, 7, 1, fill, fill");
 
-        lblBacklashDistanceTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nBacklash <span style=\"color:#005BD9\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nEnvelope <span style=\"color:#000077\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nOvershoot <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<p>\r\nRandom <span style=\"color:#BB7700\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nMove Time <span style=\"color:#00AA00\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<br/>\r\n<p>\r\nforward/ <span style=\"color:#777777\">reverse</span><br/>\r\nat move distance.\r\n<p/>\r\n</body>\r\n</html>");
+        lblBacklashDistanceTest = new JLabel(Translations.getStringOrDefault(
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.DistanceTestLabel.text",
+                "<html>\n" +
+                        "<body style=\"text-align:right\">\n" +
+                        "<p>\n" +
+                        "Backlash <span style=\"color:#005BD9\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<p>\n" +
+                        "Envelope <span style=\"color:#000077\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<p>\n" +
+                        "Overshoot <span style=\"color:#FF0000\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<p>\n" +
+                        "Random <span style=\"color:#BB7700\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<br/>\n" +
+                        "<p>\n" +
+                        "Move Time <span style=\"color:#00AA00\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<br/>\n" +
+                        "<br/>\n" +
+                        "<p>\n" +
+                        "forward/ <span style=\"color:#777777\">reverse</span><br/>\n" +
+                        "at move distance.\n" +
+                        "<p/>\n" +
+                        "</body>\n" +
+                        "</html>"
+        ));
         panelBacklashDiagnostics.add(lblBacklashDistanceTest, "2, 10, right, default");
 
         backlashDistanceTestGraph = new SimpleGraphView();
@@ -222,7 +330,26 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
         backlashDistanceTestGraph.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelBacklashDiagnostics.add(backlashDistanceTestGraph, "4, 10, 7, 1, fill, fill");
 
-        lblBacklashSpeedTest = new JLabel("<html>\r\n<body style=\"text-align:right\">\r\n<p>\r\nBacklash <span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<p>\r\nEffective Speed <span style=\"color:#00AA00\">&mdash;&mdash;</span>\r\n</p>\r\n<br/>\r\n<br/>\r\n<p>\r\nforward/ <span style=\"color:#777777\">reverse</span><br/>\r\nat nominal speed.\r\n</p>\r\n</body>\r\n</html>");
+        lblBacklashSpeedTest = new JLabel(Translations.getStringOrDefault(
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.SpeedTestLabel.text",
+                "<html>\n" +
+                        "<body style=\"text-align:right\">\n" +
+                        "<p>\n" +
+                        "Backlash <span style=\"color:#FF0000\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<br/>\n" +
+                        "<p>\n" +
+                        "Effective Speed <span style=\"color:#00AA00\">&mdash;&mdash;</span>\n" +
+                        "</p>\n" +
+                        "<br/>\n" +
+                        "<br/>\n" +
+                        "<p>\n" +
+                        "forward/ <span style=\"color:#777777\">reverse</span><br/>\n" +
+                        "at nominal speed.\n" +
+                        "</p>\n" +
+                        "</body>\n" +
+                        "</html>"
+        ));
         panelBacklashDiagnostics.add(lblBacklashSpeedTest, "2, 12, right, default");
 
         backlashSpeedTestGraph = new SimpleGraphView();
