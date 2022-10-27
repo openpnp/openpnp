@@ -73,13 +73,14 @@ In addition to the automated tests, it's a good idea to run a manual test using 
 
 ### JDK or JRE 8+
 
-OpenPnP is written in Java and requires at least Java 8 to run. If you want
-to do development on OpenPnP or recompile it, you should install the JDK. 
+OpenPnP is written in Java and should run on Java 8 through 15 (inspect the [latest workflows](https://github.com/openpnp/openpnp/actions?query=event%3Apush) for details). If you want to do development on OpenPnP or recompile it, you should install the lowest version (8) JDK in order to tests compliance. JDKs later than version 15 have incompatibiities that need to be addressed, help is welcome. 
+
 If you just want to run it you can install the smaller JRE.
 
 You can download the latest revision of the JDK or JRE at:
 
 http://java.com/getjava
+https://openjdk.org/
 
 ### OpenCV
 
