@@ -22,6 +22,7 @@ package org.openpnp.machine.reference.signaler.wizards;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.machine.reference.signaler.ActuatorSignaler;
 import org.openpnp.model.Configuration;
@@ -62,19 +63,22 @@ public class ActuatorSignalerConfigurationWizard extends AbstractConfigurationWi
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblNewLabel = new JLabel("Actuator");
+        lblNewLabel = new JLabel(Translations.getStringOrDefault("ActuatorSignalerConfigurationWizard.ActuatorLabel",
+                "Actuator"));
         contentPanel.add(lblNewLabel, "2, 2, right, default");
         
         actuator = new JComboBox();
         contentPanel.add(actuator, "4, 2, fill, default");
         
-        lblNewLabel_1 = new JLabel("Job State");
+        lblNewLabel_1 = new JLabel(Translations.getStringOrDefault("ActuatorSignalerConfigurationWizard.JobStateLabel",
+                "Job State"));
         contentPanel.add(lblNewLabel_1, "2, 4, right, default");
         
         jobState = new JComboBox();
         contentPanel.add(jobState, "4, 4, fill, default");
         
-        lblNewLabel_2 = new JLabel("Machine State");
+        lblNewLabel_2 = new JLabel(Translations.getStringOrDefault(
+                "ActuatorSignalerConfigurationWizard.MachineStateLabel", "Machine State"));
         contentPanel.add(lblNewLabel_2, "2, 6, right, default");
         
         machineState = new JComboBox();

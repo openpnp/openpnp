@@ -27,6 +27,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.spi.Axis;
@@ -50,7 +51,9 @@ public abstract class AbstractAxisConfigurationWizard extends AbstractConfigurat
         super();
         this.axis = axis;
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelProperties.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "AbstractAxisConfigurationWizard.PropertiesPanel.Border.title",
+                "Properties"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -63,13 +66,15 @@ public abstract class AbstractAxisConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblType = new JLabel("Type");
+        lblType = new JLabel(Translations.getStringOrDefault(
+                "AbstractAxisConfigurationWizard.PropertiesPanel.TypeLabel.text", "Type"));
         panelProperties.add(lblType, "2, 2, right, default");
         
         type = new JComboBox(Axis.Type.values());
         panelProperties.add(type, "4, 2, fill, default");
         
-        lblName = new JLabel("Name");
+        lblName = new JLabel(Translations.getStringOrDefault(
+                "AbstractAxisConfigurationWizard.PropertiesPanel.NameLabel.text", "Name"));
         panelProperties.add(lblName, "2, 4, right, default");
         
         name = new JTextField();
