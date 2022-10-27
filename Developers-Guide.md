@@ -83,8 +83,8 @@ JDKs later than version 15 [have incompatibities that need to be addressed](http
 
 You can download the JDKs or JREs at:
 
-http://java.com/getjava
-https://openjdk.org/
+- https://openjdk.org/
+- http://java.com/getjava
 
 ### OpenCV
 
