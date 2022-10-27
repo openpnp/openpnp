@@ -7,6 +7,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Icons;
@@ -35,14 +36,18 @@ public class AxesPropertySheetHolder extends SimplePropertySheetHolder {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Axis...");
-            putValue(SHORT_DESCRIPTION, "Create a new axis.");
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("AxisPropertySheetHolder.Action.NewAxis.Description",
+                    "Create a new axis."));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Axis> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    "Select Axis...", "Please select an Axis implemention from the list below.",
+                    Translations.getStringOrDefault("AxisPropertySheetHolder.SelectionDialog.title",
+                            "Select Axis..."),
+                    Translations.getStringOrDefault("AxisPropertySheetHolder.SelectionDialog.description",
+                            "Please select an Axis implementation from the list below."),
                     configuration.getMachine().getCompatibleAxisClasses());
             dialog.setVisible(true);
             Class<? extends Axis> axisClass = dialog.getSelectedClass();

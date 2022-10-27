@@ -109,11 +109,13 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         panel.add(panel_1, BorderLayout.EAST);
         
-                cbExp = new JCheckBox("Expand");
+                cbExp = new JCheckBox(Translations.getStringOrDefault("MachineSetupPanel.ExpandChkBox.text",
+                        "Expand"));
                 panel_1.add(cbExp);
                 cbExp.setAction(action);
 
-        JLabel lblSearch = new JLabel("Search");
+        JLabel lblSearch = new JLabel(Translations.getStringOrDefault("MachineSetupPanel.SearchLabel.text",
+                "Search"));
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -235,7 +237,7 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
                         JPanel panel = propertySheet.getPropertySheetPanel();
                         if (title == null) {
                             title = Translations.getStringOrDefault(
-                                    "MechineSetupPanel.RightComponent.tabs.configuration.title","Configuration");
+                                    "MachineSetupPanel.RightComponent.tabs.configuration.title","Configuration");
                         }
                         if (panel != null) {
                             tabbedPane.add(title, panel);
@@ -370,8 +372,9 @@ public class MachineSetupPanel extends JPanel implements WizardContainer {
     };
     private class SwingAction extends AbstractAction {
         public SwingAction() {
-            putValue(NAME, "Expand");
-            putValue(SHORT_DESCRIPTION, "Expand machine configuration tree");
+            putValue(NAME, Translations.getStringOrDefault("MachineSetupPanel.Action.Expand","Expand"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("MachineSetupPanel.Action.Expand.Description",
+                    "Expand machine configuration tree"));
         }
         
         public void actionPerformed(ActionEvent e) {

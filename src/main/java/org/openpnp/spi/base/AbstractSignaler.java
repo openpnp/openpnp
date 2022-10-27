@@ -7,6 +7,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -86,7 +87,8 @@ public abstract class AbstractSignaler extends AbstractModelObject implements Si
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Delete Signaler");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected signaler.");
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("AbstractSignaler.Action.Delete.Description",
+                    "Delete the currently selected signaler."));
         }
 
         @Override

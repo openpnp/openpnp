@@ -27,6 +27,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -150,7 +151,8 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
         {
             putValue(SMALL_ICON, Icons.delete);
             putValue(NAME, "Delete Axis");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected axis.");
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("AbstractAxis.Action.Delete.Description",
+                    "Delete the currently selected axis."));
         }
 
         @Override
@@ -184,7 +186,8 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
         {
             putValue(SMALL_ICON, Icons.arrowUp);
             putValue(NAME, "Permutate Up");
-            putValue(SHORT_DESCRIPTION, "Move the currently selected axis one position up.");
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("AbstractAxis.Action.PermutateUp.Description",
+                    "Move the currently selected axis one position up."));
         }
 
         @Override
@@ -198,7 +201,8 @@ public abstract class AbstractAxis extends AbstractModelObject implements Axis {
         {
             putValue(SMALL_ICON, Icons.arrowDown);
             putValue(NAME, "Permutate Down");
-            putValue(SHORT_DESCRIPTION, "Move the currently selected axis one position down.");
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("AbstractAxis.Action.PermutateDown.Description",
+                    "Move the currently selected axis one position down."));
         }
 
         @Override
