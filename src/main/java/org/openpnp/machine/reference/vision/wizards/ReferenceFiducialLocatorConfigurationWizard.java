@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.VisionSettingsComboBoxModel;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -43,8 +44,9 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         this.fiducialLocator = fiducialLocator;
 
         JPanel panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "General", TitledBorder.LEADING, TitledBorder.TOP,
-                null, null));
+        panel.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.Border.title", "General"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -65,7 +67,9 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        JLabel lblVisionSettings = new JLabel("Vision Settings");
+        JLabel lblVisionSettings = new JLabel(Translations.getStringOrDefault(
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.VisionSettingsLabel.text",
+                "Vision Settings"));
         panel.add(lblVisionSettings, "2, 2, right, default");
         
         visionSettings = new JComboBox(new VisionSettingsComboBoxModel(FiducialVisionSettings.class));
@@ -78,23 +82,37 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         });
         panel.add(visionSettings, "4, 2, 3, 1, fill, default");
 
-        JLabel lblRepeatFiducialRecognition = new JLabel("Repeat Recognition");
+        JLabel lblRepeatFiducialRecognition = new JLabel(Translations.getStringOrDefault(
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.RepeatRecognitionLabel.text",
+                "Repeat Recognition"));
         panel.add(lblRepeatFiducialRecognition, "2, 4");
         
         textFieldRepeatFiducialRecognition = new JTextField();
-        textFieldRepeatFiducialRecognition.setToolTipText("To dial-in on fiducials the recognition is repeated several times, but at least 3 times. (default: 3)");
+        textFieldRepeatFiducialRecognition.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.RepeatRecognitionTextField.toolTip.text",
+                "To dial-in on fiducials the recognition is repeated several times, but at least 3 times. (default: 3)"
+        ));
         panel.add(textFieldRepeatFiducialRecognition, "4, 4");
         textFieldRepeatFiducialRecognition.setColumns(2);
 
-        JLabel lblEnabledAveraging = new JLabel("Average Matches?");
-        lblEnabledAveraging.setToolTipText("Finally calculates the arithmetic average over all matches (except the first). Needs 3 or more repeated recognitions to work.");
+        JLabel lblEnabledAveraging = new JLabel(Translations.getStringOrDefault(
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.AverageMatchesLabel.text",
+                "Average Matches?"));
+        lblEnabledAveraging.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.AverageMatchesLabel.toolTip.text",
+                "Finally calculates the arithmetic average over all matches (except the first). Needs 3 or more repeated recognitions to work."
+        ));
         panel.add(lblEnabledAveraging, "2, 6");
 
         enabledAveragingCheckbox = new JCheckBox("");
         panel.add(enabledAveragingCheckbox, "4, 6");
         
-        JLabel lblMaxDistance = new JLabel("Max. Distance");
-        lblMaxDistance.setToolTipText("Maximum allowed distance between nominal fiducial location and detected location.");
+        JLabel lblMaxDistance = new JLabel(Translations.getStringOrDefault(
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.MaxDistanceLabel.text",
+                "Max. Distance"));
+        lblMaxDistance.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.MaxDistanceLabel.toolTip.text",
+                "Maximum allowed distance between nominal fiducial location and detected location."));
         panel.add(lblMaxDistance, "2, 8, right, default");
         
         maxDistance = new JTextField();
@@ -137,7 +155,8 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
 
     @Override
     public String getWizardName() {
-        return "ReferenceFiducialLocator";
+        return Translations.getStringOrDefault(
+                "ReferenceFiducialLocatorConfigurationWizard.wizardName", "ReferenceFiducialLocator");
     }
 
     @Override
