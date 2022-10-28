@@ -7,6 +7,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Icons;
@@ -35,14 +36,19 @@ public class NozzlesPropertySheetHolder extends SimplePropertySheetHolder {
         {
             putValue(SMALL_ICON, Icons.nozzleAdd);
             putValue(NAME, "New Nozzle...");
-            putValue(SHORT_DESCRIPTION, "Create a new nozzle.");
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "NozzlesPropertySheetHolder.Action.NewNozzle.Description", "Create a new nozzle."));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Nozzle> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    "Select Nozzle...", "Please select a Nozzle implemention from the list below.",
+                    Translations.getStringOrDefault(
+                            "NozzlesPropertySheetHolder.SelectNozzleDialog.title",
+                            "Select Nozzle..."),
+                    Translations.getStringOrDefault("NozzlesPropertySheetHolder.SelectNozzleDialog.description",
+                    "Please select a Nozzle implemention from the list below."),
                     configuration.getMachine().getCompatibleNozzleClasses());
             dialog.setVisible(true);
             Class<? extends Nozzle> cls = dialog.getSelectedClass();

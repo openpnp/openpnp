@@ -29,6 +29,7 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -64,8 +65,9 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
 
 
         panelChanger = new JPanel();
-        panelChanger.setBorder(new TitledBorder(null, "Nozzle Tip Changer", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        panelChanger.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceNozzleToolChangerWizard.ChangerPanel.Border.title",
+                "Nozzle Tip Changer"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelChanger);
         panelChanger
                 .setLayout(
@@ -90,7 +92,9 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
                 
-        lblChangerEnabled = new JLabel("Automatic Tool Changer Enabled?");
+        lblChangerEnabled = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleToolChangerWizard.ChangerPanel.ChangerEnabledLabel.text",
+                "Automatic Tool Changer Enabled?"));
         panelChanger.add(lblChangerEnabled, "2, 2, right, default");
 
         chckbxChangerEnabled = new JCheckBox("");
@@ -109,7 +113,9 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
         });
         panelChanger.add(chckbxChangerEnabled, "4, 2");
         
-        lblChangeOnManual = new JLabel("Change On Manual Pick?");
+        lblChangeOnManual = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleToolChangerWizard.ChangerPanel.ChangeOnManualLabel.text",
+                "Change On Manual Pick?"));
         panelChanger.add(lblChangeOnManual, "2, 4, right, default");
         
         chckbxChangeOnManualFeed = new JCheckBox("");
@@ -124,7 +130,9 @@ public class ReferenceNozzleToolChangerWizard extends AbstractConfigurationWizar
         lblZ = new JLabel("Z");
         panelChanger.add(lblZ, "8, 6, center, default");
         
-        lblManualChangeLocation = new JLabel("Manual Change Location");
+        lblManualChangeLocation = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleToolChangerWizard.ChangerPanel.ManualChangeLocationLabel.text",
+                "Manual Change Location"));
         lblManualChangeLocation.setToolTipText("r");
         panelChanger.add(lblManualChangeLocation, "2, 8, right, default");
         

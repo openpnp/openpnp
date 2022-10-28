@@ -7,6 +7,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Icons;
@@ -15,6 +16,7 @@ import org.openpnp.model.Configuration;
 import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Head;
 import org.openpnp.spi.PropertySheetHolder;
+import org.openpnp.spi.TransformedAxis;
 import org.openpnp.spi.base.SimplePropertySheetHolder;
 
 public class ActuatorsPropertySheetHolder extends SimplePropertySheetHolder {
@@ -35,14 +37,19 @@ public class ActuatorsPropertySheetHolder extends SimplePropertySheetHolder {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Actuator...");
-            putValue(SHORT_DESCRIPTION, "Create a new actuator.");
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "ActuatorsPropertySheetHolder.Action.NewActuator", "Create a new actuator."));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Actuator> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    "Select Actuator...", "Please select a Actuator implemention from the list below.",
+                    Translations.getStringOrDefault(
+                            "ActuatorsPropertySheetHolder.ActuatorSelectionDialog.title", "Select Actuator..."),
+                    Translations.getStringOrDefault(
+                            "ActuatorsPropertySheetHolder.ActuatorSelectionDialog.description",
+                            "Please select a Actuator implementation from the list below."),
                     configuration.getMachine().getCompatibleActuatorClasses());
             dialog.setVisible(true);
             Class<? extends Actuator> cls = dialog.getSelectedClass();

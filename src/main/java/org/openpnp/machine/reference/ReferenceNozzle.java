@@ -10,6 +10,7 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.MessageBoxes;
@@ -849,10 +850,18 @@ public class ReferenceNozzle extends AbstractNozzle implements ReferenceHeadMoun
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new ReferenceNozzleCompatibleNozzleTipsWizard(this), "Nozzle Tips"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleVacuumWizard(this), "Vacuum"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleToolChangerWizard(this), "Tool Changer"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleCameraOffsetWizard(this), "Offset Wizard"),
+                new PropertySheetWizardAdapter(new ReferenceNozzleCompatibleNozzleTipsWizard(this),
+                        Translations.getStringOrDefault("ReferenceNozzle.PropertySheetHolder.NozzleTips.title",
+                                "Nozzle Tips")),
+                new PropertySheetWizardAdapter(new ReferenceNozzleVacuumWizard(this),
+                        Translations.getStringOrDefault("ReferenceNozzle.PropertySheetHolder.Vacuum.title",
+                                "Vacuum")),
+                new PropertySheetWizardAdapter(new ReferenceNozzleToolChangerWizard(this),
+                        Translations.getStringOrDefault("ReferenceNozzle.PropertySheetHolder.ToolChanger.title",
+                                "Tool Changer")),
+                new PropertySheetWizardAdapter(new ReferenceNozzleCameraOffsetWizard(this),
+                        Translations.getStringOrDefault("ReferenceNozzle.PropertySheetHolder.OffsetWizard.title",
+                                "Offset Wizard")),
         };
     }
 
