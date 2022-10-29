@@ -138,7 +138,7 @@ public class DlgAutoPanelize extends JDialog {
         btnImport.setAction(okAction);
         footerPanel.add(btnImport);
 
-        setSize(400, 600);
+        setSize(400, 700);
         setResizable(false);
         setLocationRelativeTo(parent);
 
