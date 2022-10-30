@@ -42,6 +42,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraPanel;
 import org.openpnp.gui.components.CameraView;
@@ -1223,18 +1224,49 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
     @Override
     public PropertySheet[] getPropertySheets() {
         PropertySheet[] sheets = new PropertySheet[] {
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraConfigurationWizard.class, this.getId(), this), "General Configuration"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraVisionConfigurationWizard.class, this.getId(), this), "Camera Settling"),
-                new PropertySheetWizardAdapter(getConfigurationWizard(), "Device Settings"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraWhiteBalanceConfigurationWizard.class, this.getId(), this), "White Balance"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraPositionConfigurationWizard.class, this.getId(), getMachine(), this), "Position"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraCalibrationConfigurationWizard.class, this.getId(), this), "Lens Calibration"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraTransformsConfigurationWizard.class, this.getId(), this), "Image Transforms"),
-                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(ReferenceCameraCalibrationWizard.class, this.getId(), this), "Advanced Calibration")
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(CameraConfigurationWizard.class,
+                        this.getId(), this), Translations.getStringOrDefault(
+                                "ReferenceCamera.CameraConfigurationWizard.tab.title",
+                        "General Configuration")),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        CameraVisionConfigurationWizard.class, this.getId(), this), Translations.getStringOrDefault(
+                                "ReferenceCamera.CameraVisionConfigurationWizard.tab.title",
+                        "Camera Settling")),
+                new PropertySheetWizardAdapter(getConfigurationWizard(), Translations.getStringOrDefault(
+                        "ReferenceCamera.DeviceSettings.tab.title",
+                        "Device Settings")),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraWhiteBalanceConfigurationWizard.class, this.getId(), this),
+                        Translations.getStringOrDefault(
+                                "ReferenceCamera.ReferenceCameraWhiteBalanceConfigurationWizard.tab.title",
+                                "White Balance")),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraPositionConfigurationWizard.class, this.getId(), getMachine(), this),
+                        Translations.getStringOrDefault(
+                                "ReferenceCamera.ReferenceCameraPositionConfigurationWizard.tab.title",
+                                "Position")),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraCalibrationConfigurationWizard.class, this.getId(), this),
+                        Translations.getStringOrDefault(
+                                "ReferenceCamera.ReferenceCameraCalibrationConfigurationWizard.tab.title",
+                                "Lens Calibration")),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraTransformsConfigurationWizard.class, this.getId(), this),
+                        Translations.getStringOrDefault(
+                                "ReferenceCamera.ReferenceCameraTransformsConfigurationWizard.tab.title",
+                                "Image Transforms")),
+                new PropertySheetWizardAdapter(WizardUtils.configurationWizardFactory(
+                        ReferenceCameraCalibrationWizard.class, this.getId(), this),
+                        Translations.getStringOrDefault(
+                                "ReferenceCamera.ReferenceCameraCalibrationWizard.tab.title",
+                                "Advanced Calibration"))
         };
         if (getFocusSensingMethod() != FocusSensingMethod.None) {
                 sheets = Collect.concat(sheets, new PropertySheet[] {
-                        new PropertySheetWizardAdapter(getFocusProvider().getConfigurationWizard(this), "Auto Focus"),
+                        new PropertySheetWizardAdapter(getFocusProvider().getConfigurationWizard(this),
+                                Translations.getStringOrDefault(
+                                        "ReferenceCamera.FocusProvider.ConfigurationWizard.tab.title",
+                                        "Auto Focus")),
                 });
         }
         return sheets;
@@ -1245,11 +1277,14 @@ public abstract class ReferenceCamera extends AbstractBroadcastingCamera impleme
         return new Action[] { deleteAction };
     }
     
-    public Action deleteAction = new AbstractAction("Delete Camera") {
+    public Action deleteAction = new AbstractAction(Translations.getStringOrDefault(
+            "ReferenceCamera.Action.Delete",
+            "Delete Camera")) {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Camera");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected camera.");
+            putValue(NAME, Translations.getStringOrDefault("ReferenceCamera.Action.Delete","Delete Camera"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("ReferenceCamera.Action.Delete.Description",
+                    "Delete the currently selected camera."));
         }
 
         @Override
