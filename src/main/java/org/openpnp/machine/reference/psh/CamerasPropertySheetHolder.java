@@ -7,6 +7,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ClassSelectionDialog;
 import org.openpnp.gui.support.Icons;
@@ -37,15 +38,21 @@ public class CamerasPropertySheetHolder extends SimplePropertySheetHolder {
     public Action newCameraAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, "New Camera...");
-            putValue(SHORT_DESCRIPTION, "Create a new camera.");
+            putValue(NAME, Translations.getStringOrDefault("CamerasPropertySheetHolder.Action.NewCamera",
+                    "New Camera..."));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "CamerasPropertySheetHolder.Action.NewCamera.Description", "Create a new camera."));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Camera> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    "Select Camera...", "Please select a Camera implemention from the list below.",
+                    Translations.getStringOrDefault(
+                            "CamerasPropertySheetHolder.SelectionDialog.title", "Select Camera..."),
+                    Translations.getStringOrDefault(
+                            "CamerasPropertySheetHolder.SelectionDialog.description",
+                            "Please select a Camera implementation from the list below."),
                     configuration.getMachine().getCompatibleCameraClasses());
             dialog.setVisible(true);
             Class<? extends Camera> cameraClass = dialog.getSelectedClass();
