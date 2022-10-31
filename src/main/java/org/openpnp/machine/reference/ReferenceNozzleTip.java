@@ -17,6 +17,7 @@ import org.opencv.core.Rect;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -337,9 +338,15 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new ReferenceNozzleTipPartDetectionWizard(this), "Part Detection"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleTipToolChangerWizard(this), "Tool Changer"),
-                new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this), "Calibration")
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipPartDetectionWizard(this),
+                        Translations.getStringOrDefault("ReferenceNozzleTip.PartDetection.tab.title",
+                                "Part Detection")),
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipToolChangerWizard(this),
+                        Translations.getStringOrDefault("ReferenceNozzleTip.ToolChanger.tab.title",
+                                "Tool Changer")),
+                new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this),
+                        Translations.getStringOrDefault("ReferenceNozzleTip.Calibration.tab.title",
+                                "Calibration"))
                 };
     }
 

@@ -30,6 +30,7 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.IntegerConverter;
@@ -75,7 +76,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         this.nozzleTip = nozzleTip;
         
         panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, "Properties", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panel.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PropertiesPanel.Border.title", "Properties"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -86,7 +89,8 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblName = new JLabel("Name");
+        lblName = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PropertiesPanel.NameLabel.text","Name"));
         panel.add(lblName, "2, 2, right, default");
         
         nameTf = new JTextField();
@@ -94,7 +98,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         nameTf.setColumns(10);
         
         panelDwellTime = new JPanel();
-        panelDwellTime.setBorder(new TitledBorder(null, "Dwell Times", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelDwellTime.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.Border.title", "Dwell Times"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelDwellTime);
         panelDwellTime.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -111,14 +117,18 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
           
-        lblPickDwellTime = new JLabel("Pick Dwell Time (ms)");
+        lblPickDwellTime = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.PickDwellTimeLabel.text",
+                "Pick Dwell Time (ms)"));
         panelDwellTime.add(lblPickDwellTime, "2, 2, right, default");
         
         pickDwellTf = new JTextField();
         panelDwellTime.add(pickDwellTf, "4, 2");
         pickDwellTf.setColumns(10);
         
-        lblPlaceDwellTime = new JLabel("Place Dwell Time (ms)");
+        lblPlaceDwellTime = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.PlaceDwellTimeLabel.text",
+                "Place Dwell Time (ms)"));
         panelDwellTime.add(lblPlaceDwellTime, "2, 4, right, default");
         
         placeDwellTf = new JTextField();
@@ -126,11 +136,15 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
         placeDwellTf.setColumns(10);
         
         CellConstraints cc = new CellConstraints();
-        lblDwellTime = new JLabel("Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time.");
+        lblDwellTime = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.DwellTimesPanel.DwellTimeLabel.text",
+                "Note: Total Dwell Time is the sum of Nozzle Dwell Time plus the Nozzle Tip Dwell Time."));
         panelDwellTime.add(lblDwellTime, cc.xywh(2, 6, 5, 1));
 
         panelPushAndDrag = new JPanel();
-        panelPushAndDrag.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Push and Drag Usage", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelPushAndDrag.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
+                Translations.getStringOrDefault("ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.Border.title",
+                "Push and Drag Usage"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPushAndDrag);
         panelPushAndDrag.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -153,16 +167,32 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblLowDiameter = new JLabel("Outside Diameter");
-        lblLowDiameter.setToolTipText("Outside diameter of the nozzle tip at the lowest ~0.75mm.");
+        lblLowDiameter = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.OutsideDiameterLabel.text",
+                "Outside Diameter"));
+        lblLowDiameter.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.OutsideDiameterLabel.toolTip.text",
+                "Outside diameter of the nozzle tip at the lowest ~0.75mm."));
         panelPushAndDrag.add(lblLowDiameter, "2, 4, right, default");
         
         textFieldLowDiameter = new JTextField();
         panelPushAndDrag.add(textFieldLowDiameter, "4, 4");
         textFieldLowDiameter.setColumns(10);
         
-        lblPushAndDragAllowed = new JLabel("Push & Drag allowed?");
-        lblPushAndDragAllowed.setToolTipText("<html>\r\n<p>\r\nDetermines if the NozzleTip is allowed to be used <br/>\r\nfor pushing and dragging. \r\n</p><p>\r\nShould only be enabled for NozzleTips that are <br/>\r\nsturdy enough to take the lateral forces, including <br/>\r\nthe occasional snag. </p>\r\n</html>");
+        lblPushAndDragAllowed = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.PushAndDragAllowedLabel.text",
+                "Push & Drag allowed?"));
+        lblPushAndDragAllowed.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.PushAndDragAllowedLabel.toolTip.text",
+                "<html>\n" +
+                        "<p>\n" +
+                        "Determines if the NozzleTip is allowed to be used <br/>\n" +
+                        "for pushing and dragging. \n" +
+                        "</p><p>\n" +
+                        "Should only be enabled for NozzleTips that are <br/>\n" +
+                        "sturdy enough to take the lateral forces, including <br/>\n" +
+                        "the occasional snag. </p>\n" +
+                        "</html>"));
         panelPushAndDrag.add(lblPushAndDragAllowed, "2, 2, right, default");
         
         chckbxPushAndDragAllowed = new JCheckBox("");
@@ -170,7 +200,9 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
 
         panelPartDimensions= new JPanel();
         panelPartDimensions.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
-                "Part Dimensions", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getStringOrDefault(
+                        "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.Border.title",
+                        "Part Dimensions"), TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelPartDimensions);
 
         panelPartDimensions.setLayout(new FormLayout(new ColumnSpec[] {
@@ -198,34 +230,59 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblMinPartDiameter = new JLabel("Min. Part Diameter");
-        lblMinPartDiameter.setToolTipText("<html>\nMinimum part diameter, to be picked with this the nozzle tip.<br/>\nNote, the <strong>Minimum Part Diameter</strong> minus two times the <strong>Pick Tolerance</strong><br/>\ndetermines the minimum <em>inner</em> diameter of the nozzle tip that<br/>\nis always considered covered by the part. This inner diameter is ignored<br/>\nin the Background Calibration key color analysis and diagnostics.\n</html>");
+        lblMinPartDiameter = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MinPartDiameterLabel.text",
+                "Min. Part Diameter"));
+        lblMinPartDiameter.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MinPartDiameterLabel.toolTip.text",
+                "<html>\nMinimum part diameter, to be picked with this the nozzle tip.<br/>\nNote, the <strong>Minimum Part Diameter</strong> minus two times the <strong>Pick Tolerance</strong><br/>\ndetermines the minimum <em>inner</em> diameter of the nozzle tip that<br/>\nis always considered covered by the part. This inner diameter is ignored<br/>\nin the Background Calibration key color analysis and diagnostics.\n</html>"
+        ));
         panelPartDimensions.add(lblMinPartDiameter, "2, 2, right, default");
         
         minPartDiameter = new JTextField();
         panelPartDimensions.add(minPartDiameter, "4, 2, fill, default");
         minPartDiameter.setColumns(10);
 
-        lblMaxPartDiameter = new JLabel("Max. Part Diameter");
-        lblMaxPartDiameter.setToolTipText(
-                "<html>\nMaximum diameter/diagonal of parts picked with this nozzle tip, <br/>\nincluding tolerances.\n</html>\n");
+        lblMaxPartDiameter = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartDiameterLabel.text",
+                "Max. Part Diameter"));
+        lblMaxPartDiameter.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartDiameterLabel.toolTip.text",
+                "<html>\n" +
+                        "Maximum diameter/diagonal of parts picked with this nozzle tip, <br/>\n" +
+                        "including tolerances.\n" +
+                        "</html>\n"
+        ));
         panelPartDimensions.add(lblMaxPartDiameter, "2, 4, right, default");
 
         maxPartDiameter = new JTextField();
         panelPartDimensions.add(maxPartDiameter, "4, 4, fill, default");
         maxPartDiameter.setColumns(10);
 
-        lblMaxPartHeight = new JLabel("Max. Part Height");
-        lblMaxPartHeight.setToolTipText(
-                "Maximum part heights picked with this nozzle tip. Used for dynamic safe Z, if part height is unknown.");
+        lblMaxPartHeight = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartHeightLabel.text",
+                "Max. Part Height"));
+        lblMaxPartHeight.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartHeightLabel.toolTip.text",
+                "Maximum part heights picked with this nozzle tip. Used for dynamic safe Z," +
+                        " if part height is unknown."));
         panelPartDimensions.add(lblMaxPartHeight, "2, 6, right, default");
 
         maxPartHeight = new JTextField();
         panelPartDimensions.add(maxPartHeight, "4, 6, fill, default");
         maxPartHeight.setColumns(10);
         
-        lblMaxPickTolerance = new JLabel("Max. Pick Tolerance");
-        lblMaxPickTolerance.setToolTipText("<html>\nMaximum assumed pick tolerance allowed with this nozzle tip.<br/>\nThis determines how far away from the nominal location a detected <br/>\nBottom Vision alignment position is accepted. It also reduces the <br/>\ncomputation time of some vision operations by limiting the search range.\n</html>\n\n");
+        lblMaxPickTolerance = new JLabel(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPickToleranceLabel.text",
+                "Max. Pick Tolerance"));
+        lblMaxPickTolerance.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPickToleranceLabel.toolTip.text",
+                "<html>\n" +
+                        "Maximum assumed pick tolerance allowed with this nozzle tip.<br/>\n" +
+                        "This determines how far away from the nominal location a detected <br/>\n" +
+                        "Bottom Vision alignment position is accepted. It also reduces the <br/>\n" +
+                        "computation time of some vision operations by limiting the search range.\n" +
+                        "</html>\n\n"));
         panelPartDimensions.add(lblMaxPickTolerance, "2, 8, right, default");
         
         maxPickTolerance = new JTextField();
