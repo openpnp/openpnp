@@ -9,6 +9,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.LocationButtonsPanel;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -65,7 +66,8 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         panelOffsets = new JPanel();
         contentPanel.add(panelOffsets);
         panelOffsets.setBorder(new TitledBorder(null,
-                "Coordinate System", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getStringOrDefault("ReferenceCameraPositionConfigurationWizard.OffsetsPanel.Border.title",
+                        "Coordinate System"), TitledBorder.LEADING, TitledBorder.TOP, null));
         panelOffsets.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 FormSpecs.DEFAULT_COLSPEC,
@@ -94,10 +96,13 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         JLabel olblZ = new JLabel("Z");
         panelOffsets.add(olblZ, "8, 2");
         
-        lblRotation = new JLabel("Rotation");
+        lblRotation = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraPositionConfigurationWizard.OffsetsPanel.RotationLabel.text",
+                "Rotation"));
         panelOffsets.add(lblRotation, "10, 2");
         
-        lblAxis = new JLabel("Axis");
+        lblAxis = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraPositionConfigurationWizard.OffsetsPanel.AxisLabel.text","Axis"));
         panelOffsets.add(lblAxis, "2, 4, right, default");
         
         axisX = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.X, true));
@@ -112,7 +117,8 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         axisRotation = new JComboBox(new AxesComboBoxModel(machine, AbstractAxis.class, Axis.Type.Rotation, true));
         panelOffsets.add(axisRotation, "10, 4, fill, default");
         
-        lblOffset = new JLabel("Offset");
+        lblOffset = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraPositionConfigurationWizard.OffsetsPanel.OffsetLabel.text", "Offset"));
         panelOffsets.add(lblOffset, "2, 6, right, default");
 
 
@@ -133,15 +139,17 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         textFieldOffRotation.setColumns(10);
 
         JPanel panelSafeZ = new JPanel();
-        panelSafeZ.setBorder(new TitledBorder(null, "Safe Z", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        panelSafeZ.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceCameraPositionConfigurationWizard.SafeZPanel.Border.title", "Safe Z"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelSafeZ);
         panelSafeZ.setLayout(new FormLayout(
                 new ColumnSpec[] {FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
                         FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,},
                 new RowSpec[] {FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        JLabel lblSafeZ = new JLabel("Safe Z");
+        JLabel lblSafeZ = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraPositionConfigurationWizard.SafeZPanel.SafeZLabel.text", "Safe Z"));
         panelSafeZ.add(lblSafeZ, "2, 2, right, default");
 
         textFieldSafeZ = new JTextField();
@@ -150,8 +158,9 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         textFieldSafeZ.setColumns(10);
 
         panelLocation = new JPanel();
-        panelLocation.setBorder(new TitledBorder(null, "Location", TitledBorder.LEADING,
-                TitledBorder.TOP, null, null));
+        panelLocation.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceCameraPositionConfigurationWizard.LocationPanel.Border.title", "Location"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelLocation);
         panelLocation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -179,7 +188,8 @@ public class ReferenceCameraPositionConfigurationWizard extends AbstractConfigur
         lblZ = new JLabel("Z");
         panelLocation.add(lblZ, "6, 2");
 
-        lblRotation_1 = new JLabel("Rotation");
+        lblRotation_1 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraPositionConfigurationWizard.LocationPanel.RotationLabel.text", "Rotation"));
         panelLocation.add(lblRotation_1, "8, 2");
 
         textFieldLocationX = new JTextField();

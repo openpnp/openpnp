@@ -36,6 +36,7 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
@@ -62,7 +63,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(null,
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getStringOrDefault("ImageCameraConfigurationWizard.GeneralPanel.Border.title",
+                        "General"), TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -104,7 +106,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 lblHeight = new JLabel("Y");
                 panelGeneral.add(lblHeight, "6, 2, center, default");
         
-        lblDimension = new JLabel("Pixel Dimension");
+        lblDimension = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.PixelDimensionLabel.text",
+                "Pixel Dimension"));
         panelGeneral.add(lblDimension, "2, 4, right, default");
 
         width = new JTextField();
@@ -118,9 +122,13 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         label_1 = new JLabel(" ");
         panelGeneral.add(label_1, "10, 4");
         
-        lblUnitsPerPixel = new JLabel("Units per Pixel");
+        lblUnitsPerPixel = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.text",
+                "Units per Pixel"));
         panelGeneral.add(lblUnitsPerPixel, "2, 6, right, default");
-        lblUnitsPerPixel.setToolTipText("To allow simulation of Unit per Pixel calibration, the true Units per Pixel of the image must be stored independently.");
+        lblUnitsPerPixel.setToolTipText(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTip.text",
+                "To allow simulation of Unit per Pixel calibration, the true Units per Pixel of the image must be stored independently."));
         
         imageUnitsPerPixelX = new JTextField();
         panelGeneral.add(imageUnitsPerPixelX, "4, 6");
@@ -130,31 +138,42 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelGeneral.add(imageUnitsPerPixelY, "6, 6");
         imageUnitsPerPixelY.setColumns(10);
 
-        lblRotation = new JLabel("Z Rotation");
-        lblRotation.setToolTipText("Simulated camera mounting rotation around the Z axis (Portrait/Landscape/mounting error).");
+        lblRotation = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.text", "Z Rotation"));
+        lblRotation.setToolTipText(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.toolTip.text",
+                "Simulated camera mounting rotation around the Z axis (Portrait/Landscape/mounting error)."));
         panelGeneral.add(lblRotation, "2, 8, right, default");
 
         simulatedRotation = new JTextField();
         panelGeneral.add(simulatedRotation, "4, 8, fill, default");
         simulatedRotation.setColumns(10);
         
-        lblYaw = new JLabel("Y Rotation");
-        lblYaw.setToolTipText("Simulated camera mounting error as a rotation around the Y axis (sideways tilt).");
+        lblYaw = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.text", "Y Rotation"));
+        lblYaw.setToolTipText(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.toolTip.text",
+                "Simulated camera mounting error as a rotation around the Y axis (sideways tilt)."));
         panelGeneral.add(lblYaw, "2, 10, right, default");
         
         simulatedYRotation = new JTextField();
         panelGeneral.add(simulatedYRotation, "4, 10, fill, default");
         simulatedYRotation.setColumns(10);
         
-        lblScale = new JLabel("Viewing Scale");
+        lblScale = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.ViewingScaleLabel.text", "Viewing Scale"));
         panelGeneral.add(lblScale, "2, 12, right, default");
         
         simulatedScale = new JTextField();
         panelGeneral.add(simulatedScale, "4, 12, fill, default");
         simulatedScale.setColumns(10);
         
-        lblDistortion = new JLabel("Distortion [%]");
-        lblDistortion.setToolTipText("<html>Simulated lens distortion. Positive values create Barrel distortion, negative values create a Pincushion distortion.</html>");
+        lblDistortion = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.text", "Distortion [%]"));
+        lblDistortion.setToolTipText(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.toolTip.text",
+                "<html>Simulated lens distortion. Positive values create Barrel distortion, negative values create a Pincushion distortion.</html>"
+        ));
         panelGeneral.add(lblDistortion, "2, 14, right, default");
         
         simulatedDistortion = new JTextField();
@@ -162,8 +181,11 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         simulatedDistortion.setColumns(10);
 
 
-        lblCameraFlipped = new JLabel("View mirrored?");
-        lblCameraFlipped.setToolTipText("Simulate the camera as showing a mirrored view");
+        lblCameraFlipped = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text", "View mirrored?"));
+        lblCameraFlipped.setToolTipText(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTip.text",
+                "Simulate the camera as showing a mirrored view"));
         panelGeneral.add(lblCameraFlipped, "2, 16, right, default");
 
         simulatedFlipped = new JCheckBox("");
@@ -172,7 +194,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         label = new JLabel(" ");
         panelGeneral.add(label, "8, 16");
 
-        lblSourceUrl = new JLabel("Source URL");
+        lblSourceUrl = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.SourceUrlLabel.text","Source URL"));
         panelGeneral.add(lblSourceUrl, "2, 20, right, default");
 
         textFieldSourceUrl = new JTextField();
@@ -184,7 +207,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         
         panelExtra = new JPanel();
         contentPanel.add(panelExtra);
-        panelExtra.setBorder(new TitledBorder(null, "Simulated Calibration Rig", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        panelExtra.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.Border.title", "Simulated Calibration Rig"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelExtra.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -210,16 +235,31 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblFocalLength = new JLabel("Focal Length");
-        lblFocalLength.setToolTipText("Lens focal length");
+        lblFocalLength = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.text", "Focal Length"));
+        lblFocalLength.setToolTipText(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.toolTip.text",
+                "Lens focal length"));
         panelExtra.add(lblFocalLength, "2, 2, right, default");
         
         focalLength = new JTextField();
         panelExtra.add(focalLength, "4, 2");
         focalLength.setColumns(10);
         
-        lblSensorDiagonal = new JLabel("Sensor Diagonal");
-        lblSensorDiagonal.setToolTipText("<html>\r\n<p>Imaging sensor diagonal for relation with lens focal length.</p>\r\n<p>Examples:</p>\r\n<ul>\r\n<li>6.71mm for typical ELP camera at 1080p i.e. OmniVision camera sensors with 3µm pixels.</li>\r\n<li>4.4mm for typical ELP camera at 720p i.e. OmniVision camera sensors with 3µm pixels.</li>\r\n<li>43.27mm for a 35mm film equivalent full frame SLR camera.</li>\r\n</ul>\r\n</html>\r\n");
+        lblSensorDiagonal = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.text", "Sensor Diagonal"));
+        lblSensorDiagonal.setToolTipText(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.toolTip.text",
+                "<html>\n" +
+                        "<p>Imaging sensor diagonal for relation with lens focal length.</p>\n" +
+                        "<p>Examples:</p>\n" +
+                        "<ul>\n" +
+                        "<li>6.71mm for typical ELP camera at 1080p i.e. OmniVision camera sensors with 3µm pixels.</li>\n" +
+                        "<li>4.4mm for typical ELP camera at 720p i.e. OmniVision camera sensors with 3µm pixels.</li>\n" +
+                        "<li>43.27mm for a 35mm film equivalent full frame SLR camera.</li>\n" +
+                        "</ul>\n" +
+                        "</html>\n"
+        ));
         panelExtra.add(lblSensorDiagonal, "6, 2, right, default");
         
         sensorDiagonal = new JTextField();
@@ -234,7 +274,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         lblZ = new JLabel("Z");
         panelExtra.add(lblZ, "8, 6, center, default");
         
-        lblPrimaryFiducial = new JLabel("Primary Fiducial");
+        lblPrimaryFiducial = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.PrimaryFiducialLabel.text",
+                "Primary Fiducial"));
         panelExtra.add(lblPrimaryFiducial, "2, 8, right, default");
         
         primaryFiducialX = new JTextField();
@@ -249,7 +291,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelExtra.add(primaryFiducialZ, "8, 8, fill, default");
         primaryFiducialZ.setColumns(10);
         
-        lblSecondaryFiducial = new JLabel("Secondary Fiducial");
+        lblSecondaryFiducial = new JLabel(Translations.getStringOrDefault(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SecondaryFiducialLabel.text",
+                "Secondary Fiducial"));
         panelExtra.add(lblSecondaryFiducial, "2, 10, right, default");
         
         secondaryFiducialX = new JTextField();
@@ -325,8 +369,10 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
 
     private Action browseAction = new AbstractAction() {
         {
-            putValue(NAME, "Browse");
-            putValue(SHORT_DESCRIPTION, "Browse");
+            putValue(NAME, Translations.getStringOrDefault("ImageCameraConfigurationWizard.Action.Browse", "Browse"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "ImageCameraConfigurationWizard.Action.Browse.Description",
+                    "Browse"));
         }
 
         public void actionPerformed(ActionEvent e) {

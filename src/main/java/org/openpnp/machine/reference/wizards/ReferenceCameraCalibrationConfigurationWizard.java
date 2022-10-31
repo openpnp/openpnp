@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
@@ -35,8 +36,9 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         this.referenceCamera = referenceCamera;
 
         panelLensCalibration = new JPanel();
-        panelLensCalibration.setBorder(new TitledBorder(null, "Lens Calibration",
-                TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelLensCalibration.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationConfigurationWizard.LensCalibrationPanel.Border.title",
+                "Lens Calibration"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelLensCalibration);
         panelLensCalibration.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -66,11 +68,15 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         startLensCalibrationBtn = new JButton(startCalibration);
         panelLensCalibration.add(startLensCalibrationBtn, "2, 2, 3, 1");
         
-        advancedCalWarning = new JLabel("Advanced Calibration Active");
+        advancedCalWarning = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationConfigurationWizard.LensCalibrationPanel.AdvancedCalibrationActiveLabel.text",
+                "Advanced Calibration Active"));
         advancedCalWarning.setForeground(Color.RED);
         panelLensCalibration.add(advancedCalWarning, "8, 2, left, default");
 
-        lblApplyCalibration = new JLabel("Apply Calibration?");
+        lblApplyCalibration = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationConfigurationWizard.LensCalibrationPanel.ApplyCalibrationLabel.text",
+                "Apply Calibration?"));
         panelLensCalibration.add(lblApplyCalibration, "2, 4, right, default");
 
         calibrationEnabledChk = new JCheckBox("");
@@ -100,7 +106,9 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         // "selected");
     }
 
-    private Action startCalibration = new AbstractAction("Start Lens Calibration") {
+    private Action startCalibration = new AbstractAction(Translations.getStringOrDefault(
+            "ReferenceCameraCalibrationConfigurationWizard.Action.StartCalibration",
+            "Start Lens Calibration")) {
         @Override
         public void actionPerformed(ActionEvent e) {
             MainFrame.get().getCameraViews().setSelectedCamera(referenceCamera);
@@ -130,7 +138,9 @@ public class ReferenceCameraCalibrationConfigurationWizard extends AbstractConfi
         }
     };
 
-    private Action cancelCalibration = new AbstractAction("Cancel Lens Calibration") {
+    private Action cancelCalibration = new AbstractAction(Translations.getStringOrDefault(
+            "ReferenceCameraCalibrationConfigurationWizard.Action.CancelCalibration",
+            "Cancel Lens Calibration")) {
         @Override
         public void actionPerformed(ActionEvent e) {
             startLensCalibrationBtn.setAction(startCalibration);

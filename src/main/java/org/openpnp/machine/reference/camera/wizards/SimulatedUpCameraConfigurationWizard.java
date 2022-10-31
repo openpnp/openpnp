@@ -27,6 +27,7 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
+import org.openpnp.Translations;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
 import org.openpnp.gui.support.DoubleConverter;
@@ -82,8 +83,9 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
 
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
-        panelGeneral.setBorder(new TitledBorder(null,
-                "General", TitledBorder.LEADING, TitledBorder.TOP, null));
+        panelGeneral.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.Border.title", "General"),
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -128,11 +130,18 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         lblZ = new JLabel("Z");
         panelGeneral.add(lblZ, "8, 2, center, default");
         
-        lblRotation = new JLabel("Rotation");
+        lblRotation = new JLabel(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.RotationLabel.text", "Rotation"));
         panelGeneral.add(lblRotation, "10, 2, center, default");
         
-        lblNewLabel = new JLabel("Camera Location");
-        lblNewLabel.setToolTipText("<html>\r\nThe Camera simulated location.<br/>\r\n<strong>Note:</strong>  In order to test calibration procedures, we cannot use the regular camera location.\r\n</html>");
+        lblNewLabel = new JLabel(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.CameraLocationLabel.text", "Camera Location"));
+        lblNewLabel.setToolTipText(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.CameraLocationLabel.toolTip.text",
+                "<html>\n" +
+                        "The Camera simulated location.<br/>\n" +
+                        "<strong>Note:</strong>  In order to test calibration procedures, we cannot use the regular camera location.\n" +
+                        "</html>"));
         panelGeneral.add(lblNewLabel, "2, 4, right, default");
         
         simulatedLocationX = new JTextField();
@@ -151,7 +160,9 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(simulatedLocationRotation, "10, 4, fill, default");
         simulatedLocationRotation.setColumns(10);
         
-        lblCameraDimension = new JLabel("Pixel Dimension");
+        lblCameraDimension = new JLabel(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PixelDimensionLabel.text",
+                "Pixel Dimension"));
         panelGeneral.add(lblCameraDimension, "2, 6, right, default");
         
         width = new JTextField();
@@ -162,8 +173,16 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(height, "6, 6, fill, default");
         height.setColumns(10);
         
-        lblUnitsPerPixel = new JLabel("Units per Pixel");
-        lblUnitsPerPixel.setToolTipText("<html>\r\nThe camera simulated units per pixel.<br/>\r\n<strong>Note:</strong>  In order to test calibration procedures, we cannot use the regular units per pixel.\r\n</html>");
+        lblUnitsPerPixel = new JLabel(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.text",
+                "Units per Pixel"));
+        lblUnitsPerPixel.setToolTipText(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTip.text",
+                "<html>\n" +
+                        "The camera simulated units per pixel.<br/>\n" +
+                        "<strong>Note:</strong>  In order to test calibration procedures, we cannot use the regular units per pixel.\n" +
+                        "</html>"
+        ));
         panelGeneral.add(lblUnitsPerPixel, "2, 8, right, default");
         
         simulatedUnitsPerPixelX = new JTextField();
@@ -175,22 +194,31 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(simulatedUnitsPerPixelY, "6, 8, fill, default");
         simulatedUnitsPerPixelY.setColumns(10);
         
-        lblFocalLength = new JLabel("Focal Length");
+        lblFocalLength = new JLabel(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalLengthLabel.text",
+                "Focal Length"));
         panelGeneral.add(lblFocalLength, "2, 10, right, default");
         
         focalLength = new JTextField();
         panelGeneral.add(focalLength, "4, 10, fill, default");
         focalLength.setColumns(10);
         
-        lblSensorDiagonal = new JLabel("Sensor Diagonal");
+        lblSensorDiagonal = new JLabel(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.SensorDiagonalLabel.text",
+                "Sensor Diagonal"));
         panelGeneral.add(lblSensorDiagonal, "2, 12, right, default");
         
         sensorDiagonal = new JTextField();
         panelGeneral.add(sensorDiagonal, "4, 12, fill, default");
         sensorDiagonal.setColumns(10);
         
-        lblErrorOffsets = new JLabel("Pick Error Offsets");
-        lblErrorOffsets.setToolTipText("Picked part on nozzle error offsets in simulation.");
+        lblErrorOffsets = new JLabel(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.text",
+                "Pick Error Offsets"));
+        lblErrorOffsets.setToolTipText(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.toolTip.text",
+                "Picked part on nozzle error offsets in simulation."
+        ));
         panelGeneral.add(lblErrorOffsets, "2, 16, right, default");
         
         errorOffsetsX = new JTextField();
@@ -209,15 +237,23 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         panelGeneral.add(errorOffsetsRotation, "10, 16, fill, default");
         errorOffsetsRotation.setColumns(10);
         
-        lblCameraFlipped = new JLabel("View mirrored?");
-        lblCameraFlipped.setToolTipText("Simulate the camera as showing a mirrored view");
+        lblCameraFlipped = new JLabel(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text",
+                "View mirrored?"));
+        lblCameraFlipped.setToolTipText(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTip.text",
+                "Simulate the camera as showing a mirrored view"));
         panelGeneral.add(lblCameraFlipped, "2, 20, right, default");
         
         simulatedFlipped = new JCheckBox("");
         panelGeneral.add(simulatedFlipped, "4, 20");
         
-        lblFocalBlur = new JLabel("Simulate Focal Blur?");
-        lblFocalBlur.setToolTipText("Simulate focal blur in order to test Auto Focus. This is very slow!");
+        lblFocalBlur = new JLabel(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.text",
+                "Simulate Focal Blur?"));
+        lblFocalBlur.setToolTipText(Translations.getStringOrDefault(
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.toolTip.text",
+                "Simulate focal blur in order to test Auto Focus. This is very slow!"));
         panelGeneral.add(lblFocalBlur, "2, 22, right, default");
         
         simulateFocalBlur = new JCheckBox("");

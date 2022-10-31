@@ -46,6 +46,7 @@ import javax.swing.event.ChangeListener;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.CameraView;
 import org.openpnp.gui.components.ComponentDecorators;
@@ -242,7 +243,8 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         }
             
         panelCameraCalibration = new JPanel();
-        panelCameraCalibration.setBorder(new TitledBorder(null, "Camera Calibration",
+        panelCameraCalibration.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.Border.title", "Camera Calibration"),
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelCameraCalibration);
         panelCameraCalibration.setLayout(new FormLayout(new ColumnSpec[] {
@@ -342,14 +344,18 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 RowSpec.decode("default:grow"),}));
         
-        chckbxAdvancedCalOverride = new JCheckBox("Enable the advanced calibration to override old"
-                + " style image transforms and distortion correction settings");
-        chckbxAdvancedCalOverride.setToolTipText("Enable this to use advanced calibration.  "
-                + "Disable this to restore usage of old settings.");
+        chckbxAdvancedCalOverride = new JCheckBox(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AdvancedCalOverrideChkbox.text",
+                "Enable the advanced calibration to override old  style image transforms and distortion correction settings"));
+        chckbxAdvancedCalOverride.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AdvancedCalOverrideChkbox.toolTip.text",
+                "Enable this to use advanced calibration. Disable this to restore usage of old settings."));
         chckbxAdvancedCalOverride.addActionListener(overrideAction);
         panelCameraCalibration.add(chckbxAdvancedCalOverride, "2, 2, 11, 1");
         
-        lblDescription = new JLabel("<html><p width=\"500\">"
+        lblDescription = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DescriptionLabel.text",
+                "<html><p width=\"500\">"
                 + "The settings on this tab are intended to eventually replace all of the Units "
                 + "Per Pixel settings on the General Configuration tab, everything on the Lens "
                 + "Calibration tab, and everything on the Image Transforms tab. It will also "
@@ -364,42 +370,58 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 + "for bottom cameras, the rotation axis and nozzle offsets must be properly "
                 + "calibrated; and, visual homing, if it is going to be used, must be setup and "
                 + "working properly."
-                + "</p></html>");
+                + "</p></html>"
+        ));
         panelCameraCalibration.add(lblDescription, "4, 4, 7, 1");
         
         separator_2 = new JSeparator();
         panelCameraCalibration.add(separator_2, "2, 6, 13, 1");
         
-        lblNewLabel_31 = new JLabel("General Settings");
+        lblNewLabel_31 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.GeneralSettingsLabel.text",
+                "General Settings"));
         lblNewLabel_31.setFont(new Font("Tahoma", Font.BOLD, 14));
         lblNewLabel_31.setHorizontalAlignment(SwingConstants.CENTER);
         panelCameraCalibration.add(lblNewLabel_31, "2, 8, 7, 1");
         
-        checkboxDeinterlace = new JCheckBox("Deinterlace");
-        checkboxDeinterlace.setToolTipText("Removes interlacing from stacked frames");
+        checkboxDeinterlace = new JCheckBox(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DeInterlaceLabel.text", "Deinterlace"));
+        checkboxDeinterlace.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DeInterlaceLabel.toolTip.text",
+                "Removes interlacing from stacked frames"));
         panelCameraCalibration.add(checkboxDeinterlace, "4, 10");
         
-        lblNewLabel_20 = new JLabel("Cropped Width");
+        lblNewLabel_20 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CroppedWidthLabel.text",
+                "Cropped Width"));
         panelCameraCalibration.add(lblNewLabel_20, "2, 12, right, default");
         
         textFieldCropWidth = new JTextField();
         panelCameraCalibration.add(textFieldCropWidth, "4, 12, fill, default");
         textFieldCropWidth.setColumns(10);
         
-        lblNewLabel_22 = new JLabel("(Set to zero for no cropping)");
+        lblNewLabel_22 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.SetZeroForNoCropped1Label.text",
+                "(Set to zero for no cropping)"));
         panelCameraCalibration.add(lblNewLabel_22, "6, 12");
         
-        lblNewLabel_21 = new JLabel("Cropped Height");
+        lblNewLabel_21 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CroppedHeightLabel.text",
+                "Cropped Height"));
         panelCameraCalibration.add(lblNewLabel_21, "2, 14, right, default");
         
         textFieldCropHeight = new JTextField();
         panelCameraCalibration.add(textFieldCropHeight, "4, 14, fill, default");
         textFieldCropHeight.setColumns(10);
         
-        lblNewLabel_23 = new JLabel("(Set to zero for no cropping)");
+        lblNewLabel_23 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.SetZeroForNoCropped2Label.text",
+                "(Set to zero for no cropping)"));
         panelCameraCalibration.add(lblNewLabel_23, "6, 14");
         
-        lblNewLabel_1 = new JLabel("Default Working Plane Z");
+        lblNewLabel_1 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DefaultWorkingPlaneZLabel.text",
+                "Default Working Plane Z"));
         panelCameraCalibration.add(lblNewLabel_1, "2, 16, right, default");
         
         textFieldDefaultZ = new JTextField();
@@ -409,115 +431,154 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         separator = new JSeparator();
         panelCameraCalibration.add(separator, "2, 18, 13, 1");
         
-        lblNewLabel_32 = new JLabel("Calibration Setup");
+        lblNewLabel_32 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CalibrationSetupLabel.text",
+                "Calibration Setup"));
         lblNewLabel_32.setFont(new Font("Tahoma", Font.BOLD, 14));
         lblNewLabel_32.setHorizontalAlignment(SwingConstants.CENTER);
         panelCameraCalibration.add(lblNewLabel_32, "2, 20, 7, 1");
         
         if (isMovable) {
-            textFieldDefaultZ.setToolTipText("<html><p width=\"500\">"
-                + "This is the assumed Z coordinate of objects viewed by the "
-                + "camera if their true Z coordinate is unknown. Typically this "
-                + "is set to the Z coordinate of the working surface of the "
-                + "board(s) to be populated.</p></html>");
+            textFieldDefaultZ.setToolTipText(Translations.getStringOrDefault(
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.MovableDefaultZTextFiled.toolTip.text",
+                    "<html><p width=\"500\">"
+                            + "This is the assumed Z coordinate of objects viewed by the "
+                            + "camera if their true Z coordinate is unknown. Typically this "
+                            + "is set to the Z coordinate of the working surface of the "
+                            + "board(s) to be populated.</p></html>"));
         }
         else {
-            textFieldDefaultZ.setToolTipText("<html><p width=\"500\">"
-                    + "This is the Z coordinate to which the bottom surface of "
-                    + "parts carried by the nozzle will be lowered for visual "
-                    + "alignment.</p></html>");
+            textFieldDefaultZ.setToolTipText(Translations.getStringOrDefault(
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NotMovableDefaultZTextFiled.toolTip.text",
+                    "<html><p width=\"500\">"
+                            + "This is the Z coordinate to which the bottom surface of "
+                            + "parts carried by the nozzle will be lowered for visual "
+                            + "alignment.</p></html>"));
         }
         
-        lblNewLabel_35 = new JLabel("Primary Calibration Z");
+        lblNewLabel_35 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.PrimaryCalibrationZLabel.text",
+                "Primary Calibration Z"));
         lblNewLabel_35.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel_35, "2, 22, right, default");
         
         textFieldPrimaryCalZ = new JTextField();
         if (isMovable) {
-            textFieldPrimaryCalZ.setToolTipText("<html><p width=\"500\">"
-                + "This is the Z coordinate of the Primary Calibration Fiducial."
-                + "</p></html>");
+            textFieldPrimaryCalZ.setToolTipText(Translations.getStringOrDefault(
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.MovablePrimCalZTextField.toolTip.text",
+                    "<html><p width=\"500\">"
+                            + "This is the Z coordinate of the Primary Calibration Fiducial."
+                            + "</p></html>"));
         }
         else {
-            textFieldPrimaryCalZ.setToolTipText("<html><p width=\"500\">"
-                    + "This is the Z coordinate where objects are in best focus for this camera."
-                    + "</p></html>");
+            textFieldPrimaryCalZ.setToolTipText(Translations.getStringOrDefault(
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NotMovablePrimCalZTextField.toolTip.text",
+                    "<html><p width=\"500\">"
+                            + "This is the Z coordinate where objects are in best focus for this camera."
+                            + "</p></html>"));
         }
         textFieldPrimaryCalZ.setEnabled(false);
         panelCameraCalibration.add(textFieldPrimaryCalZ, "4, 22, fill, default");
         textFieldPrimaryCalZ.setColumns(10);
         
         if (!isMovable) {
-            lblNewLabel_37 = new JLabel("<html><p width=\"500\" "
-                    + "style=\"color:Black;background-color:Yellow;\">" 
-                    + "Caution - The nozzle tip will be lowered to these Z coordinates and moved "
-                    + "over the camera's <b>entire field-of-view</b> during the calibration sequence. "
-                    + "Ensure there is sufficient clearance to any obstacles near the camera "
-                    + "before starting calibration or machine damage may occur."
-                    + "</p></html>");
+            lblNewLabel_37 = new JLabel(Translations.getStringOrDefault(
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CautionLabel.text",
+                    "<html><p width=\"500\" "
+                            + "style=\"color:Black;background-color:Yellow;\">"
+                            + "Caution - The nozzle tip will be lowered to these Z coordinates and moved "
+                            + "over the camera's <b>entire field-of-view</b> during the calibration sequence. "
+                            + "Ensure there is sufficient clearance to any obstacles near the camera "
+                            + "before starting calibration or machine damage may occur."
+                            + "</p></html>"));
             panelCameraCalibration.add(lblNewLabel_37, "6, 22, 5, 3");
         }
         
-        lblNewLabel_36 = new JLabel("Secondary Calibration Z");
+        lblNewLabel_36 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.SecondaryCalibrationZLabel.text",
+                "Secondary Calibration Z"));
         lblNewLabel_36.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel_36, "2, 24, right, default");
         
         textFieldSecondaryCalZ = new JTextField();
         if (isMovable) {
-            textFieldSecondaryCalZ.setToolTipText("<html><p width=\"500\">"
-                + "This is the Z coordinate of the Secondary Calibration Fiducial."
-                + "</p></html>");
+            textFieldSecondaryCalZ.setToolTipText(Translations.getStringOrDefault(
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.MovableSecondaryCalZTextField.toolTip.text",
+                    "<html><p width=\"500\">"
+                            + "This is the Z coordinate of the Secondary Calibration Fiducial."
+                            + "</p></html>"));
         }
         else {
-            textFieldSecondaryCalZ.setToolTipText("<html><p width=\"500\">"
-                    + "Set this larger (higher) than the Primary Cal Z as much as possible but "
-                    + "such that the nozzle tip is still within reasonable focus."
-                    + "</p></html>");
+            textFieldSecondaryCalZ.setToolTipText(Translations.getStringOrDefault(
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NotMovableSecondaryCalZTextField.toolTip.text",
+                    "<html><p width=\"500\">"
+                            + "Set this larger (higher) than the Primary Cal Z as much as possible but "
+                            + "such that the nozzle tip is still within reasonable focus."
+                            + "</p></html>"
+            ));
         }
         panelCameraCalibration.add(textFieldSecondaryCalZ, "4, 24, fill, default");
         textFieldSecondaryCalZ.setColumns(10);
         
-        lblNewLabel_28 = new JLabel("Radial Lines Per Calibration Z");
+        lblNewLabel_28 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.RadialLinesPerCalZLabel.text",
+                "Radial Lines Per Calibration Z"
+        ));
         lblNewLabel_28.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel_28, "2, 26, right, default");
         
         textFieldDesiredNumberOfRadialLines = new JTextField();
-        textFieldDesiredNumberOfRadialLines.setToolTipText("<html><p width=\"500\">"
-                + "This is the desired number of radial lines along which calibration points will "
-                + "be collected at each calibration Z coordinate. The actual number will be "
-                + "rounded up to the nearest multiple of 4. Decreasing this number shortens the "
-                + "calibration collection time but may result in lower quality or even failed "
-                + "calibration. Increasing this may result in a higher quality calibration but "
-                + "the collection will take longer.</p></html>");
+        textFieldDesiredNumberOfRadialLines.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NumberOfRadialLinesTextField.toolTip.text",
+                "<html><p width=\"500\">"
+                        + "This is the desired number of radial lines along which calibration points will "
+                        + "be collected at each calibration Z coordinate. The actual number will be "
+                        + "rounded up to the nearest multiple of 4. Decreasing this number shortens the "
+                        + "calibration collection time but may result in lower quality or even failed "
+                        + "calibration. Increasing this may result in a higher quality calibration but "
+                        + "the collection will take longer.</p></html>"
+        ));
         panelCameraCalibration.add(textFieldDesiredNumberOfRadialLines, "4, 26, fill, default");
         textFieldDesiredNumberOfRadialLines.setColumns(10);
         
         startCameraCalibrationBtn = new JButton(startCalibration);
         startCameraCalibrationBtn.setForeground(Color.RED);
-        startCameraCalibrationBtn.setText("Start Calibration");
+        startCameraCalibrationBtn.setText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.StartCameraCalibrationButton.text",
+                "Start Calibration"));
         panelCameraCalibration.add(startCameraCalibrationBtn, "4, 30");
                 
-        chckbxUseSavedData = new JCheckBox("Skip New Collection And Reprocess Prior Collection");
+        chckbxUseSavedData = new JCheckBox(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.UseSavedDateChkBox.text",
+                "Skip New Collection And Reprocess Prior Collection"));
         chckbxUseSavedData.setEnabled(advCal.isValid());
-        chckbxUseSavedData.setToolTipText("Set this to skip collection of new calibration data "
-                + "and just reprocess previously collected calibration data - only useful for "
-                + "code debugging");
+        chckbxUseSavedData.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.UseSavedDateChkBox.toolTip.text",
+                "Set this to skip collection of new calibration data and just reprocess previously" +
+                        " collected calibration data - only useful for code debugging"
+        ));
         panelCameraCalibration.add(chckbxUseSavedData, "6, 30, 5, 1");
         
-        lblNewLabel_34 = new JLabel("Detection Diameter");
+        lblNewLabel_34 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DetectionDiameterLabel.text",
+                "Detection Diameter"));
         lblNewLabel_34.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel_34, "2, 32");
         
         spinnerDiameter = new JSpinner();
-        spinnerDiameter.setToolTipText("When instructed, adjust this value to obtain the best "
-                + "detection of the fiducial/nozzle tip.");
+        spinnerDiameter.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DiameterSpinner.toolTip.text",
+                "When instructed, adjust this value to obtain the best detection of the fiducial/nozzle tip."));
         spinnerDiameter.setEnabled(false);
         panelCameraCalibration.add(spinnerDiameter, "4, 32");
         
-        chckbxEnable = new JCheckBox("Apply Calibration");
-        chckbxEnable.setToolTipText("Enable this to apply the new image transform and distortion "
-                + "correction settings.  Disable this and no calibration will be applied (raw "
-                + "images will be displayed).");
+        chckbxEnable = new JCheckBox(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ApplyCalibrationChkBox.text",
+                "Apply Calibration"));
+        chckbxEnable.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ApplyCalibrationChkBox.toolTip.text",
+                "Enable this to apply the new image transform and distortion correction settings." +
+                        "  Disable this and no calibration will be applied (raw images will be displayed)."));
         chckbxEnable.setEnabled(advCal.isValid());
         chckbxEnable.addActionListener(enableAction);
         panelCameraCalibration.add(chckbxEnable, "2, 34");
@@ -531,24 +592,32 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         sliderAlpha.setPaintLabels(true);
         sliderAlpha.addChangeListener(sliderAlphaChanged);
         
-        lblNewLabel = new JLabel("Crop All Invalid Pixels");
+        lblNewLabel = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CropInvalidPixelsLabel.text",
+                "Crop All Invalid Pixels"));
         lblNewLabel.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel, "2, 36");
-        sliderAlpha.setToolTipText("<html><p width=\"500\">"
-                + "A value of 0 crops all invalid pixels from the edge of the image but at the "
-                + "risk of losing some valid pixels at the edge of the image. A value"
-                + " of 100 forces all valid pixels to be displayed but at the risk of some invalid "
-                + "(usually black) pixels being displayed around the edges of the image."
-                + "</p></html>");
+        sliderAlpha.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AlfaSlider.toolTip.text",
+                "<html><p width=\"500\">"
+                        + "A value of 0 crops all invalid pixels from the edge of the image but at the "
+                        + "risk of losing some valid pixels at the edge of the image. A value"
+                        + " of 100 forces all valid pixels to be displayed but at the risk of some invalid "
+                        + "(usually black) pixels being displayed around the edges of the image."
+                        + "</p></html>"));
         panelCameraCalibration.add(sliderAlpha, "4, 36, 5, 1");
         
-        lblNewLabel_3 = new JLabel("Show All Valid Pixels");
+        lblNewLabel_3 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ShowValidPixelsLabel.text",
+                "Show All Valid Pixels"));
         panelCameraCalibration.add(lblNewLabel_3, "10, 36");
         
         separator_1 = new JSeparator();
         panelCameraCalibration.add(separator_1, "2, 38, 13, 1");
         
-        lblNewLabel_33 = new JLabel("Calibration Results/Diagnostics");
+        lblNewLabel_33 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CalibrationResults.text",
+                "Calibration Results/Diagnostics"));
         lblNewLabel_33.setHorizontalAlignment(SwingConstants.CENTER);
         lblNewLabel_33.setFont(new Font("Tahoma", Font.BOLD, 14));
         panelCameraCalibration.add(lblNewLabel_33, "2, 40, 7, 1");
@@ -564,10 +633,14 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         String offsetOrPositionLabel;
         if (isMovable) {
-            offsetOrPositionLabel = "Calibrated Head Offsets";
+            offsetOrPositionLabel = Translations.getStringOrDefault(
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CalibratedHeadOffsets.text",
+                    "Calibrated Head Offsets");
         }
         else {
-            offsetOrPositionLabel = "Camera Location";
+            offsetOrPositionLabel = Translations.getStringOrDefault(
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CameraLocation.text",
+                    "Camera Location");
         }
         lblHeadOffsetOrPosition = new JLabel(offsetOrPositionLabel);
         lblHeadOffsetOrPosition.setHorizontalAlignment(SwingConstants.TRAILING);
@@ -588,48 +661,66 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         panelCameraCalibration.add(textFieldZOffset, "8, 44, fill, default");
         textFieldZOffset.setColumns(10);
         
-        lblNewLabel_24 = new JLabel("Units Per Pixel");
+        lblNewLabel_24 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.UnitsPerPixelLabel.text",
+                "Units Per Pixel"));
         lblNewLabel_24.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel_24, "2, 46, right, default");
         
         textFieldUnitsPerPixel = new JTextField();
-        textFieldUnitsPerPixel.setToolTipText("<html><p width=\"500\">"
-                + "This is the calculated units per pixel at this camera's default Z. Note that "
-                + "the units per pixel is the same in both the X and Y directions.</p></html>");
+        textFieldUnitsPerPixel.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.UnitsPerPixelTextField.toolTip.text",
+                "<html><p width=\"500\">"
+                        + "This is the calculated units per pixel at this camera's default Z. Note that "
+                        + "the units per pixel is the same in both the X and Y directions.</p></html>"));
         textFieldUnitsPerPixel.setEditable(false);
         panelCameraCalibration.add(textFieldUnitsPerPixel, "4, 46, fill, default");
         textFieldUnitsPerPixel.setColumns(10);
         
-        lblNewLabel_30 = new JLabel("(at Default Working Plane Z)");
+        lblNewLabel_30 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AtDefaultWorkingPlaneZLabel.text",
+                "(at Default Working Plane Z)"));
         panelCameraCalibration.add(lblNewLabel_30, "6, 46");
         
-        lblNewLabel_4 = new JLabel("Estimated Locating Accuracy");
+        lblNewLabel_4 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.EstimatedLocatingAccuracyLabel.text",
+                "Estimated Locating Accuracy"));
         lblNewLabel_4.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel_4, "2, 48, right, default");
         
         textFieldRmsError = new JTextField();
-        textFieldRmsError.setToolTipText("<html><p width=\"500\">"
-                + "This is an estimate of the accuracy of object locations measured at "
-                + "default Z that can be obtained with this camera. For a large number of "
-                + "measurements performed at random locations throughout the image, one should "
-                + "expect 63% of the measured locations to be within this distance of their true "
-                + "location and 98% within double this distance. See the plots below for more "
-                + "details."
-                + "</p></html>");
+        textFieldRmsError.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.RmsErrorTextField.toolTip.text",
+                "<html><p width=\"500\">"
+                        + "This is an estimate of the accuracy of object locations measured at "
+                        + "default Z that can be obtained with this camera. For a large number of "
+                        + "measurements performed at random locations throughout the image, one should "
+                        + "expect 63% of the measured locations to be within this distance of their true "
+                        + "location and 98% within double this distance. See the plots below for more "
+                        + "details."
+                        + "</p></html>"
+        ));
         textFieldRmsError.setEditable(false);
         panelCameraCalibration.add(textFieldRmsError, "4, 48, fill, default");
         textFieldRmsError.setColumns(10);
         
-        lblNewLabel_29 = new JLabel("(at Default Working Plane Z)");
+        lblNewLabel_29 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AtDefaultWorkingPlaneZLabel.text",
+                "(at Default Working Plane Z)"
+        ));
         panelCameraCalibration.add(lblNewLabel_29, "6, 48");
         
-        lblNewLabel_40 = new JLabel("Width");
+        lblNewLabel_40 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.WidthLabel.text", "Width"));
         panelCameraCalibration.add(lblNewLabel_40, "4, 50, default, top");
         
-        lblNewLabel_41 = new JLabel("Height");
+        lblNewLabel_41 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.HeightLabel.text", "Height"));
         panelCameraCalibration.add(lblNewLabel_41, "6, 50");
         
-        lblNewLabel_39 = new JLabel("Physical Field-of-View [Deg]");
+        lblNewLabel_39 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.PhysicalFieldOfViewLabel.text",
+                "Physical Field-of-View [Deg]"));
         lblNewLabel_39.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel_39, "2, 52, right, default");
         
@@ -643,7 +734,9 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         panelCameraCalibration.add(textFieldHeightFov, "6, 52, fill, default");
         textFieldHeightFov.setColumns(10);
         
-        lblNewLabel_42 = new JLabel("Effective Field-of-View [Deg]");
+        lblNewLabel_42 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.EffectiveFieldOfViewLabel.text",
+                "Effective Field-of-View [Deg]"));
         lblNewLabel_42.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel_42, "2, 54, right, default");
         
@@ -657,61 +750,78 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         panelCameraCalibration.add(textFieldVirtualHeightFov, "6, 54, fill, default");
         textFieldVirtualHeightFov.setColumns(10);
         
-        lblNewLabel_5 = new JLabel("X Axis");
+        lblNewLabel_5 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.XAxisLabel.text", "X Axis"));
         panelCameraCalibration.add(lblNewLabel_5, "4, 56");
         
-        lblNewLabel_6 = new JLabel("Y Axis");
+        lblNewLabel_6 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.YAxisLabel.text", "Y Axis"));
         panelCameraCalibration.add(lblNewLabel_6, "6, 56");
         
-        lblNewLabel_7 = new JLabel("Z Axis");
+        lblNewLabel_7 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ZAxisLabel.text", "Z Axis"));
         panelCameraCalibration.add(lblNewLabel_7, "8, 56");
         
-        lblNewLabel_2 = new JLabel("Camera Mounting Error [Deg]");
+        lblNewLabel_2 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CameraMountingErrorLabel.text",
+                "Camera Mounting Error [Deg]"));
         panelCameraCalibration.add(lblNewLabel_2, "2, 58, right, default");
         
         textFieldXRotationError = new JTextField();
-        textFieldXRotationError.setToolTipText("<html><p width=\"500\">"
-                + "The estimated camera mounting error using the right hand rule about "
-                + "the machine X axis. If the camera reticle crosshairs appear too far offset (up "
-                + "or down) from the center of the image, correct this physical mounting error and "
-                + "re-calibrate the camera. Note that this error does not affect the accuracy of "
-                + "the machine but only reduces the maximum size of objects that can be centered "
-                + "on the reticle crosshairs and still be fully visible in the image."
-                + "</p></html>");
+        textFieldXRotationError.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.XRotationErrorTextField.toolTip.text",
+                "<html><p width=\"500\">"
+                        + "The estimated camera mounting error using the right hand rule about "
+                        + "the machine X axis. If the camera reticle crosshairs appear too far offset (up "
+                        + "or down) from the center of the image, correct this physical mounting error and "
+                        + "re-calibrate the camera. Note that this error does not affect the accuracy of "
+                        + "the machine but only reduces the maximum size of objects that can be centered "
+                        + "on the reticle crosshairs and still be fully visible in the image."
+                        + "</p></html>"
+        ));
         textFieldXRotationError.setEditable(false);
         panelCameraCalibration.add(textFieldXRotationError, "4, 58, fill, default");
         textFieldXRotationError.setColumns(10);
         
         textFieldYRotationError = new JTextField();
-        textFieldYRotationError.setToolTipText("<html><p width=\"500\">"
-                + "The estimated camera mounting error using the right hand rule about "
-                + "the machine Y axis. If the camera reticle crosshairs appear too far offset "
-                + "(left or right) from the center of the image, correct this physical mounting "
-                + "error and re-calibrate the camera. Note that this error does not affect the "
-                + "accuracy of the machine but only reduces the maximum size of objects that can "
-                + "be centered on the reticle crosshairs and still be fully visible in the image."
-                + "</p></html>");
+        textFieldYRotationError.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.YRotationErrorTextField.toolTip.text",
+                "<html><p width=\"500\">"
+                        + "The estimated camera mounting error using the right hand rule about "
+                        + "the machine Y axis. If the camera reticle crosshairs appear too far offset "
+                        + "(left or right) from the center of the image, correct this physical mounting "
+                        + "error and re-calibrate the camera. Note that this error does not affect the "
+                        + "accuracy of the machine but only reduces the maximum size of objects that can "
+                        + "be centered on the reticle crosshairs and still be fully visible in the image."
+                        + "</p></html>"));
         textFieldYRotationError.setEditable(false);
         panelCameraCalibration.add(textFieldYRotationError, "6, 58, fill, default");
         textFieldYRotationError.setColumns(10);
         
         textFieldZRotationError = new JTextField();
-        textFieldZRotationError.setToolTipText("<html><p width=\"500\">"
-                + "The estimated camera mounting error using the right hand rule about "
-                + "the machine Z axis. If the camera image appears rotated too much, correct this "
-                + "physical mounting error and re-calibrate the camera. Note that this error does "
-                + "not affect the accuracy of the machine but is mainly asthetic.</p></html>");
+        textFieldZRotationError.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ZRotationErrorTextField.toolTip.text",
+                "<html><p width=\"500\">"
+                        + "The estimated camera mounting error using the right hand rule about "
+                        + "the machine Z axis. If the camera image appears rotated too much, correct this "
+                        + "physical mounting error and re-calibrate the camera. Note that this error does "
+                        + "not affect the accuracy of the machine but is mainly asthetic.</p></html>"
+        ));
         textFieldZRotationError.setEditable(false);
         panelCameraCalibration.add(textFieldZRotationError, "8, 58, fill, default");
         textFieldZRotationError.setColumns(10);
         
-        lblNewLabel_8 = new JLabel("Selected Cal Z For Plotting");
+        lblNewLabel_8 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.SelectedCalZForPlottingLabel.text",
+                "Selected Cal Z For Plotting"));
         lblNewLabel_8.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel_8, "2, 60");
         
         spinnerModel = new SpinnerListModel(calibrationHeightSelections);
         spinnerIndex = new JSpinner(spinnerModel);
-        spinnerIndex.setToolTipText("Used to select the data to display in the plots below.");
+        spinnerIndex.setToolTipText(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.IndexSpinner.toolTip.text",
+                "Used to select the data to display in the plots below."));
         spinnerIndex.addChangeListener(new ChangeListener() {
 
             @Override
@@ -724,18 +834,23 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         });
         panelCameraCalibration.add(spinnerIndex, "4, 60");
         
-        chckbxShowOutliers = new JCheckBox("Show Outliers");
+        chckbxShowOutliers = new JCheckBox(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ShowOutliersChkBox.text",
+                "Show Outliers"));
         chckbxShowOutliers.addActionListener(showOutliersActionListener);
         panelCameraCalibration.add(chckbxShowOutliers, "6, 60");
 
         
-        lblNewLabel_14 = new JLabel("Residual Errors In Collection Order");
+        lblNewLabel_14 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorsInCollectionOrderLabel.text",
+                "Residual Errors In Collection Order"));
         lblNewLabel_14.setFont(new Font("Tahoma", Font.BOLD, 13));
         lblNewLabel_14.setHorizontalAlignment(SwingConstants.CENTER);
         panelCameraCalibration.add(lblNewLabel_14, "4, 62, 3, 1");
 
-        lblNewLabel_9 = new VerticalLabel("Residual Error [" + 
-                smallDisplayUnits.getShortName() + "]");
+        lblNewLabel_9 = new VerticalLabel(String.format(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualError.text",
+                "Residual Error") + " [%s]", smallDisplayUnits.getShortName()));
         lblNewLabel_9.setVerticalAlignment(SwingConstants.BOTTOM);
         lblNewLabel_9.setRotation(VerticalLabel.ROTATE_LEFT);
         panelCameraCalibration.add(lblNewLabel_9, "2, 64");
@@ -743,37 +858,46 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         modelErrorsTimeSequenceView = new SimpleGraphView();
         modelErrorsTimeSequenceView.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelCameraCalibration.add(modelErrorsTimeSequenceView, "4, 64, 3, 1, fill, fill");
-        
-        String legend = "\r\n<p><body style=\"text-align:left\">"
-                + "\r\n<p>\r\nX Residual "
-                + "<span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>"
-                + "\r\n<p>\r\nY Residual "
-                + "<span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>"
-                + "\r\n</body></p>\r\n";
-        lblNewLabel_17 = new JLabel("<html><p width=\"500\">"
-                + "This plot displays the residual location error (that is, the remaining error "
-                + "after calibration has been applied) of each calibration point in the order it "
-                + "was collected. The residual errors should have zero mean and appear as random "
-                + "noise. If there are significant steps in the mean level or trends in the "
-                + "errors; depending on their magnitude, there may be a problem with the "
-                + "calibration. Some possible causes are: calibration rig movement/slippage during "
-                + "the collection; camera or lens moving in its mount; motors missing steps; "
-                + "belt/cog slippage; thermal expansion/contraction; etcetera."
-                + "</p>" + legend + "</html>");
+
+        String legend = Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.Legend.text",
+                "\r\n<p><body style=\"text-align:left\">"
+                        + "\r\n<p>\r\nX Residual "
+                        + "<span style=\"color:#FF0000\">&mdash;&mdash;</span>\r\n</p>"
+                        + "\r\n<p>\r\nY Residual "
+                        + "<span style=\"color:#00BB00\">&mdash;&mdash;</span>\r\n</p>"
+                        + "\r\n</body></p>\r\n");
+
+        lblNewLabel_17 = new JLabel(String.format(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorsLegendDescriptionLabel.text",
+                "<html><p width=\"500\">"
+                        + "This plot displays the residual location error (that is, the remaining error "
+                        + "after calibration has been applied) of each calibration point in the order it "
+                        + "was collected. The residual errors should have zero mean and appear as random "
+                        + "noise. If there are significant steps in the mean level or trends in the "
+                        + "errors; depending on their magnitude, there may be a problem with the "
+                        + "calibration. Some possible causes are: calibration rig movement/slippage during "
+                        + "the collection; camera or lens moving in its mount; motors missing steps; "
+                        + "belt/cog slippage; thermal expansion/contraction; etcetera."
+                        + "</p>%s</html>"), legend));
         panelCameraCalibration.add(lblNewLabel_17, "8, 64, 3, 1, left, default");
         
-        lblNewLabel_10 = new JLabel("Collection Sequence Number");
+        lblNewLabel_10 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.CollectionSequenceNumberLabel.text",
+                "Collection Sequence Number"));
         lblNewLabel_10.setHorizontalAlignment(SwingConstants.CENTER);
         panelCameraCalibration.add(lblNewLabel_10, "4, 66, 3, 1");
 
-        
-        lblNewLabel_15 = new JLabel("Residual Error X-Y Scatter Plot");
+        lblNewLabel_15 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorXYScatterPlotLabel.text",
+                "Residual Error X-Y Scatter Plot"));
         lblNewLabel_15.setFont(new Font("Tahoma", Font.BOLD, 13));
         lblNewLabel_15.setHorizontalAlignment(SwingConstants.CENTER);
         panelCameraCalibration.add(lblNewLabel_15, "4, 68, 3, 1");
 
-        lblNewLabel_11 = new VerticalLabel("Y Residual Error [" + 
-                smallDisplayUnits.getShortName() + "]");
+        lblNewLabel_11 = new VerticalLabel(String.format("Y %s [%s]", Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualError.text",
+                "Residual Error"), smallDisplayUnits.getShortName()));
         lblNewLabel_11.setVerticalAlignment(SwingConstants.BOTTOM);
         lblNewLabel_11.setRotation(VerticalLabel.ROTATE_LEFT);
         panelCameraCalibration.add(lblNewLabel_11, "2, 70");
@@ -782,33 +906,40 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         modelErrorsScatterPlotView.setFont(new Font("Dialog", Font.PLAIN, 11));
         panelCameraCalibration.add(modelErrorsScatterPlotView, "4, 70, 3, 1, fill, fill");
         
-        lblNewLabel_18 = new JLabel("<html><p width=\"500\">"
-                + "This plot displays the residual location error of each point collected "
-                + "during the calibration process. The green circle marks the approximate boundary "
-                + "at which points are considered to be outliers and are not used for determining "
-                + "the camera calibration parameters. The residual errors should form a single "
-                + "circular cluster centered at (0, 0) and should appear randomly distributed. If "
-                + "two or more distinct clusters are present or the cluster is significantly "
-                + "non-circular; depending on the magnitude of the errors, there may be a problem "
-                + "with the calibration. Some possible causes are: bad vision detection of the "
-                + "calibration fiducial, calibration rig movement/slippage during the collection; "
-                + "camera or lens moving in its mount; under or over compensated backlash; motors "
-                + "missing steps; belt/cog slippage; etcetera."
-                + "</p></html>");
+        lblNewLabel_18 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorsXYDescriptionLabel.text",
+                "<html><p width=\"500\">"
+                        + "This plot displays the residual location error of each point collected "
+                        + "during the calibration process. The green circle marks the approximate boundary "
+                        + "at which points are considered to be outliers and are not used for determining "
+                        + "the camera calibration parameters. The residual errors should form a single "
+                        + "circular cluster centered at (0, 0) and should appear randomly distributed. If "
+                        + "two or more distinct clusters are present or the cluster is significantly "
+                        + "non-circular; depending on the magnitude of the errors, there may be a problem "
+                        + "with the calibration. Some possible causes are: bad vision detection of the "
+                        + "calibration fiducial, calibration rig movement/slippage during the collection; "
+                        + "camera or lens moving in its mount; under or over compensated backlash; motors "
+                        + "missing steps; belt/cog slippage; etcetera."
+                        + "</p></html>"));
         panelCameraCalibration.add(lblNewLabel_18, "8, 70, 3, 1, left, default");
-        
-        lblNewLabel_12 = new JLabel("X Residual Error [" + 
-                smallDisplayUnits.getShortName() + "]");
+
+        lblNewLabel_12 = new JLabel(String.format("X %s [%s]", Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualError.text",
+                "Residual Error"), smallDisplayUnits.getShortName()));
         lblNewLabel_12.setHorizontalAlignment(SwingConstants.CENTER);
         panelCameraCalibration.add(lblNewLabel_12, "4, 72, 3, 1");
         
 
-        lblNewLabel_16 = new JLabel("Residual Error Map");
+        lblNewLabel_16 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorMapLabel.text",
+                "Residual Error Map"));
         lblNewLabel_16.setFont(new Font("Tahoma", Font.BOLD, 13));
         lblNewLabel_16.setHorizontalAlignment(SwingConstants.CENTER);
         panelCameraCalibration.add(lblNewLabel_16, "4, 74, 3, 1");
 
-        lblNewLabel_13 = new VerticalLabel("Image Y Location [pixels]");
+        lblNewLabel_13 = new VerticalLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ImageYLocationLabel.text",
+                "Image Y Location [pixels]"));
         lblNewLabel_13.setVerticalAlignment(SwingConstants.BOTTOM);
         lblNewLabel_13.setRotation(VerticalLabel.ROTATE_LEFT);
         panelCameraCalibration.add(lblNewLabel_13, "2, 76");
@@ -816,22 +947,26 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         modelErrorsView = new MatView();
         panelCameraCalibration.add(modelErrorsView, "4, 76, 3, 1, fill, fill");
         
-        lblNewLabel_19 = new JLabel("<html><p width=\"500\">"
-                + "This plot displays the magnitude of the residual location error as a "
-                + "function of the expected location of the pixel in the image. Dark blue areas "
-                + "have very low errors while dark red areas have the highest errors.  Note that "
-                + "the color range is always scaled so that zero error is the darkest blue and "
-                + "the maximum magnitude error is the darkest red. Therefore, this plot cannot "
-                + "be used to judge the magnitude of the error but only its distribution about "
-                + "the image. This distribution should look more or less random with no "
-                + "discernible patterns. If patterns such as rings or stripes are clearly "
-                + "visible and the residual errors observed in the other plots are large, the "
-                + "mathematical model of the camera does not fit very well with the physics "
-                + "of the camera and may indicate something is wrong with the camera and/or lens."
-                + "</p></html>");
+        lblNewLabel_19 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ResidualErrorMapDescriptionLabel.text",
+                "<html><p width=\"500\">"
+                        + "This plot displays the magnitude of the residual location error as a "
+                        + "function of the expected location of the pixel in the image. Dark blue areas "
+                        + "have very low errors while dark red areas have the highest errors.  Note that "
+                        + "the color range is always scaled so that zero error is the darkest blue and "
+                        + "the maximum magnitude error is the darkest red. Therefore, this plot cannot "
+                        + "be used to judge the magnitude of the error but only its distribution about "
+                        + "the image. This distribution should look more or less random with no "
+                        + "discernible patterns. If patterns such as rings or stripes are clearly "
+                        + "visible and the residual errors observed in the other plots are large, the "
+                        + "mathematical model of the camera does not fit very well with the physics "
+                        + "of the camera and may indicate something is wrong with the camera and/or lens."
+                        + "</p></html>"));
         panelCameraCalibration.add(lblNewLabel_19, "8, 76, 5, 1, left, default");
         
-        lblNewLabel_12 = new JLabel("Image X Location [pixels]");
+        lblNewLabel_12 = new JLabel(Translations.getStringOrDefault(
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ImageXLocationLabel.text",
+                "Image X Location [pixels]"));
         lblNewLabel_12.setHorizontalAlignment(SwingConstants.CENTER);
         panelCameraCalibration.add(lblNewLabel_12, "4, 78, 3, 1");
         
