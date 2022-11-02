@@ -9,6 +9,7 @@ import javax.swing.Action;
 import javax.swing.Icon;
 import javax.swing.JOptionPane;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -171,11 +172,14 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     }
 
     @SuppressWarnings("serial")
-    public Action deleteAction = new AbstractAction("Delete Driver") {
+    public Action deleteAction = new AbstractAction(Translations.getStringOrDefault(
+            "AbstractDriver.Action.DeleteDriver",
+            "Delete Driver")) {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Driver");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected driver.");
+            putValue(NAME, Translations.getStringOrDefault("AbstractDriver.Action.DeleteDriver", "Delete Driver"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "AbstractDriver.Action.DeleteDriver.Description", "Delete the currently selected driver."));
         }
 
         @Override
@@ -193,8 +197,11 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     public Action permutateUpAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.arrowUp);
-            putValue(NAME, "Permutate Up");
-            putValue(SHORT_DESCRIPTION, "Move the currently selected driver one position up.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "AbstractDriver.Action.PermutateUpDriver", "Permutate Up"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "AbstractDriver.Action.PermutateUpDriver.Description",
+                    "Move the currently selected driver one position up."));
         }
 
         @Override
@@ -207,8 +214,11 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
     public Action permutateDownAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.arrowDown);
-            putValue(NAME, "Permutate Down");
-            putValue(SHORT_DESCRIPTION, "Move the currently selected driver one position down.");
+            putValue(NAME, Translations.getStringOrDefault(
+                    "AbstractDriver.Action.PermutateDownDriver", "Permutate Down"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "AbstractDriver.Action.PermutateDownDriver.Description",
+                    "Move the currently selected driver one position down."));
         }
 
         @Override
