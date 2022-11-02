@@ -58,6 +58,7 @@ import org.jdesktop.beansbinding.AutoBinding;
 import org.jdesktop.beansbinding.AutoBinding.UpdateStrategy;
 import org.jdesktop.beansbinding.BeanProperty;
 import org.jdesktop.beansbinding.Bindings;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.LengthConverter;
 import org.openpnp.machine.reference.ReferenceMachine;
 import org.openpnp.model.Length;
@@ -136,7 +137,7 @@ public class IssuePanel extends JPanel {
         }
         : dynamicRowspec(rowCount)));
 
-        lblSubject = new JLabel("Subject");
+        lblSubject = new JLabel(Translations.getStringOrDefault("IssuePanel.SubjectLabel.text", "Subject"));
         panel.add(lblSubject, "2, 2, right, center");
 
         panel_1 = new JPanel();
@@ -151,7 +152,7 @@ public class IssuePanel extends JPanel {
         panel_1.add(subjectText, "1, 1, fill, default");
         subjectText.setBackground(lblSubject.getBackground());
 
-        lblIssue = new JLabel("Issue");
+        lblIssue = new JLabel(Translations.getStringOrDefault("IssuePanel.IssueLabel.text", "Issue"));
         panel.add(lblIssue, "2, 4, right, center");
 
         panel_2 = new JPanel();
@@ -170,7 +171,7 @@ public class IssuePanel extends JPanel {
         issueText.setWrapStyleWord(true);  
         issueText.setLineWrap(true);
 
-        lblSolution = new JLabel("Solution");
+        lblSolution = new JLabel(Translations.getStringOrDefault("IssuePanel.SolutionLabel.text","Solution"));
         panel.add(lblSolution, "2, 6, right, center");
 
         panel_3 = new JPanel();

@@ -41,6 +41,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.AutoSelectTextTable;
 import org.openpnp.gui.support.Icons;
@@ -72,14 +73,45 @@ public class Solutions extends AbstractTableModel {
     private boolean showDismissed;
 
     public enum Milestone implements Subject, Named {
-        Welcome     ("Welcome",     "welcome",      "Get to know OpenPnP by using the demo simulation machine. Choose your nozzle configuration."), 
-        Connect     ("Connect",     "connect",      "Connect OpenPnP to real controllers and cameras."),
-        Basics      ("Basics",      "basics",       "Configure basic machine axes, motion, vacuum switching, light switching."),
-        Kinematics  ("Kinematics",  "kinematics",   "Define machine kinematics: Safe Z, soft limits, motion control model, feed-rates, accelerations etc."),
-        Vision      ("Vision",      "vision",       "Setup cameras and computer vision."),
-        Calibration ("Calibration", "calibration",  "Calibrate the machine for precision motion and vision."),
-        Production  ("Production",  "production",   "Configure feeders and solve other production related issues."), 
-        Advanced    ("Advanced",    "advanced",     "Enable more advanced features for a faster and more automatic machine.");
+        Welcome(Translations.getStringOrDefault("Solutions.Milestone.Welcome.name", "Welcome"),
+                "welcome",
+                Translations.getStringOrDefault("Solutions.Milestone.Welcome.description",
+                        "Get to know OpenPnP by using the demo simulation machine. Choose your nozzle configuration.")),
+
+        Connect(Translations.getStringOrDefault("Solutions.Milestone.Connect.name", "Connect"),
+                "connect",
+                Translations.getStringOrDefault("Solutions.Milestone.Connect.description",
+                        "Connect OpenPnP to real controllers and cameras.")),
+
+        Basics(Translations.getStringOrDefault("Solutions.Milestone.Basics.name", "Basics"),
+                "basics",
+                Translations.getStringOrDefault("Solutions.Milestone.Basics.description",
+                        "Configure basic machine axes, motion, vacuum switching, light switching.")),
+
+        Kinematics(Translations.getStringOrDefault("Solutions.Milestone.Kinematics.name", "Kinematics"),
+                "kinematics",
+                Translations.getStringOrDefault("Solutions.Milestone.Kinematics.description",
+                        "Define machine kinematics: Safe Z, soft limits, motion control model, feed-rates, accelerations etc.")),
+
+        Vision(Translations.getStringOrDefault("Solutions.Milestone.Vision.name", "Vision"),
+                "vision",
+                Translations.getStringOrDefault("Solutions.Milestone.Vision.description",
+                        "Setup cameras and computer vision.")),
+
+        Calibration(Translations.getStringOrDefault("Solutions.Milestone.Calibration.name", "Calibration"),
+                "calibration",
+                Translations.getStringOrDefault("Solutions.Milestone.Calibration.description",
+                        "Calibrate the machine for precision motion and vision.")),
+
+        Production(Translations.getStringOrDefault("Solutions.Milestone.Production.name", "Production"),
+                "production",
+                Translations.getStringOrDefault("Solutions.Milestone.Production.description",
+                        "Configure feeders and solve other production related issues.")),
+
+        Advanced(Translations.getStringOrDefault("Solutions.Milestone.Advanced.name", "Advanced"),
+                "advanced",
+                Translations.getStringOrDefault("Solutions.Milestone.Advanced.description",
+                        "Enable more advanced features for a faster and more automatic machine."));
 
         final private String name;
         final private String tag;
@@ -544,7 +576,8 @@ public class Solutions extends AbstractTableModel {
         Milestone targetMilestone = getTargetMilestone();
         pendingIssues.add(new Solutions.Issue(
                 targetMilestone, 
-                "Complete milestone "+targetMilestone.getName(), 
+                Translations.getStringOrDefault("Solutions.Issue.CompleteMilestone", "Complete milestone")
+                        + " " + targetMilestone.getName(),
                 targetMilestone.getDescription(), 
                 Solutions.Severity.Information,
                 "https://github.com/openpnp/openpnp/wiki/Issues-and-Solutions"+targetMilestone.getAnchor()) {
@@ -576,13 +609,14 @@ public class Solutions extends AbstractTableModel {
                         str.append("</ul>");
                         pendingIssues = null;
                         if (!ok) {
-                            if (confirm("<html>"
-                                    + "<p>Issues for milestone <strong>"+targetMilestone+"</strong> are still open:</p>"
-                                    + str.toString()
-                                    + "<p color=\"red\">It is not recommended to switch to the next target milestone "
-                                    + "before these are resolved or dismissed!</p>"
-                                    + "<p><br/>Are you sure you still want to proceed?</p>"
-                                    + "</html>", 
+                            if (confirm(String.format(Translations.getStringOrDefault("Solutions.Issue.CompleteMilestone.Confirm",
+                                            "<html>"
+                                                    + "<p>Issues for milestone <strong>%s</strong> are still open:</p>"
+                                                    + "%s"
+                                                    + "<p color=\"red\">It is not recommended to switch to the next target milestone "
+                                                    + "before these are resolved or dismissed!</p>"
+                                                    + "<p><br/>Are you sure you still want to proceed?</p>"
+                                                    + "</html>"), targetMilestone, str.toString()),
                                     true)) {
                                 ok = true;
                             }
@@ -603,29 +637,42 @@ public class Solutions extends AbstractTableModel {
             public Solutions.Issue.Choice[] getChoices() {
                 return new Solutions.Issue.Choice[] {
                         (targetMilestone.getNext() == null ? null :
-                            new Solutions.Issue.Choice(targetMilestone.getNext(), 
-                                    "<html><h3>Proceed to "+targetMilestone.getNext().getName()+"</h3>"
-                                            + "<p>Confirm to have completed and tested milestone <strong>"+targetMilestone.getName()+"</strong>:</p><br/>"
-                                            + "<blockquote>"+XmlSerialize.escapeXml(targetMilestone.getDescription())+"</blockquote><br/>"
-                                            + "<p>Note: all issues from this milestone should be resolved or dismissed before you proceed.</p><br/>"
-                                            + "<p>Yes? <em>Congratulations!</em></p><br/>"
-                                            + "<p>You can proceed to the next milestone "
-                                            + "<strong>"+targetMilestone.getNext().getName()+"</strong>:</p><br/>"
-                                            + "<blockquote>"+XmlSerialize.escapeXml(targetMilestone.getNext().getDescription())+"</blockquote><br/>"
-                                            + "<p>More Issues & Solutions will be presented that need addressing to reach the next milestone.</p>"
-                                            + "</html>",
-                                            Icons.milestone)),
+                                new Solutions.Issue.Choice(targetMilestone.getNext(),
+                                        String.format(Translations.getStringOrDefault(
+                                                        "Solutions.Issue.CompleteMilestone.Choice.0",
+                                                        "<html><h3>Proceed to %s</h3>"
+                                                                + "<p>Confirm to have completed and tested milestone " +
+                                                                "<strong>%s</strong>:</p><br/>"
+                                                                + "<blockquote>%s</blockquote><br/>"
+                                                                + "<p>Note: all issues from this milestone should be " +
+                                                                "resolved or dismissed before you proceed.</p><br/>"
+                                                                + "<p>Yes? <em>Congratulations!</em></p><br/>"
+                                                                + "<p>You can proceed to the next milestone "
+                                                                + "<strong>%s</strong>:</p><br/>"
+                                                                + "<blockquote>%s</blockquote><br/>"
+                                                                + "<p>More Issues & Solutions will be presented that " +
+                                                                "need addressing to reach the next milestone.</p>"
+                                                                + "</html>"), targetMilestone.getNext().getName(),
+                                                targetMilestone.getName(),
+                                                XmlSerialize.escapeXml(targetMilestone.getDescription()),
+                                                targetMilestone.getNext().getName(),
+                                                XmlSerialize.escapeXml(targetMilestone.getNext().getDescription())),
+                                        Icons.milestone)),
                         (targetMilestone.getPrevious() == null ? null :
-                            new Solutions.Issue.Choice(targetMilestone.getPrevious(), 
-                                    "<html><h3>Go back to "+targetMilestone.getPrevious().getName()+"</h3>"
-                                            + "<p>To limit the scope for Issues & Solutions, you can go back to the previous milestone "
-                                            + "<strong>"+targetMilestone.getPrevious().getName()+"</strong>:</p><br/>"
-                                            + "<blockquote>"+XmlSerialize.escapeXml(targetMilestone.getPrevious().getDescription())+"</blockquote><br/>"
-                                            + "<p>Note: Most Issues & Solutions from previous milestones are also reported on subsequent milestones. "
-                                            + "But in earlier target milestones some solutions proposed are simpler, more conservative. "
-                                            + "For troubleshooting, it can therfore be beneficial to go back and try getting it to work there.</p>"
-                                            + "</html>",
-                                            Icons.milestone)),
+                                new Solutions.Issue.Choice(targetMilestone.getPrevious(),
+                                        String.format(Translations.getStringOrDefault(
+                                                        "Solutions.Issue.CompleteMilestone.Choice.1",
+                                                        "<html><h3>Go back to %s</h3>"
+                                                                + "<p>To limit the scope for Issues & Solutions, you can go back to the previous milestone "
+                                                                + "<strong>%s</strong>:</p><br/>"
+                                                                + "<blockquote>%s</blockquote><br/>"
+                                                                + "<p>Note: Most Issues & Solutions from previous milestones are also reported on subsequent milestones. "
+                                                                + "But in earlier target milestones some solutions proposed are simpler, more conservative. "
+                                                                + "For troubleshooting, it can therfore be beneficial to go back and try getting it to work there.</p>"
+                                                                + "</html>"), targetMilestone.getPrevious().getName(),
+                                                targetMilestone.getPrevious().getName(),
+                                                XmlSerialize.escapeXml(targetMilestone.getPrevious().getDescription())),
+                                        Icons.milestone)),
                 };
             }
         });
@@ -712,8 +759,12 @@ public class Solutions extends AbstractTableModel {
         //firePropertyChange("issues", oldValue, this.issues);
     }
 
-    private String[] columnNames =
-            new String[] {"Subject", "Severity", "Issue", "Solution", "State"};
+    private String[] columnNames = new String[] {
+            Translations.getStringOrDefault("Solutions.Model.ColumnName.subject", "Subject"),
+            Translations.getStringOrDefault("Solutions.Model.ColumnName.severity", "Severity"),
+            Translations.getStringOrDefault("Solutions.Model.ColumnName.issue", "Issue"),
+            Translations.getStringOrDefault("Solutions.Model.ColumnName.solution", "Solution"),
+            Translations.getStringOrDefault("Solutions.Model.ColumnName.state", "State")};
     private Class[] columnTypes = new Class[] {Subject.class, Severity.class, String.class, String.class, State.class};
 
     @Override
