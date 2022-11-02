@@ -35,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.openpnp.Translations;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.machine.reference.ReferenceActuator;
 import org.openpnp.machine.reference.ReferenceMachine;
@@ -1401,9 +1402,12 @@ public class GcodeDriver extends AbstractReferenceDriver implements Named {
     public PropertySheet[] getPropertySheets() {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(super.getConfigurationWizard()),
-                new PropertySheetWizardAdapter(new GcodeDriverSettings(this), "Driver Settings"),
-                new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), "Gcode"),
-                new PropertySheetWizardAdapter(new GcodeDriverConsole(this), "Console"),
+                new PropertySheetWizardAdapter(new GcodeDriverSettings(this), Translations.getStringOrDefault(
+                        "GCodeDriver.GCodeDriverSettings.title", "Driver Settings")),
+                new PropertySheetWizardAdapter(new GcodeDriverGcodes(this), Translations.getStringOrDefault(
+                        "GCodeDriver.GCode.title", "Gcode")),
+                new PropertySheetWizardAdapter(new GcodeDriverConsole(this), Translations.getStringOrDefault(
+                        "GCodeDriver.Console.title", "Console")),
         };
     }
 
