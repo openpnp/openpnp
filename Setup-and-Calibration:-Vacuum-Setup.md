@@ -9,7 +9,7 @@ Each nozzle has a valve that controls the vacuum to the nozzle tip. When you use
 To manually configure the vacuum valve for a nozzle:
 
 1. [[Create a head mounted actuator|Setup and Calibration: Actuators]] for each nozzle. It should be named something like N1_VAC, N2_VAC, etc.
-2. Set the boolean command for the actuator so that it turns the valve on and off when the actuator is triggered.
+2. [Set the boolean command for the actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands) so that it turns the valve on and off when the actuator is triggered.
 3. In Machine Setup -> Nozzles, select a nozzle and then select the Vacuum tab.
 4. In the Vacuum tab, select the Actuator you created for this nozzle's valve.
 5. Repeat steps 2 and 3 for all nozzles.
@@ -18,8 +18,9 @@ To manually configure the vacuum valve for a nozzle:
 
 OpenPnP can turn the pump on and off whenever it is needed by any nozzle on the head. You should already have the PUMP actuator on the machine head. If not, create one as follows:
 
-1. [[Create a head mounted actuator|Setup and Calibration: Actuators]] and set the boolean command to turn the pump on and off.
-2. Go to Machine Setup -> Heads and select your Head, then find the Vacuum Pump Actuator field and select the actuator you created for your pump.
+1. [[Create a head mounted actuator|Setup and Calibration: Actuators]]. 
+2. [Set the boolean command](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands) so that it turns the pump on and off when the actuator is triggered.
+3. Go to Machine Setup -> Heads and select your Head, then find the Vacuum Pump Actuator field and select the actuator you created for your pump.
 
 ![Vacuum Pump](https://user-images.githubusercontent.com/9963310/181920168-facf1355-300d-405f-8bff-2f2d359a993b.png)
 
