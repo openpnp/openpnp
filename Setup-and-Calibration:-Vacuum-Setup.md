@@ -28,8 +28,8 @@ OpenPnP can turn the pump on and off whenever it is needed by any nozzle on the 
 ![Control Methods](https://user-images.githubusercontent.com/9963310/181920613-9a05ac18-bd80-4afe-b01f-da8d0448002c.png)
 
 - **None** the pump is controlled manually or outside of OpenPnP. Use this for a controller-side hysteresis control, for instance.
-- **PartOn**: the pump is switched on when a part is about to be picked, it is switched off when no part is on any nozzle.
-- **TaskDuration**: the pump is switched on when a part is about to be picked, it is only switched off when queued tasks (e.g. the running job) is finished, given no part is on any nozzle.
+- **PartOn**: the pump is switched on when a part is about to be picked, it is switched off as soon as no part is on any nozzle anymore.
+- **TaskDuration**: the pump is switched on when a part is about to be picked, it is only switched off when queued tasks (e.g. the running job) is finished, given no part is on any nozzle anymore.
 - **KeepRunning**: the pump is switched on when a part is about to be picked, it is kept running until explicitly switched off, or until the machine is being disabled.
 
 **Pump On Wait [ms]** sets the wait time used to give the pump a chance to establish the proper vacuum level.
