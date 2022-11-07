@@ -19,6 +19,8 @@
 
 package org.openpnp.machine.reference.feeder;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.Action;
@@ -30,6 +32,7 @@ import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceLoosePartFeederConfigurationWizard;
+import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
@@ -67,6 +70,10 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
                      .getCameraView(camera)
                      .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
                              1000);
+        }
+        catch (Exception e) {
+            MainFrame.get().getJobTab().PauseJob();	
+            setupForJogging();
         }
     }
 
@@ -106,6 +113,42 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         return location;
     }
 
+    private void setupForJogging() {
+        String title = String.format("Part Detection Failed with CV:");
+        String instructions= String.format("Manually jog the camera to the part and click Accept");
+        MainFrame.get().showInstructions(title, instructions, true, true,
+               "Accept" , cancelActionListener, proceedActionListener);
+    }
+    private final ActionListener proceedActionListener = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+        	doProceed();
+       }
+    };
+    
+    private void doProceed() {
+        Camera camera;
+		try {
+			camera = Configuration.get().getMachine().getDefaultHead().getDefaultCamera();
+	        Location l = camera.getLocation();
+	        
+	        // Update the location with the correct Z, which is the configured Location's Z.
+	        double z = this.location.convertToUnits(l.getUnits()).getZ(); 
+	        pickLocation = l.derive(null, null, z, null);
+	    	MainFrame.get().hideInstructions();
+	    	MainFrame.get().getJobTab().ResumeJob();
+	    }
+		catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+
+    private final ActionListener cancelActionListener = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+        	MainFrame.get().hideInstructions();
+        	// TD raise error
+        }
+    };
     /**
      * Returns if the feeder can take back a part.
      * Makes the assumption, that after each feed a pick followed,

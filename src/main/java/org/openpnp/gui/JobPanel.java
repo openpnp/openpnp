@@ -1042,6 +1042,19 @@ public class JobPanel extends JPanel {
         }
     };
 
+    public void PauseJob() {
+    	if (state == State.Running) {
+            setState(State.Pausing);
+    	}
+    }
+
+    public void ResumeJob() {
+    	 if (state == State.Paused) {
+             setState(State.Running);
+             jobRun();
+    	 }
+    }
+
     public final Action stepJobAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.step);
