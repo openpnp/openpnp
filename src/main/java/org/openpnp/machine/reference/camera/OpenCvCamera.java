@@ -40,7 +40,7 @@ import org.simpleframework.xml.ElementList;
  */
 public class OpenCvCamera extends ReferenceCamera implements Runnable {
     static {
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     @Attribute(name = "deviceIndex", required = true)

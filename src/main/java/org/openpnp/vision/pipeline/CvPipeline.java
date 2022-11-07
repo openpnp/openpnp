@@ -50,7 +50,7 @@ import org.simpleframework.xml.stream.Style;
 @Root
 public class CvPipeline implements AutoCloseable {
     static {
-        nu.pattern.OpenCV.loadShared();
+        nu.pattern.OpenCV.loadLocally();
     }
 
     @ElementList
