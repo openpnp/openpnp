@@ -37,6 +37,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.openpnp.Translations;
 import org.openpnp.gui.support.Wizard;
 import org.openpnp.machine.reference.ReferenceCamera;
 import org.openpnp.machine.reference.SimulationModeMachine;
@@ -680,9 +681,11 @@ public class ImageCamera extends ReferenceCamera {
         super.findIssues(solutions);
         if (solutions.isTargeting(Milestone.Connect)) {
             solutions.add(new Solutions.Issue(
-                    this, 
-                    "The simulation ImageCamera can be replaced with a OpenPnpCaptureCamera to connect to a real USB camera.", 
-                    "Replace with OpenPnpCaptureCamera.", 
+                    this,
+                    Translations.getStringOrDefault("ImageCamera.Issue",
+                            "The simulation ImageCamera can be replaced with a " +
+                                    "OpenPnpCaptureCamera to connect to a real USB camera."),
+                    Translations.getStringOrDefault("ImageCamera.Solution", "Replace with OpenPnpCaptureCamera."),
                     Severity.Fundamental,
                     "https://github.com/openpnp/openpnp/wiki/OpenPnpCaptureCamera") {
 
