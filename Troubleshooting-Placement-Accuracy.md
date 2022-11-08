@@ -9,7 +9,7 @@ If your machine is up and running but your placements are not as accurate as you
 3. Now select the second fiducial and do the same thing.
 4. If either fiducial was not well centered the following issues could be present:
    * if the fiducial detection failed tune the fiducial detection pipeline
-   * Steps-per-mm is slightly off: https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Steps-Per-Mm
+   * Steps-per-mm is slightly off: https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Steps-Per-Mm
    * Consider non-squareness compensation (https://github.com/openpnp/openpnp/wiki/GcodeDriver#non-squareness-compensation)
    * consider enabling backlash compensation: https://github.com/openpnp/openpnp/wiki/GcodeDriver#backlash-compensation
    * Make sure the PCB is lying 100% flat, very small deviations can already be visible if the top vision camera has high resolution and is close to the PCB
@@ -32,7 +32,7 @@ Note that C axis in most machines cannot be homed so nozzle runout will affect t
 
 # Head Offset
 
-If all placements on a board are slightly offset in the same direction this is a good indicator that either the head-camera offset is wrong: https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup#head-offsets or the bottom vision nozzle position is off (see below: Nozzle Center).
+If all placements on a board are slightly offset in the same direction this is a good indicator that either the head-camera offset is wrong: https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Top-Camera-Setup#head-offsets or the bottom vision nozzle position is off (see below: Nozzle Center).
 
 To benchmark if the head-camera offset is correct you can:
 * place a PCB of your choice in the machine

@@ -145,10 +145,10 @@ For other types of controller firmwares, these settings will be found in differe
 
 This question is impossible to answer, as each machine is different. The problem is further confounded, as the two or three rate limits play together. The following is not quite a recipe but gives you some ideas on how to approach good values for your machine. This is done **per Axis**:
 
-1. Backup your configuration, both for OpenPnP and your controller. Note down the [Park location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Park-Location).
+1. Backup your configuration, both for OpenPnP and your controller. Note down the [Park location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Park-Location).
 2. Set very high limits in your controller configuration, so you are free to experiment on the OpenPnP side. The controller must not clip the rates you are setting in OpenPnP. Be extra sure this is the case, otherwise you can easily fool yourself in the steps below, and things can become very confusing. 
 3. If you have Duet, Smoothieware or another high performance controller, set your driver to **Simulated3rdOrderControl**. If you have TinyG and other supported S-Curve controllers, set **SimpleSCurve**. Otherwise set **ModeratedConstantAcceleration**. See [here for how to](https://github.com/openpnp/openpnp/wiki/GcodeAsyncDriver#gcodedriver-new-settings).
-4. Set your [Park location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Park-Location) to some prominent high-contrast mark on your machine table, somewhere in the middle, where you can move freely in all directions. You need to be able to judge whether the mark is precisely in the cross-hairs of your down-looking camera, after pressing **`P`**. This will be your check for the machine not having lost steps (assuming you don't have closed loop). 
+4. Set your [Park location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Park-Location) to some prominent high-contrast mark on your machine table, somewhere in the middle, where you can move freely in all directions. You need to be able to judge whether the mark is precisely in the cross-hairs of your down-looking camera, after pressing **`P`**. This will be your check for the machine not having lost steps (assuming you don't have closed loop). 
 5. Go to Machine/Setup down-looking camera, into the **Vision** tab. If [[Camera Settling]] is not yet configured, enable it like so:
    
    ![Camera Settle Diagnostics](https://user-images.githubusercontent.com/9963310/124281237-d1917b00-db49-11eb-9147-5c3e56c350d9.png)
@@ -171,7 +171,7 @@ This question is impossible to answer, as each machine is different. The problem
 15. Do this over and over again. Note down good settings. 
 16. Once you get good settings on all axes, set your controller config limits to the same or somewhat higher values (for safety).
 17. If you have not done proper [[Camera Settling]] setup in steps 5 and 6, switch it back to **FixedTime**. 
-18. Restore the [Park Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Park-Location) to what it was before.
+18. Restore the [Park Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Park-Location) to what it was before.
 
 ## ReferenceVirtualAxis
 
@@ -204,7 +204,7 @@ But it's hard to judge the X/Y precisely from the side, and you have no idea of 
 
 ![Move Camera to Nozzle](https://user-images.githubusercontent.com/9963310/95973733-513cb580-0e14-11eb-8233-5e660b863365.png) Use the **Move Camera to Nozzle** button to move the camera over the part. Doing so will move the nozzle to Safe Z first, so the Z you carefully adjusted, would be lost. But with the **Z virtual axis** on the camera, the camera can now not only move X and Y to the former nozzle location, but also the Z. The Z coordinate will now be safeguarded in the **Z virtual axis**. 
 
-In the Machine Controls, select the camera (if you have **Auto tool select** [enabled on the Machine](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#the-machine-setup-tree), it will already have selected it automatically). Then jog to make sure to have the pick location of the feeder in the crosshairs of the camera, so the X and Y are also precisely set. There is no real/physical C axis on a camera but it does still make sense to use the C machine controls to rotate the crosshairs until they align nicely with the part in the camera view. This is done using the **C virtual axis**. 
+In the Machine Controls, select the camera (if you have **Auto tool select** [enabled on the Machine](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Machine-Setup#the-machine-setup-tree), it will already have selected it automatically). Then jog to make sure to have the pick location of the feeder in the crosshairs of the camera, so the X and Y are also precisely set. There is no real/physical C axis on a camera but it does still make sense to use the C machine controls to rotate the crosshairs until they align nicely with the part in the camera view. This is done using the **C virtual axis**. 
 
 ![Move Nozzle to Camera](https://user-images.githubusercontent.com/9963310/95973794-6580b280-0e14-11eb-98b1-8be29a4a5673.png) Now you can use the **Move Nozzle to Camera** button to move the nozzle back to the to the former camera coordinates, so not only X and Y are now applied to the nozzle, but also the safeguarded Z from before and the adjusted C. 
 
@@ -224,7 +224,7 @@ Aside from the Machine Axes, discussed here, there are other types of axes, docu
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Driver-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Top Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup) |
+| [Driver Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Driver-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Top Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Top-Camera-Setup) |
 
 ___
 

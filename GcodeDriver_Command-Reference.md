@@ -143,7 +143,7 @@ Example:
 
 ### PICK_COMMAND
 
-**NOTE** This command is deprecated in OpenPnP 2.0. Use the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup) instead. The command remains in OpenPnP so you can move it to the actuator.
+**NOTE** This command is deprecated in OpenPnP 2.0. Use the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Vacuum-Setup) instead. The command remains in OpenPnP so you can move it to the actuator.
 
 For OpenPnP 1.0: Sent to indicate that the machine should pick a part. Typically turns on a vacuum pump or solenoid.
 
@@ -160,7 +160,7 @@ M800 ; Turn on nozzle 1 vacuum solenoid
 
 ### PLACE_COMMAND
 
-**NOTE** This command is deprecated in OpenPnP 2.0. Use the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup) instead. The command remains in OpenPnP so you can move it to the actuator.
+**NOTE** This command is deprecated in OpenPnP 2.0. Use the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Vacuum-Setup) instead. The command remains in OpenPnP so you can move it to the actuator.
 
 For OpenPnP 1.0: Sent to indicate that the machine should place a part. Typically turns off a vacuum pump or solenoid. May also trigger an exhaust solenoid or blow off valve.
 
@@ -180,13 +180,13 @@ M803 ; Turn off nozzle 1 exhaust solenoid
 
 ### PUMP_ON_COMMAND
 
-**NOTE** This command is deprecated in OpenPnP 2.0. Use the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup) instead. The command remains in OpenPnP so you can move it to the actuator.
+**NOTE** This command is deprecated in OpenPnP 2.0. Use the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Vacuum-Setup) instead. The command remains in OpenPnP so you can move it to the actuator.
 
 Sent to turn on the vacuum pump before performing a pick.
 
 ### PUMP_OFF_COMMAND
 
-**NOTE** This command is deprecated in OpenPnP 2.0. Use the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup) instead. The command remains in OpenPnP so you can move it to the actuator.
+**NOTE** This command is deprecated in OpenPnP 2.0. Use the [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Vacuum-Setup) instead. The command remains in OpenPnP so you can move it to the actuator.
 
 Sent to turn off the vacuum pump after a place if there are no longer any nozzles that are picked.
 
@@ -242,7 +242,7 @@ Sent whenever an Actuator's read() method is called. Along with [ACTUATOR_READ_R
 
 ### ACTUATOR_READ_WITH_DOUBLE_COMMAND
 
-**NOTE** This command is deprecated in OpenPnP 2.0. Use the [ACTUATOR_READ_COMMAND](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command) instead. If ACTUATOR_READ_WITH_DOUBLE_COMMAND is defined but ACTUATOR_READ_COMMAND is not, it will migrate automatically. If both are defined, an issue in the "Issues & Solutions" tab will appear. Accept that issue to replace the read command with the "read with double" command. Dismiss it to remove the "read with double" command entirely.
+**NOTE** This command is deprecated in OpenPnP 2.0. Use the [ACTUATOR_READ_COMMAND](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuator_read_command) instead. If ACTUATOR_READ_WITH_DOUBLE_COMMAND is defined but ACTUATOR_READ_COMMAND is not, it will migrate automatically. If both are defined, an issue in the "Issues & Solutions" tab will appear. Accept that issue to replace the read command with the "read with double" command. Dismiss it to remove the "read with double" command entirely.
 
 Sent whenever an Actuator's read(double) method is called. Along with [ACTUATOR_READ_REGEX](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex) this can be used to read a value from any type of attached sensor or device.
 

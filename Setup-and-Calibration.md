@@ -44,4 +44,4 @@ You should follow the steps in the order they are listed in this guide since man
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Before You Start](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Before-You-Start) |
+| | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Before You Start](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Before-You-Start) |

@@ -8,7 +8,7 @@ Instructions for OpenPnP 1.0 and 2.0 are different. See further down the page fo
 
 Make sure to have [[configured the vacuum valve Actuator|Setup and Calibration: Vacuum Setup]]. The same Actuator can be reused to sense the vacuum, or you can create a second one (for instance if your actuator is on a different driver):
 
-1. Set a ACTUATOR_READ_COMMAND in your GcodeDriver config on the new Actuator. This command will be sent to your controller when OpenPnP needs to read the vacuum level. See [actuator-read-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command) for more information.
+1. Set a ACTUATOR_READ_COMMAND in your GcodeDriver config on the new Actuator. This command will be sent to your controller when OpenPnP needs to read the vacuum level. See [actuator-read-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuator_read_command) for more information.
 2. Set a ACTUATOR_READ_REGEX in your GcodeDriver config on the new Actuator. This regex will be used to read the response to the ACTUATOR_READ_COMMAND. See [actuator-read-regex](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex) for more information.
 3. You can test that the actuator read is working by opening the Actuators tab in Machine Controls, clicking the button for the actuator and clicking the Read button. You should see the value that was read in the text field. 
    ![Test Actuators](https://user-images.githubusercontent.com/9963310/114305655-6f405580-9ad9-11eb-855e-39d4607c3671.png)
@@ -75,8 +75,8 @@ There is a video that shows how to migrate settings from the old system to this 
 
 1. Attach a pressure sensor to your machine between the nozzle and the vacuum pump.
 2. Configure your machine controller to be able to read the sensor using a command such as an Mcode or Gcode. How to do this is beyond the scope of this document, but you can ask for help on the mailing list.
-3. [Create an actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators) on the head on the nozzle you want to sense vacuum for. Give it a logical name like "H1VAC".
-4. Set a ACTUATOR_READ_COMMAND in your GcodeDriver config on the new Actuator. This command will be sent to your controller when OpenPnP needs to read the vacuum level. See [actuator-read-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command) for more information.
+3. [Create an actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Actuators) on the head on the nozzle you want to sense vacuum for. Give it a logical name like "H1VAC".
+4. Set a ACTUATOR_READ_COMMAND in your GcodeDriver config on the new Actuator. This command will be sent to your controller when OpenPnP needs to read the vacuum level. See [actuator-read-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuator_read_command) for more information.
 5. Set a ACTUATOR_READ_REGEX in your GcodeDriver config on the new Actuator. This regex will be used to read the response to the ACTUATOR_READ_COMMAND. See [actuator-read-regex](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex) for more information.
 6. You can test that the actuator read is working by opening the Actuators tab in Machine Controls, clicking the button for the new actuator and clicking the Read button. You should see the value that was read in the text field.
 7. Open Machine Setup and select the Nozzle you want to sense vacuum for. Near the bottom of the configuration panel find the Vaccuum Sense Actuator Name and set it to the name of the actuator you created.
@@ -93,4 +93,4 @@ There is a video that shows how to migrate settings from the old system to this 
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [Bottom Vision](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Bottom-Vision) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Camera Lighting](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Camera-Lighting) |
+| [Bottom Vision](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Bottom-Vision) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Camera Lighting](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Camera-Lighting) |

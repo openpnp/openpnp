@@ -68,7 +68,7 @@ You can also create a new Nozzle manually on the head and choose the ContactProb
 **Method** lets you select the probing method. 
 
 - **None** switches contact probing off. The nozzle behaves as if it were a regular ReferenceNozzle. 
-- **Vacuum Sense** uses the Vacuum Sensing setup of the nozzle to perform "sniffle probing". More specifically, the [Part Off](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing#measurement-method) detection method is used to sense if the nozzle tip has touched the surface. 
+- **Vacuum Sense** uses the Vacuum Sensing setup of the nozzle to perform "sniffle probing". More specifically, the [Part Off](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Vacuum-Sensing#measurement-method) detection method is used to sense if the nozzle tip has touched the surface. 
 - **ContactSensingActuator** uses a separate Actuator to probe and sense for contact. This is a setup made popular by the Liteplacer kit. 
 
 Notes: The Wizard will show different fields according to the selection. If at least one nozzle has an active **Method** selected, other parts of the OpenPnP GUI will also show additional elements for contact probing. 
@@ -124,7 +124,7 @@ Notes: The Wizard will show different fields according to the selection. If at l
 
 With the Contact Sense Method you need a sensor actuator.
 
-Go to Head / Actuators, [add a new probing Actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators#adding-actuators). 
+Go to Head / Actuators, [add a new probing Actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Actuators#adding-actuators). 
 
 On the Nozzle, assign the probe:
 

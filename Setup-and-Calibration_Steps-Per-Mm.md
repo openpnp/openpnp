@@ -23,4 +23,4 @@ To test that your steps per mm settings are correct:
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [Top Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Nozzle Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup) |
+| [Top Camera Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Top-Camera-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Nozzle Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup) |

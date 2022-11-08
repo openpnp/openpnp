@@ -37,4 +37,4 @@ Remember, you should follow the [Issues and Solutions](https://github.com/openpn
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [[Setup and Calibration]] | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Machine Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Machine-Setup) |
+| [[Setup and Calibration]] | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Machine Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Machine-Setup) |

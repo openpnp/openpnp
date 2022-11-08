@@ -112,7 +112,7 @@ Make sure you have the nozzle as the selected tool in the machine controls:
 
 ![selected-tool-2 avi](https://user-images.githubusercontent.com/9963310/173219902-d6d6851c-55e3-4a2a-9b6c-07284aa5df0d.gif)
 
-Often, the camera is selected, especially if you use the [Auto tool select option](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Machine-Setup#the-machine-setup-tree) on the machine (as is recommended). The camera is then automatically selected, whenever you "do something" with it.
+Often, the camera is selected, especially if you use the [Auto tool select option](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Machine-Setup#the-machine-setup-tree) on the machine (as is recommended). The camera is then automatically selected, whenever you "do something" with it.
 
 The camera has its own _virtual `C` and `Z` axes_, i.e. they move "invisibly" when you jog them. Read [here](https://github.com/openpnp/openpnp/wiki/Machine-Axes#use-case--example), why this is useful.
 

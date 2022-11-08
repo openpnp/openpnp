@@ -231,7 +231,7 @@ In earlier versions of OpenPnP this requires the following steps:
 
 The Actuator may also be assigned a Boolean command. It is switched ON after having moved to the Start Location and before performing the actual actuation motion. It is switched OFF again when the motion has finished. 
 
-See the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators#assigning-commands) for more information on how to assign the command.
+See the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Actuators#assigning-commands) for more information on how to assign the command.
 
 ## Push-Pull Motion
 

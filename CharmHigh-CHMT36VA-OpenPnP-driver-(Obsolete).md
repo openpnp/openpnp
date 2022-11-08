@@ -37,7 +37,7 @@ To run the CHMT36VA driver in OpenPnP, follow these basic instructions:
 ## Things to Try
 
 * Jog the machine in X/Y using the jog buttons.
-* Add a [Top Camera](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Top-Camera-Setup) and perform camera calibration. Try camera jogging.
+* Add a [Top Camera](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Top-Camera-Setup) and perform camera calibration. Try camera jogging.
 * Visit the Actuators panel and try the various Actuators. You can select different cameras, turn lights on and off, extend the drag pin, turn the pump on and off, turn on nozzle 1 and nozzle 2 vacuum, etc.
 
 # Machine Overview

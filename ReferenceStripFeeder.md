@@ -65,7 +65,7 @@ Proceed as follows:
 
 This error usually occurs when the strip feeder vision system cannot find the next tape hole. The most common causes of this problem are incorrect units per pixel settings on the camera and poor lighting.
 
-See https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-General-Camera-Setup#set-units-per-pixel to set and verify the units per pixel settings and make sure your camera is getting enough light. There should be strong contrast between the tape itself and the holes. The feeders CvPipeline can be adjusted to help address issues with your particular setup of camera and lighting, however in general it's best to start with a good hardware setup.
+See https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_General-Camera-Setup#set-units-per-pixel to set and verify the units per pixel settings and make sure your camera is getting enough light. There should be strong contrast between the tape itself and the holes. The feeders CvPipeline can be adjusted to help address issues with your particular setup of camera and lighting, however in general it's best to start with a good hardware setup.
 
 A good way to check that your units per pixel settings are correct is to right click the camera view and turn on the following options:
 * Reticle -> Fiducial

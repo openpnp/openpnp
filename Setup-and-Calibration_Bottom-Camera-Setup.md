@@ -24,7 +24,7 @@ Now that OpenPnP knows where the camera is, let's move the nozzle around and mak
 1. Hold Shift and then Left Click the mouse in the camera view for the bottom camera.
 2. The nozzle will move to the camera and should land where you clicked.
 3. Using the jog controls, move the nozzle forward, backward, left and right while looking at the camera view.
-4. Make sure that when you click arrows to move nozzle, in the camera view the nozzle moves in the same direction. For example if you click the up arrow nozzle should move vertical on your screen.  If it doesn't, you may need to adjust the [rotation and transforms](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-General-Camera-Setup#set-rotation-and-transforms) of the camera.
+4. Make sure that when you click arrows to move nozzle, in the camera view the nozzle moves in the same direction. For example if you click the up arrow nozzle should move vertical on your screen.  If it doesn't, you may need to adjust the [rotation and transforms](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_General-Camera-Setup#set-rotation-and-transforms) of the camera.
 
 ## Auto-Focus
 
@@ -34,4 +34,4 @@ The Camera can optionally enable Auto-Focus capabilities. See the [[Up looking C
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Park Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Park-Location) |
+| [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Vacuum-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Park Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Park-Location) |

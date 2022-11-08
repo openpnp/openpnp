@@ -14,7 +14,7 @@ A loose part feeder is different: It works with loose parts scattered on its sur
 
 _A 2x3 loose part holder_
 
-A loose part feeder's job is to detect the position and orientation of the parts, so that they can be picked and placed correctly on the PCB board. The task of detecting parts is assumed by the vision system, which uses the down looking camera (AKA the [Top Camera](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Top-Camera-Setup)) to take images of the parts for image processing and model detection.
+A loose part feeder's job is to detect the position and orientation of the parts, so that they can be picked and placed correctly on the PCB board. The task of detecting parts is assumed by the vision system, which uses the down looking camera (AKA the [Top Camera](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Top-Camera-Setup)) to take images of the parts for image processing and model detection.
 
 ## The AdvancedLoosePartFeeder
 ### What is needed
@@ -35,7 +35,7 @@ As mentioned above, proper orientation when detecting a part requires knowledge 
  
 ## Adding an AdvancedLoosePartFeeder
 
-Loose part feeders [can be added to OpenPnP](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Feeders#adding-a-feeder) through the `Create feeder` button in the _Feeders_ tab:
+Loose part feeders [can be added to OpenPnP](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Feeders#adding-a-feeder) through the `Create feeder` button in the _Feeders_ tab:
 
 ![add_feeder](https://user-images.githubusercontent.com/1109829/27770481-162114ce-5f48-11e7-8cff-4c894f731137.png)
 

@@ -103,7 +103,7 @@ Therefore, if you migrate an existing machine setup and then change the **Motion
 
 These are the most important configurations:
 
-* [[Nozzle tip tool changer|Setup-and-Calibration:-Nozzle-Setup#nozzle-tip-changer]] speed factors. 
+* [[Nozzle tip tool changer|Setup-and-Calibration_Nozzle-Setup#nozzle-tip-changer]] speed factors. 
 * [[Parts|User-Manual#parts]] speed factors.
 * [[ReferencePushPullFeeder|ReferencePushPullFeeder#push-pull-motion]] and ReferenceLeverFeeder feeder actuation speed factors.
 * [[BlindsFeeder]] cover opening/closing speed factors.

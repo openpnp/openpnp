@@ -73,7 +73,7 @@ The **Enabled**, **Homed**, **Disabled** machine state actuation settings can be
 
 ### Actuator with Profiles
 
-The **Profile** actuator value type is typically used when you want to control multiple other actuators in concert. As an example consider a camera light that can control the Red, Green, Blue channel intensities separately. A set of predefined profiles can be used to control such a multi-channel actuator in a consisent way across the application e.g. in many Pipelines (see the [usage in computer vision i.e. the ImageCapture Pipeline stage](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Camera-Lighting#use-in-the-imagecapture-stage)).  
+The **Profile** actuator value type is typically used when you want to control multiple other actuators in concert. As an example consider a camera light that can control the Red, Green, Blue channel intensities separately. A set of predefined profiles can be used to control such a multi-channel actuator in a consisent way across the application e.g. in many Pipelines (see the [usage in computer vision i.e. the ImageCapture Pipeline stage](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Camera-Lighting#use-in-the-imagecapture-stage)).  
 
 Once you have selected the **Profile** actuator value type, press **Apply**. A new "Profiles" Wizard tab will appear: 
 
@@ -136,7 +136,7 @@ For manual setup or other actuators, follow the following procedures.
 To set the Gcode for a Boolean Actuator:
 1. Go to Machine Setup -> Driver -> GcodeDriver/GcodeAsyncDriver -> Gcode. 
 2. Select the Actuator from the dropdown menu.
-3. Select the [ACTUATE_BOOLEAN](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_boolean_command)  command.
+3. Select the [ACTUATE_BOOLEAN](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuate_boolean_command)  command.
 4. Enter the Gcode fragment. An example would be `{True:M801}{False:M800}`. This will send M801 when the Actuator is turned on, and M800 when it is turned off. The text after `True:` or `False:` is what will actually be sent.
 
 Here is an example for the vacuum valve:
@@ -146,19 +146,19 @@ Here is an example for the vacuum valve:
 To set the Gcode for a Double Actuator:
 1. Go to Machine Setup -> Driver -> GcodeDriver/GcodeAsyncDriver -> Gcode. 
 2. Select the Actuator from the dropdown menu.
-3. Select the [ACTUATE_DOUBLE](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_double_command) command.
+3. Select the [ACTUATE_DOUBLE](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuate_double_command) command.
 4. Enter the Gcode fragment. An example would be `M104 {DoubleValue}`. 
 
 ### Reading Sensors
 
 This applies to the ReferenceActuator, for the other types please see the corresponding sections below.
 
-Another common use of Actuators is to read a sensor, with [vacuum level sensors](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing) being the most common. To read a sensor using the GcodeDriver/GcodeAsyncDriver the steps are a little different than the above.
+Another common use of Actuators is to read a sensor, with [vacuum level sensors](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Vacuum-Sensing) being the most common. To read a sensor using the GcodeDriver/GcodeAsyncDriver the steps are a little different than the above.
 
 To set the Gcode for an Actuator that reads a sensor:
 1. Go to Machine Setup -> Driver -> GcodeDriver -> Gcode. 
 2. Select the Actuator from the dropdown menu.
-3. Select the [ACTUATOR_READ_COMMAND](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command) command.
+3. Select the [ACTUATOR_READ_COMMAND](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuator_read_command) command.
 4. Enter the Gcode fragment. This should be whatever command you need to send to your controller to cause it to respond with the sensor value.
 5. Select the [ACTUATOR_READ_REGEX](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex).
 6. Enter a [regex](https://github.com/openpnp/openpnp/wiki/GcodeDriver#regular-expressions-receiving-responses) that matches the response that will come from the controller.
@@ -166,11 +166,11 @@ To set the Gcode for an Actuator that reads a sensor:
 ### GcodeDriver
 (and GcodeAsyncDriver)
 
-See [actuate-boolean-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_boolean_command)
+See [actuate-boolean-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuate_boolean_command)
 
-See [actuate-double-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuate_double_command)
+See [actuate-double-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuate_double_command)
 
-See [actuator-read-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#actuator_read_command)
+See [actuator-read-command](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuator_read_command)
 
 See [actuator-read-regex](https://github.com/openpnp/openpnp/wiki/GcodeDriver#actuator_read_regex)
 
@@ -197,10 +197,10 @@ The ScriptActuator can execute a script with the given value as a parameter. The
 For more info on ScriptActuators and an example click [here](https://github.com/openpnp/openpnp/wiki/Script-Actuators)
 
 ## Head Offsets
-See [Setting Head Offsets](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup#head-offsets) for the general process. It is basically the same for Actuators.
+See [Setting Head Offsets](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#head-offsets) for the general process. It is basically the same for Actuators.
 
 ***
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [Nozzle Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup)  | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Setup) |
+| [Nozzle Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup)  | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Vacuum Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Vacuum-Setup) |

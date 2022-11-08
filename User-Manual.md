@@ -96,7 +96,7 @@ The Machine Controls are your interface to interacting with the machine. From he
 
 The DROs show the current position of the selected nozzle in your preferred units. You can click the DROs to set them to relative mode which will zero them out and turn them blue. You can use this to measure distances; the DROs will show the distance from where you first clicked them. Click again to go back to normal mode.
 
-You may notice that the coordinates shown are not the same as the coordinates sent to your controller. This is due to [Head Offsets](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Nozzle-Setup#head-offsets) which tell OpenPnP where the items on the head are in relation to each other. The coordinates shown in the DROs are the machine's coordinates plus the head offsets for the selected nozzle.
+You may notice that the coordinates shown are not the same as the coordinates sent to your controller. This is due to [Head Offsets](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Nozzle-Setup#head-offsets) which tell OpenPnP where the items on the head are in relation to each other. The coordinates shown in the DROs are the machine's coordinates plus the head offsets for the selected nozzle.
 
 ## The Camera Panel
 
@@ -307,7 +307,7 @@ The fields in the feeder table are:
 - **Part**: The part that this feeder feeds. You can easily select a new part if, for instance, you remove one reel from a feeder and install a different one.
 - **Enabled**: Whether the feeder is enabled. A disabled feeder will not be considered when OpenPnP is looking for parts.
 
-Feeders are a big topic all on their own. For more details, see the [Feeders section of the Setup and Calibration Guide](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Feeders).
+Feeders are a big topic all on their own. For more details, see the [Feeders section of the Setup and Calibration Guide](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Feeders).
 
 ## Preparing a Job
 

@@ -62,7 +62,7 @@ Example: `^error:.*`
 
 ### MOVE_TO_COMPLETE_REGEX
 
-For **newer Versions of OpenPnP 2.0** and [[recent controller firmwares|Motion-Controller-Firmwares]], this is often no longer needed. TinyG users should [[upgrade the firmware|Motion-Controller-Firmwares#tinyg]]. Use the [[Issues and Solutions]] system to set this up in a modern way, i.e. use the [`MOVE_TO_COMPLETE_COMMAND`](https://github.com/openpnp/openpnp/wiki/GcodeDriver%3A-Command-Reference#move_to_complete_command).
+For **newer Versions of OpenPnP 2.0** and [[recent controller firmwares|Motion-Controller-Firmwares]], this is often no longer needed. TinyG users should [[upgrade the firmware|Motion-Controller-Firmwares#tinyg]]. Use the [[Issues and Solutions]] system to set this up in a modern way, i.e. use the [`MOVE_TO_COMPLETE_COMMAND`](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#move_to_complete_command).
 
 For **older Versions of OpenPnP** and/or older firmwares follow these instructions.
 
@@ -72,7 +72,7 @@ Example: `.*vel:0.00.*`
 
 ### ACTUATOR_READ_REGEX
 
-Used to parse a value from an actuator after sending a [ACTUATOR_READ_COMMAND](https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#actuator_read_command). The regex should contain a named group called Value that includes the required response value.
+Used to parse a value from an actuator after sending a [ACTUATOR_READ_COMMAND](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#actuator_read_command). The regex should contain a named group called Value that includes the required response value.
 
 Example: `read:(?<Value>-?\d+)`
 
@@ -173,7 +173,7 @@ GcodeDriver supports the ability to complete the homing operation using a vision
 To use visual homing:
 
 1. Create a Part called `FIDUCIAL-HOME`. The Part should follow the same rules are used for setting up [[Fiducials]].
-2. Set the GcodeDriver POST_VISION_HOME_COMMAND as [as described in the Reference](https://github.com/openpnp/openpnp/wiki/GcodeDriver:-Command-Reference#post_vision_home_command). This command is sent after visual homing is complete and will reset the coordinates to the home coordinates.
+2. Set the GcodeDriver POST_VISION_HOME_COMMAND as [as described in the Reference](https://github.com/openpnp/openpnp/wiki/GcodeDriver_Command-Reference#post_vision_home_command). This command is sent after visual homing is complete and will reset the coordinates to the home coordinates.
 3. Set up your machine so that when mechanical homing is complete the fiducial is visible to the camera.
 4. When mechanical homing is complete, GcodeDriver will look for the fiducial, center on it and then reset the X and Y coordinates to the home coordinates.
 

@@ -131,4 +131,4 @@ Some machines (e.g. the Liteplacer) have a nozzle that can sense when the nozzle
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [Steps Per Mm](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Steps-Per-Mm) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Actuators](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Actuators) |
+| [Steps Per Mm](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Steps-Per-Mm) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Actuators](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Actuators) |

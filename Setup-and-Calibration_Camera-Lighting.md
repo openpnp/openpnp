@@ -1,10 +1,10 @@
-You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators) system to turn lights on and off in response to camera capture events.
+You can use OpenPnP's [Actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Actuators) system to turn lights on and off in response to camera capture events.
 
 # Set Up a Lighting Actuator
 
 1. Add an actuator for the lights you want to control. Go to the Machine Setup tab and then look for the Camera you want to assign the light to. You'll find it either attached to the Machine (up-looking Camera) or to the Head (down-looking Camera). Got to the Actuators branch besides the Cameras branch and then click the green + button to add a new Actuator.
 2. Expand the Actuators list and select the new Actuator.
-3. Set up the Actuator as described in the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators). If you have multi-channel lights, be sure to read about the Actuator Profiles. 
+3. Set up the Actuator as described in the [Actuators page](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Actuators). If you have multi-channel lights, be sure to read about the Actuator Profiles. 
 
 # Test The Lights
 
@@ -37,7 +37,7 @@ As soon as the camera has a **Light Actuator** assigned, the ImageCapture stage 
 
 If the **defaultLight** property is switched on (default) the **Default ON** value of the actuator will be used to determine the lighting. If it is switched off, the **light** property comes into play.
 
-The **light** property controls the lighting for this specific pipeline (if **defaultLight** is off). The user interface responds to the [**Value Type** of the actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators#actuator-value-type), i.e. it can be a checkbox for lights that can only switch ON/OFF, it can be a number for lights that can be controlled in intensity, or it can be an [Actuator with Profiles](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration:-Actuators#actuator-with-profiles) combo box to control multi-channel lights:
+The **light** property controls the lighting for this specific pipeline (if **defaultLight** is off). The user interface responds to the [**Value Type** of the actuator](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Actuators#actuator-value-type), i.e. it can be a checkbox for lights that can only switch ON/OFF, it can be a number for lights that can be controlled in intensity, or it can be an [Actuator with Profiles](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Actuators#actuator-with-profiles) combo box to control multi-channel lights:
 
 ![Light Property Boolean](https://user-images.githubusercontent.com/9963310/103425237-53abe180-4bb1-11eb-93f0-b212953113f5.png) 
 
@@ -87,4 +87,4 @@ Here is a short video showing the steps above: https://www.youtube.com/watch?v=Y
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [Vacuum Sensing](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Vacuum-Sensing) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [[Computer Vision]] |
+| [Vacuum Sensing](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Vacuum-Sensing) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [[Computer Vision]] |

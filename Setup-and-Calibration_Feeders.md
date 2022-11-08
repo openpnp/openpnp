@@ -88,4 +88,4 @@ Now that you've configured a feeder, click the Feed and Pick button ![](https://
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [Discard Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Discard-Location) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Bottom Vision](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Bottom-Vision) |
+| [Discard Location](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Discard-Location) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [Bottom Vision](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Bottom-Vision) |

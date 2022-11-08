@@ -72,4 +72,4 @@ With the machine homed, you can now try jogging the machine to make sure everyth
 
 | Previous Step                 | Jump To                 | Next Step                                   |
 | ----------------------------- | ----------------------- | ------------------------------------------- |
-| [Machine Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration%3A-Machine-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [[Machine Axes]] |
+| [Machine Setup](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Machine-Setup) | [Table of Contents](https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration) | [[Machine Axes]] |
