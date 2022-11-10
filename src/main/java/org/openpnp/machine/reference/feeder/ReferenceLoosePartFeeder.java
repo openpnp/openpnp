@@ -24,12 +24,15 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.Action;
+import javax.swing.SwingUtilities;
 
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.index.exceptions.FeedFailureException;
 import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceLoosePartFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
@@ -48,6 +51,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     private CvPipeline pipeline = createDefaultPipeline();
 
     private Location pickLocation;
+    private boolean humanVision = false;
 
     @Override
     public Location getPickLocation() throws Exception {
@@ -56,25 +60,35 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
 
     @Override
     public void feed(Nozzle nozzle) throws Exception {
-        Camera camera = nozzle.getHead()
-                              .getDefaultCamera();
-        // Move to the feeder pick location
-        MovableUtils.moveToLocationAtSafeZ(camera, location);
-        try (CvPipeline pipeline = getPipeline()) {
-            for (int i = 0; i < 3; i++) {
-                pickLocation = getPickLocation(pipeline, camera, nozzle);
-                camera.moveTo(pickLocation.derive(null, null, null, 0.0));
-            }
-            MainFrame.get()
-                     .getCameraViews()
-                     .getCameraView(camera)
-                     .showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
-                             1000);
-        }
-        catch (Exception e) {
-            MainFrame.get().getJobTab().PauseJob();	
-            setupForJogging();
-        }
+    	if (!humanVision) {
+	    	Camera camera = nozzle.getHead()
+	    			.getDefaultCamera();
+	    	// Move to the feeder pick location
+	    	MovableUtils.moveToLocationAtSafeZ(camera, location);
+	    	try (CvPipeline pipeline = getPipeline()) {
+	    		for (int i = 0; i < 3; i++) {
+	    			pickLocation = getPickLocation(pipeline, camera, nozzle);
+	    			camera.moveTo(pickLocation.derive(null, null, null, 0.0));
+	    		}
+	    		MainFrame.get()
+	    		.getCameraViews()
+	    		.getCameraView(camera)
+	    		.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
+	    				1000);
+	    	}
+	    	catch (Exception e) {
+	    		setupForJogging();
+	    		JobPanel jobTab = MainFrame.get().getJobTab();
+	    		if (JobPanel.State.Running == jobTab.getJobState()) {		// fromJob
+		    		humanVision = true;
+		    		jobTab.pauseJob();	
+		    		throw new FeedFailureException("CV Failed. Fallback to Human Vision");
+	    		}
+	    	}
+    	}
+    	else {
+    		humanVision = false;
+    	}
     }
 
     @Override
@@ -114,11 +128,15 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     }
 
     private void setupForJogging() {
-        String title = String.format("Part Detection Failed with CV:");
-        String instructions= String.format("Manually jog the camera to the part and click Accept");
-        MainFrame.get().showInstructions(title, instructions, true, true,
-               "Accept" , cancelActionListener, proceedActionListener);
+	    SwingUtilities.invokeLater(() -> {
+	    	MainFrame mf = MainFrame.get();
+	        String title = String.format("Part Detection Failed with CV:");
+	        String instructions= String.format("Manually jog the camera to the part and click Accept");
+	        mf.showInstructions(title, instructions, true, true,
+	               "Accept" , cancelActionListener, proceedActionListener);
+	    });
     }
+    
     private final ActionListener proceedActionListener = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
         	doProceed();
@@ -135,7 +153,10 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
 	        double z = this.location.convertToUnits(l.getUnits()).getZ(); 
 	        pickLocation = l.derive(null, null, z, null);
 	    	MainFrame.get().hideInstructions();
-	    	MainFrame.get().getJobTab().ResumeJob();
+	    	JobPanel jobTab = MainFrame.get().getJobTab();
+    		if ( JobPanel.State.Paused == jobTab.getJobState()) {		// fromJob
+    			jobTab.resumeJob();
+    		}
 	    }
 		catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -144,11 +165,12 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     }
 
     private final ActionListener cancelActionListener = new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-        	MainFrame.get().hideInstructions();
-        	// TD raise error
-        }
+    	public void actionPerformed(ActionEvent e) {
+    		humanVision = false;
+    		MainFrame.get().hideInstructions();
+    	}
     };
+    
     /**
      * Returns if the feeder can take back a part.
      * Makes the assumption, that after each feed a pick followed,

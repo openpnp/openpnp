@@ -103,7 +103,7 @@ import com.google.common.eventbus.Subscribe;
 
 @SuppressWarnings("serial")
 public class JobPanel extends JPanel {
-    enum State {
+	public enum State {
         Stopped,
         Paused,
         Running,
@@ -747,6 +747,10 @@ public class JobPanel extends JPanel {
         return true;
     }
 
+    public State getJobState() {
+    	return state;
+    }
+
     public void importBoard(Class<? extends BoardImporter> boardImporterClass) {
         if (!checkJobStopped()) {
             return;
@@ -1042,13 +1046,13 @@ public class JobPanel extends JPanel {
         }
     };
 
-    public void PauseJob() {
+    public void pauseJob() {
     	if (state == State.Running) {
             setState(State.Pausing);
     	}
     }
 
-    public void ResumeJob() {
+    public void resumeJob() {
     	 if (state == State.Paused) {
              setState(State.Running);
              jobRun();

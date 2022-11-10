@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openpnp.gui.support.Wizard;
+import org.openpnp.machine.index.exceptions.FeedFailureException;
 import org.openpnp.machine.reference.vision.AbstractPartAlignment;
 import org.openpnp.machine.reference.wizards.ReferencePnpJobProcessorConfigurationWizard;
 import org.openpnp.model.BoardLocation;
@@ -610,6 +611,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 try {
                     feed(feeder, nozzle);
                 }
+                catch (FeedFailureException e) {	// for immediate user intervention via Instructions Pane
+                	throw new JobProcessorException(null, e);
+                }
                 catch (JobProcessorException jpe) {
                     lastException = jpe;
                     continue;
@@ -646,7 +650,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             throw lastException;
         }
         
-        private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException {
+        private void feed(Feeder feeder, Nozzle nozzle) throws JobProcessorException, FeedFailureException {
             Exception lastException = null;
             for (int i = 0; i < 1 + feeder.getFeedRetryCount(); i++) {
                 try {
@@ -654,6 +658,9 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     
                     feeder.feed(nozzle);
                     return;
+                }
+                catch (FeedFailureException e) {	// for immediate user intervention via Instructions Pane
+                    throw e;
                 }
                 catch (Exception e) {
                     lastException = e;
