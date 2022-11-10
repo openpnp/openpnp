@@ -81,7 +81,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
 	    		JobPanel jobTab = MainFrame.get().getJobTab();
 	    		if (JobPanel.State.Running == jobTab.getJobState()) {		// fromJob
 		    		humanVision = true;
-		    		jobTab.pauseJob();	
+		    		// jobTab.pauseJob();					redundant
 		    		throw new FeedFailureException("CV Failed. Fallback to Human Vision");
 	    		}
 	    	}
