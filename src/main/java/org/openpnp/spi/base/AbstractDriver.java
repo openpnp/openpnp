@@ -185,8 +185,10 @@ public abstract class AbstractDriver extends AbstractModelObject implements Driv
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    "Are you sure you want to delete " + getName() + "?",
-                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
+                            "Are you sure you want to delete") + " " + getName() + "?",
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
+                            "Delete") + " " + getName() + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().getMachine().removeDriver(AbstractDriver.this);
             }

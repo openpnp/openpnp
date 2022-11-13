@@ -27,6 +27,7 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import org.openpnp.ConfigurationListener;
+import org.openpnp.Translations;
 import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
@@ -393,8 +394,10 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    "Are you sure you want to delete " + getName() + "?",
-                    "Delete " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
+                            "Are you sure you want to delete") + " " + getName() + "?",
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
+                            "Delete") + " " + getName() + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 if (getHead() != null) {
                     getHead().removeActuator(ReferenceActuator.this);
