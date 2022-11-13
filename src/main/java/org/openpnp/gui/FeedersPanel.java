@@ -561,8 +561,11 @@ public class FeedersPanel extends JPanel implements WizardContainer {
             }
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + formattedIds + "?",
-                    "Delete " + selections.size() + " feeders?", JOptionPane.YES_NO_OPTION);
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
+                            "Are you sure you want to delete") + " " + formattedIds + "?",
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
+                            "Delete") + " " + selections.size() + " " + Translations.getStringOrDefault(
+                                    "CommonWords.feeders", "feeders") + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (Feeder feeder : selections) {
                     configuration.getMachine().removeFeeder(feeder);

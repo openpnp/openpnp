@@ -336,8 +336,11 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             }
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + formattedIds + "?",
-                    "Delete " + selections.size() + " packages?", JOptionPane.YES_NO_OPTION);
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
+                            "Are you sure you want to delete") + " " + formattedIds + "?",
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
+                            "Delete") + selections.size() + " " + Translations.getStringOrDefault(
+                                    "CommonWords.packages", "packages") + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (Package pkg : selections) {
                     Configuration.get().removePackage(pkg);

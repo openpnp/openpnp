@@ -238,8 +238,12 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
             }
 
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + formattedNames + "?",
-                    "Delete " + selections.size() + " vision settings?", JOptionPane.YES_NO_OPTION);
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
+                            "Are you sure you want to delete") + " " + formattedNames + "?",
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title", "Delete")
+                            + " " + selections.size() + " " + Translations.getStringOrDefault(
+                            "CommonPhrases.visionSettings", "vision settings") + "?",
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (AbstractVisionSettings visionSettings : selections) {
                     Configuration.get().removeVisionSettings(visionSettings);

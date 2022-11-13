@@ -252,8 +252,10 @@ public class PackageVisionPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    "Are you sure you want to delete " + getSelectedPad().getName() + "?",
-                    "Delete " + getSelectedPad().getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
+                            "Are you sure you want to delete") + " " + getSelectedPad().getName() + "?",
+                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
+                            "Delete") + " " + getSelectedPad().getName() + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 footprint.removePad(getSelectedPad());
             }
