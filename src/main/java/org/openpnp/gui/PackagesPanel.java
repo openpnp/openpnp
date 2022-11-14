@@ -318,9 +318,11 @@ public class PackagesPanel extends JPanel implements WizardContainer {
             for (Package pkg : selections) {
                 for (Part part : Configuration.get().getParts()) {
                     if (part.getPackage() == pkg) {
-                        MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                                pkg.getId() + " cannot be deleted. It is used by "
-                                        + part.getId());
+                        MessageBoxes.errorBox(getTopLevelAncestor(),
+                                Translations.getStringOrDefault("CommonWords.error", "Error"),
+                                pkg.getId() + " " + Translations.getStringOrDefault(
+                                        "CommonPhrases.cannotBeDeletedUsedBy",
+                                        "cannot be deleted. It is used by") + " " + part.getId());
                         return;
                     }
                 }

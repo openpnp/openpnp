@@ -224,8 +224,10 @@ public class VisionSettingsPanel extends JPanel implements WizardContainer {
 
             if (!usedIn.isEmpty()) {
                 String errorNames = new AbstractVisionSettings.ListConverter(false).convertForward(usedIn);
-                MessageBoxes.errorBox(getTopLevelAncestor(), "Error",
-                        "The selection cannot be deleted. It is used by " + errorNames + ".");
+                MessageBoxes.errorBox(getTopLevelAncestor(), Translations.getStringOrDefault(
+                        "CommonWords.error", "Error"),
+                        Translations.getStringOrDefault("CommonPhrases.selectionCannotBeDeletedUsedBy",
+                                "The selection cannot be deleted. It is used by") + " " + errorNames + ".");
                 return;
             }
 
