@@ -1086,8 +1086,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public Action loadAction = new AbstractAction("Load") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipLoad);
-            putValue(NAME, "Load");
-            putValue(SHORT_DESCRIPTION, "Load the currently selected nozzle tip.");
+            putValue(NAME, Translations.getStringOrDefault("ReferenceNozzleTip.Action.Load","Load"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("ReferenceNozzleTip.Action.Load.Description",
+                    "Load the currently selected nozzle tip."));
         }
 
         @Override
@@ -1103,8 +1104,9 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public Action unloadAction = new AbstractAction("Unload") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipUnload);
-            putValue(NAME, "Unload");
-            putValue(SHORT_DESCRIPTION, "Unload the currently loaded nozzle tip.");
+            putValue(NAME, Translations.getStringOrDefault("ReferenceNozzleTip.Action.Unload", "Unload"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "ReferenceNozzleTip.Action.Unload.Description", "Unload the currently loaded nozzle tip."));
         }
 
         @Override
@@ -1119,8 +1121,10 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipRemove);
-            putValue(NAME, "Delete Nozzle Tip");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected nozzle tip.");
+            putValue(NAME, Translations.getStringOrDefault("ReferenceNozzleTip.Action.Delete",
+                    "Delete Nozzle Tip"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("ReferenceNozzleTip.Action.Delete.Description",
+                    "Delete the currently selected nozzle tip."));
         }
 
         @Override
