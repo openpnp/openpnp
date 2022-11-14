@@ -387,8 +387,10 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public Action deleteAction = new AbstractAction("Delete Actuator") {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, "Delete Actuator");
-            putValue(SHORT_DESCRIPTION, "Delete the currently selected actuator.");
+            putValue(NAME, Translations.getStringOrDefault("ReferenceActuator.Actions.Delete",
+                    "Delete Actuator"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("ReferenceActuator.Actions.Delete.Description",
+                    "Delete the currently selected actuator."));
         }
 
         @Override
@@ -413,8 +415,11 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public Action permutateUpAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.arrowUp);
-            putValue(NAME, "Permutate Up");
-            putValue(SHORT_DESCRIPTION, "Move the currently selected actuator one position up.");
+            putValue(NAME, Translations.getStringOrDefault("ReferenceActuator.Actions.PermutateUp",
+                    "Permutate Up"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "ReferenceActuator.Actions.PermutateUp.Description",
+                    "Move the currently selected actuator one position up."));
         }
 
         @Override
@@ -432,8 +437,11 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public Action permutateDownAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.arrowDown);
-            putValue(NAME, "Permutate Down");
-            putValue(SHORT_DESCRIPTION, "Move the currently selected actuator one position down.");
+            putValue(NAME, Translations.getStringOrDefault("ReferenceActuator.Actions.PermutateDown",
+                    "Permutate Down"));
+            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
+                    "ReferenceActuator.Actions.PermutateDown.Description",
+                    "Move the currently selected actuator one position down."));
         }
 
         @Override
