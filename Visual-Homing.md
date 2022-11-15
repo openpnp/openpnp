@@ -26,6 +26,10 @@ Use [[Issues and Solutions]] to setup Visual Homing. It will be offered in the r
 
 ![visual-homing-issues-and-solutions](https://user-images.githubusercontent.com/9963310/162245692-1def5213-c72c-4f4d-a646-9361274993b7.gif)
 
+If you want to revisit this later and you are ⚠ **absolutely sure** ⚠ that you want to start from scratch with all your machine locations, proceed as follows: 
+
+Go to Machine Setup / Heads / H1. Set the **Homing Method** to **None**. Press **Apply**. Go to [[Issues and Solutions]] and press **Find Issues & Solutions**. The Visual Homing solution should then appear (see the animation above). Follow the instructions.
+
 The following instructions are for manual setup. 
 
 ## Creating the Fiducial Part
