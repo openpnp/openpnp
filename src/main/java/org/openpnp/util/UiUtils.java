@@ -63,7 +63,12 @@ public class UiUtils {
      */
     public static void showError(Throwable t) {
         if (MainFrame.get() != null) {
-            MessageBoxes.errorBox(MainFrame.get(), "Error", t);
+        	if (t.getMessage() == VisionUtils.HUMAN_VISION_FALLBACK) {		// Quickfix to suppress nagging essage
+    			Logger.info(t);
+    		}
+    		else {
+                MessageBoxes.errorBox(MainFrame.get(), "Error", t);
+    		}
         }
         else {
             Logger.error(t);
@@ -165,42 +170,18 @@ public class UiUtils {
             String moveBeforeActionDescription, HeadMountable movable, 
             Location location, boolean allowWithoutMove,
             final Thrunnable actionThrunnable) {
-
         messageBoxOnException(() -> {
             if (movable == null || location == null || location.equals(movable.getLocation())) {
                 // Already there, just act.
                 actionThrunnable.thrun();
             }
-            else  {
-                confirmMoveToLocationAndAct(parentComponent, moveBeforeActionDescription, allowWithoutMove,
-                        () -> {
-                            MovableUtils.moveToLocationAtSafeZ(movable, location);
-                            MovableUtils.fireTargetedUserAction(movable);
-                            movable.waitForCompletion(CompletionType.WaitForStillstand);
-                        },
-                        actionThrunnable);
-            }
-        });
-    }
-
-    public static void confirmMoveToLocationAndAct(Component parentComponent, 
-            String moveBeforeActionDescription, boolean allowWithoutMove,
-            final Thrunnable motionThrunnable,
-            final Thrunnable actionThrunnable) {
-    
-        messageBoxOnException(() -> {
-            if (Configuration.get().getMachine().isEnabled()) {
+            else if (Configuration.get().getMachine().isEnabled()) {
                 // We need to move there, ask the user to confirm.
                 int result;
                 if (allowWithoutMove) {
-                    if (moveBeforeActionDescription != null) {
-                        result = JOptionPane.showConfirmDialog(parentComponent,
-                                "Do you want to "+moveBeforeActionDescription+"?\n",
-                                null, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-                    }
-                    else {
-                        result = JOptionPane.NO_OPTION;
-                    }
+                    result = JOptionPane.showConfirmDialog(parentComponent,
+                            "Do you want to "+moveBeforeActionDescription+"?\n",
+                                    null, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
                 }
                 else {
                     result = JOptionPane.showConfirmDialog(parentComponent,
@@ -211,7 +192,9 @@ public class UiUtils {
                 if (result == JOptionPane.YES_OPTION) {
                     // Move wanted.
                     UiUtils.submitUiMachineTask(() -> {
-                        motionThrunnable.thrun();
+                        MovableUtils.moveToLocationAtSafeZ(movable, location);
+                        MovableUtils.fireTargetedUserAction(movable);
+                        movable.waitForCompletion(CompletionType.WaitForStillstand);
                         UiUtils.messageBoxOnExceptionLater(actionThrunnable);
                     });
                 }

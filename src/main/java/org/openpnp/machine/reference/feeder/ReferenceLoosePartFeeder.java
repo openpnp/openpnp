@@ -29,6 +29,7 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.io.IOUtils;
 import org.opencv.core.RotatedRect;
 import org.openpnp.gui.MainFrame;
+import org.openpnp.gui.FeedersPanel;
 import org.openpnp.gui.JobPanel;
 import org.openpnp.gui.support.PropertySheetWizardAdapter;
 import org.openpnp.gui.support.Wizard;
@@ -37,6 +38,7 @@ import org.openpnp.machine.reference.ReferenceFeeder;
 import org.openpnp.machine.reference.feeder.wizards.ReferenceLoosePartFeederConfigurationWizard;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.Location;
+import org.openpnp.model.Part;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.Nozzle;
 import org.openpnp.spi.PropertySheetHolder;
@@ -44,18 +46,24 @@ import org.openpnp.util.MovableUtils;
 import org.openpnp.util.OpenCvUtils;
 import org.openpnp.util.VisionUtils;
 import org.openpnp.vision.pipeline.CvPipeline;
-import org.simpleframework.xml.Element;
+import org.simpleframework.xml.core.Commit;
 
 public class ReferenceLoosePartFeeder extends ReferenceFeeder {
-    @Element(required = false)
-    private CvPipeline pipeline = createDefaultPipeline();
-
-    private Location pickLocation;
+    private enum WhoCalledMe {
+    	None,
+    	Job,
+    	Feed,	// From Feeders Tab
+    	Pick,	// From Feeders Tab
+    	Suspense
+    }
+	
+    private Location visionLocation;
     private boolean humanVision = false;
+    private WhoCalledMe whoCalledMe = WhoCalledMe.None;
 
     @Override
     public Location getPickLocation() throws Exception {
-        return pickLocation == null ? location : pickLocation;
+        return visionLocation == null ? location : visionLocation;
     }
 
     @Override
@@ -67,22 +75,50 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
 	    	MovableUtils.moveToLocationAtSafeZ(camera, location);
 	    	try (CvPipeline pipeline = getPipeline()) {
 	    		for (int i = 0; i < 3; i++) {
-	    			pickLocation = getPickLocation(pipeline, camera, nozzle);
-	    			camera.moveTo(pickLocation.derive(null, null, null, 0.0));
+	    			visionLocation = getPickLocationWithCv(pipeline, camera, nozzle);
+	    			camera.moveTo(visionLocation.derive(null, null, null, 0.0));
 	    		}
 	    		MainFrame.get()
 	    		.getCameraViews()
 	    		.getCameraView(camera)
 	    		.showFilteredImage(OpenCvUtils.toBufferedImage(pipeline.getWorkingImage()),
-	    				1000);
+	    				1500);
 	    	}
 	    	catch (Exception e) {
-	    		setupForJogging();
-	    		JobPanel jobTab = MainFrame.get().getJobTab();
-	    		if (JobPanel.State.Running == jobTab.getJobState()) {		// fromJob
-		    		humanVision = true;
-		    		jobTab.pauseJob();	
-		    		throw new FeedFailureException("CV Failed. Fallback to Human Vision");
+	    		if (whoCalledMe == WhoCalledMe.None) {
+		    		StackTraceElement[]  stacktrace = Thread.currentThread().getStackTrace();
+	    			
+		    		if (stacktrace[3].getMethodName() == "pickFeeder") {
+		    			whoCalledMe = WhoCalledMe.Pick;
+		    		}
+		    		else if (stacktrace[2].getMethodName() == "feedFeeder") {
+		    			whoCalledMe = WhoCalledMe.Feed;
+		    		}
+		    		else {
+		    			whoCalledMe = WhoCalledMe.Job;		    			
+		    		}
+	    		}
+	    		else {										// monkey testing
+	        	    SwingUtilities.invokeLater(() -> {
+		        		MainFrame.get().hideInstructions();
+	        	    });	        		
+	        		humanVision = false;
+	        		whoCalledMe = WhoCalledMe.None;  		// fall back to default
+	        		throw new Exception ("Human Vision Aborted! Resuming normal flow");
+	    		}
+	    			
+    			setupForJogging(camera);
+	    		switch (whoCalledMe) {
+		    		case Job:
+			    		humanVision = true;
+			    		throw new FeedFailureException(VisionUtils.HUMAN_VISION_FALLBACK);
+		    		case Feed:
+			    		throw new Exception (VisionUtils.HUMAN_VISION_FALLBACK);
+		    		case Pick:
+			    		humanVision = true;
+			    		throw new Exception (VisionUtils.HUMAN_VISION_FALLBACK);
+		    		default:
+		    			break;
 	    		}
 	    	}
     	}
@@ -96,7 +132,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         return true;
     }
 
-    private Location getPickLocation(CvPipeline pipeline, Camera camera, Nozzle nozzle)
+    private Location getPickLocationWithCv(CvPipeline pipeline, Camera camera, Nozzle nozzle)
             throws Exception {
         // Process the pipeline to extract RotatedRect results
         pipeline.setProperty("camera", camera);
@@ -127,7 +163,7 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         return location;
     }
 
-    private void setupForJogging() {
+    private void setupForJogging(Camera camera) {
 	    SwingUtilities.invokeLater(() -> {
 	    	MainFrame mf = MainFrame.get();
 	        String title = String.format("Part Detection Failed with CV:");
@@ -135,6 +171,9 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
 	        mf.showInstructions(title, instructions, true, true,
 	               "Accept" , cancelActionListener, proceedActionListener);
 	    });
+	    
+		MovableUtils.fireTargetedUserAction(camera);
+	    
     }
     
     private final ActionListener proceedActionListener = new ActionListener() {
@@ -151,12 +190,23 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
 	        
 	        // Update the location with the correct Z, which is the configured Location's Z.
 	        double z = this.location.convertToUnits(l.getUnits()).getZ(); 
-	        pickLocation = l.derive(null, null, z, null);
+	        visionLocation = l.derive(null, null, z, null);
+
+	        
+	        if (whoCalledMe == WhoCalledMe.Job) {							// resubmit
+		    	JobPanel jobTab = MainFrame.get().getJobTab();
+	    		if ( JobPanel.State.Paused == jobTab.getJobState()) {
+	    			jobTab.resumeJob();
+	    		}
+	        }
+	        else if (whoCalledMe == WhoCalledMe.Pick) {						// resubmit pick
+		    	FeedersPanel fedTab = MainFrame.get().getFeedersTab();
+		    	fedTab.pickFeederAction
+		    		.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null)); // restart pick
+	        }
+	        
 	    	MainFrame.get().hideInstructions();
-	    	JobPanel jobTab = MainFrame.get().getJobTab();
-    		if ( JobPanel.State.Paused == jobTab.getJobState()) {		// fromJob
-    			jobTab.resumeJob();
-    		}
+	    	whoCalledMe = WhoCalledMe.None;
 	    }
 		catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -168,17 +218,18 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
     	public void actionPerformed(ActionEvent e) {
     		humanVision = false;
     		MainFrame.get().hideInstructions();
+	    	whoCalledMe = WhoCalledMe.None;
     	}
-    };
+    };    
     
     /**
      * Returns if the feeder can take back a part.
      * Makes the assumption, that after each feed a pick followed,
-     * so the area around the pickLocation is now empty.
+     * so the area around the visionLocation is now empty.
      */
     @Override
     public boolean canTakeBackPart() {
-        if (pickLocation != null ) {  
+        if (visionLocation != null ) {  
             return true;
         } else {
             return false;
@@ -205,16 +256,24 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
         if (nozzle.isPartOffEnabled(Nozzle.PartOffStep.AfterPlace) && !nozzle.isPartOff()) {
             throw new Exception("Feeder: " + getName() + " - Putting part back failed, check nozzle tip");
         }
-        // set pickLocation to null, avoid putting a second part on the same location
-        pickLocation = null;
+        // set visionLocation to null, avoid putting a second part on the same location
+        visionLocation = null;
     }
     
     public CvPipeline getPipeline() {
-        return pipeline;
+    	if (part != null) {
+    		return part.getFiducialVisionSettings().getPipeline(); 
+    	}
+    	else {
+    		return null;
+    	}	
     }
 
     public void resetPipeline() {
-        pipeline = createDefaultPipeline();
+    	CvPipeline pipeline = createDefaultPipeline();
+    	if (part != null) {
+    		part.getFiducialVisionSettings().setPipeline(pipeline); 
+    	}
     }
 
     @Override
@@ -252,4 +311,12 @@ public class ReferenceLoosePartFeeder extends ReferenceFeeder {
             throw new Error(e);
         }
     }
+
+    @Commit
+    void commit() {
+    }
+
+	  public void setPart(Part part) { 
+		  super.setPart(part); 
+	  }    
 }

@@ -31,6 +31,8 @@ import com.google.zxing.common.HybridBinarizer;
 public class VisionUtils {
     final public static String PIPELINE_RESULTS_NAME = "results";
     final public static String PIPELINE_CONTROL_PROPERTY_NAME = "propertyName";
+    final public static String HUMAN_VISION_FALLBACK = "CV Failed. Fallback to Human Vision";	// hack for error processing.
+    private boolean humanVision = false;
 
     /**
      * Given pixel coordinates within the frame of the Camera's image, get the offsets from Camera
@@ -57,26 +59,14 @@ public class VisionUtils {
         // Calculate the difference between the center of the image to the
         // center of the match.
         double offsetX = x - (imageWidth / 2);
-        double offsetY = y - (imageHeight / 2);
+        double offsetY = (imageHeight / 2) - y;
 
-        return getPixelOffsets(camera, offsetX, offsetY);
-    }
-
-    /**
-     * Given pixel offset coordinates, get the same offsets in Camera space and units.
-     * 
-     * @param camera
-     * @param offsetX
-     * @param offsetY
-     * @return
-     */
-    public static Location getPixelOffsets(Camera camera, double offsetX, double offsetY) {
-        // Convert pixels to units
+        // And convert pixels to units
         Location unitsPerPixel = camera.getUnitsPerPixelAtZ();
         offsetX *= unitsPerPixel.getX();
         offsetY *= unitsPerPixel.getY();
-        // Convert to right-handed.
-        return new Location(unitsPerPixel.getUnits(), offsetX, -offsetY, 0, 0);
+
+        return new Location(unitsPerPixel.getUnits(), offsetX, offsetY, 0, 0);
     }
 
     /**
@@ -270,7 +260,7 @@ public class VisionUtils {
             Configuration.get().getScripting().on("Vision.PartAlignment.After", globals);
         }
     }
-
+    
     /**
      * Compute an RGB histogram over the provided image.
      * 
@@ -294,10 +284,10 @@ public class VisionUtils {
     }
 
     /**
-     * Compute an HSV histogram over the provided image.
+     * Compute an RGB histogram over the provided image.
      * 
      * @param image
-     * @return the histogram as long[channel][value] with channel 0=Hue 1=Saturation 2=Value and value 0...255.
+     * @return the histogram as long[channel][value] with channel 0=Red 1=Green 2=Blue and value 0...255.
      */
     public static long[][] computeImageHistogramHsv(BufferedImage image) {
         long[][] histogram = new long[3][256];

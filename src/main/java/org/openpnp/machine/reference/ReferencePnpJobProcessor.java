@@ -79,9 +79,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     @Attribute(required = false)
     protected int maxVisionRetries = 3;
-    
-    @Attribute(required = false)
-    boolean steppingToNextMotion = true;
 
     @Element(required = false)
     public PnpJobPlanner planner = new SimplePnpJobPlanner();
@@ -95,13 +92,17 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     protected List<JobPlacement> jobPlacements = new ArrayList<>();
 
     private Step currentStep = null;
+
     
     long startTime;
     int totalPartsPlaced;
+	boolean parkAfterPlacements = true;
     
     public ReferencePnpJobProcessor() {
     }
-    
+    public void parkAfterPlacements(boolean b) {
+    	parkAfterPlacements = b;
+    }
     public synchronized void initialize(Job job) throws Exception {
         if (job == null) {
             throw new Exception("Can't initialize with a null Job.");
@@ -695,8 +696,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
             for (int i = 0; i < 1 + feeder.getPickRetryCount(); i++) {
                 try {
                     pick(nozzle, feeder, jobPlacement, part);
-                    postPick(feeder, nozzle);
                     checkPartOn(nozzle);
+                    postPick(feeder, nozzle);
                     return;
                 }
                 catch (Exception e) {
@@ -807,7 +808,12 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                     return;
                 }
                 catch (Exception e) {
-                    lastException = e;
+                	if (e.getMessage() == VisionUtils.HUMAN_VISION_FALLBACK) {
+                    	throw new JobProcessorException(null, e);
+                	}
+                	else {
+                		lastException = e;
+                	}
                 }
             }
             throw new JobProcessorException(part, lastException);
@@ -1056,15 +1062,18 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 throw new JobProcessorException(head, e);
             }
             
-            fireTextStatus("Park head.");
-            try {
-                MovableUtils.park(head);
+            if (parkAfterPlacements) {
+				fireTextStatus("Park head.");
+				try {
+					MovableUtils.park(head);
+				} catch (Exception e) {
+					throw new JobProcessorException(head, e);
+				} 
+			}
+            else {
+            	parkAfterPlacements = true;	// we suppress this only when running placements from Feeder Panel
             }
-            catch (Exception e) {
-                throw new JobProcessorException(head, e);
-            }
-            
-            return null;
+			return null;
         }
     }
     
@@ -1111,6 +1120,8 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
                 }
             }
             else {
+            	fireTextStatus("Placements Over.");	// this text is the flag for placements cycle to advance. Do not change 
+            	
                 fireTextStatus("Job finished without error, placed %s parts in %s sec. (%s CPH)", 
                         totalPartsPlaced,
                         df.format(dtSec), 
@@ -1123,6 +1134,7 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
     
     protected class Abort implements Step {
         public Step step() throws JobProcessorException {
+        	parkAfterPlacements = true;						// logical to move to park
             new Cleanup().step();
             
             fireTextStatus("Aborted.");
@@ -1160,15 +1172,6 @@ public class ReferencePnpJobProcessor extends AbstractPnpJobProcessor {
 
     public void setMaxVisionRetries(int maxVisionRetries) {
         this.maxVisionRetries = maxVisionRetries;
-    }
-
-    @Override
-    public boolean isSteppingToNextMotion() {
-        return steppingToNextMotion;
-    }
-
-    public void setSteppingToNextMotion(boolean steppingToNextMotion) {
-        this.steppingToNextMotion = steppingToNextMotion;
     }
 
     protected abstract class PlannedPlacementStep implements Step {
