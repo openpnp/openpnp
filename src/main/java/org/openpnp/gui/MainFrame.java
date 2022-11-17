@@ -1101,8 +1101,9 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Inches);
-          MessageBoxes.infoBox("Notice", //$NON-NLS-1$
-                  "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+            MessageBoxes.infoBox(Translations.getStringOrDefault("CommonWords.notice", "Notice"), //$NON-NLS-1$
+                  Translations.getStringOrDefault("CommonPhrases.restartToTakeEffect",
+                          "Please restart OpenPnP for the changes to take effect.")); //$NON-NLS-1$
       }
     };
 
@@ -1114,8 +1115,9 @@ public class MainFrame extends JFrame {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             configuration.setSystemUnits(LengthUnit.Millimeters);
-            MessageBoxes.infoBox("Notice", //$NON-NLS-1$
-                    "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+            MessageBoxes.infoBox(Translations.getStringOrDefault("CommonWords.notice", "Notice"), //$NON-NLS-1$
+                    Translations.getStringOrDefault("CommonPhrases.restartToTakeEffect",
+                            "Please restart OpenPnP for the changes to take effect.")); //$NON-NLS-1$
         }
     };
 
@@ -1146,8 +1148,10 @@ public class MainFrame extends JFrame {
             else {
                 prefs.putBoolean(PREF_WINDOW_STYLE_MULTIPLE, false);
             }
-            MessageBoxes.infoBox("Windows Style Changed", //$NON-NLS-1$
-                    "Window style has been changed. Please restart OpenPnP to see the changes."); //$NON-NLS-1$
+            MessageBoxes.infoBox(Translations.getStringOrDefault("CommonPhrases.windowsStyleChanged",
+                    "Windows Style Changed"), //$NON-NLS-1$
+                    Translations.getStringOrDefault("CommonPhrases.windowsStyleChangedRestartToTakeEffect",
+                            "Window style has been changed. Please restart OpenPnP to see the changes.")); //$NON-NLS-1$
         }
     };
 
@@ -1338,9 +1342,10 @@ public class MainFrame extends JFrame {
         }
         
         public void actionPerformed(ActionEvent arg0) {
-          configuration.setLocale(locale);
-          MessageBoxes.infoBox("Notice", //$NON-NLS-1$
-                  "Please restart OpenPnP for the changes to take effect."); //$NON-NLS-1$
+            configuration.setLocale(locale);
+            MessageBoxes.infoBox(Translations.getStringOrDefault("CommonWords.notice", "Notice"), //$NON-NLS-1$
+                    Translations.getStringOrDefault("CommonPhrases.restartToTakeEffect",
+                            "Please restart OpenPnP for the changes to take effect.")); //$NON-NLS-1$
       }
     }
     
