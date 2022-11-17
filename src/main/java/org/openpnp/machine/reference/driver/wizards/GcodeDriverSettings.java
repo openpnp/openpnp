@@ -433,7 +433,9 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 StringSelection stringSelection = new StringSelection(w.toString());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
-                MessageBoxes.infoBox("Copied Gcode", "Copied Gcode to Clipboard");
+                MessageBoxes.infoBox(Translations.getStringOrDefault("CommonPhrases.copiedGcode", "Copied Gcode"),
+                        Translations.getStringOrDefault("CommonPhrases.copiedGcodeToClipboard",
+                                "Copied Gcode to Clipboard"));
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Copy Failed", e);
@@ -460,7 +462,9 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 StringReader r = new StringReader(s);
                 GcodeDriver d = ser.read(GcodeDriver.class, s);
                 // copySettings(d, driver);
-                MessageBoxes.infoBox("Pasted Gcode", "Pasted Gcode from Clipboard");
+                MessageBoxes.infoBox(Translations.getStringOrDefault("CommonPhrases.pastedGcode",
+                        "Pasted Gcode"), Translations.getStringOrDefault("CommonPhrases.pastedGcodeFromClipboard",
+                        "Pasted Gcode from Clipboard"));
             }
             catch (Exception e) {
                 MessageBoxes.errorBox(MainFrame.get(), "Paste Failed", e);
