@@ -285,7 +285,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         panelTapeSettings.add(textFieldMaxFeedCount,"10,8");
         textFieldMaxFeedCount.setColumns(10);
         textFieldMaxFeedCount.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceStripFeederConfigurationWizard.MaxFeedCountTextField.toolTip.text",
+                "ReferenceStripFeederConfigurationWizard.MaxFeedCountTextField.toolTipText",
                 "Max number of parts to feed from this strip.  If set to zero, this setting is ignored."));
         btnMaxFeedCount = new JButton(new AbstractAction(Translations.getStringOrDefault(
                 "ReferenceStripFeederConfigurationWizard.AutoSetMaxFeedCountButton.text", "Auto Set MaxFeedCount"
@@ -301,7 +301,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
         	}
         });
         btnMaxFeedCount.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceStripFeederConfigurationWizard.AutoSetMaxFeedCountButton.toolTip.text",
+                "ReferenceStripFeederConfigurationWizard.AutoSetMaxFeedCountButton.toolTipText",
                 "Calculate the Max Feed Count using the feeder's hole locations and part pitch"));
         panelTapeSettings.add(btnMaxFeedCount,"12,8");
         
@@ -373,7 +373,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 "ReferenceStripFeederConfigurationWizard.PanelLocations.ReferenceHoleLocationLabel.text",
                 "Reference Hole Location"));
         lblFeedStartLocation.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceStripFeederConfigurationWizard.PanelLocations.ReferenceHoleLocationLabel.toolTip.text",
+                "ReferenceStripFeederConfigurationWizard.PanelLocations.ReferenceHoleLocationLabel.toolTipText",
                 "The location of the first tape hole past the first part in the direction of more parts."));
         panelLocations.add(lblFeedStartLocation, "2, 4, right, default");
 
@@ -397,7 +397,7 @@ public class ReferenceStripFeederConfigurationWizard extends AbstractConfigurati
                 "ReferenceStripFeederConfigurationWizard.PanelLocations.NextHoleLocationLabel.text",
                 "Next Hole Location"));
         lblFeedEndLocation.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceStripFeederConfigurationWizard.PanelLocations.NextHoleLocationLabel.toolTip.text",
+                "ReferenceStripFeederConfigurationWizard.PanelLocations.NextHoleLocationLabel.toolTipText",
                 "The location of another hole after the reference hole. This can be any hole along the tape as long as it's past the reference hole."
                 ));
         panelLocations.add(lblFeedEndLocation, "2, 6, right, default");

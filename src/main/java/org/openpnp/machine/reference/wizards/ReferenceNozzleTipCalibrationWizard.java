@@ -154,7 +154,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "Calibrate Camera Position and Rotation"));
         panelTop.add(btnCalibrateCamera, "8, 4");
         btnCalibrateCamera.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrateCameraButton.toolTip.text",
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.CalibrateCameraButton.toolTipText",
                 "<html>\n" +
                         "Calibrate the bottom vision camera position and rotation <br />\n" +
                         "according to a pattern of measured nozzle positions.\n" +
@@ -164,7 +164,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipCalibrationWizard.TopPanel.RecalibrationLabel.text", "Auto Recalibration"));
         panelTop.add(lblRecalibration, "2, 6, right, default");
         lblRecalibration.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.RecalibrationLabel.toolTip.text",
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.RecalibrationLabel.toolTipText",
                 "<html>\n" +
                         "<p>Determines when a recalibration is automatically executed:</p>\n" +
                         "<p><ul><li>On each nozzle tip change.</li>\n" +
@@ -181,7 +181,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipCalibrationWizard.TopPanel.FailHomingLabel.text", "Fail Homing?"));
         panelTop.add(lblFailHoming, "2, 8, right, default");
         lblFailHoming.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipCalibrationWizard.TopPanel.FailHomingLabel.toolTip.text",
+                "ReferenceNozzleTipCalibrationWizard.TopPanel.FailHomingLabel.toolTipText",
                 "When the calibration fails during homing, also fail the homing cycle."));
 
         failHoming = new JCheckBox("");
@@ -264,7 +264,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.AllowMisDetectsLabel.text",
                 "Allowed Misdectects"));
         lblAllowMisdectects.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.AllowMisDetectsLabel.toolTip.text",
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.AllowMisDetectsLabel.toolTipText",
                 "Number of missed detections tolerated before a calibration fails."));
         panelCalibration.add(lblAllowMisdectects, "6, 4, right, default");
 
@@ -286,7 +286,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "Calibration Z Offset"
         ));
         lblCalibrationZOffset.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.CalibrationZOffsetLabel.toolTip.text",
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.CalibrationZOffsetLabel.toolTipText",
                 "<html>\n" +
                         "<p>\n" +
                         "When the vision-detected feature of a nozzle is higher up on the nozzle tip <br />\n" +
@@ -307,7 +307,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.VisionDiameterLabel.text",
                 "Vision Diameter"));
         lblNozzleTipDiameter.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.VisionDiameterLabel.toolTip.text",
+                "ReferenceNozzleTipCalibrationWizard.CalibrationPanel.VisionDiameterLabel.toolTipText",
                 "<html>\n" +
                         "Diameter of the feature/edge that should be detected in calibration vision.<br/>\n" +
                         "Only used with pipelines that have a DetectCircularSymmetry stage.\n" +
@@ -414,7 +414,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MinDetailSizeLabel.title",
                 "Minimum Detail Size"));
         lblDetailSize.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MinDetailSizeLabel.toolTip.title",
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.MinDetailSizeLabel.toolTipText",
                 "<html>\n" +
                         "<p>Specify the size of the smallest details in the image that are considered a<br/>\n" +
                         "meaningfull part of the shape to be detected, like the smallest contacts etc.<br/>\n" +
@@ -467,7 +467,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
         lblSaturation = new JLabel(Translations.getStringOrDefault(
                 "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.SaturationLabel.text","Saturation"));
         lblSaturation.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.SaturationLabel.toolTip.text",
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.SaturationLabel.toolTipText",
                 "Saturation in the HSV color model"));
         panelBackground.add(lblSaturation, "2, 12, right, default");
 
@@ -489,7 +489,7 @@ public class ReferenceNozzleTipCalibrationWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ValueLabel.text",
                 "Value"));
         lblBrightness.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ValueLabel.toolTip.text",
+                "ReferenceNozzleTipCalibrationWizard.BackgroundCalibrationPanel.ValueLabel.toolTipText",
                 "Brightness, Value in the HSV color model"));
         panelBackground.add(lblBrightness, "2, 14, right, default");
 

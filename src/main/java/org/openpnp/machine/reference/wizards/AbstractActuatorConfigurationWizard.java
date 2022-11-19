@@ -19,7 +19,6 @@
 
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.Color;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
@@ -198,7 +197,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.AxisInterlockLabel.text",
                 "Axis Interlock?"));
         lblAxisInterlock.setToolTipText(Translations.getStringOrDefault(
-                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.AxisInterlockLabel.toolTip.text",
+                "AbstractActuatorConfigurationWizard.CoordinateSystemPanel.AxisInterlockLabel.toolTipText",
                 "Enable to get an extra Wizard tab to configure an Axis Interlocking Actuator"));
         panelOffsets.add(lblAxisInterlock, "2, 8, right, default");
         
@@ -255,7 +254,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeActuationLabel.text",
                 "Before Actuation?"));
         lblBeforeActuation.setToolTipText(Translations.getStringOrDefault(
-                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeActuationLabel.toolTip.text",
+                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeActuationLabel.toolTipText",
                 "<html>\n" +
                         "Coordinate with the machine, before the actuator is actuated, i.e. wait for the controllers <br/>\n" +
                         "to acknowledge that all the pending commands (including motion) were sent and executed. \n" +
@@ -269,7 +268,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.CoordinationPanel.AfterActuationLabel.text",
                 "After Actuation?"));
         lblAfterActuation.setToolTipText(Translations.getStringOrDefault(
-                "AbstractActuatorConfigurationWizard.CoordinationPanel.AfterActuationLabel.toolTip.text",
+                "AbstractActuatorConfigurationWizard.CoordinationPanel.AfterActuationLabel.toolTipText",
                 "<html>\n" +
                         "Coordinate with the machine, after the actuator was actuated, i.e. wait for the controllers <br/>\n" +
                         "to acknowledge that the actuation as well as all the pending commands (including motion)<br/>\n" +
@@ -283,7 +282,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         lblBeforeRead = new JLabel(Translations.getStringOrDefault(
                 "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeReadLabel.text", "Before Read?"));
         lblBeforeRead.setToolTipText(Translations.getStringOrDefault(
-                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeReadLabel.toolTip.text",
+                "AbstractActuatorConfigurationWizard.CoordinationPanel.BeforeReadLabel.toolTipText",
                 "<html>\n" +
                         "Coordinate with the machine, before the actuator is read, i.e. wait for the controllers <br/>\n" +
                         "to acknowledge that all the pending commands (including motion) were sent and executed. \n" +
@@ -327,7 +326,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
         lblValueType = new JLabel(Translations.getStringOrDefault(
                 "AbstractActuatorConfigurationWizard.GeneralPanel.ValueTypeLabel.text", "Value Type"));
         lblValueType.setToolTipText(Translations.getStringOrDefault(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.ValueTypeLabel.toolTip.text",
+                "AbstractActuatorConfigurationWizard.GeneralPanel.ValueTypeLabel.toolTipText",
                 "<html>\n" +
                         "<p>\n" +
                         "Determines the primary data type of Actuator write values. \n" +
@@ -416,7 +415,7 @@ public abstract class AbstractActuatorConfigurationWizard extends AbstractConfig
                 "AbstractActuatorConfigurationWizard.GeneralPanel.ActuationLabel.text",
                 "Actuation"));
         lblMachineStateActuation.setToolTipText(Translations.getStringOrDefault(
-                "AbstractActuatorConfigurationWizard.GeneralPanel.ActuationLabel.toolTip.text",
+                "AbstractActuatorConfigurationWizard.GeneralPanel.ActuationLabel.toolTipText",
                 "<html>\n" +
                         "When the machine state changes, a specific actuation value can be assumed or set. \n" +
                         "</html>\n"));

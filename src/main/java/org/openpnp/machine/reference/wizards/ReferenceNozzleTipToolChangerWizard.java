@@ -179,7 +179,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipToolChangerWizard.ChangerPanel.FirstLocationLabel.text",
                 "First Location"));
         lblStartLocation.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.ChangerPanel.FirstLocationLabel.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.ChangerPanel.FirstLocationLabel.toolTipText",
                 "<html>First location in a nozzle tip loading motion sequence.<br/>\n" +
                         "This is the first way-point when loading the nozzle tip and the<br/>\n" +
                         "last way-point when unloading it.\n" +
@@ -200,7 +200,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
 
         textFieldChangerStartToMidSpeed = new JTextField();
         textFieldChangerStartToMidSpeed.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.ChangerPanel.ChangerStartToMidSpeedTextField.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.ChangerPanel.ChangerStartToMidSpeedTextField.toolTipText",
                 "Speed between First location and Second location"));
         panelChanger.add(textFieldChangerStartToMidSpeed, "10, 5, fill, default");
         textFieldChangerStartToMidSpeed.setColumns(8);
@@ -229,7 +229,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
 
         textFieldChangerMidToMid2Speed = new JTextField();
         textFieldChangerMidToMid2Speed.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.ChangerPanel.ChangerMidToMid2SpeedTextField.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.ChangerPanel.ChangerMidToMid2SpeedTextField.toolTipText",
                 "Speed between Second location and Third location"));
         textFieldChangerMidToMid2Speed.setColumns(8);
         panelChanger.add(textFieldChangerMidToMid2Speed, "10, 7, fill, default");
@@ -258,7 +258,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
 
         textFieldChangerMid2ToEndSpeed = new JTextField();
         textFieldChangerMid2ToEndSpeed.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.ChangerPanel.ChangerMidToEndSpeedTextField.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.ChangerPanel.ChangerMidToEndSpeedTextField.toolTipText",
                 "Speed between Third location and Last location"));
         textFieldChangerMid2ToEndSpeed.setColumns(8);
         panelChanger.add(textFieldChangerMid2ToEndSpeed, "10, 9, fill, default");
@@ -315,7 +315,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipToolChangerWizard.ChangerPanel.ZCalibrateLabel.text",
                 "Auto Z Calibration"));
         lblZCalibrate.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.ChangerPanel.ZCalibrateLabel.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.ChangerPanel.ZCalibrateLabel.toolTipText",
                         "<html>\n" +
                                 "Calibrate the nozzle/nozzle tip Z by probing against the <strong>Touch Location</strong> surface.<br/>\n" +
                                 "Z calibration can be triggered manually using the <strong>Calibrate now</strong> button or automatically:<br/>\n" +
@@ -341,7 +341,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         
                 calibrationOffsetZ = new JTextField();
                 calibrationOffsetZ.setToolTipText(Translations.getStringOrDefault(
-                        "ReferenceNozzleTipToolChangerWizard.ChangerPanel.CalibrationOffsetZTextField.toolTip.text",
+                        "ReferenceNozzleTipToolChangerWizard.ChangerPanel.CalibrationOffsetZTextField.toolTipText",
                         "Calibrated Z offset of the nozzle"));
                 calibrationOffsetZ.setEditable(false);
                 panelChanger.add(calibrationOffsetZ, "8, 18, fill, default");
@@ -356,7 +356,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 lblFailHoming = new JLabel(Translations.getStringOrDefault(
                         "ReferenceNozzleTipToolChangerWizard.ChangerPanel.FailHomingLabel.text", "Fail Homing?"));
                 lblFailHoming.setToolTipText(Translations.getStringOrDefault(
-                        "ReferenceNozzleTipToolChangerWizard.ChangerPanel.FailHomingLabel.toolTip.text",
+                        "ReferenceNozzleTipToolChangerWizard.ChangerPanel.FailHomingLabel.toolTipText",
                         "When the Z calibration fails during homing, also fail the homing cycle."));
                 panelChanger.add(lblFailHoming, "2, 20, right, default");
         
@@ -411,7 +411,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.VisionLocationLabel.text",
                 "Vision Location"));
         lblVisionCalibration.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.VisionLocationLabel.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.VisionLocationLabel.toolTipText",
                 "<html>Location for vision calibration, or None for no calibration.<br/>\n" +
                         "Choose a location where the nozzle tip in the slot is visible. \n" +
                         "</html>"));
@@ -429,7 +429,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.AdjustZLabel.text",
                 "Adjust Z"));
         lblAdjustZ.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.AdjustZLabel.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.AdjustZLabel.toolTipText",
                 "<html>\n" +
                         "Adjust the Z coordinate of the Vision Location by this offset. Set it to the Z distance between <br/>\n" +
                         "the template subject that you are detecting with Vision Calibration, e.g. the visible surface of <br/>\n" +
@@ -470,7 +470,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.TemplateWidthLabel.text",
                 "Template Width"));
         lblTemplateDimX.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.TemplateWidthLabel.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.TemplateWidthLabel.toolTipText",
                 "<html>\n" +
                         "Template image width (X). The template is centered around the selected Vision Location.<br/>\n" +
                         "Choose dimensions as small as possible, but the templates should include tell-tale horizontal and vertical<br/>\n" +
@@ -486,7 +486,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.TemplateHeightLabel.text",
                 "Template Height"));
         lblTemplateDimY.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.TemplateHeightLabel.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.TemplateHeightLabel.toolTipText",
                 "<html>\n" +
                         "Template image height (Y). The template is centered around the selected Vision Location.<br/>\n" +
                         "Choose dimensions as small as possible, but the templates should include tell-tale horizontal and vertical<br/>\n" +
@@ -501,7 +501,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         lblTolerance = new JLabel(Translations.getStringOrDefault(
                 "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.ToleranceLabel.text", "Tolerance"));
         lblTolerance.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.ToleranceLabel.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.ToleranceLabel.toolTipText",
                 "Maximum calibration tolerance i.e. how far away from the nominal location the calibrated location can be."));
         panelVision.add(lblTolerance, "2, 9, right, default");
         
@@ -513,7 +513,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.WantedPrecisionLabel.text",
                 "Wanted Precision"));
         lblPrecision.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.WantedPrecisionLabel.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.WantedPrecisionLabel.toolTipText",
                 "<html>If the detected template image match is further away than the " +
                         "<strong>Wanted Precision</strong>,<br/>\n" +
                         "the camera is re-centered and another vision pass is made.</html>"
@@ -535,7 +535,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
         lblMinScore = new JLabel(Translations.getStringOrDefault(
                 "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.MinScoreLabel.text", "Minimum Score"));
         lblMinScore.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.MinScoreLabel.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.VisionCalibrationPanel.MinScoreLabel.toolTipText",
                 "<html>\n" +
                         "When the template images are matched against the camera image, a score is computed<br/>\n" +
                         "indicating the quality of the match. If the obtained score is smaller than the Minimum Score<br/>\n" +
@@ -626,7 +626,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "Behavior"));
         panelClone.add(lblTemplate, "2, 2, right, default");
         lblTemplate.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.CloningSettingsPanel.BehaviorLabel.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.CloningSettingsPanel.BehaviorLabel.toolTipText",
                 "<html>\n" +
                         "One nozzle tip can become the <strong>Template</strong> for others to be cloned from.<br/>\n" +
                         "OpenPnP will automatically translate Locations relative to the First Location.<br/>\n" +
@@ -637,7 +637,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipToolChangerWizard.CloningSettingsPanel.TemplateRadioButton.text",
                 "Template"));
         templateNozzleTip.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.CloningSettingsPanel.TemplateRadioButton.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.CloningSettingsPanel.TemplateRadioButton.toolTipText",
                 "Mark this nozzle tip as the template that can be cloned to and from the other nozzle tips."
         ));
         templateNozzleTip.addItemListener(new ItemListener() {
@@ -702,7 +702,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipToolChangerWizard.UnnamedPanel.ClonesFromTemplateRadioButton.text",
                 "Clones from Template"));
         templateClone.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.UnnamedPanel.ClonesFromTemplateRadioButton.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.UnnamedPanel.ClonesFromTemplateRadioButton.toolTipText",
                 "This nozzle tip can clone its settings from the nozzle tip marked as the <strong>Template</strong>."));
         behaviorButtonGroup.add(templateClone);
         panelClone.add(templateClone, "4, 4");
@@ -711,7 +711,7 @@ public class ReferenceNozzleTipToolChangerWizard extends AbstractConfigurationWi
                 "ReferenceNozzleTipToolChangerWizard.UnnamedPanel.LockedRadioButton.text",
                 "Locked"));
         templateLocked.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipToolChangerWizard.UnnamedPanel.LockedRadioButton.toolTip.text",
+                "ReferenceNozzleTipToolChangerWizard.UnnamedPanel.LockedRadioButton.toolTipText",
                 "<html>This nozzle tip is locked against cloning.<br/>Note, its touch location Z" +
                         " can still be calibrated against the template nozzle tip reference. </html>"
         ));

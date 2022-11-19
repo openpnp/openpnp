@@ -317,7 +317,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.AxisLetterLabel.text",
                 "Axis Letter"));
         lblDesignator.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.AxisLetterLabel.toolTip.text",
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.AxisLetterLabel.toolTipText",
                 "The axis letter (X, Y, Z etc.) as used by the Controller."));
         panelControllerSettings.add(lblDesignator, "2, 4, right, default");
 
@@ -430,7 +430,7 @@ public class ReferenceControllerAxisConfigurationWizard extends AbstractAxisConf
                 "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.LimitToRangeLabel.text",
                 "Limit to Range"));
         lblLimitRotation.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.LimitToRangeLabel.toolTip.text",
+                "ReferenceControllerAxisConfigurationWizard.ControllerSettingsPanel.LimitToRangeLabel.toolTipText",
                 "Limit the rotation to -180° ... +180° or the custom Soft-Limits if enabled."));
         panelControllerSettings.add(lblLimitRotation, "2, 14, right, default");
 

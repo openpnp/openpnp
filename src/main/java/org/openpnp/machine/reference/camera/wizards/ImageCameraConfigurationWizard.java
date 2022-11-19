@@ -127,7 +127,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 "Units per Pixel"));
         panelGeneral.add(lblUnitsPerPixel, "2, 6, right, default");
         lblUnitsPerPixel.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTip.text",
+                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTipText",
                 "To allow simulation of Unit per Pixel calibration, the true Units per Pixel of the image must be stored independently."));
         
         imageUnitsPerPixelX = new JTextField();
@@ -141,7 +141,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         lblRotation = new JLabel(Translations.getStringOrDefault(
                 "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.text", "Z Rotation"));
         lblRotation.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.toolTip.text",
+                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.toolTipText",
                 "Simulated camera mounting rotation around the Z axis (Portrait/Landscape/mounting error)."));
         panelGeneral.add(lblRotation, "2, 8, right, default");
 
@@ -152,7 +152,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         lblYaw = new JLabel(Translations.getStringOrDefault(
                 "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.text", "Y Rotation"));
         lblYaw.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.toolTip.text",
+                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.toolTipText",
                 "Simulated camera mounting error as a rotation around the Y axis (sideways tilt)."));
         panelGeneral.add(lblYaw, "2, 10, right, default");
         
@@ -171,7 +171,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         lblDistortion = new JLabel(Translations.getStringOrDefault(
                 "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.text", "Distortion [%]"));
         lblDistortion.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.toolTip.text",
+                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.toolTipText",
                 "<html>Simulated lens distortion. Positive values create Barrel distortion, negative values create a Pincushion distortion.</html>"
         ));
         panelGeneral.add(lblDistortion, "2, 14, right, default");
@@ -184,7 +184,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         lblCameraFlipped = new JLabel(Translations.getStringOrDefault(
                 "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text", "View mirrored?"));
         lblCameraFlipped.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTip.text",
+                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTipText",
                 "Simulate the camera as showing a mirrored view"));
         panelGeneral.add(lblCameraFlipped, "2, 16, right, default");
 
@@ -238,7 +238,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         lblFocalLength = new JLabel(Translations.getStringOrDefault(
                 "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.text", "Focal Length"));
         lblFocalLength.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.toolTip.text",
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.toolTipText",
                 "Lens focal length"));
         panelExtra.add(lblFocalLength, "2, 2, right, default");
         
@@ -249,7 +249,7 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         lblSensorDiagonal = new JLabel(Translations.getStringOrDefault(
                 "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.text", "Sensor Diagonal"));
         lblSensorDiagonal.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.toolTip.text",
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.toolTipText",
                 "<html>\n" +
                         "<p>Imaging sensor diagonal for relation with lens focal length.</p>\n" +
                         "<p>Examples:</p>\n" +

@@ -236,7 +236,7 @@ public class ReferenceNozzleConfigurationWizard extends AbstractConfigurationWiz
                 
                 chckbxDynamicsafez = new JCheckBox("");
                 chckbxDynamicsafez.setToolTipText(Translations.getStringOrDefault(
-                        "ReferenceNozzleConfigurationWizard.SafeZPanel.DynamicSafeZChkbox.toolTip.text",
+                        "ReferenceNozzleConfigurationWizard.SafeZPanel.DynamicSafeZChkbox.toolTipText",
                         "dynamicaly adjust the safeZ, so the bottom of a loaded part is at safeZ if possible"
                 ));
                 panelSafeZ.add(chckbxDynamicsafez, "3, 2");

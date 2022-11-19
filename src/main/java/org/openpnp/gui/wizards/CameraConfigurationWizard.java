@@ -217,7 +217,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lblSuspendDuringTasks = new JLabel(Translations.getStringOrDefault(
                 "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.text","Suspend during tasks?"));
         lblSuspendDuringTasks.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.toolTip.text",
+                "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.toolTipText",
                 "<html>Continuous camera preview is suspended during machine tasks, only frames<br/>\n" +
                         "captured using computer vision are shown. For high Preview FPS this improves <br/>\n" +
                         "performance </html>"));
@@ -230,7 +230,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.text",
                 "Auto Camera View?"));
         lblAutoVisible.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.toolTip.text",
+                "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.toolTipText",
                 "<html>If enabled, the CameraView will be automatically selected whenever a<br/>\n" +
                         "user action is related to the camera or when a computer vision result is presented.</html>"));
         panel.add(lblAutoVisible, "2, 8, right, default");
@@ -242,7 +242,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.text",
                 "Show in multi camera view?"));
         lblShowMultiview.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.toolTip.text",
+                "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.toolTipText",
                 "<html>\n" +
                         "Show this camera in the Camera Panel when mutiple cameras are shown.<br/>\n" +
                         "For example this can be switched off for capture card cameras that are <br/>\n" +
@@ -296,14 +296,14 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 "Allow Machine Actuators?"));
         panelLight.add(lblAllowMachineActuators, "6, 2, right, default");
         lblAllowMachineActuators.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsLabel.toolTip.text",
+                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsLabel.toolTipText",
                 "<html>It is recommended to attach the Light Actuator to the camera's head.<br/>However, for backwards-compatibility with how Light Actuators were used in<br/>Scripts, you can enable this switch and choose a Machine actuator. </html>"
         ));
 
         allowMachineActuators = new JCheckBox("");
         panelLight.add(allowMachineActuators, "8, 2");
         allowMachineActuators.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsChkBox.toolTip.text",
+                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsChkBox.toolTipText",
                 "<html>It is recommended to attach the Light Actuator to the camera's head.<br/>However, for backwards-compatibility with how Light Actuators were used in<br/>Scripts, you can enable this switch and choose a Machine actuator. </html>"
                 ));
 
@@ -318,7 +318,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lblBeforeCapture = new JLabel(Translations.getStringOrDefault(
                 "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.text", "Before Capture?"));
         lblBeforeCapture.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.toolTip.text",
+                "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.toolTipText",
                 "<html>\n" +
                         "The light is actuated ON, before this camera is capturing an<br/>\n" +
                         "image for computer vision. \n" +
@@ -331,7 +331,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lblAfterCapture = new JLabel(Translations.getStringOrDefault(
                 "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.text", "After Capture?"));
         lblAfterCapture.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.toolTip.text",
+                "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.toolTipText",
                 "<html>\n" +
                         "The light is actuated OFF, after this camera has captured an<br/>\n" +
                         "image for computer vision. \n" +
@@ -346,7 +346,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 "User Camera Action?"));
         panelLight.add(lblUserActionLight, "2, 10, right, default");
         lblUserActionLight.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.UserCameraActionLabel.toolTip.text",
+                "CameraConfigurationWizard.LightPanel.UserCameraActionLabel.toolTipText",
                 "<html>\n" +
                         "The light is actuated ON when a user action is deliberately positioning<br>\n" +
                         "or otherwise using the camera. \n" +
@@ -358,7 +358,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lblAntiglare = new JLabel(Translations.getStringOrDefault(
                 "CameraConfigurationWizard.LightPanel.AntiGlareLabel.text", "Anti-Glare?"));
         lblAntiglare.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AntiGlareLabel.toolTip.text",
+                "CameraConfigurationWizard.LightPanel.AntiGlareLabel.toolTipText",
                 "<html>\n" +
                         "To prevent glare from this camera light, the light is actuated OFF, <br/>\n" +
                         "before any other camera looking the opposite way is capturing. \n" +
@@ -448,7 +448,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.text",
                 "Object Dimensions"));
         lblCalibrationObject.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.toolTip.text",
+                "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.toolTipText",
                 "Dimensions of the Calibration Object"));
         panelUpp.add(lblCalibrationObject, "2, 6, right, default");
 
@@ -533,7 +533,7 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         textFieldDefaultZ = new JTextField();
         panelUpp.add(textFieldDefaultZ, "8, 12");
         textFieldDefaultZ.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.DefaultZTextField.toolTip.text",
+                "CameraConfigurationWizard.UnitsPerPixelPanel.DefaultZTextField.toolTipText",
                 "<html>" + "This is the Z level at which objects in the camera view are assumed<br>"
                         + "to be if their true height is unknown.  Generally this should be set<br>"
                         + "to the Z height of the working surface of the circuit board(s) that<br>"

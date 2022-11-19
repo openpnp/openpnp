@@ -19,7 +19,6 @@
 
 package org.openpnp.machine.reference.wizards;
 
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -115,7 +114,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 "ReferenceNozzleTipPartDetectionWizard.PartOnVacuumSensingPanel.EstablishLevelLabel.text",
                 "Establish Level?"));
         lblEstablishPartOnLevel.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipPartDetectionWizard.PartOnVacuumSensingPanel.EstablishLevelLabel.toolTip.text",
+                "ReferenceNozzleTipPartDetectionWizard.PartOnVacuumSensingPanel.EstablishLevelLabel.toolTipText",
                 "<html>While the nozzle is pressed down on the part in the pick operation,<br/>\n" +
                         "the vacuum level is repeatedly measured until it builds up to the Vacuum Range <br/>\n" +
                         "or the Pick Dwell Time timeout expires, whichever comes first.\n" +
@@ -272,7 +271,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 "ReferenceNozzleTipPartDetectionWizard.PartOffVacuumSensingPanel.EstablishLevelLabel.text",
                 "Establish Level?"));
         lblEstablishPartOffLevel.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipPartDetectionWizard.PartOffVacuumSensingPanel.EstablishLevelLabel.toolTip.text",
+                "ReferenceNozzleTipPartDetectionWizard.PartOffVacuumSensingPanel.EstablishLevelLabel.toolTipText",
                 "<html>While the nozzle is pressed down on the part in the place operation,<br/>\n" +
                         "the vacuum level is repeatedly measured until it decays to the Vacuum Range <br/>\n" +
                         "or the Place Dwell Time timeout expires, whichever comes first.\n" +
@@ -339,7 +338,7 @@ public class ReferenceNozzleTipPartDetectionWizard extends AbstractConfiguration
                 "ReferenceNozzleTipPartDetectionWizard.PartOffVacuumSensingPanel.ValveOpenCloseLabel.text",
                 "Valve open/close (ms)"));
         lblProbingTimePartOff.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipPartDetectionWizard.PartOffVacuumSensingPanel.ValveOpenCloseLabel.toolTip.text",
+                "ReferenceNozzleTipPartDetectionWizard.PartOffVacuumSensingPanel.ValveOpenCloseLabel.toolTipText",
                 "<html>\n" +
                         "<p>The valve is opened and closed to create a small underpressure pulse. </p>\n" +
                         "<p>The open time should be quite short, no point in creating full pick suction.</p>\n" +

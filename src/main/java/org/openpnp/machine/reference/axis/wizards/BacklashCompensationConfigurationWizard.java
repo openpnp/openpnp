@@ -176,7 +176,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
                 "Compensation Method"));
         panelBacklashDiagnostics.add(lblBacklashCompensation, "2, 2, right, default");
         lblBacklashCompensation.setToolTipText(Translations.getStringOrDefault(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.CompensationMethodLabel.toolTip.text",
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.CompensationMethodLabel.toolTipText",
                 "<html>\n" +
                         "<p>Backlash compensation is used to avoid the effects of any looseness or play in the <br/>\n" +
                         "mechanical linkages of the given axis.  When the actuator reverses the direction of travel, <br/>\n" +
@@ -223,7 +223,7 @@ public class BacklashCompensationConfigurationWizard extends AbstractConfigurati
                 "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.ToleranceLabel.text",
                 "Tolerance ±"));
         lblAcceptableTolerance.setToolTipText(Translations.getStringOrDefault(
-                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.ToleranceLabel.toolTip.text",
+                "BacklashCompensationConfigurationWizard.BacklashDiagnosticsPanel.ToleranceLabel.toolTipText",
                 "<html>\n" +
                         "<p>Acceptable backlash compensation tolerance (±) for calibration.</p>\n" +
                         "<p>A larger tolerance will possibly allow for a more efficient backlash compensation method.</p>\n" +

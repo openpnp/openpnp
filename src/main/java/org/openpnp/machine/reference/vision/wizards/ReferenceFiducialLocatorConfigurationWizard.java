@@ -89,7 +89,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
         
         textFieldRepeatFiducialRecognition = new JTextField();
         textFieldRepeatFiducialRecognition.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.RepeatRecognitionTextField.toolTip.text",
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.RepeatRecognitionTextField.toolTipText",
                 "To dial-in on fiducials the recognition is repeated several times, but at least 3 times. (default: 3)"
         ));
         panel.add(textFieldRepeatFiducialRecognition, "4, 4");
@@ -99,7 +99,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.AverageMatchesLabel.text",
                 "Average Matches?"));
         lblEnabledAveraging.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.AverageMatchesLabel.toolTip.text",
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.AverageMatchesLabel.toolTipText",
                 "Finally calculates the arithmetic average over all matches (except the first). Needs 3 or more repeated recognitions to work."
         ));
         panel.add(lblEnabledAveraging, "2, 6");
@@ -111,7 +111,7 @@ public class ReferenceFiducialLocatorConfigurationWizard extends AbstractConfigu
                 "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.MaxDistanceLabel.text",
                 "Max. Distance"));
         lblMaxDistance.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.MaxDistanceLabel.toolTip.text",
+                "ReferenceFiducialLocatorConfigurationWizard.GeneralPanel.MaxDistanceLabel.toolTipText",
                 "Maximum allowed distance between nominal fiducial location and detected location."));
         panel.add(lblMaxDistance, "2, 8, right, default");
         

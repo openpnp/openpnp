@@ -133,7 +133,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
                 "IssuesAndSolutionsPanel.MilestoneLabel.text", "Milestone"));
         lblMilestone.setFont(lblMilestone.getFont().deriveFont(lblMilestone.getFont().getStyle() | Font.BOLD));
         lblMilestone.setToolTipText(Translations.getStringOrDefault(
-                "IssuesAndSolutionsPanel.MilestoneLabel.toolTip.text",
+                "IssuesAndSolutionsPanel.MilestoneLabel.toolTipText",
                 "<html>\n" +
                         "The target milestone for the machine configuration.<br/>\n" +
                         "The milestone filters and sometimes influences proposed solutions<br/>\n" +
@@ -280,7 +280,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         JLabel lblSolved = new JLabel(Translations.getStringOrDefault(
                 "IssuesAndSolutionsPanel.IncludeSolvedLabel.text", "Include Solved?"));
         lblSolved.setToolTipText(Translations.getStringOrDefault(
-                "IssuesAndSolutionsPanel.IncludeSolvedLabel.toolTip.text",
+                "IssuesAndSolutionsPanel.IncludeSolvedLabel.toolTipText",
                 "<html>Include already solved solutions, if they can be revisited.<br/>\n" +
                         "Some solutions can only be accepted once, these will not reappear.</html>"));
         toolbar.add(lblSolved, "9, 3, right, default");
@@ -296,7 +296,7 @@ public class IssuesAndSolutionsPanel extends JPanel {
         JLabel lblDismissed = new JLabel(Translations.getStringOrDefault(
                 "IssuesAndSolutionsPanel.IncludeDismissedLabel.text", "Include Dismissed?"));
         lblDismissed.setToolTipText(Translations.getStringOrDefault(
-                "IssuesAndSolutionsPanel.IncludeDismissedLabel.toolTip.text",
+                "IssuesAndSolutionsPanel.IncludeDismissedLabel.toolTipText",
                 "<html>Include already dismissed solutions.</html>"));
         toolbar.add(lblDismissed, "15, 3, right, default");
         
