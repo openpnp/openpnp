@@ -169,7 +169,7 @@ public class HeadSolutions implements Solutions.Subject {
                                                 "HeadSolutions.Solution.CreateNozzles.NumberOfNozzlesLabel.text",
                                                 "Number of Nozzle Units"),
                                         Translations.getStringOrDefault(
-                                                "HeadSolutions.Solution.CreateNozzles.NumberOfNozzlesLabel.toolTip.text",
+                                                "HeadSolutions.Solution.CreateNozzles.NumberOfNozzlesLabel.toolTipText",
                                                 "The Number of Nozzles or Pairs of Nozzles"),
                                         1, 8) {
                                     @Override

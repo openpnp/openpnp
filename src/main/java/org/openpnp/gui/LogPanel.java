@@ -113,7 +113,7 @@ public class LogPanel extends JPanel {
 
         JButton btnClear = new JButton(Icons.delete);
         btnClear.setToolTipText(Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.ClearButton.toolTip.text", "Clear log"));
+                "LogPanel.FilterLoggingPanel.ClearButton.toolTipText", "Clear log"));
 
         btnClear.addActionListener(e -> logEntries.clear());
 
@@ -121,7 +121,7 @@ public class LogPanel extends JPanel {
 
         JButton btnCopyToClipboard = new JButton(Icons.copy);
         btnCopyToClipboard.setToolTipText(Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.CopyToClipboardButton.toolTip.text", "Copy to clipboard"));
+                "LogPanel.FilterLoggingPanel.CopyToClipboardButton.toolTipText", "Copy to clipboard"));
 
         btnCopyToClipboard.addActionListener(e -> {
             StringBuilder sb = new StringBuilder();
@@ -133,7 +133,7 @@ public class LogPanel extends JPanel {
 
         JButton btnScroll = new JButton(Icons.scrollDown);
         btnScroll.setToolTipText(Translations.getStringOrDefault(
-                "LogPanel.FilterLoggingPanel.ScrollDownButton.toolTip.text", "Scroll down"));
+                "LogPanel.FilterLoggingPanel.ScrollDownButton.toolTipText", "Scroll down"));
 
         btnScroll.addActionListener(e -> {
             autoScroller.scrollDown();

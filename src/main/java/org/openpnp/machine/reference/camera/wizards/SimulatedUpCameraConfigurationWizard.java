@@ -137,7 +137,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
         lblNewLabel = new JLabel(Translations.getStringOrDefault(
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.CameraLocationLabel.text", "Camera Location"));
         lblNewLabel.setToolTipText(Translations.getStringOrDefault(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.CameraLocationLabel.toolTip.text",
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.CameraLocationLabel.toolTipText",
                 "<html>\n" +
                         "The Camera simulated location.<br/>\n" +
                         "<strong>Note:</strong>  In order to test calibration procedures, we cannot use the regular camera location.\n" +
@@ -177,7 +177,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.text",
                 "Units per Pixel"));
         lblUnitsPerPixel.setToolTipText(Translations.getStringOrDefault(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTip.text",
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTipText",
                 "<html>\n" +
                         "The camera simulated units per pixel.<br/>\n" +
                         "<strong>Note:</strong>  In order to test calibration procedures, we cannot use the regular units per pixel.\n" +
@@ -216,7 +216,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.text",
                 "Pick Error Offsets"));
         lblErrorOffsets.setToolTipText(Translations.getStringOrDefault(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.toolTip.text",
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.PickErrorOffsetsLabel.toolTipText",
                 "Picked part on nozzle error offsets in simulation."
         ));
         panelGeneral.add(lblErrorOffsets, "2, 16, right, default");
@@ -241,7 +241,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text",
                 "View mirrored?"));
         lblCameraFlipped.setToolTipText(Translations.getStringOrDefault(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTip.text",
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTipText",
                 "Simulate the camera as showing a mirrored view"));
         panelGeneral.add(lblCameraFlipped, "2, 20, right, default");
         
@@ -252,7 +252,7 @@ public class SimulatedUpCameraConfigurationWizard extends AbstractConfigurationW
                 "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.text",
                 "Simulate Focal Blur?"));
         lblFocalBlur.setToolTipText(Translations.getStringOrDefault(
-                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.toolTip.text",
+                "SimulatedUpCameraConfigurationWizard.GeneralPanel.FocalBlurLabel.toolTipText",
                 "Simulate focal blur in order to test Auto Focus. This is very slow!"));
         panelGeneral.add(lblFocalBlur, "2, 22, right, default");
         

@@ -145,7 +145,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         ));
         panel_1.add(btnHomingTest, "1, 1, fill, default");
         btnHomingTest.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualTestButton.toolTip.text",
+                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualTestButton.toolTipText",
                 "Test the visual homing fiducial locator without affecting the machine coordinate system."));
 
         btnVisualHome = new JButton(Translations.getStringOrDefault(
@@ -153,7 +153,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 "Visual Home"));
         panel_1.add(btnVisualHome, "3, 1");
         btnVisualHome.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualHomeButton.toolTip.text",
+                "ReferenceHeadConfigurationWizard.LocationsPanel.VisualHomeButton.toolTipText",
                 "Perform visual homing."));
         btnVisualHome.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -238,7 +238,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
         lblDiameter = new JLabel(Translations.getStringOrDefault(
                 "ReferenceHeadConfigurationWizard.CalibrationRigPanel.DiameterLabel.text", "Diameter"));
         lblDiameter.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.DiameterLabel.toolTip.text",
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.DiameterLabel.toolTipText",
                 "Diameter of the fiducial."));
         panelCalibration.add(lblDiameter, "10, 2, center, default");
 
@@ -246,7 +246,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 "ReferenceHeadConfigurationWizard.CalibrationRigPanel.PrimaryFiducialLabel.text",
                 "Primary Fiducial"));
         lblCalibrationPrimary.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.PrimaryFiducialLabel.toolTip.text",
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.PrimaryFiducialLabel.toolTipText",
                 "Calibration primary fiducial location. Must be placed at PCB surface Z height. "));
         panelCalibration.add(lblCalibrationPrimary, "2, 4, right, default");
         
@@ -273,7 +273,7 @@ public class ReferenceHeadConfigurationWizard extends AbstractConfigurationWizar
                 "ReferenceHeadConfigurationWizard.CalibrationRigPanel.SecondaryFiducialLabel.text",
                 "Secondary Fiducial"));
         lblCalibrationSecondary.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.SecondaryFiducialLabel.toolTip.text",
+                "ReferenceHeadConfigurationWizard.CalibrationRigPanel.SecondaryFiducialLabel.toolTipText",
                 "Calibration secondary fiducial location. Must be placed at different Z height than the primary fiducial. "
         ));
         panelCalibration.add(lblCalibrationSecondary, "2, 6, right, default");

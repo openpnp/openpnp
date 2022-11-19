@@ -171,7 +171,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.OutsideDiameterLabel.text",
                 "Outside Diameter"));
         lblLowDiameter.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.OutsideDiameterLabel.toolTip.text",
+                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.OutsideDiameterLabel.toolTipText",
                 "Outside diameter of the nozzle tip at the lowest ~0.75mm."));
         panelPushAndDrag.add(lblLowDiameter, "2, 4, right, default");
         
@@ -183,7 +183,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.PushAndDragAllowedLabel.text",
                 "Push & Drag allowed?"));
         lblPushAndDragAllowed.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.PushAndDragAllowedLabel.toolTip.text",
+                "ReferenceNozzleTipConfigurationWizard.PushAndDragPanel.PushAndDragAllowedLabel.toolTipText",
                 "<html>\n" +
                         "<p>\n" +
                         "Determines if the NozzleTip is allowed to be used <br/>\n" +
@@ -234,7 +234,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MinPartDiameterLabel.text",
                 "Min. Part Diameter"));
         lblMinPartDiameter.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MinPartDiameterLabel.toolTip.text",
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MinPartDiameterLabel.toolTipText",
                 "<html>\nMinimum part diameter, to be picked with this the nozzle tip.<br/>\nNote, the <strong>Minimum Part Diameter</strong> minus two times the <strong>Pick Tolerance</strong><br/>\ndetermines the minimum <em>inner</em> diameter of the nozzle tip that<br/>\nis always considered covered by the part. This inner diameter is ignored<br/>\nin the Background Calibration key color analysis and diagnostics.\n</html>"
         ));
         panelPartDimensions.add(lblMinPartDiameter, "2, 2, right, default");
@@ -247,7 +247,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartDiameterLabel.text",
                 "Max. Part Diameter"));
         lblMaxPartDiameter.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartDiameterLabel.toolTip.text",
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartDiameterLabel.toolTipText",
                 "<html>\n" +
                         "Maximum diameter/diagonal of parts picked with this nozzle tip, <br/>\n" +
                         "including tolerances.\n" +
@@ -263,7 +263,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartHeightLabel.text",
                 "Max. Part Height"));
         lblMaxPartHeight.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartHeightLabel.toolTip.text",
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPartHeightLabel.toolTipText",
                 "Maximum part heights picked with this nozzle tip. Used for dynamic safe Z," +
                         " if part height is unknown."));
         panelPartDimensions.add(lblMaxPartHeight, "2, 6, right, default");
@@ -276,7 +276,7 @@ public class ReferenceNozzleTipConfigurationWizard extends AbstractConfiguration
                 "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPickToleranceLabel.text",
                 "Max. Pick Tolerance"));
         lblMaxPickTolerance.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPickToleranceLabel.toolTip.text",
+                "ReferenceNozzleTipConfigurationWizard.PartDimensionsPanel.MaxPickToleranceLabel.toolTipText",
                 "<html>\n" +
                         "Maximum assumed pick tolerance allowed with this nozzle tip.<br/>\n" +
                         "This determines how far away from the nominal location a detected <br/>\n" +

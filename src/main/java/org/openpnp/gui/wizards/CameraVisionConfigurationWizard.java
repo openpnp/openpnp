@@ -43,16 +43,13 @@ import org.openpnp.gui.MainFrame;
 import org.openpnp.gui.components.ComponentDecorators;
 import org.openpnp.gui.components.SimpleGraphView;
 import org.openpnp.gui.support.AbstractConfigurationWizard;
-import org.openpnp.gui.support.ActuatorsComboBoxModel;
 import org.openpnp.gui.support.DoubleConverter;
 import org.openpnp.gui.support.Icons;
 import org.openpnp.gui.support.IntegerConverter;
 import org.openpnp.gui.support.LongConverter;
-import org.openpnp.gui.support.NamedConverter;
 import org.openpnp.model.Configuration;
 import org.openpnp.model.LengthUnit;
 import org.openpnp.model.Location;
-import org.openpnp.spi.Actuator;
 import org.openpnp.spi.Camera;
 import org.openpnp.spi.HeadMountable;
 import org.openpnp.spi.base.AbstractCamera;
@@ -165,7 +162,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
                 "CameraVisionConfigurationWizard.VisionPanel.ColorSensitiveLabel.text",
                 "Color Sensitive?"));
         lblSettleFullColor.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.ColorSensitiveLabel.toolTip.text",
+                "CameraVisionConfigurationWizard.VisionPanel.ColorSensitiveLabel.toolTipText",
                 "Compare as full color image, i.e. difference in colors with same brightness will register."));
         panelVision.add(lblSettleFullColor, "2, 8, right, default");
 
@@ -214,7 +211,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         lblSettleGradient = new JLabel(Translations.getStringOrDefault(
                 "CameraVisionConfigurationWizard.VisionPanel.EdgeSensitiveLabel.text","Edge Sensitive?"));
         lblSettleGradient.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.EdgeSensitiveLabel.toolTip.text",
+                "CameraVisionConfigurationWizard.VisionPanel.EdgeSensitiveLabel.toolTipText",
                 "Use the gradients of the images rather than brightness."));
         panelVision.add(lblSettleGradient, "8, 8, right, default");
 
@@ -224,7 +221,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         lblContrastEnhance = new JLabel(Translations.getStringOrDefault(
                 "CameraVisionConfigurationWizard.VisionPanel.EnhanceContrastLabel.text", "Enhance Contrast"));
         lblContrastEnhance.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.EnhanceContrastLabel.toolTip.text",
+                "CameraVisionConfigurationWizard.VisionPanel.EnhanceContrastLabel.toolTipText",
                 "How much it should enhance the contrast from 0.0 (original image) to 1.0 (full dynamic range)."));
         panelVision.add(lblContrastEnhance, "2, 10, right, default");
 
@@ -235,7 +232,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         lblSettleGaussianBlur = new JLabel(Translations.getStringOrDefault(
                 "CameraVisionConfigurationWizard.VisionPanel.DenoisePixelLabel.text", "Denoise (Pixel)"));
         lblSettleGaussianBlur.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.DenoisePixelLabel.toolTip.text",
+                "CameraVisionConfigurationWizard.VisionPanel.DenoisePixelLabel.toolTipText",
                 "<html>\n" +
                         "Diameter in pixels of the Gaussian Blur used to denoise the images. <br/>\n" +
                         "For large diameters the image will be scaled down for better speed.\n" +
@@ -250,7 +247,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         lblSettleMaskCircle = new JLabel(Translations.getStringOrDefault(
                 "CameraVisionConfigurationWizard.VisionPanel.CenterMaskLabel.text", "Center Mask"));
         lblSettleMaskCircle.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.CenterMaskLabel.toolTip.text",
+                "CameraVisionConfigurationWizard.VisionPanel.CenterMaskLabel.toolTipText",
                 "<html>\n" +
                         "<p>Size of the central circular mask, relative to the camera dimension <br/>\n" +
                         "(height or width, whichever is smaller).</p>\n" +
@@ -272,7 +269,7 @@ public class CameraVisionConfigurationWizard extends AbstractConfigurationWizard
         lblSettleDiagnostics = new JLabel(Translations.getStringOrDefault(
                 "CameraVisionConfigurationWizard.VisionPanel.DiagnosticsLabel.text", "Diagnostics?"));
         lblSettleDiagnostics.setToolTipText(Translations.getStringOrDefault(
-                "CameraVisionConfigurationWizard.VisionPanel.DiagnosticsLabel.toolTip.text",
+                "CameraVisionConfigurationWizard.VisionPanel.DiagnosticsLabel.toolTipText",
                 "Enable graphical diagnostics and replay of settle frames."));
         panelVision.add(lblSettleDiagnostics, "8, 12, right, default");
 

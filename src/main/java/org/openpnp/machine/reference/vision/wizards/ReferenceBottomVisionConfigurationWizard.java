@@ -96,7 +96,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 "ReferenceBottomVisionConfigurationWizard.GeneralPanel.RotatePartsLabel.text",
                 "Rotate parts prior to vision?"));
         lblPreRot.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.RotatePartsLabel.toolTip.text",
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.RotatePartsLabel.toolTipText",
                 ""));
         panel.add(lblPreRot, "2, 6");
 
@@ -107,7 +107,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxVisionPassesLabel.text",
                 "Max. vision passes"));
         lblMaxVisionPasses.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxVisionPassesLabel.toolTip.text",
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxVisionPassesLabel.toolTipText",
                 "The maximum number of bottom vision passes performed to get a good fix on the part."));
         panel.add(lblMaxVisionPasses, "2, 8, right, default");
         
@@ -119,7 +119,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxLinearOffsetLabel.text",
                 "Max. linear offset"));
         lblMaxLinearOffset.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxLinearOffsetLabel.toolTip.text",
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxLinearOffsetLabel.toolTipText",
                 "The maximum linear part offset accepted as a good fix i.e. where no additional vision pass is needed."));
         panel.add(lblMaxLinearOffset, "2, 10, right, default");
         
@@ -131,7 +131,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxAngularOffsetLabel.text",
                 "Max. angular offset"));
         lblMaxAngularOffset.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxAngularOffsetLabel.toolTip.text",
+                "ReferenceBottomVisionConfigurationWizard.GeneralPanel.MaxAngularOffsetLabel.toolTipText",
                 "The maximum angular part offset accepted as a good fix i.e. where no additional vision pass is needed."
         ));
         panel.add(lblMaxAngularOffset, "6, 10, right, default");

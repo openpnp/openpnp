@@ -120,7 +120,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                     "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.SpecializeForText",
                     "Specialize for") + " " +settingsHolder.getShortName());
             btnSpecializeSetting.setToolTipText(Translations.getStringOrDefault(
-                    "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.toolTip",
+                    "BottomVisionSettingsConfigurationWizard.SpecializeSettingsButton.toolTipText",
                     "Create a copy of these Bottom Vision Settings and assign to") + " "
                     +settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName());
         }
@@ -253,7 +253,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
 
         comboBoxMaxRotation = new JComboBox(ReferenceBottomVision.MaxRotation.values());
         comboBoxMaxRotation.setToolTipText(Translations.getStringOrDefault(
-                "BottomVisionSettingsConfigurationWizard.ComboMaxRotationToolTip.text",
+                "BottomVisionSettingsConfigurationWizard.ComboMaxRotation.toolTipText",
                 "Adjust for all parts, where only some minor offset is expected. Full for parts, where bottom vision detects pin 1"
                 ));
         panel.add(comboBoxMaxRotation, "4, 12, fill, default");
@@ -352,7 +352,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 "Center After Test"));
         panelAlign.add(chckbxCenterAfterTest, "8, 2");
         chckbxCenterAfterTest.setToolTipText(Translations.getStringOrDefault(
-                "BottomVisionSettingsConfigurationWizard.PanelAlign.CenterAfterTestChkbox.toolTip.text",
+                "BottomVisionSettingsConfigurationWizard.PanelAlign.CenterAfterTestChkbox.toolTipText",
                 "Center and rotate the part after the test."));
         chckbxCenterAfterTest.setSelected(true);
         btnTestAlighment.addActionListener((e) -> {
@@ -395,7 +395,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 "Vision Center Offset"));
         panelDetectOffset.add(lblVisionCenterOffset, "2, 4");
         lblVisionCenterOffset.setToolTipText(Translations.getStringOrDefault(
-                "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.VisionCenterOffsetLabel.toolTip.text",
+                "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.VisionCenterOffsetLabel.toolTipText",
                 "Offset relative to the pick location/center of the part to the center of the rectangle detected by the bottom vision"
         ));
 
@@ -413,7 +413,7 @@ public class BottomVisionSettingsConfigurationWizard extends AbstractConfigurati
                 "Detect"));
         panelDetectOffset.add(btnAutoVisionCenterOffset, "8, 4");
         btnAutoVisionCenterOffset.setToolTipText(Translations.getStringOrDefault(
-                "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.AutoVisionCenterOffsetButton.toolTip.text",
+                "BottomVisionSettingsConfigurationWizard.PanelDetectOffset.AutoVisionCenterOffsetButton.toolTipText",
                 "Center part over bottom vision camera. Button will run bottom vision and calculates the offset."
         ));
         btnAutoVisionCenterOffset.addActionListener((e) -> {

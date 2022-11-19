@@ -88,7 +88,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 "Sync Initial Location"));
         panelController.add(lblSyncInitialLocation, "2, 4, right, default");
         lblSyncInitialLocation.setToolTipText(Translations.getStringOrDefault(
-                "AbstractReferenceDriverConfigurationWizard.ControllerPanel.SyncInitialLocationLabel.toolTip.text",
+                "AbstractReferenceDriverConfigurationWizard.ControllerPanel.SyncInitialLocationLabel.toolTipText",
                 "<html>\n" +
                         "After enabling the driver, get the initial location from the controller.<br/>\n" +
                         "It allows you to safely jog an unhomed machine.\n" +
@@ -143,7 +143,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
                 "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.LineEndingsLabel.text",
                 "Line-Endings"));
         lblLineendings.setToolTipText(Translations.getStringOrDefault(
-                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.LineEndingsLabel.toolTip.text",
+                "AbstractReferenceDriverConfigurationWizard.CommunicationMethodPanel.LineEndingsLabel.toolTipText",
                 "<html>\n" +
                         "Line-endings used in commands and responses (if the driver uses them).<br/>\n" +
                         "<ul>\n" +
@@ -307,7 +307,7 @@ public class AbstractReferenceDriverConfigurationWizard extends AbstractConfigur
         JLabel lblIpAddress = new JLabel(Translations.getStringOrDefault(
                 "AbstractReferenceDriverConfigurationWizard.TCPPanel.IPAddressLabel.text", "IP Address"));
         lblIpAddress.setToolTipText(Translations.getStringOrDefault(
-                "AbstractReferenceDriverConfigurationWizard.TCPPanel.IPAddressLabel.toolTip.text",
+                "AbstractReferenceDriverConfigurationWizard.TCPPanel.IPAddressLabel.toolTipText",
                 "IP address or host-name. Set to \"GcodeServer\" for an internally simulated Controller."));
         panelTcp.add(lblIpAddress, "2, 2, right, default");
 

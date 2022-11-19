@@ -348,7 +348,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AdvancedCalOverrideChkbox.text",
                 "Enable the advanced calibration to override old  style image transforms and distortion correction settings"));
         chckbxAdvancedCalOverride.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AdvancedCalOverrideChkbox.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AdvancedCalOverrideChkbox.toolTipText",
                 "Enable this to use advanced calibration. Disable this to restore usage of old settings."));
         chckbxAdvancedCalOverride.addActionListener(overrideAction);
         panelCameraCalibration.add(chckbxAdvancedCalOverride, "2, 2, 11, 1");
@@ -387,7 +387,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         checkboxDeinterlace = new JCheckBox(Translations.getStringOrDefault(
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DeInterlaceLabel.text", "Deinterlace"));
         checkboxDeinterlace.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DeInterlaceLabel.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DeInterlaceLabel.toolTipText",
                 "Removes interlacing from stacked frames"));
         panelCameraCalibration.add(checkboxDeinterlace, "4, 10");
         
@@ -440,7 +440,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         if (isMovable) {
             textFieldDefaultZ.setToolTipText(Translations.getStringOrDefault(
-                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.MovableDefaultZTextFiled.toolTip.text",
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.MovableDefaultZTextFiled.toolTipText",
                     "<html><p width=\"500\">"
                             + "This is the assumed Z coordinate of objects viewed by the "
                             + "camera if their true Z coordinate is unknown. Typically this "
@@ -449,7 +449,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         }
         else {
             textFieldDefaultZ.setToolTipText(Translations.getStringOrDefault(
-                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NotMovableDefaultZTextFiled.toolTip.text",
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NotMovableDefaultZTextFiled.toolTipText",
                     "<html><p width=\"500\">"
                             + "This is the Z coordinate to which the bottom surface of "
                             + "parts carried by the nozzle will be lowered for visual "
@@ -465,14 +465,14 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         textFieldPrimaryCalZ = new JTextField();
         if (isMovable) {
             textFieldPrimaryCalZ.setToolTipText(Translations.getStringOrDefault(
-                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.MovablePrimCalZTextField.toolTip.text",
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.MovablePrimCalZTextField.toolTipText",
                     "<html><p width=\"500\">"
                             + "This is the Z coordinate of the Primary Calibration Fiducial."
                             + "</p></html>"));
         }
         else {
             textFieldPrimaryCalZ.setToolTipText(Translations.getStringOrDefault(
-                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NotMovablePrimCalZTextField.toolTip.text",
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NotMovablePrimCalZTextField.toolTipText",
                     "<html><p width=\"500\">"
                             + "This is the Z coordinate where objects are in best focus for this camera."
                             + "</p></html>"));
@@ -503,14 +503,14 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         textFieldSecondaryCalZ = new JTextField();
         if (isMovable) {
             textFieldSecondaryCalZ.setToolTipText(Translations.getStringOrDefault(
-                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.MovableSecondaryCalZTextField.toolTip.text",
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.MovableSecondaryCalZTextField.toolTipText",
                     "<html><p width=\"500\">"
                             + "This is the Z coordinate of the Secondary Calibration Fiducial."
                             + "</p></html>"));
         }
         else {
             textFieldSecondaryCalZ.setToolTipText(Translations.getStringOrDefault(
-                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NotMovableSecondaryCalZTextField.toolTip.text",
+                    "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NotMovableSecondaryCalZTextField.toolTipText",
                     "<html><p width=\"500\">"
                             + "Set this larger (higher) than the Primary Cal Z as much as possible but "
                             + "such that the nozzle tip is still within reasonable focus."
@@ -529,7 +529,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         textFieldDesiredNumberOfRadialLines = new JTextField();
         textFieldDesiredNumberOfRadialLines.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NumberOfRadialLinesTextField.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.NumberOfRadialLinesTextField.toolTipText",
                 "<html><p width=\"500\">"
                         + "This is the desired number of radial lines along which calibration points will "
                         + "be collected at each calibration Z coordinate. The actual number will be "
@@ -553,7 +553,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 "Skip New Collection And Reprocess Prior Collection"));
         chckbxUseSavedData.setEnabled(advCal.isValid());
         chckbxUseSavedData.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.UseSavedDateChkBox.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.UseSavedDateChkBox.toolTipText",
                 "Set this to skip collection of new calibration data and just reprocess previously" +
                         " collected calibration data - only useful for code debugging"
         ));
@@ -567,7 +567,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         spinnerDiameter = new JSpinner();
         spinnerDiameter.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DiameterSpinner.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.DiameterSpinner.toolTipText",
                 "When instructed, adjust this value to obtain the best detection of the fiducial/nozzle tip."));
         spinnerDiameter.setEnabled(false);
         panelCameraCalibration.add(spinnerDiameter, "4, 32");
@@ -576,7 +576,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
                 "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ApplyCalibrationChkBox.text",
                 "Apply Calibration"));
         chckbxEnable.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ApplyCalibrationChkBox.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ApplyCalibrationChkBox.toolTipText",
                 "Enable this to apply the new image transform and distortion correction settings." +
                         "  Disable this and no calibration will be applied (raw images will be displayed)."));
         chckbxEnable.setEnabled(advCal.isValid());
@@ -598,7 +598,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         lblNewLabel.setHorizontalAlignment(SwingConstants.TRAILING);
         panelCameraCalibration.add(lblNewLabel, "2, 36");
         sliderAlpha.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AlfaSlider.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.AlfaSlider.toolTipText",
                 "<html><p width=\"500\">"
                         + "A value of 0 crops all invalid pixels from the edge of the image but at the "
                         + "risk of losing some valid pixels at the edge of the image. A value"
@@ -669,7 +669,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         textFieldUnitsPerPixel = new JTextField();
         textFieldUnitsPerPixel.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.UnitsPerPixelTextField.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.UnitsPerPixelTextField.toolTipText",
                 "<html><p width=\"500\">"
                         + "This is the calculated units per pixel at this camera's default Z. Note that "
                         + "the units per pixel is the same in both the X and Y directions.</p></html>"));
@@ -690,7 +690,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         textFieldRmsError = new JTextField();
         textFieldRmsError.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.RmsErrorTextField.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.RmsErrorTextField.toolTipText",
                 "<html><p width=\"500\">"
                         + "This is an estimate of the accuracy of object locations measured at "
                         + "default Z that can be obtained with this camera. For a large number of "
@@ -769,7 +769,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         textFieldXRotationError = new JTextField();
         textFieldXRotationError.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.XRotationErrorTextField.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.XRotationErrorTextField.toolTipText",
                 "<html><p width=\"500\">"
                         + "The estimated camera mounting error using the right hand rule about "
                         + "the machine X axis. If the camera reticle crosshairs appear too far offset (up "
@@ -785,7 +785,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         textFieldYRotationError = new JTextField();
         textFieldYRotationError.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.YRotationErrorTextField.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.YRotationErrorTextField.toolTipText",
                 "<html><p width=\"500\">"
                         + "The estimated camera mounting error using the right hand rule about "
                         + "the machine Y axis. If the camera reticle crosshairs appear too far offset "
@@ -800,7 +800,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         
         textFieldZRotationError = new JTextField();
         textFieldZRotationError.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ZRotationErrorTextField.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.ZRotationErrorTextField.toolTipText",
                 "<html><p width=\"500\">"
                         + "The estimated camera mounting error using the right hand rule about "
                         + "the machine Z axis. If the camera image appears rotated too much, correct this "
@@ -820,7 +820,7 @@ public class ReferenceCameraCalibrationWizard extends AbstractConfigurationWizar
         spinnerModel = new SpinnerListModel(calibrationHeightSelections);
         spinnerIndex = new JSpinner(spinnerModel);
         spinnerIndex.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.IndexSpinner.toolTip.text",
+                "ReferenceCameraCalibrationWizard.CameraCalibrationPanel.IndexSpinner.toolTipText",
                 "Used to select the data to display in the plots below."));
         spinnerIndex.addChangeListener(new ChangeListener() {
 

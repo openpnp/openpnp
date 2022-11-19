@@ -100,7 +100,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         JLabel lblMotionControlType = new JLabel(Translations.getStringOrDefault(
                 "GcodeDriverSettings.SettingsPanel.MotionControlTypeLabel.text", "Motion Control Type"));
         lblMotionControlType.setToolTipText(Translations.getStringOrDefault(
-                "GcodeDriverSettings.SettingsPanel.MotionControlTypeLabel.toolTip.text",
+                "GcodeDriverSettings.SettingsPanel.MotionControlTypeLabel.toolTipText",
                 "<html>\n" +
                         "<p>Determines how the OpenPnP MotionPlanner will plan the motion and how it will talk <br/>\n" +
                         "to the controller:</p>\n" +
@@ -153,7 +153,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         JLabel lblMaxFeedRate = new JLabel(Translations.getStringOrDefault(
                 "GcodeDriverSettings.SettingsPanel.MaxFeedRate.text", "Max Feed Rate [/min]"));
         lblMaxFeedRate.setToolTipText(Translations.getStringOrDefault(
-                "GcodeDriverSettings.SettingsPanel.MaxFeedRate.toolTip.text",
+                "GcodeDriverSettings.SettingsPanel.MaxFeedRate.toolTipText",
                 "<html><p>Maximum tool-path feed-rate in driver units per minute. </p>\n" +
                         "<p>Set to 0 to disable and only use axis feed-rate limits. Diagonal moves will then be faster. </p>\n" +
                         "</html>"));
@@ -183,7 +183,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         JLabel lblLetterVariables = new JLabel(Translations.getStringOrDefault(
                 "GcodeDriverSettings.SettingsPanel.LetterVariablesLabel.text", "Letter Variables?"));
         lblLetterVariables.setToolTipText(Translations.getStringOrDefault(
-                "GcodeDriverSettings.SettingsPanel.LetterVariablesLabel.toolTip.text",
+                "GcodeDriverSettings.SettingsPanel.LetterVariablesLabel.toolTipText",
                 "Axis variables in Gcode are named using the Axis Letters rather than the Axis Type."));
         settingsPanel.add(lblLetterVariables, "2, 8, right, default");
         
@@ -200,7 +200,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         JLabel lblRemoveComments = new JLabel(Translations.getStringOrDefault(
                 "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.text", "Remove Comments?"));
         lblRemoveComments.setToolTipText(Translations.getStringOrDefault(
-                "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.toolTip.text",
+                "GcodeDriverSettings.SettingsPanel.RemoveCommentsLabel.toolTipText",
                 "<html>\n" +
                         "<p>Remove comments from G-code to speed up transmissions <br/>\n" +
                         "to the controller.</p>\n" +
@@ -219,7 +219,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         JLabel lblCompressGcode = new JLabel(Translations.getStringOrDefault(
                 "GcodeDriverSettings.SettingsPanel.CompressGCodeLabel.text", "Compress Gcode?"));
         lblCompressGcode.setToolTipText(Translations.getStringOrDefault(
-                "GcodeDriverSettings.SettingsPanel.CompressGCodeLabel.toolTip.text",
+                "GcodeDriverSettings.SettingsPanel.CompressGCodeLabel.toolTipText",
                 "<html>\n" +
                         "<p>Remove unneeded white-space and trailing decimal digits from Gcode<br/>\n" +
                         "to speed up transmissions to the controller.</p>\n" +
@@ -239,7 +239,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
                 "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.text",
                 "Backslash Escaped Characters?"));
         lblBackslashEscapedCharacters.setToolTipText(Translations.getStringOrDefault(
-                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTip.text",
+                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTipText",
                 "Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                         + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                         + "feed, \\r for carriage return, and \\f for form feed."));
@@ -247,7 +247,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         
         backslashEscapedCharacters = new JCheckBox("");
         backslashEscapedCharacters.setToolTipText(Translations.getStringOrDefault(
-                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTip.text",
+                "GcodeDriverSettings.SettingsPanel.BackslashEscapedCharactersLabel.toolTipText",
                 "Allows insertion of unicode characters into Gcode strings as \\uxxxx "
                         + "where xxxx is four hexidecimal characters.  Also permits \\t for tab, \\b for backspace, \\n for line "
                         + "feed, \\r for carriage return, and \\f for form feed."));
@@ -256,7 +256,7 @@ public class GcodeDriverSettings extends AbstractConfigurationWizard {
         JLabel lblLogGcode = new JLabel(Translations.getStringOrDefault(
                 "GcodeDriverSettings.SettingsPanel.LogGCodeLabel.text", "Log Gcode?"));
         lblLogGcode.setToolTipText(Translations.getStringOrDefault(
-                "GcodeDriverSettings.SettingsPanel.LogGCodeLabel.toolTip.text",
+                "GcodeDriverSettings.SettingsPanel.LogGCodeLabel.toolTipText",
                 "Log the generated Gcode into a separate file in the .openpnp2 driver subdirectory."));
         settingsPanel.add(lblLogGcode, "6, 12, right, default");
         

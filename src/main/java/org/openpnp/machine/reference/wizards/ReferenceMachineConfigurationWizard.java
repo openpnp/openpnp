@@ -97,7 +97,7 @@ public class ReferenceMachineConfigurationWizard extends AbstractConfigurationWi
                 "ReferenceMachineConfigurationWizard.PanelGeneral.ParkAllAtSafeZLabel.text",
                 "Park all at Safe Z?"));
         lblParkAllAtSafeZ.setToolTipText(Translations.getStringOrDefault(
-                "ReferenceMachineConfigurationWizard.PanelGeneral.ParkAllAtSafeZLabel.toolTip",
+                "ReferenceMachineConfigurationWizard.PanelGeneral.ParkAllAtSafeZLabel.toolTipText",
                 "When the Z Park button is pressed, move all tools mounted on the same head to safe Z."));
         panelGeneral.add(lblParkAllAtSafeZ, "2, 6, right, default");
         

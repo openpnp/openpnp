@@ -334,7 +334,7 @@ public abstract class PipelinePanel extends JPanel {
         panel.add(lblPipeline, "2, 2, right, default");
 
         btnEdit = new JButton(Translations.getStringOrDefault("PipelinePanel.EditButton.title", "Edit"));
-        btnEdit.setToolTipText(Translations.getStringOrDefault("PipelinePanel.EditButton.toolTip.text",
+        btnEdit.setToolTipText(Translations.getStringOrDefault("PipelinePanel.EditButton.toolTipText",
                 "Edit the pipeline in the Pipeline Editor"));
         btnEdit.setEnabled(isEnabled());
         btnEdit.setVisible(editable);
@@ -346,7 +346,7 @@ public abstract class PipelinePanel extends JPanel {
         panel.add(btnEdit, "4, 2, default, fill");
 
         btnReset = new JButton(Translations.getStringOrDefault("PipelinePanel.ResetButton.text","Reset"));
-        btnReset.setToolTipText(Translations.getStringOrDefault("PipelinePanel.ResetButton.toolTip.text",
+        btnReset.setToolTipText(Translations.getStringOrDefault("PipelinePanel.ResetButton.toolTipText",
                 "Reset the pipeline to the default."));
         btnReset.setEnabled(isEnabled());
         btnReset.setVisible(resetable);

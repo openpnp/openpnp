@@ -103,7 +103,7 @@ public class FiducialVisionSettingsConfigurationWizard extends AbstractConfigura
                     "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.SpecializeForText",
                     "Specialize for") + " " +settingsHolder.getShortName());
             btnSpecializeSetting.setToolTipText(Translations.getStringOrDefault(
-                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.toolTip",
+                    "FiducialVisionSettingsConfigurationWizard.GeneralPanel.SpecializeSettingsButton.toolTipText",
                     "Create a copy of these Fiducial Vision Settings and assign to") + " "
                     +settingsHolder.getClass().getSimpleName()+" "+settingsHolder.getShortName());
         }
