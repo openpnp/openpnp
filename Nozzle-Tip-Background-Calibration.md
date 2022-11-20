@@ -27,6 +27,8 @@ If the Background Calibration is enabled, the following is controlled in the bot
 ## Configuration
 First make sure your [[Nozzle Tip Calibration|Nozzle-Tip-Calibration-Setup]] is enabled and working. **You can't use the background calibration without the nozzle tip calibration.**
 
+If you intend to use **Color Keying**, be sure to have [[Camera White Balance]] set up first. 
+
 There is a new Background Calibration section on the Calibration tab: 
 
 ![Screenshot_20220219_154325](https://user-images.githubusercontent.com/9963310/154806475-db1c38d9-7be9-44f7-8bd4-86e06fbdcba4.png)
