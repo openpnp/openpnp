@@ -63,8 +63,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelGeneral = new JPanel();
         contentPanel.add(panelGeneral);
         panelGeneral.setBorder(new TitledBorder(null,
-                Translations.getStringOrDefault("ImageCameraConfigurationWizard.GeneralPanel.Border.title",
-                        "General"), TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString("ImageCameraConfigurationWizard.GeneralPanel.Border.title"),
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         panelGeneral.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
                 ColumnSpec.decode("max(70dlu;default)"),
@@ -106,9 +106,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 lblHeight = new JLabel("Y");
                 panelGeneral.add(lblHeight, "6, 2, center, default");
         
-        lblDimension = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.PixelDimensionLabel.text",
-                "Pixel Dimension"));
+        lblDimension = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.PixelDimensionLabel.text"));
         panelGeneral.add(lblDimension, "2, 4, right, default");
 
         width = new JTextField();
@@ -122,13 +121,11 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         label_1 = new JLabel(" ");
         panelGeneral.add(label_1, "10, 4");
         
-        lblUnitsPerPixel = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.text",
-                "Units per Pixel"));
+        lblUnitsPerPixel = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.text"));
         panelGeneral.add(lblUnitsPerPixel, "2, 6, right, default");
-        lblUnitsPerPixel.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTipText",
-                "To allow simulation of Unit per Pixel calibration, the true Units per Pixel of the image must be stored independently."));
+        lblUnitsPerPixel.setToolTipText(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.UnitsPerPixelLabel.toolTipText"));
         
         imageUnitsPerPixelX = new JTextField();
         panelGeneral.add(imageUnitsPerPixelX, "4, 6");
@@ -138,42 +135,38 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelGeneral.add(imageUnitsPerPixelY, "6, 6");
         imageUnitsPerPixelY.setColumns(10);
 
-        lblRotation = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.text", "Z Rotation"));
-        lblRotation.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.toolTipText",
-                "Simulated camera mounting rotation around the Z axis (Portrait/Landscape/mounting error)."));
+        lblRotation = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.text"));
+        lblRotation.setToolTipText(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.ZRotationLabel.toolTipText"));
         panelGeneral.add(lblRotation, "2, 8, right, default");
 
         simulatedRotation = new JTextField();
         panelGeneral.add(simulatedRotation, "4, 8, fill, default");
         simulatedRotation.setColumns(10);
         
-        lblYaw = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.text", "Y Rotation"));
-        lblYaw.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.toolTipText",
-                "Simulated camera mounting error as a rotation around the Y axis (sideways tilt)."));
+        lblYaw = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.text"));
+        lblYaw.setToolTipText(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.YRotationLabel.toolTipText"));
         panelGeneral.add(lblYaw, "2, 10, right, default");
         
         simulatedYRotation = new JTextField();
         panelGeneral.add(simulatedYRotation, "4, 10, fill, default");
         simulatedYRotation.setColumns(10);
         
-        lblScale = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ViewingScaleLabel.text", "Viewing Scale"));
+        lblScale = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.ViewingScaleLabel.text"));
         panelGeneral.add(lblScale, "2, 12, right, default");
         
         simulatedScale = new JTextField();
         panelGeneral.add(simulatedScale, "4, 12, fill, default");
         simulatedScale.setColumns(10);
         
-        lblDistortion = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.text", "Distortion [%]"));
-        lblDistortion.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.toolTipText",
-                "<html>Simulated lens distortion. Positive values create Barrel distortion, negative values create a Pincushion distortion.</html>"
-        ));
+        lblDistortion = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.text"));
+        lblDistortion.setToolTipText(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.DistortionLabel.toolTipText"));
         panelGeneral.add(lblDistortion, "2, 14, right, default");
         
         simulatedDistortion = new JTextField();
@@ -181,11 +174,10 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         simulatedDistortion.setColumns(10);
 
 
-        lblCameraFlipped = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text", "View mirrored?"));
-        lblCameraFlipped.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTipText",
-                "Simulate the camera as showing a mirrored view"));
+        lblCameraFlipped = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.text"));
+        lblCameraFlipped.setToolTipText(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.MirroredViewLabel.toolTipText"));
         panelGeneral.add(lblCameraFlipped, "2, 16, right, default");
 
         simulatedFlipped = new JCheckBox("");
@@ -194,8 +186,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         label = new JLabel(" ");
         panelGeneral.add(label, "8, 16");
 
-        lblSourceUrl = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.SourceUrlLabel.text","Source URL"));
+        lblSourceUrl = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.SourceUrlLabel.text"));
         panelGeneral.add(lblSourceUrl, "2, 20, right, default");
 
         textFieldSourceUrl = new JTextField();
@@ -207,8 +199,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         
         panelExtra = new JPanel();
         contentPanel.add(panelExtra);
-        panelExtra.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.Border.title", "Simulated Calibration Rig"),
+        panelExtra.setBorder(new TitledBorder(null, Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
         panelExtra.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -235,31 +227,20 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblFocalLength = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.text", "Focal Length"));
-        lblFocalLength.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.toolTipText",
-                "Lens focal length"));
+        lblFocalLength = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.text"));
+        lblFocalLength.setToolTipText(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.FocalLengthLabel.toolTipText"));
         panelExtra.add(lblFocalLength, "2, 2, right, default");
         
         focalLength = new JTextField();
         panelExtra.add(focalLength, "4, 2");
         focalLength.setColumns(10);
         
-        lblSensorDiagonal = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.text", "Sensor Diagonal"));
-        lblSensorDiagonal.setToolTipText(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.toolTipText",
-                "<html>\n" +
-                        "<p>Imaging sensor diagonal for relation with lens focal length.</p>\n" +
-                        "<p>Examples:</p>\n" +
-                        "<ul>\n" +
-                        "<li>6.71mm for typical ELP camera at 1080p i.e. OmniVision camera sensors with 3µm pixels.</li>\n" +
-                        "<li>4.4mm for typical ELP camera at 720p i.e. OmniVision camera sensors with 3µm pixels.</li>\n" +
-                        "<li>43.27mm for a 35mm film equivalent full frame SLR camera.</li>\n" +
-                        "</ul>\n" +
-                        "</html>\n"
-        ));
+        lblSensorDiagonal = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.text"));
+        lblSensorDiagonal.setToolTipText(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SensorDiagonalLabel.toolTipText"));
         panelExtra.add(lblSensorDiagonal, "6, 2, right, default");
         
         sensorDiagonal = new JTextField();
@@ -274,9 +255,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         lblZ = new JLabel("Z");
         panelExtra.add(lblZ, "8, 6, center, default");
         
-        lblPrimaryFiducial = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.PrimaryFiducialLabel.text",
-                "Primary Fiducial"));
+        lblPrimaryFiducial = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.PrimaryFiducialLabel.text"));
         panelExtra.add(lblPrimaryFiducial, "2, 8, right, default");
         
         primaryFiducialX = new JTextField();
@@ -291,9 +271,8 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
         panelExtra.add(primaryFiducialZ, "8, 8, fill, default");
         primaryFiducialZ.setColumns(10);
         
-        lblSecondaryFiducial = new JLabel(Translations.getStringOrDefault(
-                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SecondaryFiducialLabel.text",
-                "Secondary Fiducial"));
+        lblSecondaryFiducial = new JLabel(Translations.getString(
+                "ImageCameraConfigurationWizard.GeneralPanel.ExtraPanel.SecondaryFiducialLabel.text"));
         panelExtra.add(lblSecondaryFiducial, "2, 10, right, default");
         
         secondaryFiducialX = new JTextField();
@@ -369,10 +348,9 @@ public class ImageCameraConfigurationWizard extends AbstractConfigurationWizard 
 
     private Action browseAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getStringOrDefault("ImageCameraConfigurationWizard.Action.Browse", "Browse"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "ImageCameraConfigurationWizard.Action.Browse.Description",
-                    "Browse"));
+            putValue(NAME, Translations.getString("ImageCameraConfigurationWizard.Action.Browse"));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "ImageCameraConfigurationWizard.Action.Browse.Description"));
         }
 
         public void actionPerformed(ActionEvent e) {

@@ -355,41 +355,33 @@ public class ReferenceMachine extends AbstractMachine {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        children.add(new AxesPropertySheetHolder(this, Translations.getStringOrDefault(
-                "ReferenceMachine.PropertySheetHolder.Axes.title",
-                "Axes"), getAxes(), null));
-        children.add(new SignalersPropertySheetHolder(this, Translations.getStringOrDefault(
-                "ReferenceMachine.PropertySheetHolder.Signalers.title","Signalers"),
-                getSignalers(), null));
-        children.add(new SimplePropertySheetHolder(Translations.getStringOrDefault(
-                "ReferenceMachine.PropertySheetHolder.Feeders.title",
-                "Feeders"), getFeeders()));
-        children.add(new SimplePropertySheetHolder(Translations.getStringOrDefault(
-                "ReferenceMachine.PropertySheetHolder.Heads.title",
-                "Heads"), getHeads()));
-        children.add(new NozzleTipsPropertySheetHolder(Translations.getStringOrDefault(
-                "ReferenceMachine.PropertySheetHolder.NozzleTips.title", "Nozzle Tips"),
+        children.add(new AxesPropertySheetHolder(this, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Axes.title"), getAxes(), null));
+        children.add(new SignalersPropertySheetHolder(this, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Signalers.title"), getSignalers(), null));
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Feeders.title"), getFeeders()));
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Heads.title"), getHeads()));
+        children.add(new NozzleTipsPropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.NozzleTips.title"),
                 getNozzleTips(), null));
-        children.add(new CamerasPropertySheetHolder(null, Translations.getStringOrDefault(
-                "ReferenceMachine.PropertySheetHolder.Cameras.title",
-                "Cameras"), getCameras(), null));
-        children.add(new ActuatorsPropertySheetHolder(null, Translations.getStringOrDefault(
-                "ReferenceMachine.PropertySheetHolder.Actuators.title",
-                "Actuators"), getActuators(), null));
-        children.add(new DriversPropertySheetHolder(this, Translations.getStringOrDefault(
-                "ReferenceMachine.PropertySheetHolder.Drivers.title", "Drivers"),
-                getDrivers(), null));
-        children.add(new SimplePropertySheetHolder(Translations.getStringOrDefault(
-                "ReferenceMachine.PropertySheetHolder.JobProcessors.title", "Job Processors"),
-                Arrays.asList(getPnpJobProcessor())));
+        children.add(new CamerasPropertySheetHolder(null, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Cameras.title"), getCameras(), null));
+        children.add(new ActuatorsPropertySheetHolder(null, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Actuators.title"), getActuators(), null));
+        children.add(new DriversPropertySheetHolder(this, Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Drivers.title"), getDrivers(), null));
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.JobProcessors.title"), Arrays.asList(getPnpJobProcessor())));
 
         List<PropertySheetHolder> vision = new ArrayList<>();
         for (PartAlignment alignment : getPartAlignments()) {
             vision.add(alignment);
         }
         vision.add(getFiducialLocator());
-        children.add(new SimplePropertySheetHolder(Translations.getStringOrDefault(
-                "ReferenceMachine.PropertySheetHolder.Vision.title", "Vision"), vision));
+        children.add(new SimplePropertySheetHolder(Translations.getString(
+                "ReferenceMachine.PropertySheetHolder.Vision.title"), vision));
         return children.toArray(new PropertySheetHolder[] {});
     }
 

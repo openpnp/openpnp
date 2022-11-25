@@ -387,19 +387,16 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public Action deleteAction = new AbstractAction("Delete Actuator") {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getStringOrDefault("ReferenceActuator.Actions.Delete",
-                    "Delete Actuator"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("ReferenceActuator.Actions.Delete.Description",
-                    "Delete the currently selected actuator."));
+            putValue(NAME, Translations.getString("ReferenceActuator.Actions.Delete"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceActuator.Actions.Delete.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
-                            "Are you sure you want to delete") + " " + getName() + "?",
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
-                            "Delete") + " " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?",
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 if (getHead() != null) {
                     getHead().removeActuator(ReferenceActuator.this);
@@ -415,11 +412,8 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public Action permutateUpAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.arrowUp);
-            putValue(NAME, Translations.getStringOrDefault("ReferenceActuator.Actions.PermutateUp",
-                    "Permutate Up"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "ReferenceActuator.Actions.PermutateUp.Description",
-                    "Move the currently selected actuator one position up."));
+            putValue(NAME, Translations.getString("ReferenceActuator.Actions.PermutateUp"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceActuator.Actions.PermutateUp.Description"));
         }
 
         @Override
@@ -437,11 +431,8 @@ public class ReferenceActuator extends AbstractActuator implements ReferenceHead
     public Action permutateDownAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.arrowDown);
-            putValue(NAME, Translations.getStringOrDefault("ReferenceActuator.Actions.PermutateDown",
-                    "Permutate Down"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "ReferenceActuator.Actions.PermutateDown.Description",
-                    "Move the currently selected actuator one position down."));
+            putValue(NAME, Translations.getString("ReferenceActuator.Actions.PermutateDown"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceActuator.Actions.PermutateDown.Description"));
         }
 
         @Override

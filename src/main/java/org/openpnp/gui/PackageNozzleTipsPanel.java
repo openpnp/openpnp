@@ -53,8 +53,8 @@ public class PackageNozzleTipsPanel extends JPanel {
 
     public class NozzleTipsTableModel extends AbstractTableModel {
         private String[] columnNames = new String[] {
-                Translations.getStringOrDefault("NozzleTipsTableModel.ColumnName.NozzleTip", "Nozzle Tip"),
-                Translations.getStringOrDefault("NozzleTipsTableModel.ColumnName.Compatible", "Compatible?") };
+                Translations.getString("NozzleTipsTableModel.ColumnName.NozzleTip"),
+                Translations.getString("NozzleTipsTableModel.ColumnName.Compatible") };
         private Class[] columnClasses = new Class[] { String.class, Boolean.class };
         private List<NozzleTip> nozzleTips;
 

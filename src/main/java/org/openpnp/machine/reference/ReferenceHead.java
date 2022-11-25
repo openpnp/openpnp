@@ -120,12 +120,12 @@ public class ReferenceHead extends AbstractHead {
     @Override
     public PropertySheetHolder[] getChildPropertySheetHolders() {
         ArrayList<PropertySheetHolder> children = new ArrayList<>();
-        children.add(new NozzlesPropertySheetHolder(this, Translations.getStringOrDefault(
-                "ReferenceHead.NozzlesPropertySheetHolder.title", "Nozzles"), getNozzles(), null));
-        children.add(new CamerasPropertySheetHolder(this, Translations.getStringOrDefault(
-                "ReferenceHead.CamerasPropertySheetHolder.title", "Cameras"), getCameras(), null));
-        children.add(new ActuatorsPropertySheetHolder(this, Translations.getStringOrDefault(
-                "ReferenceHead.ActuatorsPropertySheetHolder.title", "Actuators"), getActuators(), null));
+        children.add(new NozzlesPropertySheetHolder(this, Translations.getString(
+                "ReferenceHead.NozzlesPropertySheetHolder.title"), getNozzles(), null));
+        children.add(new CamerasPropertySheetHolder(this, Translations.getString(
+                "ReferenceHead.CamerasPropertySheetHolder.title"), getCameras(), null));
+        children.add(new ActuatorsPropertySheetHolder(this, Translations.getString(
+                "ReferenceHead.ActuatorsPropertySheetHolder.title"), getActuators(), null));
         return children.toArray(new PropertySheetHolder[] {});
     }
 

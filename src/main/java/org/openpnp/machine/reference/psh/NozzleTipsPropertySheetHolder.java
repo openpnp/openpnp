@@ -3,7 +3,6 @@ package org.openpnp.machine.reference.psh;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
-import javax.sound.midi.Track;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Icon;
@@ -32,11 +31,9 @@ public class NozzleTipsPropertySheetHolder extends SimplePropertySheetHolder {
     public Action newAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.nozzleTipAdd);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "NozzleTipsPropertySheetHolder.Action.NewNozzleTip", "New Nozzle Tip..."));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "NozzleTipsPropertySheetHolder.Action.NewNozzleTip.Description",
-                    "Create a new nozzle tip."));
+            putValue(NAME, Translations.getString("NozzleTipsPropertySheetHolder.Action.NewNozzleTip"));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "NozzleTipsPropertySheetHolder.Action.NewNozzleTip.Description"));
         }
 
         @Override

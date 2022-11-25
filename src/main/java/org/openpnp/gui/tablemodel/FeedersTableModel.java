@@ -33,10 +33,10 @@ public class FeedersTableModel extends AbstractObjectTableModel {
     final private Configuration configuration;
 
     private String[] columnNames = new String[] {
-            Translations.getStringOrDefault("FeedersTableModel.ColumnName.Name", "Name"),
-            Translations.getStringOrDefault("FeedersTableModel.ColumnName.Type", "Type"),
-            Translations.getStringOrDefault("FeedersTableModel.ColumnName.Part", "Part"),
-            Translations.getStringOrDefault("FeedersTableModel.ColumnName.Enabled", "Enabled")
+            Translations.getString("FeedersTableModel.ColumnName.Name"),
+            Translations.getString("FeedersTableModel.ColumnName.Type"),
+            Translations.getString("FeedersTableModel.ColumnName.Part"),
+            Translations.getString("FeedersTableModel.ColumnName.Enabled")
     };
 
     private List<Feeder> feeders;

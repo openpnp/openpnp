@@ -44,9 +44,9 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
 
         panelTransforms = new JPanel();
         panelTransforms.setBorder(new TitledBorder(null,
-                Translations.getStringOrDefault(
-                        "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Border.title",
-                        "Image Transforms"), TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString(
+                        "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Border.title"),
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         contentPanel.add(panelTransforms);
         panelTransforms.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -82,121 +82,107 @@ public class ReferenceCameraTransformsConfigurationWizard extends AbstractConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblRotation = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.RotationLabel.text",
-                "Rotation"));
+        lblRotation = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.RotationLabel.text"));
         panelTransforms.add(lblRotation, "2, 2, right, default");
 
         textFieldRotation = new JTextField();
         panelTransforms.add(textFieldRotation, "4, 2");
         textFieldRotation.setColumns(10);
         
-        advancedCalWarning = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.AdvancedCalibrationActiveLabel.text",
-                "Advanced Calibration Active"));
+        advancedCalWarning = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.AdvancedCalibrationActiveLabel.text"
+        ));
         advancedCalWarning.setForeground(Color.RED);
         panelTransforms.add(advancedCalWarning, "7, 2, right, default");
 
-        lblOffsetX = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.OffsetXLabel.text",
-                "Offset X"));
+        lblOffsetX = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.OffsetXLabel.text"));
         panelTransforms.add(lblOffsetX, "2, 4, right, default");
 
         textFieldOffsetX = new JTextField();
         panelTransforms.add(textFieldOffsetX, "4, 4");
         textFieldOffsetX.setColumns(10);
 
-        lblOffsetY = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.OffsetYLabel.text",
-                "Offset Y"));
+        lblOffsetY = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.OffsetYLabel.text"));
         panelTransforms.add(lblOffsetY, "2, 6, right, default");
 
         textFieldOffsetY = new JTextField();
         panelTransforms.add(textFieldOffsetY, "4, 6");
         textFieldOffsetY.setColumns(10);
 
-        lblFlipX = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.FlipVerticalLabel.text",
-                "Flip Vertical?"));
+        lblFlipX = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.FlipVerticalLabel.text"));
         panelTransforms.add(lblFlipX, "2, 8, right, default");
 
         chckbxFlipX = new JCheckBox("");
         panelTransforms.add(chckbxFlipX, "4, 8");
 
-        lblFlipY = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.FlipHorizontalLabel.text",
-                "Flip Horizontal?"));
+        lblFlipY = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.FlipHorizontalLabel.text"));
         panelTransforms.add(lblFlipY, "2, 10, right, default");
 
         checkBoxFlipY = new JCheckBox("");
         panelTransforms.add(checkBoxFlipY, "4, 10");
         
-        lblCropX = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.CropWidthLabel.text", "Crop Width"));
+        lblCropX = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.CropWidthLabel.text"));
         panelTransforms.add(lblCropX, "2, 12, right, default");
         
         cropWidthTextField = new JTextField();
         panelTransforms.add(cropWidthTextField, "4, 12");
         cropWidthTextField.setColumns(10);
         
-        lblNewLabel = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoCropping1Label.text",
-                "(Use 0 for no cropping)"));
+        lblNewLabel = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoCropping1Label.text"));
         panelTransforms.add(lblNewLabel, "7, 12");
         
-        lblCropHeight = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.CropHeightLabel.text",
-                "Crop Height"));
+        lblCropHeight = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.CropHeightLabel.text"));
         panelTransforms.add(lblCropHeight, "2, 14, right, default");
         
         cropHeightTextField = new JTextField();
         panelTransforms.add(cropHeightTextField, "4, 14");
         cropHeightTextField.setColumns(10);
         
-        lblNewLabel_1 = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoCropping2Label.text",
-                "(Use 0 for no cropping)"));
+        lblNewLabel_1 = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoCropping2Label.text"));
         panelTransforms.add(lblNewLabel_1, "7, 14");
         
-        lblScaleWidth = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.ScaleWidthLabel.text", "Scale Width"));
+        lblScaleWidth = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.ScaleWidthLabel.text"));
         panelTransforms.add(lblScaleWidth, "2, 16, right, default");
         
         scaleWidthTf = new JTextField();
         panelTransforms.add(scaleWidthTf, "4, 16, fill, default");
         scaleWidthTf.setColumns(10);
         
-        lbluseFor = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoScaling1Label.text",
-                "(Use 0 for no scaling)"));
+        lbluseFor = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoScaling1Label.text"));
         panelTransforms.add(lbluseFor, "7, 16");
         
-        lblScaleHeight = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.ScaleHeightLabel.text",
-                "Scale Height"));
+        lblScaleHeight = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.ScaleHeightLabel.text"));
         panelTransforms.add(lblScaleHeight, "2, 18, right, default");
         
         scaleHeightTf = new JTextField();
         panelTransforms.add(scaleHeightTf, "4, 18, fill, default");
         scaleHeightTf.setColumns(10);
         
-        label = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoScaling2Label.text",
-                "(Use 0 for no scaling)"));
+        label = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.Use0ForNoScaling2Label.text"));
         panelTransforms.add(label, "7, 18");
         
-        lblDeinterlace = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.DeInterlaceLabel.text",
-                "De-Interlace?"));
+        lblDeinterlace = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.DeInterlaceLabel.text"));
         panelTransforms.add(lblDeinterlace, "2, 20, right, default");
         
         deinterlaceChk = new JCheckBox("");
         panelTransforms.add(deinterlaceChk, "4, 20");
         
-        lblremovesInterlacingFrom = new JLabel(Translations.getStringOrDefault(
-                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.RemoveInterlacingLabel.text",
-                "(Removes interlacing from stacked frames)"
-        ));
+        lblremovesInterlacingFrom = new JLabel(Translations.getString(
+                "ReferenceCameraTransformsConfigurationWizard.TransformsPanel.RemoveInterlacingLabel.text"));
         panelTransforms.add(lblremovesInterlacingFrom, "7, 20");
     }
 

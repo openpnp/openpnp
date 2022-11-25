@@ -36,19 +36,17 @@ public class NozzlesPropertySheetHolder extends SimplePropertySheetHolder {
         {
             putValue(SMALL_ICON, Icons.nozzleAdd);
             putValue(NAME, "New Nozzle...");
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "NozzlesPropertySheetHolder.Action.NewNozzle.Description", "Create a new nozzle."));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "NozzlesPropertySheetHolder.Action.NewNozzle.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Nozzle> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    Translations.getStringOrDefault(
-                            "NozzlesPropertySheetHolder.SelectNozzleDialog.title",
-                            "Select Nozzle..."),
-                    Translations.getStringOrDefault("NozzlesPropertySheetHolder.SelectNozzleDialog.description",
-                    "Please select a Nozzle implemention from the list below."),
+                    Translations.getString(
+                            "NozzlesPropertySheetHolder.SelectNozzleDialog.title"),
+                    Translations.getString("NozzlesPropertySheetHolder.SelectNozzleDialog.description"),
                     configuration.getMachine().getCompatibleNozzleClasses());
             dialog.setVisible(true);
             Class<? extends Nozzle> cls = dialog.getSelectedClass();

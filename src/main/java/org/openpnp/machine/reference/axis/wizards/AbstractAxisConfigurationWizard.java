@@ -51,9 +51,9 @@ public abstract class AbstractAxisConfigurationWizard extends AbstractConfigurat
         super();
         this.axis = axis;
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "AbstractAxisConfigurationWizard.PropertiesPanel.Border.title",
-                "Properties"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelProperties.setBorder(new TitledBorder(null, Translations.getString(
+                "AbstractAxisConfigurationWizard.PropertiesPanel.Border.title"
+        ), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -66,15 +66,15 @@ public abstract class AbstractAxisConfigurationWizard extends AbstractConfigurat
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblType = new JLabel(Translations.getStringOrDefault(
-                "AbstractAxisConfigurationWizard.PropertiesPanel.TypeLabel.text", "Type"));
+        lblType = new JLabel(Translations.getString(
+                "AbstractAxisConfigurationWizard.PropertiesPanel.TypeLabel.text"));
         panelProperties.add(lblType, "2, 2, right, default");
         
         type = new JComboBox(Axis.Type.values());
         panelProperties.add(type, "4, 2, fill, default");
         
-        lblName = new JLabel(Translations.getStringOrDefault(
-                "AbstractAxisConfigurationWizard.PropertiesPanel.NameLabel.text", "Name"));
+        lblName = new JLabel(Translations.getString(
+                "AbstractAxisConfigurationWizard.PropertiesPanel.NameLabel.text"));
         panelProperties.add(lblName, "2, 4, right, default");
         
         name = new JTextField();

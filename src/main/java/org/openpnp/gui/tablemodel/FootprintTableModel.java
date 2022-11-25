@@ -33,12 +33,12 @@ import org.openpnp.model.Length;
 public class FootprintTableModel extends AbstractTableModel {
     private String[] columnNames =
             new String[] {
-                    Translations.getStringOrDefault("FootPrintTableModel.ColumnName.Name", "Name"),
+                    Translations.getString("FootPrintTableModel.ColumnName.Name"),
                     "X", "Y",
-                    Translations.getStringOrDefault("FootPrintTableModel.ColumnName.Width", "Width"),
-                    Translations.getStringOrDefault("FootPrintTableModel.ColumnName.Length", "Length"),
-                    Translations.getStringOrDefault("FootPrintTableModel.ColumnName.Rotate", "Rot."),
-                    Translations.getStringOrDefault("FootPrintTableModel.ColumnName.Round", "% Round")
+                    Translations.getString("FootPrintTableModel.ColumnName.Width"),
+                    Translations.getString("FootPrintTableModel.ColumnName.Length"),
+                    Translations.getString("FootPrintTableModel.ColumnName.Rotate"),
+                    Translations.getString("FootPrintTableModel.ColumnName.Round")
     };
 
     private Class[] columnTypes =

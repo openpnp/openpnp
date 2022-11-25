@@ -35,20 +35,18 @@ public class DriversPropertySheetHolder extends SimplePropertySheetHolder {
     public Action newDriverAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "DriversPropertySheetHolder.Action.NewDriver", "New Driver..."));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "DriversPropertySheetHolder.Action.NewDriver.Description", "Create a new driver."));
+            putValue(NAME, Translations.getString("DriversPropertySheetHolder.Action.NewDriver"));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "DriversPropertySheetHolder.Action.NewDriver.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Driver> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    Translations.getStringOrDefault(
-                            "DriversPropertySheetHolder.SelectionDialog.title",  "Select Driver..."),
-                    Translations.getStringOrDefault("DriversPropertySheetHolder.SelectionDialog.description",
-                            "Please select a Driver implementation from the list below."),
+                    Translations.getString(
+                            "DriversPropertySheetHolder.SelectionDialog.title"),
+                    Translations.getString("DriversPropertySheetHolder.SelectionDialog.description"),
                     configuration.getMachine().getCompatibleDriverClasses());
             dialog.setVisible(true);
             Class<? extends Driver> driverClass = dialog.getSelectedClass();

@@ -35,13 +35,11 @@ public class PackagesTableModel extends AbstractObjectTableModel implements Prop
     final private Configuration configuration;
 
     private String[] columnNames = new String[] {
-            Translations.getStringOrDefault("PackagesTableModel.ColumnName.ID", "ID"),
-            Translations.getStringOrDefault("PackagesTableModel.ColumnName.Description", "Description"),
-            Translations.getStringOrDefault("PackagesTableModel.ColumnName.TapeSpecification",
-                    "Tape Specification"),
-            Translations.getStringOrDefault("PackagesTableModel.ColumnName.BottomVision", "BottomVision"),
-            Translations.getStringOrDefault("PackagesTableModel.ColumnName.FiducialVision",
-                    "FiducialVision")
+            Translations.getString("PackagesTableModel.ColumnName.ID"),
+            Translations.getString("PackagesTableModel.ColumnName.Description"),
+            Translations.getString("PackagesTableModel.ColumnName.TapeSpecification"),
+            Translations.getString("PackagesTableModel.ColumnName.BottomVision"),
+            Translations.getString("PackagesTableModel.ColumnName.FiducialVision")
     };
     private Class[] columnTypes = new Class[] {String.class, String.class, String.class, BottomVisionSettings.class, FiducialVisionSettings.class};
     private List<Package> packages;

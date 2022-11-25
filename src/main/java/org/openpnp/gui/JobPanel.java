@@ -1442,10 +1442,8 @@ public class JobPanel extends JPanel {
     
     public final Action setEnabledAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getStringOrDefault("JobPanel.Action.Job.Board.SetEnabled",
-                    "Set Enabled"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("JobPanel.Action.Job.Board.Description",
-                    "Set board(s) enabled to..."));
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.SetEnabled"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.Description"));
         }
 
         @Override
@@ -1472,10 +1470,8 @@ public class JobPanel extends JPanel {
 
     public final Action setCheckFidsAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getStringOrDefault("JobPanel.Action.Job.Board.SetCheckFids",
-                    "Set Check Fids"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "JobPanel.Action.Job.Board.SetCheckFids.Description", "Set check fids to..."));
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.SetCheckFids"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.SetCheckFids.Description"));
         }
 
         @Override
@@ -1502,10 +1498,8 @@ public class JobPanel extends JPanel {
     
     public final Action setSideAction = new AbstractAction() {
         {
-            putValue(NAME, Translations.getStringOrDefault("JobPanel.Action.Job.Board.SetSide",
-                    "Set Side"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "JobPanel.Action.Job.Board.SetSide.Description", "Set board side(s) to..."));
+            putValue(NAME, Translations.getString("JobPanel.Action.Job.Board.SetSide"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("JobPanel.Action.Job.Board.SetSide.Description"));
         }
 
         @Override

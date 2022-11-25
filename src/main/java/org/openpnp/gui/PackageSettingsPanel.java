@@ -57,8 +57,8 @@ public class PackageSettingsPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
         vacuumBlowOffPanel = new JPanel();
-        vacuumBlowOffPanel.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "PackageSettingsPanel.Border.title", "Vacuum & Blow Off"),
+        vacuumBlowOffPanel.setBorder(new TitledBorder(null, Translations.getString(
+                "PackageSettingsPanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         add(vacuumBlowOffPanel);
         vacuumBlowOffPanel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -72,16 +72,14 @@ public class PackageSettingsPanel extends JPanel {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblNewLabel = new JLabel(Translations.getStringOrDefault(
-                "PackageSettingsPanel.VacuumLevelLabel.text", "Vacuum Level"));
+        lblNewLabel = new JLabel(Translations.getString("PackageSettingsPanel.VacuumLevelLabel.text"));
         vacuumBlowOffPanel.add(lblNewLabel, "2, 2, right, default");
         
         vacuumLevel = new JTextField();
         vacuumBlowOffPanel.add(vacuumLevel, "4, 2, left, default");
         vacuumLevel.setColumns(10);
         
-        lblBlowOffLevel = new JLabel(Translations.getStringOrDefault(
-                "PackageSettingsPanel.BlowOffLevelLabel.text", "Blow Off Level"));
+        lblBlowOffLevel = new JLabel(Translations.getString("PackageSettingsPanel.BlowOffLevelLabel.text"));
         vacuumBlowOffPanel.add(lblBlowOffLevel, "2, 4, right, default");
         
         blowOffLevel = new JTextField();

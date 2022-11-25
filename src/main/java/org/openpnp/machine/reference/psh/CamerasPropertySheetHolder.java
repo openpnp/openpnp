@@ -38,21 +38,19 @@ public class CamerasPropertySheetHolder extends SimplePropertySheetHolder {
     public Action newCameraAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getStringOrDefault("CamerasPropertySheetHolder.Action.NewCamera",
-                    "New Camera..."));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "CamerasPropertySheetHolder.Action.NewCamera.Description", "Create a new camera."));
+            putValue(NAME, Translations.getString("CamerasPropertySheetHolder.Action.NewCamera"));
+            putValue(SHORT_DESCRIPTION, Translations.getString(
+                    "CamerasPropertySheetHolder.Action.NewCamera.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Camera> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    Translations.getStringOrDefault(
-                            "CamerasPropertySheetHolder.SelectionDialog.title", "Select Camera..."),
-                    Translations.getStringOrDefault(
-                            "CamerasPropertySheetHolder.SelectionDialog.description",
-                            "Please select a Camera implementation from the list below."),
+                    Translations.getString(
+                            "CamerasPropertySheetHolder.SelectionDialog.title"),
+                    Translations.getString(
+                            "CamerasPropertySheetHolder.SelectionDialog.description"),
                     configuration.getMachine().getCompatibleCameraClasses());
             dialog.setVisible(true);
             Class<? extends Camera> cameraClass = dialog.getSelectedClass();

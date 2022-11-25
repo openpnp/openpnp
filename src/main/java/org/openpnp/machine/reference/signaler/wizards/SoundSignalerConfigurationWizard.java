@@ -50,12 +50,12 @@ public class SoundSignalerConfigurationWizard extends AbstractConfigurationWizar
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        chckbxError = new JCheckBox(Translations.getStringOrDefault(
-                "SoundSignalerConfigurationWizard.PlaySoundOnErrorChkBox.text", "Play sound on error?"));
+        chckbxError = new JCheckBox(Translations.getString(
+                "SoundSignalerConfigurationWizard.PlaySoundOnErrorChkBox.text"));
         contentPanel.add(chckbxError, "2, 2");
         
-        chckbxSuccess = new JCheckBox(Translations.getStringOrDefault(
-                "SoundSignalerConfigurationWizard.PlaySoundOnCompletionChkBox.text", "Play sound on completion?"));
+        chckbxSuccess = new JCheckBox(Translations.getString(
+                "SoundSignalerConfigurationWizard.PlaySoundOnCompletionChkBox.text"));
         contentPanel.add(chckbxSuccess, "2, 4");
     }
 

@@ -469,9 +469,8 @@ public class ReferenceControllerAxis extends AbstractControllerAxis {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
                 new PropertySheetWizardAdapter(new BacklashCompensationConfigurationWizard(this),
-                        Translations.getStringOrDefault(
-                                "ReferenceControllerAxis.BacklashCompensationConfigurationWizard.title",
-                                "Backlash Compensation")),
+                        Translations.getString(
+                                "ReferenceControllerAxis.BacklashCompensationConfigurationWizard.title")),
         };
     }
 

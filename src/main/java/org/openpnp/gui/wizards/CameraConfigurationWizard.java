@@ -80,78 +80,14 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
     private final static String uppFormat = "%.8f";
 
-    private final static String basicCalibrationInstructions = Translations.getStringOrDefault(
-            "CameraConfigurationWizard.basicCalibrationInstructions",
-            "<html>"
-                    + "<ol>"
-                    + "<li>Place an object with a known width and length on the table. Graphing paper "
-                    + "is a good, easy choice for this."
-                    + "<li>Enter the width and length of the object into the X and Y fields of the Object "
-                    + "Dimensions."
-                    + "<li>Top camera: Jog the camera to where it is centered over the object and in focus."
-                    + "<li>Bottom camera: lay the object flat above the camera so it is in focus."
-                    + "<li>Press Measure and use the camera selection rectangle to measure the object. "
-                    + "<li>Press Confirm when finished."
-                    + "<li>The calculated Units Per Pixel values will be inserted into the X and Y fields."
-                    + "</ol></html>");
+    private final static String basicCalibrationInstructions = Translations.getString(
+            "CameraConfigurationWizard.basicCalibrationInstructions");
 
-    private final static String downLookingCalibrationInstructions = Translations.getStringOrDefault(
-            "CameraConfigurationWizard.downLookingCalibrationInstructions",
-            "<html>"
-                    + "Calibrating Units Per Pixel at two different Z levels allows OpenPnP to "
-                    + "correctly interpret object sizes in 3D i.e. at arbitrary distance from the camera. "
-                    + "If you already have calibrated in 2D, you still need two fresh 3D measurements. "
-                    + "Calibrating in 3D requires nozzle and camera locations, offsets, Safe Z and basic "
-                    + "machine motion to be set up. "
-                    + "<ol>"
-                    + "<li>Select a rectangular object with a known width and length that will fit within "
-                    + "the camera's field-of-view. Graphing paper is a good, easy choice for this. Enter "
-                    + "the object's width and length into the X and Y field of the Object Dimensions."
-                    + "<li>Place the object on the table. Note that the primary Units Per Pixel should be "
-                    + "calibrated near the same Z height as the top surface of the circuit board(s) to "
-                    + "be populated and the Secondary as high as possible with the object still reasonably "
-                    + "in focus. The object should comfortably fit into the field-of-view at both heights."
-                    + "<li>Jog the nozzle over the center of the object and then down so that it is just "
-                    + "touching the surface. "
-                    + "<li>If calibrating the primary Units Per Pixel, you may now press the "
-                    + "Capture Nozzle Z button to capture the Default Working Height (circuit board surface)."
-                    + "<li>Press Measure to automatically position the camera over the object and use the "
-                    + "camera view selection rectangle to measure the object. "
-                    + "If the object is not in perfect focus, use the middle of the blurry edges for the "
-                    + "measurement. Press Confirm when finished."
-                    + "<li>The calculated Units Per Pixel values will be inserted into the X and Y "
-                    + "fields. Measurement object/camera Z coordinates are recorded."
-                    + "<li>Place a spacer under the object for the secondary measurement, or for machines "
-                    + "that can physically move the top camera in Z, jog the camera up as high as possible "
-                    + "with the object still reasonably in focus. "
-                    + "<li>Repeat steps 3 through 6 for the secondary Units Per Pixel. " + "</ol></html>");
+    private final static String downLookingCalibrationInstructions = Translations.getString(
+            "CameraConfigurationWizard.downLookingCalibrationInstructions");
 
-    private final static String upLookingCalibrationInstructions = Translations.getStringOrDefault(
-            "CameraConfigurationWizard.upLookingCalibrationInstructions",
-            "<html>"
-                    + "Calibrating Units Per Pixel at two different Z levels allows OpenPnP to "
-                    + "correctly interpret object sizes in 3D i.e. at arbitrary distance from the camera. "
-                    + "If you already have calibrated in 2D, you still need two fresh 3D measurements. "
-                    + "Calibrating in 3D requires nozzle and camera locations, offsets, Safe Z and basic "
-                    + "machine motion to be set up. "
-                    + "<ol>"
-                    + "<li>Select an object with a known width, length, and thickness that will fit within "
-                    + "the camera's field-of-view. Enter the object's width, length, and thickness into "
-                    + "the X, Y, and Z fields of the Object Dimensions above."
-                    + "<li>Place the object square on the table and using a nozzle, pick up the object."
-                    + "<li>Note that the primary Units Per Pixel is calibrated at the up looking camera's "
-                    + "location while the secondary should be calibrated at a higher location."
-                    + "<li>WARNING - if the nozzle is not already over the up looking camera's position, "
-                    + "the next step will automatically move the nozzle to that position."
-                    + "<li>Press Measure and use the camera selection rectangle to measure the object.  If "
-                    + "necessary, use the jog panel to rotate the nozzle so that the object is square with "
-                    + "the selection rectangle.  If the object is not in perfect focus, use the middle of "
-                    + "the blurry edges for the measurement.  Press Confirm when finished."
-                    + "<li>The calculated Units Per Pixel values will be inserted into the X and Y "
-                    + "fields. Measurement object/camera Z coordinates are recorded."
-                    + "<li>Jog the nozzle up  as high as possible with the object still reasonably "
-                    + "in focus. " + "<li>Repeat steps 5 through 6 for the secondary Units Per Pixel."
-                    + "</ol></html>");
+    private final static String upLookingCalibrationInstructions = Translations.getString(
+            "CameraConfigurationWizard.upLookingCalibrationInstructions");
 
     protected Location measurementLocation;
 
@@ -161,8 +97,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         this.camera = camera;
 
         panel = new JPanel();
-        panel.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.Border.title", "Properties"),
+        panel.setBorder(new TitledBorder(null, Translations.getString(
+                "CameraConfigurationWizard.PropertiesPanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panel);
         panel.setLayout(new FormLayout(new ColumnSpec[] {
@@ -186,16 +122,14 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblName = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.NameLabel.text", "Name"));
+        lblName = new JLabel(Translations.getString("CameraConfigurationWizard.PropertiesPanel.NameLabel.text"));
         panel.add(lblName, "2, 2, right, default");
 
         nameTf = new JTextField();
         panel.add(nameTf, "4, 2");
         nameTf.setColumns(10);
 
-        lblLooking = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.LookingLabel.text", "Looking"));
+        lblLooking = new JLabel(Translations.getString("CameraConfigurationWizard.PropertiesPanel.LookingLabel.text"));
         panel.add(lblLooking, "2, 4, right, default");
 
         lookingCb = new JComboBox(Camera.Looking.values());
@@ -206,56 +140,43 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         });
         panel.add(lookingCb, "4, 4");
 
-        lblPreviewFps = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.PreviewFPSLabel.text", "Preview FPS"));
+        lblPreviewFps = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.PropertiesPanel.PreviewFPSLabel.text"));
         panel.add(lblPreviewFps, "2, 6, right, default");
 
         previewFps = new JTextField();
         panel.add(previewFps, "4, 6, fill, default");
         previewFps.setColumns(10);
 
-        lblSuspendDuringTasks = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.text","Suspend during tasks?"));
-        lblSuspendDuringTasks.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.toolTipText",
-                "<html>Continuous camera preview is suspended during machine tasks, only frames<br/>\n" +
-                        "captured using computer vision are shown. For high Preview FPS this improves <br/>\n" +
-                        "performance </html>"));
+        lblSuspendDuringTasks = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.text"));
+        lblSuspendDuringTasks.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.PropertiesPanel.SuspendDuringTasksLabel.toolTipText"));
         panel.add(lblSuspendDuringTasks, "6, 6, right, default");
 
         suspendPreviewInTasks = new JCheckBox("");
         panel.add(suspendPreviewInTasks, "8, 6");
 
-        lblAutoVisible = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.text",
-                "Auto Camera View?"));
-        lblAutoVisible.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.toolTipText",
-                "<html>If enabled, the CameraView will be automatically selected whenever a<br/>\n" +
-                        "user action is related to the camera or when a computer vision result is presented.</html>"));
+        lblAutoVisible = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.text"));
+        lblAutoVisible.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.PropertiesPanel.AutoCameraViewLabel.toolTipText"));
         panel.add(lblAutoVisible, "2, 8, right, default");
 
         autoVisible = new JCheckBox("");
         panel.add(autoVisible, "4, 8");
         
-        lblShowMultiview = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.text",
-                "Show in multi camera view?"));
-        lblShowMultiview.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.toolTipText",
-                "<html>\n" +
-                        "Show this camera in the Camera Panel when mutiple cameras are shown.<br/>\n" +
-                        "For example this can be switched off for capture card cameras that are <br/>\n" +
-                        "already exposed through SwitcherCameras.\n" +
-                        "</html>"));
+        lblShowMultiview = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.text"));
+        lblShowMultiview.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.PropertiesPanel.ShowInMultiCameraViewLabel.toolTipText"));
         panel.add(lblShowMultiview, "6, 8, right, default");
         
         shownInMultiCameraView = new JCheckBox("");
         panel.add(shownInMultiCameraView, "8, 8");
         
-        lblFocusSensing = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.PropertiesPanel.FocusSensingLabel.text",
-                "Focus Sensing Method"));
+        lblFocusSensing = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.PropertiesPanel.FocusSensingLabel.text"));
         panel.add(lblFocusSensing, "2, 10, right, default");
         
         focusSensingMethod = new JComboBox(FocusSensingMethod.values());
@@ -266,8 +187,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         });
         panel.add(focusSensingMethod, "4, 10, fill, default");
         panelLight = new JPanel();
-        panelLight.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.Border.title", "Light"),
+        panelLight.setBorder(new TitledBorder(null, Translations.getString(
+                "CameraConfigurationWizard.LightPanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP,null, null));
         contentPanel.add(panelLight);
         panelLight.setLayout(new FormLayout(
@@ -282,87 +203,62 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,}));
 
-        lblLightingActuator = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.LightActuatorLabel.text",
-                "Light Actuator"));
+        lblLightingActuator = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.LightActuatorLabel.text"));
         panelLight.add(lblLightingActuator, "2, 2, right, default");
 
         lightActuator = new JComboBox();
         panelLight.add(lightActuator, "4, 2");
         lightActuator.setMaximumRowCount(12);
 
-        lblAllowMachineActuators = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsLabel.text",
-                "Allow Machine Actuators?"));
+        lblAllowMachineActuators = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsLabel.text"));
         panelLight.add(lblAllowMachineActuators, "6, 2, right, default");
-        lblAllowMachineActuators.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsLabel.toolTipText",
-                "<html>It is recommended to attach the Light Actuator to the camera's head.<br/>However, for backwards-compatibility with how Light Actuators were used in<br/>Scripts, you can enable this switch and choose a Machine actuator. </html>"
-        ));
+        lblAllowMachineActuators.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsLabel.toolTipText"));
 
         allowMachineActuators = new JCheckBox("");
         panelLight.add(allowMachineActuators, "8, 2");
-        allowMachineActuators.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsChkBox.toolTipText",
-                "<html>It is recommended to attach the Light Actuator to the camera's head.<br/>However, for backwards-compatibility with how Light Actuators were used in<br/>Scripts, you can enable this switch and choose a Machine actuator. </html>"
-                ));
+        allowMachineActuators.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.AllowMachineActuatorsChkBox.toolTipText"));
 
-        lblOn = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.OnLabel.text", " ON"));
+        lblOn = new JLabel(Translations.getString("CameraConfigurationWizard.LightPanel.OnLabel.text"));
         panelLight.add(lblOn, "4, 6, left, default");
 
-        lblOff = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.OFFLabel.text", "OFF"));
+        lblOff = new JLabel(Translations.getString("CameraConfigurationWizard.LightPanel.OFFLabel.text"));
         panelLight.add(lblOff, "8, 6");
 
-        lblBeforeCapture = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.text", "Before Capture?"));
-        lblBeforeCapture.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.toolTipText",
-                "<html>\n" +
-                        "The light is actuated ON, before this camera is capturing an<br/>\n" +
-                        "image for computer vision. \n" +
-                        "</html>"));
+        lblBeforeCapture = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.text"));
+        lblBeforeCapture.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.BeforeCaptureLabel.toolTipText"));
         panelLight.add(lblBeforeCapture, "2, 8, right, default");
 
         beforeCaptureLightOn = new JCheckBox("");
         panelLight.add(beforeCaptureLightOn, "4, 8");
 
-        lblAfterCapture = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.text", "After Capture?"));
-        lblAfterCapture.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.toolTipText",
-                "<html>\n" +
-                        "The light is actuated OFF, after this camera has captured an<br/>\n" +
-                        "image for computer vision. \n" +
-                        "</html>"));
+        lblAfterCapture = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.text"));
+        lblAfterCapture.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.AfterCaptureLabel.toolTipText"));
         panelLight.add(lblAfterCapture, "6, 8, right, default");
 
         afterCaptureLightOff = new JCheckBox("");
         panelLight.add(afterCaptureLightOff, "8, 8");
 
-        lblUserActionLight = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.UserCameraActionLabel.text",
-                "User Camera Action?"));
+        lblUserActionLight = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.UserCameraActionLabel.text"));
         panelLight.add(lblUserActionLight, "2, 10, right, default");
-        lblUserActionLight.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.UserCameraActionLabel.toolTipText",
-                "<html>\n" +
-                        "The light is actuated ON when a user action is deliberately positioning<br>\n" +
-                        "or otherwise using the camera. \n" +
-                        "</html>"));
+        lblUserActionLight.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.UserCameraActionLabel.toolTipText"));
 
         userActionLightOn = new JCheckBox("");
         panelLight.add(userActionLightOn, "4, 10");
 
-        lblAntiglare = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AntiGlareLabel.text", "Anti-Glare?"));
-        lblAntiglare.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.LightPanel.AntiGlareLabel.toolTipText",
-                "<html>\n" +
-                        "To prevent glare from this camera light, the light is actuated OFF, <br/>\n" +
-                        "before any other camera looking the opposite way is capturing. \n" +
-                        "</html>"));
+        lblAntiglare = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.AntiGlareLabel.text"));
+        lblAntiglare.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.LightPanel.AntiGlareLabel.toolTipText"));
         panelLight.add(lblAntiglare, "6, 10, right, default");
 
         antiGlareLightOff = new JCheckBox("");
@@ -375,8 +271,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
 
         panelUpp = new JPanel();
         contentPanel.add(panelUpp);
-        panelUpp.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.Border.title", "Units Per Pixel"),
+        panelUpp.setBorder(new TitledBorder(null, Translations.getString(
+                "CameraConfigurationWizard.UnitsPerPixelPanel.Border.title"),
                 TitledBorder.LEADING, TitledBorder.TOP, null));
         panelUpp.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -411,9 +307,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
                 RowSpec.decode("default:grow"),
                 FormSpecs.RELATED_GAP_ROWSPEC,}));
 
-        lbldCalibration = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.3DCalibrationLabel.text",
-                "3D Calibration?"));
+        lbldCalibration = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.UnitsPerPixelPanel.3DCalibrationLabel.text"));
         panelUpp.add(lbldCalibration, "2, 2, right, default");
 
         enableUnitsPerPixel3D = new JCheckBox("");
@@ -424,9 +319,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         });
         panelUpp.add(enableUnitsPerPixel3D, "4, 2");
         
-        advancedCalWarning = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.AdvancedCalibrationActiveLabel.text",
-                "Advanced Calibration Active"));
+        advancedCalWarning = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.UnitsPerPixelPanel.AdvancedCalibrationActiveLabel.text"));
         advancedCalWarning.setForeground(Color.RED);
         panelUpp.add(advancedCalWarning, "6, 2, 9, 1, right, default");
 
@@ -439,17 +333,14 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         lblZ = new JLabel("Z");
         panelUpp.add(lblZ, "8, 4, center, default");
 
-        lblCameraZ = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.CameraZLabel.text",
-                "Camera Z"));
+        lblCameraZ = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.UnitsPerPixelPanel.CameraZLabel.text"));
         panelUpp.add(lblCameraZ, "10, 4, center, default");
 
-        lblCalibrationObject = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.text",
-                "Object Dimensions"));
-        lblCalibrationObject.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.toolTipText",
-                "Dimensions of the Calibration Object"));
+        lblCalibrationObject = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.text"));
+        lblCalibrationObject.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.UnitsPerPixelPanel.ObjectDimensionsLabel.toolTipText"));
         panelUpp.add(lblCalibrationObject, "2, 6, right, default");
 
         textFieldWidth = new JTextField();
@@ -467,9 +358,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         textFieldThickness.setText("1");
         textFieldThickness.setColumns(8);
 
-        lblPrimaryUpp = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.UnitsPerPixelLabel.text",
-                "Units per Pixel"));
+        lblPrimaryUpp = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.UnitsPerPixelPanel.UnitsPerPixelLabel.text"));
         panelUpp.add(lblPrimaryUpp, "2, 8, right, default");
 
         textFieldPrimaryUppX = new JTextField();
@@ -496,9 +386,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelUpp.add(btnCancelMeasure1, "14, 8");
         cancelMeasure1Action.setEnabled(false);
 
-        lblSecondaryUpp = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.SecondaryUnitsPerPixelLabel.text",
-                "2nd Units per Pixel"));
+        lblSecondaryUpp = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.UnitsPerPixelPanel.SecondaryUnitsPerPixelLabel.text"));
         panelUpp.add(lblSecondaryUpp, "2, 10, right, default");
 
         textFieldSecondaryUppX = new JTextField();
@@ -525,19 +414,14 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         cancelMeasure2Action.setEnabled(false);
         panelUpp.add(btnCancelMeasure2, "14, 10");
 
-        lblDefaultWorkingPlane = new JLabel(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.DefaultWorkingPlaneLabel.text",
-                "Default Working Plane"));
+        lblDefaultWorkingPlane = new JLabel(Translations.getString(
+                "CameraConfigurationWizard.UnitsPerPixelPanel.DefaultWorkingPlaneLabel.text"));
         panelUpp.add(lblDefaultWorkingPlane, "2, 12, right, default");
 
         textFieldDefaultZ = new JTextField();
         panelUpp.add(textFieldDefaultZ, "8, 12");
-        textFieldDefaultZ.setToolTipText(Translations.getStringOrDefault(
-                "CameraConfigurationWizard.UnitsPerPixelPanel.DefaultZTextField.toolTipText",
-                "<html>" + "This is the Z level at which objects in the camera view are assumed<br>"
-                        + "to be if their true height is unknown.  Generally this should be set<br>"
-                        + "to the Z height of the working surface of the circuit board(s) that<br>"
-                        + "are to be populated.</html>"));
+        textFieldDefaultZ.setToolTipText(Translations.getString(
+                "CameraConfigurationWizard.UnitsPerPixelPanel.DefaultZTextField.toolTipText"));
         textFieldDefaultZ.setColumns(8);
 
         btnCaptureToolZ = new JButton(captureToolZAction);
@@ -546,9 +430,9 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         panelCal = new JPanel();
         panelCal.setName("Units Per Pixel Calibration Tool");
         panelCal.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"),
-                Translations.getStringOrDefault(
-                        "CameraConfigurationWizard.CalibrateInstructionsPanel.Border.title",
-                        "Calibration Instructions"), TitledBorder.LEADING, TitledBorder.TOP, null));
+                Translations.getString(
+                        "CameraConfigurationWizard.CalibrateInstructionsPanel.Border.title"),
+                TitledBorder.LEADING, TitledBorder.TOP, null));
         panelUpp.add(panelCal, "2, 14, 13, 1, fill, fill");
         panelCal.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -746,8 +630,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         }
     };
 
-    private Action measure1Action = new AbstractAction(Translations.getStringOrDefault(
-            "CameraConfigurationWizard.Action.Measure1", "Measure")) {
+    private Action measure1Action = new AbstractAction(Translations.getString(
+            "CameraConfigurationWizard.Action.Measure1")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure1.setAction(confirmMeasure1Action);
@@ -763,8 +647,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         }
     };
 
-    private Action confirmMeasure1Action = new AbstractAction(Translations.getStringOrDefault(
-            "CameraConfigurationWizard.Action.ConfirmMeasure1", "Confirm")) {
+    private Action confirmMeasure1Action = new AbstractAction(Translations.getString(
+            "CameraConfigurationWizard.Action.ConfirmMeasure1")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure1.setAction(measure1Action);
@@ -774,8 +658,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         }
     };
 
-    private Action cancelMeasure1Action = new AbstractAction(Translations.getStringOrDefault(
-            "CameraConfigurationWizard.Action.CancelMeasure1", "Cancel")) {
+    private Action cancelMeasure1Action = new AbstractAction(Translations.getString(
+            "CameraConfigurationWizard.Action.CancelMeasure1")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure1.setAction(measure1Action);
@@ -788,8 +672,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         }
     };
 
-    private Action measure2Action = new AbstractAction(Translations.getStringOrDefault(
-            "CameraConfigurationWizard.Action.Measure2", "Measure")) {
+    private Action measure2Action = new AbstractAction(Translations.getString(
+            "CameraConfigurationWizard.Action.Measure2")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure2.setAction(confirmMeasure2Action);
@@ -806,8 +690,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         }
     };
 
-    private Action confirmMeasure2Action = new AbstractAction(Translations.getStringOrDefault(
-            "CameraConfigurationWizard.Action.ConfirmMeasure2", "Confirm")) {
+    private Action confirmMeasure2Action = new AbstractAction(Translations.getString(
+            "CameraConfigurationWizard.Action.ConfirmMeasure2")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure2.setAction(measure2Action);
@@ -817,8 +701,8 @@ public class CameraConfigurationWizard extends AbstractConfigurationWizard {
         }
     };
 
-    private Action cancelMeasure2Action = new AbstractAction(Translations.getStringOrDefault(
-            "CameraConfigurationWizard.Action.CancelMeasure2", "Cancel")) {
+    private Action cancelMeasure2Action = new AbstractAction(Translations.getString(
+            "CameraConfigurationWizard.Action.CancelMeasure2")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             btnMeasure2.setAction(measure2Action);

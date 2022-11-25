@@ -177,8 +177,8 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         return null;
     }
 
-    protected Action applyAction = new AbstractAction(Translations.getStringOrDefault(
-            "AbstractConfigurationWizard.Action.Apply", "Apply")) {
+    protected Action applyAction = new AbstractAction(Translations.getString(
+            "AbstractConfigurationWizard.Action.Apply")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             saveToModel();
@@ -186,8 +186,8 @@ public abstract class AbstractConfigurationWizard extends JPanel implements Wiza
         }
     };
 
-    protected Action resetAction = new AbstractAction(Translations.getStringOrDefault(
-            "AbstractConfigurationWizard.Action.Reset", "Reset")) {
+    protected Action resetAction = new AbstractAction(Translations.getString(
+            "AbstractConfigurationWizard.Action.Reset")) {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             loadFromModel();

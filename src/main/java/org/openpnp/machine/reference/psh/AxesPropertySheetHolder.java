@@ -36,18 +36,15 @@ public class AxesPropertySheetHolder extends SimplePropertySheetHolder {
         {
             putValue(SMALL_ICON, Icons.add);
             putValue(NAME, "New Axis...");
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("AxisPropertySheetHolder.Action.NewAxis.Description",
-                    "Create a new axis."));
+            putValue(SHORT_DESCRIPTION, Translations.getString("AxisPropertySheetHolder.Action.NewAxis.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             Configuration configuration = Configuration.get();
             ClassSelectionDialog<Axis> dialog = new ClassSelectionDialog<>(MainFrame.get(),
-                    Translations.getStringOrDefault("AxisPropertySheetHolder.SelectionDialog.title",
-                            "Select Axis..."),
-                    Translations.getStringOrDefault("AxisPropertySheetHolder.SelectionDialog.description",
-                            "Please select an Axis implementation from the list below."),
+                    Translations.getString("AxisPropertySheetHolder.SelectionDialog.title"),
+                    Translations.getString("AxisPropertySheetHolder.SelectionDialog.description"),
                     configuration.getMachine().getCompatibleAxisClasses());
             dialog.setVisible(true);
             Class<? extends Axis> axisClass = dialog.getSelectedClass();

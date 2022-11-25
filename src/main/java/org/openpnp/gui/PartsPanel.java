@@ -129,8 +129,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         JPanel panel_1 = new JPanel();
         toolbarAndSearch.add(panel_1, BorderLayout.EAST);
 
-        JLabel lblSearch = new JLabel(Translations.getStringOrDefault("PartsPanel.SearchLabel.text",
-                "Search"));
+        JLabel lblSearch = new JLabel(Translations.getString("PartsPanel.SearchLabel.text"));
         panel_1.add(lblSearch);
 
         searchTextField = new JTextField();
@@ -275,12 +274,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action newPartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.add);
-            putValue(NAME, Translations.getStringOrDefault(
-                    "PartsPanel.Action.NewPart",
-                    "New Part..."));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "PartsPanel.Action.NewPart.Description",
-                    "Create a new part, specifying it's ID."));
+            putValue(NAME, Translations.getString("PartsPanel.Action.NewPart"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.NewPart.Description"));
         }
 
         @Override
@@ -313,10 +308,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action deletePartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.delete);
-            putValue(NAME, Translations.getStringOrDefault("PartsPanel.Action.DeletePart",
-                    "Delete Part"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("PartsPanel.Action.DeletePart.Description",
-                    "Delete the currently selected part."));
+            putValue(NAME, Translations.getString("PartsPanel.Action.DeletePart"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.DeletePart.Description"));
         }
 
         @Override
@@ -332,11 +325,9 @@ public class PartsPanel extends JPanel implements WizardContainer {
             }
             
             int ret = JOptionPane.showConfirmDialog(getTopLevelAncestor(),
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
-                            "Are you sure you want to delete") + " " + formattedIds + "?",
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
-                            "Delete") + " " + selections.size() + " " + Translations.getStringOrDefault(
-                                    "CommonWords.parts", "parts") + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + formattedIds + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + selections.size() + " " + Translations.getString(
+                                    "CommonWords.parts") + "?", JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 for (Part part : selections) {
                     Configuration.get().removePart(part);
@@ -348,9 +339,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action pickPartAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.pick);
-            putValue(NAME, Translations.getStringOrDefault("PartsPanel.Action.PickPart", "Pick Part"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("PartsPanel.Action.PickPart.Description",
-                    "Pick the selected part from the first available feeder."));
+            putValue(NAME, Translations.getString("PartsPanel.Action.PickPart"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.PickPart.Description"));
         }
 
         @Override
@@ -376,11 +366,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action copyPartToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.copy);
-            putValue(NAME, Translations.getStringOrDefault("PartsPanel.Action.CopyPartToClipboard",
-                    "Copy Part to Clipboard"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                            "PartsPanel.Action.CopyPartToClipboard.Description",
-                            "Copy the currently selected part to the clipboard in text format."));
+            putValue(NAME, Translations.getString("PartsPanel.Action.CopyPartToClipboard"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.CopyPartToClipboard.Description"));
         }
 
         @Override
@@ -406,11 +393,8 @@ public class PartsPanel extends JPanel implements WizardContainer {
     public final Action pastePartToClipboardAction = new AbstractAction() {
         {
             putValue(SMALL_ICON, Icons.paste);
-            putValue(NAME, Translations.getStringOrDefault("PartsPanel.Action.PastePartFromClipboard",
-                    "Create Part from Clipboard"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "PartsPanel.Action.PastePartFromClipboard.Description",
-                    "Create a new part from a definition on the clipboard."));
+            putValue(NAME, Translations.getString("PartsPanel.Action.PastePartFromClipboard"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("PartsPanel.Action.PastePartFromClipboard.Description"));
         }
 
         @Override
@@ -467,7 +451,7 @@ public class PartsPanel extends JPanel implements WizardContainer {
         tabbedPane.removeAll();
 
         if (selectedPart != null) {
-            tabbedPane.add(Translations.getStringOrDefault("PartsPanel.SettingsTab.title", "Settings"),
+            tabbedPane.add(Translations.getString("PartsPanel.SettingsTab.title"),
                     new JScrollPane(new PartSettingsPanel(selectedPart)));
 
             for (PartAlignment partAlignment : Configuration.get().getMachine().getPartAlignments()) {

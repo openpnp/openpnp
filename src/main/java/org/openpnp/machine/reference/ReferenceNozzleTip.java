@@ -342,14 +342,11 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
         return new PropertySheet[] {
                 new PropertySheetWizardAdapter(getConfigurationWizard()),
                 new PropertySheetWizardAdapter(new ReferenceNozzleTipPartDetectionWizard(this),
-                        Translations.getStringOrDefault("ReferenceNozzleTip.PartDetection.tab.title",
-                                "Part Detection")),
+                        Translations.getString("ReferenceNozzleTip.PartDetection.tab.title")),
                 new PropertySheetWizardAdapter(new ReferenceNozzleTipToolChangerWizard(this),
-                        Translations.getStringOrDefault("ReferenceNozzleTip.ToolChanger.tab.title",
-                                "Tool Changer")),
+                        Translations.getString("ReferenceNozzleTip.ToolChanger.tab.title")),
                 new PropertySheetWizardAdapter(new ReferenceNozzleTipCalibrationWizard(this),
-                        Translations.getStringOrDefault("ReferenceNozzleTip.Calibration.tab.title",
-                                "Calibration"))
+                        Translations.getString("ReferenceNozzleTip.Calibration.tab.title"))
                 };
     }
 
@@ -1086,9 +1083,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public Action loadAction = new AbstractAction("Load") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipLoad);
-            putValue(NAME, Translations.getStringOrDefault("ReferenceNozzleTip.Action.Load","Load"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("ReferenceNozzleTip.Action.Load.Description",
-                    "Load the currently selected nozzle tip."));
+            putValue(NAME, Translations.getString("ReferenceNozzleTip.Action.Load"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceNozzleTip.Action.Load.Description"));
         }
 
         @Override
@@ -1104,9 +1100,8 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public Action unloadAction = new AbstractAction("Unload") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipUnload);
-            putValue(NAME, Translations.getStringOrDefault("ReferenceNozzleTip.Action.Unload", "Unload"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault(
-                    "ReferenceNozzleTip.Action.Unload.Description", "Unload the currently loaded nozzle tip."));
+            putValue(NAME, Translations.getString("ReferenceNozzleTip.Action.Unload"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceNozzleTip.Action.Unload.Description"));
         }
 
         @Override
@@ -1121,19 +1116,16 @@ public class ReferenceNozzleTip extends AbstractNozzleTip {
     public Action deleteAction = new AbstractAction("Delete Nozzle Tip") {
         {
             putValue(SMALL_ICON, Icons.nozzleTipRemove);
-            putValue(NAME, Translations.getStringOrDefault("ReferenceNozzleTip.Action.Delete",
-                    "Delete Nozzle Tip"));
-            putValue(SHORT_DESCRIPTION, Translations.getStringOrDefault("ReferenceNozzleTip.Action.Delete.Description",
-                    "Delete the currently selected nozzle tip."));
+            putValue(NAME, Translations.getString("ReferenceNozzleTip.Action.Delete"));
+            putValue(SHORT_DESCRIPTION, Translations.getString("ReferenceNozzleTip.Action.Delete.Description"));
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
             int ret = JOptionPane.showConfirmDialog(MainFrame.get(),
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.text",
-                            "Are you sure you want to delete") + " " + getName() + "?",
-                    Translations.getStringOrDefault("DialogMessages.ConfirmDelete.title",
-                            "Delete") + " " + getName() + "?", JOptionPane.YES_NO_OPTION);
+                    Translations.getString("DialogMessages.ConfirmDelete.text") + " " + getName() + "?",
+                    Translations.getString("DialogMessages.ConfirmDelete.title") + " " + getName() + "?",
+                    JOptionPane.YES_NO_OPTION);
             if (ret == JOptionPane.YES_OPTION) {
                 Configuration.get().getMachine().removeNozzleTip(ReferenceNozzleTip.this);
             }

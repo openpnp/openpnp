@@ -45,9 +45,9 @@ public class ReferenceVirtualAxisConfigurationWizard extends AbstractAxisConfigu
     public ReferenceVirtualAxisConfigurationWizard(ReferenceVirtualAxis axis) {
         super(axis);
         panelTransformation = new JPanel();
-        panelTransformation.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "ReferenceVirtualAxisConfigurationWizard.TransformationPanel.Border.title",
-                "Virtual Axis"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelTransformation.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceVirtualAxisConfigurationWizard.TransformationPanel.Border.title"
+        ), TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelTransformation);
         panelTransformation.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -72,9 +72,8 @@ public class ReferenceVirtualAxisConfigurationWizard extends AbstractAxisConfigu
                         FormSpecs.RELATED_GAP_ROWSPEC,
                         RowSpec.decode("bottom:default:grow"),}));
 
-        JLabel lblHomeCoordinate = new JLabel(Translations.getStringOrDefault(
-                "ReferenceVirtualAxisConfigurationWizard.TransformationPanel.HomeSafeZLabel.text",
-                "Home / Safe Z"));
+        JLabel lblHomeCoordinate = new JLabel(Translations.getString(
+                "ReferenceVirtualAxisConfigurationWizard.TransformationPanel.HomeSafeZLabel.text"));
         panelTransformation.add(lblHomeCoordinate, "2, 2, right, default");
 
         homeCoordinate = new JTextField();

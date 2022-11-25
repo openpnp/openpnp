@@ -54,9 +54,9 @@ public class ReferenceActuatorConfigurationWizard extends AbstractActuatorConfig
     @Override 
     protected void createUi(AbstractMachine machine) {
         panelProperties = new JPanel();
-        panelProperties.setBorder(new TitledBorder(null, Translations.getStringOrDefault(
-                "ReferenceActuatorConfigurationWizard.PropertiesPanel.Border.title",
-                "Properties"), TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        panelProperties.setBorder(new TitledBorder(null, Translations.getString(
+                "ReferenceActuatorConfigurationWizard.PropertiesPanel.Border.title"),
+                TitledBorder.LEADING, TitledBorder.TOP, null, null));
         contentPanel.add(panelProperties);
         panelProperties.setLayout(new FormLayout(new ColumnSpec[] {
                 FormSpecs.RELATED_GAP_COLSPEC,
@@ -69,16 +69,15 @@ public class ReferenceActuatorConfigurationWizard extends AbstractActuatorConfig
                 FormSpecs.RELATED_GAP_ROWSPEC,
                 FormSpecs.DEFAULT_ROWSPEC,}));
         
-        lblDriver = new JLabel(Translations.getStringOrDefault(
-                "ReferenceActuatorConfigurationWizard.PropertiesPanel.DriverLabel.text", "Driver"));
+        lblDriver = new JLabel(Translations.getString(
+                "ReferenceActuatorConfigurationWizard.PropertiesPanel.DriverLabel.text"));
         panelProperties.add(lblDriver, "2, 2, right, default");
         
         driver = new JComboBox(new DriversComboBoxModel(machine, true));
         panelProperties.add(driver, "4, 2, fill, default");
         
-        lblName = new JLabel(Translations.getStringOrDefault(
-                "ReferenceActuatorConfigurationWizard.PropertiesPanel.NameLabel.text",
-                "Name"));
+        lblName = new JLabel(Translations.getString(
+                "ReferenceActuatorConfigurationWizard.PropertiesPanel.NameLabel.text"));
         panelProperties.add(lblName, "2, 4, right, default");
         
         nameTf = new JTextField();
