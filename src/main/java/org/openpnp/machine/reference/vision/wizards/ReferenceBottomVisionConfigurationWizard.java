@@ -97,7 +97,7 @@ public class ReferenceBottomVisionConfigurationWizard extends AbstractConfigurat
                 "Rotate parts prior to vision?"));
         lblPreRot.setToolTipText(Translations.getStringOrDefault(
                 "ReferenceBottomVisionConfigurationWizard.GeneralPanel.RotatePartsLabel.toolTipText",
-                ""));
+                "Pre-rotate default setting for bottom vision. Can be overridden on individual parts."));
         panel.add(lblPreRot, "2, 6");
 
         preRotCheckbox = new JCheckBox("");
